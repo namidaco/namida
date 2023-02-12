@@ -12,7 +12,7 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/selected_tracks_row.dart';
 import 'package:namida/ui/widgets/track_tile.dart';
 
-class CustomSwitchListTile extends StatefulWidget {
+class CustomSwitchListTile extends StatelessWidget {
   final bool value;
   final void Function(bool) onChanged;
   final String title;
@@ -23,11 +23,6 @@ class CustomSwitchListTile extends StatefulWidget {
   final int? rotateIcon;
   const CustomSwitchListTile({Key? key, required this.value, required this.onChanged, required this.title, this.subtitle, this.leading, this.icon, this.passedColor, this.rotateIcon}) : super(key: key);
 
-  @override
-  State<CustomSwitchListTile> createState() => _CustomSwitchListTileState();
-}
-
-class _CustomSwitchListTileState extends State<CustomSwitchListTile> {
   @override
   Widget build(BuildContext context) {
     return Theme(
@@ -40,37 +35,37 @@ class _CustomSwitchListTileState extends State<CustomSwitchListTile> {
           borderRadius: BorderRadius.circular(20),
         ),
         onTap: () {
-          widget.onChanged(widget.value);
+          onChanged(value);
         },
         contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
         horizontalTitleGap: 0.0,
         minVerticalPadding: 8.0,
-        leading: widget.icon != null
+        leading: icon != null
             ? SizedBox(
                 height: double.infinity,
-                child: widget.rotateIcon != null
+                child: rotateIcon != null
                     ? RotatedBox(
-                        quarterTurns: widget.rotateIcon!,
+                        quarterTurns: rotateIcon!,
                         child: Icon(
-                          widget.icon,
-                          color: widget.passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(100), context.theme.colorScheme.onBackground),
+                          icon,
+                          color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(100), context.theme.colorScheme.onBackground),
                         ),
                       )
                     : Icon(
-                        widget.icon,
-                        color: widget.passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(100), context.theme.colorScheme.onBackground),
+                        icon,
+                        color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(100), context.theme.colorScheme.onBackground),
                       ),
               )
-            : widget.leading,
+            : leading,
         title: Text(
-          widget.title,
+          title,
           style: context.theme.textTheme.displayMedium,
-          maxLines: widget.subtitle != null ? 1 : 2,
+          maxLines: subtitle != null ? 1 : 2,
           overflow: TextOverflow.ellipsis,
         ),
-        subtitle: widget.subtitle != null
+        subtitle: subtitle != null
             ? Text(
-                widget.subtitle!,
+                subtitle!,
                 style: context.theme.textTheme.displaySmall,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -85,9 +80,9 @@ class _CustomSwitchListTileState extends State<CustomSwitchListTile> {
                 ),
                 AnimatedContainer(
                   decoration: BoxDecoration(
-                    color: widget.passedColor ?? CurrentColor.inst.color.value,
+                    color: passedColor ?? CurrentColor.inst.color.value,
                     borderRadius: BorderRadius.circular(30),
-                    boxShadow: widget.value ? [BoxShadow(offset: const Offset(0, 2), blurRadius: 8, spreadRadius: 0, color: widget.passedColor ?? CurrentColor.inst.color.value)] : null,
+                    boxShadow: value ? [BoxShadow(offset: const Offset(0, 2), blurRadius: 8, spreadRadius: 0, color: passedColor ?? CurrentColor.inst.color.value)] : null,
                   ),
                   duration: const Duration(milliseconds: 400),
                   child: FlutterSwitch(
@@ -100,11 +95,9 @@ class _CustomSwitchListTileState extends State<CustomSwitchListTile> {
                     width: 40,
                     height: 21,
                     toggleSize: 14,
-                    value: widget.value,
+                    value: value,
                     onToggle: (value) {
-                      setState(() {
-                        widget.onChanged(value);
-                      });
+                      onChanged(value);
                     },
                   ),
                 ),
