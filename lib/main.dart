@@ -9,8 +9,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/now_playing_color.dart';
-import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -23,10 +22,12 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  /// Getting Device info
   DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
   AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
   final sdkVersion = androidInfo.version.sdkInt;
 
+  /// Granting Storage Permission
   if (await Permission.storage.status.isDenied || await Permission.storage.status.isPermanentlyDenied) {
     final st = await Permission.storage.request();
     if (!st.isGranted) {
@@ -34,7 +35,6 @@ void main() async {
     }
   }
   if (sdkVersion >= 33 && (await Permission.audio.status.isDenied || await Permission.audio.status.isPermanentlyDenied)) {
-    print(sdkVersion);
     final st = await Permission.audio.request();
     if (!st.isGranted) {
       SystemNavigator.pop();
@@ -62,31 +62,26 @@ void main() async {
   // );
 
   await GetStorage.init();
-  // if (!await Permission.manageExternalStorage.status.isGranted) {
-  //   await Permission.manageExternalStorage.request();
-  // }
+
   kAppDirectoryPath = await getApplicationDocumentsDirectory().then((value) => value.path);
   await Directory(kArtworksDirPath).create();
   await Directory(kArtworksCompDirPath).create();
   await Directory(kWaveformDirPath).create();
 
-  print(kAudioFilesLength);
-
   final paths = await ExternalPath.getExternalStorageDirectories();
   kDirectoriesPaths = paths.map((path) => "$path/${ExternalPath.DIRECTORY_MUSIC}").toSet();
   kDirectoriesPaths.add('/storage/emulated/0/Download/');
-  print(kDirectoriesPaths);
-  // kDirectoriesPaths = paths.map((path) => path).toSet();
-  print(kDirectoriesPaths);
 
   Get.put(() => SettingsController());
   Get.put(() => SelectedTracksController());
+
   final tfe = await File(kTracksFilePath).exists() && await File(kTracksFilePath).stat().then((value) => value.size != 0);
   if (tfe) {
     await Indexer.inst.prepareTracksFile(tfe);
   } else {
     Indexer.inst.prepareTracksFile(tfe);
   }
+
   // await Player.inst.initializePlayer();
 
   runApp(const MyApp());
@@ -172,4 +167,24 @@ class ScrollBehaviorModified extends ScrollBehavior {
         return const ClampingScrollPhysics();
     }
   }
+}
+
+class KeepAliveWrapper extends StatefulWidget {
+  final Widget child;
+
+  const KeepAliveWrapper({Key? key, required this.child}) : super(key: key);
+
+  @override
+  _KeepAliveWrapperState createState() => _KeepAliveWrapperState();
+}
+
+class _KeepAliveWrapperState extends State<KeepAliveWrapper> with AutomaticKeepAliveClientMixin {
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
+  }
+
+  @override
+  bool get wantKeepAlive => true;
 }

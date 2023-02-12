@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:on_audio_query/on_audio_query.dart';
+
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';

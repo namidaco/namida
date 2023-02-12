@@ -1,6 +1,8 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:wheel_slider/wheel_slider.dart';
+
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
@@ -8,15 +10,12 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/indexing_percentage.dart';
-import 'package:namida/ui/widgets/settings/stats.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
-import 'package:wheel_slider/wheel_slider.dart';
 
 class IndexerSettings extends StatelessWidget {
   IndexerSettings({super.key});
 
   final SettingsController stg = SettingsController.inst;
-  final TextEditingController artistsSeparatorsController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -38,13 +37,13 @@ class IndexerSettings extends StatelessWidget {
                   () => Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      StatsContainerModern(
+                      StatsContainer(
                         icon: Broken.info_circle,
                         title: '${Language.inst.TRACKS_INFO} :',
                         value: Indexer.inst.tracksInfoList.length.toString(),
                         total: Indexer.inst.allTracksPaths.value == 0 ? null : Indexer.inst.allTracksPaths.toString(),
                       ),
-                      StatsContainerModern(
+                      StatsContainer(
                         icon: Broken.image,
                         title: '${Language.inst.ARTWORKS} :',
                         value: Indexer.inst.artworksInStorage.length.toString(),

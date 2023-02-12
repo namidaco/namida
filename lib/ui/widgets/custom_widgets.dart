@@ -1,16 +1,15 @@
 import 'dart:ui';
 
+import 'package:checkmark/checkmark.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_switch/flutter_switch.dart';
 import 'package:get/get.dart';
-import 'package:namida/controller/now_playing_color.dart';
-import 'package:namida/controller/selected_tracks_controller.dart';
+import 'package:flutter_switch/flutter_switch.dart';
+
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/ui/widgets/selected_tracks_row.dart';
-import 'package:namida/ui/widgets/track_tile.dart';
 
 class CustomSwitchListTile extends StatelessWidget {
   final bool value;
@@ -191,107 +190,6 @@ class CustomListTile extends StatelessWidget {
   }
 }
 
-// class AnimatingBackgroundModern extends StatefulWidget {
-//   final Widget child;
-//   final Color currentColor;
-//   final List<Color> currentColorsList;
-
-//   const AnimatingBackgroundModern({super.key, required this.child, required this.currentColor, required this.currentColorsList});
-//   @override
-//   _AnimatingBackgroundModernState createState() => _AnimatingBackgroundModernState();
-// }
-
-// class _AnimatingBackgroundModernState extends State<AnimatingBackgroundModern> with TickerProviderStateMixin {
-//   late List<Color> colorList;
-//   List<Alignment> alignmentList = [Alignment.topCenter, Alignment.bottomCenter];
-//   int index = 0;
-//   late Color bottomColor;
-//   late Color topColor;
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     setState(() {
-//       bottomColor = widget.currentColor.withAlpha(20);
-//       topColor = widget.currentColor.withAlpha(50);
-//       // bottomColor = Colors.red;
-//       // topColor = Colors.green;
-//     });
-//     () {
-//       setState(
-//         () {
-//           bottomColor = const Color(0xff33267C);
-//         },
-//       );
-//     };
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     colorList = [
-//       widget.currentColor.withAlpha(25),
-//       widget.currentColor.withAlpha(50),
-//       // Colors.red,
-//       // Colors.green,
-//       // Colors.blue,
-//     ];
-//     return AnimatedContainer(
-//       duration: const Duration(seconds: 2),
-//       onEnd: () {
-//         setState(
-//           () {
-//             index = index + 1;
-//             bottomColor = colorList[index % colorList.length];
-//             topColor = colorList[(index + 1) % colorList.length];
-//           },
-//         );
-//       },
-//       decoration: BoxDecoration(
-//         gradient: LinearGradient(
-//           begin: Alignment.topLeft,
-//           end: Alignment.bottomRight,
-//           colors: [bottomColor, topColor],
-//         ),
-//       ),
-//       child: widget.child,
-//     );
-//   }
-// }
-class AnimatingBackgroundModern extends StatelessWidget {
-  final Widget child;
-  final Color currentColor;
-  final List<Color> currentColorsList;
-  final Duration duration;
-
-  AnimatingBackgroundModern({
-    super.key,
-    required this.child,
-    required this.currentColor,
-    required this.currentColorsList,
-    this.duration = const Duration(milliseconds: 0),
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: duration,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            currentColor.withAlpha(context.isDarkMode ? 0 : 25),
-            currentColor.withAlpha(context.isDarkMode ? 55 : 110),
-            // context.theme.appBarTheme.backgroundColor!,
-            // context.theme.appBarTheme.backgroundColor!,
-          ],
-        ),
-      ),
-      child: child,
-    );
-  }
-}
-
 class CustomBlurryDialog extends StatelessWidget {
   final Widget? child;
   final String? title;
@@ -385,6 +283,143 @@ class AddFolderButton extends StatelessWidget {
           Text(Language.inst.ADD),
         ],
       ),
+    );
+  }
+}
+
+class StatsContainer extends StatelessWidget {
+  final Widget? child;
+  final IconData? icon;
+  final String? title;
+  final String? value;
+  final String? total;
+
+  const StatsContainer({super.key, this.child, this.icon, this.title, this.value, this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: context.theme.cardTheme.color?.withAlpha(200),
+        borderRadius: BorderRadius.circular(22.0.multipliedRadius),
+      ),
+      margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 5.0),
+      child: child ??
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon),
+              const SizedBox(
+                width: 8.0,
+              ),
+              Text(title ?? ''),
+              const SizedBox(
+                width: 8.0,
+              ),
+              Text(value ?? ''),
+              if (total != null) Text(" ${Language.inst.OF} $total")
+            ],
+          ),
+    );
+  }
+}
+
+class SmallListTile extends StatelessWidget {
+  final String title;
+  final Widget? trailing;
+  final IconData? icon;
+  final IconData? trailingIcon;
+  final bool active;
+  final bool displayAnimatedCheck;
+  final void Function()? onTap;
+  const SmallListTile({super.key, required this.title, this.onTap, this.trailing, this.active = false, this.icon, this.trailingIcon, this.displayAnimatedCheck = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: icon != null
+          ? Icon(icon)
+          : active
+              ? const Icon(Broken.arrow_circle_right)
+              : const Icon(
+                  Broken.arrow_right_3,
+                  size: 18.0,
+                ),
+      visualDensity: VisualDensity.compact,
+      title: Text(title),
+      trailing: displayAnimatedCheck
+          ? SizedBox(
+              height: 18.0,
+              width: 18.0,
+              child: CheckMark(
+                // curve: Curves.easeInOutExpo,
+                strokeWidth: 2,
+                activeColor: context.theme.listTileTheme.iconColor!,
+                inactiveColor: context.theme.listTileTheme.iconColor!,
+                duration: const Duration(milliseconds: 400),
+                active: SettingsController.inst.artistSortReversed.value,
+              ),
+            )
+          : trailingIcon != null
+              ? Icon(trailingIcon)
+              : trailing,
+      onTap: onTap,
+    );
+  }
+}
+
+class CustomSortByExpansionTile extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+  const CustomSortByExpansionTile({super.key, required this.title, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return ExpansionTile(
+        initiallyExpanded: true,
+        // backgroundColor: context.theme.cardColor,
+        trailing: const Icon(Broken.arrow_down_2),
+        title: Row(
+          children: [
+            const Icon(Broken.sort),
+            const SizedBox(
+              width: 10.0,
+            ),
+            Text(title),
+          ],
+        ),
+        children: children);
+  }
+}
+
+class ListTileWithCheckMark extends StatelessWidget {
+  final bool active;
+  final void Function()? onTap;
+  final String? title;
+  final IconData? icon;
+  const ListTileWithCheckMark({super.key, required this.active, this.onTap, this.title, this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0.multipliedRadius)),
+      tileColor: Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(10), context.theme.cardTheme.color!),
+      leading: Icon(icon ?? Broken.arrange_circle),
+      title: Text(title ?? Language.inst.REVERSE_ORDER),
+      trailing: SizedBox(
+        height: 18.0,
+        width: 18.0,
+        child: CheckMark(
+          strokeWidth: 2,
+          activeColor: context.theme.listTileTheme.iconColor!,
+          inactiveColor: context.theme.listTileTheme.iconColor!,
+          duration: const Duration(milliseconds: 400),
+          active: active,
+        ),
+      ),
+      visualDensity: VisualDensity.compact,
+      onTap: onTap,
     );
   }
 }

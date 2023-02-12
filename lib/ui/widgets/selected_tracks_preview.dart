@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:namida/controller/indexer_controller.dart';
+
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/ui/widgets/selected_tracks_row.dart';
-import 'package:namida/ui/widgets/track_tile.dart';
+import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class SelectedTracksPreviewContainer extends StatelessWidget {
   SelectedTracksPreviewContainer({super.key});
@@ -21,12 +21,9 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
               ? Center(
                   child: Container(
                     width: MediaQuery.of(context).size.width,
-                    padding: EdgeInsets.all(12.0),
+                    padding: const EdgeInsets.all(12.0),
                     child: Column(
                       children: [
-                        // const SizedBox(
-                        //   height: 300,
-                        // ),
                         GestureDetector(
                           onTap: () => stc.isMenuMinimized.value = !stc.isMenuMinimized.value,
                           onTapDown: (value) => stc.isExpanded.value = true,
@@ -93,31 +90,9 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                                     stc.removeTrack(i);
                                                   },
                                                   child: TrackTile(
-                                                    // displayRightDragHandler: true,
-                                                    // trackModel: stc.selectedTracks[i],
                                                     track: stc.selectedTracks[i],
-
                                                     displayRightDragHandler: true,
                                                     isInSelectedTracksPreview: true,
-                                                    // disableContextMenu: true,
-                                                    // disableSeparator: true,
-                                                    // onPressed: () {
-                                                    //   Playback.instance.open(selectedTracks, index: i);
-                                                    // },
-                                                    // title: Text(
-                                                    //   selectedTracks[i].trackName,
-                                                    //   overflow: TextOverflow.ellipsis,
-                                                    //   maxLines: 1,
-                                                    //   style: context.theme.textTheme.displayMedium?.copyWith(
-                                                    //         color: i < Playback.instance.index ? context.theme.textTheme.displaySmall?.color : null,
-                                                    //       ),
-                                                    // ),
-                                                    // subtitle: Text(
-                                                    //   selectedTracks[i].trackArtistNames.take(1).join(', '),
-                                                    //   overflow: TextOverflow.ellipsis,
-                                                    //   maxLines: 1,
-                                                    //   style: context.theme.textTheme.displaySmall,
-                                                    // ),
                                                   ),
                                                 ),
                                               );

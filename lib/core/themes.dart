@@ -6,10 +6,6 @@ class AppThemes extends GetxController {
   static final AppThemes inst = AppThemes();
 
   ThemeData getAppTheme(Color color, {bool light = true}) {
-    // ThemeMode currentTheme = ThemeController.inst.themeMode.value;
-    // bool light2 = currentTheme == ThemeMode.light;
-    // final color = CurrentColor.inst.color.value;
-
     final cardTheme = CardTheme(
       elevation: 12.0,
       color: light

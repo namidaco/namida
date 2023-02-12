@@ -1,9 +1,8 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:restart_app/restart_app.dart';
-import 'package:namida/controller/now_playing_color.dart';
+
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';

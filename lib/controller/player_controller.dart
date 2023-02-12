@@ -2,7 +2,7 @@
 import 'package:get/get.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/now_playing_color.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:just_audio/just_audio.dart';
 
 //

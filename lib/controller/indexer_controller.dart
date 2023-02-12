@@ -1,16 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:path/path.dart' as p;
+
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:on_audio_edit/on_audio_edit.dart' as audioedit;
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path/path.dart' as p;
+
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/main.dart';
 
 class Indexer extends GetxController {
   static Indexer inst = Indexer();

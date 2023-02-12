@@ -1,9 +1,8 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:namida/controller/now_playing_color.dart';
+
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -155,22 +154,3 @@ class CustomizationSettings extends StatelessWidget {
     );
   }
 }
-
-/// Default values available for setting the Date Time Format.
-const kDefaultDateTimeStrings = {
-  'yyyyMMdd': '20220413',
-  'dd/MM/yyyy': '13/04/2022',
-  'MM/dd/yyyy': '04/13/2022',
-  'yyyy/MM/dd': '2022/04/13',
-  'yyyy/dd/MM': '2022/13/04',
-  'dd-MM-yyyy': '13-04-2022',
-  'MM-dd-yyyy': '04-13-2022',
-  'MMMM dd, yyyy': 'April 13, 2022',
-  'MMM dd, yyyy': 'Apr 13, 2022',
-  //TODO: add more preset formats
-  'MMM dd, yyyy1': 'Apr 13, 2022',
-  'MMM dd, yyyy2': 'Apr 13, 2022',
-  'MMM dd, yyyy3': 'Apr 13, 2022',
-  'MMM dd, yyyy4': 'Apr 13, 2022',
-  'MMM dd, yyyy5': 'Apr 13, 2022',
-};

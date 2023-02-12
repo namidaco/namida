@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/now_playing_color.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -30,9 +30,6 @@ class TrackTile extends StatelessWidget {
     final formatDate = DateFormat('${SettingsController.inst.dateTimeFormat}');
     final formatClock = SettingsController.inst.hourFormat12.value ? DateFormat('hh:mm aa') : DateFormat('HH:mm');
 
-    //  if (trackItem == TrackTileItem.none) {
-    //   return "";
-    // }
     String trackItemPlaceV = [
       if (trackItem == TrackTileItem.none) '',
       if (trackItem == TrackTileItem.title) track.title.overflow,
@@ -48,7 +45,6 @@ class TrackTile extends StatelessWidget {
       if (trackItem == TrackTileItem.extension) track.fileExtension,
       if (trackItem == TrackTileItem.fileName) track.displayName.overflow,
       if (trackItem == TrackTileItem.folder) track.folderPath.split('/').last.overflow,
-      // if (trackItem == TrackTileItem.path) pathRev.take(pathRev.length - 1).toList().reversed.join('/').toString(),
       if (trackItem == TrackTileItem.path) track.path.formatPath,
       if (trackItem == TrackTileItem.channels) track.channels.channelToLabel,
       if (trackItem == TrackTileItem.comment) track.comment.overflow,

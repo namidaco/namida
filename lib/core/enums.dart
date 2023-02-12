@@ -1,15 +1,3 @@
-enum GroupSortType {
-  album,
-  albumArtist,
-  year,
-  artistsList,
-  genresList,
-  dateModified,
-  composer,
-  duration,
-  numberOfTracks,
-}
-
 enum SortType {
   title,
   album,
@@ -26,6 +14,18 @@ enum SortType {
   duration,
   sampleRate,
   size,
+}
+
+enum GroupSortType {
+  album,
+  albumArtist,
+  year,
+  artistsList,
+  genresList,
+  dateModified,
+  composer,
+  duration,
+  numberOfTracks,
 }
 
 enum TrackTilePosition {
@@ -81,16 +81,6 @@ enum TrackSearchFilter {
   composer,
   year,
 }
-
-// enum TrackSearchFilter {
-//   title,
-//   album,
-//   artists,
-//   albumArtist,
-//   genres,
-//   composer,
-//   year,
-// }
 
 enum LibraryTab {
   tracks,

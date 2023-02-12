@@ -2,12 +2,11 @@ import 'package:file_manager/file_manager.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:namida/controller/folders_controller.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/pages/homepage.dart';
-import 'package:namida/ui/widgets/track_tile.dart';
+import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class FoldersPage extends StatelessWidget {
   final String? title;
@@ -17,7 +16,6 @@ class FoldersPage extends StatelessWidget {
   final FileManagerController controller = FileManagerController();
   @override
   Widget build(BuildContext context) {
-    // context.theme;
     return Obx(
       () {
         print(Indexer.inst.groupedFoldersMap.keys);
@@ -34,7 +32,7 @@ class FoldersPage extends StatelessWidget {
                 //       ):
                 ListView(
               children: Indexer.inst.groupedFoldersMap.entries
-                  .map((e) => FoldersController.inst.displayTracks.value
+                  .map((e) => true
                       ? FolderTracksPage(
                           title: e.key.formatPath,
                           tracks: e.value,

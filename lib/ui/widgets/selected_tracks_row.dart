@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/selected_tracks_controller.dart';
-import 'package:namida/core/functions/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/extensions.dart';
 

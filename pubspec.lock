@@ -71,13 +71,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.0.2"
-  cupertino_icons:
-    dependency: "direct main"
-    description:
-      name: cupertino_icons
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.0.5"
   device_info_plus:
     dependency: "direct main"
     description:
@@ -303,13 +296,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.1"
-  loading_animation_widget:
-    dependency: "direct main"
-    description:
-      name: loading_animation_widget
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.2.0+4"
   matcher:
     dependency: transitive
     description:

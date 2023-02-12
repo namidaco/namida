@@ -1,22 +1,14 @@
-import 'dart:io';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:get/get.dart';
-import 'package:loading_animation_widget/loading_animation_widget.dart';
+
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/settings/reverse_order_container.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
-import 'package:namida/core/extensions.dart';
 
 class ExtrasSettings extends StatelessWidget {
   const ExtrasSettings({super.key});

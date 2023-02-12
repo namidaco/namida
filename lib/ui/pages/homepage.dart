@@ -2,10 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:namida/ui/widgets/settings/filter_sort_menu.dart';
 import 'package:searchbar_animation/searchbar_animation.dart';
+
+import 'package:namida/main.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/now_playing_color.dart';
-import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/extensions.dart';
@@ -15,11 +16,9 @@ import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/pages/folders_page.dart';
 import 'package:namida/ui/pages/genres_page.dart';
-import 'package:namida/ui/pages/now_playing_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/pages/tracks_page.dart';
 import 'package:namida/ui/widgets/selected_tracks_preview.dart';
-import 'package:namida/ui/widgets/settings/filter_sort_menu.dart';
 import 'package:namida/ui/widgets/waveform.dart';
 
 class HomePage extends StatelessWidget {
@@ -36,10 +35,8 @@ class HomePage extends StatelessWidget {
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
           titleSpacing: 0,
-          // leading: SizedBox(),
           automaticallyImplyLeading: false,
           // title: Obx(() => Text("${Indexer.inst.tracksInfoList.length} ${Language.inst.OF} ${Indexer.inst.allTracksPaths}")),
-
           title: SearchBarAnimation(
             isSearchBoxOnRightSide: true,
             textAlignToRight: false,
@@ -89,19 +86,7 @@ class HomePage extends StatelessWidget {
             ),
           ),
           actions: [
-            // IconButton(
-            //   onPressed: () => Indexer.inst.refreshLibraryAndCheckForDiff(forceReIndex: true),
-            //   icon: const Icon(Broken.additem),
-            // ),
-            // IconButton(
-            //   onPressed: () => ThemeController.inst.changeThemeMode(),
-            //   icon: const Icon(Broken.sun_1),
-            // ),
-            // FilterSortByMenu(),
-            // IconButton(
-            //   onPressed: () => ThemeController.inst.changeThemeModeOld(),
-            //   icon: const Icon(Broken.moon),
-            // ),
+            FilterSortByMenu(),
             IconButton(
               constraints: BoxConstraints(maxWidth: 60, minWidth: 56.0),
               onPressed: () => Get.to(() => SettingsPage()),
@@ -222,24 +207,4 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
-}
-
-class KeepAliveWrapper extends StatefulWidget {
-  final Widget child;
-
-  const KeepAliveWrapper({Key? key, required this.child}) : super(key: key);
-
-  @override
-  _KeepAliveWrapperState createState() => _KeepAliveWrapperState();
-}
-
-class _KeepAliveWrapperState extends State<KeepAliveWrapper> with AutomaticKeepAliveClientMixin {
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return widget.child;
-  }
-
-  @override
-  bool get wantKeepAlive => true;
 }

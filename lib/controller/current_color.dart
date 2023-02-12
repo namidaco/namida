@@ -2,15 +2,16 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:on_audio_query/on_audio_query.dart';
 import 'package:palette_generator/palette_generator.dart';
+
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/core/themes.dart';
+import 'package:namida/core/constants.dart';
 
 class CurrentColor extends GetxController {
   static CurrentColor inst = CurrentColor();
 
-  Rx<Color> color = Color.fromARGB(255, 139, 149, 241).obs;
+  Rx<Color> color = kMainColor.obs;
   RxString currentPlayingTrack = ''.obs;
 
   // CurrentColor() {}
@@ -26,7 +27,7 @@ class CurrentColor extends GetxController {
       currentPlayingTrack.value = track.path;
       update();
     } else {
-      color.value = Color.fromARGB(33, 139, 149, 241);
+      color.value = kMainColor;
     }
   }
 
@@ -91,17 +92,5 @@ Color? delightnedColor(Color? color) {
     hslColor = hslColor.withLightness(hslColor.lightness + lightnessDiff);
   }
   colorDelightened = hslColor.toColor();
-  // if (l >= 0.0 && l < 0.1) colorDelightened = hslColor.withLightness(0.3).toColor();
-  // if (l >= 0.1 && l < 0.2) colorDelightened = hslColor.withLightness(0.2).toColor();
-  // if (l >= 0.2 && l < 0.3) colorDelightened = hslColor.withLightness(0.5).toColor();
-  // if (l >= 0.3 && l < 0.4) colorDelightened = hslColor.withLightness(0.4).toColor();
-  // if (l >= 0.4 && l < 0.5) colorDelightened = hslColor.withLightness(0.3).toColor();
-  // if (l >= 0.5 && l < 0.6) colorDelightened = hslColor.withLightness(0.1).toColor();
-  // if (l >= 0.6 && l < 0.7) colorDelightened = hslColor.withLightness(0.2).toColor();
-  // if (l >= 0.7 && l < 0.8) colorDelightened = hslColor.withLightness(0.2).toColor();
-  // if (l >= 0.8 && l < 0.9) colorDelightened = hslColor.withLightness(0.2).toColor();
-
-  // hslColor.withLightness(0.5).toColor();
-  // colorDelightened = Color.alphaBlend(Colors.white.withAlpha(20), colorDelightened);
   return colorDelightened;
 }

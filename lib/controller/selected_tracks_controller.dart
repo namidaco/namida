@@ -11,21 +11,12 @@ class SelectedTracksController extends GetxController {
 
   SelectedTracksController() {
     selectedTracks.listen((st) {
-      print(st.length);
       if (st.isNotEmpty) {
         bottomPadding.value = 102.0;
       } else {
         bottomPadding.value = 0.0;
       }
     });
-    // ever(selectedTracks, (value) {
-    //   print(value.length);
-    //   if (value.isNotEmpty) {
-    //     bottomPadding.value = 92.0;
-    //   } else {
-    //     bottomPadding.value = 0.0;
-    //   }
-    // });
   }
 
   void selectOrUnselect(Track track) {
@@ -34,7 +25,7 @@ class SelectedTracksController extends GetxController {
     } else {
       selectedTracks.add(track);
     }
-    print("length: ${selectedTracks.length}");
+    printInfo(info: "length: ${selectedTracks.length}");
   }
 
   void reorderTracks(int oldIndex, int newIndex) {

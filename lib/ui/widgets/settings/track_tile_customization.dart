@@ -1,6 +1,8 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
@@ -10,7 +12,6 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/setting_dialog.dart';
-import 'package:namida/ui/widgets/settings/filter_sort_menu.dart';
 
 class TrackTileCustomization extends StatelessWidget {
   final Color? currentTrackColor;
@@ -78,11 +79,6 @@ class TrackTileCustomization extends StatelessWidget {
               showSettingDialogWithTextField(title: Language.inst.HEIGHT_OF_TRACK_TILE, trackListTileHeight: true);
             },
           ),
-          // CustomListTile(
-          //   title: "firstrowi1",
-          //   onTap: () => SettingsController.inst.updateTrackItemList(TrackTilePosition.row1Item1, TrackTileItem.artists),
-          // ),
-
           CustomSwitchListTile(
             icon: Broken.chart_1,
             rotateIcon: 1,
@@ -557,146 +553,3 @@ class TrackItemSmallBox extends StatelessWidget {
     );
   }
 }
-
-class ListTileAlertDialogueWithRadioList extends StatefulWidget {
-  final BuildContext context;
-  final String valueToBeChanged;
-  final Function(String?)? functionToSaveTheValue;
-  const ListTileAlertDialogueWithRadioList({
-    super.key,
-    required this.context,
-    required this.valueToBeChanged,
-    required this.functionToSaveTheValue,
-  });
-
-  @override
-  State<ListTileAlertDialogueWithRadioList> createState() => _ListTileAlertDialogueWithRadioListState();
-}
-
-class _ListTileAlertDialogueWithRadioListState extends State<ListTileAlertDialogueWithRadioList> {
-  @override
-  Widget build(BuildContext context) {
-    ScrollController _scrollController = ScrollController();
-    return ListTile(
-      onTap: () async {
-        await showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12.0.multipliedRadius))),
-              content: SingleChildScrollView(
-                controller: _scrollController,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: kDefaultTrackTileInfoChoose.entries
-                          .map(
-                            (e) => RadioListTile<String>(
-                              activeColor: context.theme.colorScheme.secondary,
-                              groupValue: widget.valueToBeChanged,
-                              value: e.key,
-                              onChanged: widget.functionToSaveTheValue,
-                              title: Text(
-                                '${e.value}',
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-      leading: Text(
-        Language.inst.DATE_TIME_FORMAT,
-        style: Get.textTheme.displayMedium?.copyWith(color: context.theme.brightness == Brightness.dark ? Colors.white : Colors.black),
-      ),
-      // trailing: Text(
-      //   "${stg.trackTileFirstRowFirstItem}",
-      //    style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
-      // ),
-    );
-  }
-}
-
-class AlertDialogueWithRadioList extends StatefulWidget {
-  final BuildContext context;
-  final String valueToBeChanged;
-  final Function(String?)? functionToSaveTheValue;
-  const AlertDialogueWithRadioList({
-    super.key,
-    required this.context,
-    required this.valueToBeChanged,
-    required this.functionToSaveTheValue,
-  });
-
-  @override
-  State<AlertDialogueWithRadioList> createState() => _AlertDialogueWithRadioListState();
-}
-
-class _AlertDialogueWithRadioListState extends State<AlertDialogueWithRadioList> {
-  @override
-  Widget build(BuildContext context) {
-    ScrollController _scrollController = ScrollController();
-    return AlertDialog(
-      contentPadding: const EdgeInsets.all(0),
-      insetPadding: const EdgeInsets.all(50),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12.0.multipliedRadius))),
-      content: SingleChildScrollView(
-        controller: _scrollController,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: kDefaultTrackTileInfoChoose.entries
-                  .map(
-                    (e) => RadioListTile<String>(
-                      activeColor: context.theme.colorScheme.secondary,
-                      groupValue: widget.valueToBeChanged,
-                      value: e.key,
-                      onChanged: widget.functionToSaveTheValue,
-                      title: Text(
-                        '${e.value}',
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-const kDefaultTrackTileInfoChoose = {
-  'none': 'None',
-  'trackName': 'Track Name',
-  'artistNames': 'Artist Names',
-  'albumName': 'Album Name',
-  'albumArtistName': 'Album Artist Name',
-  'genre': 'Genre',
-  'duration': 'Duration',
-  'year': 'Year',
-  'trackNumber': 'Track Number',
-  'discNumber': 'Disk Number',
-  'filenamenoext': 'File Name Without Extension',
-  'extension': 'Extension',
-  'filename': 'File Name',
-  'folder': 'Folder Name',
-  'uri': 'File Full Path',
-  'bitrate': 'Bitrate',
-  'timeAddedDate': 'Time Added in Date',
-  'timeAddedClock': 'Time Added in Hour',
-  'timeAdded': 'Time Added (Date, Hour)',
-};

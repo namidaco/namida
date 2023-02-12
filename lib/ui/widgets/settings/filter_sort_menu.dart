@@ -1,4 +1,3 @@
-import 'package:checkmark/checkmark.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -7,7 +6,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/ui/widgets/settings/reverse_order_container.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/core/extensions.dart';
 
 class FilterSortByMenu extends StatelessWidget {
@@ -48,7 +47,7 @@ class FilterSortByMenu extends StatelessWidget {
                   return CustomSortByExpansionTile(
                     title: Language.inst.SORT_TRACKS_BY,
                     children: [
-                      ReverseOrderContainer(
+                      ListTileWithCheckMark(
                         active: SettingsController.inst.tracksSortReversed.value,
                         onTap: () => Indexer.inst.sortTracks(reverse: !SettingsController.inst.tracksSortReversed.value),
                       ),
@@ -151,7 +150,7 @@ class FilterSortByMenu extends StatelessWidget {
                   return CustomSortByExpansionTile(
                     title: Language.inst.SORT_ALBUMS_BY,
                     children: [
-                      ReverseOrderContainer(
+                      ListTileWithCheckMark(
                         active: SettingsController.inst.albumSortReversed.value,
                         onTap: () => Indexer.inst.sortAlbums(reverse: !SettingsController.inst.albumSortReversed.value),
                       ),
@@ -225,7 +224,7 @@ class FilterSortByMenu extends StatelessWidget {
                   return CustomSortByExpansionTile(
                     title: Language.inst.SORT_ARTISTS_BY,
                     children: [
-                      ReverseOrderContainer(
+                      ListTileWithCheckMark(
                         active: SettingsController.inst.artistSortReversed.value,
                         onTap: () => Indexer.inst.sortArtists(reverse: !SettingsController.inst.artistSortReversed.value),
                       ),
@@ -304,7 +303,7 @@ class FilterSortByMenu extends StatelessWidget {
                   return CustomSortByExpansionTile(
                     title: Language.inst.SORT_GENRES_BY,
                     children: [
-                      ReverseOrderContainer(
+                      ListTileWithCheckMark(
                         active: SettingsController.inst.genreSortReversed.value,
                         onTap: () => Indexer.inst.sortGenres(reverse: !SettingsController.inst.genreSortReversed.value),
                       ),
@@ -362,73 +361,5 @@ class FilterSortByMenu extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class SmallListTile extends StatelessWidget {
-  final String title;
-  final Widget? trailing;
-  final IconData? icon;
-  final IconData? trailingIcon;
-  final bool active;
-  final bool displayAnimatedCheck;
-  final void Function()? onTap;
-  const SmallListTile({super.key, required this.title, this.onTap, this.trailing, this.active = false, this.icon, this.trailingIcon, this.displayAnimatedCheck = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: icon != null
-          ? Icon(icon)
-          : active
-              ? const Icon(Broken.arrow_circle_right)
-              : const Icon(
-                  Broken.arrow_right_3,
-                  size: 18.0,
-                ),
-      visualDensity: VisualDensity.compact,
-      title: Text(title),
-      trailing: displayAnimatedCheck
-          ? SizedBox(
-              height: 18.0,
-              width: 18.0,
-              child: CheckMark(
-                // curve: Curves.easeInOutExpo,
-                strokeWidth: 2,
-                activeColor: context.theme.listTileTheme.iconColor!,
-                inactiveColor: context.theme.listTileTheme.iconColor!,
-                duration: const Duration(milliseconds: 400),
-                active: SettingsController.inst.artistSortReversed.value,
-              ),
-            )
-          : trailingIcon != null
-              ? Icon(trailingIcon)
-              : trailing,
-      onTap: onTap,
-    );
-  }
-}
-
-class CustomSortByExpansionTile extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-  const CustomSortByExpansionTile({super.key, required this.title, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return ExpansionTile(
-        initiallyExpanded: true,
-        // backgroundColor: context.theme.cardColor,
-        trailing: const Icon(Broken.arrow_down_2),
-        title: Row(
-          children: [
-            const Icon(Broken.sort),
-            const SizedBox(
-              width: 10.0,
-            ),
-            Text(title),
-          ],
-        ),
-        children: children);
   }
 }

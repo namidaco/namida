@@ -1,13 +1,9 @@
-import 'dart:convert';
-
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
-import 'package:namida/main.dart';
 
 class SettingsController extends GetxController {
   static SettingsController inst = SettingsController();
@@ -70,20 +66,6 @@ class SettingsController extends GetxController {
   Rx<TrackTileItem> rightItem1 = TrackTileItem.duration.obs;
   Rx<TrackTileItem> rightItem2 = TrackTileItem.none.obs;
   Rx<TrackTileItem> rightItem3 = TrackTileItem.none.obs;
-  // RxSet<TrackItems> trackItems = {
-  //   TrackItems.fromJson({TrackTilePosition.row1Item1: TrackTileItem.title}),
-  //   TrackItems.fromJson({TrackTilePosition.row1Item2: TrackTileItem.title}),
-  //   TrackItems.fromJson({TrackTilePosition.row1Item3: TrackTileItem.none}),
-  //   TrackItems.fromJson({TrackTilePosition.row2Item1: TrackTileItem.artists}),
-  //   TrackItems.fromJson({TrackTilePosition.row2Item2: TrackTileItem.album}),
-  //   TrackItems.fromJson({TrackTilePosition.row2Item3: TrackTileItem.none}),
-  //   TrackItems.fromJson({TrackTilePosition.row3Item1: TrackTileItem.year}),
-  //   TrackItems.fromJson({TrackTilePosition.row3Item2: TrackTileItem.none}),
-  //   TrackItems.fromJson({TrackTilePosition.row3Item2: TrackTileItem.none}),
-  //   TrackItems.fromJson({TrackTilePosition.rightItem1: TrackTileItem.duration}),
-  //   TrackItems.fromJson({TrackTilePosition.rightItem2: TrackTileItem.none}),
-  //   TrackItems.fromJson({TrackTilePosition.rightItem3: TrackTileItem.none}),
-  // }.obs;
 
   SettingsController() {
     themeMode.value = EnumToString.fromString(ThemeMode.values, getString('themeMode') ?? EnumToString.convertToString(themeMode.value))!;
@@ -494,7 +476,7 @@ class SettingsController extends GetxController {
     }
   }
 
-//
+  /// GetStorage functions
   final GetStorage storage = GetStorage();
 
   void setData(String key, dynamic value) => storage.write(key, value);

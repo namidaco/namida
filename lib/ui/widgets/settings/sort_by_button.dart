@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/now_playing_color.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/ui/widgets/settings/filter_sort_menu.dart';
-import 'package:namida/ui/widgets/settings/reverse_order_container.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/core/extensions.dart';
 
 class SortByMenu extends StatelessWidget {
@@ -54,7 +52,7 @@ class SortByMenu extends StatelessWidget {
                         return CustomSortByExpansionTile(
                           title: Language.inst.SORT_TRACKS_BY,
                           children: [
-                            ReverseOrderContainer(
+                            ListTileWithCheckMark(
                               active: SettingsController.inst.tracksSortReversed.value,
                               onTap: () => Indexer.inst.sortTracks(reverse: !SettingsController.inst.tracksSortReversed.value),
                             ),
@@ -157,7 +155,7 @@ class SortByMenu extends StatelessWidget {
                         return CustomSortByExpansionTile(
                           title: Language.inst.SORT_ALBUMS_BY,
                           children: [
-                            ReverseOrderContainer(
+                            ListTileWithCheckMark(
                               active: SettingsController.inst.albumSortReversed.value,
                               onTap: () => Indexer.inst.sortAlbums(reverse: !SettingsController.inst.albumSortReversed.value),
                             ),
@@ -231,7 +229,7 @@ class SortByMenu extends StatelessWidget {
                         return CustomSortByExpansionTile(
                           title: Language.inst.SORT_ARTISTS_BY,
                           children: [
-                            ReverseOrderContainer(
+                            ListTileWithCheckMark(
                               active: SettingsController.inst.artistSortReversed.value,
                               onTap: () => Indexer.inst.sortArtists(reverse: !SettingsController.inst.artistSortReversed.value),
                             ),
@@ -310,7 +308,7 @@ class SortByMenu extends StatelessWidget {
                         return CustomSortByExpansionTile(
                           title: Language.inst.SORT_GENRES_BY,
                           children: [
-                            ReverseOrderContainer(
+                            ListTileWithCheckMark(
                               active: SettingsController.inst.genreSortReversed.value,
                               onTap: () => Indexer.inst.sortGenres(reverse: !SettingsController.inst.genreSortReversed.value),
                             ),
@@ -407,7 +405,7 @@ class SortByMenuTracks extends StatelessWidget {
                       return CustomSortByExpansionTile(
                         title: Language.inst.SORT_TRACKS_BY,
                         children: [
-                          ReverseOrderContainer(
+                          ListTileWithCheckMark(
                             active: SettingsController.inst.tracksSortReversed.value,
                             onTap: () => Indexer.inst.sortTracks(reverse: !SettingsController.inst.tracksSortReversed.value),
                           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
+
 import 'package:namida/controller/indexer_controller.dart';
 
 class IndexingPercentage extends StatelessWidget {

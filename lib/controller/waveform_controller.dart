@@ -14,36 +14,39 @@ class WaveformController extends GetxController {
   RxBool generatingAllWaveforms = false.obs;
 
   Future<void> generateWaveform(Track track) async {
-    final waveFile = File("$kWaveformDirPath${p.basename(track.path)}.wave");
-    List<double> waveform = kDefaultWaveFormData;
-    if (await waveFile.exists()) {
+    final wavePath = "$kWaveformDirPath${p.basename(track.path)}.wave";
+    final waveFile = File(wavePath);
+    final waveFileStat = await waveFile.stat();
+    // List<double> waveform = kDefaultWaveFormData;
+    if (await waveFile.exists() && waveFileStat.size != 0) {
       try {
-        // A Delay to prevent glitches caused by theme change
-        // Future.delayed(const Duration(milliseconds: 2300), () async {
         String content = await waveFile.readAsString();
-        waveform.assignAll(List<double>.from(json.decode(content)));
-        // });
+        final waveform = List<double>.from(json.decode(content));
+
+        // A Delay to prevent glitches caused by theme change
+        Future.delayed(const Duration(milliseconds: 300), () async {
+          curentWaveform.assignAll(waveform);
+        });
       } catch (e) {
         printInfo(info: e.toString());
         await waveFile.delete();
         await generateWaveform(track);
       }
     } else {
-      waveform.assignAll(kDefaultWaveFormData);
+      /// A Delay to prevent glitches caused by theme change
+      Future.delayed(const Duration(milliseconds: 300), () async {
+        curentWaveform.assignAll(kDefaultWaveFormData);
+      });
+
       await waveFile.create();
 
       // creates a new instance to prevent extracting from the same file.
       // currently this won't be performant when the user plays multiple files at once
       final waveformData = await PlayerController().extractWaveformData(path: track.path, noOfSamples: 500);
 
-      waveform.assignAll(waveformData);
+      curentWaveform.assignAll(waveformData);
       await waveFile.writeAsString(waveformData.toString());
     }
-
-    // A Delay to prevent glitches caused by theme change
-    Future.delayed(const Duration(milliseconds: 300), () async {
-      curentWaveform.assignAll(waveform);
-    });
 
     Indexer.inst.waveformsInStorage.value = Directory(kWaveformDirPath).listSync();
   }

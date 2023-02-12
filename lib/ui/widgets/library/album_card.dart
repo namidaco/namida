@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:on_audio_query/on_audio_query.dart';
+
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/functions/functions.dart';
-import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 
@@ -20,8 +17,6 @@ class AlbumCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // margin: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 8.0),
-
       width: Get.width / 2,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
