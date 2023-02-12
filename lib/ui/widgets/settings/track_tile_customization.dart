@@ -1,0 +1,702 @@
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/translations/strings.dart';
+import 'package:namida/ui/widgets/artwork.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/setting_dialog.dart';
+import 'package:namida/ui/widgets/settings/filter_sort_menu.dart';
+
+class TrackTileCustomization extends StatelessWidget {
+  final Color? currentTrackColor;
+  TrackTileCustomization({super.key, this.currentTrackColor});
+
+  final SettingsController stg = SettingsController.inst;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () => ExpansionTile(
+        leading: Stack(
+          children: [
+            Icon(
+              Broken.brush,
+              color: currentTrackColor,
+            ),
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Container(
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), boxShadow: [BoxShadow(color: context.theme.colorScheme.background, spreadRadius: 1)]),
+                child: Icon(
+                  Broken.music_circle,
+                  size: 14,
+                  color: currentTrackColor,
+                ),
+              ),
+            )
+          ],
+        ),
+        title: Text(
+          Language.inst.TRACK_TILE_CUSTOMIZATION,
+          style: Get.textTheme.displayMedium,
+        ),
+        trailing: const Icon(
+          Broken.arrow_down_2,
+        ),
+        children: [
+          CustomSwitchListTile(
+            icon: Broken.crop,
+            title: Language.inst.FORCE_SQUARED_TRACK_THUMBNAIL,
+            onChanged: (value) => stg.save(forceSquaredTrackThumbnail: !value),
+            value: stg.forceSquaredTrackThumbnail.value,
+          ),
+          CustomListTile(
+            icon: Broken.maximize_3,
+            title: Language.inst.TRACK_THUMBNAIL_SIZE_IN_LIST,
+            trailing: Text(
+              "${stg.trackThumbnailSizeinList.toInt()}",
+              style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
+            ),
+            onTap: () {
+              showSettingDialogWithTextField(title: Language.inst.TRACK_THUMBNAIL_SIZE_IN_LIST, trackThumbnailSizeinList: true);
+            },
+          ),
+          CustomListTile(
+            icon: Broken.pharagraphspacing,
+            title: Language.inst.HEIGHT_OF_TRACK_TILE,
+            trailing: Text(
+              "${stg.trackListTileHeight.toInt()}",
+              style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
+            ),
+            onTap: () {
+              showSettingDialogWithTextField(title: Language.inst.HEIGHT_OF_TRACK_TILE, trackListTileHeight: true);
+            },
+          ),
+          // CustomListTile(
+          //   title: "firstrowi1",
+          //   onTap: () => SettingsController.inst.updateTrackItemList(TrackTilePosition.row1Item1, TrackTileItem.artists),
+          // ),
+
+          CustomSwitchListTile(
+            icon: Broken.chart_1,
+            rotateIcon: 1,
+            title: Language.inst.DISPLAY_THIRD_ROW_IN_TRACK_TILE,
+            onChanged: (_) => stg.save(
+              displayThirdRow: !stg.displayThirdRow.value,
+            ),
+            value: stg.displayThirdRow.value,
+          ),
+          CustomSwitchListTile(
+            icon: Broken.coin,
+            rotateIcon: 3,
+            title: Language.inst.DISPLAY_THIRD_ITEM_IN_ROW_IN_TRACK_TILE,
+            onChanged: (_) => stg.save(
+              displayThirdItemInEachRow: !stg.displayThirdItemInEachRow.value,
+            ),
+            value: stg.displayThirdItemInEachRow.value,
+          ),
+          CustomListTile(
+            icon: Broken.minus_square,
+            title: Language.inst.TRACK_TILE_ITEMS_SEPARATOR,
+            onTap: () => showSettingDialogWithTextField(
+              title: Language.inst.TRACK_TILE_ITEMS_SEPARATOR,
+              trackTileSeparator: true,
+            ),
+            trailing: Text(
+              stg.trackTileSeparator.value,
+              style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
+            ),
+          ),
+          Container(
+            color: context.theme.cardTheme.color,
+            width: MediaQuery.of(context).size.width,
+            height: stg.trackListTileHeight * 1.4,
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(vertical: 7.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                const SizedBox(
+                  width: 12.0,
+                ),
+                Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 0.0,
+                  ),
+                  width: SettingsController.inst.trackThumbnailSizeinList.value,
+                  height: SettingsController.inst.trackThumbnailSizeinList.value,
+                  child: ArtworkWidget(
+                    thumnailSize: SettingsController.inst.trackThumbnailSizeinList.value,
+                    track: Indexer.inst.tracksInfoList.first,
+                    // size: (stg.trackThumbnailSizeinList.value * 2).round(),
+                    forceSquared: stg.forceSquaredTrackThumbnail.value,
+                  ),
+                ),
+                const SizedBox(
+                  width: 12.0,
+                ),
+
+                /// Main Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FittedBox(
+                        child: Row(
+                          children: [
+                            TrackItemSmallBox(
+                              text: SettingsController.inst.row1Item1.value.label,
+                              onTap: () => _showTrackItemsDialog(TrackTilePosition.row1Item1, SettingsController.inst.row1Item1),
+                            ),
+                            const SizedBox(
+                              width: 6.0,
+                            ),
+                            TrackItemSmallBox(
+                              text: SettingsController.inst.row1Item2.value.label,
+                              onTap: () => _showTrackItemsDialog(TrackTilePosition.row1Item2, SettingsController.inst.row1Item2),
+                            ),
+                            const SizedBox(
+                              width: 6.0,
+                            ),
+                            if (SettingsController.inst.displayThirdItemInEachRow.value)
+                              TrackItemSmallBox(
+                                text: SettingsController.inst.row1Item3.value.label,
+                                onTap: () => _showTrackItemsDialog(TrackTilePosition.row1Item3, SettingsController.inst.row1Item3),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 4.0,
+                      ),
+                      FittedBox(
+                        child: Row(
+                          children: [
+                            TrackItemSmallBox(
+                              text: SettingsController.inst.row2Item1.value.label,
+                              onTap: () => _showTrackItemsDialog(TrackTilePosition.row2Item1, SettingsController.inst.row2Item1),
+                            ),
+                            const SizedBox(
+                              width: 6.0,
+                            ),
+                            TrackItemSmallBox(
+                              text: SettingsController.inst.row2Item2.value.label,
+                              onTap: () => _showTrackItemsDialog(TrackTilePosition.row2Item2, SettingsController.inst.row2Item2),
+                            ),
+                            const SizedBox(
+                              width: 6.0,
+                            ),
+                            if (SettingsController.inst.displayThirdItemInEachRow.value)
+                              TrackItemSmallBox(
+                                text: SettingsController.inst.row2Item3.value.label,
+                                onTap: () => _showTrackItemsDialog(TrackTilePosition.row2Item3, SettingsController.inst.row2Item3),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 4.0,
+                      ),
+                      if (SettingsController.inst.displayThirdRow.value)
+                        FittedBox(
+                          child: Row(
+                            children: [
+                              TrackItemSmallBox(
+                                text: SettingsController.inst.row3Item1.value.label,
+                                onTap: () => _showTrackItemsDialog(TrackTilePosition.row3Item1, SettingsController.inst.row3Item1),
+                              ),
+                              const SizedBox(
+                                width: 6.0,
+                              ),
+                              TrackItemSmallBox(
+                                text: SettingsController.inst.row3Item2.value.label,
+                                onTap: () => _showTrackItemsDialog(TrackTilePosition.row3Item2, SettingsController.inst.row3Item2),
+                              ),
+                              const SizedBox(
+                                width: 6.0,
+                              ),
+                              if (SettingsController.inst.displayThirdItemInEachRow.value)
+                                TrackItemSmallBox(
+                                  text: SettingsController.inst.row3Item3.value.label,
+                                  onTap: () => _showTrackItemsDialog(TrackTilePosition.row3Item3, SettingsController.inst.row3Item3),
+                                ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6.0),
+
+                /// Right Items
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TrackItemSmallBox(
+                      text: SettingsController.inst.rightItem1.value.label,
+                      onTap: () => _showTrackItemsDialog(TrackTilePosition.rightItem1, SettingsController.inst.rightItem1),
+                    ),
+                    const SizedBox(
+                      height: 6.0,
+                    ),
+                    TrackItemSmallBox(
+                      text: SettingsController.inst.rightItem2.value.label,
+                      onTap: () => _showTrackItemsDialog(TrackTilePosition.rightItem2, SettingsController.inst.rightItem2),
+                    ),
+                    const SizedBox(
+                      height: 6.0,
+                    ),
+                    // if (SettingsController.inst.displayThirdItemInEachRow.value)
+                    //   TrackItemSmallBox(
+                    //     text: SettingsController.inst.rightItem3.value.label,
+                    //     onTap: () => _showTrackItemsDialog(TrackTilePosition.rightItem3, SettingsController.inst.rightItem3),
+                    //   ),
+                  ],
+                ),
+                const SizedBox(width: 6.0),
+                SizedBox(
+                  width: 26.0,
+                  child: IconButton(
+                    onPressed: null,
+                    icon: RotatedBox(
+                      quarterTurns: 1,
+                      child: Icon(
+                        Broken.more,
+                        color: context.theme.iconTheme.color,
+                      ),
+                    ),
+                    iconSize: 22.0,
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  _showTrackItemsDialog(TrackTilePosition p, Rx<TrackTileItem> rowItemInSettingpre) async {
+    await Get.dialog(
+      transitionDuration: const Duration(milliseconds: 500),
+      Obx(
+        () {
+          final rowItemInSetting = rowItemInSettingpre.value;
+          return BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            child: Dialog(
+              clipBehavior: Clip.antiAlias,
+              insetPadding: const EdgeInsets.all(64.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 8.0),
+                    SmallListTile(
+                      title: Language.inst.NONE,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.none);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.none,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.TITLE,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.title);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.title,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.ARTISTS,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.artists);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.artists,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.ALBUM,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.album);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.album,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.ALBUM_ARTIST,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.albumArtist);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.albumArtist,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.GENRES,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.genres);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.genres,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.COMPOSER,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.composer);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.composer,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.YEAR,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.year);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.year,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.BITRATE,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.bitrate);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.bitrate,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.CHANNELS,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.channels);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.channels,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.COMMENT,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.comment);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.comment,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.DATE_ADDED,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.dateAdded);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.dateAdded,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.DATE_MODIFIED,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.dateModified);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.dateModified,
+                    ),
+                    SmallListTile(
+                      title: "${Language.inst.DATE_MODIFIED} (${Language.inst.CLOCK})",
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.dateModifiedClock);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.dateModifiedClock,
+                    ),
+                    SmallListTile(
+                      title: "${Language.inst.DATE_MODIFIED} (${Language.inst.DATE})",
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.dateModifiedDate);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.dateModifiedDate,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.DISC_NUMBER,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.discNumber);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.discNumber,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.TRACK_NUMBER,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.trackNumber);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.trackNumber,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.DURATION,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.duration);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.duration,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.FILE_NAME,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.fileName);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.fileName,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.FILE_NAME_WO_EXT,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.fileNameWOExt);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.fileNameWOExt,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.EXTENSION,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.extension);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.extension,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.FOLDER_NAME,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.folder);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.folder,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.FORMAT,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.format);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.format,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.PATH,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.path);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.path,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.SAMPLE_RATE,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.sampleRate);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.sampleRate,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.SIZE,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.size);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.size,
+                    ),
+                    SmallListTile(
+                      title: Language.inst.YEAR,
+                      onTap: () {
+                        SettingsController.inst.updateTrackItemList(p, TrackTileItem.year);
+                        Get.close(1);
+                      },
+                      active: rowItemInSetting == TrackTileItem.year,
+                    ),
+                    const SizedBox(height: 8.0),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class TrackItemSmallBox extends StatelessWidget {
+  final void Function()? onTap;
+  final Widget? child;
+  final String? text;
+  const TrackItemSmallBox({super.key, this.onTap, this.child, this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: context.theme.colorScheme.background.withAlpha(160),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0.multipliedRadius)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+          child: text != null
+              ? Text(
+                  text!,
+                  style: context.theme.textTheme.displaySmall,
+                )
+              : child,
+        ),
+      ),
+    );
+  }
+}
+
+class ListTileAlertDialogueWithRadioList extends StatefulWidget {
+  final BuildContext context;
+  final String valueToBeChanged;
+  final Function(String?)? functionToSaveTheValue;
+  const ListTileAlertDialogueWithRadioList({
+    super.key,
+    required this.context,
+    required this.valueToBeChanged,
+    required this.functionToSaveTheValue,
+  });
+
+  @override
+  State<ListTileAlertDialogueWithRadioList> createState() => _ListTileAlertDialogueWithRadioListState();
+}
+
+class _ListTileAlertDialogueWithRadioListState extends State<ListTileAlertDialogueWithRadioList> {
+  @override
+  Widget build(BuildContext context) {
+    ScrollController _scrollController = ScrollController();
+    return ListTile(
+      onTap: () async {
+        await showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12.0.multipliedRadius))),
+              content: SingleChildScrollView(
+                controller: _scrollController,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: kDefaultTrackTileInfoChoose.entries
+                          .map(
+                            (e) => RadioListTile<String>(
+                              activeColor: context.theme.colorScheme.secondary,
+                              groupValue: widget.valueToBeChanged,
+                              value: e.key,
+                              onChanged: widget.functionToSaveTheValue,
+                              title: Text(
+                                '${e.value}',
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+      leading: Text(
+        Language.inst.DATE_TIME_FORMAT,
+        style: Get.textTheme.displayMedium?.copyWith(color: context.theme.brightness == Brightness.dark ? Colors.white : Colors.black),
+      ),
+      // trailing: Text(
+      //   "${stg.trackTileFirstRowFirstItem}",
+      //    style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
+      // ),
+    );
+  }
+}
+
+class AlertDialogueWithRadioList extends StatefulWidget {
+  final BuildContext context;
+  final String valueToBeChanged;
+  final Function(String?)? functionToSaveTheValue;
+  const AlertDialogueWithRadioList({
+    super.key,
+    required this.context,
+    required this.valueToBeChanged,
+    required this.functionToSaveTheValue,
+  });
+
+  @override
+  State<AlertDialogueWithRadioList> createState() => _AlertDialogueWithRadioListState();
+}
+
+class _AlertDialogueWithRadioListState extends State<AlertDialogueWithRadioList> {
+  @override
+  Widget build(BuildContext context) {
+    ScrollController _scrollController = ScrollController();
+    return AlertDialog(
+      contentPadding: const EdgeInsets.all(0),
+      insetPadding: const EdgeInsets.all(50),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12.0.multipliedRadius))),
+      content: SingleChildScrollView(
+        controller: _scrollController,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: kDefaultTrackTileInfoChoose.entries
+                  .map(
+                    (e) => RadioListTile<String>(
+                      activeColor: context.theme.colorScheme.secondary,
+                      groupValue: widget.valueToBeChanged,
+                      value: e.key,
+                      onChanged: widget.functionToSaveTheValue,
+                      title: Text(
+                        '${e.value}',
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+const kDefaultTrackTileInfoChoose = {
+  'none': 'None',
+  'trackName': 'Track Name',
+  'artistNames': 'Artist Names',
+  'albumName': 'Album Name',
+  'albumArtistName': 'Album Artist Name',
+  'genre': 'Genre',
+  'duration': 'Duration',
+  'year': 'Year',
+  'trackNumber': 'Track Number',
+  'discNumber': 'Disk Number',
+  'filenamenoext': 'File Name Without Extension',
+  'extension': 'Extension',
+  'filename': 'File Name',
+  'folder': 'Folder Name',
+  'uri': 'File Full Path',
+  'bitrate': 'Bitrate',
+  'timeAddedDate': 'Time Added in Date',
+  'timeAddedClock': 'Time Added in Hour',
+  'timeAdded': 'Time Added (Date, Hour)',
+};
