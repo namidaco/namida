@@ -1,6 +1,6 @@
-# namida
+# Namida
 
-A new Flutter project.
+A Beautiful and Feature-rich Music Player Built in Flutter
 
 ## Getting Started
 
