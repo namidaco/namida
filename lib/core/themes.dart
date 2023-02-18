@@ -39,7 +39,7 @@ class AppThemes extends GetxController {
       splashColor: Colors.transparent,
       splashFactory: InkRipple.splashFactory,
       highlightColor: Colors.white.withAlpha(10),
-      disabledColor: const Color.fromARGB(200, 60, 60, 60),
+      disabledColor: light ? const Color.fromARGB(0, 160, 160, 160) : const Color.fromARGB(200, 60, 60, 60),
       appBarTheme: AppBarTheme(
         backgroundColor: light
             ? Color.alphaBlend(
@@ -89,7 +89,7 @@ class AppThemes extends GetxController {
           ],
         ),
         textStyle: TextStyle(
-          color: light ? const Color.fromARGB(200, 55, 55, 55) : const Color.fromARGB(255, 228, 228, 228),
+          color: light ? const Color.fromARGB(244, 55, 55, 55) : const Color.fromARGB(255, 228, 228, 228),
         ),
         waitDuration: const Duration(seconds: 1),
       ),

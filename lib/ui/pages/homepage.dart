@@ -1,7 +1,13 @@
 // ignore_for_file: no_leading_underscores_for_local_identifiers, prefer_const_constructors
 
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:namida/class/playlist.dart';
+import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/ui/pages/playlists_page.dart';
 import 'package:namida/ui/widgets/settings/filter_sort_menu.dart';
 import 'package:searchbar_animation/searchbar_animation.dart';
 
@@ -45,11 +51,9 @@ class HomePage extends StatelessWidget {
             enableKeyboardFocus: true,
             isOriginalAnimation: false,
             onPressButton: (isOpen) {
-              // setState(() {
-              //   showSearchCard = isOpen;
-              //   searchTextEditingController.clear();
-              //   query.value = '';
-              // });
+              ScrollSearchController.inst.isGlobalSearchMenuShown.value = isOpen;
+              Indexer.inst.globalSearchController.value.clear();
+              Indexer.inst.searchAll('');
             },
             onChanged: (value) {
               Indexer.inst.searchAll(value);
@@ -86,6 +90,22 @@ class HomePage extends StatelessWidget {
             ),
           ),
           actions: [
+            IconButton(
+              constraints: BoxConstraints(maxWidth: 60, minWidth: 56.0),
+              onPressed: () => PlaylistController.inst.addNewPlaylist(
+                'Auto Generated ${PlaylistController.inst.playlistList.length + 1}',
+                tracks: [
+                  Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)],
+                  Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)],
+                  Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)],
+                  Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)],
+                  Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)],
+                  Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)],
+                  Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)],
+                ],
+              ),
+              icon: const Icon(Broken.add),
+            ),
             FilterSortByMenu(),
             IconButton(
               constraints: BoxConstraints(maxWidth: 60, minWidth: 56.0),
@@ -114,6 +134,9 @@ class HomePage extends StatelessWidget {
                 ),
                 KeepAliveWrapper(
                   child: GenresPage(),
+                ),
+                KeepAliveWrapper(
+                  child: PlaylistsPage(),
                 ),
                 KeepAliveWrapper(
                   child: folderChild ?? FoldersPage(),
@@ -145,6 +168,24 @@ class HomePage extends StatelessWidget {
                 // boxMaxWidth: Get.size.width - 66.0,
                 padding: EdgeInsets.all(14), heightMultiplier: 1.2,
                 boxMaxHeight: 65,
+              ),
+            ),
+            Positioned.fill(
+              child: AnimatedSwitcher(
+                duration: Duration(milliseconds: 400),
+                child: ScrollSearchController.inst.isGlobalSearchMenuShown.value
+                    ? Container(
+                        color: Colors.brown,
+                        child: ListView(
+                          children: [
+                            Text(Indexer.inst.trackSearchList.length.toString()),
+                            Text(Indexer.inst.albumSearchList.length.toString()),
+                            Text(Indexer.inst.artistSearchList.length.toString()),
+                            Text(Indexer.inst.genreSearchList.length.toString()),
+                          ],
+                        ),
+                      )
+                    : null,
               ),
             ),
           ],
@@ -196,6 +237,10 @@ class HomePage extends StatelessWidget {
             ),
             NavigationDestination(
               icon: Icon(Broken.smileys),
+              label: Language.inst.GENRES,
+            ),
+            NavigationDestination(
+              icon: Icon(Broken.music_library_2),
               label: Language.inst.GENRES,
             ),
             NavigationDestination(

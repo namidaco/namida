@@ -3,7 +3,9 @@ import 'dart:io';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:get/get.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:path/path.dart' as p;
 
@@ -38,13 +40,16 @@ class WaveformController extends GetxController {
         curentWaveform.assignAll(kDefaultWaveFormData);
       });
 
-      await waveFile.create();
+      // no await since extraction process will take time anyway, hope this doesnt make problems
+      waveFile.create();
 
       // creates a new instance to prevent extracting from the same file.
       // currently this won't be performant when the user plays multiple files at once
       final waveformData = await PlayerController().extractWaveformData(path: track.path, noOfSamples: 500);
 
-      curentWaveform.assignAll(waveformData);
+      if (track == Player.inst.nowPlayingTrack.value) {
+        curentWaveform.assignAll(waveformData);
+      }
       await waveFile.writeAsString(waveformData.toString());
     }
 

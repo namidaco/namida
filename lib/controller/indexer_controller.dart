@@ -8,6 +8,7 @@ import 'package:on_audio_edit/on_audio_edit.dart' as audioedit;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart' as p;
 
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -21,12 +22,14 @@ class Indexer extends GetxController {
   RxInt allTracksPaths = 0.obs;
   RxList<FileSystemEntity> tracksFileSystemEntity = <FileSystemEntity>[].obs;
   RxInt filteredForSizeDurationTracks = 0.obs;
+  RxInt duplicatedTracksLength = 0.obs;
   Set<String> filteredPathsToBeDeleted = {};
 
   RxList<FileSystemEntity> artworksInStorage = Directory(kArtworksDirPath).listSync().obs;
   RxList<FileSystemEntity> artworksCompInStorage = Directory(kArtworksCompDirPath).listSync().obs;
   RxList<FileSystemEntity> waveformsInStorage = Directory(kWaveformDirPath).listSync().obs;
 
+  Rx<TextEditingController> globalSearchController = TextEditingController().obs;
   Rx<TextEditingController> tracksSearchController = TextEditingController().obs;
   Rx<TextEditingController> albumsSearchController = TextEditingController().obs;
   Rx<TextEditingController> artistsSearchController = TextEditingController().obs;
@@ -45,22 +48,6 @@ class Indexer extends GetxController {
   RxMap<String, Set<Track>> genreSearchList = <String, Set<Track>>{}.obs;
   // RxMap<String, List<Track>> foldersSearchList = <String, List<Track>>{}.obs;
 
-//TODO DELETE
-  RxBool displayAlbumSearch = false.obs;
-  RxBool displayArtistSearch = false.obs;
-  RxBool displayGenreSearch = false.obs;
-
-  // Future<void> querySongs() async {
-  //   // List<SongModel> tracks = await _query.querySongs();
-  //   List<SongModel> tracks = await _query.querySongs();
-  //   List<SongModel> tracksExisting = <SongModel>[];
-  //   for (var p in tracks) {
-  //     if (await File(p.data).exists()) {
-  //       tracksExisting.add(p);
-  //     }
-  //   }
-  //   tracksList.assignAll(tracksExisting);
-  // }
   final OnAudioQuery _query = OnAudioQuery();
   final onAudioEdit = audioedit.OnAudioEdit();
 
@@ -173,6 +160,7 @@ class Indexer extends GetxController {
     List<SongModel> tracksOld = await _query.querySongs();
     print("AUDIO FILES LENGTH ${audioFiles.length}");
     filteredForSizeDurationTracks.value = 0;
+    duplicatedTracksLength.value = 0;
     final minDur = SettingsController.inst.indexMinDurationInSec.value; // Seconds
     final minSize = SettingsController.inst.indexMinFileSizeInB.value; // B
 
@@ -185,6 +173,7 @@ class Indexer extends GetxController {
 
           /// skip duplicated tracks according to filename
           if (SettingsController.inst.preventDuplicatedTracks.value && listOfCurrentFileNames.contains(p.basename(track))) {
+            duplicatedTracksLength.value++;
             continue;
           }
 
@@ -199,13 +188,11 @@ class Indexer extends GetxController {
           }
           final fileStat = await File(track).stat();
 
-          // breaks the loop early depending on size [mb] or duration [seconds]
-
+          // breaks the loop early depending on size [byte] or duration [seconds]
           if ((duration ?? 0) < minDur * 1000 || fileStat.size < minSize) {
             filteredForSizeDurationTracks++;
             filteredPathsToBeDeleted.add(track);
             deletedPaths.add(track);
-            print("HHHHHHHHHHHHHHHHHHHHHHHH");
             continue;
           }
 
@@ -352,12 +339,14 @@ class Indexer extends GetxController {
         if (!listOfCurrentFileNames.contains(tr.displayName)) {
           listOfTracksWithoutDuplicates.add(tr);
           listOfCurrentFileNames.add(tr.displayName);
+        } else {
+          duplicatedTracksLength.value++;
         }
       }
       tracksInfoList.assignAll(listOfTracksWithoutDuplicates);
     }
 
-    print("FINAL: ${tracksInfoList.length}");
+    printInfo(info: "FINAL: ${tracksInfoList.length}");
 
     tracksInfoList.map((track) => track.toJson()).toList();
     File(kTracksFilePath).writeAsStringSync(json.encode(tracksInfoList));
@@ -458,6 +447,7 @@ class Indexer extends GetxController {
 
   void searchTracks(String text) {
     if (text == '') {
+      tracksSearchController.value.clear();
       trackSearchList.assignAll(tracksInfoList);
       return;
     }
@@ -493,43 +483,45 @@ class Indexer extends GetxController {
 
   void searchAlbums(String text) {
     if (text == '') {
+      albumsSearchController.value.clear();
       albumSearchList.assignAll(albumsMap);
       return;
     }
-    albumSearchList.clear();
-    albumsMap.forEach((key, value) {
-      if (key.toLowerCase().contains(text.toLowerCase())) {
-        albumSearchList.addAll({key: value});
-      }
-    });
+    Map<String, Set<Track>> newMap = <String, Set<Track>>{};
+    for (var album in albumsMap.entries) {
+      newMap.addAllIf(album.key.toLowerCase().contains(text.toLowerCase()), {album.key: album.value});
+    }
+    albumSearchList.assignAll(newMap);
   }
 
   void searchArtists(String text) {
     if (text == '') {
+      artistsSearchController.value.clear();
       artistSearchList.assignAll(groupedArtistsMap);
       return;
     }
-    artistSearchList.clear();
-    groupedArtistsMap.forEach((key, value) {
-      if (key.toLowerCase().contains(text.toLowerCase())) {
-        artistSearchList.addAll({key: value});
-      }
-    });
+    Map<String, Set<Track>> newMap = <String, Set<Track>>{};
+    for (var artist in groupedArtistsMap.entries) {
+      newMap.addAllIf(artist.key.toLowerCase().contains(text.toLowerCase()), {artist.key: artist.value});
+    }
+    artistSearchList.assignAll(newMap);
   }
 
   void searchGenres(String text) {
     if (text == '') {
+      genresSearchController.value.clear();
       genreSearchList.assignAll(groupedGenresMap);
       return;
     }
-    genreSearchList.clear();
-    groupedGenresMap.forEach((key, value) {
-      if (key.toLowerCase().contains(text.toLowerCase())) {
-        genreSearchList.addAll({key: value});
-      }
-    });
+
+    Map<String, Set<Track>> newMap = <String, Set<Track>>{};
+    for (var genre in groupedGenresMap.entries) {
+      newMap.addAllIf(genre.key.toLowerCase().contains(text.toLowerCase()), {genre.key: genre.value});
+    }
+    genreSearchList.assignAll(newMap);
   }
 
+  /// Sorts Tracks and Saves automatically to settings
   void sortTracks({SortType? sortBy, bool? reverse}) {
     sortBy ??= SettingsController.inst.tracksSort.value;
     reverse ??= SettingsController.inst.tracksSortReversed.value;
@@ -591,6 +583,7 @@ class Indexer extends GetxController {
     searchTracks(tracksSearchController.value.text);
   }
 
+  /// Sorts Albums and Saves automatically to settings
   void sortAlbums({GroupSortType? sortBy, bool? reverse}) {
     sortBy ??= SettingsController.inst.albumSort.value;
     reverse ??= SettingsController.inst.albumSortReversed.value;
@@ -637,6 +630,7 @@ class Indexer extends GetxController {
     searchAlbums(albumsSearchController.value.text);
   }
 
+  /// Sorts Artists and Saves automatically to settings
   void sortArtists({GroupSortType? sortBy, bool? reverse}) {
     sortBy ??= SettingsController.inst.artistSort.value;
     reverse ??= SettingsController.inst.artistSortReversed.value;
@@ -685,6 +679,7 @@ class Indexer extends GetxController {
     searchArtists(artistsSearchController.value.text);
   }
 
+  /// Sorts Genres and Saves automatically to settings
   void sortGenres({GroupSortType? sortBy, bool? reverse}) {
     sortBy ??= SettingsController.inst.genreSort.value;
     reverse ??= SettingsController.inst.genreSortReversed.value;
@@ -743,6 +738,7 @@ class Indexer extends GetxController {
       var stat = file.statSync();
       totalSizeImage += stat.size;
     }
+
     return totalSizeImage;
   }
 
@@ -779,157 +775,3 @@ class Indexer extends GetxController {
     super.onClose();
   }
 }
-
-class Track {
-  late String title;
-  late List<String> artistsList;
-  late String album;
-  late String albumArtist;
-  late List<String> genresList;
-  late String composer;
-  late int track;
-  late int duration;
-  late int year;
-  late int size;
-  late int dateAdded;
-  late int dateModified;
-  late String path;
-  late String pathToImage;
-  late String pathToImageComp;
-  late String folderPath;
-  late String displayName;
-  late String displayNameWOExt;
-  late String fileExtension;
-  late String comment;
-  late int bitrate;
-  late int sampleRate;
-  late String format;
-  late String channels;
-  late int discNo;
-  late String language;
-  late String lyricist;
-  late String mood;
-  late String tags;
-
-  Track(
-    this.title,
-    this.artistsList,
-    this.album,
-    this.albumArtist,
-    this.genresList,
-    this.composer,
-    this.track,
-    this.duration,
-    this.year,
-    this.size,
-    this.dateAdded,
-    this.dateModified,
-    this.path,
-    this.pathToImage,
-    this.pathToImageComp,
-    this.folderPath,
-    this.displayName,
-    this.displayNameWOExt,
-    this.fileExtension,
-    this.comment,
-    this.bitrate,
-    this.sampleRate,
-    this.format,
-    this.channels,
-    this.discNo,
-    this.language,
-    this.lyricist,
-    this.mood,
-    this.tags,
-  );
-
-  Track.fromJson(Map<String, dynamic> json) {
-    title = json['title'];
-    artistsList = json['artistsList'];
-    album = json['album'];
-    albumArtist = json['albumArtist'];
-    genresList = json['genresList'];
-    composer = json['composer'];
-    track = json['track'];
-    duration = json['duration'];
-    year = json['year'];
-    size = json['size'];
-    dateAdded = json['dateAdded'];
-    dateModified = json['dateModified'];
-    path = json['path'];
-    pathToImage = json['pathToImage'];
-    pathToImageComp = json['pathToImageComp'];
-    folderPath = json['folderPath'];
-    displayName = json['displayName'];
-    displayNameWOExt = json['displayNameWOExt'];
-    fileExtension = json['fileExtension'];
-    comment = json['comment'];
-    bitrate = json['bitrate'];
-    sampleRate = json['sampleRate'];
-    format = json['format'];
-    channels = json['channels'];
-    discNo = json['discNo'];
-    language = json['language'];
-    lyricist = json['lyricist'];
-    mood = json['mood'];
-    tags = json['tags'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-
-    data['title'] = title;
-    data['artistsList'] = artistsList;
-    data['album'] = album;
-    data['albumArtist'] = albumArtist;
-    data['genresList'] = genresList;
-    data['composer'] = composer;
-    data['track'] = track;
-    data['duration'] = duration;
-    data['year'] = year;
-    data['size'] = size;
-    data['dateAdded'] = dateAdded;
-    data['dateModified'] = dateModified;
-    data['path'] = path;
-    data['pathToImage'] = pathToImage;
-    data['pathToImageComp'] = pathToImageComp;
-    data['folderPath'] = folderPath;
-    data['displayName'] = displayName;
-    data['displayNameWOExt'] = displayNameWOExt;
-    data['fileExtension'] = fileExtension;
-    data['comment'] = comment;
-    data['bitrate'] = bitrate;
-    data['sampleRate'] = sampleRate;
-    data['format'] = format;
-    data['channels'] = channels;
-    data['discNo'] = discNo;
-    data['language'] = language;
-    data['lyricist'] = lyricist;
-    data['mood'] = mood;
-    data['tags'] = tags;
-
-    return data;
-  }
-}
-
-const List<String> kFileExtensions = [
-  '.aac',
-  '.ac3',
-  '.aiff',
-  '.amr',
-  '.ape',
-  '.au',
-  '.dts',
-  '.flac',
-  '.m4a',
-  '.m4b',
-  '.m4p',
-  '.mid',
-  '.mp3',
-  '.ogg',
-  '.opus',
-  '.ra',
-  '.tak',
-  '.wav',
-  '.wma',
-];

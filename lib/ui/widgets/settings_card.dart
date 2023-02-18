@@ -19,7 +19,7 @@ class SettingsCard extends StatelessWidget {
         color: context.theme.cardColor.withOpacity(0.6),
         borderRadius: BorderRadius.circular(20.0.multipliedRadius),
         boxShadow: [
-          BoxShadow(color: context.theme.shadowColor.withAlpha(100), spreadRadius: 1, blurRadius: 10, offset: const Offset(0, 2)),
+          BoxShadow(color: context.theme.shadowColor.withAlpha(60), spreadRadius: 1, blurRadius: 10, offset: const Offset(0, 2)),
         ],
       ),
       child: Column(

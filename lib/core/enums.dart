@@ -87,5 +87,6 @@ enum LibraryTab {
   albums,
   artists,
   genres,
+  playlists,
   folders,
 }

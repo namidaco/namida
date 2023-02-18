@@ -3,44 +3,78 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/artist_tile.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/settings/sort_by_button.dart';
 
 class ArtistsPage extends StatelessWidget {
   ArtistsPage({super.key});
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollSearchController.inst.artistScrollcontroller.value;
   @override
   Widget build(BuildContext context) {
     return CupertinoScrollbar(
       controller: _scrollController,
       child: AnimationLimiter(
         child: Obx(
-          () => ListView.builder(
-            controller: _scrollController,
-            itemCount: Indexer.inst.artistSearchList.length,
-            itemBuilder: (BuildContext context, int i) {
-              final artist = Indexer.inst.groupedArtistsMap.entries.toList()[i];
-              return AnimationConfiguration.staggeredList(
-                position: i,
-                duration: const Duration(milliseconds: 400),
-                child: SlideAnimation(
-                  verticalOffset: 25.0,
-                  child: FadeInAnimation(
-                    duration: const Duration(milliseconds: 400),
-                    child: ArtistTile(
-                      tracks: artist.value.toList(),
-                      name: artist.key,
-                    ),
+          () => Column(
+            children: [
+              ExpandableBox(
+                isBarVisible: ScrollSearchController.inst.isArtistBarVisible.value,
+                showSearchBox: ScrollSearchController.inst.showArtistSearchBox.value,
+                leftText: Indexer.inst.artistSearchList.length.displayArtistKeyword,
+                onFilterIconTap: () => ScrollSearchController.inst.switchArtistSearchBoxVisibilty(),
+                onCloseButtonPressed: () {
+                  ScrollSearchController.inst.clearArtistSearchTextField();
+                },
+                sortByMenuWidget: SortByMenu(
+                  title: SettingsController.inst.artistSort.value.toText,
+                  popupMenuChild: const SortByMenuArtists(),
+                  isCurrentlyReversed: SettingsController.inst.artistSortReversed.value,
+                  onReverseIconTap: () {
+                    Indexer.inst.sortArtists(reverse: !SettingsController.inst.artistSortReversed.value);
+                  },
+                ),
+                textField: CustomTextFiled(
+                  textFieldController: Indexer.inst.artistsSearchController.value,
+                  textFieldHintText: Language.inst.FILTER_ARTISTS,
+                  onTextFieldValueChanged: (value) => Indexer.inst.searchArtists(value),
+                ),
+              ),
+              Expanded(
+                child: Obx(
+                  () => ListView.builder(
+                    controller: _scrollController,
+                    itemCount: Indexer.inst.artistSearchList.length,
+                    itemBuilder: (BuildContext context, int i) {
+                      // final artist = Indexer.inst.artistSearchList.entries.toList()[i];
+                      return AnimationConfiguration.staggeredList(
+                        position: i,
+                        duration: const Duration(milliseconds: 400),
+                        child: SlideAnimation(
+                          verticalOffset: 25.0,
+                          child: FadeInAnimation(
+                            duration: const Duration(milliseconds: 400),
+                            child: ArtistTile(
+                              tracks: Indexer.inst.artistSearchList.entries.toList()[i].value.toList(),
+                              name: Indexer.inst.artistSearchList.entries.toList()[i].key,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              );
-            },
+              ),
+            ],
           ),
         ),
       ),
@@ -62,7 +96,7 @@ class ArtistTracksPage extends StatelessWidget {
           leading: IconButton(onPressed: () => Get.back(), icon: const Icon(Broken.arrow_left_2)),
           title: Text(
             artist[0].artistsList.toString(),
-            style: Theme.of(context).textTheme.displayLarge,
+            style: context.textTheme.displayLarge,
           ),
         ),
         body: ListView(
@@ -110,7 +144,7 @@ class ArtistTracksPage extends StatelessWidget {
                           padding: const EdgeInsets.only(left: 14.0),
                           child: Text(
                             artist[0].album,
-                            style: Theme.of(context).textTheme.displayLarge,
+                            style: context.textTheme.displayLarge,
                           ),
                         ),
                         const SizedBox(
@@ -122,7 +156,7 @@ class ArtistTracksPage extends StatelessWidget {
                             [artist.displayTrackKeyword, if (artist.isNotEmpty) artist.totalDurationFormatted].join(' - '),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                            style: Theme.of(context).textTheme.displayMedium?.copyWith(fontSize: 14),
+                            style: context.textTheme.displayMedium?.copyWith(fontSize: 14),
                           ),
                         ),
                         const SizedBox(

@@ -14,8 +14,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/setting_dialog.dart';
 
 class TrackTileCustomization extends StatelessWidget {
-  final Color? currentTrackColor;
-  TrackTileCustomization({super.key, this.currentTrackColor});
+  TrackTileCustomization({super.key});
 
   final SettingsController stg = SettingsController.inst;
 
@@ -23,25 +22,9 @@ class TrackTileCustomization extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () => ExpansionTile(
-        leading: Stack(
-          children: [
-            Icon(
-              Broken.brush,
-              color: currentTrackColor,
-            ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: Container(
-                decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), boxShadow: [BoxShadow(color: context.theme.colorScheme.background, spreadRadius: 1)]),
-                child: Icon(
-                  Broken.music_circle,
-                  size: 14,
-                  color: currentTrackColor,
-                ),
-              ),
-            )
-          ],
+        leading: StackedIcon(
+          baseIcon: Broken.brush,
+          secondaryIcon: Broken.music_circle,
         ),
         title: Text(
           Language.inst.TRACK_TILE_CUSTOMIZATION,

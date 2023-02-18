@@ -6,8 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:namida/class/playlist.dart';
+import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
@@ -46,10 +50,7 @@ void main() async {
   //     title: Language.inst.STORAGE_PERMISSION,
   //     bodyText: Language.inst.STORAGE_PERMISSION_SUBTITLE,
   //     actions: [
-  //       ElevatedButton(
-  //         onPressed: () => Get.close(1),
-  //         child: Text(Language.inst.CANCEL),
-  //       ),
+  // CancelButton(),
   //       ElevatedButton(
   //         onPressed: () async {
   //           await Permission.storage.request();
@@ -74,6 +75,8 @@ void main() async {
 
   Get.put(() => SettingsController());
   Get.put(() => SelectedTracksController());
+  Get.put(() => ScrollSearchController());
+  Get.put(() => CurrentColor());
 
   final tfe = await File(kTracksFilePath).exists() && await File(kTracksFilePath).stat().then((value) => value.size != 0);
   if (tfe) {
@@ -81,6 +84,7 @@ void main() async {
   } else {
     Indexer.inst.prepareTracksFile(tfe);
   }
+  await PlaylistController.inst.preparePlaylistFile();
 
   // await Player.inst.initializePlayer();
 
@@ -108,22 +112,9 @@ class MyApp extends StatelessWidget {
             textScaleFactor: SettingsController.inst.fontScaleFactor.value,
           ),
           child: WillPopScope(
-              onWillPop: () async => await Get.dialog(
-                    CustomBlurryDialog(
-                      bodyText: Language.inst.EXIT_APP_SUBTITLE,
-                      title: Language.inst.EXIT_APP,
-                      actions: [
-                        ElevatedButton(
-                          onPressed: () => Get.close(1),
-                          child: Text(Language.inst.CANCEL),
-                        ),
-                        ElevatedButton(
-                          onPressed: () => SystemNavigator.pop(),
-                          child: Text(Language.inst.EXIT),
-                        ),
-                      ],
-                    ),
-                  ),
+              onWillPop: () async {
+                return Future.value(false);
+              },
               child:
 
                   // return AnnotatedRegion<SystemUiOverlayStyle>(

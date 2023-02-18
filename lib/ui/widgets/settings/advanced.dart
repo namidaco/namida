@@ -37,10 +37,7 @@ class AdvancedSettings extends StatelessWidget {
                   normalTitleStyle: true,
                   bodyText: Language.inst.CLEAR_IMAGE_CACHE_WARNING,
                   actions: [
-                    ElevatedButton(
-                      onPressed: () => Get.close(1),
-                      child: Text(Language.inst.CANCEL),
-                    ),
+                    const CancelButton(),
                     ElevatedButton(
                       onPressed: () {
                         Indexer.inst.clearImageCache();
@@ -70,10 +67,7 @@ class AdvancedSettings extends StatelessWidget {
                   title: Language.inst.CLEAR_WAVEFORM_DATA,
                   bodyText: Language.inst.CLEAR_WAVEFORM_DATA_WARNING,
                   actions: [
-                    ElevatedButton(
-                      onPressed: () => Get.close(1),
-                      child: Text(Language.inst.CANCEL),
-                    ),
+                    const CancelButton(),
                     ElevatedButton(
                       onPressed: () {
                         Indexer.inst.clearWaveformData();

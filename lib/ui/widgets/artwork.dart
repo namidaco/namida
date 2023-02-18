@@ -4,29 +4,16 @@ import 'package:drop_shadow/drop_shadow.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 
 /// Always displays compressed image, if not [compressed] then it will add the full res image on top of it.
 class ArtworkWidget extends StatelessWidget {
-  const ArtworkWidget({
-    super.key,
-    required this.track,
-    this.compressed = true,
-    this.fadeMilliSeconds = 250,
-    required this.thumnailSize,
-    this.forceSquared = false,
-    this.child,
-    this.scale = 1.0,
-    this.borderRadius = 8.0,
-    this.blur = 1.5,
-    this.width,
-    this.height,
-    this.cacheHeight,
-  });
-
   final Track track;
   final bool compressed;
   final int fadeMilliSeconds;
@@ -39,11 +26,35 @@ class ArtworkWidget extends StatelessWidget {
   final double? width;
   final double? height;
   final int? cacheHeight;
-
+  final bool forceDummyArtwork;
+  final Color? bgcolor;
+  final double? iconSize;
+  final bool staggered;
+  final Positioned? onTopWidget;
+  const ArtworkWidget({
+    super.key,
+    required this.track,
+    this.compressed = true,
+    this.fadeMilliSeconds = 350,
+    required this.thumnailSize,
+    this.forceSquared = false,
+    this.child,
+    this.scale = 1.0,
+    this.borderRadius = 8.0,
+    this.blur = 1.5,
+    this.width,
+    this.height,
+    this.cacheHeight,
+    this.forceDummyArtwork = false,
+    this.bgcolor,
+    this.iconSize,
+    this.staggered = false,
+    this.onTopWidget,
+  });
   @override
   Widget build(BuildContext context) {
     final finalPath = compressed ? track.pathToImageComp : track.pathToImage;
-    final extImageChild = FileSystemEntity.typeSync(finalPath) != FileSystemEntityType.notFound
+    final extImageChild = FileSystemEntity.typeSync(finalPath) != FileSystemEntityType.notFound && !forceDummyArtwork
         ? Stack(
             children: [
               Image.file(
@@ -52,8 +63,8 @@ class ArtworkWidget extends StatelessWidget {
                 fit: BoxFit.cover,
                 cacheHeight: cacheHeight ?? 240,
                 filterQuality: FilterQuality.high,
-                width: forceSquared ? MediaQuery.of(context).size.width : null,
-                height: forceSquared ? MediaQuery.of(context).size.width : null,
+                width: forceSquared ? context.width : null,
+                height: forceSquared ? context.width : null,
                 frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
                   if (wasSynchronouslyLoaded) return child;
                   return AnimatedSwitcher(
@@ -70,9 +81,10 @@ class ArtworkWidget extends StatelessWidget {
                   clearMemoryCacheWhenDispose: true,
                   cacheWidth: 1080,
                   filterQuality: FilterQuality.high,
-                  width: forceSquared ? MediaQuery.of(context).size.width : null,
-                  height: forceSquared ? MediaQuery.of(context).size.width : null,
+                  width: forceSquared ? context.width : null,
+                  height: forceSquared ? context.width : null,
                 ),
+              if (onTopWidget != null) onTopWidget!,
             ],
           )
         : Container(
@@ -80,18 +92,21 @@ class ArtworkWidget extends StatelessWidget {
             height: height ?? thumnailSize,
             key: const ValueKey("empty"),
             decoration: BoxDecoration(
-              color: context.theme.colorScheme.background,
+              color: bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.colorScheme.background),
               borderRadius: BorderRadius.circular(borderRadius),
             ),
-            child: const Icon(Broken.musicnote),
+            child: Icon(
+              Broken.musicnote,
+              size: iconSize,
+            ),
           );
 
-    return SettingsController.inst.enableGlowEffect.value
+    return SettingsController.inst.enableGlowEffect.value && blur != 0.0
         ? SizedBox(
-            width: width ?? thumnailSize * scale,
-            height: height ?? thumnailSize * scale,
+            width: staggered ? null : width ?? thumnailSize * scale,
+            height: staggered ? null : height ?? thumnailSize * scale,
             child: Center(
-              child: SettingsController.inst.borderRadiusMultiplier.value == 0.0
+              child: SettingsController.inst.borderRadiusMultiplier.value == 0.0 || borderRadius == 0
                   ? DropShadow(
                       borderRadius: borderRadius.multipliedRadius,
                       blurRadius: blur,
@@ -112,8 +127,8 @@ class ArtworkWidget extends StatelessWidget {
             ),
           )
         : SizedBox(
-            width: thumnailSize * scale,
-            height: thumnailSize * scale,
+            width: staggered ? null : width ?? thumnailSize * scale,
+            height: staggered ? null : height ?? thumnailSize * scale,
             child: Center(
               child: SettingsController.inst.borderRadiusMultiplier.value == 0.0
                   ? child ?? extImageChild
@@ -125,126 +140,141 @@ class ArtworkWidget extends StatelessWidget {
           );
   }
 }
+// }
 
 class MultiArtworks extends StatelessWidget {
   final List<Track> tracks;
   final double thumbnailSize;
-  const MultiArtworks({super.key, required this.tracks, required this.thumbnailSize});
+  final Color? bgcolor;
+  final double? borderRadius;
+  const MultiArtworks({super.key, required this.tracks, required this.thumbnailSize, this.bgcolor, this.borderRadius});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: thumbnailSize,
       width: thumbnailSize,
-      child: tracks.length == 1
+      child: tracks.isEmpty
           ? ArtworkWidget(
               thumnailSize: thumbnailSize,
-              track: tracks.elementAt(0),
+              track: Indexer.inst.tracksInfoList.first,
               forceSquared: true,
-              blur: 0,
-              borderRadius: 0,
               cacheHeight: 480,
+              blur: 0,
+              forceDummyArtwork: true,
+              bgcolor: bgcolor,
+              borderRadius: borderRadius ?? 8.0,
+              iconSize: 28.0,
             )
-          : tracks.length == 2
-              ? Row(
-                  children: [
-                    ArtworkWidget(
-                      thumnailSize: thumbnailSize / 2,
-                      height: thumbnailSize,
-                      track: tracks.elementAt(0),
-                      forceSquared: true,
-                      blur: 0,
-                      borderRadius: 0,
-                      cacheHeight: 480,
-                    ),
-                    ArtworkWidget(
-                      thumnailSize: thumbnailSize / 2,
-                      height: thumbnailSize,
-                      track: tracks.elementAt(1),
-                      forceSquared: true,
-                      blur: 0,
-                      borderRadius: 0,
-                      cacheHeight: 480,
-                    ),
-                  ],
+          : tracks.length == 1
+              ? ArtworkWidget(
+                  thumnailSize: thumbnailSize,
+                  track: tracks.elementAt(0),
+                  forceSquared: true,
+                  blur: 0,
+                  borderRadius: 0,
+                  cacheHeight: 480,
                 )
-              : tracks.length == 3
+              : tracks.length == 2
                   ? Row(
                       children: [
-                        Column(
-                          children: [
-                            ArtworkWidget(
-                              thumnailSize: thumbnailSize / 2,
-                              track: tracks.elementAt(0),
-                              forceSquared: true,
-                              blur: 0,
-                              borderRadius: 0,
-                            ),
-                            ArtworkWidget(
-                              thumnailSize: thumbnailSize / 2,
-                              track: tracks.elementAt(1),
-                              forceSquared: true,
-                              blur: 0,
-                              borderRadius: 0,
-                            ),
-                          ],
+                        ArtworkWidget(
+                          thumnailSize: thumbnailSize / 2,
+                          height: thumbnailSize,
+                          track: tracks.elementAt(0),
+                          forceSquared: true,
+                          blur: 0,
+                          borderRadius: 0,
+                          cacheHeight: 480,
                         ),
-                        Column(
-                          children: [
-                            ArtworkWidget(
-                              thumnailSize: thumbnailSize / 2,
-                              track: tracks.elementAt(2),
-                              forceSquared: true,
-                              blur: 0,
-                              borderRadius: 0,
-                              height: thumbnailSize,
-                              cacheHeight: 480,
-                            ),
-                          ],
+                        ArtworkWidget(
+                          thumnailSize: thumbnailSize / 2,
+                          height: thumbnailSize,
+                          track: tracks.elementAt(1),
+                          forceSquared: true,
+                          blur: 0,
+                          borderRadius: 0,
+                          cacheHeight: 480,
                         ),
                       ],
                     )
-                  : Column(
-                      children: [
-                        Row(
+                  : tracks.length == 3
+                      ? Row(
                           children: [
-                            ArtworkWidget(
-                              thumnailSize: thumbnailSize / 2,
-                              track: tracks.elementAt(0),
-                              forceSquared: true,
-                              blur: 0,
-                              borderRadius: 0,
+                            Column(
+                              children: [
+                                ArtworkWidget(
+                                  thumnailSize: thumbnailSize / 2,
+                                  track: tracks.elementAt(0),
+                                  forceSquared: true,
+                                  blur: 0,
+                                  borderRadius: 0,
+                                ),
+                                ArtworkWidget(
+                                  thumnailSize: thumbnailSize / 2,
+                                  track: tracks.elementAt(1),
+                                  forceSquared: true,
+                                  blur: 0,
+                                  borderRadius: 0,
+                                ),
+                              ],
                             ),
-                            ArtworkWidget(
-                              thumnailSize: thumbnailSize / 2,
-                              track: tracks.elementAt(1),
-                              forceSquared: true,
-                              blur: 0,
-                              borderRadius: 0,
+                            Column(
+                              children: [
+                                ArtworkWidget(
+                                  thumnailSize: thumbnailSize / 2,
+                                  track: tracks.elementAt(2),
+                                  forceSquared: true,
+                                  blur: 0,
+                                  borderRadius: 0,
+                                  height: thumbnailSize,
+                                  cacheHeight: 480,
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            Row(
+                              children: [
+                                ArtworkWidget(
+                                  thumnailSize: thumbnailSize / 2,
+                                  track: tracks.elementAt(0),
+                                  forceSquared: true,
+                                  blur: 0,
+                                  borderRadius: 0,
+                                ),
+                                ArtworkWidget(
+                                  thumnailSize: thumbnailSize / 2,
+                                  track: tracks.elementAt(1),
+                                  forceSquared: true,
+                                  blur: 0,
+                                  borderRadius: 0,
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                ArtworkWidget(
+                                  thumnailSize: thumbnailSize / 2,
+                                  track: tracks.elementAt(2),
+                                  forceSquared: true,
+                                  blur: 0,
+                                  borderRadius: 0,
+                                ),
+                                ArtworkWidget(
+                                  thumnailSize: thumbnailSize / 2,
+                                  track: tracks.elementAt(3),
+                                  forceSquared: true,
+                                  blur: 0,
+                                  borderRadius: 0,
+                                  // width: 100,
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        Row(
-                          children: [
-                            ArtworkWidget(
-                              thumnailSize: thumbnailSize / 2,
-                              track: tracks.elementAt(2),
-                              forceSquared: true,
-                              blur: 0,
-                              borderRadius: 0,
-                            ),
-                            ArtworkWidget(
-                              thumnailSize: thumbnailSize / 2,
-                              track: tracks.elementAt(3),
-                              forceSquared: true,
-                              blur: 0,
-                              borderRadius: 0,
-                              // width: 100,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
     );
   }
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
@@ -12,6 +12,8 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/artwork.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/dialogs/track_popup_dialog.dart';
 
 class TrackTile extends StatelessWidget {
   final Track track;
@@ -81,7 +83,7 @@ class TrackTile extends StatelessWidget {
       () {
         double thumnailSize = SettingsController.inst.trackThumbnailSizeinList.value;
         double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
-        bool isTrackCurrentlyPlaying = CurrentColor.inst.currentPlayingTrack.value == track.path;
+        bool isTrackCurrentlyPlaying = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
         bool isTrackSelected = SelectedTracksController.inst.selectedTracks.contains(track);
         final textColor = isTrackCurrentlyPlaying ? Colors.white : null;
         return Container(
@@ -107,7 +109,6 @@ class TrackTile extends StatelessWidget {
                   print(track.path);
                 }
                 await WaveformController.inst.generateWaveform(track);
-                print(track.displayName);
               },
               child: Container(
                 alignment: Alignment.center,
@@ -130,7 +131,6 @@ class TrackTile extends StatelessWidget {
                             blur: 1.5,
                             thumnailSize: thumnailSize,
                             track: track,
-                            // size: (stg.trackThumbnailSizeinList.value * 2).round(),
                             forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
                           ),
                         ),
@@ -159,10 +159,10 @@ class TrackTile extends StatelessWidget {
                               joinTrackItems(SettingsController.inst.row1Item1.value, SettingsController.inst.row1Item2.value, SettingsController.inst.row1Item3.value),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
-                              style: Theme.of(context).textTheme.displayMedium!.copyWith(
-                                    // fontSize: Configuration.instance.trackListTileHeight * 0.2,
-                                    color: textColor?.withAlpha(170),
-                                  ),
+                              style: context.textTheme.displayMedium!.copyWith(
+                                // fontSize: Configuration.instance.trackListTileHeight * 0.2,
+                                color: textColor?.withAlpha(170),
+                              ),
                             ),
 
                           // check if second row isnt empty
@@ -237,22 +237,12 @@ class TrackTile extends StatelessWidget {
                         ),
                       ),
                     ],
-                    SizedBox(
-                      height: 36,
-                      width: 36,
-                      child: RotatedBox(
-                        quarterTurns: 1,
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          onPressed: () {},
-                          icon: Icon(
-                            Broken.more,
-                            size: 20,
-                            color: textColor?.withAlpha(160),
-                          ),
-                        ),
-                      ),
+                    const SizedBox(
+                      width: 2.0,
+                    ),
+                    MoreIcon(
+                      padding: 6.0,
+                      onPressed: () => showTrackDialog(track),
                     ),
                     const SizedBox(
                       width: 4.0,

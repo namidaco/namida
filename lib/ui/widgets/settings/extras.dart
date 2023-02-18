@@ -22,7 +22,7 @@ class ExtrasSettings extends StatelessWidget {
       child: Column(
         children: [
           CustomListTile(
-            icon: Broken.clock,
+            icon: Broken.filter_search,
             title: Language.inst.FILTER_TRACKS_BY,
             trailing: Obx(
               () => Text("${SettingsController.inst.trackSearchFilter.length}"),
@@ -134,17 +134,12 @@ class ExtrasSettings extends StatelessWidget {
           ),
           CustomListTile(
             icon: Broken.sound,
-            title: "Generate All Waveform data",
-            // trailing: Obx(() => Text("${WaveformController.inst.wavesInStorage.length}/${Indexer.inst.tracksInfoList.length}")),
+            title: Language.inst.GENERATE_ALL_WAVEFORM_DATA,
             trailing: Obx(
               () => Column(
                 children: [
                   Text("${Indexer.inst.waveformsInStorage.length}/${Indexer.inst.tracksInfoList.length}"),
                   if (WaveformController.inst.generatingAllWaveforms.value) const LoadingIndicator(),
-                  // LoadingAnimationWidget.prograssiveDots(
-                  //   color: Get.textTheme.displayMedium!.color!,
-                  //   size: 20,
-                  // ),
                 ],
               ),
             ),
@@ -152,19 +147,16 @@ class ExtrasSettings extends StatelessWidget {
               if (WaveformController.inst.generatingAllWaveforms.value) {
                 await Get.dialog(
                   CustomBlurryDialog(
-                    title: 'Note',
-                    bodyText: 'Force stop generating waveforms? you can still continue it later',
+                    title: Language.inst.NOTE,
+                    bodyText: Language.inst.FORCE_STOP_WAVEFORM_GENERATION,
                     actions: [
-                      ElevatedButton(
-                        onPressed: () => Get.close(1),
-                        child: Text(Language.inst.CANCEL),
-                      ),
+                      const CancelButton(),
                       ElevatedButton(
                         onPressed: () {
                           WaveformController.inst.generatingAllWaveforms.value = false;
                           Get.close(1);
                         },
-                        child: Text("STOP"),
+                        child: Text(Language.inst.STOP),
                       ),
                     ],
                   ),
@@ -172,19 +164,16 @@ class ExtrasSettings extends StatelessWidget {
               } else {
                 await Get.dialog(
                   CustomBlurryDialog(
-                    title: 'Note',
-                    bodyText: 'You currently have ${Indexer.inst.waveformsInStorage.length} waveforms generated out of ${Indexer.inst.tracksInfoList.length}.\n\nThis is a heavy process and generating for all tracks at once will takes quite a while, proceed?',
+                    title: Language.inst.NOTE,
+                    bodyText: Language.inst.GENERATE_ALL_WAVEFORM_DATA_SUBTITLE.replaceFirst('_WAVEFORM_CURRENT_LENGTH_', '${Indexer.inst.waveformsInStorage.length}').replaceFirst('_WAVEFORM_TOTAL_LENGTH_', '${Indexer.inst.tracksInfoList.length}'),
                     actions: [
-                      ElevatedButton(
-                        onPressed: () => Get.close(1),
-                        child: Text(Language.inst.CANCEL),
-                      ),
+                      const CancelButton(),
                       ElevatedButton(
                         onPressed: () {
                           WaveformController.inst.generateAllWaveforms();
                           Get.close(1);
                         },
-                        child: Text("GENERATE"),
+                        child: Text(Language.inst.GENERATE),
                       ),
                     ],
                   ),

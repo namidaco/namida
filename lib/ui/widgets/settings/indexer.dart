@@ -65,13 +65,22 @@ class IndexerSettings extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Obx(
                 () => Text(
+                  '${Language.inst.DUPLICATED_TRACKS}: ${Indexer.inst.duplicatedTracksLength.value}',
+                  style: Get.textTheme.displaySmall,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Obx(
+                () => Text(
                   '${Language.inst.FILTERED_BY_SIZE_AND_DURATION}: ${Indexer.inst.filteredForSizeDurationTracks.value}',
                   style: Get.textTheme.displaySmall,
                 ),
               ),
             ),
             CustomSwitchListTile(
-              icon: Broken.sun_1,
+              icon: Broken.copy,
               title: Language.inst.PREVENT_DUPLICATED_TRACKS,
               subtitle: "${Language.inst.PREVENT_DUPLICATED_TRACKS_SUBTITLE} ${Language.inst.INDEX_REFRESH_REQUIRED}",
               onChanged: (p0) {
@@ -113,7 +122,7 @@ class IndexerSettings extends StatelessWidget {
             ),
             Obx(
               () => CustomListTile(
-                icon: Broken.size,
+                icon: Broken.unlimited,
                 title: Language.inst.MIN_FILE_SIZE,
                 subtitle: Language.inst.INDEX_REFRESH_REQUIRED,
                 trailing: SizedBox(
@@ -190,11 +199,13 @@ class IndexerSettings extends StatelessWidget {
                     normalTitleStyle: true,
                     isWarning: true,
                     actions: [
-                      ElevatedButton(onPressed: () => Get.close(1), child: Text(Language.inst.CANCEL)),
+                      const CancelButton(),
                       ElevatedButton(
-                          onPressed: () {
-                            Indexer.inst.refreshLibraryAndCheckForDiff(forceReIndex: true);
+                          onPressed: () async {
                             Get.close(1);
+                            Future.delayed(const Duration(milliseconds: 500), () {
+                              Indexer.inst.refreshLibraryAndCheckForDiff(forceReIndex: true);
+                            });
                           },
                           child: Text(Language.inst.RE_INDEX)),
                     ],
@@ -223,8 +234,10 @@ class IndexerSettings extends StatelessWidget {
                         final path = await FilePicker.platform.getDirectoryPath();
                         if (path != null) {
                           SettingsController.inst.save(directoriesToScan: [path]);
+                          Indexer.inst.refreshLibraryAndCheckForDiff();
+                        } else {
+                          Get.snackbar(Language.inst.NOTE, Language.inst.NO_FOLDER_CHOSEN);
                         }
-                        Indexer.inst.refreshLibraryAndCheckForDiff();
                       },
                     ),
                     const SizedBox(width: 8.0),
@@ -254,7 +267,7 @@ class IndexerSettings extends StatelessWidget {
                                     title: Language.inst.WARNING,
                                     icon: Broken.warning_2,
                                     actions: [
-                                      ElevatedButton(onPressed: () => Get.close(1), child: Text(Language.inst.CANCEL)),
+                                      const CancelButton(),
                                       ElevatedButton(
                                           onPressed: () {
                                             SettingsController.inst.removeFromList(directoriesToScan1: e.value);
@@ -289,8 +302,10 @@ class IndexerSettings extends StatelessWidget {
                         final path = await FilePicker.platform.getDirectoryPath();
                         if (path != null) {
                           SettingsController.inst.save(directoriesToExclude: [path]);
+                          Indexer.inst.refreshLibraryAndCheckForDiff();
+                        } else {
+                          Get.snackbar(Language.inst.NOTE, Language.inst.NO_FOLDER_CHOSEN);
                         }
-                        Indexer.inst.refreshLibraryAndCheckForDiff();
                       },
                     ),
                     const SizedBox(width: 8.0),
@@ -337,12 +352,7 @@ class IndexerSettings extends StatelessWidget {
       CustomBlurryDialog(
         title: title,
         actions: [
-          ElevatedButton(
-            onPressed: () {
-              Get.close(1);
-            },
-            child: Text(Language.inst.CANCEL),
-          ),
+          const CancelButton(),
           ElevatedButton(
             onPressed: () {
               if (separatorsController.text.isNotEmpty) {

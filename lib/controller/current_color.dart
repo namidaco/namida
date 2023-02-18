@@ -2,9 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:palette_generator/palette_generator.dart';
 
-import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/constants.dart';
 
@@ -12,10 +13,14 @@ class CurrentColor extends GetxController {
   static CurrentColor inst = CurrentColor();
 
   Rx<Color> color = kMainColor.obs;
-  RxString currentPlayingTrack = ''.obs;
+  RxString currentPlayingTrackPath = ''.obs;
 
-  // CurrentColor() {}
-  setPlayerColor(Track track) async {
+  CurrentColor() {
+    Player.inst.nowPlayingTrack.listen((track) {
+      setPlayerColor(track);
+    });
+  }
+  Future<void> setPlayerColor(Track track) async {
     if (await File(track.pathToImageComp).exists()) {
       final result = await PaletteGenerator.fromImageProvider(FileImage(File(track.pathToImageComp)));
       final palette = result.colors.toList();
@@ -23,8 +28,8 @@ class CurrentColor extends GetxController {
       // color.value = result.darkMutedColor?.color ?? result.dominantColor?.color ?? Colors.red;
       // color.value = mixColors([result.mutedColor?.color ?? result.vibrantColor?.color ?? result.darkMutedColor?.color ?? result.darkMutedColor?.color ?? result.dominantColor?.color ?? Colors.red]);
       print(color);
-      Get.changeTheme(AppThemes().getAppTheme(color.value));
-      currentPlayingTrack.value = track.path;
+      Get.changeTheme(AppThemes.inst.getAppTheme(color.value));
+      currentPlayingTrackPath.value = track.path;
       update();
     } else {
       color.value = kMainColor;
@@ -47,25 +52,44 @@ Color getAlbumColorModifiedModern(List<Color>? value) {
   }
   HSLColor hslColor = HSLColor.fromColor(color);
   Color colorDelightened;
-//   if (hslColor.lightness > 0.65) {
-//   hslColor = hslColor.withLightness(0.45);
-//   colorDelightened = hslColor.toColor();
-// } else if (hslColor.lightness < 0.35) {
-//   hslColor = hslColor.withLightness(0.55);
-//   colorDelightened = hslColor.toColor();
-// } else {
-//   colorDelightened = color;
-// }
-
   if (hslColor.lightness > 0.65) {
-    hslColor = hslColor.withLightness(0.45);
+    hslColor = hslColor.withLightness(0.55);
     colorDelightened = hslColor.toColor();
   } else {
     colorDelightened = color;
   }
-  // colorDelightened = Color.alphaBlend(Colors.black.withAlpha(10), colorDelightened);
+  colorDelightened = Color.alphaBlend(Colors.white.withAlpha(20), colorDelightened);
   return colorDelightened;
 }
+
+// Color getAlbumColorModifiedModern(List<Color>? value) {
+//   final Color color;
+//   if ((value?.length ?? 0) > 9) {
+//     color = Color.alphaBlend(value?.first.withAlpha(140) ?? Colors.transparent, Color.alphaBlend(value?.elementAt(7).withAlpha(155) ?? Colors.transparent, value?.elementAt(9) ?? Colors.transparent));
+//   } else {
+//     color = Color.alphaBlend(value?.last.withAlpha(50) ?? Colors.transparent, value?.first ?? Colors.transparent);
+//   }
+//   HSLColor hslColor = HSLColor.fromColor(color);
+//   Color colorDelightened;
+// //   if (hslColor.lightness > 0.65) {
+// //   hslColor = hslColor.withLightness(0.45);
+// //   colorDelightened = hslColor.toColor();
+// // } else if (hslColor.lightness < 0.35) {
+// //   hslColor = hslColor.withLightness(0.55);
+// //   colorDelightened = hslColor.toColor();
+// // } else {
+// //   colorDelightened = color;
+// // }
+
+//   if (hslColor.lightness > 0.65) {
+//     hslColor = hslColor.withLightness(0.45);
+//     colorDelightened = hslColor.toColor();
+//   } else {
+//     colorDelightened = color;
+//   }
+//   // colorDelightened = Color.alphaBlend(Colors.black.withAlpha(10), colorDelightened);
+//   return colorDelightened;
+// }
 
 Color mixColors(List<Color> colors) {
   Color mixedColor = colors[0];

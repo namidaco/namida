@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class ArtistTile extends StatelessWidget {
   final List<Track> tracks;
@@ -113,21 +114,10 @@ class ArtistTile extends StatelessWidget {
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(
-                  height: 38.0,
-                  width: 38.0,
-                  child: RotatedBox(
-                    quarterTurns: 1,
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: BoxConstraints(),
-                      onPressed: () {},
-                      icon: const Icon(
-                        Broken.more,
-                        size: 20,
-                      ),
-                    ),
-                  ),
+                SizedBox(width: 4.0),
+                MoreIcon(
+                  onPressed: () => null,
+                  padding: 6.0,
                 ),
               ],
             ),

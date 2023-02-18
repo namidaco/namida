@@ -25,36 +25,42 @@ class CustomizationSettings extends StatelessWidget {
         child: Column(
           children: [
             CustomSwitchListTile(
-              leading: Stack(
-                children: [
-                  ShaderMask(
-                    shaderCallback: (rect) => LinearGradient(
-                      stops: const [0.3, 0.9],
-                      begin: Alignment.topLeft,
-                      colors: [
-                        context.theme.listTileTheme.iconColor!,
-                        context.theme.listTileTheme.iconColor!.withAlpha(10),
-                      ],
-                    ).createShader(rect),
-                    child: const Icon(
-                      Broken.play,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), boxShadow: [BoxShadow(color: context.theme.colorScheme.background, spreadRadius: 1)]),
-                      child: Icon(
-                        Broken.pause,
-                        size: 12,
-                        color: context.theme.listTileTheme.iconColor!,
-                      ),
-                    ),
-                  )
-                ],
+              leading: StackedIcon(
+                baseIcon: Broken.play,
+                secondaryIcon: Broken.pause,
+                baseIconColor: context.theme.listTileTheme.iconColor,
+                secondaryIconColor: context.theme.listTileTheme.iconColor,
               ),
+              // leading: Stack(
+              //   children: [
+              //     ShaderMask(
+              //       shaderCallback: (rect) => LinearGradient(
+              //         stops: const [0.3, 0.9],
+              //         begin: Alignment.topLeft,
+              //         colors: [
+              //           context.theme.listTileTheme.iconColor!,
+              //           context.theme.listTileTheme.iconColor!.withAlpha(10),
+              //         ],
+              //       ).createShader(rect),
+              //       child: const Icon(
+              //         Broken.play,
+              //         color: Colors.white,
+              //       ),
+              //     ),
+              //     Positioned(
+              //       bottom: 0,
+              //       right: 0,
+              //       child: Container(
+              //         decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), boxShadow: [BoxShadow(color: context.theme.colorScheme.background, spreadRadius: 1)]),
+              //         child: Icon(
+              //           Broken.pause,
+              //           size: 12,
+              //           color: context.theme.listTileTheme.iconColor!,
+              //         ),
+              //       ),
+              //     )
+              //   ],
+              // ),
               title: Language.inst.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE,
               onChanged: (value) {
                 SettingsController.inst.save(

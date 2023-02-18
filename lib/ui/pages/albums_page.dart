@@ -1,70 +1,166 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
+import 'package:namida/ui/widgets/expandable_box.dart';
+import 'package:namida/ui/widgets/library/album_card.dart';
 import 'package:namida/ui/widgets/library/album_tile.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/settings/sort_by_button.dart';
 
 class AlbumsPage extends StatelessWidget {
   final Map<String?, Set<Track>>? albums;
   AlbumsPage({super.key, this.albums});
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollSearchController.inst.albumScrollcontroller.value;
   @override
   Widget build(BuildContext context) {
+    // return MasonryGridView.builder(
+    //   padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+    //   shrinkWrap: true,
+    //   itemCount: albums?.length ?? Indexer.inst.albumSearchList.length,
+    //   mainAxisSpacing: 8.0,
+    //   crossAxisSpacing: 6.0,
+    //   gridDelegate: const SliverSimpleGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+    //   itemBuilder: (context, i) {
+    //     final album = (albums ?? Indexer.inst.albumSearchList).entries.toList()[i].value.toList();
+    //     return AlbumCard(album: album);
+    //   },
+    // );
+
     return CupertinoScrollbar(
       controller: _scrollController,
       child: AnimationLimiter(
         child: Obx(
-          () {
-            return SettingsController.inst.albumGridCount.value == 1
-                ? ListView.builder(
-                    controller: _scrollController,
-                    itemCount: albums?.length ?? Indexer.inst.albumSearchList.length,
-                    itemBuilder: (BuildContext context, int i) {
-                      return AnimationConfiguration.staggeredList(
-                        position: i,
-                        duration: const Duration(milliseconds: 400),
-                        child: SlideAnimation(
-                          verticalOffset: 25.0,
-                          child: FadeInAnimation(
-                            duration: const Duration(milliseconds: 400),
-                            child: AlbumTile(
-                              album: (albums ?? Indexer.inst.albumSearchList).entries.toList()[i].value.toList(),
+          () => Column(
+            children: [
+              ExpandableBox(
+                gridWidget: ChangeGridCountWidget(
+                  currentCount: SettingsController.inst.albumGridCount.value,
+                  forStaggered: SettingsController.inst.useAlbumStaggeredGridView.value,
+                  onTap: () {
+                    final n = SettingsController.inst.albumGridCount.value;
+                    if (n == 1) {
+                      SettingsController.inst.save(albumGridCount: 2);
+                    }
+                    if (n == 2) {
+                      SettingsController.inst.save(albumGridCount: 3);
+                    }
+                    if (n == 3) {
+                      SettingsController.inst.save(albumGridCount: 4);
+                    }
+                    if (n == 4) {
+                      SettingsController.inst.save(albumGridCount: 1);
+                    }
+                  },
+                ),
+                isBarVisible: ScrollSearchController.inst.isAlbumBarVisible.value,
+                showSearchBox: ScrollSearchController.inst.showAlbumSearchBox.value,
+                leftText: Indexer.inst.albumSearchList.length.displayAlbumKeyword,
+                onFilterIconTap: () => ScrollSearchController.inst.switchAlbumSearchBoxVisibilty(),
+                onCloseButtonPressed: () {
+                  ScrollSearchController.inst.clearAlbumSearchTextField();
+                },
+                sortByMenuWidget: SortByMenu(
+                  title: SettingsController.inst.albumSort.value.toText,
+                  popupMenuChild: const SortByMenuAlbums(),
+                  isCurrentlyReversed: SettingsController.inst.albumSortReversed.value,
+                  onReverseIconTap: () {
+                    Indexer.inst.sortAlbums(reverse: !SettingsController.inst.albumSortReversed.value);
+                  },
+                ),
+                textField: CustomTextFiled(
+                  textFieldController: Indexer.inst.albumsSearchController.value,
+                  textFieldHintText: Language.inst.FILTER_ALBUMS,
+                  onTextFieldValueChanged: (value) => Indexer.inst.searchAlbums(value),
+                ),
+              ),
+              Obx(
+                () {
+                  return SettingsController.inst.albumGridCount.value == 1
+                      ? Expanded(
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            itemCount: albums?.length ?? Indexer.inst.albumSearchList.length,
+                            itemBuilder: (BuildContext context, int i) {
+                              return AnimationConfiguration.staggeredList(
+                                position: i,
+                                duration: const Duration(milliseconds: 400),
+                                child: SlideAnimation(
+                                  verticalOffset: 25.0,
+                                  child: FadeInAnimation(
+                                    duration: const Duration(milliseconds: 400),
+                                    child: AlbumTile(
+                                      album: (albums ?? Indexer.inst.albumSearchList).entries.toList()[i].value.toList(),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                      : Expanded(
+                          child: MasonryGridView.builder(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            itemCount: albums?.length ?? Indexer.inst.albumSearchList.length,
+                            mainAxisSpacing: 8.0,
+                            crossAxisSpacing: 6.0,
+                            gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(crossAxisCount: SettingsController.inst.albumGridCount.value),
+                            itemBuilder: (context, i) {
+                              final album = (albums ?? Indexer.inst.albumSearchList).entries.toList()[i].value.toList();
+                              return AnimationConfiguration.staggeredList(
+                                position: i,
+                                duration: const Duration(milliseconds: 400),
+                                child: SlideAnimation(
+                                  verticalOffset: 25.0,
+                                  child: FadeInAnimation(
+                                    duration: const Duration(milliseconds: 400),
+                                    child: AlbumCard(album: album),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4),
+                      controller: _scrollController,
+                      itemCount: albums?.length ?? Indexer.inst.albumSearchList.length,
+                      // itemCount: 100,
+                      itemBuilder: (BuildContext context, int i) {
+                        return AnimationConfiguration.staggeredGrid(
+                          columnCount: Indexer.inst.albumSearchList.length,
+                          position: i,
+                          duration: const Duration(milliseconds: 400),
+                          child: SlideAnimation(
+                            verticalOffset: 25.0,
+                            child: FadeInAnimation(
+                              duration: const Duration(milliseconds: 400),
+                              child: AlbumCard(
+                                album: (albums ?? Indexer.inst.albumSearchList).entries.toList()[i].value.toList(),
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  )
-                : ListView.builder(
-                    controller: _scrollController,
-                    itemCount: albums?.length ?? Indexer.inst.albumSearchList.length,
-                    // itemCount: 100,
-                    itemBuilder: (BuildContext context, int i) {
-                      return AnimationConfiguration.staggeredGrid(
-                        columnCount: Indexer.inst.albumSearchList.length,
-                        position: i,
-                        duration: const Duration(milliseconds: 400),
-                        child: SlideAnimation(
-                          verticalOffset: 25.0,
-                          child: FadeInAnimation(
-                            duration: const Duration(milliseconds: 400),
-                            child: AlbumTile(
-                              album: (albums ?? Indexer.inst.albumSearchList).entries.toList()[i].value.toList(),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   );
-          },
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -84,7 +180,7 @@ class AlbumTracksPage extends StatelessWidget {
           leading: IconButton(onPressed: () => Get.back(), icon: const Icon(Broken.arrow_left_2)),
           title: Text(
             album[0].album,
-            style: Theme.of(context).textTheme.displayLarge,
+            style: context.textTheme.displayLarge,
           ),
         ),
         body: ListView(
@@ -133,7 +229,7 @@ class AlbumTracksPage extends StatelessWidget {
                           padding: const EdgeInsets.only(left: 14.0),
                           child: Text(
                             album[0].album,
-                            style: Theme.of(context).textTheme.displayLarge,
+                            style: context.textTheme.displayLarge,
                           ),
                         ),
                         const SizedBox(
@@ -145,7 +241,7 @@ class AlbumTracksPage extends StatelessWidget {
                             [album.displayTrackKeyword, if (album.isNotEmpty) album.totalDurationFormatted].join(' - '),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                            style: Theme.of(context).textTheme.displayMedium?.copyWith(fontSize: 14),
+                            style: context.textTheme.displayMedium?.copyWith(fontSize: 14),
                           ),
                         ),
                         const SizedBox(

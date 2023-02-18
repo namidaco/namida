@@ -16,29 +16,13 @@ class AlbumTileCustomization extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () => ExpansionTile(
-        leading: Stack(
-          children: [
-            Icon(
-              Broken.brush,
-              color: currentTrackColor,
-            ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: Container(
-                decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.background, spreadRadius: 1)]),
-                child: Icon(
-                  Broken.music_dashboard,
-                  size: 14,
-                  color: currentTrackColor,
-                ),
-              ),
-            )
-          ],
+        leading: const StackedIcon(
+          baseIcon: Broken.brush,
+          secondaryIcon: Broken.music_dashboard,
         ),
         title: Text(
           Language.inst.ALBUM_TILE_CUSTOMIZATION,
-          style: Theme.of(context).textTheme.displayMedium,
+          style: context.textTheme.displayMedium,
         ),
         trailing: const Icon(
           Broken.arrow_down_2,
@@ -78,7 +62,7 @@ class AlbumTileCustomization extends StatelessWidget {
             title: Language.inst.ALBUM_THUMBNAIL_SIZE_IN_LIST,
             trailing: Text(
               "${stg.albumThumbnailSizeinList.toInt()}",
-              style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.grey[500]),
+              style: context.textTheme.displayMedium?.copyWith(color: Colors.grey[500]),
             ),
             onTap: () {
               showSettingDialogWithTextField(title: Language.inst.ALBUM_THUMBNAIL_SIZE_IN_LIST, albumThumbnailSizeinList: true);
@@ -90,7 +74,7 @@ class AlbumTileCustomization extends StatelessWidget {
             title: Language.inst.HEIGHT_OF_ALBUM_TILE,
             trailing: Text(
               "${stg.albumListTileHeight.toInt()}",
-              style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.grey[500]),
+              style: context.textTheme.displayMedium?.copyWith(color: Colors.grey[500]),
             ),
             onTap: () {
               showSettingDialogWithTextField(

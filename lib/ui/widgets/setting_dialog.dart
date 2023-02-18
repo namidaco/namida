@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:namida/class/playlist.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:restart_app/restart_app.dart';
 
 import 'package:namida/controller/current_color.dart';
@@ -23,6 +25,7 @@ void showSettingDialogWithTextField({
   bool? fontScaleFactor,
   bool? dateTimeFormat,
   bool? trackTileSeparator,
+  bool? addNewPlaylist,
 }) async {
   SettingsController stg = SettingsController.inst;
   TextEditingController controller = TextEditingController();
@@ -98,7 +101,8 @@ void showSettingDialogWithTextField({
       child: CustomBlurryDialog(
         title: title,
         actions: [
-          IconButton(
+          if (addNewPlaylist == null)
+            IconButton(
               tooltip: Language.inst.RESTORE_DEFAULTS,
               onPressed: () {
                 if (trackThumbnailSizeinList != null) {
@@ -169,13 +173,9 @@ void showSettingDialogWithTextField({
                 }
                 Get.close(1);
               },
-              icon: const Icon(Broken.refresh)),
-          ElevatedButton(
-              style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Get.theme.disabledColor)),
-              onPressed: () {
-                Get.close(1);
-              },
-              child: Text(Language.inst.CANCEL)),
+              icon: const Icon(Broken.refresh),
+            ),
+          const CancelButton(),
           ElevatedButton(
               onPressed: () {
                 if (formKey.currentState!.validate()) {
@@ -254,66 +254,72 @@ void showSettingDialogWithTextField({
                       trackTileSeparator: controller.text,
                     );
                   }
+                  if (addNewPlaylist != null) {
+                    PlaylistController.inst.addNewPlaylist(controller.text);
+                  }
 
                   Get.close(1);
                 }
               },
               child: Text(Language.inst.SAVE))
         ],
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Stack(
           children: [
-            const SizedBox(
-              height: 0.0,
-            ),
-            topWidget != null
-                ? Expanded(
-                    child: Stack(
-                      children: [
-                        SingleChildScrollView(controller: scrollController, child: topWidget),
-                        Positioned(
-                          bottom: 20,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(0.0),
-                            decoration: BoxDecoration(color: Get.theme.cardTheme.color, shape: BoxShape.circle),
-                            child: IconButton(
-                              icon: const Icon(Broken.arrow_circle_down),
-                              onPressed: () {
-                                scrollController.position.animateTo(scrollController.position.maxScrollExtent, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                              },
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
-                  )
-                : const SizedBox.shrink(),
-            Padding(
-              padding: const EdgeInsets.only(top: 14.0),
-              child: TextFormField(
-                keyboardType: dateTimeFormat != null || trackTileSeparator != null ? TextInputType.text : TextInputType.number,
-                controller: controller,
-                textAlign: TextAlign.left,
-                decoration: InputDecoration(
-                  errorMaxLines: 3,
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14.0 * stg.borderRadiusMultiplier.value),
-                    borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 2.0),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18.0 * stg.borderRadiusMultiplier.value),
-                    borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 1.0),
-                  ),
-                  hintText: Language.inst.VALUE,
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  height: 0.0,
                 ),
-                validator: (value) {
-                  if (fontScaleFactor != null && (double.parse(value!) < 50 || double.parse(value) > 200)) {
-                    return Language.inst.VALUE_BETWEEN_50_200;
-                  }
-                  return null;
-                },
-              ),
+                topWidget != null
+                    ? Stack(
+                        children: [
+                          SingleChildScrollView(controller: scrollController, child: topWidget),
+                          Positioned(
+                            bottom: 20,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(0.0),
+                              decoration: BoxDecoration(color: Get.theme.cardTheme.color, shape: BoxShape.circle),
+                              child: IconButton(
+                                icon: const Icon(Broken.arrow_circle_down),
+                                onPressed: () {
+                                  scrollController.position.animateTo(scrollController.position.maxScrollExtent, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                                },
+                              ),
+                            ),
+                          )
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+                Padding(
+                  padding: const EdgeInsets.only(top: 14.0),
+                  child: TextFormField(
+                    autofocus: true,
+                    keyboardType: dateTimeFormat != null || trackTileSeparator != null || addNewPlaylist != null ? TextInputType.text : TextInputType.number,
+                    controller: controller,
+                    textAlign: TextAlign.left,
+                    decoration: InputDecoration(
+                      errorMaxLines: 3,
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14.0 * stg.borderRadiusMultiplier.value),
+                        borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 2.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(18.0 * stg.borderRadiusMultiplier.value),
+                        borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 1.0),
+                      ),
+                      hintText: addNewPlaylist != null ? Language.inst.NAME : Language.inst.VALUE,
+                    ),
+                    validator: (value) {
+                      if (fontScaleFactor != null && (double.parse(value!) < 50 || double.parse(value) > 200)) {
+                        return Language.inst.VALUE_BETWEEN_50_200;
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
             ),
           ],
         ),

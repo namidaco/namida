@@ -10,6 +10,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
+import 'package:namida/ui/widgets/setting_dialog.dart';
 
 class CustomSwitchListTile extends StatelessWidget {
   final bool value;
@@ -79,9 +80,18 @@ class CustomSwitchListTile extends StatelessWidget {
                 ),
                 AnimatedContainer(
                   decoration: BoxDecoration(
-                    color: passedColor ?? CurrentColor.inst.color.value,
+                    color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.background),
                     borderRadius: BorderRadius.circular(30),
-                    boxShadow: value ? [BoxShadow(offset: const Offset(0, 2), blurRadius: 8, spreadRadius: 0, color: passedColor ?? CurrentColor.inst.color.value)] : null,
+                    boxShadow: value
+                        ? [
+                            BoxShadow(
+                              offset: const Offset(0, 2),
+                              blurRadius: 8,
+                              spreadRadius: 0,
+                              color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.background),
+                            ),
+                          ]
+                        : null,
                   ),
                   duration: const Duration(milliseconds: 400),
                   child: FlutterSwitch(
@@ -270,19 +280,18 @@ class AddFolderButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Broken.folder_add,
-            size: 18,
-          ),
-          const SizedBox(width: 8.0),
-          Text(Language.inst.ADD),
-        ],
+    return ElevatedButton.icon(
+      style: ButtonStyle(
+        backgroundColor: MaterialStateProperty.all(
+          context.theme.backgroundColor.withAlpha(200),
+        ),
       ),
+      icon: const Icon(
+        Broken.folder_add,
+        size: 18,
+      ),
+      label: Text(Language.inst.ADD),
+      onPressed: onPressed,
     );
   }
 }
@@ -347,7 +356,7 @@ class SmallListTile extends StatelessWidget {
                   size: 18.0,
                 ),
       visualDensity: VisualDensity.compact,
-      title: Text(title),
+      title: Text(title, style: context.textTheme.displayMedium),
       trailing: displayAnimatedCheck
           ? SizedBox(
               height: 18.0,
@@ -420,6 +429,145 @@ class ListTileWithCheckMark extends StatelessWidget {
       ),
       visualDensity: VisualDensity.compact,
       onTap: onTap,
+    );
+  }
+}
+
+class CreatePlaylistButton extends StatelessWidget {
+  const CreatePlaylistButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: () => showSettingDialogWithTextField(
+        title: Language.inst.CREATE_NEW_PLAYLIST,
+        addNewPlaylist: true,
+      ),
+      icon: const Icon(Broken.add),
+      label: Text(Language.inst.CREATE),
+    );
+  }
+}
+
+class MoreIcon extends StatelessWidget {
+  final void Function()? onPressed;
+  final bool rotated;
+  final double padding;
+  const MoreIcon({super.key, this.onPressed, this.rotated = true, this.padding = 1.0});
+
+  @override
+  Widget build(BuildContext context) {
+    return RotatedBox(
+      quarterTurns: rotated ? 1 : 0,
+      child: Material(
+        borderRadius: BorderRadius.circular(34.0.multipliedRadius),
+        color: Colors.transparent,
+        child: InkWell(
+          highlightColor: const Color.fromARGB(60, 120, 120, 120),
+          borderRadius: BorderRadius.circular(34.0.multipliedRadius),
+          onTap: onPressed,
+          child: Padding(
+            padding: EdgeInsets.all(padding),
+            child: const Icon(
+              Broken.more,
+              size: 18.0,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class StackedIcon extends StatelessWidget {
+  final IconData baseIcon;
+  final IconData? secondaryIcon;
+  final String? secondaryText;
+  final Color? baseIconColor;
+  final Color? secondaryIconColor;
+
+  const StackedIcon({
+    super.key,
+    required this.baseIcon,
+    this.secondaryIcon,
+    this.baseIconColor,
+    this.secondaryIconColor,
+    this.secondaryText,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Icon(
+          baseIcon,
+          color: baseIconColor,
+        ),
+        Positioned(
+          bottom: 0,
+          right: 0,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+              boxShadow: [
+                BoxShadow(color: Get.theme.scaffoldBackgroundColor, spreadRadius: 1, blurRadius: 3.0),
+              ],
+            ),
+            child: secondaryText != null ? Text(secondaryText!, style: context.textTheme.displaySmall) : Icon(secondaryIcon, size: 14, color: secondaryIconColor),
+          ),
+        )
+      ],
+    );
+  }
+}
+
+class SmallIconButton extends StatelessWidget {
+  final IconData icon;
+  final void Function()? onTap;
+
+  const SmallIconButton({super.key, required this.icon, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Icon(
+        icon,
+        size: 20.0,
+      ),
+    );
+  }
+}
+
+class BlurryContainer extends StatelessWidget {
+  final Container? container;
+  final BorderRadius borderRadius;
+  final Widget? child;
+  final bool disableBlur;
+  const BlurryContainer({super.key, this.container, this.child, this.borderRadius = BorderRadius.zero, this.disableBlur = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: disableBlur
+          ? container ?? child
+          : BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+              child: container ?? child,
+            ),
+    );
+  }
+}
+
+class CancelButton extends StatelessWidget {
+  const CancelButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: () => Get.close(1),
+      child: Text(Language.inst.CANCEL),
     );
   }
 }

@@ -1,5 +1,6 @@
 // import 'package:audio_service/audio_service.dart';
 import 'package:get/get.dart';
+import 'package:namida/class/track.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/current_color.dart';
@@ -16,7 +17,7 @@ class Player extends GetxController {
 
   // _AudioServicePlayer? _audioHandler;
 
-  // Rx<Track> nowPlayingTrack = Track.obs;
+  Rx<Track> nowPlayingTrack = Indexer.inst.tracksInfoList[0].obs;
   initializePlayer() async {
     // _audioHandler = await AudioService.init(
     //   builder: () => _AudioServicePlayer(),
@@ -29,9 +30,9 @@ class Player extends GetxController {
   }
 
   void play(Track track) {
-    CurrentColor.inst.setPlayerColor(track);
+    // CurrentColor.inst.setPlayerColor(track);
     // _audioHandler.playFromUri(Uri(path: track.path));
-    // nowPlayingTrack.value = track;
+    nowPlayingTrack.value = track;
   }
 
   @override

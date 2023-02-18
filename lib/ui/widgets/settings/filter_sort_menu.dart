@@ -9,6 +9,8 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/core/extensions.dart';
 
+/// NOT USED
+/// TODO: REMOVE
 class FilterSortByMenu extends StatelessWidget {
   const FilterSortByMenu({super.key});
 
@@ -17,11 +19,10 @@ class FilterSortByMenu extends StatelessWidget {
     return IconButton(
       icon: const Icon(Broken.filter),
       onPressed: () async => await showMenu(
-        // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0.multipliedRadius)),
-        // color: Color.alphaBlend(context.theme.cardTheme.color!.withAlpha(100), context.theme.colorScheme.background),
         color: context.theme.appBarTheme.backgroundColor,
         context: context,
-        position: RelativeRect.fromLTRB(Get.width, Get.statusBarHeight + 12.0, 20, 0), constraints: BoxConstraints(maxHeight: Get.height / 1.5),
+        position: RelativeRect.fromLTRB(Get.width, Get.statusBarHeight + 12.0, 20, 0),
+        constraints: BoxConstraints(maxHeight: Get.height / 1.5),
         items: [
           if (SettingsController.inst.selectedLibraryTab.value == LibraryTab.tracks) ...[
             PopupMenuItem(

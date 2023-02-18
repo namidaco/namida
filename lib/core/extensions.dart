@@ -2,11 +2,19 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:namida/class/playlist.dart';
 
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/translations/strings.dart';
+import 'package:namida/ui/pages/albums_page.dart';
+import 'package:namida/ui/pages/artists_page.dart';
+import 'package:namida/ui/pages/folders_page.dart';
+import 'package:namida/ui/pages/genres_page.dart';
+import 'package:namida/ui/pages/playlists_page.dart';
+import 'package:namida/ui/pages/tracks_page.dart';
 
 extension DurationLabel on Duration {
   String get label {
@@ -26,6 +34,13 @@ extension PathFormat on String {
   String get formatPath => replaceFirst('/0', '').replaceFirst('/storage/', '').replaceFirst('emulated/', '');
 }
 
+extension AllDirInDir on String {
+  List<String> get getDirectoriesInside {
+    final allFolders = Indexer.inst.groupedFoldersMap;
+    return allFolders.keys.where((key) => key.startsWith(this)).toList();
+  }
+}
+
 extension UtilExtensions on String {
   List<String> multiSplit(Iterable<String> delimeters) => delimeters.isEmpty
       ? [this]
@@ -41,7 +56,7 @@ extension Iterables<E> on Iterable<E> {
       );
 }
 
-extension TracksDuration on List<Track> {
+extension TracksUtils on List<Track> {
   int get totalDuration {
     int totalFinalDuration = 0;
 
@@ -58,16 +73,32 @@ extension TracksDuration on List<Track> {
     return formattedTotalTracksDuration;
   }
 
-  // String get displayTrackKeyword {
-  //   return '$length Track${length == 1 ? "" : "s"}';
-  // }
-
   String get displayTrackKeyword {
     return '$length ${length == 1 ? Language.inst.TRACK : Language.inst.TRACKS}';
   }
+}
 
+extension DisplayKeywords on int {
   String get displayAlbumKeyword {
-    return '$length ${length == 1 ? Language.inst.ALBUM : Language.inst.ALBUMS}';
+    return '$this ${this == 1 ? Language.inst.ALBUM : Language.inst.ALBUMS}';
+  }
+
+  String get displayArtistKeyword {
+    return '$this ${this == 1 ? Language.inst.ARTIST : Language.inst.ARTISTS}';
+  }
+
+  String get displayGenreKeyword {
+    return '$this ${this == 1 ? Language.inst.GENRE : Language.inst.GENRES}';
+  }
+
+  String get displayFolderKeyword {
+    return '$this ${this == 1 ? Language.inst.FOLDER : Language.inst.FOLDERS}';
+  }
+}
+
+extension PlaylistUtils on List<Playlist> {
+  String get displayPlaylistKeyword {
+    return '$length ${length == 1 ? Language.inst.PLAYLIST : Language.inst.PLAYLISTS}';
   }
 }
 
@@ -164,6 +195,30 @@ extension LibraryTabToInt on LibraryTab {
   }
 }
 
+extension LibraryTabToWidget on LibraryTab {
+  Widget get toWidget {
+    if (this == LibraryTab.albums) {
+      return AlbumsPage();
+    }
+    if (this == LibraryTab.tracks) {
+      return TracksPage();
+    }
+    if (this == LibraryTab.artists) {
+      return ArtistsPage();
+    }
+    if (this == LibraryTab.genres) {
+      return GenresPage();
+    }
+    if (this == LibraryTab.playlists) {
+      return PlaylistsPage();
+    }
+    if (this == LibraryTab.folders) {
+      return FoldersPage();
+    }
+    return const SizedBox();
+  }
+}
+
 extension LibraryTabToEnum on int {
   LibraryTab get toEnum {
     if (this == 0) {
@@ -230,6 +285,41 @@ extension SortToText on SortType {
       return Language.inst.SIZE;
     }
     if (this == SortType.year) {
+      return Language.inst.YEAR;
+    }
+
+    return '';
+  }
+}
+
+extension GroupSortToText on GroupSortType {
+  String get toText {
+    if (this == GroupSortType.album) {
+      return Language.inst.ALBUM;
+    }
+    if (this == GroupSortType.albumArtist) {
+      return Language.inst.ALBUM_ARTIST;
+    }
+    if (this == GroupSortType.artistsList) {
+      return Language.inst.ARTISTS;
+    }
+    if (this == GroupSortType.genresList) {
+      return Language.inst.GENRES;
+    }
+
+    if (this == GroupSortType.composer) {
+      return Language.inst.COMPOSER;
+    }
+    if (this == GroupSortType.dateModified) {
+      return Language.inst.DATE_MODIFIED;
+    }
+    if (this == GroupSortType.duration) {
+      return Language.inst.DURATION;
+    }
+    if (this == GroupSortType.numberOfTracks) {
+      return Language.inst.NUMBER_OF_TRACKS;
+    }
+    if (this == GroupSortType.year) {
       return Language.inst.YEAR;
     }
 

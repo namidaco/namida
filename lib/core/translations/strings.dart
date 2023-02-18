@@ -39,10 +39,11 @@ class Language {
   String get REFRESH_LIBRARY_SUBTITLE => 'Check for newly added or deleted music';
   String get TRACK_ARTISTS_SEPARATOR => 'Artists Separators';
   String get TRACK_GENRES_SEPARATOR => 'Genres Separators';
-  String get SEPARATORS_MESSAGE => 'Spaces are taken care of automatically, No need to insert them.';
+  String get SEPARATORS_MESSAGE => 'No need to insert spaces, unless you wanna use a letter (like x)';
   String get TRACKS_INFO => 'Tracks Info';
   String get ARTWORKS => 'Artworks';
   String get FILTERED_BY_SIZE_AND_DURATION => 'Tracks Filtered by size and duration';
+  String get DUPLICATED_TRACKS => 'Duplicated Tracks';
   String get MIN_FILE_SIZE => 'Minimum File Size';
   String get MIN_FILE_SIZE_SUBTITLE => 'Only index tracks with size more than this';
   String get MIN_FILE_DURATION => 'Minimum Track Duration';
@@ -53,6 +54,7 @@ class Language {
   String get MINIMUM_ONE_FOLDER_SUBTITLE => 'There should be at least 1 folder, add more folders if you want to remove this one';
   String get EXCLUDED_FODLERS => 'Excluded Folders';
   String get NO_EXCLUDED_FOLDERS => 'You Don\'t have any excluded folders';
+  String get NO_FOLDER_CHOSEN => 'You haven\'t chosen any folder';
   String get PREVENT_DUPLICATED_TRACKS => 'Prevent Duplicated tracks';
   String get PREVENT_DUPLICATED_TRACKS_SUBTITLE => 'Uses filename to uniqely identify tracks.';
 
@@ -61,6 +63,7 @@ class Language {
   String get CUSTOMIZATIONS_SUBTITLE => 'Customize how your player looks, make it yours';
   String get ENABLE_BLUR_EFFECT => 'Enable Blur Effect';
   String get ENABLE_GLOW_EFFECT => 'Enable Glow Effect';
+  String get PERFORMANCE_NOTE => 'Might affect performance';
   String get BORDER_RADIUS_MULTIPLIER => 'Border Radius Multiplier';
   String get FONT_SCALE => 'Font Scale';
 
@@ -108,14 +111,24 @@ class Language {
   String get DATE_TIME_FORMAT => 'Date Time Format';
   String get HOUR_FORMAT_12 => '12 Hour Format';
 
+  /// Advanced
+  String get GENERATE_ALL_WAVEFORM_DATA => 'Generate All Waveform data';
+  String get GENERATE_ALL_WAVEFORM_DATA_SUBTITLE => 'You currently have _WAVEFORM_CURRENT_LENGTH_ waveforms generated out of _WAVEFORM_TOTAL_LENGTH_.\n\nThis is a heavy process and generating for all tracks at once will takes quite a while, proceed?';
+  String get FORCE_STOP_WAVEFORM_GENERATION => 'Force stop generating waveforms? you can still continue it later';
+
   /// Defaults
   String get ADD => 'Add';
+  String get CREATE => 'Create';
   String get REMOVE => 'Remove';
   String get CLEAR => 'Clear';
   String get SAVE => 'Save';
   String get CONFIRM => 'Confirm';
   String get CANCEL => 'Cancel';
   String get OF => 'of';
+  String get NAME => 'Name';
+  String get NOTE => 'Note';
+  String get STOP => 'Stop';
+  String get GENERATE => 'Generate';
   String get GRANT_ACCESS => 'Grant Access';
   String get RESTORE_DEFAULTS => 'Restore Defaults';
   String get VALUE => 'Value';
@@ -128,6 +141,10 @@ class Language {
   String get VALUE_BETWEEN_50_200 => 'Value should be between 50% and 200%';
   String get ITEM => 'Item';
   String get EXIT => 'Exit';
+
+  ///
+  String get CREATE_NEW_PLAYLIST => 'Create new Playlist';
+  String get ADD_TO_PLAYLIST => 'Add to Playlist';
 
   /// Other Settings
   String get ENABLE_FADE_EFFECT_ON_PLAY_PAUSE => 'Enable Fade Effect on Play/Pause';
@@ -156,6 +173,12 @@ class Language {
   String get REVERSE_ORDER => 'Reverse Order';
 
   /// Track/Group Info
+  String get FILE => 'File';
+  String get FILES => 'Files';
+  String get FOLDER => 'Folder';
+  String get FOLDERS => 'Folders';
+  String get PLAYLIST => 'Playlist';
+  String get PLAYLISTS => 'Playlists';
   String get TRACK => 'Track';
   String get ALBUM => 'Album';
   String get ARTIST => 'Artist';

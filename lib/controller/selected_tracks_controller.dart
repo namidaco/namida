@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/class/track.dart';
 
 class SelectedTracksController extends GetxController {
   static SelectedTracksController inst = SelectedTracksController();
