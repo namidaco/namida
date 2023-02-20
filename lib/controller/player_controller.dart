@@ -1,6 +1,7 @@
 // import 'package:audio_service/audio_service.dart';
 import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/core/constants.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/current_color.dart';
@@ -16,8 +17,7 @@ class Player extends GetxController {
   static Player inst = Player();
 
   // _AudioServicePlayer? _audioHandler;
-
-  Rx<Track> nowPlayingTrack = Indexer.inst.tracksInfoList[0].obs;
+  Rx<Track> nowPlayingTrack = kDummyTrack.obs;
   initializePlayer() async {
     // _audioHandler = await AudioService.init(
     //   builder: () => _AudioServicePlayer(),

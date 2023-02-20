@@ -92,13 +92,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "7.0.0"
-  drop_shadow:
-    dependency: "direct main"
-    description:
-      name: drop_shadow
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.0.2+1"
   enum_to_string:
     dependency: "direct main"
     description:
@@ -167,6 +160,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_colorpicker:
+    dependency: "direct main"
+    description:
+      name: flutter_colorpicker
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.3"
   flutter_image_compress:
     dependency: "direct main"
     description:

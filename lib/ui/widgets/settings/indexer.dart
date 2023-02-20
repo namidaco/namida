@@ -33,24 +33,26 @@ class IndexerSettings extends StatelessWidget {
             SizedBox(
               height: 50,
               child: FittedBox(
-                child: Obx(
-                  () => Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      StatsContainer(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Obx(
+                      () => StatsContainer(
                         icon: Broken.info_circle,
                         title: '${Language.inst.TRACKS_INFO} :',
                         value: Indexer.inst.tracksInfoList.length.toString(),
                         total: Indexer.inst.allTracksPaths.value == 0 ? null : Indexer.inst.allTracksPaths.toString(),
                       ),
-                      StatsContainer(
+                    ),
+                    Obx(
+                      () => StatsContainer(
                         icon: Broken.image,
                         title: '${Language.inst.ARTWORKS} :',
                         value: Indexer.inst.artworksInStorage.length.toString(),
                         total: Indexer.inst.allTracksPaths.value == 0 ? null : Indexer.inst.allTracksPaths.toString(),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -92,10 +94,7 @@ class IndexerSettings extends StatelessWidget {
               icon: Broken.profile_2user,
               title: Language.inst.TRACK_ARTISTS_SEPARATOR,
               subtitle: Language.inst.RE_INDEXING_REQUIRED,
-              trailing: Text(
-                "${stg.trackArtistsSeparators.length}",
-                style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
-              ),
+              trailingText: "${stg.trackArtistsSeparators.length}",
               onTap: () async {
                 await _showSeparatorSymbolsDialog(
                   Language.inst.TRACK_ARTISTS_SEPARATOR,
@@ -108,10 +107,7 @@ class IndexerSettings extends StatelessWidget {
               icon: Broken.smileys,
               title: Language.inst.TRACK_GENRES_SEPARATOR,
               subtitle: Language.inst.RE_INDEXING_REQUIRED,
-              trailing: Text(
-                "${stg.trackGenresSeparators.length}",
-                style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
-              ),
+              trailingText: "${stg.trackGenresSeparators.length}",
               onTap: () async {
                 await _showSeparatorSymbolsDialog(
                   Language.inst.TRACK_GENRES_SEPARATOR,

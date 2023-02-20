@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
+import 'package:namida/controller/current_color.dart';
 
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
@@ -139,6 +143,47 @@ class ThemeSetting extends StatelessWidget {
                   ),
                 );
               },
+            ),
+            Obx(
+              () => CustomSwitchListTile(
+                icon: Broken.colorfilter,
+                title: Language.inst.AUTO_COLORING,
+                subtitle: Language.inst.AUTO_COLORING_SUBTITLE,
+                value: SettingsController.inst.autoColor.value,
+                onChanged: (p0) {
+                  SettingsController.inst.save(autoColor: !p0);
+                  CurrentColor.inst.color.value = Color(SettingsController.inst.staticColor.value);
+                  CurrentColor.inst.updateThemeAndRefresh();
+                },
+              ),
+            ),
+            Obx(
+              () => AnimatedOpacity(
+                opacity: SettingsController.inst.autoColor.value ? 0.5 : 1.0,
+                duration: const Duration(milliseconds: 400),
+                child: CustomListTile(
+                  enabled: !SettingsController.inst.autoColor.value,
+                  icon: Broken.colorfilter,
+                  title: Language.inst.DEFAULT_COLOR,
+                  subtitle: Language.inst.DEFAULT_COLOR_SUBTITLE,
+                  trailing: CircleAvatar(
+                    minRadius: 12,
+                    backgroundColor: Color(SettingsController.inst.staticColor.value),
+                  ),
+                  onTap: () => Get.dialog(
+                    CustomBlurryDialog(
+                      child: ColorPicker(
+                        pickerColor: kMainColor,
+                        onColorChanged: (value) {
+                          SettingsController.inst.save(staticColor: value.value);
+                          CurrentColor.inst.color.value = value;
+                          CurrentColor.inst.updateThemeAndRefresh();
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),

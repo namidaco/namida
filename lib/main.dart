@@ -78,7 +78,7 @@ void main() async {
   Get.put(() => ScrollSearchController());
   Get.put(() => CurrentColor());
 
-  final tfe = await File(kTracksFilePath).exists() && await File(kTracksFilePath).stat().then((value) => value.size != 0);
+  final tfe = await File(kTracksFilePath).exists() && await File(kTracksFilePath).stat().then((value) => value.size > 80);
   if (tfe) {
     await Indexer.inst.prepareTracksFile(tfe);
   } else {

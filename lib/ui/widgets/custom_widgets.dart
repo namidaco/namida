@@ -21,7 +21,9 @@ class CustomSwitchListTile extends StatelessWidget {
   final IconData? icon;
   final Color? passedColor;
   final int? rotateIcon;
-  const CustomSwitchListTile({Key? key, required this.value, required this.onChanged, required this.title, this.subtitle, this.leading, this.icon, this.passedColor, this.rotateIcon}) : super(key: key);
+  const CustomSwitchListTile(
+      {Key? key, required this.value, required this.onChanged, required this.title, this.subtitle, this.leading, this.icon, this.passedColor, this.rotateIcon})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -78,40 +80,103 @@ class CustomSwitchListTile extends StatelessWidget {
                 const SizedBox(
                   width: 12.0,
                 ),
-                AnimatedContainer(
-                  decoration: BoxDecoration(
-                    color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.background),
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: value
-                        ? [
-                            BoxShadow(
-                              offset: const Offset(0, 2),
-                              blurRadius: 8,
-                              spreadRadius: 0,
-                              color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.background),
-                            ),
-                          ]
-                        : null,
-                  ),
-                  duration: const Duration(milliseconds: 400),
-                  child: FlutterSwitch(
-                    activeColor: Colors.transparent,
-                    toggleColor: const Color.fromARGB(222, 255, 255, 255),
-                    inactiveColor: context.theme.disabledColor,
-                    duration: const Duration(milliseconds: 400),
-                    borderRadius: 30.0,
-                    padding: 4.0,
-                    width: 40,
-                    height: 21,
-                    toggleSize: 14,
-                    value: value,
-                    onToggle: (value) {
-                      onChanged(value);
-                    },
-                  ),
-                ),
+                CustomSwitch(active: value),
+                // AnimatedContainer(
+                //   decoration: BoxDecoration(
+                //     color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.background),
+                //     borderRadius: BorderRadius.circular(30),
+                //     boxShadow: value
+                //         ? [
+                //             BoxShadow(
+                //               offset: const Offset(0, 2),
+                //               blurRadius: 8,
+                //               spreadRadius: 0,
+                //               color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.background),
+                //             ),
+                //           ]
+                //         : null,
+                //   ),
+                //   duration: const Duration(milliseconds: 400),
+                //   child: FlutterSwitch(
+                //     activeColor: Colors.transparent,
+                //     toggleColor: const Color.fromARGB(222, 255, 255, 255),
+                //     inactiveColor: context.theme.disabledColor,
+                //     duration: const Duration(milliseconds: 400),
+                //     borderRadius: 30.0,
+                //     padding: 4.0,
+                //     width: 40,
+                //     height: 21,
+                //     toggleSize: 14,
+                //     value: value,
+                //     onToggle: (value) {
+                //       onChanged(value);
+                //     },
+                //   ),
+                // ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class CustomSwitch extends StatelessWidget {
+  final bool active;
+  final double height;
+  final double width;
+  final Color? circleColor;
+  final Color? bgColor;
+  final Color? shadowColor;
+  final int durationInMillisecond;
+
+  const CustomSwitch({
+    super.key,
+    required this.active,
+    this.height = 21.0,
+    this.width = 40.0,
+    this.circleColor,
+    this.durationInMillisecond = 400,
+    this.bgColor,
+    this.shadowColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      width: width,
+      height: height,
+      duration: Duration(milliseconds: durationInMillisecond),
+      padding: EdgeInsets.symmetric(horizontal: width / 10),
+      decoration: BoxDecoration(
+        color: (active
+            ? bgColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.background).withAlpha(140)
+            : context.theme.scaffoldBackgroundColor.withAlpha(34)),
+        borderRadius: BorderRadius.circular(30.0.multipliedRadius),
+        boxShadow: [
+          BoxShadow(
+            offset: const Offset(0, 2),
+            blurRadius: active ? 8 : 0,
+            spreadRadius: 0,
+            color: active
+                ? (shadowColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.background)).withOpacity(0.8)
+                : Colors.transparent,
+          ),
+        ],
+      ),
+      child: AnimatedAlign(
+        duration: Duration(milliseconds: durationInMillisecond),
+        alignment: active ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          width: width / 3,
+          height: height / 1.5,
+          decoration: BoxDecoration(
+            color: circleColor ?? Colors.white.withAlpha(222),
+            borderRadius: BorderRadius.circular(30.0.multipliedRadius),
+            // boxShadow: [
+            //   BoxShadow(color: Colors.black.withAlpha(100), spreadRadius: 1, blurRadius: 4, offset: Offset(0, 2)),
+            // ],
           ),
         ),
       ),
@@ -124,10 +189,12 @@ class CustomListTile extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? trailing;
+  final String? trailingText;
   final IconData? icon;
   final Widget? leading;
   final Color? passedColor;
   final int? rotateIcon;
+  final bool enabled;
   const CustomListTile({
     Key? key,
     required this.title,
@@ -138,6 +205,8 @@ class CustomListTile extends StatelessWidget {
     this.icon,
     this.passedColor,
     this.rotateIcon,
+    this.trailingText,
+    this.enabled = true,
   }) : super(key: key);
 
   @override
@@ -148,6 +217,7 @@ class CustomListTile extends StatelessWidget {
         highlightColor: Colors.white.withAlpha(10),
       ),
       child: ListTile(
+        enabled: enabled,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.0.multipliedRadius),
         ),
@@ -186,15 +256,20 @@ class CustomListTile extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               )
             : null,
-        trailing: trailing != null
-            ? FittedBox(
-                child: AnimatedContainer(
-                  margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                  duration: const Duration(milliseconds: 400),
-                  child: trailing,
-                ),
+        trailing: trailingText != null
+            ? Text(
+                trailingText!,
+                style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
               )
-            : null,
+            : (trailing != null
+                ? FittedBox(
+                    child: AnimatedContainer(
+                      margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                      duration: const Duration(milliseconds: 400),
+                      child: trailing,
+                    ),
+                  )
+                : null),
       ),
     );
   }
@@ -407,13 +482,14 @@ class ListTileWithCheckMark extends StatelessWidget {
   final void Function()? onTap;
   final String? title;
   final IconData? icon;
-  const ListTileWithCheckMark({super.key, required this.active, this.onTap, this.title, this.icon});
+  final Color? tileColor;
+  const ListTileWithCheckMark({super.key, required this.active, this.onTap, this.title, this.icon, this.tileColor});
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0.multipliedRadius)),
-      tileColor: Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(10), context.theme.cardTheme.color!),
+      tileColor: tileColor ?? Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(10), context.theme.cardTheme.color!),
       leading: Icon(icon ?? Broken.arrange_circle),
       title: Text(title ?? Language.inst.REVERSE_ORDER),
       trailing: SizedBox(

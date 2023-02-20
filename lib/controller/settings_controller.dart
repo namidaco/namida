@@ -9,7 +9,11 @@ class SettingsController extends GetxController {
   static SettingsController inst = SettingsController();
 
   Rx<ThemeMode> themeMode = ThemeMode.system.obs;
+  RxBool autoColor = true.obs;
+  RxInt staticColor = kMainColor.value.obs;
   Rx<LibraryTab> selectedLibraryTab = LibraryTab.tracks.obs;
+  RxBool autoLibraryTab = true.obs;
+  RxList<String> libraryTabs = kLibraryTabsStock.obs;
   RxInt searchResultsPlayMode = 1.obs;
   RxDouble borderRadiusMultiplier = 1.0.obs;
   RxDouble fontScaleFactor = 1.0.obs;
@@ -69,7 +73,11 @@ class SettingsController extends GetxController {
 
   SettingsController() {
     themeMode.value = EnumToString.fromString(ThemeMode.values, getString('themeMode') ?? EnumToString.convertToString(themeMode.value))!;
+    autoColor.value = getBool('autoColor') ?? autoColor.value;
+    staticColor.value = getInt('staticColor') ?? staticColor.value;
     selectedLibraryTab.value = EnumToString.fromString(LibraryTab.values, getString('selectedLibraryTab') ?? EnumToString.convertToString(selectedLibraryTab.value))!;
+    autoLibraryTab.value = getBool('autoLibraryTab') ?? autoLibraryTab.value;
+    libraryTabs.value = getListString('libraryTabs', ifNull: libraryTabs.value);
     borderRadiusMultiplier.value = getDouble('borderRadiusMultiplier') ?? borderRadiusMultiplier.value;
     fontScaleFactor.value = getDouble('fontScaleFactor') ?? fontScaleFactor.value;
     trackThumbnailSizeinList.value = getDouble('trackThumbnailSizeinList') ?? trackThumbnailSizeinList.value;
@@ -128,12 +136,16 @@ class SettingsController extends GetxController {
     update();
   }
 
-  /// Saves a value to the key, if [List]or [Set], then it will add to it.
+  /// Saves a value to the key, if [List] or [Set], then it will add to it.
   void save({
     ThemeMode? themeMode,
+    bool? autoColor,
+    int? staticColor,
     int? searchResultsPlayMode,
     // int? selectedLibraryPageIndex,
     LibraryTab? selectedLibraryTab,
+    bool? autoLibraryTab,
+    List<String>? libraryTabs,
     double? borderRadiusMultiplier,
     double? fontScaleFactor,
     double? trackThumbnailSizeinList,
@@ -178,10 +190,33 @@ class SettingsController extends GetxController {
       this.themeMode.value = themeMode;
       setData('themeMode', EnumToString.convertToString(themeMode));
     }
+    if (autoColor != null) {
+      this.autoColor.value = autoColor;
+      setData('autoColor', autoColor);
+    }
+    if (staticColor != null) {
+      this.staticColor.value = staticColor;
+      setData('staticColor', staticColor);
+    }
     if (selectedLibraryTab != null) {
       this.selectedLibraryTab.value = selectedLibraryTab;
-      setData('selectedLibraryTab', EnumToString.convertToString(selectedLibraryTab));
+      if (this.autoLibraryTab.value) {
+        setData('selectedLibraryTab', EnumToString.convertToString(selectedLibraryTab));
+      }
     }
+    if (autoLibraryTab != null) {
+      this.autoLibraryTab.value = autoLibraryTab;
+      setData('autoLibraryTab', autoLibraryTab);
+    }
+    if (libraryTabs != null) {
+      for (var t in libraryTabs) {
+        if (!this.libraryTabs.contains(t)) {
+          this.libraryTabs.add(t);
+        }
+      }
+      setData('libraryTabs', List<String>.from(this.libraryTabs));
+    }
+
     if (searchResultsPlayMode != null) {
       this.searchResultsPlayMode.value = searchResultsPlayMode;
       setData('searchResultsPlayMode', searchResultsPlayMode);
@@ -360,6 +395,21 @@ class SettingsController extends GetxController {
     update();
   }
 
+  void insertInList(
+    index, {
+    String? libraryTab1,
+  }) {
+    if (libraryTab1 != null) {
+      // if (index == 0) {
+      libraryTabs.insert(index, libraryTab1);
+      // } else {
+      //   libraryTabs.insert(index - 1, libraryTab1);
+      // }
+
+      setData('libraryTabs', List<String>.from(libraryTabs));
+    }
+  }
+
   void removeFromList({
     String? trackArtistsSeparator,
     String? trackGenresSeparator,
@@ -369,6 +419,8 @@ class SettingsController extends GetxController {
     List<String>? directoriesToScanAll,
     String? directoriesToExclude1,
     List<String>? directoriesToExcludeAll,
+    String? libraryTab1,
+    List<String>? libraryTabsAll,
   }) {
     if (trackArtistsSeparator != null) {
       trackArtistsSeparators.remove(trackArtistsSeparator);
@@ -413,6 +465,18 @@ class SettingsController extends GetxController {
         }
       }
       setData('directoriesToExclude', List<String>.from(directoriesToExclude));
+    }
+    if (libraryTab1 != null) {
+      libraryTabs.remove(libraryTab1);
+      setData('libraryTabs', List<String>.from(libraryTabs));
+    }
+    if (libraryTabsAll != null) {
+      for (var t in libraryTabsAll) {
+        if (libraryTabs.contains(t)) {
+          libraryTabs.remove(t);
+        }
+      }
+      setData('libraryTabs', List<String>.from(libraryTabs));
     }
     update();
   }

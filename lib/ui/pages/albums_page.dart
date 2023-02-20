@@ -24,19 +24,6 @@ class AlbumsPage extends StatelessWidget {
   final ScrollController _scrollController = ScrollSearchController.inst.albumScrollcontroller.value;
   @override
   Widget build(BuildContext context) {
-    // return MasonryGridView.builder(
-    //   padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-    //   shrinkWrap: true,
-    //   itemCount: albums?.length ?? Indexer.inst.albumSearchList.length,
-    //   mainAxisSpacing: 8.0,
-    //   crossAxisSpacing: 6.0,
-    //   gridDelegate: const SliverSimpleGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
-    //   itemBuilder: (context, i) {
-    //     final album = (albums ?? Indexer.inst.albumSearchList).entries.toList()[i].value.toList();
-    //     return AlbumCard(album: album);
-    //   },
-    // );
-
     return CupertinoScrollbar(
       controller: _scrollController,
       child: AnimationLimiter(
@@ -49,16 +36,9 @@ class AlbumsPage extends StatelessWidget {
                   forStaggered: SettingsController.inst.useAlbumStaggeredGridView.value,
                   onTap: () {
                     final n = SettingsController.inst.albumGridCount.value;
-                    if (n == 1) {
-                      SettingsController.inst.save(albumGridCount: 2);
-                    }
-                    if (n == 2) {
-                      SettingsController.inst.save(albumGridCount: 3);
-                    }
-                    if (n == 3) {
-                      SettingsController.inst.save(albumGridCount: 4);
-                    }
-                    if (n == 4) {
+                    if (n < 4) {
+                      SettingsController.inst.save(albumGridCount: n + 1);
+                    } else {
                       SettingsController.inst.save(albumGridCount: 1);
                     }
                   },
@@ -132,31 +112,6 @@ class AlbumsPage extends StatelessWidget {
                             },
                           ),
                         );
-
-                  Expanded(
-                    child: GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4),
-                      controller: _scrollController,
-                      itemCount: albums?.length ?? Indexer.inst.albumSearchList.length,
-                      // itemCount: 100,
-                      itemBuilder: (BuildContext context, int i) {
-                        return AnimationConfiguration.staggeredGrid(
-                          columnCount: Indexer.inst.albumSearchList.length,
-                          position: i,
-                          duration: const Duration(milliseconds: 400),
-                          child: SlideAnimation(
-                            verticalOffset: 25.0,
-                            child: FadeInAnimation(
-                              duration: const Duration(milliseconds: 400),
-                              child: AlbumCard(
-                                album: (albums ?? Indexer.inst.albumSearchList).entries.toList()[i].value.toList(),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  );
                 },
               ),
             ],
@@ -169,7 +124,7 @@ class AlbumsPage extends StatelessWidget {
 
 class AlbumTracksPage extends StatelessWidget {
   final List<Track> album;
-  AlbumTracksPage({super.key, required this.album});
+  const AlbumTracksPage({super.key, required this.album});
 
   @override
   Widget build(BuildContext context) {

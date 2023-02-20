@@ -12,12 +12,14 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
+import 'package:namida/ui/widgets/library/artist_card.dart';
 import 'package:namida/ui/widgets/library/artist_tile.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/sort_by_button.dart';
 
 class ArtistsPage extends StatelessWidget {
-  ArtistsPage({super.key});
+  final int gridCount;
+  ArtistsPage({super.key, this.gridCount = 3});
   final ScrollController _scrollController = ScrollSearchController.inst.artistScrollcontroller.value;
   @override
   Widget build(BuildContext context) {
@@ -49,23 +51,57 @@ class ArtistsPage extends StatelessWidget {
                   onTextFieldValueChanged: (value) => Indexer.inst.searchArtists(value),
                 ),
               ),
-              Expanded(
-                child: Obx(
-                  () => ListView.builder(
+              if (gridCount == 1)
+                Expanded(
+                  child: Obx(
+                    () => ListView.builder(
+                      controller: _scrollController,
+                      itemCount: Indexer.inst.artistSearchList.length,
+                      itemBuilder: (BuildContext context, int i) {
+                        // final artist = Indexer.inst.artistSearchList.entries.toList()[i];
+                        return AnimationConfiguration.staggeredList(
+                          position: i,
+                          duration: const Duration(milliseconds: 400),
+                          child: SlideAnimation(
+                            verticalOffset: 25.0,
+                            child: FadeInAnimation(
+                              duration: const Duration(milliseconds: 400),
+                              child: ArtistTile(
+                                tracks: Indexer.inst.artistSearchList.entries.toList()[i].value.toList(),
+                                name: Indexer.inst.artistSearchList.entries.toList()[i].key,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              if (gridCount > 1)
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: gridCount,
+                      childAspectRatio: 0.7,
+                      mainAxisSpacing: 8.0,
+                      // crossAxisSpacing: 4.0,
+                    ),
                     controller: _scrollController,
                     itemCount: Indexer.inst.artistSearchList.length,
                     itemBuilder: (BuildContext context, int i) {
-                      // final artist = Indexer.inst.artistSearchList.entries.toList()[i];
-                      return AnimationConfiguration.staggeredList(
+                      final artist = Indexer.inst.artistSearchList.entries.toList()[i];
+                      return AnimationConfiguration.staggeredGrid(
+                        columnCount: Indexer.inst.artistSearchList.length,
                         position: i,
                         duration: const Duration(milliseconds: 400),
                         child: SlideAnimation(
                           verticalOffset: 25.0,
                           child: FadeInAnimation(
                             duration: const Duration(milliseconds: 400),
-                            child: ArtistTile(
-                              tracks: Indexer.inst.artistSearchList.entries.toList()[i].value.toList(),
-                              name: Indexer.inst.artistSearchList.entries.toList()[i].key,
+                            child: ArtistCard(
+                              name: artist.key,
+                              artist: artist.value.toList(),
+                              gridCountOverride: gridCount,
                             ),
                           ),
                         ),
@@ -73,7 +109,6 @@ class ArtistsPage extends StatelessWidget {
                     },
                   ),
                 ),
-              ),
             ],
           ),
         ),

@@ -60,10 +60,7 @@ class AlbumTileCustomization extends StatelessWidget {
           CustomListTile(
             icon: Broken.maximize_3,
             title: Language.inst.ALBUM_THUMBNAIL_SIZE_IN_LIST,
-            trailing: Text(
-              "${stg.albumThumbnailSizeinList.toInt()}",
-              style: context.textTheme.displayMedium?.copyWith(color: Colors.grey[500]),
-            ),
+            trailingText: "${stg.albumThumbnailSizeinList.toInt()}",
             onTap: () {
               showSettingDialogWithTextField(title: Language.inst.ALBUM_THUMBNAIL_SIZE_IN_LIST, albumThumbnailSizeinList: true);
             },
@@ -72,10 +69,7 @@ class AlbumTileCustomization extends StatelessWidget {
           CustomListTile(
             icon: Broken.pharagraphspacing,
             title: Language.inst.HEIGHT_OF_ALBUM_TILE,
-            trailing: Text(
-              "${stg.albumListTileHeight.toInt()}",
-              style: context.textTheme.displayMedium?.copyWith(color: Colors.grey[500]),
-            ),
+            trailingText: "${stg.albumListTileHeight.toInt()}",
             onTap: () {
               showSettingDialogWithTextField(
                 title: Language.inst.HEIGHT_OF_ALBUM_TILE,

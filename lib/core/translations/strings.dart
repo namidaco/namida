@@ -25,6 +25,10 @@ class Language {
   String get THEME_MODE_DARK => 'Dark';
   String get THEME_SETTINGS => 'Theme';
   String get THEME_SETTINGS_SUBTITLE => 'The overall vibe of your player';
+  String get AUTO_COLORING => 'Auto Coloring';
+  String get AUTO_COLORING_SUBTITLE => 'Automatically pick player colors from current artwork';
+  String get DEFAULT_COLOR => 'Default Color';
+  String get DEFAULT_COLOR_SUBTITLE => 'Set a color to be used by the player';
 
   /// Indexer Settings
   String get INDEXER => 'Indexer';
@@ -72,9 +76,14 @@ class Language {
   String get EXTRAS_SUBTITLE => 'Extra Settings to fine your experience';
   String get AT_LEAST_ONE_FILTER => 'Couldn\'t remove filter';
   String get AT_LEAST_ONE_FILTER_SUBTITLE => 'At least one filter should remain';
+  String get LIBRARY_TABS => 'Library Tabs';
+  String get AT_LEAST_THREE_TABS => 'Couldn\'t remove Tab';
+  String get AT_LEAST_THREE_TABS_SUBTITLE => 'At least 3 tabs should remain';
+  String get LIBRARY_TABS_REORDER => 'You can reorder the activated tabs.';
+  String get DEFAULT_LIBRARY_TAB => 'Default Library Tab';
 
   /// Search
-  String get FILTER_TRACKS_BY => 'Filter Tracks in Search List By';
+  String get FILTER_TRACKS_BY => 'Filter Tracks in Search Lists By';
   String get FILTER_TRACKS => 'Filter Tracks';
   String get FILTER_ALBUMS => 'Filter Albums';
   String get FILTER_ARTISTS => 'Filter Artists';
@@ -113,7 +122,8 @@ class Language {
 
   /// Advanced
   String get GENERATE_ALL_WAVEFORM_DATA => 'Generate All Waveform data';
-  String get GENERATE_ALL_WAVEFORM_DATA_SUBTITLE => 'You currently have _WAVEFORM_CURRENT_LENGTH_ waveforms generated out of _WAVEFORM_TOTAL_LENGTH_.\n\nThis is a heavy process and generating for all tracks at once will takes quite a while, proceed?';
+  String get GENERATE_ALL_WAVEFORM_DATA_SUBTITLE =>
+      'You currently have _WAVEFORM_CURRENT_LENGTH_ waveforms generated out of _WAVEFORM_TOTAL_LENGTH_.\n\nThis is a heavy process and generating for all tracks at once will take quite a while, proceed?';
   String get FORCE_STOP_WAVEFORM_GENERATION => 'Force stop generating waveforms? you can still continue it later';
 
   /// Defaults

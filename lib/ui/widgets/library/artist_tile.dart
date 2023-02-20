@@ -9,18 +9,18 @@ import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class ArtistTile extends StatelessWidget {
-  final List<Track> tracks;
   final String name;
+  final List<Track> tracks;
 
-  const ArtistTile({super.key, required this.tracks, required this.name});
+  const ArtistTile({super.key, required this.name, required this.tracks});
 
   @override
   Widget build(BuildContext context) {
     double artistthumnailSize = 65;
     double artistTileHeight = 65;
     final albums = name.artistAlbums;
-    final albumsList = albums.keys.toList();
-    final albumTracks = albums.values.toList();
+    final albumsList = albums.keys;
+    final albumTracks = albums.values;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
@@ -36,7 +36,7 @@ class ArtistTile extends StatelessWidget {
           },
           onTap: () {
             Get.to(
-              // () => ArtistTracksPage(artist: tracks.toList(), name: name),
+              // () => ArtistTracksPage(artist: tracks, name: name),
               () => AlbumsPage(albums: albums),
               //  duration: Duration(milliseconds: 300),
             );
@@ -78,7 +78,7 @@ class ArtistTile extends StatelessWidget {
                       ),
                       // Text(
                       //   [
-                      //     tracks.toList().displayTrackKeyword,
+                      //     tracks.displayTrackKeyword,
                       //     tracks[0].year.yearFormatted,
                       //   ].join(' • '),
                       //   style: Get.textTheme.displayMedium?.copyWith(
@@ -88,7 +88,7 @@ class ArtistTile extends StatelessWidget {
                       // ),
                       Text(
                         [
-                          tracks.toList().displayTrackKeyword,
+                          tracks.displayTrackKeyword,
                           albumsList.length,
                           tracks[0].year.yearFormatted,
                         ].join(' • '),
@@ -107,7 +107,7 @@ class ArtistTile extends StatelessWidget {
                 ),
                 Text(
                   [
-                    tracks.toList().totalDurationFormatted,
+                    tracks.totalDurationFormatted,
                   ].join(' - '),
                   style: Get.textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.w500,

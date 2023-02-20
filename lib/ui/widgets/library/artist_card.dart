@@ -8,27 +8,26 @@ import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-class AlbumCard extends StatelessWidget {
+class ArtistCard extends StatelessWidget {
   final int? gridCountOverride;
-  final List<Track> album;
-  final bool? staggered;
+  final String name;
+  final List<Track> artist;
 
-  AlbumCard({
+  ArtistCard({
     super.key,
     this.gridCountOverride,
-    required this.album,
-    this.staggered,
+    required this.name,
+    required this.artist,
   });
 
   @override
   Widget build(BuildContext context) {
-    final gridCount = gridCountOverride ?? SettingsController.inst.albumGridCount.value;
+    final gridCount = gridCountOverride ?? 2;
     final fontSize = 16.0 - (gridCount * 1.8);
-    final shouldDisplayTopRightDate = SettingsController.inst.albumCardTopRightDate.value && album[0].year != 0;
-    final shouldDisplayNormalDate = !SettingsController.inst.albumCardTopRightDate.value && album[0].year != 0;
-    final shouldDisplayAlbumArtist = album[0].albumArtist != '';
+    // final shouldDisplayAlbumArtist = artist[0].albumArtist != '';
     return Container(
       width: Get.width / gridCount - 34.0,
+      // margin: const EdgeInsets.symmetric(horizontal: 4.0),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12.0.multipliedRadius),
@@ -41,52 +40,30 @@ class AlbumCard extends StatelessWidget {
         ],
       ),
       child: Material(
-        color: context.theme.cardColor,
+        // color: context.theme.cardColor,
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 120, 120, 120),
           onLongPress: () {},
-          onTap: () {
-            Get.to(
-              () => AlbumTracksPage(album: album),
-            );
-          },
+          onTap: () {},
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            // crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Hero(
-                tag: 'album_artwork_${album[0].path}',
-                child: ArtworkWidget(
-                  thumnailSize: Get.width / gridCount,
-                  track: album[0],
-                  borderRadius: 10.0,
-                  forceSquared: !(staggered ?? SettingsController.inst.useAlbumStaggeredGridView.value),
-                  staggered: staggered ?? SettingsController.inst.useAlbumStaggeredGridView.value,
-                  onTopWidget: shouldDisplayTopRightDate
-                      ? Positioned(
-                          top: 0,
-                          right: 0,
-                          child: BlurryContainer(
-                            disableBlur: !SettingsController.inst.enableBlurEffect.value,
-                            borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(8.0.multipliedRadius),
-                            ),
-                            container: Container(
-                              padding: EdgeInsets.symmetric(horizontal: 6.0.multipliedRadius, vertical: 2.0),
-                              decoration: BoxDecoration(
-                                color: context.theme.cardColor.withAlpha(SettingsController.inst.enableBlurEffect.value ? 20 : 220),
-                                borderRadius: BorderRadius.only(
-                                  bottomLeft: Radius.circular(8.0.multipliedRadius),
-                                ),
-                              ),
-                              child: Text(
-                                album[0].year.yearFormatted,
-                                style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                        )
-                      : null,
+                tag: 'album_artwork_${artist[0].path}',
+                child: Container(
+                  // padding: const EdgeInsets.all(8.0),
+                  clipBehavior: Clip.antiAlias,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                  ),
+                  child: ArtworkWidget(
+                    thumnailSize: Get.width / gridCount,
+                    track: artist[0],
+                    borderRadius: 10.0,
+                    forceSquared: true,
+                    blur: 0,
+                  ),
                 ),
               ),
               Stack(
@@ -99,28 +76,16 @@ class AlbumCard extends StatelessWidget {
                         ConstrainedBox(
                           constraints: BoxConstraints(maxWidth: Get.width / gridCount - 30.0, minWidth: Get.width / gridCount - 30.0),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            // crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const SizedBox(height: 10.0),
                               Text(
-                                album[0].album.overflow,
+                                name,
                                 style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize * 1.16),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              if (!SettingsController.inst.albumCardTopRightDate.value || album[0].albumArtist != '') ...[
-                                const SizedBox(height: 2.0),
-                                if (shouldDisplayNormalDate || shouldDisplayAlbumArtist)
-                                  Text(
-                                    [
-                                      if (shouldDisplayNormalDate) album[0].year.yearFormatted,
-                                      if (shouldDisplayAlbumArtist) album[0].albumArtist.overflow,
-                                    ].join(' - '),
-                                    style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize * 1.08),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                              ],
+
                               // if (album[0].albumArtist != '') ...[
                               //   const SizedBox(height: 2.0),
                               //   Text(
@@ -133,8 +98,8 @@ class AlbumCard extends StatelessWidget {
                               const SizedBox(height: 2.0),
                               Text(
                                 [
-                                  album.length.displayAlbumKeyword,
-                                  album.totalDurationFormatted,
+                                  artist.length.displayAlbumKeyword,
+                                  artist.totalDurationFormatted,
                                 ].join(' • '),
                                 style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize),
                                 maxLines: 1,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:namida/controller/current_color.dart';
+import 'package:namida/class/track.dart';
 
 ///
 String kAppDirectoryPath = '';
@@ -9,7 +8,7 @@ Set<String> kDirectoriesPaths = {};
 List<double> kDefaultWaveFormData = List<double>.generate(500, (index) => 0.02);
 
 /// Main Color
-Color kMainColor = const Color.fromARGB(255, 117, 128, 224);
+Color kMainColor = const Color.fromARGB(160, 117, 128, 224);
 Color kMainColorLight = const Color.fromARGB(255, 116, 126, 219);
 Color kMainColorDark = const Color.fromARGB(255, 139, 149, 241);
 
@@ -19,6 +18,16 @@ final String kPlaylistsFilePath = '$kAppDirectoryPath/playlists.json';
 final String kArtworksDirPath = '$kAppDirectoryPath/Artworks/';
 final String kArtworksCompDirPath = '$kAppDirectoryPath/ArtworksCompressed/';
 final String kWaveformDirPath = '$kAppDirectoryPath/Waveforms/';
+
+/// Stock Library Tabs List
+final List<String> kLibraryTabsStock = [
+  'albums',
+  'tracks',
+  'artists',
+  'genres',
+  'playlists',
+  'folders',
+];
 
 /// Default values available for setting the Date Time Format.
 const kDefaultDateTimeStrings = {
@@ -57,8 +66,34 @@ const List<String> kFileExtensions = [
   '.wav',
   '.wma',
 ];
-
-/// Colors
-// class Namida {
-//   static Color iconColor = Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(100), Get.theme.colorScheme.onBackground);
-// }
+final kDummyTrack = Track(
+  '',
+  [''],
+  '',
+  '',
+  [''],
+  '',
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  '0',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  0,
+  0,
+  '',
+  '',
+  0,
+  '',
+  '',
+  '',
+  '',
+);

@@ -8,6 +8,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
@@ -176,22 +177,76 @@ extension FileSizeFormat on int {
 
 extension LibraryTabToInt on LibraryTab {
   int get toInt {
+    // return SettingsController.inst.libraryTabs.toList().indexOf(toText);
+    final libtabs = SettingsController.inst.libraryTabs.toList();
     if (this == LibraryTab.albums) {
-      return 0;
+      return libtabs.indexOf('albums');
     }
     if (this == LibraryTab.tracks) {
-      return 1;
+      return libtabs.indexOf('tracks');
     }
     if (this == LibraryTab.artists) {
-      return 2;
+      return libtabs.indexOf('artists');
     }
     if (this == LibraryTab.genres) {
-      return 3;
+      return libtabs.indexOf('genres');
+    }
+    if (this == LibraryTab.playlists) {
+      return libtabs.indexOf('playlists');
     }
     if (this == LibraryTab.folders) {
-      return 4;
+      return libtabs.indexOf('folders');
     }
-    return 1;
+    return libtabs.indexOf('tracks');
+  }
+}
+
+extension LibraryTabToEnum on int {
+  LibraryTab get toEnum {
+    final libtabs = SettingsController.inst.libraryTabs.toList();
+    if (this == libtabs.indexOf('albums')) {
+      return LibraryTab.albums;
+    }
+    if (this == libtabs.indexOf('tracks')) {
+      return LibraryTab.tracks;
+    }
+    if (this == libtabs.indexOf('artists')) {
+      return LibraryTab.artists;
+    }
+    if (this == libtabs.indexOf('genres')) {
+      return LibraryTab.genres;
+    }
+    if (this == libtabs.indexOf('playlists')) {
+      return LibraryTab.playlists;
+    }
+    if (this == libtabs.indexOf('folders')) {
+      return LibraryTab.folders;
+    }
+    return LibraryTab.tracks;
+  }
+}
+
+extension LibraryTabFromString on String {
+  LibraryTab get toEnum {
+    if (this == 'albums') {
+      return LibraryTab.albums;
+    }
+    if (this == 'tracks') {
+      return LibraryTab.tracks;
+    }
+    if (this == 'artists') {
+      return LibraryTab.artists;
+    }
+    if (this == 'genres') {
+      return LibraryTab.genres;
+    }
+    if (this == 'playlists') {
+      return LibraryTab.playlists;
+    }
+    if (this == 'folders') {
+      return LibraryTab.folders;
+    }
+    return LibraryTab.tracks;
   }
 }
 
@@ -217,26 +272,49 @@ extension LibraryTabToWidget on LibraryTab {
     }
     return const SizedBox();
   }
-}
 
-extension LibraryTabToEnum on int {
-  LibraryTab get toEnum {
-    if (this == 0) {
-      return LibraryTab.albums;
+  IconData get toIcon {
+    if (this == LibraryTab.albums) {
+      return Broken.music_dashboard;
     }
-    if (this == 1) {
-      return LibraryTab.tracks;
+    if (this == LibraryTab.tracks) {
+      return Broken.music_circle;
     }
-    if (this == 2) {
-      return LibraryTab.artists;
+    if (this == LibraryTab.artists) {
+      return Broken.profile_2user;
     }
-    if (this == 3) {
-      return LibraryTab.genres;
+    if (this == LibraryTab.genres) {
+      return Broken.smileys;
     }
-    if (this == 4) {
-      return LibraryTab.folders;
+    if (this == LibraryTab.playlists) {
+      return Broken.music_library_2;
     }
-    return LibraryTab.tracks;
+    if (this == LibraryTab.folders) {
+      return Broken.folder;
+    }
+    return Broken.music_circle;
+  }
+
+  String get toText {
+    if (this == LibraryTab.albums) {
+      return Language.inst.ALBUMS;
+    }
+    if (this == LibraryTab.tracks) {
+      return Language.inst.TRACKS;
+    }
+    if (this == LibraryTab.artists) {
+      return Language.inst.ARTISTS;
+    }
+    if (this == LibraryTab.genres) {
+      return Language.inst.GENRES;
+    }
+    if (this == LibraryTab.playlists) {
+      return Language.inst.PLAYLISTS;
+    }
+    if (this == LibraryTab.folders) {
+      return Language.inst.FOLDERS;
+    }
+    return Language.inst.TRACKS;
   }
 }
 

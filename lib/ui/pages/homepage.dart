@@ -4,10 +4,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:namida/class/playlist.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
-import 'package:namida/ui/pages/playlists_page.dart';
+import 'package:namida/ui/pages/search_page.dart';
 import 'package:namida/ui/widgets/settings/filter_sort_menu.dart';
 import 'package:searchbar_animation/searchbar_animation.dart';
 
@@ -17,13 +16,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/translations/strings.dart';
-import 'package:namida/ui/pages/albums_page.dart';
-import 'package:namida/ui/pages/artists_page.dart';
-import 'package:namida/ui/pages/folders_page.dart';
-import 'package:namida/ui/pages/genres_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
-import 'package:namida/ui/pages/tracks_page.dart';
 import 'package:namida/ui/widgets/selected_tracks_preview.dart';
 import 'package:namida/ui/widgets/waveform.dart';
 
@@ -121,27 +114,17 @@ class HomePage extends StatelessWidget {
               controller: _pageController,
               onPageChanged: (page) {
                 SettingsController.inst.save(selectedLibraryTab: page.toEnum);
+                printInfo(info: page.toString());
               },
-              children: [
-                KeepAliveWrapper(
-                  child: AlbumsPage(),
-                ),
-                KeepAliveWrapper(
-                  child: TracksPage(),
-                ),
-                KeepAliveWrapper(
-                  child: ArtistsPage(),
-                ),
-                KeepAliveWrapper(
-                  child: GenresPage(),
-                ),
-                KeepAliveWrapper(
-                  child: PlaylistsPage(),
-                ),
-                KeepAliveWrapper(
-                  child: folderChild ?? FoldersPage(),
-                ),
-              ],
+              children: SettingsController.inst.libraryTabs
+                  .asMap()
+                  .entries
+                  .map(
+                    (e) => KeepAliveWrapper(
+                      child: e.value.toEnum.toWidget,
+                    ),
+                  )
+                  .toList(),
             ),
             Positioned(
               bottom: 0.0,
@@ -174,17 +157,18 @@ class HomePage extends StatelessWidget {
               child: AnimatedSwitcher(
                 duration: Duration(milliseconds: 400),
                 child: ScrollSearchController.inst.isGlobalSearchMenuShown.value
-                    ? Container(
-                        color: Colors.brown,
-                        child: ListView(
-                          children: [
-                            Text(Indexer.inst.trackSearchList.length.toString()),
-                            Text(Indexer.inst.albumSearchList.length.toString()),
-                            Text(Indexer.inst.artistSearchList.length.toString()),
-                            Text(Indexer.inst.genreSearchList.length.toString()),
-                          ],
-                        ),
-                      )
+                    ? SearchPage()
+                    // Container(
+                    //     color: Colors.brown,
+                    //     child: ListView(
+                    //       children: [
+                    //         Text(Indexer.inst.trackSearchList.length.toString()),
+                    //         Text(Indexer.inst.albumSearchList.length.toString()),
+                    //         Text(Indexer.inst.artistSearchList.length.toString()),
+                    //         Text(Indexer.inst.genreSearchList.length.toString()),
+                    //       ],
+                    //     ),
+                    //   )
                     : null,
               ),
             ),
@@ -220,34 +204,21 @@ class HomePage extends StatelessWidget {
           onDestinationSelected: (value) {
             SettingsController.inst.save(selectedLibraryTab: value.toEnum);
             _pageController.animateToPage(value, duration: Duration(milliseconds: 400), curve: Curves.easeInOutQuart);
+            printInfo(info: value.toString());
           },
           selectedIndex: SettingsController.inst.selectedLibraryTab.value.toInt,
-          destinations: <NavigationDestination>[
-            NavigationDestination(
-              icon: Icon(Broken.music_dashboard),
-              label: Language.inst.ALBUMS,
-            ),
-            NavigationDestination(
-              icon: Icon(Broken.music_circle),
-              label: Language.inst.TRACKS,
-            ),
-            NavigationDestination(
-              icon: Icon(Broken.profile_2user),
-              label: Language.inst.ARTISTS,
-            ),
-            NavigationDestination(
-              icon: Icon(Broken.smileys),
-              label: Language.inst.GENRES,
-            ),
-            NavigationDestination(
-              icon: Icon(Broken.music_library_2),
-              label: Language.inst.GENRES,
-            ),
-            NavigationDestination(
-              icon: Icon(Broken.folder),
-              label: Language.inst.GENRES,
-            ),
-          ],
+          // selectedIndex: SettingsController.inst.libraryTabs.indexOf(SettingsController.inst.selectedLibraryTab.value.toText),
+          // selectedIndex: 0,
+          destinations: SettingsController.inst.libraryTabs
+              .asMap()
+              .entries
+              .map(
+                (e) => NavigationDestination(
+                  icon: Icon(e.value.toEnum.toIcon),
+                  label: e.value.toEnum.toText,
+                ),
+              )
+              .toList(),
         ),
       ),
     );

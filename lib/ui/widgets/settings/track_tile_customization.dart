@@ -43,10 +43,7 @@ class TrackTileCustomization extends StatelessWidget {
           CustomListTile(
             icon: Broken.maximize_3,
             title: Language.inst.TRACK_THUMBNAIL_SIZE_IN_LIST,
-            trailing: Text(
-              "${stg.trackThumbnailSizeinList.toInt()}",
-              style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
-            ),
+            trailingText: "${stg.trackThumbnailSizeinList.toInt()}",
             onTap: () {
               showSettingDialogWithTextField(title: Language.inst.TRACK_THUMBNAIL_SIZE_IN_LIST, trackThumbnailSizeinList: true);
             },
@@ -54,10 +51,7 @@ class TrackTileCustomization extends StatelessWidget {
           CustomListTile(
             icon: Broken.pharagraphspacing,
             title: Language.inst.HEIGHT_OF_TRACK_TILE,
-            trailing: Text(
-              "${stg.trackListTileHeight.toInt()}",
-              style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
-            ),
+            trailingText: "${stg.trackListTileHeight.toInt()}",
             onTap: () {
               showSettingDialogWithTextField(title: Language.inst.HEIGHT_OF_TRACK_TILE, trackListTileHeight: true);
             },
@@ -83,13 +77,10 @@ class TrackTileCustomization extends StatelessWidget {
           CustomListTile(
             icon: Broken.minus_square,
             title: Language.inst.TRACK_TILE_ITEMS_SEPARATOR,
+            trailingText: stg.trackTileSeparator.value,
             onTap: () => showSettingDialogWithTextField(
               title: Language.inst.TRACK_TILE_ITEMS_SEPARATOR,
               trackTileSeparator: true,
-            ),
-            trailing: Text(
-              stg.trackTileSeparator.value,
-              style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
             ),
           ),
           Container(

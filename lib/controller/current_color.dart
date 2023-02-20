@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:palette_generator/palette_generator.dart';
 
 import 'package:namida/class/track.dart';
@@ -12,28 +13,37 @@ import 'package:namida/core/constants.dart';
 class CurrentColor extends GetxController {
   static CurrentColor inst = CurrentColor();
 
-  Rx<Color> color = kMainColor.obs;
+  Rx<Color> color = Color(SettingsController.inst.staticColor.value).obs;
+  // Rx<Color> color = kMainColor.obs;
+
   RxString currentPlayingTrackPath = ''.obs;
 
   CurrentColor() {
-    Player.inst.nowPlayingTrack.listen((track) {
-      setPlayerColor(track);
+    Player.inst.nowPlayingTrack.listen((track) async {
+      // Checking here will not require restart for changes to take effect
+      if (SettingsController.inst.autoColor.value) {
+        await setPlayerColor(track);
+      }
+      currentPlayingTrackPath.value = track.path;
+      updateThemeAndRefresh();
     });
   }
   Future<void> setPlayerColor(Track track) async {
-    if (await File(track.pathToImageComp).exists()) {
+    if (await FileSystemEntity.type(track.pathToImageComp) != FileSystemEntityType.notFound) {
       final result = await PaletteGenerator.fromImageProvider(FileImage(File(track.pathToImageComp)));
       final palette = result.colors.toList();
       color.value = getAlbumColorModifiedModern(palette);
       // color.value = result.darkMutedColor?.color ?? result.dominantColor?.color ?? Colors.red;
       // color.value = mixColors([result.mutedColor?.color ?? result.vibrantColor?.color ?? result.darkMutedColor?.color ?? result.darkMutedColor?.color ?? result.dominantColor?.color ?? Colors.red]);
       print(color);
-      Get.changeTheme(AppThemes.inst.getAppTheme(color.value));
-      currentPlayingTrackPath.value = track.path;
-      update();
     } else {
-      color.value = kMainColor;
+      color.value = Color(SettingsController.inst.staticColor.value);
     }
+  }
+
+  void updateThemeAndRefresh() {
+    Get.changeTheme(AppThemes.inst.getAppTheme(color.value));
+    update();
   }
 
   @override
@@ -46,7 +56,8 @@ class CurrentColor extends GetxController {
 Color getAlbumColorModifiedModern(List<Color>? value) {
   final Color color;
   if ((value?.length ?? 0) > 9) {
-    color = Color.alphaBlend(value?.first.withAlpha(140) ?? Colors.transparent, Color.alphaBlend(value?.elementAt(7).withAlpha(155) ?? Colors.transparent, value?.elementAt(9) ?? Colors.transparent));
+    color = Color.alphaBlend(
+        value?.first.withAlpha(140) ?? Colors.transparent, Color.alphaBlend(value?.elementAt(7).withAlpha(155) ?? Colors.transparent, value?.elementAt(9) ?? Colors.transparent));
   } else {
     color = Color.alphaBlend(value?.last.withAlpha(50) ?? Colors.transparent, value?.first ?? Colors.transparent);
   }

@@ -29,9 +29,9 @@ class TrackTile extends StatelessWidget {
   });
 
   String getChoosenTrackTileItem(TrackTileItem trackItem) {
-    final formatDate = DateFormat('${SettingsController.inst.dateTimeFormat}');
     final formatClock = SettingsController.inst.hourFormat12.value ? DateFormat('hh:mm aa') : DateFormat('HH:mm');
-
+    final finalClock = formatClock.format(DateTime.fromMillisecondsSinceEpoch(track.dateModified));
+    final finalDate = track.dateModified.dateFormatted;
     String trackItemPlaceV = [
       if (trackItem == TrackTileItem.none) '',
       if (trackItem == TrackTileItem.title) track.title.overflow,
@@ -56,9 +56,9 @@ class TrackTile extends StatelessWidget {
       if (trackItem == TrackTileItem.sampleRate) '${track.sampleRate}Hz',
       if (trackItem == TrackTileItem.size) track.size.fileSizeFormatted,
       if (trackItem == TrackTileItem.bitrate) "${(track.bitrate)} kps",
-      if (trackItem == TrackTileItem.dateModified) track.dateModified.dateFormatted,
-      if (trackItem == TrackTileItem.dateModifiedClock) formatClock.format(DateTime.fromMillisecondsSinceEpoch(track.dateModified)),
-      if (trackItem == TrackTileItem.dateModifiedDate) formatDate.format(DateTime.fromMillisecondsSinceEpoch(track.dateModified)),
+      if (trackItem == TrackTileItem.dateModified) '$finalDate, $finalClock',
+      if (trackItem == TrackTileItem.dateModifiedClock) finalClock,
+      if (trackItem == TrackTileItem.dateModifiedDate) finalDate,
     ].join('');
 
     return trackItemPlaceV;
@@ -84,6 +84,7 @@ class TrackTile extends StatelessWidget {
         double thumnailSize = SettingsController.inst.trackThumbnailSizeinList.value;
         double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
         bool isTrackCurrentlyPlaying = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
+        // bool isTrackCurrentlyPlaying = Player.inst.nowPlayingTrack.value == track;
         bool isTrackSelected = SelectedTracksController.inst.selectedTracks.contains(track);
         final textColor = isTrackCurrentlyPlaying ? Colors.white : null;
         return Container(
@@ -154,7 +155,9 @@ class TrackTile extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // check if first row isnt empty
-                          if (SettingsController.inst.row1Item1.value != TrackTileItem.none || SettingsController.inst.row1Item2.value != TrackTileItem.none || SettingsController.inst.row1Item3.value != TrackTileItem.none)
+                          if (SettingsController.inst.row1Item1.value != TrackTileItem.none ||
+                              SettingsController.inst.row1Item2.value != TrackTileItem.none ||
+                              SettingsController.inst.row1Item3.value != TrackTileItem.none)
                             Text(
                               joinTrackItems(SettingsController.inst.row1Item1.value, SettingsController.inst.row1Item2.value, SettingsController.inst.row1Item3.value),
                               overflow: TextOverflow.ellipsis,
@@ -166,7 +169,9 @@ class TrackTile extends StatelessWidget {
                             ),
 
                           // check if second row isnt empty
-                          if (SettingsController.inst.row2Item1.value != TrackTileItem.none || SettingsController.inst.row2Item2.value != TrackTileItem.none || SettingsController.inst.row2Item3.value != TrackTileItem.none)
+                          if (SettingsController.inst.row2Item1.value != TrackTileItem.none ||
+                              SettingsController.inst.row2Item2.value != TrackTileItem.none ||
+                              SettingsController.inst.row2Item3.value != TrackTileItem.none)
                             Text(
                               joinTrackItems(SettingsController.inst.row2Item1.value, SettingsController.inst.row2Item2.value, SettingsController.inst.row2Item3.value),
                               style: Get.textTheme.displaySmall?.copyWith(
@@ -177,7 +182,9 @@ class TrackTile extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           // check if third row isnt empty
-                          if (SettingsController.inst.displayThirdRow.value && SettingsController.inst.row3Item1.value != TrackTileItem.none || SettingsController.inst.row3Item2.value != TrackTileItem.none || SettingsController.inst.row3Item3.value != TrackTileItem.none)
+                          if (SettingsController.inst.displayThirdRow.value && SettingsController.inst.row3Item1.value != TrackTileItem.none ||
+                              SettingsController.inst.row3Item2.value != TrackTileItem.none ||
+                              SettingsController.inst.row3Item3.value != TrackTileItem.none)
                             Text(
                               joinTrackItems(SettingsController.inst.row3Item1.value, SettingsController.inst.row3Item2.value, SettingsController.inst.row3Item3.value),
                               style: Get.textTheme.displaySmall?.copyWith(
@@ -193,7 +200,9 @@ class TrackTile extends StatelessWidget {
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (SettingsController.inst.rightItem1.value != TrackTileItem.none || SettingsController.inst.rightItem2.value != TrackTileItem.none || SettingsController.inst.rightItem3.value != TrackTileItem.none)
+                        if (SettingsController.inst.rightItem1.value != TrackTileItem.none ||
+                            SettingsController.inst.rightItem2.value != TrackTileItem.none ||
+                            SettingsController.inst.rightItem3.value != TrackTileItem.none)
                           if (SettingsController.inst.rightItem1.value != TrackTileItem.none)
                             Text(
                               getChoosenTrackTileItem(SettingsController.inst.rightItem1.value),

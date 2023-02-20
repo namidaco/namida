@@ -72,6 +72,7 @@ class CustomizationSettings extends StatelessWidget {
             CustomSwitchListTile(
               icon: Broken.drop,
               title: Language.inst.ENABLE_BLUR_EFFECT,
+              subtitle: Language.inst.PERFORMANCE_NOTE,
               onChanged: (p0) {
                 stg.save(enableBlurEffect: !p0);
               },
@@ -80,6 +81,7 @@ class CustomizationSettings extends StatelessWidget {
             CustomSwitchListTile(
               icon: Broken.sun_1,
               title: Language.inst.ENABLE_GLOW_EFFECT,
+              subtitle: Language.inst.PERFORMANCE_NOTE,
               onChanged: (p0) {
                 stg.save(enableGlowEffect: !p0);
               },
@@ -88,10 +90,7 @@ class CustomizationSettings extends StatelessWidget {
             CustomListTile(
               icon: Broken.rotate_left_1,
               title: Language.inst.BORDER_RADIUS_MULTIPLIER,
-              trailing: Text(
-                "${stg.borderRadiusMultiplier.value}",
-                style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
-              ),
+              trailingText: "${stg.borderRadiusMultiplier.value}",
               onTap: () {
                 showSettingDialogWithTextField(title: Language.inst.BORDER_RADIUS_MULTIPLIER, borderRadiusMultiplier: true);
               },
@@ -99,10 +98,7 @@ class CustomizationSettings extends StatelessWidget {
             CustomListTile(
               icon: Broken.text,
               title: Language.inst.FONT_SCALE,
-              trailing: Text(
-                "${(stg.fontScaleFactor.value * 100).toInt()}%",
-                style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
-              ),
+              trailingText: "${(stg.fontScaleFactor.value * 100).toInt()}%",
               onTap: () {
                 showSettingDialogWithTextField(title: Language.inst.FONT_SCALE, fontScaleFactor: true);
               },
@@ -118,10 +114,7 @@ class CustomizationSettings extends StatelessWidget {
             CustomListTile(
               icon: Broken.calendar_edit,
               title: Language.inst.DATE_TIME_FORMAT,
-              trailing: Text(
-                "${stg.dateTimeFormat}",
-                style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
-              ),
+              trailingText: "${stg.dateTimeFormat}",
               onTap: () {
                 showSettingDialogWithTextField(
                     title: Language.inst.DATE_TIME_FORMAT,

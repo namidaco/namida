@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:drop_shadow/drop_shadow.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -10,7 +9,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/packages/drop_shadow.dart';
 
 /// Always displays compressed image, if not [compressed] then it will add the full res image on top of it.
 class ArtworkWidget extends StatelessWidget {
@@ -54,6 +53,23 @@ class ArtworkWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final finalPath = compressed ? track.pathToImageComp : track.pathToImage;
+    final lowResChild = Image.file(
+      File(track.pathToImageComp),
+      gaplessPlayback: true,
+      fit: BoxFit.cover,
+      cacheHeight: 24,
+      filterQuality: FilterQuality.low,
+      width: forceSquared ? context.width : null,
+      height: forceSquared ? context.width : null,
+      frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded) return child;
+        return AnimatedSwitcher(
+          duration: Duration(milliseconds: fadeMilliSeconds),
+          child: frame != null ? child : const SizedBox(),
+        );
+      }),
+    );
+    // final lowResChild = SizedBox();
     final extImageChild = FileSystemEntity.typeSync(finalPath) != FileSystemEntityType.notFound && !forceDummyArtwork
         ? Stack(
             children: [
@@ -112,11 +128,13 @@ class ArtworkWidget extends StatelessWidget {
                       blurRadius: blur,
                       spread: 0.8,
                       offset: const Offset(0, 1),
+                      bottomChild: lowResChild,
                       child: child ?? extImageChild,
                     )
                   : ClipRRect(
                       borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
                       child: DropShadow(
+                        bottomChild: lowResChild,
                         borderRadius: borderRadius.multipliedRadius,
                         blurRadius: blur,
                         spread: 0.8,
