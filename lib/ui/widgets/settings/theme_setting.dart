@@ -21,7 +21,7 @@ class ThemeSetting extends StatelessWidget {
     return SettingsCard(
       title: Language.inst.THEME_SETTINGS,
       subtitle: Language.inst.THEME_SETTINGS_SUBTITLE,
-      icon: Broken.brush_1,
+      icon: Broken.brush_2,
       child: SizedBox(
         width: MediaQuery.of(context).size.width,
         child: Column(
@@ -69,7 +69,7 @@ class ThemeSetting extends StatelessWidget {
                   //     ),
                   //   );
                   // },
-                  icon: Broken.bucket,
+                  icon: Broken.brush_4,
                   title: Language.inst.THEME_MODE,
                   trailing: Container(
                     decoration: BoxDecoration(
@@ -163,7 +163,7 @@ class ThemeSetting extends StatelessWidget {
                 duration: const Duration(milliseconds: 400),
                 child: CustomListTile(
                   enabled: !SettingsController.inst.autoColor.value,
-                  icon: Broken.colorfilter,
+                  icon: Broken.bucket,
                   title: Language.inst.DEFAULT_COLOR,
                   subtitle: Language.inst.DEFAULT_COLOR_SUBTITLE,
                   trailing: CircleAvatar(

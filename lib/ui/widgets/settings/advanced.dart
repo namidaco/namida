@@ -18,7 +18,9 @@ class AdvancedSettings extends StatelessWidget {
     return SettingsCard(
       title: Language.inst.ADVANCED_SETTINGS,
       subtitle: Language.inst.ADVANCED_SETTINGS_SUBTITLE,
-      icon: Broken.brush_1,
+      // icon: Broken.code_circle,
+      icon: Broken.hierarchy_3,
+      // icon: Broken.danger,
       child: Column(
         children: [
           Obx(

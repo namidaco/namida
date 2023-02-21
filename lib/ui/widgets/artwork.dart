@@ -34,7 +34,7 @@ class ArtworkWidget extends StatelessWidget {
     super.key,
     required this.track,
     this.compressed = true,
-    this.fadeMilliSeconds = 350,
+    this.fadeMilliSeconds = 300,
     required this.thumnailSize,
     this.forceSquared = false,
     this.child,
@@ -50,26 +50,10 @@ class ArtworkWidget extends StatelessWidget {
     this.staggered = false,
     this.onTopWidget,
   });
+
   @override
   Widget build(BuildContext context) {
     final finalPath = compressed ? track.pathToImageComp : track.pathToImage;
-    final lowResChild = Image.file(
-      File(track.pathToImageComp),
-      gaplessPlayback: true,
-      fit: BoxFit.cover,
-      cacheHeight: 24,
-      filterQuality: FilterQuality.low,
-      width: forceSquared ? context.width : null,
-      height: forceSquared ? context.width : null,
-      frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
-        if (wasSynchronouslyLoaded) return child;
-        return AnimatedSwitcher(
-          duration: Duration(milliseconds: fadeMilliSeconds),
-          child: frame != null ? child : const SizedBox(),
-        );
-      }),
-    );
-    // final lowResChild = SizedBox();
     final extImageChild = FileSystemEntity.typeSync(finalPath) != FileSystemEntityType.notFound && !forceDummyArtwork
         ? Stack(
             children: [
@@ -128,13 +112,11 @@ class ArtworkWidget extends StatelessWidget {
                       blurRadius: blur,
                       spread: 0.8,
                       offset: const Offset(0, 1),
-                      bottomChild: lowResChild,
                       child: child ?? extImageChild,
                     )
                   : ClipRRect(
                       borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
                       child: DropShadow(
-                        bottomChild: lowResChild,
                         borderRadius: borderRadius.multipliedRadius,
                         blurRadius: blur,
                         spread: 0.8,
@@ -158,7 +140,6 @@ class ArtworkWidget extends StatelessWidget {
           );
   }
 }
-// }
 
 class MultiArtworks extends StatelessWidget {
   final List<Track> tracks;

@@ -60,6 +60,7 @@ class AlbumCard extends StatelessWidget {
                   thumnailSize: Get.width / gridCount,
                   track: album[0],
                   borderRadius: 10.0,
+                  blur: 0,
                   forceSquared: !(staggered ?? SettingsController.inst.useAlbumStaggeredGridView.value),
                   staggered: staggered ?? SettingsController.inst.useAlbumStaggeredGridView.value,
                   onTopWidget: shouldDisplayTopRightDate

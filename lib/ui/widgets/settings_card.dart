@@ -24,6 +24,7 @@ class SettingsCard extends StatelessWidget {
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
               clipBehavior: Clip.antiAlias,

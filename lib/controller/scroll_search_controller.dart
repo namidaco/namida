@@ -6,6 +6,8 @@ import 'package:namida/controller/indexer_controller.dart';
 class ScrollSearchController extends GetxController {
   static final ScrollSearchController inst = ScrollSearchController();
 
+  RxDouble miniPlayerHeight = 0.1.obs;
+
   RxBool isGlobalSearchMenuShown = false.obs;
 
   RxBool showTrackSearchBox = false.obs;

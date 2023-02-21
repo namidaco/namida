@@ -16,7 +16,7 @@ class Stats extends StatelessWidget {
     return SettingsCard(
       title: Language.inst.STATS,
       subtitle: Language.inst.STATS_SUBTITLE,
-      icon: Broken.brush_1,
+      icon: Broken.chart_21,
       child: SizedBox(
         width: MediaQuery.of(context).size.width,
         child: Obx(

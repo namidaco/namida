@@ -3,13 +3,13 @@ import 'dart:ui';
 import 'package:checkmark/checkmark.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:flutter_switch/flutter_switch.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
+import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/setting_dialog.dart';
 
 class CustomSwitchListTile extends StatelessWidget {
@@ -195,6 +195,7 @@ class CustomListTile extends StatelessWidget {
   final Color? passedColor;
   final int? rotateIcon;
   final bool enabled;
+  final bool largeTitle;
   const CustomListTile({
     Key? key,
     required this.title,
@@ -207,6 +208,7 @@ class CustomListTile extends StatelessWidget {
     this.rotateIcon,
     this.trailingText,
     this.enabled = true,
+    this.largeTitle = false,
   }) : super(key: key);
 
   @override
@@ -244,7 +246,7 @@ class CustomListTile extends StatelessWidget {
             : leading,
         title: Text(
           title.overflow,
-          style: context.theme.textTheme.displayMedium,
+          style: largeTitle ? context.theme.textTheme.displayLarge : context.theme.textTheme.displayMedium,
           maxLines: subtitle != null ? 1 : 2,
           overflow: TextOverflow.ellipsis,
         ),
@@ -644,6 +646,26 @@ class CancelButton extends StatelessWidget {
     return TextButton(
       onPressed: () => Get.close(1),
       child: Text(Language.inst.CANCEL),
+    );
+  }
+}
+
+class CollapsedSettingTileWidget extends StatelessWidget {
+  const CollapsedSettingTileWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () => CustomSwitchListTile(
+        icon: Broken.archive,
+        title: Language.inst.USE_COLLAPSED_SETTING_TILES,
+        value: SettingsController.inst.useSettingCollapsedTiles.value,
+        onChanged: (p0) {
+          SettingsController.inst.save(useSettingCollapsedTiles: !p0);
+          Get.back();
+          Get.to(() => const SettingsPage());
+        },
+      ),
     );
   }
 }

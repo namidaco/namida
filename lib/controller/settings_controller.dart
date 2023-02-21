@@ -31,6 +31,7 @@ class SettingsController extends GetxController {
   RxBool forceSquaredTrackThumbnail = false.obs;
   RxBool forceSquaredAlbumThumbnail = false.obs;
   RxBool useAlbumStaggeredGridView = false.obs;
+  RxBool useSettingCollapsedTiles = false.obs;
   RxInt albumGridCount = 2.obs;
   RxBool enableBlurEffect = true.obs;
   RxBool enableGlowEffect = true.obs;
@@ -93,6 +94,7 @@ class SettingsController extends GetxController {
     forceSquaredTrackThumbnail.value = getBool('forceSquaredTrackThumbnail') ?? forceSquaredTrackThumbnail.value;
     forceSquaredAlbumThumbnail.value = getBool('forceSquaredAlbumThumbnail') ?? forceSquaredAlbumThumbnail.value;
     useAlbumStaggeredGridView.value = getBool('useAlbumStaggeredGridView') ?? useAlbumStaggeredGridView.value;
+    useSettingCollapsedTiles.value = getBool('useSettingCollapsedTiles') ?? useSettingCollapsedTiles.value;
     albumGridCount.value = getInt('albumGridCount') ?? albumGridCount.value;
     enableBlurEffect.value = getBool('enableBlurEffect') ?? enableBlurEffect.value;
     enableGlowEffect.value = getBool('enableGlowEffect') ?? enableGlowEffect.value;
@@ -161,6 +163,7 @@ class SettingsController extends GetxController {
     bool? forceSquaredTrackThumbnail,
     bool? forceSquaredAlbumThumbnail,
     bool? useAlbumStaggeredGridView,
+    bool? useSettingCollapsedTiles,
     int? albumGridCount,
     bool? enableBlurEffect,
     bool? enableGlowEffect,
@@ -281,6 +284,10 @@ class SettingsController extends GetxController {
     if (useAlbumStaggeredGridView != null) {
       this.useAlbumStaggeredGridView.value = useAlbumStaggeredGridView;
       setData('useAlbumStaggeredGridView', useAlbumStaggeredGridView);
+    }
+    if (useSettingCollapsedTiles != null) {
+      this.useSettingCollapsedTiles.value = useSettingCollapsedTiles;
+      setData('useSettingCollapsedTiles', useSettingCollapsedTiles);
     }
     if (albumGridCount != null) {
       this.albumGridCount.value = albumGridCount;

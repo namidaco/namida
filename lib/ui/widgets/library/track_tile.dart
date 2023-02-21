@@ -106,7 +106,7 @@ class TrackTile extends StatelessWidget {
                 if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
                   SelectedTracksController.inst.selectOrUnselect(track);
                 } else {
-                  Player.inst.play(track);
+                  Player.inst.playOrPause(track);
                   print(track.path);
                 }
                 await WaveformController.inst.generateWaveform(track);

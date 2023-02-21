@@ -74,7 +74,7 @@ dependencies:
   # UI Widgets
   # drop_shadow: ^0.0.2+1
   searchbar_animation: ^0.0.4
-  flutter_switch: ^0.3.2
+  # flutter_switch: ^0.3.2
   wheel_slider: ^1.0.1
   sleek_circular_slider: ^2.0.1
   checkmark: ^0.0.2+1

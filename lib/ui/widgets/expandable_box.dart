@@ -54,7 +54,7 @@ class ExpandableBox extends StatelessWidget {
                 sortByMenuWidget,
                 const SizedBox(width: 12),
                 SmallIconButton(
-                  icon: Broken.filter,
+                  icon: Broken.filter_search,
                   onTap: onFilterIconTap,
                 ),
                 const SizedBox(width: 12.0),

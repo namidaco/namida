@@ -81,6 +81,7 @@ class Language {
   String get AT_LEAST_THREE_TABS_SUBTITLE => 'At least 3 tabs should remain';
   String get LIBRARY_TABS_REORDER => 'You can reorder the activated tabs.';
   String get DEFAULT_LIBRARY_TAB => 'Default Library Tab';
+  String get USE_COLLAPSED_SETTING_TILES => 'Use Collapsed Setting Tiles';
 
   /// Search
   String get FILTER_TRACKS_BY => 'Filter Tracks in Search Lists By';
@@ -132,9 +133,11 @@ class Language {
   String get REMOVE => 'Remove';
   String get CLEAR => 'Clear';
   String get SAVE => 'Save';
+  String get DONE => 'Done';
   String get CONFIRM => 'Confirm';
   String get CANCEL => 'Cancel';
   String get OF => 'of';
+  String get AUTO => 'Auto';
   String get NAME => 'Name';
   String get NOTE => 'Note';
   String get STOP => 'Stop';
@@ -160,7 +163,7 @@ class Language {
   String get ENABLE_FADE_EFFECT_ON_PLAY_PAUSE => 'Enable Fade Effect on Play/Pause';
 
   /// Advanced Settings
-  String get ADVANCED_SETTINGS => 'Advanced Settings';
+  String get ADVANCED_SETTINGS => 'Advanced';
   String get ADVANCED_SETTINGS_SUBTITLE => 'Advanced Settings, don\'t touch';
   String get CLEAR_IMAGE_CACHE => 'Clear Image cache';
   String get CLEAR_IMAGE_CACHE_WARNING => 'Clearing Image cache will result in a library without images.\n\nUse it only in case you want to rebuild image cache.';

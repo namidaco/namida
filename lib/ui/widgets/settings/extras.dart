@@ -20,22 +20,22 @@ class ExtrasSettings extends StatelessWidget {
     return SettingsCard(
       title: Language.inst.EXTRAS,
       subtitle: Language.inst.EXTRAS_SUBTITLE,
-      icon: Broken.brush_1,
+      icon: Broken.command_square,
       child: Column(
         children: [
+          const CollapsedSettingTileWidget(),
           Obx(
             () => CustomListTile(
-              icon: Broken.sidebar_left,
+              icon: Broken.receipt_1,
               title: Language.inst.DEFAULT_LIBRARY_TAB,
-              trailingText: SettingsController.inst.autoLibraryTab.value ? 'Auto' : SettingsController.inst.selectedLibraryTab.value.toText,
+              trailingText: SettingsController.inst.autoLibraryTab.value ? Language.inst.AUTO : SettingsController.inst.selectedLibraryTab.value.toText,
               onTap: () => Get.dialog(
                 CustomBlurryDialog(
                   title: Language.inst.DEFAULT_LIBRARY_TAB,
                   actions: [
-                    const CancelButton(),
                     ElevatedButton(
                       onPressed: () => Get.close(1),
-                      child: Text(Language.inst.SAVE),
+                      child: Text(Language.inst.DONE),
                     ),
                   ],
                   child: SizedBox(
@@ -45,7 +45,8 @@ class ExtrasSettings extends StatelessWidget {
                         margin: const EdgeInsets.all(4.0),
                         child: Obx(
                           () => ListTileWithCheckMark(
-                            title: "Auto",
+                            title: Language.inst.AUTO,
+                            icon: Broken.recovery_convert,
                             onTap: () => SettingsController.inst.save(autoLibraryTab: true),
                             active: SettingsController.inst.autoLibraryTab.value,
                           ),
@@ -61,6 +62,7 @@ class ExtrasSettings extends StatelessWidget {
                                 margin: const EdgeInsets.all(4.0),
                                 child: ListTileWithCheckMark(
                                   title: "${e.key + 1}. ${e.value.toEnum.toText}",
+                                  icon: e.value.toEnum.toIcon,
                                   onTap: () {
                                     SettingsController.inst.save(selectedLibraryTab: e.value.toEnum);
                                     SettingsController.inst.save(autoLibraryTab: false);
@@ -80,17 +82,16 @@ class ExtrasSettings extends StatelessWidget {
           Obx(
             () {
               return CustomListTile(
-                icon: Broken.lifebuoy,
+                icon: Broken.color_swatch,
                 title: Language.inst.LIBRARY_TABS,
                 trailingText: "${SettingsController.inst.libraryTabs.length}",
                 onTap: () => Get.dialog(
                   CustomBlurryDialog(
                     title: Language.inst.LIBRARY_TABS,
                     actions: [
-                      const CancelButton(),
                       ElevatedButton(
                         onPressed: () => Get.close(1),
-                        child: Text(Language.inst.SAVE),
+                        child: Text(Language.inst.DONE),
                       ),
                     ],
                     child: Obx(
@@ -123,6 +124,7 @@ class ExtrasSettings extends StatelessWidget {
                                           margin: const EdgeInsets.all(4.0),
                                           child: ListTileWithCheckMark(
                                             title: "${e.key + 1}. ${e.value.toEnum.toText}",
+                                            icon: e.value.toEnum.toIcon,
                                             onTap: () {
                                               if (SettingsController.inst.libraryTabs.length > 3) {
                                                 SettingsController.inst.removeFromList(libraryTab1: e.value);
@@ -160,6 +162,7 @@ class ExtrasSettings extends StatelessWidget {
                                       const SizedBox(height: 8.0),
                                       ListTileWithCheckMark(
                                         title: "${e.key + 1}. ${e.value.toEnum.toText}",
+                                        icon: e.value.toEnum.toIcon,
                                         onTap: () => SettingsController.inst.save(libraryTabs: [e.value]),
                                         active: SettingsController.inst.libraryTabs.contains(e.value),
                                       ),
@@ -332,25 +335,6 @@ class ExtrasSettings extends StatelessWidget {
       ),
     );
   }
-
-  // void _libraryTabsOnTap(LibraryTab tab) {
-  //   final String type = tab.toText;
-  //   final canRemove = SettingsController.inst.libraryTabs.length > 3;
-
-  //   if (SettingsController.inst.libraryTabs.contains(type)) {
-  //     if (canRemove) {
-  //       SettingsController.inst.removeFromList(libraryTab1: type);
-
-  //       /// important step to reset the selected library tab if it was removed from this list
-  //       SettingsController.inst.save(selectedLibraryTab: SettingsController.inst.libraryTabs[0].toEnum);
-  //     } else {
-  //       Get.snackbar(Language.inst.AT_LEAST_THREE_TABS, Language.inst.AT_LEAST_THREE_TABS_SUBTITLE);
-  //     }
-  //   } else {
-  //     SettingsController.inst.save(libraryTabs: [type]);
-  //   }
-  //   printInfo(info: "${SettingsController.inst.libraryTabs.toList()}");
-  // }
 
   void _trackFilterOnTap(TrackSearchFilter filter) {
     String type = '';

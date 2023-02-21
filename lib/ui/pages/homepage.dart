@@ -6,8 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/pages/search_page.dart';
 import 'package:namida/ui/widgets/settings/filter_sort_menu.dart';
+import 'package:namida/ui/widgets/settings/stats.dart';
 import 'package:searchbar_animation/searchbar_animation.dart';
 
 import 'package:namida/main.dart';
@@ -102,6 +104,14 @@ class HomePage extends StatelessWidget {
             FilterSortByMenu(),
             IconButton(
               constraints: BoxConstraints(maxWidth: 60, minWidth: 56.0),
+              onPressed: () => Get.to(() => SettingsSubPage(
+                    title: Language.inst.STATS,
+                    child: Stats(),
+                  )),
+              icon: const Icon(Broken.chart_21),
+            ),
+            IconButton(
+              constraints: BoxConstraints(maxWidth: 60, minWidth: 56.0),
               onPressed: () => Get.to(() => SettingsPage()),
               icon: const Icon(Broken.setting_2),
             ),
@@ -130,46 +140,46 @@ class HomePage extends StatelessWidget {
               bottom: 0.0,
               child: SelectedTracksPreviewContainer(),
             ),
-            // Positioned.fill(
-            //   bottom: 0.0,
-            //   child: Align(
-            //     alignment: Alignment.bottomCenter,
-            //     child: WaveformComponent(
-            //       durationInMilliseconds: 2000,
-            //       color: context.theme.colorScheme.onBackground.withAlpha(150),
-            //       boxMaxWidth: Get.size.width - 66.0,
-            //       boxMaxHeight: 65,
-            //     ),
-            //   ),
-            // ),
+
             Obx(
               () => WaveformComponent(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
-                waveDataList: WaveformController.inst.downscaleList(WaveformController.inst.curentWaveform.toList(), Get.width.toInt() ~/ 3.5),
-                // durationInMilliseconds: 2000,
+                waveDataList: WaveformController.inst.downscaleList(WaveformController.inst.curentWaveform.toList(), Get.width.toInt() ~/ 3.2),
                 color: context.theme.colorScheme.onBackground.withAlpha(150),
-                // boxMaxWidth: Get.size.width - 66.0,
-                padding: EdgeInsets.all(14), heightMultiplier: 1.2,
-                boxMaxHeight: 65,
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                heightMultiplier: 1.1,
               ),
             ),
+            // Obx(
+            //   () => GestureDetector(
+            //     onVerticalDragUpdate: (details) {
+            //       ScrollSearchController.inst.miniPlayerHeight.value -= (details.delta.dy / Get.height);
+            //       // ScrollSearchController.inst.miniPlayerHeight.value.clamp(100.0, Get.height - 50.0);
+            //       ;
+            //     },
+            //     onVerticalDragEnd: (details) {
+            //       if (ScrollSearchController.inst.miniPlayerHeight.value > 0.3) {
+            //         ScrollSearchController.inst.miniPlayerHeight.value = 1.0;
+            //       } else {
+            //         ScrollSearchController.inst.miniPlayerHeight.value = 0.1;
+            //       }
+            //     },
+            //     child: AnimatedContainer(
+            //       duration: Duration(milliseconds: 100),
+            //       height: ScrollSearchController.inst.miniPlayerHeight.value * Get.height,
+            //       margin: EdgeInsets.all(12.0),
+            //       decoration: BoxDecoration(
+            //         color: Colors.brown,
+            //         borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+            //       ),
+            //     ),
+            //   ),
+            // ),
+            // Search Box
             Positioned.fill(
               child: AnimatedSwitcher(
                 duration: Duration(milliseconds: 400),
-                child: ScrollSearchController.inst.isGlobalSearchMenuShown.value
-                    ? SearchPage()
-                    // Container(
-                    //     color: Colors.brown,
-                    //     child: ListView(
-                    //       children: [
-                    //         Text(Indexer.inst.trackSearchList.length.toString()),
-                    //         Text(Indexer.inst.albumSearchList.length.toString()),
-                    //         Text(Indexer.inst.artistSearchList.length.toString()),
-                    //         Text(Indexer.inst.genreSearchList.length.toString()),
-                    //       ],
-                    //     ),
-                    //   )
-                    : null,
+                child: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? SearchPage() : null,
               ),
             ),
           ],

@@ -1,4 +1,6 @@
 // import 'package:audio_service/audio_service.dart';
+import 'dart:io';
+
 import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/core/constants.dart';
@@ -15,9 +17,13 @@ import 'package:just_audio/just_audio.dart';
 //
 class Player extends GetxController {
   static Player inst = Player();
-
+  final player = AudioPlayer();
+  Player() {
+    nowPlayingTrack.listen((p0) {});
+  }
   // _AudioServicePlayer? _audioHandler;
   Rx<Track> nowPlayingTrack = kDummyTrack.obs;
+  Rx<Duration> nowPlayingPosition = Duration.zero.obs;
   initializePlayer() async {
     // _audioHandler = await AudioService.init(
     //   builder: () => _AudioServicePlayer(),
@@ -29,9 +35,23 @@ class Player extends GetxController {
     // );
   }
 
-  void play(Track track) {
-    // CurrentColor.inst.setPlayerColor(track);
-    // _audioHandler.playFromUri(Uri(path: track.path));
+  void playOrPause(Track track) async {
+    // final playlist = ConcatenatingAudioSource(
+    //   useLazyPreparation: true,
+    //   shuffleOrder: DefaultShuffleOrder(),
+    //   children: Indexer.inst.tracksInfoList.asMap().entries.map((e) => AudioSource.file(e.value.path)).toList(),
+    // );
+
+    await player.setUrl(track.path);
+    // await player.setAudioSource(playlist, initialIndex: Indexer.inst.tracksInfoList.indexOf(track), initialPosition: Duration.zero);
+
+    if (player.playerState.playing && nowPlayingTrack.value == track) {
+      // nowPlayingPosition.value = player.duration ?? Duration.zero;
+      player.pause();
+    } else {
+      // await player.seek(nowPlayingPosition.value);
+      player.play();
+    }
     nowPlayingTrack.value = track;
   }
 
