@@ -162,7 +162,7 @@ class Indexer extends GetxController {
     filteredForSizeDurationTracks.value = 0;
     duplicatedTracksLength.value = 0;
     final minDur = SettingsController.inst.indexMinDurationInSec.value; // Seconds
-    final minSize = SettingsController.inst.indexMinFileSizeInB.value; // B
+    final minSize = SettingsController.inst.indexMinFileSizeInB.value; // bytes
 
     Future<void> extractAllMetadata() async {
       Set<String> listOfCurrentFileNames = <String>{};

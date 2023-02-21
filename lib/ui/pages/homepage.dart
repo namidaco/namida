@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -87,18 +88,18 @@ class HomePage extends StatelessWidget {
           actions: [
             IconButton(
               constraints: BoxConstraints(maxWidth: 60, minWidth: 56.0),
-              onPressed: () => PlaylistController.inst.addNewPlaylist(
-                'Auto Generated ${PlaylistController.inst.playlistList.length + 1}',
-                tracks: [
-                  Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)],
-                  Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)],
-                  Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)],
-                  Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)],
-                  Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)],
-                  Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)],
-                  Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)],
-                ],
-              ),
+              onPressed: () {
+                final List<Track> randomList = [];
+                final int randomNumber =
+                    Random().nextInt(Indexer.inst.tracksInfoList.length ~/ 4).clamp(Indexer.inst.tracksInfoList.length ~/ 6, Indexer.inst.tracksInfoList.length ~/ 4);
+                for (int i = 0; i < randomNumber; i++) {
+                  randomList.add(Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)]);
+                }
+                PlaylistController.inst.addNewPlaylist(
+                  '${Language.inst.AUTO_GENERATED} ${PlaylistController.inst.playlistList.length + 1}',
+                  tracks: randomList,
+                );
+              },
               icon: const Icon(Broken.add),
             ),
             FilterSortByMenu(),

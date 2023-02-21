@@ -25,7 +25,10 @@ class AdvancedSettings extends StatelessWidget {
         children: [
           Obx(
             () => CustomListTile(
-              icon: Broken.rotate_left_1,
+              leading: const StackedIcon(
+                baseIcon: Broken.image,
+                secondaryIcon: Broken.close_circle,
+              ),
               title: Language.inst.CLEAR_IMAGE_CACHE,
               trailingText: Indexer.inst.getImageCacheSize().fileSizeFormatted,
               // trailing: Obx(
@@ -57,7 +60,10 @@ class AdvancedSettings extends StatelessWidget {
           ),
           Obx(
             () => CustomListTile(
-              icon: Broken.rotate_left_1,
+              leading: const StackedIcon(
+                baseIcon: Broken.sound,
+                secondaryIcon: Broken.close_circle,
+              ),
               title: Language.inst.CLEAR_WAVEFORM_DATA,
               trailingText: Indexer.inst.getWaveformDataSize().fileSizeFormatted,
               onTap: () {

@@ -142,6 +142,7 @@ class Language {
   String get NOTE => 'Note';
   String get STOP => 'Stop';
   String get GENERATE => 'Generate';
+  String get AUTO_GENERATED => 'Auto Generated';
   String get GRANT_ACCESS => 'Grant Access';
   String get RESTORE_DEFAULTS => 'Restore Defaults';
   String get VALUE => 'Value';
