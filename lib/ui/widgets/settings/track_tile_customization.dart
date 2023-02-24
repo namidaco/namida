@@ -22,7 +22,7 @@ class TrackTileCustomization extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () => ExpansionTile(
-        leading: StackedIcon(
+        leading: const StackedIcon(
           baseIcon: Broken.brush,
           secondaryIcon: Broken.music_circle,
         ),
@@ -37,7 +37,28 @@ class TrackTileCustomization extends StatelessWidget {
           CustomSwitchListTile(
             icon: Broken.crop,
             title: Language.inst.FORCE_SQUARED_TRACK_THUMBNAIL,
-            onChanged: (value) => stg.save(forceSquaredTrackThumbnail: !value),
+            onChanged: (value) {
+              stg.save(forceSquaredTrackThumbnail: !value);
+              if (!value && stg.trackThumbnailSizeinList.toInt() != stg.trackListTileHeight.toInt()) {
+                Get.dialog(
+                  CustomBlurryDialog(
+                    normalTitleStyle: true,
+                    isWarning: true,
+                    bodyText: Language.inst.FORCE_SQUARED_THUMBNAIL_NOTE,
+                    actions: [
+                      const CancelButton(),
+                      ElevatedButton(
+                        onPressed: () {
+                          stg.save(trackThumbnailSizeinList: stg.trackListTileHeight.value);
+                          Get.close(1);
+                        },
+                        child: Text(Language.inst.CONFIRM),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            },
             value: stg.forceSquaredTrackThumbnail.value,
           ),
           CustomListTile(
@@ -45,7 +66,11 @@ class TrackTileCustomization extends StatelessWidget {
             title: Language.inst.TRACK_THUMBNAIL_SIZE_IN_LIST,
             trailingText: "${stg.trackThumbnailSizeinList.toInt()}",
             onTap: () {
-              showSettingDialogWithTextField(title: Language.inst.TRACK_THUMBNAIL_SIZE_IN_LIST, trackThumbnailSizeinList: true);
+              showSettingDialogWithTextField(
+                title: Language.inst.TRACK_THUMBNAIL_SIZE_IN_LIST,
+                trackThumbnailSizeinList: true,
+                iconWidget: const Icon(Broken.maximize_3),
+              );
             },
           ),
           CustomListTile(
@@ -53,7 +78,11 @@ class TrackTileCustomization extends StatelessWidget {
             title: Language.inst.HEIGHT_OF_TRACK_TILE,
             trailingText: "${stg.trackListTileHeight.toInt()}",
             onTap: () {
-              showSettingDialogWithTextField(title: Language.inst.HEIGHT_OF_TRACK_TILE, trackListTileHeight: true);
+              showSettingDialogWithTextField(
+                title: Language.inst.HEIGHT_OF_TRACK_TILE,
+                trackListTileHeight: true,
+                iconWidget: const Icon(Broken.pharagraphspacing),
+              );
             },
           ),
           CustomSwitchListTile(
@@ -81,6 +110,7 @@ class TrackTileCustomization extends StatelessWidget {
             onTap: () => showSettingDialogWithTextField(
               title: Language.inst.TRACK_TILE_ITEMS_SEPARATOR,
               trackTileSeparator: true,
+              iconWidget: const Icon(Broken.minus_square),
             ),
           ),
           Container(
@@ -106,7 +136,6 @@ class TrackTileCustomization extends StatelessWidget {
                   child: ArtworkWidget(
                     thumnailSize: SettingsController.inst.trackThumbnailSizeinList.value,
                     track: Indexer.inst.tracksInfoList.first,
-                    // size: (stg.trackThumbnailSizeinList.value * 2).round(),
                     forceSquared: stg.forceSquaredTrackThumbnail.value,
                   ),
                 ),

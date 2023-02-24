@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,8 @@ import 'package:namida/packages/drop_shadow.dart';
 /// Always displays compressed image, if not [compressed] then it will add the full res image on top of it.
 class ArtworkWidget extends StatelessWidget {
   final Track track;
+  final Uint8List? bytes;
+  final String? path;
   final bool compressed;
   final int fadeMilliSeconds;
   final double thumnailSize;
@@ -29,10 +32,12 @@ class ArtworkWidget extends StatelessWidget {
   final Color? bgcolor;
   final double? iconSize;
   final bool staggered;
-  final Positioned? onTopWidget;
+  final Widget? onTopWidget;
+  final List<BoxShadow>? boxShadow;
   const ArtworkWidget({
     super.key,
     required this.track,
+    this.bytes,
     this.compressed = true,
     this.fadeMilliSeconds = 300,
     required this.thumnailSize,
@@ -49,30 +54,42 @@ class ArtworkWidget extends StatelessWidget {
     this.iconSize,
     this.staggered = false,
     this.onTopWidget,
+    this.boxShadow,
+    this.path,
   });
 
   @override
   Widget build(BuildContext context) {
-    final finalPath = compressed ? track.pathToImageComp : track.pathToImage;
+    final finalPath = (compressed ? track.pathToImageComp : track.pathToImage);
     final extImageChild = FileSystemEntity.typeSync(finalPath) != FileSystemEntityType.notFound && !forceDummyArtwork
         ? Stack(
             children: [
-              Image.file(
-                File(track.pathToImageComp),
-                gaplessPlayback: true,
-                fit: BoxFit.cover,
-                cacheHeight: cacheHeight ?? 240,
-                filterQuality: FilterQuality.high,
-                width: forceSquared ? context.width : null,
-                height: forceSquared ? context.width : null,
-                frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
-                  if (wasSynchronouslyLoaded) return child;
-                  return AnimatedSwitcher(
-                    duration: Duration(milliseconds: fadeMilliSeconds),
-                    child: frame != null ? child : const SizedBox(),
-                  );
-                }),
-              ),
+              bytes != null
+                  ? ExtendedImage.memory(
+                      bytes!,
+                      gaplessPlayback: true,
+                      fit: BoxFit.cover,
+                      clearMemoryCacheWhenDispose: true,
+                      filterQuality: FilterQuality.high,
+                      width: forceSquared ? context.width : null,
+                      height: forceSquared ? context.width : null,
+                    )
+                  : Image.file(
+                      File(path ?? track.pathToImageComp),
+                      gaplessPlayback: true,
+                      fit: BoxFit.cover,
+                      cacheHeight: cacheHeight ?? 240,
+                      filterQuality: FilterQuality.high,
+                      width: forceSquared ? context.width : null,
+                      height: forceSquared ? context.width : null,
+                      frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
+                        if (wasSynchronouslyLoaded) return child;
+                        return AnimatedSwitcher(
+                          duration: Duration(milliseconds: fadeMilliSeconds),
+                          child: frame != null ? child : const SizedBox(),
+                        );
+                      }),
+                    ),
               if (!compressed)
                 ExtendedImage.file(
                   File(track.pathToImage),
@@ -93,7 +110,7 @@ class ArtworkWidget extends StatelessWidget {
             key: const ValueKey("empty"),
             decoration: BoxDecoration(
               color: bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.colorScheme.background),
-              borderRadius: BorderRadius.circular(borderRadius),
+              borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
             ),
             child: Icon(
               Broken.musicnote,
@@ -112,6 +129,7 @@ class ArtworkWidget extends StatelessWidget {
                       blurRadius: blur,
                       spread: 0.8,
                       offset: const Offset(0, 1),
+                      boxShadow: boxShadow,
                       child: child ?? extImageChild,
                     )
                   : ClipRRect(
@@ -121,6 +139,7 @@ class ArtworkWidget extends StatelessWidget {
                         blurRadius: blur,
                         spread: 0.8,
                         offset: const Offset(0, 1),
+                        boxShadow: boxShadow,
                         child: child ?? extImageChild,
                       ),
                     ),
@@ -130,12 +149,15 @@ class ArtworkWidget extends StatelessWidget {
             width: staggered ? null : width ?? thumnailSize * scale,
             height: staggered ? null : height ?? thumnailSize * scale,
             child: Center(
-              child: SettingsController.inst.borderRadiusMultiplier.value == 0.0
-                  ? child ?? extImageChild
-                  : ClipRRect(
-                      borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
-                      child: child ?? extImageChild,
-                    ),
+              child: Container(
+                decoration: BoxDecoration(boxShadow: boxShadow),
+                child: SettingsController.inst.borderRadiusMultiplier.value == 0.0
+                    ? child ?? extImageChild
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
+                        child: child ?? extImageChild,
+                      ),
+              ),
             ),
           );
   }

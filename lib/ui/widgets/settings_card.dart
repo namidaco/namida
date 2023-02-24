@@ -8,7 +8,7 @@ class SettingsCard extends StatelessWidget {
   final Widget child;
   final Widget? trailing;
   final String title;
-  final String subtitle;
+  final String? subtitle;
   final IconData? icon;
   @override
   Widget build(BuildContext context) {
@@ -49,7 +49,7 @@ class SettingsCard extends StatelessWidget {
                           title,
                           style: Get.textTheme.displayLarge?.copyWith(fontSize: 18.0),
                         ),
-                        Text(subtitle, style: Get.textTheme.displaySmall),
+                        if (subtitle != null) Text(subtitle!, style: Get.textTheme.displaySmall),
                       ],
                     ),
                   ),

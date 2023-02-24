@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/extensions.dart';
@@ -7,6 +8,7 @@ import 'package:namida/core/extensions.dart';
 class WaveformComponent extends StatelessWidget {
   final int durationInMilliseconds;
   final Color? color;
+  final Color? bgColor;
   final Curve curve;
   final double? boxMaxHeight;
   final double? boxMaxWidth;
@@ -21,6 +23,7 @@ class WaveformComponent extends StatelessWidget {
     Key? key,
     this.durationInMilliseconds = 600,
     this.color,
+    this.bgColor,
     this.curve = Curves.easeInOutQuart,
     this.boxMaxHeight,
     this.boxMaxWidth,
@@ -41,7 +44,7 @@ class WaveformComponent extends StatelessWidget {
       height: boxMaxHeight ?? 64.0,
       padding: padding,
       margin: margin,
-      decoration: BoxDecoration(color: Get.theme.colorScheme.background, borderRadius: borderRadius),
+      decoration: BoxDecoration(color: bgColor, borderRadius: borderRadius),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         mainAxisSize: MainAxisSize.max,
@@ -50,7 +53,6 @@ class WaveformComponent extends StatelessWidget {
             .entries
             .map(
               (e) => AnimatedContainer(
-                // constraints: BoxConstraints(minWidth: 2),
                 duration: Duration(milliseconds: durationInMilliseconds),
                 height: (e.value < (4 / 100) ? (3.0 + 2 * e.value) : e.value * 100) * heightMultiplier,
                 width: Get.width / downscaledList.length - 2,
@@ -59,10 +61,6 @@ class WaveformComponent extends StatelessWidget {
                   borderRadius: BorderRadius.circular(5.0.multipliedRadius),
                   color: color ?? CurrentColor.inst.color.value,
                 ),
-                // child: Container(
-                //   // margin: EdgeInsets.symmetric(horizontal: WaveformController.inst.waveFormBarMargin),
-
-                // ),
               ),
             )
             .toList(),

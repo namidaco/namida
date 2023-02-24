@@ -5,11 +5,39 @@ import 'package:get/get.dart';
 class Language {
   static Language inst = Language();
 
+  String get REMOVE_WHITESPACES => 'Remove Whitespaces';
+  String get MINIMUM_ONE_QUALITY => 'Couldn\'t remove quality';
+  String get MINIMUM_ONE_QUALITY_SUBTITLE => 'At least 1 quality should remain';
+  String get CHOOSE_WHAT_TO_CLEAR => 'Choose what to clear';
+  String get SET_YOUTUBE_LINK => 'Set Youtube Link';
+
   /// Main
   String get EXIT_APP => 'Exit';
   String get EXIT_APP_SUBTITLE => 'Do you really want to exit?';
   String get STORAGE_PERMISSION => 'Storage Permission';
   String get STORAGE_PERMISSION_SUBTITLE => 'Storage Permission is required to read your music files';
+
+  /// Video Playback
+  String get AUDIO => 'Audio';
+  String get VIDEO => 'Video';
+  String get VIDEO_CACHE => 'Video Cache';
+  String get CLEAR_VIDEO_CACHE => 'Clear Video Cache';
+  String get VIDEO_PLAYBACK_SETTING => 'Video Playback';
+  String get VIDEO_PLAYBACK_SETTING_SUBTITLE => 'Most of these setting can be accessed directly in the player by long pressing the video button';
+  String get ENABLE_VIDEO_PLAYBACK => 'Enable Video Playback';
+  String get VIDEO_PLAYBACK_SOURCE => 'Video Source';
+  String get VIDEO_PLAYBACK_SOURCE_AUTO_SUBTITLE => 'This will give priority to local videos, if not found then it falls back to youtube video';
+  String get VIDEO_PLAYBACK_SOURCE_LOCAL => 'Local Videos';
+  String get VIDEO_PLAYBACK_SOURCE_LOCAL_SUBTITLE => 'Checks if any video file (found inside the choosen folders list) has a filename that contains the filename of the track';
+  String get VIDEO_PLAYBACK_SOURCE_LOCAL_EXAMPLE => 'Example';
+  String get VIDEO_PLAYBACK_SOURCE_LOCAL_EXAMPLE_SUBTITLE => 'Alan Walker - Faded.m4a\nVideo Alan Walker - Faded (480p).mp4';
+  String get VIDEO_PLAYBACK_SOURCE_YOUTUBE => 'From Youtube';
+  String get VIDEO_PLAYBACK_SOURCE_YOUTUBE_SUBTITLE => 'Checks in track\'s filename & comment for any matching youtube link, videos are cached for later use.';
+  String get VIDEO_QUALITY => 'Video Quality';
+  String get VIDEO_QUALITY_SUBTITLE => 'Highest quality available will be picked.';
+  String get VIDEO_QUALITY_SUBTITLE_NOTE => 'It\'s always good to keep more alternatives in case a quality isn\'t found, otherwise it will fallback to the worst quality';
+
+  // String get PRESS_FOR_MORE_INFO => 'Press for more info';
 
   /// Stats
   String get STATS => 'Statistics';
@@ -46,6 +74,7 @@ class Language {
   String get SEPARATORS_MESSAGE => 'No need to insert spaces, unless you wanna use a letter (like x)';
   String get TRACKS_INFO => 'Tracks Info';
   String get ARTWORKS => 'Artworks';
+  String get ARTWORKS_COMPRESSED => 'Compressed Artworks';
   String get FILTERED_BY_SIZE_AND_DURATION => 'Tracks Filtered by size and duration';
   String get DUPLICATED_TRACKS => 'Duplicated Tracks';
   String get MIN_FILE_SIZE => 'Minimum File Size';
@@ -60,7 +89,10 @@ class Language {
   String get NO_EXCLUDED_FOLDERS => 'You Don\'t have any excluded folders';
   String get NO_FOLDER_CHOSEN => 'You haven\'t chosen any folder';
   String get PREVENT_DUPLICATED_TRACKS => 'Prevent Duplicated tracks';
-  String get PREVENT_DUPLICATED_TRACKS_SUBTITLE => 'Uses filename to uniqely identify tracks.';
+  String get PREVENT_DUPLICATED_TRACKS_SUBTITLE => 'Uses filename to uniqely identify tracks';
+  String get RESPECT_NO_MEDIA => 'Respect .nomedia';
+  String get RESPECT_NO_MEDIA_SUBTITLE => 'Don\'t include folders that has .nomedia';
+  String get EDIT_TAGS => 'Edit Tags';
 
   /// Customization Settings
   String get CUSTOMIZATIONS => 'Customizations';
@@ -70,6 +102,7 @@ class Language {
   String get PERFORMANCE_NOTE => 'Might affect performance';
   String get BORDER_RADIUS_MULTIPLIER => 'Border Radius Multiplier';
   String get FONT_SCALE => 'Font Scale';
+  String get FORCE_SQUARED_THUMBNAIL_NOTE => 'Thumbnail Size & Tile Height are NOT equal, Square-ish look will not be as expected, Do you wish to make them equal?';
 
   /// Extras Settings
   String get EXTRAS => 'Extras';
@@ -82,6 +115,22 @@ class Language {
   String get LIBRARY_TABS_REORDER => 'You can reorder the activated tabs.';
   String get DEFAULT_LIBRARY_TAB => 'Default Library Tab';
   String get USE_COLLAPSED_SETTING_TILES => 'Use Collapsed Setting Tiles';
+
+  /// Backup & Restore
+
+  String get BACKUP_AND_RESTORE => 'Backup & Restore';
+  String get BACKUP_AND_RESTORE_SUBTITLE => 'Backup your database and settings';
+  String get DEFAULT_BACKUP_LOCATION => 'Default Backup Location';
+  String get CREATE_BACKUP => 'Create Backup';
+  String get RESTORE_BACKUP => 'Restore Backup';
+  String get AUTOMATIC_BACKUP => 'Automatic';
+  String get AUTOMATIC_BACKUP_SUBTITLE => 'Autoamically aplies the most recent backup file found inside backup location';
+  String get MANUAL_BACKUP => 'Manual';
+  String get MANUAL_BACKUP_SUBTITLE => 'pick up a specific file';
+  String get CREATED_BACKUP_SUCCESSFULLY => 'Created Backup';
+  String get CREATED_BACKUP_SUCCESSFULLY_SUB => 'Backup file has been created successfully';
+  String get RESTORED_BACKUP_SUCCESSFULLY => 'Restored Backup';
+  String get RESTORED_BACKUP_SUCCESSFULLY_SUB => 'Backup file has been restored successfully';
 
   /// Search
   String get FILTER_TRACKS_BY => 'Filter Tracks in Search Lists By';
@@ -172,12 +221,17 @@ class Language {
   String get CLEAR_WAVEFORM_DATA_WARNING => 'Do you really want to wait all that time again?';
 
   /// Library
+  String get DATABASE => 'Database';
   String get TRACKS => 'Tracks';
   String get ALBUMS => 'Albums';
   String get ARTISTS => 'Artists';
   String get ALBUM_ARTISTS => 'Album Artists';
   String get GENRES => 'Genres';
+  String get PLAYLISTS => 'Playlists';
+  String get FOLDERS => 'Folders';
+  String get QUEUE => 'Queue';
   String get SETTINGS => 'Settings';
+  String get WAVEFORMS => 'Waveforms';
 
   /// Sort
   String get SORT_TRACKS_BY => 'Sort Tracks By';
@@ -190,9 +244,7 @@ class Language {
   String get FILE => 'File';
   String get FILES => 'Files';
   String get FOLDER => 'Folder';
-  String get FOLDERS => 'Folders';
   String get PLAYLIST => 'Playlist';
-  String get PLAYLISTS => 'Playlists';
   String get TRACK => 'Track';
   String get ALBUM => 'Album';
   String get ARTIST => 'Artist';

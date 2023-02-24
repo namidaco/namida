@@ -4,24 +4,20 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:searchbar_animation/searchbar_animation.dart';
+
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/pages/search_page.dart';
-import 'package:namida/ui/widgets/settings/filter_sort_menu.dart';
 import 'package:namida/ui/widgets/settings/stats.dart';
-import 'package:searchbar_animation/searchbar_animation.dart';
-
 import 'package:namida/main.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/pages/settings_page.dart';
-import 'package:namida/ui/widgets/selected_tracks_preview.dart';
-import 'package:namida/ui/widgets/waveform.dart';
 
 class HomePage extends StatelessWidget {
   final Widget? folderChild;
@@ -102,7 +98,8 @@ class HomePage extends StatelessWidget {
               },
               icon: const Icon(Broken.add),
             ),
-            FilterSortByMenu(),
+            // FilterSortByMenu(),
+
             IconButton(
               constraints: BoxConstraints(maxWidth: 60, minWidth: 56.0),
               onPressed: () => Get.to(() => SettingsSubPage(
@@ -137,45 +134,7 @@ class HomePage extends StatelessWidget {
                   )
                   .toList(),
             ),
-            Positioned(
-              bottom: 0.0,
-              child: SelectedTracksPreviewContainer(),
-            ),
 
-            Obx(
-              () => WaveformComponent(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
-                waveDataList: WaveformController.inst.downscaleList(WaveformController.inst.curentWaveform.toList(), Get.width.toInt() ~/ 3.2),
-                color: context.theme.colorScheme.onBackground.withAlpha(150),
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                heightMultiplier: 1.1,
-              ),
-            ),
-            // Obx(
-            //   () => GestureDetector(
-            //     onVerticalDragUpdate: (details) {
-            //       ScrollSearchController.inst.miniPlayerHeight.value -= (details.delta.dy / Get.height);
-            //       // ScrollSearchController.inst.miniPlayerHeight.value.clamp(100.0, Get.height - 50.0);
-            //       ;
-            //     },
-            //     onVerticalDragEnd: (details) {
-            //       if (ScrollSearchController.inst.miniPlayerHeight.value > 0.3) {
-            //         ScrollSearchController.inst.miniPlayerHeight.value = 1.0;
-            //       } else {
-            //         ScrollSearchController.inst.miniPlayerHeight.value = 0.1;
-            //       }
-            //     },
-            //     child: AnimatedContainer(
-            //       duration: Duration(milliseconds: 100),
-            //       height: ScrollSearchController.inst.miniPlayerHeight.value * Get.height,
-            //       margin: EdgeInsets.all(12.0),
-            //       decoration: BoxDecoration(
-            //         color: Colors.brown,
-            //         borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-            //       ),
-            //     ),
-            //   ),
-            // ),
             // Search Box
             Positioned.fill(
               child: AnimatedSwitcher(

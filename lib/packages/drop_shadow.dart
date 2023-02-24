@@ -13,6 +13,7 @@ class DropShadow extends StatelessWidget {
     this.offset = const Offset(0, 8),
     this.opacity = 1.0,
     this.spread = 1.0,
+    this.boxShadow,
     super.key,
   });
 
@@ -37,6 +38,9 @@ class DropShadow extends StatelessWidget {
   /// Size of the shadow
   final double spread;
 
+  /// Apply Stock Shadow Effect
+  final List<BoxShadow>? boxShadow;
+
   @override
   Widget build(BuildContext context) {
     var left = 0.0;
@@ -51,7 +55,9 @@ class DropShadow extends StatelessWidget {
 
     /// [ClipRRect] to isolate [BackDropFilter] from other widgets
     return ClipRRect(
-      child: Padding(
+      child: Container(
+        decoration: BoxDecoration(boxShadow: boxShadow),
+
         /// Calculate Shadow's effect field
         padding: EdgeInsets.fromLTRB(left, top, right, bottom),
         child: Stack(

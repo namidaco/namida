@@ -12,12 +12,6 @@ class PlaylistController extends GetxController {
 
   RxList<Playlist> playlistList = <Playlist>[].obs;
 
-  // Future<void> preparePlaylistFile() async {
-  //   print(playlistList.length);
-  //   await readPlaylistData();
-  //   print(playlistList.length);
-  // }
-
   void addNewPlaylist(
     String name, {
     int? id,
@@ -78,10 +72,16 @@ class PlaylistController extends GetxController {
   }
 
   void favouriteButtonOnPressed(Track track) {
-    playlistList.firstWhere(
+    final fvPlaylist = PlaylistController.inst.playlistList.firstWhere(
       (element) => element.id == -1,
     );
-    addTracksToPlaylist(-1, [track]);
+
+    if (fvPlaylist.tracks.contains(track)) {
+      fvPlaylist.tracks.remove(track);
+    } else {
+      addTracksToPlaylist(fvPlaylist.id, [track]);
+    }
+    _writeToStorage();
   }
 
   ///
@@ -108,9 +108,9 @@ class PlaylistController extends GetxController {
     }
 
     /// Creates default playlists
-    if (fileStat.size == 0) {
+    if (fileStat.size < 80) {
       // Favourites
-      addNewPlaylist('Favourites');
+      addNewPlaylist('Favourites', id: -1);
     }
     printInfo(info: "playlist: ${playlistList.length}");
   }

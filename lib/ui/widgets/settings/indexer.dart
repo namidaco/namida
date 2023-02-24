@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:namida/main.dart';
 import 'package:wheel_slider/wheel_slider.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
@@ -48,7 +49,7 @@ class IndexerSettings extends StatelessWidget {
                       () => StatsContainer(
                         icon: Broken.image,
                         title: '${Language.inst.ARTWORKS} :',
-                        value: Indexer.inst.artworksInStorage.length.toString(),
+                        value: Indexer.inst.artworksInStorage.value.toString(),
                         total: Indexer.inst.allTracksPaths.value == 0 ? null : Indexer.inst.allTracksPaths.toString(),
                       ),
                     ),
@@ -84,11 +85,23 @@ class IndexerSettings extends StatelessWidget {
             CustomSwitchListTile(
               icon: Broken.copy,
               title: Language.inst.PREVENT_DUPLICATED_TRACKS,
-              subtitle: "${Language.inst.PREVENT_DUPLICATED_TRACKS_SUBTITLE} ${Language.inst.INDEX_REFRESH_REQUIRED}",
+              subtitle: "${Language.inst.PREVENT_DUPLICATED_TRACKS_SUBTITLE}. ${Language.inst.INDEX_REFRESH_REQUIRED}",
               onChanged: (p0) {
                 stg.save(preventDuplicatedTracks: !p0);
               },
               value: stg.preventDuplicatedTracks.value,
+            ),
+            CustomSwitchListTile(
+              icon: Broken.reserve,
+              title: Language.inst.RESPECT_NO_MEDIA,
+              subtitle: "${Language.inst.RESPECT_NO_MEDIA_SUBTITLE}. ${Language.inst.INDEX_REFRESH_REQUIRED}",
+              onChanged: (p0) async {
+                if (!stg.respectNoMedia.value) {
+                  await requestManageStoragePermission();
+                }
+                stg.save(respectNoMedia: !p0);
+              },
+              value: stg.respectNoMedia.value,
             ),
             CustomListTile(
               icon: Broken.profile_2user,
@@ -387,7 +400,7 @@ class IndexerSettings extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
                         decoration: BoxDecoration(
                           color: Get.theme.cardTheme.color,
-                          borderRadius: BorderRadius.circular(16.0 * stg.borderRadiusMultiplier.value),
+                          borderRadius: BorderRadius.circular(16.0.multipliedRadius),
                         ),
                         child: InkWell(
                           onTap: () {
@@ -424,11 +437,11 @@ class IndexerSettings extends StatelessWidget {
               decoration: InputDecoration(
                 errorMaxLines: 3,
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14.0 * stg.borderRadiusMultiplier.value),
+                  borderRadius: BorderRadius.circular(14.0.multipliedRadius),
                   borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 2.0),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18.0 * stg.borderRadiusMultiplier.value),
+                  borderRadius: BorderRadius.circular(18.0.multipliedRadius),
                   borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 1.0),
                 ),
                 hintText: Language.inst.VALUE,

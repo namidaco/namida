@@ -92,7 +92,11 @@ class CustomizationSettings extends StatelessWidget {
               title: Language.inst.BORDER_RADIUS_MULTIPLIER,
               trailingText: "${stg.borderRadiusMultiplier.value}",
               onTap: () {
-                showSettingDialogWithTextField(title: Language.inst.BORDER_RADIUS_MULTIPLIER, borderRadiusMultiplier: true);
+                showSettingDialogWithTextField(
+                  title: Language.inst.BORDER_RADIUS_MULTIPLIER,
+                  borderRadiusMultiplier: true,
+                  iconWidget: const Icon(Broken.rotate_left_1),
+                );
               },
             ),
             CustomListTile(
@@ -100,7 +104,11 @@ class CustomizationSettings extends StatelessWidget {
               title: Language.inst.FONT_SCALE,
               trailingText: "${(stg.fontScaleFactor.value * 100).toInt()}%",
               onTap: () {
-                showSettingDialogWithTextField(title: Language.inst.FONT_SCALE, fontScaleFactor: true);
+                showSettingDialogWithTextField(
+                  title: Language.inst.FONT_SCALE,
+                  fontScaleFactor: true,
+                  iconWidget: const Icon(Broken.text),
+                );
               },
             ),
             CustomSwitchListTile(

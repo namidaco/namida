@@ -4,9 +4,11 @@ import 'package:get/get.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/translations/strings.dart';
+import 'package:namida/ui/widgets/dialogs/add_to_playlist_dialog.dart';
 
 class SelectedTracksRow extends StatelessWidget {
-  SelectedTracksRow({super.key});
+  const SelectedTracksRow({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +27,7 @@ class SelectedTracksRow extends StatelessWidget {
               icon: const Icon(Broken.close_circle),
               splashRadius: 20.0,
             ),
-            Container(
+            SizedBox(
               width: 140,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,14 +82,13 @@ class SelectedTracksRow extends StatelessWidget {
             //   icon: Icon(Broken.shuffle),
             //   splashRadius: 20.0,
             // ),
-            // IconButton(
-            //   onPressed: () {
-            //     showAddToPlaylistDialogModern(context, selectedTracks);
-            //   },
-            //   tooltip: Language.instance.PLAYLIST_ADD_DIALOG_TITLE,
-            //   icon: Icon(Broken.music_playlist),
-            //   splashRadius: 20.0,
-            // ),
+            IconButton(
+              onPressed: () {
+                showAddToPlaylistDialog(SelectedTracksController.inst.selectedTracks.toList());
+              },
+              tooltip: Language.inst.ADD_TO_PLAYLIST,
+              icon: const Icon(Broken.music_playlist),
+            ),
             // IconButton(
             //   onPressed: () {
             //     setState(() {

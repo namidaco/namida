@@ -18,7 +18,6 @@ class AdvancedSettings extends StatelessWidget {
     return SettingsCard(
       title: Language.inst.ADVANCED_SETTINGS,
       subtitle: Language.inst.ADVANCED_SETTINGS_SUBTITLE,
-      // icon: Broken.code_circle,
       icon: Broken.hierarchy_3,
       // icon: Broken.danger,
       child: Column(
@@ -30,7 +29,7 @@ class AdvancedSettings extends StatelessWidget {
                 secondaryIcon: Broken.close_circle,
               ),
               title: Language.inst.CLEAR_IMAGE_CACHE,
-              trailingText: Indexer.inst.getImageCacheSize().fileSizeFormatted,
+              trailingText: Indexer.inst.artworksSizeInStorage.value.fileSizeFormatted,
               // trailing: Obx(
               //   () => Text(
               //     Indexer.inst.getImageCacheSize().fileSizeFormatted,
@@ -46,9 +45,9 @@ class AdvancedSettings extends StatelessWidget {
                     actions: [
                       const CancelButton(),
                       ElevatedButton(
-                        onPressed: () {
-                          Indexer.inst.clearImageCache();
+                        onPressed: () async {
                           Get.close(1);
+                          await Indexer.inst.clearImageCache();
                         },
                         child: Text(Language.inst.CLEAR.toUpperCase()),
                       ),
@@ -65,7 +64,7 @@ class AdvancedSettings extends StatelessWidget {
                 secondaryIcon: Broken.close_circle,
               ),
               title: Language.inst.CLEAR_WAVEFORM_DATA,
-              trailingText: Indexer.inst.getWaveformDataSize().fileSizeFormatted,
+              trailingText: Indexer.inst.waveformsSizeInStorage.value.fileSizeFormatted,
               onTap: () {
                 Get.dialog(
                   CustomBlurryDialog(
@@ -77,8 +76,38 @@ class AdvancedSettings extends StatelessWidget {
                       const CancelButton(),
                       ElevatedButton(
                         onPressed: () {
-                          Indexer.inst.clearWaveformData();
                           Get.close(1);
+                          Indexer.inst.clearWaveformData();
+                        },
+                        child: Text(Language.inst.CLEAR.toUpperCase()),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          Obx(
+            () => CustomListTile(
+              leading: const StackedIcon(
+                baseIcon: Broken.video,
+                secondaryIcon: Broken.close_circle,
+              ),
+              title: Language.inst.CLEAR_VIDEO_CACHE,
+              trailingText: Indexer.inst.videosSizeInStorage.value.fileSizeFormatted,
+              onTap: () {
+                Get.dialog(
+                  CustomBlurryDialog(
+                    isWarning: true,
+                    normalTitleStyle: true,
+                    title: Language.inst.CLEAR_VIDEO_CACHE,
+                    bodyText: Language.inst.CONFIRM,
+                    actions: [
+                      const CancelButton(),
+                      ElevatedButton(
+                        onPressed: () async {
+                          Get.close(1);
+                          await Indexer.inst.clearVideoCache();
                         },
                         child: Text(Language.inst.CLEAR.toUpperCase()),
                       ),

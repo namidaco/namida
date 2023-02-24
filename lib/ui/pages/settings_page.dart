@@ -7,11 +7,12 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/advanced.dart';
+import 'package:namida/ui/widgets/settings/backup_restore.dart';
 import 'package:namida/ui/widgets/settings/customizations.dart';
 import 'package:namida/ui/widgets/settings/extras.dart';
 import 'package:namida/ui/widgets/settings/indexer.dart';
-import 'package:namida/ui/widgets/settings/stats.dart';
 import 'package:namida/ui/widgets/settings/theme_setting.dart';
+import 'package:namida/ui/widgets/settings/video_playback.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -47,6 +48,8 @@ class SettingsPage extends StatelessWidget {
                 : ListView(
                     children: [
                       const ThemeSetting(),
+                      VideoPlaybackSettings(),
+                      BackupAndRestore(),
                       IndexerSettings(),
                       CustomizationSettings(),
                       const ExtrasSettings(),
@@ -129,6 +132,18 @@ class CollapsedSettingTiles extends StatelessWidget {
           subtitle: Language.inst.EXTRAS_SUBTITLE,
           icon: Broken.command_square,
           page: const ExtrasSettings(),
+        ),
+        CustomCollapsedListTile(
+          title: Language.inst.VIDEO_PLAYBACK_SETTING,
+          subtitle: Language.inst.VIDEO_PLAYBACK_SETTING_SUBTITLE,
+          icon: Broken.video,
+          page: const VideoPlaybackSettings(),
+        ),
+        CustomCollapsedListTile(
+          title: Language.inst.BACKUP_AND_RESTORE,
+          subtitle: Language.inst.BACKUP_AND_RESTORE_SUBTITLE,
+          icon: Broken.refresh_circle,
+          page: const BackupAndRestore(),
         ),
         CustomCollapsedListTile(
           title: Language.inst.ADVANCED_SETTINGS,

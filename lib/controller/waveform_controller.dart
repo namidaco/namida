@@ -15,45 +15,62 @@ class WaveformController extends GetxController {
   RxList<double> curentWaveform = kDefaultWaveFormData.obs;
   RxBool generatingAllWaveforms = false.obs;
 
+  int retryNumber = 0;
+
+  /// Extracts waveform data from a given track, or immediately read from .wave file if exists, then assigns wavedata to [curentWaveform].
+  /// Has a timeout of 3 minutes, otherwise it will assign [kDefaultWaveFormData] permanently.
   Future<void> generateWaveform(Track track) async {
     final wavePath = "$kWaveformDirPath${p.basename(track.path)}.wave";
     final waveFile = File(wavePath);
     final waveFileStat = await waveFile.stat();
-    // List<double> waveform = kDefaultWaveFormData;
+
+    // If Waveform file exists in storage
     if (await waveFile.exists() && waveFileStat.size != 0) {
       try {
         String content = await waveFile.readAsString();
         final waveform = List<double>.from(json.decode(content));
 
         // A Delay to prevent glitches caused by theme change
-        Future.delayed(const Duration(milliseconds: 300), () async {
+        Future.delayed(const Duration(milliseconds: 400), () async {
           curentWaveform.assignAll(waveform);
         });
+        retryNumber = 0;
       } catch (e) {
         printInfo(info: e.toString());
-        await waveFile.delete();
-        await generateWaveform(track);
       }
-    } else {
+    }
+    // If Waveform file does NOT exist in storage
+    else {
       /// A Delay to prevent glitches caused by theme change
-      Future.delayed(const Duration(milliseconds: 300), () async {
+      Future.delayed(const Duration(milliseconds: 400), () async {
         curentWaveform.assignAll(kDefaultWaveFormData);
       });
 
       // no await since extraction process will take time anyway, hope this doesnt make problems
       waveFile.create();
 
+      List<double> waveformData = kDefaultWaveFormData;
       // creates a new instance to prevent extracting from the same file.
       // currently this won't be performant when the user plays multiple files at once
-      final waveformData = await PlayerController().extractWaveformData(path: track.path, noOfSamples: 500);
+      try {
+        waveformData = await PlayerController().extractWaveformData(path: track.path, noOfSamples: 500).timeout(const Duration(minutes: 3));
+      } catch (e) {
+        retryNumber++;
+        if (retryNumber < 3) {
+          await waveFile.delete();
+          await generateWaveform(track);
+        }
+        printError(info: e.toString());
+      }
 
       if (track == Player.inst.nowPlayingTrack.value) {
         curentWaveform.assignAll(waveformData);
       }
       await waveFile.writeAsString(waveformData.toString());
+      Indexer.inst.updateWaveformSizeInStorage();
     }
 
-    Indexer.inst.waveformsInStorage.value = Directory(kWaveformDirPath).listSync();
+    Indexer.inst.waveformsInStorage.refresh();
   }
 
   Future<void> generateAllWaveforms() async {

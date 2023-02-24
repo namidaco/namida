@@ -7,7 +7,6 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -20,12 +19,14 @@ class TrackTile extends StatelessWidget {
   final bool displayRightDragHandler;
   final bool draggableThumbnail;
   final bool isInSelectedTracksPreview;
+  final List<Track>? queue;
   TrackTile({
     super.key,
     required this.track,
     this.displayRightDragHandler = false,
     this.draggableThumbnail = true,
     this.isInSelectedTracksPreview = false,
+    this.queue,
   });
 
   String getChoosenTrackTileItem(TrackTileItem trackItem) {
@@ -106,10 +107,9 @@ class TrackTile extends StatelessWidget {
                 if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
                   SelectedTracksController.inst.selectOrUnselect(track);
                 } else {
-                  Player.inst.playOrPause(track);
+                  Player.inst.playOrPause(track: track, queue: queue);
                   print(track.path);
                 }
-                await WaveformController.inst.generateWaveform(track);
               },
               child: Container(
                 alignment: Alignment.center,
@@ -181,18 +181,20 @@ class TrackTile extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
+
                           // check if third row isnt empty
-                          if (SettingsController.inst.displayThirdRow.value && SettingsController.inst.row3Item1.value != TrackTileItem.none ||
-                              SettingsController.inst.row3Item2.value != TrackTileItem.none ||
-                              SettingsController.inst.row3Item3.value != TrackTileItem.none)
-                            Text(
-                              joinTrackItems(SettingsController.inst.row3Item1.value, SettingsController.inst.row3Item2.value, SettingsController.inst.row3Item3.value),
-                              style: Get.textTheme.displaySmall?.copyWith(
-                                color: textColor?.withAlpha(130),
+                          if (SettingsController.inst.displayThirdRow.value)
+                            if (SettingsController.inst.row3Item1.value != TrackTileItem.none ||
+                                SettingsController.inst.row3Item2.value != TrackTileItem.none ||
+                                SettingsController.inst.row3Item3.value != TrackTileItem.none)
+                              Text(
+                                joinTrackItems(SettingsController.inst.row3Item1.value, SettingsController.inst.row3Item2.value, SettingsController.inst.row3Item3.value),
+                                style: Get.textTheme.displaySmall?.copyWith(
+                                  color: textColor?.withAlpha(130),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
                         ],
                       ),
                     ),
@@ -241,7 +243,7 @@ class TrackTile extends StatelessWidget {
                         child: FittedBox(
                           child: Icon(
                             Broken.menu_1,
-                            color: Get.textTheme.displayMedium?.color,
+                            color: textColor?.withAlpha(160),
                           ),
                         ),
                       ),
@@ -251,6 +253,7 @@ class TrackTile extends StatelessWidget {
                     ),
                     MoreIcon(
                       padding: 6.0,
+                      iconColor: textColor?.withAlpha(160),
                       onPressed: () => showTrackDialog(track),
                     ),
                     const SizedBox(

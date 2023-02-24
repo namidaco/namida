@@ -81,38 +81,6 @@ class CustomSwitchListTile extends StatelessWidget {
                   width: 12.0,
                 ),
                 CustomSwitch(active: value),
-                // AnimatedContainer(
-                //   decoration: BoxDecoration(
-                //     color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.background),
-                //     borderRadius: BorderRadius.circular(30),
-                //     boxShadow: value
-                //         ? [
-                //             BoxShadow(
-                //               offset: const Offset(0, 2),
-                //               blurRadius: 8,
-                //               spreadRadius: 0,
-                //               color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.background),
-                //             ),
-                //           ]
-                //         : null,
-                //   ),
-                //   duration: const Duration(milliseconds: 400),
-                //   child: FlutterSwitch(
-                //     activeColor: Colors.transparent,
-                //     toggleColor: const Color.fromARGB(222, 255, 255, 255),
-                //     inactiveColor: context.theme.disabledColor,
-                //     duration: const Duration(milliseconds: 400),
-                //     borderRadius: 30.0,
-                //     padding: 4.0,
-                //     width: 40,
-                //     height: 21,
-                //     toggleSize: 14,
-                //     value: value,
-                //     onToggle: (value) {
-                //       onChanged(value);
-                //     },
-                //   ),
-                // ),
               ],
             ),
           ),
@@ -152,16 +120,15 @@ class CustomSwitch extends StatelessWidget {
       decoration: BoxDecoration(
         color: (active
             ? bgColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.background).withAlpha(140)
-            : context.theme.scaffoldBackgroundColor.withAlpha(34)),
+            // : context.theme.scaffoldBackgroundColor.withAlpha(34)
+            : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(60), context.theme.disabledColor)),
         borderRadius: BorderRadius.circular(30.0.multipliedRadius),
         boxShadow: [
           BoxShadow(
             offset: const Offset(0, 2),
-            blurRadius: active ? 8 : 0,
+            blurRadius: active ? 8 : 2,
             spreadRadius: 0,
-            color: active
-                ? (shadowColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.background)).withOpacity(0.8)
-                : Colors.transparent,
+            color: (shadowColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.background)).withOpacity(active ? 0.8 : 0.3),
           ),
         ],
       ),
@@ -196,6 +163,7 @@ class CustomListTile extends StatelessWidget {
   final int? rotateIcon;
   final bool enabled;
   final bool largeTitle;
+  final int maxSubtitleLines;
   const CustomListTile({
     Key? key,
     required this.title,
@@ -209,6 +177,7 @@ class CustomListTile extends StatelessWidget {
     this.trailingText,
     this.enabled = true,
     this.largeTitle = false,
+    this.maxSubtitleLines = 2,
   }) : super(key: key);
 
   @override
@@ -228,7 +197,7 @@ class CustomListTile extends StatelessWidget {
         horizontalTitleGap: 0.0,
         minVerticalPadding: 8.0,
         leading: icon != null
-            ? Container(
+            ? SizedBox(
                 height: double.infinity,
                 child: rotateIcon != null
                     ? RotatedBox(
@@ -254,7 +223,7 @@ class CustomListTile extends StatelessWidget {
             ? Text(
                 subtitle!,
                 style: context.theme.textTheme.displaySmall,
-                maxLines: 2,
+                maxLines: maxSubtitleLines,
                 overflow: TextOverflow.ellipsis,
               )
             : null,
@@ -285,14 +254,16 @@ class CustomBlurryDialog extends StatelessWidget {
   final bool normalTitleStyle;
   final String? bodyText;
   final bool isWarning;
-  const CustomBlurryDialog({super.key, this.child, this.title, this.actions, this.icon, this.normalTitleStyle = false, this.bodyText, this.isWarning = false});
+  final EdgeInsets? insetPadding;
+  const CustomBlurryDialog({super.key, this.child, this.title, this.actions, this.icon, this.normalTitleStyle = false, this.bodyText, this.isWarning = false, this.insetPadding});
 
   @override
   Widget build(BuildContext context) {
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
       child: AlertDialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 50, vertical: 32),
+        scrollable: true,
+        insetPadding: insetPadding ?? const EdgeInsets.symmetric(horizontal: 50, vertical: 32),
         clipBehavior: Clip.antiAlias,
         titlePadding: normalTitleStyle ? const EdgeInsets.only(top: 24.0, left: 24.0, right: 24.0) : EdgeInsets.zero,
         contentPadding: const EdgeInsets.all(14.0),
@@ -335,16 +306,18 @@ class CustomBlurryDialog extends StatelessWidget {
                   ],
                 ),
               ),
-        content: SingleChildScrollView(
-            child: bodyText != null
-                ? Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Text(
-                      bodyText!,
-                      style: Get.textTheme.displayMedium,
-                    ),
-                  )
-                : child),
+        content: SizedBox(
+          width: Get.width,
+          child: bodyText != null
+              ? Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Text(
+                    bodyText!,
+                    style: Get.textTheme.displayMedium,
+                  ),
+                )
+              : child,
+        ),
         actions: actions,
       ),
     );
@@ -413,27 +386,43 @@ class StatsContainer extends StatelessWidget {
 
 class SmallListTile extends StatelessWidget {
   final String title;
+  final String? subtitle;
   final Widget? trailing;
   final IconData? icon;
   final IconData? trailingIcon;
   final bool active;
   final bool displayAnimatedCheck;
+  final bool compact;
   final void Function()? onTap;
-  const SmallListTile({super.key, required this.title, this.onTap, this.trailing, this.active = false, this.icon, this.trailingIcon, this.displayAnimatedCheck = false});
+  const SmallListTile(
+      {super.key,
+      required this.title,
+      this.onTap,
+      this.trailing,
+      this.active = false,
+      this.icon,
+      this.trailingIcon,
+      this.displayAnimatedCheck = false,
+      this.compact = true,
+      this.subtitle});
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: icon != null
-          ? Icon(icon)
-          : active
-              ? const Icon(Broken.arrow_circle_right)
-              : const Icon(
-                  Broken.arrow_right_3,
-                  size: 18.0,
-                ),
-      visualDensity: VisualDensity.compact,
+      leading: SizedBox(
+        height: double.infinity,
+        child: icon != null
+            ? Icon(icon)
+            : active
+                ? const Icon(Broken.arrow_circle_right)
+                : const Icon(
+                    Broken.arrow_right_3,
+                    size: 18.0,
+                  ),
+      ),
+      visualDensity: compact ? VisualDensity.compact : null,
       title: Text(title, style: context.textTheme.displayMedium),
+      subtitle: subtitle != null ? Text(subtitle!, style: context.textTheme.displaySmall) : null,
       trailing: displayAnimatedCheck
           ? SizedBox(
               height: 18.0,
@@ -531,7 +520,8 @@ class MoreIcon extends StatelessWidget {
   final void Function()? onPressed;
   final bool rotated;
   final double padding;
-  const MoreIcon({super.key, this.onPressed, this.rotated = true, this.padding = 1.0});
+  final Color? iconColor;
+  const MoreIcon({super.key, this.onPressed, this.rotated = true, this.padding = 1.0, this.iconColor});
 
   @override
   Widget build(BuildContext context) {
@@ -546,9 +536,10 @@ class MoreIcon extends StatelessWidget {
           onTap: onPressed,
           child: Padding(
             padding: EdgeInsets.all(padding),
-            child: const Icon(
+            child: Icon(
               Broken.more,
               size: 18.0,
+              color: iconColor,
             ),
           ),
         ),
@@ -667,5 +658,39 @@ class CollapsedSettingTileWidget extends StatelessWidget {
         },
       ),
     );
+  }
+}
+
+class NamidaBlurryContainer extends StatelessWidget {
+  final Widget child;
+  final void Function()? onTap;
+  final BorderRadius? borderRadius;
+  const NamidaBlurryContainer({super.key, required this.child, this.onTap, this.borderRadius});
+
+  @override
+  Widget build(BuildContext context) {
+    final con = BlurryContainer(
+      disableBlur: !SettingsController.inst.enableBlurEffect.value,
+      borderRadius: borderRadius ??
+          BorderRadius.only(
+            bottomLeft: Radius.circular(8.0.multipliedRadius),
+          ),
+      container: Container(
+          padding: EdgeInsets.symmetric(horizontal: 6.0.multipliedRadius, vertical: 2.0),
+          decoration: BoxDecoration(
+            color: context.theme.cardColor.withAlpha(SettingsController.inst.enableBlurEffect.value ? 60 : 220),
+            borderRadius: borderRadius ??
+                BorderRadius.only(
+                  bottomLeft: Radius.circular(8.0.multipliedRadius),
+                ),
+          ),
+          child: child),
+    );
+    return onTap != null
+        ? InkWell(
+            onTap: onTap,
+            child: con,
+          )
+        : con;
   }
 }

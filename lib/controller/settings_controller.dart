@@ -53,6 +53,12 @@ class SettingsController extends GetxController {
   RxList<String> directoriesToScan = kDirectoriesPaths.toList().obs;
   RxList<String> directoriesToExclude = <String>[].obs;
   RxBool preventDuplicatedTracks = false.obs;
+  RxBool respectNoMedia = false.obs;
+  RxString defaultBackupLocation = kInternalAppDirectoryPath.obs;
+  RxList<String> backupItemslist = [kTracksFilePath, kQueueFilePath, kPlaylistsFilePath, kSettingsFilePath, kQueueFilePath, kWaveformDirPath, kArtworksCompDirPath].obs;
+  RxBool enableVideoPlayback = true.obs;
+  RxInt videoPlaybackSource = 0.obs;
+  RxList<String> youtubeVideoQualities = ['144p', '240p', '360p', '480p', '720p'].obs;
 
   /// Track Items
   RxBool displayThirdRow = true.obs;
@@ -78,7 +84,7 @@ class SettingsController extends GetxController {
     staticColor.value = getInt('staticColor') ?? staticColor.value;
     selectedLibraryTab.value = EnumToString.fromString(LibraryTab.values, getString('selectedLibraryTab') ?? EnumToString.convertToString(selectedLibraryTab.value))!;
     autoLibraryTab.value = getBool('autoLibraryTab') ?? autoLibraryTab.value;
-    libraryTabs.value = getListString('libraryTabs', ifNull: libraryTabs.value);
+    libraryTabs.value = getListString('libraryTabs', ifNull: libraryTabs.toList());
     borderRadiusMultiplier.value = getDouble('borderRadiusMultiplier') ?? borderRadiusMultiplier.value;
     fontScaleFactor.value = getDouble('fontScaleFactor') ?? fontScaleFactor.value;
     trackThumbnailSizeinList.value = getDouble('trackThumbnailSizeinList') ?? trackThumbnailSizeinList.value;
@@ -100,8 +106,8 @@ class SettingsController extends GetxController {
     enableGlowEffect.value = getBool('enableGlowEffect') ?? enableGlowEffect.value;
     hourFormat12.value = getBool('hourFormat12') ?? hourFormat12.value;
     dateTimeFormat.value = getString('dateTimeFormat') ?? dateTimeFormat.value;
-    trackArtistsSeparators.value = getListString('trackArtistsSeparators', ifNull: trackArtistsSeparators.value);
-    trackGenresSeparators.value = getListString('trackGenresSeparators', ifNull: trackGenresSeparators.value);
+    trackArtistsSeparators.value = getListString('trackArtistsSeparators', ifNull: trackArtistsSeparators.toList());
+    trackGenresSeparators.value = getListString('trackGenresSeparators', ifNull: trackGenresSeparators.toList());
     tracksSort.value = EnumToString.fromString(SortType.values, getString('tracksSort') ?? EnumToString.convertToString(tracksSort.value))!;
     tracksSortReversed.value = getBool('tracksSortReversed') ?? tracksSortReversed.value;
     albumSort.value = EnumToString.fromString(GroupSortType.values, getString('albumSort') ?? EnumToString.convertToString(albumSort.value))!;
@@ -113,10 +119,16 @@ class SettingsController extends GetxController {
     trackTileSeparator.value = getString('trackTileSeparator') ?? trackTileSeparator.value;
     indexMinDurationInSec.value = getInt('indexMinDurationInSec') ?? indexMinDurationInSec.value;
     indexMinFileSizeInB.value = getInt('indexMinFileSizeInB') ?? indexMinFileSizeInB.value;
-    trackSearchFilter.value = getListString('trackSearchFilter', ifNull: trackSearchFilter.value);
-    directoriesToScan.value = getListString('directoriesToScan', ifNull: directoriesToScan.value);
-    directoriesToExclude.value = getListString('directoriesToExclude', ifNull: directoriesToExclude.value);
+    trackSearchFilter.value = getListString('trackSearchFilter', ifNull: trackSearchFilter.toList());
+    directoriesToScan.value = getListString('directoriesToScan', ifNull: directoriesToScan.toList());
+    directoriesToExclude.value = getListString('directoriesToExclude', ifNull: directoriesToExclude.toList());
     preventDuplicatedTracks.value = getBool('preventDuplicatedTracks') ?? preventDuplicatedTracks.value;
+    respectNoMedia.value = getBool('respectNoMedia') ?? respectNoMedia.value;
+    defaultBackupLocation.value = getString('defaultBackupLocation') ?? defaultBackupLocation.value;
+    backupItemslist.value = getListString('backupItemslist', ifNull: backupItemslist.toList());
+    enableVideoPlayback.value = getBool('enableVideoPlayback') ?? enableVideoPlayback.value;
+    videoPlaybackSource.value = getInt('videoPlaybackSource') ?? videoPlaybackSource.value;
+    youtubeVideoQualities.value = getListString('youtubeVideoQualities', ifNull: youtubeVideoQualities.toList());
 
     /// Track Items
     displayThirdRow.value = getBool('displayThirdRow') ?? displayThirdRow.value;
@@ -188,6 +200,12 @@ class SettingsController extends GetxController {
     List<String>? directoriesToScan,
     List<String>? directoriesToExclude,
     bool? preventDuplicatedTracks,
+    bool? respectNoMedia,
+    String? defaultBackupLocation,
+    List<String>? backupItemslist,
+    bool? enableVideoPlayback,
+    int? videoPlaybackSource,
+    List<String>? youtubeVideoQualities,
   }) {
     if (themeMode != null) {
       this.themeMode.value = themeMode;
@@ -398,22 +416,53 @@ class SettingsController extends GetxController {
       this.preventDuplicatedTracks.value = preventDuplicatedTracks;
       setData('preventDuplicatedTracks', preventDuplicatedTracks);
     }
-
+    if (respectNoMedia != null) {
+      this.respectNoMedia.value = respectNoMedia;
+      setData('respectNoMedia', respectNoMedia);
+    }
+    if (defaultBackupLocation != null) {
+      this.defaultBackupLocation.value = defaultBackupLocation;
+      setData('defaultBackupLocation', defaultBackupLocation);
+    }
+    if (backupItemslist != null) {
+      for (var d in backupItemslist) {
+        if (!this.backupItemslist.contains(d)) {
+          this.backupItemslist.add(d);
+        }
+      }
+      setData('backupItemslist', List<String>.from(this.backupItemslist));
+    }
+    if (youtubeVideoQualities != null) {
+      for (var q in youtubeVideoQualities) {
+        if (!this.youtubeVideoQualities.contains(q)) {
+          this.youtubeVideoQualities.add(q);
+        }
+      }
+      setData('youtubeVideoQualities', List<String>.from(this.youtubeVideoQualities));
+    }
+    if (enableVideoPlayback != null) {
+      this.enableVideoPlayback.value = enableVideoPlayback;
+      setData('enableVideoPlayback', enableVideoPlayback);
+    }
+    if (videoPlaybackSource != null) {
+      this.videoPlaybackSource.value = videoPlaybackSource;
+      setData('videoPlaybackSource', videoPlaybackSource);
+    }
     update();
   }
 
   void insertInList(
     index, {
     String? libraryTab1,
+    String? youtubeVideoQualities1,
   }) {
     if (libraryTab1 != null) {
-      // if (index == 0) {
       libraryTabs.insert(index, libraryTab1);
-      // } else {
-      //   libraryTabs.insert(index - 1, libraryTab1);
-      // }
-
       setData('libraryTabs', List<String>.from(libraryTabs));
+    }
+    if (youtubeVideoQualities1 != null) {
+      youtubeVideoQualities.insert(index, youtubeVideoQualities1);
+      setData('youtubeVideoQualities', List<String>.from(youtubeVideoQualities));
     }
   }
 
@@ -428,6 +477,10 @@ class SettingsController extends GetxController {
     List<String>? directoriesToExcludeAll,
     String? libraryTab1,
     List<String>? libraryTabsAll,
+    String? backupItemslist1,
+    List<String>? backupItemslistAll,
+    String? youtubeVideoQualities1,
+    List<String>? youtubeVideoQualitiesAll,
   }) {
     if (trackArtistsSeparator != null) {
       trackArtistsSeparators.remove(trackArtistsSeparator);
@@ -484,6 +537,30 @@ class SettingsController extends GetxController {
         }
       }
       setData('libraryTabs', List<String>.from(libraryTabs));
+    }
+    if (backupItemslist1 != null) {
+      backupItemslist.remove(backupItemslist1);
+      setData('backupItemslist', List<String>.from(backupItemslist));
+    }
+    if (backupItemslistAll != null) {
+      for (var t in backupItemslistAll) {
+        if (backupItemslist.contains(t)) {
+          backupItemslist.remove(t);
+        }
+      }
+      setData('backupItemslist', List<String>.from(backupItemslist));
+    }
+    if (youtubeVideoQualities1 != null) {
+      youtubeVideoQualities.remove(youtubeVideoQualities1);
+      setData('youtubeVideoQualities', List<String>.from(youtubeVideoQualities));
+    }
+    if (youtubeVideoQualitiesAll != null) {
+      for (var t in youtubeVideoQualitiesAll) {
+        if (youtubeVideoQualities.contains(t)) {
+          youtubeVideoQualities.remove(t);
+        }
+      }
+      setData('youtubeVideoQualities', List<String>.from(youtubeVideoQualities));
     }
     update();
   }
@@ -548,7 +625,7 @@ class SettingsController extends GetxController {
   }
 
   /// GetStorage functions
-  final GetStorage storage = GetStorage();
+  final GetStorage storage = GetStorage('NamidaSettings');
 
   void setData(String key, dynamic value) => storage.write(key, value);
   int? getInt(String key) => storage.read(key);

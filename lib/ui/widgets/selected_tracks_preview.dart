@@ -6,7 +6,7 @@ import 'package:namida/ui/widgets/selected_tracks_row.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class SelectedTracksPreviewContainer extends StatelessWidget {
-  SelectedTracksPreviewContainer({super.key});
+  const SelectedTracksPreviewContainer({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -63,12 +63,12 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                             ),
                             padding: const EdgeInsets.all(15),
                             child: stc.isMenuMinimized.value
-                                ? FittedBox(child: SelectedTracksRow())
+                                ? const FittedBox(child: SelectedTracksRow())
                                 : Column(
                                     mainAxisSize: MainAxisSize.max,
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      FittedBox(child: SelectedTracksRow()),
+                                      const FittedBox(child: SelectedTracksRow()),
                                       const SizedBox(
                                         height: 20,
                                       ),
@@ -112,6 +112,5 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
         );
       },
     );
-    ;
   }
 }

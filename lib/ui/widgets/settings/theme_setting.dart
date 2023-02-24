@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
-import 'package:namida/controller/current_color.dart';
 
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
-import 'package:namida/core/extensions.dart';
 
 class ThemeSetting extends StatelessWidget {
   const ThemeSetting({super.key});
@@ -152,7 +151,7 @@ class ThemeSetting extends StatelessWidget {
                 value: SettingsController.inst.autoColor.value,
                 onChanged: (p0) {
                   SettingsController.inst.save(autoColor: !p0);
-                  CurrentColor.inst.color.value = Color(SettingsController.inst.staticColor.value);
+                  CurrentColor.inst.color.value = playerStaticColor;
                   CurrentColor.inst.updateThemeAndRefresh();
                 },
               ),
@@ -168,16 +167,28 @@ class ThemeSetting extends StatelessWidget {
                   subtitle: Language.inst.DEFAULT_COLOR_SUBTITLE,
                   trailing: CircleAvatar(
                     minRadius: 12,
-                    backgroundColor: Color(SettingsController.inst.staticColor.value),
+                    backgroundColor: playerStaticColor,
                   ),
                   onTap: () => Get.dialog(
                     CustomBlurryDialog(
+                      actions: [
+                        IconButton(
+                          icon: const Icon(Broken.refresh),
+                          tooltip: Language.inst.RESTORE_DEFAULTS,
+                          onPressed: () {
+                            _updateColor(kMainColor);
+                            Get.close(1);
+                          },
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Get.close(1),
+                          child: Text(Language.inst.DONE),
+                        ),
+                      ],
                       child: ColorPicker(
-                        pickerColor: kMainColor,
+                        pickerColor: playerStaticColor,
                         onColorChanged: (value) {
-                          SettingsController.inst.save(staticColor: value.value);
-                          CurrentColor.inst.color.value = value;
-                          CurrentColor.inst.updateThemeAndRefresh();
+                          _updateColor(value);
                         },
                       ),
                     ),
@@ -189,5 +200,11 @@ class ThemeSetting extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _updateColor(Color color) {
+    SettingsController.inst.save(staticColor: color.value);
+    CurrentColor.inst.color.value = color;
+    CurrentColor.inst.updateThemeAndRefresh();
   }
 }

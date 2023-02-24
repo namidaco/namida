@@ -67,23 +67,10 @@ class AlbumCard extends StatelessWidget {
                       ? Positioned(
                           top: 0,
                           right: 0,
-                          child: BlurryContainer(
-                            disableBlur: !SettingsController.inst.enableBlurEffect.value,
-                            borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(8.0.multipliedRadius),
-                            ),
-                            container: Container(
-                              padding: EdgeInsets.symmetric(horizontal: 6.0.multipliedRadius, vertical: 2.0),
-                              decoration: BoxDecoration(
-                                color: context.theme.cardColor.withAlpha(SettingsController.inst.enableBlurEffect.value ? 20 : 220),
-                                borderRadius: BorderRadius.only(
-                                  bottomLeft: Radius.circular(8.0.multipliedRadius),
-                                ),
-                              ),
-                              child: Text(
-                                album[0].year.yearFormatted,
-                                style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize, fontWeight: FontWeight.bold),
-                              ),
+                          child: NamidaBlurryContainer(
+                            child: Text(
+                              album[0].year.yearFormatted,
+                              style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize, fontWeight: FontWeight.bold),
                             ),
                           ),
                         )

@@ -6,22 +6,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:namida/class/playlist.dart';
-import 'package:namida/controller/playlist_controller.dart';
-import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/video_controller.dart';
+import 'package:namida/packages/miniplayer.dart';
+import 'package:namida/ui/widgets/selected_tracks_preview.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/themes.dart';
-import 'package:namida/core/translations/strings.dart';
 import 'package:namida/core/translations/translations.dart';
 import 'package:namida/ui/pages/homepage.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,21 +63,26 @@ void main() async {
   //   ),
   // );
 
-  await GetStorage.init();
+  await GetStorage.init('NamidaSettings');
 
   kAppDirectoryPath = await getApplicationDocumentsDirectory().then((value) => value.path);
   await Directory(kArtworksDirPath).create();
   await Directory(kArtworksCompDirPath).create();
   await Directory(kWaveformDirPath).create();
+  await Directory(kVideosCachePath).create();
+  await Directory(kVideosCacheTempPath).create();
 
   final paths = await ExternalPath.getExternalStorageDirectories();
   kDirectoriesPaths = paths.map((path) => "$path/${ExternalPath.DIRECTORY_MUSIC}").toSet();
-  kDirectoriesPaths.add('/storage/emulated/0/Download/');
+  kDirectoriesPaths.add('${paths[0]}/Download/');
+  kInternalAppDirectoryPath = "${paths[0]}/Namida";
 
   Get.put(() => SettingsController());
   Get.put(() => SelectedTracksController());
   Get.put(() => ScrollSearchController());
-  Get.put(() => CurrentColor());
+  Get.put(() => Player());
+  Get.put(() => VideoController());
+  await Player.inst.initializePlayer();
 
   final tfe = await File(kTracksFilePath).exists() && await File(kTracksFilePath).stat().then((value) => value.size > 80);
   if (tfe) {
@@ -85,10 +91,17 @@ void main() async {
     Indexer.inst.prepareTracksFile(tfe);
   }
   await PlaylistController.inst.preparePlaylistFile();
-
-  // await Player.inst.initializePlayer();
+  await VideoController.inst.getVideoFiles();
 
   runApp(const MyApp());
+}
+
+Future<void> requestManageStoragePermission() async {
+  if (!await Permission.manageExternalStorage.isGranted) {
+    await Permission.manageExternalStorage.request();
+  } else {
+    return;
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -127,7 +140,16 @@ class MyApp extends StatelessWidget {
                   //       systemNavigationBarIconBrightness: Brightness.light,
                   //     ),
                   //     child:
-                  HomePage()
+                  Stack(
+                children: [
+                  HomePage(),
+                  const MiniPlayerParent(),
+                  const Positioned(
+                    bottom: 60.0,
+                    child: SelectedTracksPreviewContainer(),
+                  ),
+                ],
+              )
               // );
 
               ),
@@ -178,4 +200,13 @@ class _KeepAliveWrapperState extends State<KeepAliveWrapper> with AutomaticKeepA
 
   @override
   bool get wantKeepAlive => true;
+}
+
+class MyNavigatorObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    // Dismiss keyboard when a new screen is navigated to
+    Get.focusScope?.unfocus();
+    super.didPush(route, previousRoute);
+  }
 }

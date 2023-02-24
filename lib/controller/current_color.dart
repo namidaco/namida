@@ -2,32 +2,29 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:namida/controller/player_controller.dart';
-import 'package:namida/controller/settings_controller.dart';
 import 'package:palette_generator/palette_generator.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/core/themes.dart';
-import 'package:namida/core/constants.dart';
+import 'package:namida/controller/settings_controller.dart';
+
+Color get playerStaticColor => Color(SettingsController.inst.staticColor.value);
 
 class CurrentColor extends GetxController {
   static CurrentColor inst = CurrentColor();
 
-  Rx<Color> color = Color(SettingsController.inst.staticColor.value).obs;
-  // Rx<Color> color = kMainColor.obs;
-
+  Rx<Color> color = playerStaticColor.obs;
   RxString currentPlayingTrackPath = ''.obs;
 
-  CurrentColor() {
-    Player.inst.nowPlayingTrack.listen((track) async {
-      // Checking here will not require restart for changes to take effect
-      if (SettingsController.inst.autoColor.value) {
-        await setPlayerColor(track);
-      }
-      currentPlayingTrackPath.value = track.path;
-      updateThemeAndRefresh();
-    });
+  Future<void> updatePlayerColor(Track track) async {
+    // Checking here will not require restart for changes to take effect
+    if (SettingsController.inst.autoColor.value) {
+      await setPlayerColor(track);
+    }
+    currentPlayingTrackPath.value = track.path;
+    updateThemeAndRefresh();
   }
+
   Future<void> setPlayerColor(Track track) async {
     if (await FileSystemEntity.type(track.pathToImageComp) != FileSystemEntityType.notFound) {
       final result = await PaletteGenerator.fromImageProvider(FileImage(File(track.pathToImageComp)));
@@ -37,7 +34,7 @@ class CurrentColor extends GetxController {
       // color.value = mixColors([result.mutedColor?.color ?? result.vibrantColor?.color ?? result.darkMutedColor?.color ?? result.darkMutedColor?.color ?? result.dominantColor?.color ?? Colors.red]);
       print(color);
     } else {
-      color.value = Color(SettingsController.inst.staticColor.value);
+      color.value = playerStaticColor;
     }
   }
 
@@ -101,6 +98,21 @@ Color getAlbumColorModifiedModern(List<Color>? value) {
 //   // colorDelightened = Color.alphaBlend(Colors.black.withAlpha(10), colorDelightened);
 //   return colorDelightened;
 // }
+/// Returns [playerStaticColor] if both was null.
+Future<Color> generateDelightnedColor([Track? track, String? pathToImage]) async {
+  Color colorDelightened;
+  if (track == null && pathToImage == null) {
+    return playerStaticColor;
+  }
+  final finalPath = track?.pathToImageComp ?? pathToImage;
+  if (await File(finalPath!).exists()) {
+    final palette = await PaletteGenerator.fromImageProvider(FileImage(File(finalPath)));
+    colorDelightened = getAlbumColorModifiedModern(palette.colors.toList());
+  } else {
+    colorDelightened = playerStaticColor;
+  }
+  return colorDelightened;
+}
 
 Color mixColors(List<Color> colors) {
   Color mixedColor = colors[0];
@@ -119,7 +131,6 @@ Color? delightnedColor(Color? color) {
 
   Color colorDelightened;
   HSLColor hslColor = HSLColor.fromColor(color);
-  double l = hslColor.lightness;
   double lightnessDiff = hslColor.lightness - 0.5;
   if (lightnessDiff > 0) {
     hslColor = hslColor.withLightness(hslColor.lightness - lightnessDiff);

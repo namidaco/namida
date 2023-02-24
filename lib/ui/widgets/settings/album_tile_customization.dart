@@ -48,7 +48,28 @@ class AlbumTileCustomization extends StatelessWidget {
             icon: Broken.crop,
             title: Language.inst.FORCE_SQUARED_ALBUM_THUMBNAIL,
             value: stg.forceSquaredAlbumThumbnail.value,
-            onChanged: (p0) => stg.forceSquaredAlbumThumbnail.value = !p0,
+            onChanged: (p0) {
+              stg.forceSquaredAlbumThumbnail.value = !p0;
+              if (!p0 && stg.albumThumbnailSizeinList.toInt() != stg.albumListTileHeight.toInt()) {
+                Get.dialog(
+                  CustomBlurryDialog(
+                    normalTitleStyle: true,
+                    isWarning: true,
+                    bodyText: Language.inst.FORCE_SQUARED_THUMBNAIL_NOTE,
+                    actions: [
+                      const CancelButton(),
+                      ElevatedButton(
+                        onPressed: () {
+                          stg.save(albumThumbnailSizeinList: stg.albumListTileHeight.value);
+                          Get.close(1);
+                        },
+                        child: Text(Language.inst.CONFIRM),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            },
           ),
           CustomSwitchListTile(
             icon: Broken.element_4,
@@ -62,7 +83,11 @@ class AlbumTileCustomization extends StatelessWidget {
             title: Language.inst.ALBUM_THUMBNAIL_SIZE_IN_LIST,
             trailingText: "${stg.albumThumbnailSizeinList.toInt()}",
             onTap: () {
-              showSettingDialogWithTextField(title: Language.inst.ALBUM_THUMBNAIL_SIZE_IN_LIST, albumThumbnailSizeinList: true);
+              showSettingDialogWithTextField(
+                title: Language.inst.ALBUM_THUMBNAIL_SIZE_IN_LIST,
+                albumThumbnailSizeinList: true,
+                iconWidget: const Icon(Broken.maximize_3),
+              );
             },
           ),
           // Album Tile Height
@@ -74,6 +99,7 @@ class AlbumTileCustomization extends StatelessWidget {
               showSettingDialogWithTextField(
                 title: Language.inst.HEIGHT_OF_ALBUM_TILE,
                 albumListTileHeight: true,
+                iconWidget: const Icon(Broken.pharagraphspacing),
               );
             },
           ),

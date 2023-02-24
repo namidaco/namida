@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -284,12 +287,16 @@ class ExtrasSettings extends StatelessWidget {
             icon: Broken.sound,
             title: Language.inst.GENERATE_ALL_WAVEFORM_DATA,
             trailing: Obx(
-              () => Column(
-                children: [
-                  Text("${Indexer.inst.waveformsInStorage.length}/${Indexer.inst.tracksInfoList.length}"),
-                  if (WaveformController.inst.generatingAllWaveforms.value) const LoadingIndicator(),
-                ],
-              ),
+              () {
+                Rx<Directory> dir = Directory(kWaveformDirPath).obs;
+
+                return Column(
+                  children: [
+                    Text("${dir.value.listSync().length}/${Indexer.inst.tracksInfoList.length}"),
+                    if (WaveformController.inst.generatingAllWaveforms.value) const LoadingIndicator(),
+                  ],
+                );
+              },
             ),
             onTap: () async {
               if (WaveformController.inst.generatingAllWaveforms.value) {
@@ -314,7 +321,7 @@ class ExtrasSettings extends StatelessWidget {
                   CustomBlurryDialog(
                     title: Language.inst.NOTE,
                     bodyText: Language.inst.GENERATE_ALL_WAVEFORM_DATA_SUBTITLE
-                        .replaceFirst('_WAVEFORM_CURRENT_LENGTH_', '${Indexer.inst.waveformsInStorage.length}')
+                        .replaceFirst('_WAVEFORM_CURRENT_LENGTH_', '${Indexer.inst.waveformsInStorage.value}')
                         .replaceFirst('_WAVEFORM_TOTAL_LENGTH_', '${Indexer.inst.tracksInfoList.length}'),
                     actions: [
                       const CancelButton(),
@@ -380,55 +387,56 @@ class ExtrasSettings extends StatelessWidget {
 }
 
 class LoadingIndicator extends StatefulWidget {
-  final Color? color;
-  final int? durationMilliSeconds;
+  final Color? circleColor;
+  final double? width;
+  final double? height;
+  final double? maxWidth;
+  final double? maxHeight;
+  final int? durationInMillisecond;
+  const LoadingIndicator({super.key, this.circleColor, this.width, this.height, this.durationInMillisecond, this.maxWidth, this.maxHeight});
 
-  const LoadingIndicator({super.key, this.color, this.durationMilliSeconds});
   @override
-  _LoadingIndicatorState createState() => _LoadingIndicatorState();
+  State<LoadingIndicator> createState() => _LoadingIndicatorState();
 }
 
-class _LoadingIndicatorState extends State<LoadingIndicator> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
+class _LoadingIndicatorState extends State<LoadingIndicator> {
+  late Timer timer;
+  Rx<Alignment> alignment = Alignment.centerLeft.obs;
   @override
   void initState() {
-    _controller = AnimationController(
-      duration: Duration(milliseconds: widget.durationMilliSeconds ?? 350),
-      vsync: this,
-    );
-    _animation = Tween<double>(begin: 0, end: 1).animate(_controller)
-      ..addListener(() {
-        setState(() {});
-      })
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          _controller.reverse();
-        } else if (status == AnimationStatus.dismissed) {
-          _controller.forward();
-        }
-      });
-    _controller.forward();
+    timer = Timer.periodic(Duration(milliseconds: widget.durationInMillisecond ?? 350), (Timer timer) {
+      if (alignment.value == Alignment.centerLeft) {
+        alignment.value = Alignment.centerRight;
+      } else {
+        alignment.value = Alignment.centerLeft;
+      }
+    });
     super.initState();
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 4,
-      width: 8,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: widget.color ?? Get.textTheme.displayMedium!.color,
+    return SizedBox(
+      width: widget.maxWidth ?? 20.0,
+      height: widget.maxHeight ?? 5.0,
+      child: Obx(
+        () => AnimatedAlign(
+          duration: Duration(milliseconds: widget.durationInMillisecond ?? 400),
+          curve: Curves.easeOutSine,
+          alignment: alignment.value,
+          child: Container(
+            width: widget.width ?? 5.0,
+            height: widget.height ?? 5.0,
+            decoration: BoxDecoration(
+              color: widget.circleColor ?? Get.textTheme.displayMedium?.color,
+              borderRadius: BorderRadius.circular(30.0.multipliedRadius),
+              // boxShadow: [
+              //   BoxShadow(color: Colors.black.withAlpha(100), spreadRadius: 1, blurRadius: 4, offset: Offset(0, 2)),
+              // ],
+            ),
+          ),
+        ),
       ),
-      transform: Matrix4.translationValues(_animation.value * 16 - 8, 0, 0),
     );
   }
 }

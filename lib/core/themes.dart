@@ -75,7 +75,9 @@ class AppThemes extends GetxController {
         ),
       ),
       // this is for the expansion tile
-      dividerColor: Colors.transparent,
+      // dividerColor: Colors.transparent,
+      dividerColor: light ? const Color.fromARGB(100, 100, 100, 100) : const Color.fromARGB(200, 50, 50, 50),
+
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
           color: Get.theme.colorScheme.background,

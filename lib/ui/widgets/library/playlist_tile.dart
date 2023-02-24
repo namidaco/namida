@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import 'package:namida/class/playlist.dart';
 import 'package:namida/controller/playlist_controller.dart';
-
-import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -12,7 +11,7 @@ class PlaylistTile extends StatelessWidget {
   final Playlist playlist;
   final void Function()? onTap;
 
-  PlaylistTile({
+  const PlaylistTile({
     super.key,
     required this.playlist,
     this.onTap,
@@ -46,7 +45,7 @@ class PlaylistTile extends StatelessWidget {
                       BoxShadow(
                         color: context.theme.shadowColor,
                         blurRadius: 8,
-                        offset: Offset(0, 2.0),
+                        offset: const Offset(0, 2.0),
                       )
                     ]),
                     child: ClipRRect(
@@ -83,7 +82,7 @@ class PlaylistTile extends StatelessWidget {
                     quarterTurns: 1,
                     child: IconButton(
                       padding: EdgeInsets.zero,
-                      constraints: BoxConstraints(),
+                      constraints: const BoxConstraints(),
                       onPressed: () {
                         PlaylistController.inst.removePlaylist(playlist);
                       },

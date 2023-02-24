@@ -2,10 +2,12 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:namida/class/playlist.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart' hide Playlist;
 
+import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -140,7 +142,7 @@ extension TrackItemSubstring on TrackTileItem {
   String get label => toString().substring(14);
 }
 
-extension hh on String {
+extension EmptyString on String {
   String? get isValueEmpty {
     if (this == '') {
       return null;
@@ -162,6 +164,15 @@ extension Channels on String {
       return 'stereo';
     }
     return this;
+  }
+}
+
+extension FavouriteTrack on Track {
+  bool get isFavourite {
+    final favPlaylist = PlaylistController.inst.playlistList.firstWhere(
+      (element) => element.id == -1,
+    );
+    return favPlaylist.tracks.contains(this);
   }
 }
 
@@ -402,5 +413,38 @@ extension GroupSortToText on GroupSortType {
     }
 
     return '';
+  }
+}
+
+extension YTVideoQuality on String {
+  VideoQuality get toVideoQuality {
+    if (this == '144p') {
+      return VideoQuality.low144;
+    }
+    if (this == '240p') {
+      return VideoQuality.low240;
+    }
+    if (this == '360p') {
+      return VideoQuality.medium360;
+    }
+    if (this == '480p') {
+      return VideoQuality.medium480;
+    }
+    if (this == '720p') {
+      return VideoQuality.high720;
+    }
+    if (this == '1080p') {
+      return VideoQuality.high1080;
+    }
+    if (this == '2k') {
+      return VideoQuality.high1440;
+    }
+    if (this == '4k') {
+      return VideoQuality.high2160;
+    }
+    if (this == '8k') {
+      return VideoQuality.high4320;
+    }
+    return VideoQuality.low144;
   }
 }

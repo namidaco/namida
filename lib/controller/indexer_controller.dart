@@ -1,3 +1,5 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -25,9 +27,18 @@ class Indexer extends GetxController {
   RxInt duplicatedTracksLength = 0.obs;
   Set<String> filteredPathsToBeDeleted = {};
 
-  RxList<FileSystemEntity> artworksInStorage = Directory(kArtworksDirPath).listSync().obs;
-  RxList<FileSystemEntity> artworksCompInStorage = Directory(kArtworksCompDirPath).listSync().obs;
-  RxList<FileSystemEntity> waveformsInStorage = Directory(kWaveformDirPath).listSync().obs;
+  // RxList<FileSystemEntity> artworksInStorage = Directory(kArtworksDirPath).listSync().obs;
+  // RxList<FileSystemEntity> artworksCompInStorage = Directory(kArtworksCompDirPath).listSync().obs;
+  // RxList<FileSystemEntity> waveformsInStorage = Directory(kWaveformDirPath).listSync().obs;
+
+  RxInt artworksInStorage = Directory(kArtworksDirPath).listSync().length.obs;
+  RxInt artworksCompInStorage = Directory(kArtworksCompDirPath).listSync().length.obs;
+  RxInt waveformsInStorage = Directory(kWaveformDirPath).listSync().length.obs;
+  RxInt videosInStorage = Directory(kWaveformDirPath).listSync().length.obs;
+
+  RxInt artworksSizeInStorage = 0.obs;
+  RxInt waveformsSizeInStorage = 0.obs;
+  RxInt videosSizeInStorage = 0.obs;
 
   Rx<TextEditingController> globalSearchController = TextEditingController().obs;
   Rx<TextEditingController> tracksSearchController = TextEditingController().obs;
@@ -109,6 +120,47 @@ class Indexer extends GetxController {
     sortAlbums();
     sortArtists();
     sortGenres();
+  }
+
+  Future<void> extractOneArtwork(String path, {bool forceReExtract = false}) async {
+    final _fileOfFull = File("$kArtworksDirPath${p.basename(path)}.png");
+    final _fileOfComp = File("$kArtworksCompDirPath${p.basename(path)}.png");
+
+    if (forceReExtract) {
+      await _fileOfFull.delete();
+      await _fileOfComp.delete();
+    }
+
+    /// prevent redundent re-creation of image file
+    if (!await _fileOfFull.exists() && !await _fileOfComp.exists()) {
+      final trackInfo = await onAudioEdit.readAudio(path);
+      final art = trackInfo.firstArtwork;
+      if (art != null) {
+        final imgFile = await _fileOfFull.create(recursive: true);
+        imgFile.writeAsBytesSync(art);
+
+        final artComp = await FlutterImageCompress.compressWithList(art, quality: 40);
+        final imgFileComp = await _fileOfComp.create(recursive: true);
+        imgFileComp.writeAsBytesSync(artComp);
+      }
+      printInfo(info: "ARTWORKKK");
+    }
+    updateImageSizeInStorage();
+  }
+
+  Future<void> updateTracks(List<Track> tracks, {bool updateArtwork = false}) async {
+    for (final track in tracks) {
+      if (updateArtwork) {
+        await extractOneArtwork(track.path, forceReExtract: true);
+      }
+      await fetchAllSongsAndWriteToFile(audioFiles: {}, deletedPaths: {track.path}, forceReIndex: false);
+      await fetchAllSongsAndWriteToFile(audioFiles: {track.path}, deletedPaths: {}, forceReIndex: false);
+      if (updateArtwork) {
+        await extractOneArtwork(track.path, forceReExtract: true);
+      }
+    }
+
+    afterIndexing();
   }
 
   // Map<String?, Set<Track>> getAlbumsForArtist(String artist) {
@@ -248,7 +300,7 @@ class Indexer extends GetxController {
           listOfCurrentFileNames.add(p.basename(track));
           searchTracks('');
         } catch (e) {
-          print(e);
+          printError(info: e.toString());
 
           /// TODO: Should i add a dummy track that has a real path?
           // final fileStat = await File(track).stat();
@@ -265,23 +317,7 @@ class Indexer extends GetxController {
       for (var track in audioFiles) {
         print(track);
         try {
-          final _fileOfFull = File("$kArtworksDirPath${p.basename(track)}.png");
-          final _fileOfComp = File("$kArtworksCompDirPath${p.basename(track)}.png");
-          // prevent redundent re-creation of image file
-          if (!await _fileOfFull.exists() && !await _fileOfComp.exists()) {
-            final trackInfo = await onAudioEdit.readAudio(track);
-            final art = trackInfo.firstArtwork;
-            if (art != null) {
-              final imgFile = await _fileOfFull.create(recursive: true);
-              imgFile.writeAsBytesSync(art);
-              artworksInStorage.add(imgFile);
-
-              final artComp = await FlutterImageCompress.compressWithList(art, quality: 40);
-              final imgFileComp = await _fileOfComp.create(recursive: true);
-              imgFileComp.writeAsBytesSync(artComp);
-              artworksCompInStorage.add(imgFileComp);
-            }
-          }
+          await extractOneArtwork(track);
 
           ///
           // final fam = await MetadataRetriever.fromFile(File(track));
@@ -403,7 +439,20 @@ class Indexer extends GetxController {
     for (final path in SettingsController.inst.directoriesToScan.toList()) {
       if (await Directory(path).exists()) {
         final directory = Directory(path);
-        final filesPre = directory.listSync(recursive: true);
+        final filesPre = directory.listSync(recursive: true, followLinks: true);
+
+        /// Respects .nomedia
+        if (SettingsController.inst.respectNoMedia.value) {
+          final basenames = <String>[];
+          for (final b in filesPre) {
+            basenames.add(b.path.split('/').last);
+            printInfo(info: b.path.split('/').last);
+          }
+          if (basenames.contains('nomedia')) {
+            printInfo(info: '.nomedia skipped');
+            continue;
+          }
+        }
 
         for (final file in filesPre) {
           try {
@@ -728,45 +777,95 @@ class Indexer extends GetxController {
     searchGenres(genresSearchController.value.text);
   }
 
-  int getImageCacheSize() {
-    var totalSizeImage = 0;
-    for (var file in artworksInStorage) {
-      var stat = file.statSync();
-      totalSizeImage += stat.size;
-    }
-    for (var file in artworksCompInStorage) {
-      var stat = file.statSync();
-      totalSizeImage += stat.size;
-    }
+  // void getImageCacheSize() {
+  //   var totalSizeImage = 0;
+  //   for (var file in artworksInStorage) {
+  //     var stat = file.statSync();
+  //     totalSizeImage += stat.size;
+  //   }
+  //   for (var file in artworksCompInStorage) {
+  //     var stat = file.statSync();
+  //     totalSizeImage += stat.size;
+  //   }
+  //   artworksInStorage.refresh();
+  //   artworksCompInStorage.refresh();
 
-    return totalSizeImage;
+  //   // return totalSizeImage;
+  // }
+
+  void updateImageSizeInStorage() {
+    // resets values
+    artworksInStorage.value = 0;
+    artworksSizeInStorage.value = 0;
+
+    Directory(kArtworksDirPath).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
+      if (entity is File) {
+        artworksInStorage.value++;
+        artworksSizeInStorage.value += entity.lengthSync();
+      }
+    });
+    Directory(kArtworksCompDirPath).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
+      if (entity is File) {
+        artworksSizeInStorage.value += entity.lengthSync();
+      }
+    });
   }
 
-  int getWaveformDataSize() {
-    var totalSizeWave = 0;
-    for (var file in waveformsInStorage) {
-      var stat = file.statSync();
-      totalSizeWave += stat.size;
-    }
-    return totalSizeWave;
+  void updateWaveformSizeInStorage() {
+    // resets values
+    waveformsInStorage.value = 0;
+    waveformsSizeInStorage.value = 0;
+
+    Directory(kWaveformDirPath).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
+      if (entity is File) {
+        waveformsInStorage.value++;
+        waveformsSizeInStorage.value += entity.lengthSync();
+      }
+    });
   }
 
-  void clearImageCache() async {
-    for (var img in artworksInStorage) {
-      img.delete();
-    }
-    for (var img in artworksCompInStorage) {
-      img.delete();
-    }
-    // await Directory(kArtworksDirPath).create();
-    // await Directory(kArtworksCompDirPath).create();
+  void updatVideosSizeInStorage() {
+    // resets values
+    videosInStorage.value = 0;
+    videosSizeInStorage.value = 0;
+
+    Directory(kVideosCachePath).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
+      if (entity is File) {
+        videosInStorage.value++;
+        videosSizeInStorage.value += entity.lengthSync();
+      }
+    });
   }
 
-  void clearWaveformData() async {
-    for (var wave in waveformsInStorage) {
-      wave.delete();
-    }
-    // await Directory(kWaveformDirPath).create();
+  // void getWaveformDataSize() {
+  //   var totalSizeWave = 0;
+  //   for (var file in waveformsInStorage) {
+  //     var stat = file.statSync();
+  //     totalSizeWave += stat.size;
+  //   }
+  //   waveformsInStorage.refresh();
+
+  //   // return totalSizeWave;
+  // }
+
+  Future<void> clearImageCache() async {
+    await Directory(kArtworksDirPath).delete(recursive: true);
+    await Directory(kArtworksCompDirPath).delete(recursive: true);
+    await Directory(kArtworksDirPath).create();
+    await Directory(kArtworksCompDirPath).create();
+    updateImageSizeInStorage();
+  }
+
+  Future<void> clearWaveformData() async {
+    await Directory(kWaveformDirPath).delete(recursive: true);
+    await Directory(kWaveformDirPath).create();
+    updateWaveformSizeInStorage();
+  }
+
+  Future<void> clearVideoCache() async {
+    await Directory(kVideosCachePath).delete(recursive: true);
+    await Directory(kVideosCachePath).create();
+    updatVideosSizeInStorage();
   }
 
   @override

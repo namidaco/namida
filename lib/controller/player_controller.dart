@@ -1,13 +1,17 @@
-// import 'package:audio_service/audio_service.dart';
-import 'dart:io';
+// ignore_for_file: depend_on_referenced_packages
 
 import 'package:get/get.dart';
-import 'package:namida/class/track.dart';
-import 'package:namida/core/constants.dart';
-import 'package:on_audio_query/on_audio_query.dart';
-import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/current_color.dart';
+import 'package:collection/collection.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
+
+import 'package:namida/class/track.dart';
+import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/video_controller.dart';
+import 'package:namida/controller/waveform_controller.dart';
+import 'package:namida/core/constants.dart';
+import 'package:namida/controller/indexer_controller.dart';
 
 //
 //
@@ -18,41 +22,196 @@ import 'package:just_audio/just_audio.dart';
 class Player extends GetxController {
   static Player inst = Player();
   final player = AudioPlayer();
-  Player() {
-    nowPlayingTrack.listen((p0) {});
-  }
-  // _AudioServicePlayer? _audioHandler;
+
   Rx<Track> nowPlayingTrack = kDummyTrack.obs;
-  Rx<Duration> nowPlayingPosition = Duration.zero.obs;
-  initializePlayer() async {
-    // _audioHandler = await AudioService.init(
-    //   builder: () => _AudioServicePlayer(),
-    //   config: const AudioServiceConfig(
-    //     androidNotificationChannelId: 'com.example.sus.private',
-    //     androidNotificationChannelName: 'Sus',
-    //     androidNotificationOngoing: true,
-    //   ),
-    // );
+  RxList<Track> currentQueue = <Track>[].obs;
+  RxInt currentIndex = 0.obs;
+  RxBool isPlaying = false.obs;
+  RxInt nowPlayingPosition = 0.obs;
+
+  Player() {
+    /// isPlaying Stream
+    player.playingStream.listen((event) async {
+      isPlaying.value = event;
+
+      /// for video
+      await updateVideoPlayingState();
+    });
+
+    /// Position Stream
+    player.positionStream.listen((event) {
+      nowPlayingPosition.value = event.inMilliseconds;
+    });
+
+    // Attempt to fix video position after switching to bg or turning off screen
+    player.positionDiscontinuityStream.listen((event) async {
+      await updateVideoPlayingState();
+    });
+
+    /// Current Index Stream
+    player.currentIndexStream.listen((event) async {
+      currentIndex.value = event ?? 0;
+      final track = currentQueue.elementAt(event ?? 0);
+      nowPlayingTrack.value = track;
+      WaveformController.inst.generateWaveform(track);
+      CurrentColor.inst.updatePlayerColor(track);
+
+      /// for video
+      if (SettingsController.inst.enableVideoPlayback.value) {
+        await VideoController.inst.updateYTLink(track);
+        await VideoController.inst.updateLocalVidPath(track);
+      }
+      await updateVideoPlayingState();
+    });
+    // currentQueue.listen((q) {
+    //   final playlist = ConcatenatingAudioSource(
+    //     useLazyPreparation: true,
+    //     shuffleOrder: DefaultShuffleOrder(),
+    //     children: q
+    //         .asMap()
+    //         .entries
+    //         .map(
+    //           (e) => AudioSource.uri(
+    //             Uri.parse(e.value.path),
+    //             tag: MediaItem(
+    //               id: e.key.toString(),
+    //               title: e.value.title,
+    //               displayTitle: e.value.title,
+    //               displaySubtitle: "${e.value.artistsList.take(3).join(', ')} - ${e.value.album}",
+    //               displayDescription: "${e.key + 1}/${q.length}",
+    //               artist: e.value.artistsList.take(3).join(', '),
+    //               album: e.value.album,
+    //               genre: e.value.genresList.take(3).join(', '),
+    //               duration: Duration(milliseconds: e.value.duration),
+    //               artUri: Uri.file(e.value.pathToImage),
+    //             ),
+    //           ),
+    //         )
+    //         .toList(),
+    //   );
+    //   player.setAudioSource(playlist, initialIndex: q.indexOf(nowPlayingTrack.value), initialPosition: Duration.zero);
+    //   printInfo(info: q.length.toString());
+    // });
   }
 
-  void playOrPause(Track track) async {
-    // final playlist = ConcatenatingAudioSource(
-    //   useLazyPreparation: true,
-    //   shuffleOrder: DefaultShuffleOrder(),
-    //   children: Indexer.inst.tracksInfoList.asMap().entries.map((e) => AudioSource.file(e.value.path)).toList(),
-    // );
-
-    await player.setUrl(track.path);
-    // await player.setAudioSource(playlist, initialIndex: Indexer.inst.tracksInfoList.indexOf(track), initialPosition: Duration.zero);
-
-    if (player.playerState.playing && nowPlayingTrack.value == track) {
-      // nowPlayingPosition.value = player.duration ?? Duration.zero;
-      player.pause();
+  Future<void> updateVideoPlayingState() async {
+    await refreshVideoPosition();
+    if (isPlaying.value) {
+      VideoController.inst.play();
     } else {
-      // await player.seek(nowPlayingPosition.value);
-      player.play();
+      VideoController.inst.pause();
+    }
+    await refreshVideoPosition();
+  }
+
+  /// refreshes video position, usually after a play/pause or after switching video display
+  Future<void> refreshVideoPosition() async {
+    await VideoController.inst.seek(Duration(milliseconds: nowPlayingPosition.value));
+  }
+
+  Future<void> initializePlayer() async {
+    await JustAudioBackground.init(
+      androidNotificationChannelId: 'com.msob7y.namida',
+      androidNotificationChannelName: 'Namida',
+      androidNotificationOngoing: true,
+      preloadArtwork: true,
+    );
+  }
+
+  Future<void> addToQueue(List<Track> tracks, {bool insertNext = false}) async {
+    List<Track> finalQueue = [];
+    if (insertNext) {
+      finalQueue = [...currentQueue.getRange(0, currentIndex.value + 1), ...tracks, ...currentQueue.getRange(currentIndex.value + tracks.length, currentQueue.length)];
+      printInfo(info: finalQueue.map((e) => e.title).toString());
+    } else {
+      finalQueue = [...currentQueue, ...tracks];
+    }
+
+    await player.setAudioSource(_getAudioSourcePlaylist(finalQueue),
+        initialIndex: currentQueue.indexOf(nowPlayingTrack.value), initialPosition: Duration(milliseconds: nowPlayingPosition.value));
+    currentQueue.refresh();
+  }
+
+  Future<void> next() async {
+    await player.seekToNext();
+  }
+
+  Future<void> previous() async {
+    await player.seekToPrevious();
+  }
+
+  Future<void> skipToQueueItem(Track track) async {
+    await player.seek(const Duration(microseconds: 0), index: currentQueue.indexOf(track));
+  }
+
+  Future<void> seek(Duration position, {int? index}) async {
+    await player.seek(position, index: index);
+    VideoController.inst.seek(position, index: index);
+  }
+
+  Future<void> playOrPause({Track? track, List<Track>? queue, bool playSingle = false, bool shuffle = false}) async {
+    track ??= nowPlayingTrack.value;
+    if (nowPlayingTrack.value == track) {
+      if (player.playerState.playing) {
+        nowPlayingPosition.value = player.position.inMilliseconds;
+
+        player.pause();
+      } else {
+        await player.play();
+        await player.seek(Duration(milliseconds: nowPlayingPosition.value));
+      }
+      return;
+    }
+
+    if (playSingle) {
+      queue = [track];
+    }
+
+    queue ??= Indexer.inst.trackSearchList.toList();
+
+    /// if the queue is the same, it will skip instead of rebuilding the queue, certainly more performant
+    if (const IterableEquality().equals(queue, currentQueue.toList())) {
+      await skipToQueueItem(track);
+      printInfo(info: "Skipped");
+      return;
+    }
+
+    if (shuffle) {
+      queue.shuffle();
     }
     nowPlayingTrack.value = track;
+    currentQueue.assignAll(queue);
+
+    player.setAudioSource(_getAudioSourcePlaylist(queue), initialIndex: queue.indexOf(track), initialPosition: Duration.zero);
+    player.play();
+  }
+
+  ConcatenatingAudioSource _getAudioSourcePlaylist(List<Track> playlist) {
+    return ConcatenatingAudioSource(
+      useLazyPreparation: true,
+      shuffleOrder: DefaultShuffleOrder(),
+      children: playlist
+          .asMap()
+          .entries
+          .map(
+            (e) => AudioSource.uri(
+              Uri.parse(e.value.path),
+              tag: MediaItem(
+                id: e.key.toString(),
+                title: e.value.title,
+                displayTitle: e.value.title,
+                displaySubtitle: "${e.value.artistsList.take(3).join(', ')} - ${e.value.album}",
+                displayDescription: "${e.key + 1}/${currentQueue.length}",
+                artist: e.value.artistsList.take(3).join(', '),
+                album: e.value.album,
+                genre: e.value.genresList.take(3).join(', '),
+                duration: Duration(milliseconds: e.value.duration),
+                artUri: Uri.file(e.value.pathToImage),
+              ),
+            ),
+          )
+          .toList(),
+    );
   }
 
   @override
@@ -61,82 +220,3 @@ class Player extends GetxController {
     super.onClose();
   }
 }
-
-// class _AudioServicePlayer extends BaseAudioHandler with QueueHandler, SeekHandler {
-//   static _AudioServicePlayer inst = _AudioServicePlayer();
-
-//   static final _item = MediaItem(
-//     id: 'https://s3.amazonaws.com/scifri-episodes/scifri20181123-episode.mp3',
-//     album: "Science Friday",
-//     title: "A Salute To Head-Scratching Science",
-//     artist: "Science Friday and WNYC Studios",
-//     duration: const Duration(milliseconds: 5739820),
-//     artUri: Uri.parse('https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg'),
-//   );
-
-//   final _player = AudioPlayer();
-
-//   /// Initialise our audio handler.
-//   AudioPlayerHandler() {
-//     // So that our clients (the Flutter UI and the system notification) know
-//     // what state to display, here we set up our audio handler to broadcast all
-//     // playback state changes as they happen via playbackState...
-//     _player.playbackEventStream.map(_transformEvent).pipe(playbackState);
-//     // ... and also the current media item via mediaItem.
-//     mediaItem.add(_item);
-
-//     // Load the player.
-//     _player.setAudioSource(AudioSource.uri(Uri.parse(_item.id)));
-//   }
-
-//   // In this simple example, we handle only 4 actions: play, pause, seek and
-//   // stop. Any button press from the Flutter UI, notification, lock screen or
-//   // headset will be routed through to these 4 methods so that you can handle
-//   // your audio playback logic in one place.
-
-//   @override
-//   Future<void> play() => _player.play();
-
-//   @override
-//   Future<void> pause() => _player.pause();
-
-//   @override
-//   Future<void> seek(Duration position) => _player.seek(position);
-
-//   @override
-//   Future<void> stop() => _player.stop();
-
-//   /// Transform a just_audio event into an audio_service state.
-//   ///
-//   /// This method is used from the constructor. Every event received from the
-//   /// just_audio player will be transformed into an audio_service state so that
-//   /// it can be broadcast to audio_service clients.
-//   PlaybackState _transformEvent(PlaybackEvent event) {
-//     return PlaybackState(
-//       controls: [
-//         MediaControl.rewind,
-//         if (_player.playing) MediaControl.pause else MediaControl.play,
-//         MediaControl.stop,
-//         MediaControl.fastForward,
-//       ],
-//       systemActions: const {
-//         MediaAction.seek,
-//         MediaAction.seekForward,
-//         MediaAction.seekBackward,
-//       },
-//       androidCompactActionIndices: const [0, 1, 3],
-//       processingState: const {
-//         ProcessingState.idle: AudioProcessingState.idle,
-//         ProcessingState.loading: AudioProcessingState.loading,
-//         ProcessingState.buffering: AudioProcessingState.buffering,
-//         ProcessingState.ready: AudioProcessingState.ready,
-//         ProcessingState.completed: AudioProcessingState.completed,
-//       }[_player.processingState]!,
-//       playing: _player.playing,
-//       updatePosition: _player.position,
-//       bufferedPosition: _player.bufferedPosition,
-//       speed: _player.speed,
-//       queueIndex: event.currentIndex,
-//     );
-//   }
-// }

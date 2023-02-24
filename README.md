@@ -34,4 +34,10 @@ A Beautiful and Feature-rich Music Player Built in Flutter
 - Due to that, I've provided an option to generate all waveforms at once, maybe u can use it on a night sleep.
 
 # Support
--
+
+
+# Permission Note:
+### the following actions require `all_files_access` permission (requested when needed)
+- respect .nomedia
+- editing audio tags
+- creating backups

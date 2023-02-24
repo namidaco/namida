@@ -1,23 +1,24 @@
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import 'package:namida/controller/video_controller.dart';
+import 'package:namida/ui/widgets/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/ui/pages/playlists_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:palette_generator/palette_generator.dart';
+import 'package:namida/ui/widgets/dialogs/edits_tags_dialog.dart';
+import 'package:namida/ui/widgets/dialogs/track_clear_dialog.dart';
 
 showTrackDialog(Track track, [Widget? leading, Playlist? playlist]) async {
-  final palette = await PaletteGenerator.fromImageProvider(FileImage(File(track.pathToImageComp)));
-  final colorDelightened = getAlbumColorModifiedModern(palette.colors.toList());
+  final colorDelightened = await generateDelightnedColor(track);
 
   await Get.dialog(
     BackdropFilter(
@@ -28,6 +29,7 @@ showTrackDialog(Track track, [Widget? leading, Playlist? playlist]) async {
         child: SingleChildScrollView(
           child: Column(
             children: [
+              /// Top Widget
               InkWell(
                 highlightColor: const Color.fromARGB(60, 0, 0, 0),
                 splashColor: Colors.transparent,
@@ -96,129 +98,122 @@ showTrackDialog(Track track, [Widget? leading, Playlist? playlist]) async {
                 ),
               ),
               Divider(
-                color: Get.theme.dividerColor.withAlpha(40),
-                thickness: 1,
+                color: Get.theme.dividerColor,
+                thickness: 0.5,
                 height: 0,
               ),
-              // const SizedBox(height: 4.0),
-              Column(mainAxisSize: MainAxisSize.min, children: [
-                ListTile(
-                  title: Text(Language.inst.ADD_TO_PLAYLIST),
-                  onTap: () {
-                    Get.close(1);
-                    showAddToPlaylistDialog(track);
-                  },
-                  trailing: SizedBox(),
-                )
-              ]),
-              // const SizedBox(height: 4.0),
+
+              /// List Items
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SmallListTile(
+                    compact: false,
+                    title: Language.inst.ADD_TO_PLAYLIST,
+                    icon: Broken.music_library_2,
+                    onTap: () {
+                      Get.close(1);
+                      showAddToPlaylistDialog([track]);
+                    },
+                  ),
+                  SmallListTile(
+                    compact: false,
+                    title: Language.inst.EDIT_TAGS,
+                    icon: Broken.edit,
+                    onTap: () {
+                      Get.close(1);
+                      showEditTrackTagsDialog(track);
+                    },
+                  ),
+                  SmallListTile(
+                    compact: true,
+                    title: Language.inst.CLEAR,
+                    subtitle: Language.inst.CLEAR,
+                    icon: Broken.trash,
+                    onTap: () {
+                      showTrackClearDialog(track);
+                    },
+                  ),
+                  SmallListTile(
+                    compact: false,
+                    title: Language.inst.SET_YOUTUBE_LINK,
+                    icon: Broken.edit_2,
+                    onTap: () async {
+                      Get.close(1);
+
+                      TextEditingController controller = TextEditingController();
+                      final ytlink = await VideoController.inst.updateYTLink(track, justGetTheLink: true);
+                      controller.text = ytlink;
+                      Get.dialog(
+                        CustomBlurryDialog(
+                          title: Language.inst.SET_YOUTUBE_LINK,
+                          actions: [
+                            const CancelButton(),
+                            ElevatedButton(
+                              onPressed: () async {
+                                editTrackMetadata(track, insertComment: controller.text);
+                                Get.close(1);
+                              },
+                              child: Text(Language.inst.SAVE),
+                            ),
+                          ],
+                          child: CustomTagTextField(
+                            controller: controller,
+                            hintText: ytlink.overflow,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  Divider(
+                    color: Get.theme.dividerColor,
+                    thickness: 0.5,
+                    height: 0,
+                  ),
+
+                  /// bottom 2 tiles
+                  IntrinsicHeight(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: SmallListTile(
+                            compact: false,
+                            title: Language.inst.PLAY_NEXT,
+                            icon: Broken.next,
+                            onTap: () {
+                              Get.close(1);
+                              Player.inst.addToQueue([track], insertNext: true);
+                            },
+                          ),
+                        ),
+                        VerticalDivider(
+                          color: Get.theme.dividerColor,
+                          thickness: 0.5,
+                          width: 0,
+                        ),
+                        Expanded(
+                          child: SmallListTile(
+                            compact: false,
+                            title: Language.inst.PLAY_LAST,
+                            icon: Broken.play_cricle,
+                            onTap: () {
+                              Get.close(1);
+                              Player.inst.addToQueue([track]);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
               Divider(
                 color: Get.theme.dividerColor.withAlpha(40),
                 thickness: 1,
                 height: 0,
               ),
-              // Container(
-              //   child: IntrinsicHeight(
-              //     child: Row(
-              //       children: [
-              //         Expanded(
-              //           child: trackListItems.elementAt(trackListItems.length - 2),
-              //         ),
-              //         VerticalDivider(
-              //           color: Get.theme.dividerColor.withAlpha(40),
-              //           thickness: 1,
-              //           width: 0,
-              //         ),
-              //         Expanded(
-              //           child: trackListItems.elementAt(trackListItems.length - 1),
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // )
             ],
           ),
-        ),
-      ),
-    ),
-  );
-}
-
-void showAddToPlaylistDialog(Track track) {
-  Get.dialog(
-    BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
-      child: Dialog(
-        clipBehavior: Clip.antiAlias,
-        // backgroundColor: Color.alphaBlend(NowPlayingColorPalette.instance.modernColor.withAlpha(20), Get.theme.brightness == Brightness.light ? Color.fromARGB(255, 234, 234, 234) : Color.fromARGB(255, 24, 24, 24)),
-        insetPadding: EdgeInsets.all(30.0),
-        // shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20.0.multipliedRadius))),
-        child: Column(
-          children: [
-            Container(
-              padding: EdgeInsets.all(12.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Broken.music_library_2,
-                    size: 20.0,
-                  ),
-                  SizedBox(
-                    width: 12.0,
-                  ),
-                  Text(
-                    "${Language.inst.ADD_TO_PLAYLIST}",
-                    style: Get.theme.textTheme.displayMedium,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            // Expanded(
-            //   child: ListView.builder(
-            //     physics: BouncingScrollPhysics(),
-            //     padding: EdgeInsets.zero,
-            //     shrinkWrap: true,
-            //     itemCount: PlaylistController.inst.playlistList.length,
-            //     itemBuilder: (context, i) {
-            //       return PlaylistsPage();
-            //     },
-            //   ),
-            // ),
-            Flexible(
-              child: PlaylistsPage(
-                tracksToAdd: [track],
-                countPerRow: 1,
-                displayTopRow: false,
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 12.0,
-                  ),
-                  Expanded(
-                    child: Text(
-                      PlaylistController.inst.playlistList.length.toString(),
-                      style: Get.theme.textTheme.displayMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  // FittedBox(child: ImportPlaylistButton()),
-                  SizedBox(
-                    width: 8.0,
-                  ),
-                  FittedBox(child: CreatePlaylistButton()),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     ),

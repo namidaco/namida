@@ -45,19 +45,28 @@ dependencies:
   enum_to_string: ^2.0.1
   intl: ^0.17.0
   restart_app: ^1.1.1
+  flutter_archive: ^5.0.0
 
   # Path/File Providers
   path_provider: ^2.0.12
   external_path: ^1.0.3
   file_manager: ^1.0.1
   file_picker: ^5.2.5
+  pick_or_save: ^2.2.4
+ 
 
   # Audio Indexing & Playback
   on_audio_query: ^2.6.1
   on_audio_edit: ^1.5.1
   just_audio: ^0.9.31
+  just_audio_background: ^0.0.1-beta.9
   # audio_service: ^0.18.9
   audio_waveforms: ^1.0.1
+
+  # Video Playback
+  video_player: ^2.5.2
+  # youtube_player_flutter: ^8.1.2
+  youtube_explode_dart: ^1.12.3
 
   # Image Utilities
   flutter_image_compress: ^1.1.3
@@ -72,12 +81,11 @@ dependencies:
   flutter_colorpicker: ^1.0.3
 
   # UI Widgets
-  # drop_shadow: ^0.0.2+1
   searchbar_animation: ^0.0.4
-  # flutter_switch: ^0.3.2
   wheel_slider: ^1.0.1
   sleek_circular_slider: ^2.0.1
   checkmark: ^0.0.2+1
+  like_button: ^2.0.5
 
  
 
