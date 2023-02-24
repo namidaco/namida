@@ -16,9 +16,7 @@ void showAddToPlaylistDialog(List<Track> tracks) {
       filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
       child: Dialog(
         clipBehavior: Clip.antiAlias,
-        // backgroundColor: Color.alphaBlend(NowPlayingColorPalette.instance.modernColor.withAlpha(20), Get.theme.brightness == Brightness.light ? Color.fromARGB(255, 234, 234, 234) : Color.fromARGB(255, 24, 24, 24)),
         insetPadding: const EdgeInsets.all(30.0),
-        // shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20.0.multipliedRadius))),
         child: Column(
           children: [
             Container(

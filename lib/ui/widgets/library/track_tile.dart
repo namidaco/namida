@@ -20,7 +20,7 @@ class TrackTile extends StatelessWidget {
   final bool draggableThumbnail;
   final bool isInSelectedTracksPreview;
   final List<Track>? queue;
-  TrackTile({
+  const TrackTile({
     super.key,
     required this.track,
     this.displayRightDragHandler = false,

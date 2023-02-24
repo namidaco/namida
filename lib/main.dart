@@ -143,7 +143,7 @@ class MyApp extends StatelessWidget {
                   Stack(
                 children: [
                   HomePage(),
-                  const MiniPlayerParent(),
+                  MiniPlayerParent(),
                   const Positioned(
                     bottom: 60.0,
                     child: SelectedTracksPreviewContainer(),

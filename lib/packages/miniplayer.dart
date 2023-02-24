@@ -1,6 +1,7 @@
 // This is originally a part of [Tear Music](https://github.com/tearone/tearmusic), edited to fit Namida.
 // Credits goes for the original author @55nknown
 
+// ignore: prefer_const_constructors_in_immutables
 import 'dart:ui';
 
 import 'package:animations/animations.dart';
@@ -29,7 +30,8 @@ import 'package:namida/ui/widgets/settings/video_playback.dart';
 import 'package:namida/ui/widgets/waveform.dart';
 
 class MiniPlayerParent extends StatefulWidget {
-  const MiniPlayerParent({super.key});
+  // ignore: prefer_const_constructors_in_immutables
+  MiniPlayerParent({super.key});
 
   @override
   State<MiniPlayerParent> createState() => _MiniPlayerParentState();
