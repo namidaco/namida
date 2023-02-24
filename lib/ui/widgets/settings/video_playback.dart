@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -25,7 +26,7 @@ class VideoPlaybackSettings extends StatelessWidget {
               title: Language.inst.ENABLE_VIDEO_PLAYBACK,
               icon: Broken.video,
               value: SettingsController.inst.enableVideoPlayback.value,
-              onChanged: (p0) => SettingsController.inst.save(enableVideoPlayback: !p0),
+              onChanged: (p0) async => await VideoController.inst.toggleVideoPlaybackInSetting(),
             ),
           ),
           CustomListTile(

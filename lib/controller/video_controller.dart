@@ -238,4 +238,14 @@ class VideoController extends GetxController {
       return allPaths;
     }
   }
+
+  Future<void> toggleVideoPlaybackInSetting() async {
+    SettingsController.inst.save(enableVideoPlayback: !SettingsController.inst.enableVideoPlayback.value);
+    if (!SettingsController.inst.enableVideoPlayback.value) {
+      VideoController.inst.localVidPath.value = '';
+    } else {
+      await VideoController.inst.updateLocalVidPath();
+      await Player.inst.updateVideoPlayingState();
+    }
+  }
 }

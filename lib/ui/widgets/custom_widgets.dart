@@ -254,15 +254,27 @@ class CustomBlurryDialog extends StatelessWidget {
   final bool normalTitleStyle;
   final String? bodyText;
   final bool isWarning;
+  final bool scrollable;
   final EdgeInsets? insetPadding;
-  const CustomBlurryDialog({super.key, this.child, this.title, this.actions, this.icon, this.normalTitleStyle = false, this.bodyText, this.isWarning = false, this.insetPadding});
+  const CustomBlurryDialog({
+    super.key,
+    this.child,
+    this.title,
+    this.actions,
+    this.icon,
+    this.normalTitleStyle = false,
+    this.bodyText,
+    this.isWarning = false,
+    this.insetPadding,
+    this.scrollable = true,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
       child: AlertDialog(
-        scrollable: true,
+        scrollable: scrollable,
         insetPadding: insetPadding ?? const EdgeInsets.symmetric(horizontal: 50, vertical: 32),
         clipBehavior: Clip.antiAlias,
         titlePadding: normalTitleStyle ? const EdgeInsets.only(top: 24.0, left: 24.0, right: 24.0) : EdgeInsets.zero,

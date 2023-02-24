@@ -128,7 +128,7 @@ showTrackDialog(Track track, [Widget? leading, Playlist? playlist]) async {
                   SmallListTile(
                     compact: true,
                     title: Language.inst.CLEAR,
-                    subtitle: Language.inst.CLEAR,
+                    subtitle: Language.inst.CHOOSE_WHAT_TO_CLEAR,
                     icon: Broken.trash,
                     onTap: () {
                       showTrackClearDialog(track);

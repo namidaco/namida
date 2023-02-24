@@ -121,7 +121,7 @@ class AlbumCard extends StatelessWidget {
                               const SizedBox(height: 2.0),
                               Text(
                                 [
-                                  album.length.displayAlbumKeyword,
+                                  album.displayTrackKeyword,
                                   album.totalDurationFormatted,
                                 ].join(' • '),
                                 style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize),

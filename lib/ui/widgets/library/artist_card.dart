@@ -98,7 +98,7 @@ class ArtistCard extends StatelessWidget {
                               const SizedBox(height: 2.0),
                               Text(
                                 [
-                                  artist.length.displayAlbumKeyword,
+                                  artist.displayTrackKeyword,
                                   artist.totalDurationFormatted,
                                 ].join(' • '),
                                 style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize),

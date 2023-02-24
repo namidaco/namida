@@ -843,13 +843,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                   Get.dialog(const Dialog(child: VideoPlaybackSettings(disableSubtitle: true)));
                                 },
                                 onPressed: () async {
-                                  SettingsController.inst.save(enableVideoPlayback: !SettingsController.inst.enableVideoPlayback.value);
-                                  if (!SettingsController.inst.enableVideoPlayback.value) {
-                                    VideoController.inst.localVidPath.value = '';
-                                  } else {
-                                    await VideoController.inst.updateLocalVidPath();
-                                    await Player.inst.updateVideoPlayingState();
-                                  }
+                                  await VideoController.inst.toggleVideoPlaybackInSetting();
                                 },
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,

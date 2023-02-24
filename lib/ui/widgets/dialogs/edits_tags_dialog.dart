@@ -49,17 +49,10 @@ Future<void> showEditTrackTagsDialog(Track track) async {
     CustomBlurryDialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
       normalTitleStyle: true,
+      scrollable: false,
       icon: Broken.edit,
       title: Language.inst.EDIT_TAGS,
       actions: [
-        // SizedBox(
-        //   width: Get.width / 2,
-        //   child: Expanded(
-        //     child: ListTileWithCheckMark(
-        //       active: trimWhiteSpaces.value,
-        //     ),
-        //   ),
-        // ),
         Material(
           color: Get.theme.cardColor,
           borderRadius: BorderRadius.circular(12.0.multipliedRadius),
@@ -98,165 +91,196 @@ Future<void> showEditTrackTagsDialog(Track track) async {
           ),
         ),
         ElevatedButton.icon(
-            onPressed: () async {
-              final copiedFile = await File(track.path).copy("${SettingsController.inst.defaultBackupLocation.value}/${track.displayName}");
+          onPressed: () async {
+            final copiedFile = await File(track.path).copy("${SettingsController.inst.defaultBackupLocation.value}/${track.displayName}");
 
-              String ftitle = titleController.text;
-              String falbum = albumController.text;
-              String fartist = artistController.text;
-              String fcomposer = composerController.text;
-              String fgenre = genreController.text;
-              String ftrnum = trackNumberController.text;
-              String fcomment = commentController.text;
-              String fyear = yearController.text;
+            String ftitle = titleController.text;
+            String falbum = albumController.text;
+            String fartist = artistController.text;
+            String fcomposer = composerController.text;
+            String fgenre = genreController.text;
+            String ftrnum = trackNumberController.text;
+            String fcomment = commentController.text;
+            String fyear = yearController.text;
 
-              if (trimWhiteSpaces.value) {
-                ftitle = ftitle.trim();
-                falbum = falbum.trim();
-                fartist = fartist.trim();
-                fcomposer = fcomposer.trim();
-                fgenre = fgenre.trim();
-                ftrnum = ftrnum.trim();
-                fcomment = fcomment.trim();
-                ftitle = ftitle.trim();
-                fyear = fyear.trim();
-              }
-              final didUpdate = await audioedit.editAudio(
+            if (trimWhiteSpaces.value) {
+              ftitle = ftitle.trim();
+              falbum = falbum.trim();
+              fartist = fartist.trim();
+              fcomposer = fcomposer.trim();
+              fgenre = fgenre.trim();
+              ftrnum = ftrnum.trim();
+              fcomment = fcomment.trim();
+              ftitle = ftitle.trim();
+              fyear = fyear.trim();
+            }
+            final didUpdate = await audioedit.editAudio(
+              copiedFile.path,
+              {
+                TagType.TITLE: ftitle,
+                TagType.ALBUM: falbum,
+                TagType.ARTIST: fartist,
+                TagType.COMPOSER: fcomposer,
+                TagType.GENRE: fgenre,
+                TagType.TRACK: ftrnum,
+                TagType.COMMENT: fcomment,
+                TagType.YEAR: ftitle,
+              },
+              searchInsideFolders: true,
+            );
+            debugPrint(currentImagePath.value.toString());
+
+            // if user actually picked a pic
+            if (currentImagePath.value != '') {
+              final didUpdateImg = await audioedit.editArtwork(
                 copiedFile.path,
-                {
-                  TagType.TITLE: ftitle,
-                  TagType.ALBUM: falbum,
-                  TagType.ARTIST: fartist,
-                  TagType.COMPOSER: fcomposer,
-                  TagType.GENRE: fgenre,
-                  TagType.TRACK: ftrnum,
-                  TagType.COMMENT: fcomment,
-                  TagType.YEAR: ftitle,
-                },
+                // imagePath: currentImagePath.value,
                 searchInsideFolders: true,
+                openFilePicker: true,
               );
-              debugPrint(currentImagePath.value.toString());
+            }
 
-              // if user actually picked a pic
-              if (currentImagePath.value != '') {
-                final didUpdateImg = await audioedit.editArtwork(
-                  copiedFile.path,
-                  // imagePath: currentImagePath.value,
-                  searchInsideFolders: true,
-                  openFilePicker: true,
-                );
-              }
-
-              // await File(track.path).delete();
-              await copiedFile.copy(track.path);
-              await copiedFile.delete();
-              debugPrint(didUpdate.toString());
-              Indexer.inst.updateTracks([track], updateArtwork: currentImagePath.value != '');
-              Get.close(1);
-            },
-            icon: const Icon(Broken.pen_add),
-            label: Text(Language.inst.SAVE))
+            // await File(track.path).delete();
+            await copiedFile.copy(track.path);
+            await copiedFile.delete();
+            debugPrint(didUpdate.toString());
+            Indexer.inst.updateTracks([track], updateArtwork: currentImagePath.value != '');
+            Get.close(1);
+          },
+          icon: const Icon(Broken.pen_add),
+          label: Text(Language.inst.SAVE),
+        )
       ],
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  Obx(
-                    () => ArtworkWidget(
-                      track: track,
-                      thumnailSize: Get.width / 3,
-                      bytes: currentImagePath.value != '' ? null : info.firstArtwork,
-                      path: currentImagePath.value != '' ? currentImagePath.value : null,
-                      onTopWidget: Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: NamidaBlurryContainer(
-                          onTap: () async {
-                            String path = '';
-                            final pickedFile = await FilePicker.platform.pickFiles(type: FileType.image);
-                            path = pickedFile?.files.first.path ?? '';
-                            if (pickedFile != null && path != '') {
-                              final copiedImage = await File(path).copy("${SettingsController.inst.defaultBackupLocation.value}/${path.split('/').last}");
-                              currentImagePath.value = copiedImage.path;
-                            }
-                          },
-                          borderRadius: BorderRadius.only(topLeft: Radius.circular(12.0.multipliedRadius)),
-                          child: const Icon(Broken.edit_2),
-                        ),
-                      ),
-                      // onTopWidget: IconButton(onPressed: () {}, icon: Icon(Broken.edit_2)),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(
-                width: 12.0,
-              ),
-              Expanded(
-                child: Column(
+          Expanded(
+            child: ListView(
+              children: [
+                Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CustomTagTextField(
-                      controller: trackNumberController,
-                      hintText: Language.inst.TRACK_NUMBER,
-                      icon: Broken.repeate_one,
+                    Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        Obx(
+                          () => ArtworkWidget(
+                            track: track,
+                            thumnailSize: Get.width / 3,
+                            bytes: currentImagePath.value != '' ? null : info.firstArtwork,
+                            path: currentImagePath.value != '' ? currentImagePath.value : null,
+                            onTopWidget: Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: NamidaBlurryContainer(
+                                onTap: () async {
+                                  String path = '';
+                                  final pickedFile = await FilePicker.platform.pickFiles(type: FileType.image);
+                                  path = pickedFile?.files.first.path ?? '';
+                                  if (pickedFile != null && path != '') {
+                                    final copiedImage = await File(path).copy("${SettingsController.inst.defaultBackupLocation.value}/${path.split('/').last}");
+                                    currentImagePath.value = copiedImage.path;
+                                  }
+                                },
+                                borderRadius: BorderRadius.only(topLeft: Radius.circular(12.0.multipliedRadius)),
+                                child: const Icon(Broken.edit_2),
+                              ),
+                            ),
+                            // onTopWidget: IconButton(onPressed: () {}, icon: Icon(Broken.edit_2)),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(
-                      height: 8.0,
+                      width: 12.0,
                     ),
-                    CustomTagTextField(
-                      controller: yearController,
-                      hintText: Language.inst.YEAR,
-                      icon: Broken.calendar,
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CustomTagTextField(
+                            controller: trackNumberController,
+                            hintText: Language.inst.TRACK_NUMBER,
+                            icon: Broken.repeate_one,
+                          ),
+                          const SizedBox(
+                            height: 8.0,
+                          ),
+                          CustomTagTextField(
+                            controller: yearController,
+                            hintText: Language.inst.YEAR,
+                            icon: Broken.calendar,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(
+                  height: 12.0,
+                ),
+                CustomTagTextField(
+                  controller: titleController,
+                  hintText: Language.inst.TITLE,
+                  icon: Broken.music,
+                ),
+                const SizedBox(
+                  height: 8.0,
+                ),
+                CustomTagTextField(
+                  controller: artistController,
+                  hintText: Language.inst.ARTIST,
+                  icon: Broken.microphone,
+                ),
+                const SizedBox(
+                  height: 12.0,
+                ),
+                CustomTagTextField(
+                  controller: albumController,
+                  hintText: Language.inst.ALBUM,
+                  icon: Broken.music_dashboard,
+                ),
+                const SizedBox(
+                  height: 12.0,
+                ),
+                CustomTagTextField(
+                  controller: genreController,
+                  hintText: Language.inst.GENRE,
+                  icon: Broken.smileys,
+                ),
+                const SizedBox(
+                  height: 12.0,
+                ),
+                CustomTagTextField(
+                  controller: commentController,
+                  hintText: Language.inst.COMMENT,
+                  icon: Broken.text_block,
+                  maxLines: 4,
+                ),
+                const SizedBox(
+                  height: 12.0,
+                ),
+              ],
+            ),
           ),
           const SizedBox(
             height: 12.0,
           ),
-          CustomTagTextField(
-            controller: titleController,
-            hintText: Language.inst.TITLE,
-            icon: Broken.music,
+          Text(
+            track.path,
+            style: Get.textTheme.displaySmall,
           ),
           const SizedBox(
-            height: 8.0,
+            height: 4.0,
           ),
-          CustomTagTextField(
-            controller: artistController,
-            hintText: Language.inst.ARTIST,
-            icon: Broken.microphone,
-          ),
-          const SizedBox(
-            height: 12.0,
-          ),
-          CustomTagTextField(
-            controller: albumController,
-            hintText: Language.inst.ALBUM,
-            icon: Broken.music_dashboard,
-          ),
-          const SizedBox(
-            height: 12.0,
-          ),
-          CustomTagTextField(
-            controller: genreController,
-            hintText: Language.inst.GENRE,
-            icon: Broken.smileys,
-          ),
-          const SizedBox(
-            height: 12.0,
-          ),
-          CustomTagTextField(
-            controller: commentController,
-            hintText: Language.inst.COMMENT,
-            icon: Broken.text_block,
+          Text(
+            [
+              track.duration.milliseconds.label,
+              track.size.fileSizeFormatted,
+              "${track.bitrate} kps",
+              "${track.sampleRate} hz",
+            ].join(' • '),
+            style: Get.textTheme.displaySmall,
           ),
         ],
       ),
@@ -269,7 +293,8 @@ class CustomTagTextField extends StatelessWidget {
   final String hintText;
   final IconData? icon;
   final int hintMaxLines;
-  const CustomTagTextField({super.key, required this.controller, required this.hintText, this.icon, this.hintMaxLines = 3});
+  final int? maxLines;
+  const CustomTagTextField({super.key, required this.controller, required this.hintText, this.icon, this.hintMaxLines = 3, this.maxLines});
 
   @override
   Widget build(BuildContext context) {
@@ -278,8 +303,8 @@ class CustomTagTextField extends StatelessWidget {
       child: TextField(
         controller: controller,
         textAlign: TextAlign.left,
-        maxLines: null,
-        style: context.textTheme.displaySmall?.copyWith(fontSize: 14.5, fontWeight: FontWeight.w700),
+        maxLines: maxLines,
+        style: context.textTheme.displaySmall?.copyWith(fontSize: 14.5, fontWeight: FontWeight.w600),
         decoration: InputDecoration(
           hintMaxLines: hintMaxLines,
           contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
