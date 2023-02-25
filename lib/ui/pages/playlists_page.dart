@@ -21,11 +21,12 @@ class PlaylistsPage extends StatelessWidget {
     this.tracksToAdd,
     this.displayTopRow = true,
   });
-  // final ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
   @override
   Widget build(BuildContext context) {
     return Obx(
       () => CupertinoScrollbar(
+        controller: _scrollController,
         child: AnimationLimiter(
           child: CustomScrollView(
             slivers: [
