@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:get/get.dart';
 
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/translations/strings.dart';
 
 class PlaylistController extends GetxController {
   static PlaylistController inst = PlaylistController();
@@ -82,6 +85,21 @@ class PlaylistController extends GetxController {
       addTracksToPlaylist(fvPlaylist.id, [track]);
     }
     _writeToStorage();
+  }
+
+  void generateRandomPlaylist() {
+    final List<Track> randomList = [];
+    final trackslist = Indexer.inst.tracksInfoList.length;
+    final min = trackslist ~/ 6;
+    final max = trackslist ~/ 3;
+    final int randomNumber = min + Random().nextInt(max - min);
+    for (int i = 0; i < randomNumber; i++) {
+      randomList.add(Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)]);
+    }
+    PlaylistController.inst.addNewPlaylist(
+      '${Language.inst.AUTO_GENERATED} ${PlaylistController.inst.playlistList.length + 1}',
+      tracks: randomList,
+    );
   }
 
   ///

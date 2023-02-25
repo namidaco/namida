@@ -1,12 +1,9 @@
 // ignore_for_file: no_leading_underscores_for_local_identifiers, prefer_const_constructors
 
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:searchbar_animation/searchbar_animation.dart';
 
-import 'package:namida/class/track.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -84,18 +81,7 @@ class HomePage extends StatelessWidget {
           actions: [
             IconButton(
               constraints: BoxConstraints(maxWidth: 60, minWidth: 56.0),
-              onPressed: () {
-                final List<Track> randomList = [];
-                final int randomNumber =
-                    Random().nextInt(Indexer.inst.tracksInfoList.length ~/ 4).clamp(Indexer.inst.tracksInfoList.length ~/ 6, Indexer.inst.tracksInfoList.length ~/ 4);
-                for (int i = 0; i < randomNumber; i++) {
-                  randomList.add(Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)]);
-                }
-                PlaylistController.inst.addNewPlaylist(
-                  '${Language.inst.AUTO_GENERATED} ${PlaylistController.inst.playlistList.length + 1}',
-                  tracks: randomList,
-                );
-              },
+              onPressed: () => PlaylistController.inst.generateRandomPlaylist(),
               icon: const Icon(Broken.add),
             ),
             // FilterSortByMenu(),
