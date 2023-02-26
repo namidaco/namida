@@ -189,6 +189,11 @@ class BackupAndRestore extends StatelessWidget {
               subtitle: SettingsController.inst.defaultBackupLocation.value,
               onTap: () async {
                 final path = await FilePicker.platform.getDirectoryPath();
+
+                /// resets SAF in case folder was changed
+                if (path != SettingsController.inst.defaultBackupLocation.value) {
+                  await resetSAFPermision();
+                }
                 if (path != null) {
                   SettingsController.inst.save(defaultBackupLocation: path);
                 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:on_audio_edit/on_audio_edit.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -9,6 +8,7 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
+import 'package:namida/main.dart';
 
 class AdvancedSettings extends StatelessWidget {
   AdvancedSettings({super.key});
@@ -27,15 +27,7 @@ class AdvancedSettings extends StatelessWidget {
             icon: Broken.code_circle,
             title: Language.inst.RESET_SAF_PERMISSION,
             subtitle: Language.inst.RESET_SAF_PERMISSION_SUBTITLE,
-            onTap: () async {
-              final didReset = await OnAudioEdit().resetComplexPermission();
-              if (didReset) {
-                Get.snackbar(Language.inst.PERMISSION_UPDATE, Language.inst.RESET_SAF_PERMISSION_RESET_SUCCESS);
-                printError(info: 'Reset SAF Successully');
-              } else {
-                printError(info: 'Reset SAF Failed');
-              }
-            },
+            onTap: () async => await resetSAFPermision(),
           ),
           Obx(
             () => CustomListTile(

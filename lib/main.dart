@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:on_audio_edit/on_audio_edit.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -112,6 +113,16 @@ Future<bool> requestManageStoragePermission() async {
     return false;
   }
   return true;
+}
+
+Future<void> resetSAFPermision() async {
+  final didReset = await OnAudioEdit().resetComplexPermission();
+  if (didReset) {
+    Get.snackbar(Language.inst.PERMISSION_UPDATE, Language.inst.RESET_SAF_PERMISSION_RESET_SUCCESS);
+    debugPrint('Reset SAF Successully');
+  } else {
+    debugPrint('Reset SAF Failture');
+  }
 }
 
 class MyApp extends StatelessWidget {
