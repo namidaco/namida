@@ -60,8 +60,9 @@ class ArtworkWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final finalPath = (compressed ? track.pathToImageComp : track.pathToImage);
-    final extImageChild = FileSystemEntity.typeSync(finalPath) != FileSystemEntityType.notFound && !forceDummyArtwork
+    final anyImageExist =
+        FileSystemEntity.typeSync(track.pathToImage) != FileSystemEntityType.notFound || FileSystemEntity.typeSync(track.pathToImageComp) != FileSystemEntityType.notFound;
+    final extImageChild = anyImageExist && !forceDummyArtwork
         ? Stack(
             children: [
               bytes != null
