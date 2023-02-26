@@ -58,7 +58,7 @@ class SettingsController extends GetxController {
   RxList<String> backupItemslist = [kTracksFilePath, kQueueFilePath, kPlaylistsFilePath, kSettingsFilePath, kQueueFilePath, kWaveformDirPath, kArtworksCompDirPath].obs;
   RxBool enableVideoPlayback = true.obs;
   RxInt videoPlaybackSource = 0.obs;
-  RxList<String> youtubeVideoQualities = ['144p', '240p', '360p', '480p', '720p'].obs;
+  RxList<String> youtubeVideoQualities = ['144p', '240p', '360p', '480p'].obs;
 
   /// Track Items
   RxBool displayThirdRow = true.obs;
