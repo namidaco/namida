@@ -142,7 +142,7 @@ showTrackDialog(Track track, [Widget? leading, Playlist? playlist]) async {
                       Get.close(1);
 
                       TextEditingController controller = TextEditingController();
-                      final ytlink = await VideoController.inst.updateYTLink(track, justGetTheLink: true);
+                      final ytlink = await VideoController.inst.extractYTLinkFromTrack(track);
                       controller.text = ytlink;
                       Get.dialog(
                         CustomBlurryDialog(

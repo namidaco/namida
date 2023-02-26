@@ -33,11 +33,15 @@ class VideoController extends GetxController {
   VideoPlayerController? vidcontroller;
   var yt = YoutubeExplode();
 
-  /// Normally assigns to [VideoController.inst.youtubeLink]
-  Future<String> updateYTLink(Track track, {bool justGetTheLink = false}) async {
+  /// Always assigns to [VideoController.inst.youtubeLink] and [VideoController.inst.youtubeVideoId]
+  Future<void> updateYTLink(Track track) async {
     isVideoReady.value = false;
-    // final regex = RegExp(r'^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$');
-    // final regex = RegExp(r'\b(?:https?://)?(?:www\.)?youtu(?:be\.com/watch\?v=|\.be/)([-\w]+)(?:\S+)?\s*', caseSensitive: false, multiLine: true);
+    final link = await extractYTLinkFromTrack(track);
+    youtubeLink.value = link;
+    youtubeVideoId.value = extractIDFromYTLink(link);
+  }
+
+  Future<String> extractYTLinkFromTrack(Track track) async {
     final regex = RegExp(
       r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)(?:\S+)?',
       caseSensitive: false,
@@ -47,17 +51,16 @@ class VideoController extends GetxController {
     final match2 = regex.firstMatch(track.displayName);
 
     final link = match?[0] ?? match2?[0] ?? '';
-    if (justGetTheLink) {
-      return link;
-    }
-    youtubeLink.value = link;
 
+    return link;
+  }
+
+  String extractIDFromYTLink(String ytlink) {
     String videoId = '';
-    if (link.length > 11) {
-      videoId = link.substring(link.length - 11);
+    if (ytlink.length >= 11) {
+      videoId = ytlink.substring(ytlink.length - 11);
     }
-    youtubeVideoId.value = videoId;
-    return '';
+    return videoId;
   }
 
   Future<String> downloadYoutubeVideo(String videoId) async {
@@ -109,11 +112,6 @@ class VideoController extends GetxController {
     Indexer.inst.updateVideosSizeInStorage();
     return Future.value(File("$kVideosCachePath${videoId}_${streamToBeUsed.qualityLabel}.mp4").path);
   }
-
-  // void moveFile(String oldPath, String newPath) {
-  //   final file = File(oldPath);
-  //   file.rename(newPath).then((_) => print('File moved successfully.')).catchError((error) => print('Error while moving file: $error'));
-  // }
 
   Future<void> updateLocalVidPath([Track? track]) async {
     track ??= Player.inst.nowPlayingTrack.value;
