@@ -97,9 +97,10 @@ class IndexerSettings extends StatelessWidget {
               subtitle: "${Language.inst.RESPECT_NO_MEDIA_SUBTITLE}. ${Language.inst.INDEX_REFRESH_REQUIRED}",
               onChanged: (p0) async {
                 if (!stg.respectNoMedia.value) {
-                  await requestManageStoragePermission();
+                  if (await requestManageStoragePermission()) {
+                    stg.save(respectNoMedia: !p0);
+                  }
                 }
-                stg.save(respectNoMedia: !p0);
               },
               value: stg.respectNoMedia.value,
             ),

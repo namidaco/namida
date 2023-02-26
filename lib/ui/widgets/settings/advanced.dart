@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:on_audio_edit/on_audio_edit.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -22,6 +23,20 @@ class AdvancedSettings extends StatelessWidget {
       // icon: Broken.danger,
       child: Column(
         children: [
+          CustomListTile(
+            icon: Broken.code_circle,
+            title: Language.inst.RESET_SAF_PERMISSION,
+            subtitle: Language.inst.RESET_SAF_PERMISSION_SUBTITLE,
+            onTap: () async {
+              final didReset = await OnAudioEdit().resetComplexPermission();
+              if (didReset) {
+                Get.snackbar(Language.inst.PERMISSION_UPDATE, Language.inst.RESET_SAF_PERMISSION_RESET_SUCCESS);
+                printError(info: 'Reset SAF Successully');
+              } else {
+                printError(info: 'Reset SAF Failed');
+              }
+            },
+          ),
           Obx(
             () => CustomListTile(
               leading: const StackedIcon(
@@ -30,12 +45,6 @@ class AdvancedSettings extends StatelessWidget {
               ),
               title: Language.inst.CLEAR_IMAGE_CACHE,
               trailingText: Indexer.inst.artworksSizeInStorage.value.fileSizeFormatted,
-              // trailing: Obx(
-              //   () => Text(
-              //     Indexer.inst.getImageCacheSize().fileSizeFormatted,
-              //     style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
-              //   ),
-              // ),
               onTap: () {
                 Get.dialog(
                   CustomBlurryDialog(

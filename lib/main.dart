@@ -9,11 +9,14 @@ import 'package:get_storage/get_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/video_controller.dart';
-import 'package:namida/packages/miniplayer.dart';
+import 'package:namida/controller/folders_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/selected_tracks_preview.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/current_color.dart';
@@ -82,6 +85,7 @@ void main() async {
   Get.put(() => ScrollSearchController());
   Get.put(() => Player());
   Get.put(() => VideoController());
+  Get.put(() => Folders());
   await Player.inst.initializePlayer();
 
   final tfe = await File(kTracksFilePath).exists() && await File(kTracksFilePath).stat().then((value) => value.size > 80);
@@ -91,17 +95,23 @@ void main() async {
     Indexer.inst.prepareTracksFile(tfe);
   }
   await PlaylistController.inst.preparePlaylistFile();
+  await QueueController.inst.prepareQueueFile();
   await VideoController.inst.getVideoFiles();
 
   runApp(const MyApp());
 }
 
-Future<void> requestManageStoragePermission() async {
+Future<bool> requestManageStoragePermission() async {
+  // final shouldRequest = !await Permission.manageExternalStorage.isGranted || await Permission.manageExternalStorage.isDenied;
   if (!await Permission.manageExternalStorage.isGranted) {
     await Permission.manageExternalStorage.request();
-  } else {
-    return;
   }
+
+  if (!await Permission.manageExternalStorage.isGranted || await Permission.manageExternalStorage.isDenied) {
+    Get.snackbar(Language.inst.STORAGE_PERMISSION_DENIED, Language.inst.STORAGE_PERMISSION_DENIED_SUBTITLE);
+    return false;
+  }
+  return true;
 }
 
 class MyApp extends StatelessWidget {

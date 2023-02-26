@@ -17,7 +17,9 @@ import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 Future<void> showEditTrackTagsDialog(Track track) async {
-  await requestManageStoragePermission();
+  if (!await requestManageStoragePermission()) {
+    return;
+  }
 
   final audioedit = OnAudioEdit();
   final titleController = TextEditingController();
@@ -114,6 +116,43 @@ Future<void> showEditTrackTagsDialog(Track track) async {
               ftitle = ftitle.trim();
               fyear = fyear.trim();
             }
+            // i tried many other ways to automate this task, nothing worked
+            // so yeah ask the user to select the specific folder
+            // and provide an option in the setting to reset this premission
+            if (!await audioedit.complexPermissionStatus()) {
+              await Get.dialog(
+                CustomBlurryDialog(
+                  title: Language.inst.NOTE,
+                  // bodyText:
+                  //     "${Language.inst.CHOOSE_BACKUP_LOCATION_TO_EDIT_METADATA.replaceFirst('_BACKUP_LOCATION_', SettingsController.inst.defaultBackupLocation.value)}\n\n${Language.inst.NOTE}:\n${Language.inst.CHOOSE_BACKUP_LOCATION_TO_EDIT_METADATA_NOTE}",
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        Language.inst.CHOOSE_BACKUP_LOCATION_TO_EDIT_METADATA.replaceFirst('_BACKUP_LOCATION_', SettingsController.inst.defaultBackupLocation.value),
+                        style: Get.textTheme.displayMedium,
+                      ),
+                      const SizedBox(
+                        height: 16.0,
+                      ),
+                      Text(
+                        '${Language.inst.NOTE}:',
+                        style: Get.textTheme.displayMedium,
+                      ),
+                      const SizedBox(
+                        height: 4.0,
+                      ),
+                      Text(
+                        Language.inst.CHOOSE_BACKUP_LOCATION_TO_EDIT_METADATA_NOTE,
+                        style: Get.textTheme.displaySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+              await audioedit.requestComplexPermission();
+            }
+
             final didUpdate = await audioedit.editAudio(
               copiedFile.path,
               {
@@ -128,23 +167,25 @@ Future<void> showEditTrackTagsDialog(Track track) async {
               },
               searchInsideFolders: true,
             );
-            debugPrint(currentImagePath.value.toString());
+            debugPrint(didUpdate.toString());
 
-            // if user actually picked a pic
-            if (currentImagePath.value != '') {
-              final didUpdateImg = await audioedit.editArtwork(
-                copiedFile.path,
-                // imagePath: currentImagePath.value,
-                searchInsideFolders: true,
-                openFilePicker: true,
-              );
+            if (!didUpdate) {
+              Get.snackbar(Language.inst.METADATA_EDIT_FAILED, Language.inst.METADATA_EDIT_FAILED_SUBTITLE);
+            } else {
+              // if user actually picked a pic
+              if (currentImagePath.value != '') {
+                final didUpdateImg = await audioedit.editArtwork(
+                  copiedFile.path,
+                  // imagePath: currentImagePath.value,
+                  searchInsideFolders: true,
+                  openFilePicker: true,
+                );
+              }
+              await copiedFile.copy(track.path);
+              Indexer.inst.updateTracks([track], updateArtwork: currentImagePath.value != '');
             }
 
-            // await File(track.path).delete();
-            await copiedFile.copy(track.path);
             await copiedFile.delete();
-            debugPrint(didUpdate.toString());
-            Indexer.inst.updateTracks([track], updateArtwork: currentImagePath.value != '');
             Get.close(1);
           },
           icon: const Icon(Broken.pen_add),

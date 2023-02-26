@@ -202,7 +202,9 @@ class BackupAndRestore extends StatelessWidget {
 }
 
 Future<void> createBackupFile() async {
-  await requestManageStoragePermission();
+  if (!await requestManageStoragePermission()) {
+    return;
+  }
   isCreatingBackup.value = true;
 
   // formats date
@@ -255,7 +257,9 @@ Future<void> createBackupFile() async {
 }
 
 Future<void> restoreBackupOnTap(bool auto) async {
-  await requestManageStoragePermission();
+  if (!await requestManageStoragePermission()) {
+    return;
+  }
   Get.close(1);
   File? backupzip;
   if (auto) {
