@@ -10,7 +10,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/core/extensions.dart';
 
 /// NOT USED
-/// TODO: REMOVE
+/// TODO: REMOVE [FilterSortByMenu]
 class FilterSortByMenu extends StatelessWidget {
   const FilterSortByMenu({super.key});
 

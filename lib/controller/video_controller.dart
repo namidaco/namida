@@ -63,7 +63,7 @@ class VideoController extends GetxController {
     return videoId;
   }
 
-  Future<String> extractYTIDFromTrack(Track track) async {
+  String extractYTIDFromTrack(Track track) {
     final ytlink = extractYTLinkFromTrack(track);
     final id = extractIDFromYTLink(ytlink);
     return id;

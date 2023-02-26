@@ -844,6 +844,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                 },
                                 onPressed: () async {
                                   await VideoController.inst.toggleVideoPlaybackInSetting();
+                                  VideoController.inst.updateYTLink(Player.inst.nowPlayingTrack.value);
                                 },
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -869,16 +870,14 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                         Language.inst.VIDEO,
                                         style: TextStyle(color: onSecondary),
                                       ),
-                                      const SizedBox(
-                                        width: 10.0,
-                                      ),
-                                      Text("${VideoController.inst.videoCurrentQuality.value} • "),
+                                      VideoController.inst.youtubeLink.value == '' ? const Text(" ? ") : Text(" • ${VideoController.inst.videoCurrentQuality.value} • "),
                                       const SizedBox(
                                         width: 4.0,
                                       ),
                                       if (VideoController.inst.videoCurrentSize.value > 10)
                                         Text("${VideoController.inst.videoCurrentSize.value.fileSizeFormatted}/", style: TextStyle(color: onSecondary, fontSize: 11.0)),
-                                      Text(VideoController.inst.videoTotalSize.value.fileSizeFormatted, style: TextStyle(color: onSecondary, fontSize: 11.0)),
+                                      if (VideoController.inst.youtubeLink.value != '')
+                                        Text(VideoController.inst.videoTotalSize.value.fileSizeFormatted, style: TextStyle(color: onSecondary, fontSize: 11.0)),
                                     ]
                                   ],
                                 ),
@@ -1320,7 +1319,7 @@ class TrackInfo extends StatelessWidget {
                                         height: 4.0,
                                       ),
                                       Text(
-                                        track.artistsList.take(3).join(', '),
+                                        track.artistsList.take(3).join(', ').overflow,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: context.textTheme.displayMedium?.copyWith(
