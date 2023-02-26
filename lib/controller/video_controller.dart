@@ -31,17 +31,17 @@ class VideoController extends GetxController {
   RxInt videoTotalSize = 0.obs;
   // YoutubePlayerController? ytcontroller;
   VideoPlayerController? vidcontroller;
-  var yt = YoutubeExplode();
+  var ytexp = YoutubeExplode();
 
   /// Always assigns to [VideoController.inst.youtubeLink] and [VideoController.inst.youtubeVideoId]
-  Future<void> updateYTLink(Track track) async {
+  void updateYTLink(Track track) {
     isVideoReady.value = false;
-    final link = await extractYTLinkFromTrack(track);
+    final link = extractYTLinkFromTrack(track);
     youtubeLink.value = link;
     youtubeVideoId.value = extractIDFromYTLink(link);
   }
 
-  Future<String> extractYTLinkFromTrack(Track track) async {
+  String extractYTLinkFromTrack(Track track) {
     final regex = RegExp(
       r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)(?:\S+)?',
       caseSensitive: false,
@@ -63,8 +63,14 @@ class VideoController extends GetxController {
     return videoId;
   }
 
-  Future<String> downloadYoutubeVideo(String videoId) async {
-    var manifest = await yt.videos.streamsClient.getManifest(videoId);
+  Future<String> extractYTIDFromTrack(Track track) async {
+    final ytlink = extractYTLinkFromTrack(track);
+    final id = extractIDFromYTLink(ytlink);
+    return id;
+  }
+
+  Future<String> downloadYoutubeVideo(String videoId, Track track) async {
+    var manifest = await ytexp.videos.streamsClient.getManifest(videoId);
 
     /// Create a list of video qualities in descending order of preference
     final preferredQualities = SettingsController.inst.youtubeVideoQualities.map((element) => element.toVideoQuality);
@@ -78,7 +84,7 @@ class VideoController extends GetxController {
     );
 
     /// Get the actual stream
-    var stream = yt.videos.streamsClient.get(streamToBeUsed);
+    var stream = ytexp.videos.streamsClient.get(streamToBeUsed);
 
     /// Open a file for writing.
     var file = File("$kVideosCacheTempPath${videoId}_${streamToBeUsed.videoQualityLabel}.mp4");
@@ -92,7 +98,8 @@ class VideoController extends GetxController {
       const Duration(milliseconds: 1000),
       (timer) async {
         final s = await file.stat();
-        if (s.size > 1000) {
+        // only update if the user didnt change the track
+        if (s.size > 1000 && Player.inst.nowPlayingTrack.value == track) {
           videoCurrentSize.value = s.size;
         }
       },
@@ -142,7 +149,7 @@ class VideoController extends GetxController {
     }
 
     if (SettingsController.inst.videoPlaybackSource.value != 1) {
-      await playAndInitializeVideo(await downloadYoutubeVideo(youtubeVideoId.value), track);
+      await playAndInitializeVideo(await downloadYoutubeVideo(youtubeVideoId.value, track), track);
       printInfo(info: 'RETURNED AFTER DOWNLOAD');
     }
 
