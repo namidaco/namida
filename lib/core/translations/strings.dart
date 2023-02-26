@@ -10,6 +10,10 @@ class Language {
   String get MINIMUM_ONE_QUALITY_SUBTITLE => 'At least 1 quality should remain';
   String get CHOOSE_WHAT_TO_CLEAR => 'Choose what to clear';
   String get SET_YOUTUBE_LINK => 'Set Youtube Link';
+  String get WAVEFORM_DATA => 'Waveform data';
+  String get CLEAR_TRACK_ITEM => 'Clear Track\'s';
+  String get MIN_CANT_BE_LESS_THAN_MAX => 'Minimum value can\'t be less than the maximum';
+  String get MAX_CANT_BE_MORE_THAN_MIN => 'Maximum value can\'t be more than the minimum';
 
   /// Main
   String get EXIT_APP => 'Exit';
@@ -26,6 +30,7 @@ class Language {
   String get AUDIO => 'Audio';
   String get VIDEO => 'Video';
   String get VIDEO_CACHE => 'Video Cache';
+  String get VIDEO_CACHE_FILE => 'Cached Video File';
   String get CLEAR_VIDEO_CACHE => 'Clear Video Cache';
   String get VIDEO_PLAYBACK_SETTING => 'Video Playback';
   String get VIDEO_PLAYBACK_SETTING_SUBTITLE => 'Most of these setting can be accessed directly in the player by long pressing the video button';
@@ -78,7 +83,9 @@ class Language {
   String get TRACK_GENRES_SEPARATOR => 'Genres Separators';
   String get SEPARATORS_MESSAGE => 'No need to insert spaces, unless you wanna use a letter (like x)';
   String get TRACKS_INFO => 'Tracks Info';
+  String get ARTWORK => 'Artwork';
   String get ARTWORKS => 'Artworks';
+  String get ARTWORK_COMPRESSED => 'Compressed Artwork';
   String get ARTWORKS_COMPRESSED => 'Compressed Artworks';
   String get FILTERED_BY_SIZE_AND_DURATION => 'Tracks Filtered by size and duration';
   String get DUPLICATED_TRACKS => 'Duplicated Tracks';
@@ -225,6 +232,7 @@ class Language {
   String get ADVANCED_SETTINGS_SUBTITLE => 'Advanced Settings, don\'t touch';
   String get CLEAR_IMAGE_CACHE => 'Clear Image cache';
   String get CLEAR_IMAGE_CACHE_WARNING => 'Clearing Image cache will result in a library without images.\n\nUse it only in case you want to rebuild image cache.';
+
   String get CLEAR_WAVEFORM_DATA => 'Clear Waveform data';
   String get CLEAR_WAVEFORM_DATA_WARNING => 'Do you really want to wait all that time again?';
 
