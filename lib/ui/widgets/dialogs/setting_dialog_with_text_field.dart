@@ -206,7 +206,7 @@ void showSettingDialogWithTextField({
                         queueSheetMinHeight: stg.queueSheetMaxHeight.value,
                       );
                       showSnackBarWithTitle(
-                        "${stg.queueSheetMinHeight}, Minimum value can't be less than the maximum",
+                        "${stg.queueSheetMinHeight}, ${Language.inst.MIN_CANT_BE_LESS_THAN_MAX}",
                         duration: const Duration(seconds: 4),
                         title: title,
                       );
@@ -221,7 +221,7 @@ void showSettingDialogWithTextField({
                       stg.save(
                         queueSheetMaxHeight: stg.queueSheetMinHeight.value,
                       );
-                      showSnackBarWithTitle("${stg.queueSheetMaxHeight}, Maximum value can't be more than the minimum", duration: const Duration(seconds: 4), title: title);
+                      showSnackBarWithTitle("${stg.queueSheetMaxHeight}, ${Language.inst.MAX_CANT_BE_MORE_THAN_MIN}", duration: const Duration(seconds: 4), title: title);
                     } else {
                       stg.save(
                         queueSheetMaxHeight: double.parse(controller.text),

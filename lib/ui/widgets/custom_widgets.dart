@@ -10,7 +10,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/pages/settings_page.dart';
-import 'package:namida/ui/widgets/setting_dialog.dart';
+import 'package:namida/ui/widgets/dialogs/setting_dialog_with_text_field.dart';
 
 class CustomSwitchListTile extends StatelessWidget {
   final bool value;

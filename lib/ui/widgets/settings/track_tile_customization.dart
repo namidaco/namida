@@ -11,7 +11,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/setting_dialog.dart';
+import 'package:namida/ui/widgets/dialogs/setting_dialog_with_text_field.dart';
 
 class TrackTileCustomization extends StatelessWidget {
   TrackTileCustomization({super.key});
