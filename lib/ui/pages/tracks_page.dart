@@ -14,11 +14,11 @@ import 'package:namida/ui/widgets/settings/sort_by_button.dart';
 
 class TracksPage extends StatelessWidget {
   TracksPage({super.key});
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollSearchController.inst.trackScrollcontroller.value;
   @override
   Widget build(BuildContext context) {
     return CupertinoScrollbar(
-      controller: ScrollSearchController.inst.trackScrollcontroller.value,
+      controller: _scrollController,
       child: AnimationLimiter(
         child: Obx(
           () => Column(
@@ -26,6 +26,7 @@ class TracksPage extends StatelessWidget {
               ExpandableBox(
                 isBarVisible: ScrollSearchController.inst.isTrackBarVisible.value,
                 showSearchBox: ScrollSearchController.inst.showTrackSearchBox.value,
+                displayloadingIndicator: Indexer.inst.isIndexing.value,
                 leftText: Indexer.inst.trackSearchList.toList().displayTrackKeyword,
                 onFilterIconTap: () => ScrollSearchController.inst.switchTrackSearchBoxVisibilty(),
                 onCloseButtonPressed: () {
@@ -33,7 +34,7 @@ class TracksPage extends StatelessWidget {
                 },
                 sortByMenuWidget: SortByMenu(
                   title: SettingsController.inst.tracksSort.value.toText,
-                  popupMenuChild: SortByMenuTracks(),
+                  popupMenuChild: const SortByMenuTracks(),
                   isCurrentlyReversed: SettingsController.inst.tracksSortReversed.value,
                   onReverseIconTap: () {
                     Indexer.inst.sortTracks(reverse: !SettingsController.inst.tracksSortReversed.value);
@@ -49,7 +50,7 @@ class TracksPage extends StatelessWidget {
                 child: ListView.builder(
                   // physics: AlwaysScrollableScrollPhysics(),
                   padding: EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value),
-                  controller: ScrollSearchController.inst.trackScrollcontroller.value,
+                  controller: _scrollController,
                   itemCount: Indexer.inst.trackSearchList.length,
                   itemBuilder: (BuildContext context, int i) {
                     return AnimationConfiguration.staggeredList(

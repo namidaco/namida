@@ -4,10 +4,12 @@ import 'package:get/get.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings/extras.dart';
 
 class ExpandableBox extends StatelessWidget {
   final bool isBarVisible;
   final bool showSearchBox;
+  final bool displayloadingIndicator;
   final void Function()? onFilterIconTap;
   final String leftText;
   final void Function() onCloseButtonPressed;
@@ -18,6 +20,7 @@ class ExpandableBox extends StatelessWidget {
     super.key,
     required this.isBarVisible,
     required this.showSearchBox,
+    this.displayloadingIndicator = false,
     this.onFilterIconTap,
     required this.leftText,
     required this.onCloseButtonPressed,
@@ -42,11 +45,14 @@ class ExpandableBox extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(width: 18.0),
-                Expanded(
-                  child: Text(
-                    leftText,
-                    style: Get.textTheme.displayMedium,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      leftText,
+                      style: Get.textTheme.displayMedium,
+                    ),
+                    if (displayloadingIndicator) ...[const SizedBox(width: 8.0), const LoadingIndicator()]
+                  ],
                 ),
                 const Spacer(),
                 if (gridWidget != null) gridWidget!,
