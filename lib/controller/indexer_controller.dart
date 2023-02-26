@@ -824,7 +824,7 @@ class Indexer extends GetxController {
     });
   }
 
-  void updatVideosSizeInStorage() {
+  void updateVideosSizeInStorage() {
     // resets values
     videosInStorage.value = 0;
     videosSizeInStorage.value = 0;
@@ -865,7 +865,7 @@ class Indexer extends GetxController {
   Future<void> clearVideoCache() async {
     await Directory(kVideosCachePath).delete(recursive: true);
     await Directory(kVideosCachePath).create();
-    updatVideosSizeInStorage();
+    updateVideosSizeInStorage();
   }
 
   @override

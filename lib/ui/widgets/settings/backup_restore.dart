@@ -255,6 +255,7 @@ Future<void> createBackupFile() async {
 }
 
 Future<void> restoreBackupOnTap(bool auto) async {
+  await requestManageStoragePermission();
   Get.close(1);
   File? backupzip;
   if (auto) {
@@ -298,6 +299,9 @@ Future<void> restoreBackupOnTap(bool auto) async {
   }
 
   Indexer.inst.refreshLibraryAndCheckForDiff();
+  Indexer.inst.updateImageSizeInStorage();
+  Indexer.inst.updateVideosSizeInStorage();
+  Indexer.inst.updateWaveformSizeInStorage();
   Get.snackbar(Language.inst.RESTORED_BACKUP_SUCCESSFULLY, Language.inst.RESTORED_BACKUP_SUCCESSFULLY_SUB);
   isRestoringBackup.value = false;
 }

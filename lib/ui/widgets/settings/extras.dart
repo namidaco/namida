@@ -287,16 +287,12 @@ class ExtrasSettings extends StatelessWidget {
             icon: Broken.sound,
             title: Language.inst.GENERATE_ALL_WAVEFORM_DATA,
             trailing: Obx(
-              () {
-                Rx<Directory> dir = Directory(kWaveformDirPath).obs;
-
-                return Column(
-                  children: [
-                    Text("${dir.value.listSync().length}/${Indexer.inst.tracksInfoList.length}"),
-                    if (WaveformController.inst.generatingAllWaveforms.value) const LoadingIndicator(),
-                  ],
-                );
-              },
+              () => Column(
+                children: [
+                  Text("${Indexer.inst.waveformsInStorage.value}/${Indexer.inst.tracksInfoList.length}"),
+                  if (WaveformController.inst.generatingAllWaveforms.value) const LoadingIndicator(),
+                ],
+              ),
             ),
             onTap: () async {
               if (WaveformController.inst.generatingAllWaveforms.value) {
