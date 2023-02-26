@@ -60,6 +60,7 @@ class Player extends GetxController {
     currentIndex.listen((i) {
       updateAllAudioDependantListeners(i);
     });
+
     // currentQueue.listen((q) {
     //   final playlist = ConcatenatingAudioSource(
     //     useLazyPreparation: true,
@@ -91,10 +92,10 @@ class Player extends GetxController {
     // });
   }
   Future<void> updateAllAudioDependantListeners([int? i, Track? track]) async {
-    // i ??= player.currentIndex ?? 0;
-    // track ??= currentQueue.elementAt(i);
-    i ??= currentQueue.indexOf(nowPlayingTrack.value);
-    track ??= nowPlayingTrack.value;
+    i ??= player.currentIndex ?? 0;
+    track ??= currentQueue.elementAt(i);
+    // i ??= currentQueue.indexOf(nowPlayingTrack.value);
+    // track ??= nowPlayingTrack.value;
 
     nowPlayingTrack.value = track;
     WaveformController.inst.generateWaveform(track);
@@ -102,7 +103,7 @@ class Player extends GetxController {
 
     /// for video
     if (SettingsController.inst.enableVideoPlayback.value) {
-      await VideoController.inst.updateYTLink(track);
+      VideoController.inst.updateYTLink(track);
       await VideoController.inst.updateLocalVidPath(track);
     }
     await updateVideoPlayingState();
