@@ -1,9 +1,9 @@
 # Namida Changelog
 
-## 24/2/2023
+## 24/2/2023 [#e82f597](https://github.com/MSOB7YY/namida/commit/e82f597c6572f620a86206cbfba0da1e76cc3e08)
 
 ### 🎉 New Features:
-- Added MiniPlayer (thanks to @55nknown).
+- Added Miniplayer (thanks @55nknown).
 - Audio Playback with background notification.
 - Play Next & Play Last.
 - Video Playback Support (Local and Youtube).
