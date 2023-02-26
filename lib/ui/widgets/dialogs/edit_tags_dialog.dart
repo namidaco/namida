@@ -101,9 +101,9 @@ Future<void> showEditTrackTagsDialog(Track track) async {
             String fartist = artistController.text;
             String fcomposer = composerController.text;
             String fgenre = genreController.text;
-            String ftrnum = trackNumberController.text;
+            String _ftrnum = trackNumberController.text;
             String fcomment = commentController.text;
-            String fyear = yearController.text;
+            String _fyear = yearController.text;
 
             if (trimWhiteSpaces.value) {
               ftitle = ftitle.trim();
@@ -111,11 +111,28 @@ Future<void> showEditTrackTagsDialog(Track track) async {
               fartist = fartist.trim();
               fcomposer = fcomposer.trim();
               fgenre = fgenre.trim();
-              ftrnum = ftrnum.trim();
+              _ftrnum = _ftrnum.trim();
               fcomment = fcomment.trim();
               ftitle = ftitle.trim();
-              fyear = fyear.trim();
+              _fyear = _fyear.trim();
             }
+
+            /// separately apply int based fields only in case they are not empty.
+            /// this prevent crash resulted from assigning empty string to int.
+            int? ftrnumInt;
+
+            ftrnumInt = _ftrnum.isNotEmpty ? int.tryParse(_ftrnum) : null;
+            // user changed from number to empty
+            if (_ftrnum.isEmpty && _ftrnum != (info.track != null ? info.track.toString() : '')) {
+              ftrnumInt = 0;
+            }
+
+            int? fyearInt;
+            fyearInt = _fyear.isNotEmpty ? int.tryParse(_fyear) : null;
+            if (_fyear.isEmpty && _fyear != (info.year != null ? info.year.toString() : '')) {
+              fyearInt = 0;
+            }
+
             // i tried many other ways to automate this task, nothing worked
             // so yeah ask the user to select the specific folder
             // and provide an option in the setting to reset this premission
@@ -123,8 +140,6 @@ Future<void> showEditTrackTagsDialog(Track track) async {
               await Get.dialog(
                 CustomBlurryDialog(
                   title: Language.inst.NOTE,
-                  // bodyText:
-                  //     "${Language.inst.CHOOSE_BACKUP_LOCATION_TO_EDIT_METADATA.replaceFirst('_BACKUP_LOCATION_', SettingsController.inst.defaultBackupLocation.value)}\n\n${Language.inst.NOTE}:\n${Language.inst.CHOOSE_BACKUP_LOCATION_TO_EDIT_METADATA_NOTE}",
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -152,7 +167,6 @@ Future<void> showEditTrackTagsDialog(Track track) async {
               );
               await audioedit.requestComplexPermission();
             }
-
             final didUpdate = await audioedit.editAudio(
               copiedFile.path,
               {
@@ -161,12 +175,13 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                 TagType.ARTIST: fartist,
                 TagType.COMPOSER: fcomposer,
                 TagType.GENRE: fgenre,
-                TagType.TRACK: ftrnum,
+                if (ftrnumInt != null) TagType.TRACK: ftrnumInt,
                 TagType.COMMENT: fcomment,
-                TagType.YEAR: ftitle,
+                if (fyearInt != null) TagType.YEAR: fyearInt,
               },
               searchInsideFolders: true,
             );
+
             debugPrint(didUpdate.toString());
 
             if (!didUpdate) {
@@ -227,7 +242,6 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                                 child: const Icon(Broken.edit_2),
                               ),
                             ),
-                            // onTopWidget: IconButton(onPressed: () {}, icon: Icon(Broken.edit_2)),
                           ),
                         ),
                       ],

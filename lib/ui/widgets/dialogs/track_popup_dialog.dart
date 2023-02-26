@@ -14,7 +14,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/edits_tags_dialog.dart';
+import 'package:namida/ui/widgets/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/dialogs/track_clear_dialog.dart';
 
 showTrackDialog(Track track, [Widget? leading, Playlist? playlist]) async {
