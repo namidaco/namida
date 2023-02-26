@@ -7,6 +7,7 @@ import 'package:just_audio_background/just_audio_background.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
@@ -30,6 +31,10 @@ class Player extends GetxController {
   RxInt nowPlayingPosition = 0.obs;
 
   Player() {
+    player.playbackEventStream.listen((event) {
+      QueueController.inst.updateLatestQueue(currentQueue.toList());
+    });
+
     /// isPlaying Stream
     player.playingStream.listen((event) async {
       isPlaying.value = event;
@@ -51,17 +56,9 @@ class Player extends GetxController {
     /// Current Index Stream
     player.currentIndexStream.listen((event) async {
       currentIndex.value = event ?? 0;
-      final track = currentQueue.elementAt(event ?? 0);
-      nowPlayingTrack.value = track;
-      WaveformController.inst.generateWaveform(track);
-      CurrentColor.inst.updatePlayerColor(track);
-
-      /// for video
-      if (SettingsController.inst.enableVideoPlayback.value) {
-        await VideoController.inst.updateYTLink(track);
-        await VideoController.inst.updateLocalVidPath(track);
-      }
-      await updateVideoPlayingState();
+    });
+    currentIndex.listen((i) {
+      updateAllAudioDependantListeners(i);
     });
     // currentQueue.listen((q) {
     //   final playlist = ConcatenatingAudioSource(
@@ -93,6 +90,23 @@ class Player extends GetxController {
     //   printInfo(info: q.length.toString());
     // });
   }
+  Future<void> updateAllAudioDependantListeners([int? i, Track? track]) async {
+    // i ??= player.currentIndex ?? 0;
+    // track ??= currentQueue.elementAt(i);
+    i ??= currentQueue.indexOf(nowPlayingTrack.value);
+    track ??= nowPlayingTrack.value;
+
+    nowPlayingTrack.value = track;
+    WaveformController.inst.generateWaveform(track);
+    CurrentColor.inst.updatePlayerColor(track);
+
+    /// for video
+    if (SettingsController.inst.enableVideoPlayback.value) {
+      await VideoController.inst.updateYTLink(track);
+      await VideoController.inst.updateLocalVidPath(track);
+    }
+    await updateVideoPlayingState();
+  }
 
   Future<void> updateVideoPlayingState() async {
     await refreshVideoPosition();
@@ -121,9 +135,11 @@ class Player extends GetxController {
   Future<void> addToQueue(List<Track> tracks, {bool insertNext = false}) async {
     List<Track> finalQueue = [];
     if (insertNext) {
+      // finalQueue.insertAll(currentIndex.value + 1, tracks);
       finalQueue = [...currentQueue.getRange(0, currentIndex.value + 1), ...tracks, ...currentQueue.getRange(currentIndex.value + tracks.length, currentQueue.length)];
       printInfo(info: finalQueue.map((e) => e.title).toString());
     } else {
+      // finalQueue.addAll(tracks);
       finalQueue = [...currentQueue, ...tracks];
     }
 
@@ -169,6 +185,9 @@ class Player extends GetxController {
 
     queue ??= Indexer.inst.trackSearchList.toList();
 
+    nowPlayingTrack.value = track;
+    SettingsController.inst.setData('lastPlayedTrackPath', Player.inst.nowPlayingTrack.value.path);
+
     /// if the queue is the same, it will skip instead of rebuilding the queue, certainly more performant
     if (const IterableEquality().equals(queue, currentQueue.toList())) {
       await skipToQueueItem(track);
@@ -176,10 +195,13 @@ class Player extends GetxController {
       return;
     }
 
+    /// saves queue to storage before changing it
+    QueueController.inst.addNewQueue(tracks: currentQueue.toList());
+
     if (shuffle) {
       queue.shuffle();
     }
-    nowPlayingTrack.value = track;
+
     currentQueue.assignAll(queue);
 
     player.setAudioSource(_getAudioSourcePlaylist(queue), initialIndex: queue.indexOf(track), initialPosition: Duration.zero);
