@@ -106,6 +106,7 @@ class VideoController extends GetxController {
     await file.delete();
 
     videoCurrentSize.value = 0;
+    Indexer.inst.updateVideosSizeInStorage();
     return Future.value(File("$kVideosCachePath${videoId}_${streamToBeUsed.qualityLabel}.mp4").path);
   }
 
@@ -117,7 +118,6 @@ class VideoController extends GetxController {
   Future<void> updateLocalVidPath([Track? track]) async {
     track ??= Player.inst.nowPlayingTrack.value;
     localVidPath.value = '';
-    Indexer.inst.updatVideosSizeInStorage();
 
     /// Video Found in Local Storage
     for (var vf in videoFilesPathList) {
