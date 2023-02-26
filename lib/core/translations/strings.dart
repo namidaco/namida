@@ -14,8 +14,13 @@ class Language {
   /// Main
   String get EXIT_APP => 'Exit';
   String get EXIT_APP_SUBTITLE => 'Do you really want to exit?';
-  String get STORAGE_PERMISSION => 'Storage Permission';
-  String get STORAGE_PERMISSION_SUBTITLE => 'Storage Permission is required to read your music files';
+  String get PERMISSION_UPDATE => 'Permission Update';
+  String get STORAGE_PERMISSION_DENIED => 'Permission Denied';
+  String get STORAGE_PERMISSION_DENIED_SUBTITLE => 'Please allow access to be able to perform this action';
+  String get CHOOSE_BACKUP_LOCATION_TO_EDIT_METADATA => 'In the next screen, please choose your backup location "_BACKUP_LOCATION_" in order to edit metadata';
+  String get CHOOSE_BACKUP_LOCATION_TO_EDIT_METADATA_NOTE => 'In case you didn\'t, please go to settings and reset SAF Permission';
+  String get METADATA_EDIT_FAILED => 'Failed to edit metadata';
+  String get METADATA_EDIT_FAILED_SUBTITLE => 'Consider resetting SAF permission in the settings';
 
   /// Video Playback
   String get AUDIO => 'Audio';
@@ -124,7 +129,7 @@ class Language {
   String get CREATE_BACKUP => 'Create Backup';
   String get RESTORE_BACKUP => 'Restore Backup';
   String get AUTOMATIC_BACKUP => 'Automatic';
-  String get AUTOMATIC_BACKUP_SUBTITLE => 'Autoamically aplies the most recent backup file found inside backup location';
+  String get AUTOMATIC_BACKUP_SUBTITLE => 'Automatically aplies the most recent backup file found inside backup location';
   String get MANUAL_BACKUP => 'Manual';
   String get MANUAL_BACKUP_SUBTITLE => 'pick up a specific file';
   String get CREATED_BACKUP_SUCCESSFULLY => 'Created Backup';
@@ -175,6 +180,9 @@ class Language {
   String get GENERATE_ALL_WAVEFORM_DATA_SUBTITLE =>
       'You currently have _WAVEFORM_CURRENT_LENGTH_ waveforms generated out of _WAVEFORM_TOTAL_LENGTH_.\n\nThis is a heavy process and generating for all tracks at once will take quite a while, proceed?';
   String get FORCE_STOP_WAVEFORM_GENERATION => 'Force stop generating waveforms? you can still continue it later';
+  String get RESET_SAF_PERMISSION => 'Reset SAF Permission';
+  String get RESET_SAF_PERMISSION_SUBTITLE => 'Use it only in case tag editing is not working';
+  String get RESET_SAF_PERMISSION_RESET_SUCCESS => 'SAF Permission has been reset successfully';
 
   /// Defaults
   String get ADD => 'Add';
