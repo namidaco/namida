@@ -101,12 +101,12 @@ class QueueController extends GetxController {
     if (queueList.isEmpty) {
       return;
     }
-    Player.inst.currentQueue.assignAll(queueList.last.tracks);
-    Player.inst.nowPlayingTrack.value = Indexer.inst.tracksInfoList.toList().firstWhere(
-          (element) => element.path == SettingsController.inst.getString('lastPlayedTrackPath'),
-          orElse: () => queueList.last.tracks.first,
-        );
-    Player.inst.updateAllAudioDependantListeners();
+    final latestTrack = queueList.last.tracks.firstWhere(
+      (element) => element.path == SettingsController.inst.getString('lastPlayedTrackPath'),
+      orElse: () => queueList.last.tracks.first,
+    );
+    await Player.inst.playOrPause(track: latestTrack, queue: queueList.last.tracks);
+    await Player.inst.pause();
   }
 
   void _writeToStorage() {

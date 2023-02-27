@@ -57,8 +57,9 @@ class Player extends GetxController {
     player.currentIndexStream.listen((event) async {
       currentIndex.value = event ?? 0;
     });
-    currentIndex.listen((i) {
-      updateAllAudioDependantListeners(i);
+    currentIndex.listen((i) async {
+      await updateAllAudioDependantListeners(i);
+      SettingsController.inst.setData('lastPlayedTrackPath', nowPlayingTrack.value.path);
     });
 
     // currentQueue.listen((q) {
@@ -166,6 +167,14 @@ class Player extends GetxController {
     VideoController.inst.seek(position, index: index);
   }
 
+  Future<void> play() async {
+    await player.play();
+  }
+
+  Future<void> pause() async {
+    await player.pause();
+  }
+
   Future<void> playOrPause({Track? track, List<Track>? queue, bool playSingle = false, bool shuffle = false}) async {
     track ??= nowPlayingTrack.value;
     if (nowPlayingTrack.value == track) {
@@ -187,7 +196,6 @@ class Player extends GetxController {
     queue ??= Indexer.inst.trackSearchList.toList();
 
     nowPlayingTrack.value = track;
-    SettingsController.inst.setData('lastPlayedTrackPath', Player.inst.nowPlayingTrack.value.path);
 
     /// if the queue is the same, it will skip instead of rebuilding the queue, certainly more performant
     if (const IterableEquality().equals(queue, currentQueue.toList())) {
