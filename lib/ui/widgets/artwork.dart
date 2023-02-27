@@ -64,6 +64,7 @@ class ArtworkWidget extends StatelessWidget {
         FileSystemEntity.typeSync(track.pathToImage) != FileSystemEntityType.notFound || FileSystemEntity.typeSync(track.pathToImageComp) != FileSystemEntityType.notFound;
     final extImageChild = anyImageExist && !forceDummyArtwork
         ? Stack(
+            alignment: Alignment.center,
             children: [
               bytes != null
                   ? ExtendedImage.memory(
@@ -168,14 +169,16 @@ class MultiArtworks extends StatelessWidget {
   final List<Track> tracks;
   final double thumbnailSize;
   final Color? bgcolor;
-  final double? borderRadius;
-  const MultiArtworks({super.key, required this.tracks, required this.thumbnailSize, this.bgcolor, this.borderRadius});
+  final double borderRadius;
+  const MultiArtworks({super.key, required this.tracks, required this.thumbnailSize, this.bgcolor, this.borderRadius = 8.0});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
       height: thumbnailSize,
       width: thumbnailSize,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(borderRadius.multipliedRadius)),
       child: tracks.isEmpty
           ? ArtworkWidget(
               thumnailSize: thumbnailSize,
@@ -185,7 +188,7 @@ class MultiArtworks extends StatelessWidget {
               blur: 0,
               forceDummyArtwork: true,
               bgcolor: bgcolor,
-              borderRadius: borderRadius ?? 8.0,
+              borderRadius: borderRadius,
               iconSize: 28.0,
             )
           : tracks.length == 1

@@ -12,7 +12,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/track_popup_dialog.dart';
+import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 
 class TrackTile extends StatelessWidget {
   final Track track;
@@ -121,6 +121,7 @@ class TrackTile extends StatelessWidget {
                       width: 12.0,
                     ),
                     Stack(
+                      alignment: Alignment.center,
                       children: [
                         Container(
                           margin: const EdgeInsets.symmetric(
@@ -254,7 +255,7 @@ class TrackTile extends StatelessWidget {
                     MoreIcon(
                       padding: 6.0,
                       iconColor: textColor?.withAlpha(160),
-                      onPressed: () => showTrackDialog(track),
+                      onPressed: () => NamidaDialogs.inst.showTrackDialog(track),
                     ),
                     const SizedBox(
                       width: 4.0,
