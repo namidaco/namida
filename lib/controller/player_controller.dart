@@ -134,6 +134,7 @@ class Player extends GetxController {
     );
   }
 
+  /// TODO: Improve
   Future<void> addToQueue(List<Track> tracks, {bool insertNext = false}) async {
     List<Track> finalQueue = [];
     if (insertNext) {
@@ -150,29 +151,41 @@ class Player extends GetxController {
     currentQueue.refresh();
   }
 
-  Future<void> next() async {
-    await player.seekToNext();
-  }
-
-  Future<void> previous() async {
-    await player.seekToPrevious();
-  }
-
-  Future<void> skipToQueueItem(Track track) async {
-    await player.seek(const Duration(microseconds: 0), index: currentQueue.indexOf(track));
-  }
-
-  Future<void> seek(Duration position, {int? index}) async {
-    await player.seek(position, index: index);
-    VideoController.inst.seek(position, index: index);
-  }
-
   Future<void> play() async {
     await player.play();
   }
 
   Future<void> pause() async {
     await player.pause();
+  }
+
+  Future<void> next() async {
+    if (player.hasNext) {
+      await player.seekToNext();
+    } else {
+      skipToQueueItem(index: 0);
+    }
+  }
+
+  Future<void> previous() async {
+    if (player.hasPrevious) {
+      await player.seekToPrevious();
+    } else {
+      skipToQueueItem(index: currentQueue.length - 1);
+    }
+  }
+
+  /// Either index or track has to be assigned, otherwise falls back to index 0
+  Future<void> skipToQueueItem({Track? track, int? index}) async {
+    if (index == null && track == null) {
+      index = 0;
+    }
+    await player.seek(const Duration(microseconds: 0), index: index ?? currentQueue.indexOf(track));
+  }
+
+  Future<void> seek(Duration position, {int? index}) async {
+    await player.seek(position, index: index);
+    VideoController.inst.seek(position, index: index);
   }
 
   Future<void> playOrPause({Track? track, List<Track>? queue, bool playSingle = false, bool shuffle = false}) async {
@@ -199,7 +212,7 @@ class Player extends GetxController {
 
     /// if the queue is the same, it will skip instead of rebuilding the queue, certainly more performant
     if (const IterableEquality().equals(queue, currentQueue.toList())) {
-      await skipToQueueItem(track);
+      await skipToQueueItem(track: track);
       printInfo(info: "Skipped");
       return;
     }

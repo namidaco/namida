@@ -236,9 +236,6 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
   }
 
   void snapToPrev() {
-    if (!Player.inst.player.hasPrevious) {
-      return;
-    }
     sOffset = -sMaxOffset;
     sAnim
         .animateTo(
@@ -266,9 +263,6 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
   }
 
   void snapToNext() {
-    if (!Player.inst.player.hasNext) {
-      return;
-    }
     sOffset = sMaxOffset;
     sAnim
         .animateTo(
