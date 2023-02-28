@@ -61,6 +61,10 @@ class Player extends GetxController {
       await updateAllAudioDependantListeners(i);
       SettingsController.inst.setData('lastPlayedTrackPath', nowPlayingTrack.value.path);
     });
+    nowPlayingTrack.listen((tr) {
+      updateAllAudioDependantListeners(null, tr);
+      SettingsController.inst.setData('lastPlayedTrackPath', tr.path);
+    });
 
     // currentQueue.listen((q) {
     //   final playlist = ConcatenatingAudioSource(
