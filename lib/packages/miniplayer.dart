@@ -24,7 +24,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/artwork.dart';
-import 'package:namida/ui/widgets/dialogs/track_popup_dialog.dart';
+import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/video_playback.dart';
 import 'package:namida/ui/widgets/waveform.dart';
@@ -520,11 +520,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                   ),
                                   IconButton(
                                     onPressed: () {
-                                      // showMaterialModalBottomSheet(
-                                      //   context: context,
-                                      //   useRootNavigator: true,
-                                      //   builder: (context) => Container(height: 300),
-                                      // );
+                                      NamidaDialogs.inst.showTrackDialog(Player.inst.nowPlayingTrack.value);
                                     },
                                     icon: Container(
                                       padding: const EdgeInsets.all(4.0),
@@ -621,25 +617,26 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                               //     ),
                               //   ),
                               Padding(
-                                  padding: EdgeInsets.all(12.0 * icp).add(EdgeInsets.only(
+                                  padding: EdgeInsets.symmetric(vertical: 20.0 * icp, horizontal: 2.0 * (1 - cp)).add(EdgeInsets.only(
                                       right: !bounceDown
                                           ? !bounceUp
-                                              ? screenSize.width * rcp / 2 - (80 + 32.0 * 3) * rcp / 2 + (qp * 24.0)
+                                              ? screenSize.width * rcp / 2 - (80 + 32.0 * 3) * rcp / 2 + (qp * 2.0)
                                               : screenSize.width * cp / 2 - (80 + 32.0 * 3) * cp / 2
-                                          : screenSize.width * bcp / 2 - (80 + 32.0 * 3) * bcp / 2 + (qp * 24.0))),
+                                          : screenSize.width * bcp / 2 - (80 + 32.0 * 3) * bcp / 2 + (qp * 2.0))),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       IconButton(
-                                        iconSize: 22.0 + 10 * cp,
+                                        visualDensity: VisualDensity.compact,
+                                        iconSize: 22.0 + 10 * rcp,
                                         icon: Icon(Broken.previous, color: onSecondary),
                                         onPressed: snapToPrev,
                                       ),
                                       SizedBox(
                                         key: const Key("playpause"),
-                                        height: (vp(a: 60.0, b: 80.0, c: cp) - 18) + 18 * cp,
-                                        width: (vp(a: 60.0, b: 80.0, c: cp) - 18) + 18 * cp,
+                                        height: (vp(a: 60.0, b: 80.0, c: cp) - 18) + 18 * rcp,
+                                        width: (vp(a: 60.0, b: 80.0, c: cp) - 18) + 18 * rcp,
                                         child: Center(
                                           child: GestureDetector(
                                             onTapDown: (value) {
@@ -698,13 +695,13 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                                       () => Player.inst.isPlaying.value
                                                           ? Icon(
                                                               Broken.pause,
-                                                              size: (vp(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp,
+                                                              size: (vp(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp,
                                                               key: const Key("pauseicon"),
                                                               color: Colors.white.withAlpha(180),
                                                             )
                                                           : Icon(
                                                               Broken.play,
-                                                              size: (vp(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp,
+                                                              size: (vp(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp,
                                                               key: const Key("playicon"),
                                                               color: Colors.white.withAlpha(180),
                                                             ),
@@ -715,7 +712,8 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                         ),
                                       ),
                                       IconButton(
-                                        iconSize: 22.0 + 10 * cp,
+                                        visualDensity: VisualDensity.compact,
+                                        iconSize: 22.0 + 10 * rcp,
                                         icon: Icon(Broken.next, color: onSecondary),
                                         onPressed: snapToNext,
                                       ),
@@ -837,8 +835,8 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                   Get.dialog(const Dialog(child: VideoPlaybackSettings(disableSubtitle: true)));
                                 },
                                 onPressed: () async {
-                                  await VideoController.inst.toggleVideoPlaybackInSetting();
                                   VideoController.inst.updateYTLink(Player.inst.nowPlayingTrack.value);
+                                  await VideoController.inst.toggleVideoPlaybackInSetting();
                                 },
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -1085,10 +1083,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                         alignment: Alignment.center,
                                         children: [
                                           WaveformComponent(
-                                            waveDataList: WaveformController.inst.downscaleList(WaveformController.inst.curentWaveform.toList(), Get.width.toInt() ~/ 3.2),
                                             color: context.theme.colorScheme.onBackground.withAlpha(150),
-                                            heightMultiplier: 1.1,
-                                            // boxMaxHeight: 80.0,
                                           ),
                                           // Slider
                                           Opacity(
@@ -1281,7 +1276,7 @@ class TrackInfo extends StatelessWidget {
                             padding: EdgeInsets.only(right: 22.0 + 92 * (1 - cp)),
                             child: InkWell(
                               borderRadius: BorderRadius.circular(12.0),
-                              onTap: cp == 1 ? () => showTrackDialog(track) : null,
+                              onTap: cp == 1 ? () => NamidaDialogs.inst.showTrackDialog(track) : null,
                               child: PageTransitionSwitcher(
                                 transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
                                   return SharedAxisTransition(
@@ -1430,39 +1425,50 @@ class TrackImage extends StatelessWidget {
                   () {
                     final isNull = VideoController.inst.vidcontroller == null;
                     final shouldShowVideo = !isNull && VideoController.inst.localVidPath.value != '' && (VideoController.inst.vidcontroller?.value.isInitialized ?? false);
+                    final scaleList = WaveformController.inst.curentScaleList;
+                    final bitScale = Player.inst.nowPlayingPosition.value ~/ 50;
+                    final dynamicScale = scaleList.asMap().containsKey(bitScale) ? scaleList[bitScale] : 0.9;
 
                     return Stack(
                       alignment: Alignment.center,
                       children: [
-                        AnimatedOpacity(
-                          opacity: shouldShowVideo ? 0.0 : 1.0,
-                          duration: const Duration(milliseconds: 400),
-                          child: ArtworkWidget(
-                            track: Player.inst.nowPlayingTrack.value,
-                            thumnailSize: Get.width,
-                            compressed: false,
-                            borderRadius: 6.0 + 12.0 * cp,
-                            forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
-                            boxShadow: [
-                              BoxShadow(
-                                color: context.theme.shadowColor.withAlpha(100),
-                                blurRadius: 24.0,
-                                offset: const Offset(0.0, 8.0),
-                              ),
-                            ],
+                        AnimatedScale(
+                          duration: const Duration(milliseconds: 100),
+                          scale: dynamicScale / 6 + 1.0,
+                          child: AnimatedOpacity(
+                            opacity: shouldShowVideo ? 0.0 : 1.0,
+                            duration: const Duration(milliseconds: 400),
+                            child: ArtworkWidget(
+                              track: Player.inst.nowPlayingTrack.value,
+                              thumnailSize: Get.width,
+                              compressed: false,
+                              borderRadius: 6.0 + 12.0 * cp,
+                              forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: context.theme.shadowColor.withAlpha(100),
+                                  blurRadius: 24.0,
+                                  offset: const Offset(0.0, 8.0),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         isNull
                             ? const SizedBox()
-                            : AnimatedOpacity(
-                                opacity: shouldShowVideo ? 1.0 : 0.0,
-                                duration: const Duration(milliseconds: 400),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular((6.0 + 12.0 * cp).multipliedRadius),
-                                  child: AspectRatio(
-                                    aspectRatio: VideoController.inst.vidcontroller!.value.aspectRatio,
-                                    child: VideoPlayer(
-                                      VideoController.inst.vidcontroller!,
+                            : AnimatedScale(
+                                duration: const Duration(milliseconds: 150),
+                                scale: dynamicScale / 8 + 1.1,
+                                child: AnimatedOpacity(
+                                  opacity: shouldShowVideo ? 1.0 : 0.0,
+                                  duration: const Duration(milliseconds: 400),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular((6.0 + 12.0 * cp).multipliedRadius),
+                                    child: AspectRatio(
+                                      aspectRatio: VideoController.inst.vidcontroller!.value.aspectRatio,
+                                      child: VideoPlayer(
+                                        VideoController.inst.vidcontroller!,
+                                      ),
                                     ),
                                   ),
                                 ),

@@ -5,38 +5,43 @@ import 'dart:io';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:get/get.dart';
+import 'package:path/path.dart' as p;
+
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:path/path.dart' as p;
 
 class WaveformController extends GetxController {
   static final WaveformController inst = WaveformController();
 
   RxList<double> curentWaveform = kDefaultWaveFormData.obs;
+  RxList<double> curentScaleList = kDefaultScaleList.obs;
   RxBool generatingAllWaveforms = false.obs;
 
   int retryNumber = 0;
 
   /// Extracts waveform data from a given track, or immediately read from .wave file if exists, then assigns wavedata to [curentWaveform].
+  ///
   /// Has a timeout of 3 minutes, otherwise it will assign [kDefaultWaveFormData] permanently.
+  ///
+  /// <br>
   Future<void> generateWaveform(Track track) async {
     final wavePath = "$kWaveformDirPath${p.basename(track.path)}.wave";
     final waveFile = File(wavePath);
     final waveFileStat = await waveFile.stat();
 
     // If Waveform file exists in storage
-    if (await waveFile.exists() && waveFileStat.size != 0) {
+    if (await waveFile.exists() && waveFileStat.size > 80) {
       try {
         String content = await waveFile.readAsString();
         final waveform = List<double>.from(json.decode(content));
 
         // A Delay to prevent glitches caused by theme change
         Future.delayed(const Duration(milliseconds: 400), () async {
-          curentWaveform.assignAll(waveform);
+          curentWaveform.assignAll(increaseListToMax(waveform)); //
+          curentScaleList.assignAll(changeListSize(waveform, track.duration ~/ 50)); // each 50ms
         });
-        retryNumber = 0;
       } catch (e) {
         printInfo(info: e.toString());
       }
@@ -46,6 +51,7 @@ class WaveformController extends GetxController {
       /// A Delay to prevent glitches caused by theme change
       Future.delayed(const Duration(milliseconds: 400), () async {
         curentWaveform.assignAll(kDefaultWaveFormData);
+        curentScaleList.assignAll(changeListSize(kDefaultScaleList, track.duration ~/ 50));
       });
 
       // no await since extraction process will take time anyway, hope this doesnt make problems
@@ -55,7 +61,8 @@ class WaveformController extends GetxController {
       // creates a new instance to prevent extracting from the same file.
       // currently this won't be performant when the user plays multiple files at once
       try {
-        waveformData = await PlayerController().extractWaveformData(path: track.path, noOfSamples: 500).timeout(const Duration(minutes: 3));
+        waveformData = await PlayerController().extractWaveformData(path: track.path, noOfSamples: 1000).timeout(const Duration(minutes: 3));
+        retryNumber = 0;
       } catch (e) {
         retryNumber++;
         if (retryNumber < 3) {
@@ -66,8 +73,10 @@ class WaveformController extends GetxController {
       }
 
       if (track == Player.inst.nowPlayingTrack.value) {
-        curentWaveform.assignAll(waveformData);
+        curentWaveform.assignAll(increaseListToMax(waveformData)); //
+        curentScaleList.assignAll(changeListSize(waveformData, track.duration ~/ 50)); // each 50ms
       }
+      // print("lengthhhhhh ${curentScaleList.length}");
       await waveFile.writeAsString(waveformData.toString());
       Indexer.inst.updateWaveformSizeInStorage();
     }
@@ -90,31 +99,76 @@ class WaveformController extends GetxController {
     generatingAllWaveforms.value = false;
   }
 
-  List<double> downscaleList(List<double> originalList, int newLength) {
-    List<double> downscaledList = [];
-    int scaleFactor = originalList.length ~/ newLength;
-    for (int i = 0; i < newLength; i++) {
-      double average = 0;
-      for (int j = i * scaleFactor; j < (i + 1) * scaleFactor; j++) {
-        average += originalList[j];
+  List<double> changeListSize(List<double> list, int n) {
+    if (list.length > n) {
+      // downscale
+      final downscaledList = <double>[];
+      final scaleFactor = (list.length / n).ceil();
+      for (var i = 0; i < n; i++) {
+        var sum = 0.0;
+        var count = 0;
+        for (var j = i * scaleFactor; j < (i + 1) * scaleFactor && j < list.length; j++) {
+          sum += list[j];
+          count++;
+        }
+        downscaledList.add(sum / count);
       }
-      average /= scaleFactor;
-      downscaledList.add(average);
+
+      // removes NaN values
+      downscaledList.removeWhere((value) => value.isNaN);
+
+      return downscaledList;
+    } else {
+      // upscale
+      final double step = (list.length - 1) / (n - 1);
+
+      final finalList = List<double>.generate(n, (i) {
+        final double index = i * step;
+        final int lowerIndex = index.floor();
+        final int upperIndex = index.ceil();
+        if (upperIndex >= list.length) {
+          return list.last;
+        } else if (lowerIndex == upperIndex) {
+          return list[lowerIndex];
+        } else {
+          final double weight = index - lowerIndex;
+          return list[lowerIndex] * (1 - weight) + list[upperIndex] * weight;
+        }
+      });
+      return finalList;
     }
-    return downscaledList;
   }
 
-  // List<double> upscaleList(List<double> originalList, int newLength) {
-  //   double scaleFactor = newLength / originalList.length + 1;
-  //   List<double> newList = [];
-  //   for (int i = 0; i < newLength; i++) {
-  //     int originalIndex = (i / scaleFactor).floor();
-  //     double fraction = (i / scaleFactor) - originalIndex;
-  //     double newValue = originalList[originalIndex] * (1 - fraction) + originalList[originalIndex + 1] * fraction;
-  //     newList.add(newValue);
-  //   }
-  //   return newList;
-  // }
+  List<double> interpolateList(List<double> list, int m) {
+    final interpolatedList = <double>[];
+    for (var i = 0; i < list.length - 1; i++) {
+      final start = list[i];
+      final end = list[i + 1];
+      final step = (end - start) / (m + 1);
+      for (var j = 1; j <= m; j++) {
+        final value = start + j * step;
+        interpolatedList.add(value);
+      }
+    }
+    return interpolatedList;
+  }
+
+  List<double> increaseListToMax(List<double> list, [double max = 0.0]) {
+    final max = list.reduce((a, b) => a > b ? a : b);
+    return list.map((value) => value / max / 2.0).toList();
+  }
+
+  List<double> upscaleList(List<double> originalList, int newLength) {
+    double scaleFactor = newLength / originalList.length + 1;
+    List<double> newList = [];
+    for (int i = 0; i < newLength; i++) {
+      int originalIndex = (i / scaleFactor).floor();
+      double fraction = (i / scaleFactor) - originalIndex;
+      double newValue = originalList[originalIndex] * (1 - fraction) + originalList[originalIndex + 1] * fraction;
+      newList.add(newValue);
+    }
+    return newList;
+  }
 
   @override
   void onClose() {
