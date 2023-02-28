@@ -22,6 +22,7 @@ class TrackTileCustomization extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () => ExpansionTile(
+        initiallyExpanded: SettingsController.inst.useSettingCollapsedTiles.value,
         leading: const StackedIcon(
           baseIcon: Broken.brush,
           secondaryIcon: Broken.music_circle,

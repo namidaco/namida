@@ -20,6 +20,7 @@ class TrackTile extends StatelessWidget {
   final bool draggableThumbnail;
   final bool isInSelectedTracksPreview;
   final List<Track>? queue;
+  final Color? bgColor;
   const TrackTile({
     super.key,
     required this.track,
@@ -27,6 +28,7 @@ class TrackTile extends StatelessWidget {
     this.draggableThumbnail = true,
     this.isInSelectedTracksPreview = false,
     this.queue,
+    this.bgColor,
   });
 
   String getChoosenTrackTileItem(TrackTileItem trackItem) {
@@ -91,10 +93,11 @@ class TrackTile extends StatelessWidget {
         return Container(
           margin: const EdgeInsets.only(bottom: 4.0),
           child: Material(
-            color: Color.alphaBlend(
-              isTrackSelected & !isInSelectedTracksPreview ? context.theme.selectedRowColor : Colors.transparent,
-              isTrackCurrentlyPlaying ? CurrentColor.inst.color.value : context.theme.cardTheme.color!,
-            ),
+            color: bgColor ??
+                Color.alphaBlend(
+                  isTrackSelected & !isInSelectedTracksPreview ? context.theme.selectedRowColor : Colors.transparent,
+                  isTrackCurrentlyPlaying ? CurrentColor.inst.color.value : context.theme.cardTheme.color!,
+                ),
             child: InkWell(
               highlightColor: const Color.fromARGB(60, 0, 0, 0),
               key: ValueKey(track),

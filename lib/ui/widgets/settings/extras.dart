@@ -107,51 +107,55 @@ class ExtrasSettings extends StatelessWidget {
 
                         return SizedBox(
                           width: Get.width,
-                          child: ListView(shrinkWrap: true, children: [
+                          child: Column(children: [
                             Text(
                               Language.inst.LIBRARY_TABS_REORDER,
                               style: context.textTheme.displayMedium,
                             ),
                             const SizedBox(height: 12),
-                            ReorderableListView(
-                              shrinkWrap: true,
-                              children: SettingsController.inst.libraryTabs
-                                  .asMap()
-                                  .entries
-                                  .map(
-                                    (e) => Column(
-                                      key: ValueKey(e.value),
-                                      children: [
-                                        Container(
-                                          margin: const EdgeInsets.all(4.0),
-                                          child: ListTileWithCheckMark(
-                                            title: "${e.key + 1}. ${e.value.toEnum.toText}",
-                                            icon: e.value.toEnum.toIcon,
-                                            onTap: () {
-                                              if (SettingsController.inst.libraryTabs.length > 3) {
-                                                SettingsController.inst.removeFromList(libraryTab1: e.value);
-                                                SettingsController.inst.save(selectedLibraryTab: SettingsController.inst.libraryTabs[0].toEnum);
-                                              } else {
-                                                Get.snackbar(Language.inst.AT_LEAST_THREE_TABS, Language.inst.AT_LEAST_THREE_TABS_SUBTITLE);
-                                              }
-                                            },
-                                            active: SettingsController.inst.libraryTabs.contains(e.value),
+                            SizedBox(
+                              width: Get.width,
+                              height: Get.height / 2.5,
+                              child: ReorderableListView(
+                                shrinkWrap: true,
+                                children: SettingsController.inst.libraryTabs
+                                    .asMap()
+                                    .entries
+                                    .map(
+                                      (e) => Column(
+                                        key: ValueKey(e.value),
+                                        children: [
+                                          Container(
+                                            margin: const EdgeInsets.all(4.0),
+                                            child: ListTileWithCheckMark(
+                                              title: "${e.key + 1}. ${e.value.toEnum.toText}",
+                                              icon: e.value.toEnum.toIcon,
+                                              onTap: () {
+                                                if (SettingsController.inst.libraryTabs.length > 3) {
+                                                  SettingsController.inst.removeFromList(libraryTab1: e.value);
+                                                  SettingsController.inst.save(selectedLibraryTab: SettingsController.inst.libraryTabs[0].toEnum);
+                                                } else {
+                                                  Get.snackbar(Language.inst.AT_LEAST_THREE_TABS, Language.inst.AT_LEAST_THREE_TABS_SUBTITLE);
+                                                }
+                                              },
+                                              active: SettingsController.inst.libraryTabs.contains(e.value),
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                  .toList(),
-                              onReorder: (oldIndex, newIndex) {
-                                if (newIndex > oldIndex) {
-                                  newIndex -= 1;
-                                }
-                                final item = SettingsController.inst.libraryTabs.elementAt(oldIndex);
-                                SettingsController.inst.removeFromList(
-                                  libraryTab1: item,
-                                );
-                                SettingsController.inst.insertInList(newIndex, libraryTab1: item);
-                              },
+                                        ],
+                                      ),
+                                    )
+                                    .toList(),
+                                onReorder: (oldIndex, newIndex) {
+                                  if (newIndex > oldIndex) {
+                                    newIndex -= 1;
+                                  }
+                                  final item = SettingsController.inst.libraryTabs.elementAt(oldIndex);
+                                  SettingsController.inst.removeFromList(
+                                    libraryTab1: item,
+                                  );
+                                  SettingsController.inst.insertInList(newIndex, libraryTab1: item);
+                                },
+                              ),
                             ),
                             const Divider(),
                             ...subList

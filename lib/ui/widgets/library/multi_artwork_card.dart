@@ -9,8 +9,10 @@ class MultiArtworkCard extends StatelessWidget {
   final List<Track> tracks;
   final String name;
   final int gridCount;
+  final void Function()? onTap;
+  final void Function()? showMenuFunction;
 
-  const MultiArtworkCard({super.key, required this.tracks, required this.name, required this.gridCount});
+  const MultiArtworkCard({super.key, required this.tracks, required this.name, required this.gridCount, this.onTap, this.showMenuFunction});
 
   @override
   Widget build(BuildContext context) {
@@ -27,8 +29,8 @@ class MultiArtworkCard extends StatelessWidget {
           color: context.theme.cardColor,
           child: InkWell(
             highlightColor: const Color.fromARGB(60, 120, 120, 120),
-            onLongPress: () {},
-            onTap: () {},
+            onLongPress: showMenuFunction,
+            onTap: onTap,
             child: Column(
               children: [
                 Hero(

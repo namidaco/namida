@@ -256,6 +256,7 @@ class CustomBlurryDialog extends StatelessWidget {
   final bool isWarning;
   final bool scrollable;
   final EdgeInsets? insetPadding;
+  final EdgeInsetsGeometry? contentPadding;
   const CustomBlurryDialog({
     super.key,
     this.child,
@@ -267,6 +268,7 @@ class CustomBlurryDialog extends StatelessWidget {
     this.isWarning = false,
     this.insetPadding,
     this.scrollable = true,
+    this.contentPadding,
   });
 
   @override
@@ -278,7 +280,7 @@ class CustomBlurryDialog extends StatelessWidget {
         insetPadding: insetPadding ?? const EdgeInsets.symmetric(horizontal: 50, vertical: 32),
         clipBehavior: Clip.antiAlias,
         titlePadding: normalTitleStyle ? const EdgeInsets.only(top: 24.0, left: 24.0, right: 24.0) : EdgeInsets.zero,
-        contentPadding: const EdgeInsets.all(14.0),
+        contentPadding: contentPadding ?? const EdgeInsets.all(14.0),
         title: normalTitleStyle
             ? Row(
                 children: [
@@ -677,7 +679,9 @@ class NamidaBlurryContainer extends StatelessWidget {
   final Widget child;
   final void Function()? onTap;
   final BorderRadius? borderRadius;
-  const NamidaBlurryContainer({super.key, required this.child, this.onTap, this.borderRadius});
+  final double? width;
+  final double? height;
+  const NamidaBlurryContainer({super.key, required this.child, this.onTap, this.borderRadius, this.width, this.height});
 
   @override
   Widget build(BuildContext context) {
@@ -688,6 +692,8 @@ class NamidaBlurryContainer extends StatelessWidget {
             bottomLeft: Radius.circular(8.0.multipliedRadius),
           ),
       container: Container(
+          width: width,
+          height: height,
           padding: EdgeInsets.symmetric(horizontal: 6.0.multipliedRadius, vertical: 2.0),
           decoration: BoxDecoration(
             color: context.theme.cardColor.withAlpha(SettingsController.inst.enableBlurEffect.value ? 60 : 220),
