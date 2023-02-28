@@ -317,10 +317,13 @@ Future<void> showEditTrackTagsDialog(Track track) async {
   );
 }
 
-Future<void> editMultipleTracksTags(List<Track> tracks) async {
+Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
   if (!await requestManageStoragePermission()) {
     return;
   }
+  RxList<Track> tracks = <Track>[].obs;
+  tracks.assignAll(tracksPre);
+
   final toBeEditedTracksColumn = Column(children: [
     Padding(
       padding: const EdgeInsets.all(8.0),
@@ -558,9 +561,11 @@ Future<void> editMultipleTracksTags(List<Track> tracks) async {
                                   ),
                                 );
                               },
-                              child: Text(
-                                tracks.displayTrackKeyword,
-                                textAlign: TextAlign.center,
+                              child: Obx(
+                                () => Text(
+                                  tracks.displayTrackKeyword,
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
                             ),
                           ),
@@ -639,13 +644,15 @@ Future<void> editMultipleTracksTags(List<Track> tracks) async {
           const SizedBox(
             height: 12.0,
           ),
-          Text(
-            [
-              tracks.displayTrackKeyword,
-              tracks.map((e) => e.size).reduce((a, b) => a + b).fileSizeFormatted,
-              tracks.totalDurationFormatted,
-            ].join(' • '),
-            style: Get.textTheme.displaySmall,
+          Obx(
+            () => Text(
+              [
+                tracks.displayTrackKeyword,
+                tracks.map((e) => e.size).reduce((a, b) => a + b).fileSizeFormatted,
+                tracks.totalDurationFormatted,
+              ].join(' • '),
+              style: Get.textTheme.displaySmall,
+            ),
           ),
         ],
       ),
