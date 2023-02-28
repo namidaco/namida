@@ -6,6 +6,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/dialogs/add_to_playlist_dialog.dart';
+import 'package:namida/ui/widgets/dialogs/edit_tags_dialog.dart';
 
 class SelectedTracksRow extends StatelessWidget {
   const SelectedTracksRow({super.key});
@@ -15,6 +16,7 @@ class SelectedTracksRow extends StatelessWidget {
     return Obx(
       () {
         final SelectedTracksController stc = SelectedTracksController.inst;
+        final tracks = SelectedTracksController.inst.selectedTracks.toList();
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -84,7 +86,14 @@ class SelectedTracksRow extends StatelessWidget {
             // ),
             IconButton(
               onPressed: () {
-                showAddToPlaylistDialog(SelectedTracksController.inst.selectedTracks.toList());
+                editMultipleTracksTags(tracks);
+              },
+              tooltip: Language.inst.EDIT_TAGS,
+              icon: const Icon(Broken.edit),
+            ),
+            IconButton(
+              onPressed: () {
+                showAddToPlaylistDialog(tracks);
               },
               tooltip: Language.inst.ADD_TO_PLAYLIST,
               icon: const Icon(Broken.music_playlist),
