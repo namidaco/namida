@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 import 'dart:convert';
 
@@ -23,7 +24,7 @@ class QueueController extends GetxController {
     List<String> modes = const [],
   }) {
     date ??= DateTime.now().millisecondsSinceEpoch;
-    queueList.add(Queue(name, tracks, date, comment, modes));
+    queueList.add(Queue(name, tracks.map((e) => e.path).toList(), date, comment, modes));
     _writeToStorage();
   }
 
@@ -48,7 +49,7 @@ class QueueController extends GetxController {
   }
 
   void updateLatestQueue(List<Track> tracks) {
-    queueList.last.tracks.assignAll(tracks);
+    queueList.last.tracks.assignAll(tracks.map((e) => e.path).toList());
     _writeToStorage();
   }
 
@@ -87,7 +88,8 @@ class QueueController extends GetxController {
       for (var p in jsonResponse) {
         Queue queue = Queue(
           p['name'],
-          List<Track>.from(p['tracks'].map((i) => Track.fromJson(i))),
+          // List<String>.from(p['tracks'].map((i) => Track.fromJson(i))),
+          List<String>.from(p['tracks']),
           p['date'],
           p['comment'],
           List<String>.from(p['modes']),
@@ -98,14 +100,18 @@ class QueueController extends GetxController {
     }
 
     // Assign the last queue to the [Player]
-    if (queueList.isEmpty) {
+    if (queueList.isEmpty || await file.stat().then((value) => value.size < 100)) {
       return;
     }
-    final latestTrack = queueList.last.tracks.firstWhere(
+    final latestTrack = Indexer.inst.tracksInfoList.firstWhere(
       (element) => element.path == SettingsController.inst.getString('lastPlayedTrackPath'),
-      orElse: () => queueList.last.tracks.first,
+      orElse: () => Indexer.inst.tracksInfoList.first,
     );
-    await Player.inst.playOrPause(track: latestTrack, queue: queueList.last.tracks);
+
+    final matchingSet = HashSet.from(queueList.last.tracks);
+    final finalTracks = Indexer.inst.tracksInfoList.where((item) => matchingSet.contains(item.path));
+
+    await Player.inst.playOrPause(track: latestTrack, queue: finalTracks.toList());
     await Player.inst.pause();
   }
 
