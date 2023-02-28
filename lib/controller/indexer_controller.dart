@@ -123,28 +123,29 @@ class Indexer extends GetxController {
   }
 
   Future<void> extractOneArtwork(String path, {bool forceReExtract = false}) async {
-    final _fileOfFull = File("$kArtworksDirPath${p.basename(path)}.png");
-    final _fileOfComp = File("$kArtworksCompDirPath${p.basename(path)}.png");
+    final fileOfFull = File("$kArtworksDirPath${p.basename(path)}.png");
+    final fileOfComp = File("$kArtworksCompDirPath${p.basename(path)}.png");
 
     if (forceReExtract) {
-      await _fileOfFull.delete();
-      await _fileOfComp.delete();
+      await fileOfFull.delete();
+      await fileOfComp.delete();
     }
 
     /// prevent redundent re-creation of image file
-    if (!await _fileOfFull.exists() && !await _fileOfComp.exists()) {
+    if (!await fileOfFull.exists() || !await fileOfComp.exists()) {
       final trackInfo = await onAudioEdit.readAudio(path);
       final art = trackInfo.firstArtwork;
       if (art != null) {
-        final imgFile = await _fileOfFull.create(recursive: true);
+        final imgFile = await fileOfFull.create(recursive: true);
         imgFile.writeAsBytesSync(art);
 
         final artComp = await FlutterImageCompress.compressWithList(art, quality: 40);
-        final imgFileComp = await _fileOfComp.create(recursive: true);
+        final imgFileComp = await fileOfComp.create(recursive: true);
         imgFileComp.writeAsBytesSync(artComp);
       }
-      printInfo(info: "ARTWORKKK");
+      printInfo(info: "Created Artwork for ${trackInfo.title}");
     }
+
     updateImageSizeInStorage();
   }
 
