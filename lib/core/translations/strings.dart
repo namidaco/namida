@@ -11,9 +11,16 @@ class Language {
   String get CHOOSE_WHAT_TO_CLEAR => 'Choose what to clear';
   String get SET_YOUTUBE_LINK => 'Set Youtube Link';
   String get WAVEFORM_DATA => 'Waveform data';
+  String get WAVEFORMS_DATA => 'Waveforms data';
   String get CLEAR_TRACK_ITEM => 'Clear Track\'s';
+  String get CLEAR_TRACK_ITEM_MULTIPLE => 'Clear _NUMBER_ Tracks\'';
   String get MIN_CANT_BE_LESS_THAN_MAX => 'Minimum value can\'t be less than the maximum';
   String get MAX_CANT_BE_MORE_THAN_MIN => 'Maximum value can\'t be more than the minimum';
+  String get MULTIPLE_TRACKS_TAGS_EDIT_NOTE => 'You are about to edit these tracks,\nFields that weren\'t edited remains untouched.';
+  String get DELETE_PLAYLIST => 'Delete Playlist';
+  String get GO_TO_ALBUM => 'Go to Album';
+  String get GO_TO_ARTIST => 'Go to Artist';
+  String get EDIT_ARTWORK => 'Edit Artwork';
 
   /// Main
   String get EXIT_APP => 'Exit';
@@ -31,6 +38,7 @@ class Language {
   String get VIDEO => 'Video';
   String get VIDEO_CACHE => 'Video Cache';
   String get VIDEO_CACHE_FILE => 'Cached Video File';
+  String get VIDEO_CACHE_FILES => 'Cached Video Files';
   String get CLEAR_VIDEO_CACHE => 'Clear Video Cache';
   String get VIDEO_PLAYBACK_SETTING => 'Video Playback';
   String get VIDEO_PLAYBACK_SETTING_SUBTITLE => 'Most of these setting can be accessed directly in the player by long pressing the video button';
@@ -205,6 +213,8 @@ class Language {
   String get NAME => 'Name';
   String get NOTE => 'Note';
   String get STOP => 'Stop';
+  String get RANDOM => 'Random';
+  String get MORE => 'More';
   String get GENERATE => 'Generate';
   String get AUTO_GENERATED => 'Auto Generated';
   String get GRANT_ACCESS => 'Grant Access';
@@ -223,6 +233,8 @@ class Language {
   ///
   String get CREATE_NEW_PLAYLIST => 'Create new Playlist';
   String get ADD_TO_PLAYLIST => 'Add to Playlist';
+  String get SET_MOODS => 'Set moods';
+  String get SET_MOODS_SUBTITLE => 'Use commas (,) to separate between them';
 
   /// Other Settings
   String get ENABLE_FADE_EFFECT_ON_PLAY_PAUSE => 'Enable Fade Effect on Play/Pause';
