@@ -2,7 +2,7 @@ import 'package:namida/class/track.dart';
 
 class Queue {
   late String name;
-  late List<Track> tracks;
+  late List<String> tracks;
   late int date;
   late String comment;
   late List<String> modes;
@@ -17,7 +17,7 @@ class Queue {
 
   Queue.fromJson(Map<String, dynamic> json) {
     name = json['name'] ?? '';
-    tracks = List<Track>.from(json['tracks'] ?? []);
+    tracks = List<String>.from(json['tracks'] ?? []);
     date = json['date'] ?? DateTime.now().millisecondsSinceEpoch;
     comment = json['comment'] ?? '';
     modes = List<String>.from(json['tracks'] ?? []);
