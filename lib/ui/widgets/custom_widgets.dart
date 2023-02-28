@@ -549,7 +549,8 @@ class MoreIcon extends StatelessWidget {
   final bool rotated;
   final double padding;
   final Color? iconColor;
-  const MoreIcon({super.key, this.onPressed, this.rotated = true, this.padding = 1.0, this.iconColor});
+  final double? iconSize;
+  const MoreIcon({super.key, this.onPressed, this.rotated = true, this.padding = 1.0, this.iconColor, this.iconSize});
 
   @override
   Widget build(BuildContext context) {
@@ -566,7 +567,7 @@ class MoreIcon extends StatelessWidget {
             padding: EdgeInsets.all(padding),
             child: Icon(
               Broken.more,
-              size: 18.0,
+              size: iconSize ?? 18.0,
               color: iconColor,
             ),
           ),

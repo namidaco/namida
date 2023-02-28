@@ -79,11 +79,6 @@ class HomePage extends StatelessWidget {
             ),
           ),
           actions: [
-            IconButton(
-              constraints: BoxConstraints(maxWidth: 60, minWidth: 56.0),
-              onPressed: () => PlaylistController.inst.generateRandomPlaylist(),
-              icon: const Icon(Broken.add),
-            ),
             // FilterSortByMenu(),
 
             IconButton(
