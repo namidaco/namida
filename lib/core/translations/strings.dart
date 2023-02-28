@@ -18,6 +18,7 @@ class Language {
   String get MAX_CANT_BE_MORE_THAN_MIN => 'Maximum value can\'t be more than the minimum';
   String get MULTIPLE_TRACKS_TAGS_EDIT_NOTE => 'You are about to edit these tracks,\nFields that weren\'t edited remains untouched.';
   String get DELETE_PLAYLIST => 'Delete Playlist';
+  String get REMOVE_FROM_PLAYLIST => 'Remove From Playlist';
   String get GO_TO_ALBUM => 'Go to Album';
   String get GO_TO_ARTIST => 'Go to Artist';
   String get EDIT_ARTWORK => 'Edit Artwork';

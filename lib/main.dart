@@ -152,7 +152,7 @@ class MyApp extends StatelessWidget {
           ),
           child: WillPopScope(
               onWillPop: () async {
-                return Future.value(false);
+                return Future.value(true);
               },
               child:
 

@@ -332,6 +332,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
         style: Get.textTheme.displayMedium,
       ),
     ),
+    const SizedBox(height: 12.0),
     ...tracks.asMap().entries.map((e) {
       RxBool isRemoved = false.obs;
       return Row(
@@ -355,7 +356,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
             onPressed: () {
               tracks.remove(e.value);
               isRemoved.value = true;
-              SelectedTracksController.inst.removeTrack(e.key);
+              // SelectedTracksController.inst.removeTrack(e.key);
             },
           )
         ],
@@ -429,6 +430,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
             await Get.dialog(
               CustomBlurryDialog(
                 insetPadding: const EdgeInsets.all(42.0),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
                 isWarning: true,
                 normalTitleStyle: true,
                 actions: [
@@ -516,26 +518,28 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                     Stack(
                       alignment: Alignment.bottomRight,
                       children: [
-                        MultiArtworkContainer(
-                          size: Get.width / 3,
-                          tracks: tracks,
-                          onTopWidget: tracks.length > 3
-                              ? Positioned(
-                                  right: 0,
-                                  bottom: 0,
-                                  child: NamidaBlurryContainer(
-                                    width: Get.width / 6.2,
-                                    height: Get.width / 6.2,
-                                    borderRadius: BorderRadius.zero,
-                                    child: Center(
-                                      child: Text(
-                                        "+${tracks.length - 3}",
-                                        style: Get.textTheme.displayLarge,
+                        Obx(
+                          () => MultiArtworkContainer(
+                            size: Get.width / 3,
+                            tracks: tracks,
+                            onTopWidget: tracks.length > 3
+                                ? Positioned(
+                                    right: 0,
+                                    bottom: 0,
+                                    child: NamidaBlurryContainer(
+                                      width: Get.width / 6.2,
+                                      height: Get.width / 6.2,
+                                      borderRadius: BorderRadius.zero,
+                                      child: Center(
+                                        child: Text(
+                                          "+${tracks.length - 3}",
+                                          style: Get.textTheme.displayLarge,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                )
-                              : null,
+                                  )
+                                : null,
+                          ),
                         ),
                       ],
                     ),
@@ -576,10 +580,10 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                             width: Get.width,
                             child: ElevatedButton(
                               onPressed: () {},
-                              child: const Padding(
-                                padding: EdgeInsets.all(8.0),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
                                 child: Text(
-                                  "Edit Artwork",
+                                  Language.inst.EDIT_ARTWORK,
                                   textAlign: TextAlign.center,
                                 ),
                               ),

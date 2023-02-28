@@ -15,14 +15,15 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 void showTrackClearDialog(List<Track> tracks) {
+  final isSingle = tracks.length == 1;
   Get.dialog(
     CustomBlurryDialog(
       normalTitleStyle: true,
-      title: Language.inst.CLEAR_TRACK_ITEM,
+      title: isSingle ? Language.inst.CLEAR_TRACK_ITEM : Language.inst.CLEAR_TRACK_ITEM_MULTIPLE.replaceFirst('_NUMBER_', tracks.length.toString()),
       child: Column(
         children: [
           CustomListTile(
-            title: Language.inst.VIDEO_CACHE_FILE,
+            title: isSingle ? Language.inst.VIDEO_CACHE_FILE : Language.inst.VIDEO_CACHE_FILES,
             icon: Broken.video,
             onTap: () async {
               final allvideo = Directory(kVideosCachePath).listSync();
@@ -42,7 +43,7 @@ void showTrackClearDialog(List<Track> tracks) {
             },
           ),
           CustomListTile(
-            title: Language.inst.WAVEFORM_DATA,
+            title: isSingle ? Language.inst.WAVEFORM_DATA : Language.inst.WAVEFORMS_DATA,
             icon: Broken.sound,
             onTap: () async {
               Get.close(1);
@@ -52,7 +53,7 @@ void showTrackClearDialog(List<Track> tracks) {
             },
           ),
           CustomListTile(
-            title: Language.inst.ARTWORK,
+            title: isSingle ? Language.inst.ARTWORK : Language.inst.ARTWORKS,
             icon: Broken.image,
             onTap: () async {
               Get.close(1);
@@ -62,7 +63,7 @@ void showTrackClearDialog(List<Track> tracks) {
             },
           ),
           CustomListTile(
-            title: Language.inst.ARTWORK_COMPRESSED,
+            title: isSingle ? Language.inst.ARTWORK_COMPRESSED : Language.inst.ARTWORKS_COMPRESSED,
             icon: Broken.gallery,
             onTap: () async {
               Get.close(1);

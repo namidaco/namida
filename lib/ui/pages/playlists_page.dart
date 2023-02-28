@@ -17,11 +17,13 @@ class PlaylistsPage extends StatelessWidget {
   // final void Function()? onTap;
   final List<Track>? tracksToAdd;
   final bool displayTopRow;
+  final bool disableBottomPadding;
   PlaylistsPage({
     super.key,
     this.countPerRow = 1,
     this.tracksToAdd,
     this.displayTopRow = true,
+    this.disableBottomPadding = false,
   });
   final ScrollController _scrollController = ScrollController();
   @override
@@ -120,9 +122,10 @@ class PlaylistsPage extends StatelessWidget {
                     childCount: PlaylistController.inst.playlistList.length,
                   ),
                 ),
-              SliverPadding(
-                padding: EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value),
-              )
+              if (!disableBottomPadding)
+                SliverPadding(
+                  padding: EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value),
+                )
             ],
           ),
         ),

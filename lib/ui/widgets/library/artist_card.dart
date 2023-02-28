@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 
 class ArtistCard extends StatelessWidget {
   final int? gridCountOverride;
@@ -43,7 +42,7 @@ class ArtistCard extends StatelessWidget {
         // color: context.theme.cardColor,
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 120, 120, 120),
-          onLongPress: () {},
+          onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, artist),
           onTap: () {},
           child: Column(
             mainAxisSize: MainAxisSize.min,

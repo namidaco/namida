@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:namida/controller/indexer_controller.dart';
 
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -7,6 +8,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/widgets/dialogs/edit_tags_dialog.dart';
+import 'package:namida/ui/widgets/dialogs/general_popup_dialog.dart';
 
 class SelectedTracksRow extends StatelessWidget {
   const SelectedTracksRow({super.key});
@@ -49,41 +51,6 @@ class SelectedTracksRow extends StatelessWidget {
             const SizedBox(
               width: 32,
             ),
-            // IconButton(
-            //   onPressed: () => Playback.instance.insertAt(selectedTracks, Playback.instance.index + 1),
-            //   tooltip: Language.instance.PLAY_NEXT,
-            //   icon: Icon(Broken.next),
-            //   splashRadius: 20.0,
-            // ),
-            // IconButton(
-            //   onPressed: () => Playback.instance.add(selectedTracks),
-            //   tooltip: Language.instance.PLAY_LAST,
-            //   icon: Icon(
-            //     Iconsax.play_add,
-            //   ),
-            //   splashRadius: 20.0,
-            // ),
-            // IconButton(
-            //   onPressed: () {
-            //     Playback.instance.open([
-            //       ...selectedTracks,
-            //       if (Configuration.instance.seamlessPlayback) ...[...Collection.instance.tracks]..shuffle(),
-            //     ]);
-            //   },
-            //   tooltip: Language.instance.PLAY_ALL,
-            //   icon: Icon(Broken.play_circle),
-            //   splashRadius: 20.0,
-            // ),
-            // IconButton(
-            //   onPressed: () {
-            //     Playback.instance.open(
-            //       [...selectedTracks]..shuffle(),
-            //     );
-            //   },
-            //   tooltip: Language.instance.SHUFFLE,
-            //   icon: Icon(Broken.shuffle),
-            //   splashRadius: 20.0,
-            // ),
             IconButton(
               onPressed: () {
                 editMultipleTracksTags(tracks);
@@ -98,16 +65,35 @@ class SelectedTracksRow extends StatelessWidget {
               tooltip: Language.inst.ADD_TO_PLAYLIST,
               icon: const Icon(Broken.music_playlist),
             ),
-            // IconButton(
-            //   onPressed: () {
-            //     setState(() {
-            //       selectedTracks = [];
-            //       selectedTracks.addAll(Collection.instance.tracks);
-            //     });
-            //   },
-            //   icon: Icon(Broken.category),
-            //   splashRadius: 20.0,
-            // ),
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              onPressed: () {
+                showGeneralPopupDialog(
+                  tracks,
+                  tracks.displayTrackKeyword,
+                  [
+                    tracks.map((e) => e.size).reduce((a, b) => a + b).fileSizeFormatted,
+                    tracks.totalDurationFormatted,
+                  ].join(' • '),
+                  thirdLineText: tracks.length == 1
+                      ? tracks.first.title
+                      : tracks.map((e) {
+                          final maxLet = 20 - tracks.length.clamp(0, 17);
+                          return '${e.title.substring(0, (e.title.length > maxLet ? maxLet : e.title.length))}..';
+                        }).join(', '),
+                );
+              },
+              tooltip: Language.inst.MORE,
+              icon: const RotatedBox(quarterTurns: 1, child: Icon(Broken.more)),
+            ),
+            IconButton(
+              onPressed: () {
+                SelectedTracksController.inst.selectedTracks.clear();
+                SelectedTracksController.inst.selectedTracks.addAll(Indexer.inst.trackSearchList.toList());
+              },
+              icon: const Icon(Broken.category),
+              splashRadius: 20.0,
+            ),
             stc.isMenuMinimized.value ? const Icon(Broken.arrow_up_3) : const Icon(Broken.arrow_down_2)
           ],
         );

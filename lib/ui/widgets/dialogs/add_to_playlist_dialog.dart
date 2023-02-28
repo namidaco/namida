@@ -56,6 +56,7 @@ void showAddToPlaylistDialog(List<Track> tracks) {
                 tracksToAdd: tracks,
                 countPerRow: 1,
                 displayTopRow: false,
+                disableBottomPadding: true,
               ),
             ),
             Container(

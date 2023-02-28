@@ -7,6 +7,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 
 class AlbumCard extends StatelessWidget {
   final int? gridCountOverride;
@@ -44,7 +45,7 @@ class AlbumCard extends StatelessWidget {
         color: context.theme.cardColor,
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 120, 120, 120),
-          onLongPress: () {},
+          onLongPress: () => NamidaDialogs.inst.showAlbumDialog(album),
           onTap: () {
             Get.to(
               () => AlbumTracksPage(album: album),
@@ -85,7 +86,7 @@ class AlbumCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: Get.width / gridCount - 30.0, minWidth: Get.width / gridCount - 30.0),
+                          constraints: BoxConstraints(maxWidth: Get.width / gridCount - 28.0, minWidth: Get.width / gridCount - 28.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -140,10 +141,11 @@ class AlbumCard extends StatelessWidget {
                     bottom: 0,
                     right: 0,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8.0),
+                      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8.0 - (gridCount * 1.2)),
                       child: MoreIcon(
                         rotated: false,
-                        onPressed: () {},
+                        iconSize: 18 - (gridCount * 1.1),
+                        onPressed: () => NamidaDialogs.inst.showAlbumDialog(album),
                       ),
                     ),
                   ),
