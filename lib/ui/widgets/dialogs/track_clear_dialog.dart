@@ -14,7 +14,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-void showTrackClearDialog(Track track) {
+void showTrackClearDialog(List<Track> tracks) {
   Get.dialog(
     CustomBlurryDialog(
       normalTitleStyle: true,
@@ -25,13 +25,17 @@ void showTrackClearDialog(Track track) {
             title: Language.inst.VIDEO_CACHE_FILE,
             icon: Broken.video,
             onTap: () async {
-              final videoId = VideoController.inst.extractYTIDFromTrack(track);
               final allvideo = Directory(kVideosCachePath).listSync();
-              for (final v in allvideo) {
-                if (p.basename(v.path).startsWith(videoId)) {
-                  await v.delete();
+
+              for (final track in tracks) {
+                final videoId = VideoController.inst.extractYTIDFromTrack(track);
+                for (final v in allvideo) {
+                  if (p.basename(v.path).startsWith(videoId)) {
+                    await v.delete();
+                  }
                 }
               }
+
               Get.close(1);
               Player.inst.updateVideoPlayingState();
               VideoController.inst.youtubeLink.value = '';
@@ -42,7 +46,9 @@ void showTrackClearDialog(Track track) {
             icon: Broken.sound,
             onTap: () async {
               Get.close(1);
-              await File("$kWaveformDirPath${track.displayName}.wave").delete();
+              for (final track in tracks) {
+                await File("$kWaveformDirPath${track.displayName}.wave").delete();
+              }
             },
           ),
           CustomListTile(
@@ -50,7 +56,9 @@ void showTrackClearDialog(Track track) {
             icon: Broken.image,
             onTap: () async {
               Get.close(1);
-              await File("$kArtworksDirPath${track.displayName}.png").delete();
+              for (final track in tracks) {
+                await File("$kArtworksDirPath${track.displayName}.png").delete();
+              }
             },
           ),
           CustomListTile(
@@ -58,7 +66,9 @@ void showTrackClearDialog(Track track) {
             icon: Broken.gallery,
             onTap: () async {
               Get.close(1);
-              await File("$kArtworksCompDirPath${track.displayName}.png").delete();
+              for (final track in tracks) {
+                await File("$kArtworksCompDirPath${track.displayName}.png").delete();
+              }
             },
           ),
         ],
