@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -71,6 +72,7 @@ class AlbumsPage extends StatelessWidget {
                           child: ListView.builder(
                             controller: _scrollController,
                             itemCount: albums?.length ?? Indexer.inst.albumSearchList.length,
+                            padding: EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value),
                             itemBuilder: (BuildContext context, int i) {
                               return AnimationConfiguration.staggeredList(
                                 position: i,
@@ -91,7 +93,7 @@ class AlbumsPage extends StatelessWidget {
                       : Expanded(
                           child: MasonryGridView.builder(
                             controller: _scrollController,
-                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0).add(EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value)),
                             itemCount: albums?.length ?? Indexer.inst.albumSearchList.length,
                             mainAxisSpacing: 8.0,
                             crossAxisSpacing: 6.0,

@@ -5,8 +5,10 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_card.dart';
 import 'package:namida/ui/widgets/library/playlist_tile.dart';
 
@@ -17,7 +19,7 @@ class PlaylistsPage extends StatelessWidget {
   final bool displayTopRow;
   PlaylistsPage({
     super.key,
-    this.countPerRow = 2,
+    this.countPerRow = 1,
     this.tracksToAdd,
     this.displayTopRow = true,
   });
@@ -47,6 +49,12 @@ class PlaylistsPage extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
+                        ),
+                        const FittedBox(
+                          child: GeneratePlaylistButton(),
+                        ),
+                        const SizedBox(
+                          width: 8.0,
                         ),
                         const FittedBox(
                           child: CreatePlaylistButton(),
@@ -89,25 +97,32 @@ class PlaylistsPage extends StatelessWidget {
                     mainAxisSpacing: 8.0,
                   ),
                   delegate: SliverChildBuilderDelegate(
-                    (context, i) => AnimationConfiguration.staggeredGrid(
-                      columnCount: PlaylistController.inst.playlistList.length,
-                      position: i,
-                      duration: const Duration(milliseconds: 400),
-                      child: SlideAnimation(
-                        verticalOffset: 25.0,
-                        child: FadeInAnimation(
-                          duration: const Duration(milliseconds: 400),
-                          child: MultiArtworkCard(
-                            tracks: PlaylistController.inst.playlistList[i].tracks,
-                            name: PlaylistController.inst.playlistList[i].name,
-                            gridCount: countPerRow,
+                    (context, i) {
+                      final playlist = PlaylistController.inst.playlistList[i];
+                      return AnimationConfiguration.staggeredGrid(
+                        columnCount: PlaylistController.inst.playlistList.length,
+                        position: i,
+                        duration: const Duration(milliseconds: 400),
+                        child: SlideAnimation(
+                          verticalOffset: 25.0,
+                          child: FadeInAnimation(
+                            duration: const Duration(milliseconds: 400),
+                            child: MultiArtworkCard(
+                              tracks: playlist.tracks,
+                              name: playlist.name,
+                              gridCount: countPerRow,
+                              showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(playlist),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                     childCount: PlaylistController.inst.playlistList.length,
                   ),
                 ),
+              SliverPadding(
+                padding: EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value),
+              )
             ],
           ),
         ),

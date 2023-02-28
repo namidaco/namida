@@ -6,6 +6,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -57,8 +58,9 @@ class ArtistsPage extends StatelessWidget {
                     () => ListView.builder(
                       controller: _scrollController,
                       itemCount: Indexer.inst.artistSearchList.length,
+                      padding: EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value),
                       itemBuilder: (BuildContext context, int i) {
-                        // final artist = Indexer.inst.artistSearchList.entries.toList()[i];
+                        final artist = Indexer.inst.artistSearchList.entries.toList()[i];
                         return AnimationConfiguration.staggeredList(
                           position: i,
                           duration: const Duration(milliseconds: 400),
@@ -67,8 +69,8 @@ class ArtistsPage extends StatelessWidget {
                             child: FadeInAnimation(
                               duration: const Duration(milliseconds: 400),
                               child: ArtistTile(
-                                tracks: Indexer.inst.artistSearchList.entries.toList()[i].value.toList(),
-                                name: Indexer.inst.artistSearchList.entries.toList()[i].key,
+                                tracks: artist.value.toList(),
+                                name: artist.key,
                               ),
                             ),
                           ),
@@ -88,6 +90,7 @@ class ArtistsPage extends StatelessWidget {
                     ),
                     controller: _scrollController,
                     itemCount: Indexer.inst.artistSearchList.length,
+                    padding: EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value),
                     itemBuilder: (BuildContext context, int i) {
                       final artist = Indexer.inst.artistSearchList.entries.toList()[i];
                       return AnimationConfiguration.staggeredGrid(

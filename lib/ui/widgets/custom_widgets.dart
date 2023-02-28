@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -526,6 +527,19 @@ class CreatePlaylistButton extends StatelessWidget {
       ),
       icon: const Icon(Broken.add),
       label: Text(Language.inst.CREATE),
+    );
+  }
+}
+
+class GeneratePlaylistButton extends StatelessWidget {
+  const GeneratePlaylistButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: () => PlaylistController.inst.generateRandomPlaylist(),
+      icon: const Icon(Broken.shuffle),
+      label: Text(Language.inst.RANDOM),
     );
   }
 }

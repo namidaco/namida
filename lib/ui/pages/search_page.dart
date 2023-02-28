@@ -1,24 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
-import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/scroll_search_controller.dart';
-import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/album_card.dart';
-import 'package:namida/ui/widgets/library/album_tile.dart';
-import 'package:namida/ui/widgets/artwork.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
-import 'package:namida/ui/widgets/settings/sort_by_button.dart';
 
 class SearchPage extends StatelessWidget {
   SearchPage({super.key});
@@ -26,7 +16,6 @@ class SearchPage extends StatelessWidget {
   final ScrollController _scrollController = ScrollController();
   @override
   Widget build(BuildContext context) {
-    // return Obx(() => SizedBox(height: 222, child: AlbumsPage(isSearch: true)));
     return Obx(
       () => Container(
         color: context.theme.scaffoldBackgroundColor,
@@ -175,6 +164,9 @@ class SearchPage extends StatelessWidget {
                           childCount: Indexer.inst.trackSearchList.length,
                         ),
                       ),
+                    SliverPadding(
+                      padding: EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value),
+                    )
                   ],
                 ),
               ),

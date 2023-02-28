@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/core/extensions.dart';
@@ -50,6 +51,7 @@ class GenresPage extends StatelessWidget {
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.8, mainAxisSpacing: 8.0),
                   controller: _scrollController,
                   itemCount: Indexer.inst.genreSearchList.length,
+                  padding: EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value),
                   itemBuilder: (BuildContext context, int i) {
                     final genre = Indexer.inst.genreSearchList.entries.toList()[i];
                     return AnimationConfiguration.staggeredGrid(
