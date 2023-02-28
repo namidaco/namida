@@ -103,42 +103,42 @@ class AppThemes extends GetxController {
             borderRadius: BorderRadius.circular(16.0.multipliedRadius),
           ),
           color: Color.alphaBlend(cardColor.withAlpha(180), Colors.black)),
-      textTheme: const TextTheme(
+      textTheme: TextTheme(
         bodyMedium: TextStyle(
-          fontSize: 14.0,
+          fontSize: 14.0.multipliedFontScale,
           fontWeight: FontWeight.normal,
         ),
         bodySmall: TextStyle(
-          fontSize: 14.0,
+          fontSize: 14.0.multipliedFontScale,
           fontWeight: FontWeight.normal,
         ),
         titleSmall: TextStyle(
-          fontSize: 14.0,
+          fontSize: 14.0.multipliedFontScale,
           fontWeight: FontWeight.w600,
         ),
         titleLarge: TextStyle(
-          fontSize: 20.0,
+          fontSize: 20.0.multipliedFontScale,
           fontWeight: FontWeight.w600,
         ),
         displayLarge: TextStyle(
           fontWeight: FontWeight.w700,
-          fontSize: 17.0,
+          fontSize: 17.0.multipliedFontScale,
         ),
         displayMedium: TextStyle(
           fontWeight: FontWeight.w600,
-          fontSize: 15.0,
+          fontSize: 15.0.multipliedFontScale,
         ),
         displaySmall: TextStyle(
           fontWeight: FontWeight.w400,
-          fontSize: 13.0,
+          fontSize: 13.0.multipliedFontScale,
         ),
         headlineMedium: TextStyle(
           fontWeight: FontWeight.normal,
-          fontSize: 14.0,
+          fontSize: 14.0.multipliedFontScale,
         ),
         headlineSmall: TextStyle(
           fontWeight: FontWeight.normal,
-          fontSize: 14.0,
+          fontSize: 14.0.multipliedFontScale,
         ),
       ),
     );

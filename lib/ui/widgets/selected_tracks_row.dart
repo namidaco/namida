@@ -38,7 +38,7 @@ class SelectedTracksRow extends StatelessWidget {
                 children: [
                   Text(
                     stc.selectedTracks.displayTrackKeyword,
-                    style: context.theme.textTheme.displayLarge!.copyWith(fontSize: 26.0),
+                    style: context.theme.textTheme.displayLarge!.copyWith(fontSize: 23.0.multipliedFontScale),
                   ),
                   if (!stc.isMenuMinimized.value)
                     Text(

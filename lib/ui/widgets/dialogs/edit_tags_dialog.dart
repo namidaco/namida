@@ -682,7 +682,7 @@ class CustomTagTextField extends StatelessWidget {
         controller: controller,
         textAlign: TextAlign.left,
         maxLines: maxLines,
-        style: context.textTheme.displaySmall?.copyWith(fontSize: 14.5, fontWeight: FontWeight.w600),
+        style: context.textTheme.displaySmall?.copyWith(fontSize: 14.5.multipliedFontScale, fontWeight: FontWeight.w600),
         decoration: InputDecoration(
           hintMaxLines: hintMaxLines,
           contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
@@ -697,7 +697,7 @@ class CustomTagTextField extends StatelessWidget {
             borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 1.0),
           ),
           hintText: hintText,
-          hintStyle: context.textTheme.displaySmall?.copyWith(fontSize: 14.5),
+          hintStyle: context.textTheme.displaySmall?.copyWith(fontSize: 14.5.multipliedFontScale),
         ),
       ),
     );

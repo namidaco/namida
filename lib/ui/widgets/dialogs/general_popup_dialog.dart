@@ -99,7 +99,7 @@ Future<void> showGeneralPopupDialog(
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                                 style: Get.textTheme.displayLarge?.copyWith(
-                                  fontSize: 17,
+                                  fontSize: 17.0.multipliedFontScale,
                                   color: Color.alphaBlend(colorDelightened.withAlpha(40), Get.textTheme.displayMedium!.color!),
                                 ),
                               ),
@@ -112,7 +112,7 @@ Future<void> showGeneralPopupDialog(
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                                 style: Get.textTheme.displayMedium?.copyWith(
-                                  fontSize: 14,
+                                  fontSize: 14.0.multipliedFontScale,
                                   color: Color.alphaBlend(colorDelightened.withAlpha(80), Get.textTheme.displayMedium!.color!),
                                 ),
                               ),
@@ -125,7 +125,7 @@ Future<void> showGeneralPopupDialog(
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                                 style: Get.textTheme.displaySmall?.copyWith(
-                                  fontSize: 13,
+                                  fontSize: 12.5.multipliedFontScale,
                                   color: Color.alphaBlend(colorDelightened.withAlpha(40), Get.textTheme.displayMedium!.color!),
                                 ),
                               ),

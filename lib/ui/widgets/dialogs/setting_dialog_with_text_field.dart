@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:restart_app/restart_app.dart';
 
 import 'package:namida/core/extensions.dart';
 import 'package:namida/controller/playlist_controller.dart';
-import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -53,44 +51,6 @@ void showSettingDialogWithTextField({
       borderRadius: 16.0.multipliedRadius,
       padding: const EdgeInsets.fromLTRB(18.0, 18.0, 24.0, 18.0),
       icon: iconWidget,
-      shouldIconPulse: false,
-    );
-  }
-
-  void restartToApplyChangesSnackBar(
-    String title,
-    String? message, {
-    Duration? duration,
-    Widget? iconWidget,
-  }) {
-    Get.snackbar(
-      '',
-      '',
-      titleText: Text(
-        title,
-        style: Get.textTheme.displayLarge,
-      ),
-      messageText: Text(
-        "$message${Language.inst.RESTART_TO_APPLY_CHANGES}",
-        style: Get.textTheme.displayMedium,
-      ),
-      duration: const Duration(seconds: 4),
-      animationDuration: const Duration(milliseconds: 400),
-      borderRadius: 16.0.multipliedRadius,
-      icon: iconWidget,
-      padding: const EdgeInsets.fromLTRB(18.0, 18.0, 24.0, 18.0),
-      mainButton: TextButton(
-        style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all(
-            Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(150), Get.theme.colorScheme.primary),
-          ),
-        ),
-        onPressed: () => Restart.restartApp(),
-        child: Text(
-          Language.inst.RESTART,
-          style: Get.theme.textTheme.bodyMedium,
-        ),
-      ),
       shouldIconPulse: false,
     );
   }
@@ -157,7 +117,7 @@ void showSettingDialogWithTextField({
                   stg.save(
                     fontScaleFactor: 1.0,
                   );
-                  restartToApplyChangesSnackBar(title, "${Language.inst.RESET_TO_DEFAULT}: ${stg.fontScaleFactor.value.toInt() * 100}%, ", iconWidget: iconWidget);
+                  showSnackBarWithTitle("${stg.fontScaleFactor.value.toInt() * 100}%", title: title, iconWidget: iconWidget);
                 }
                 if (dateTimeFormat != null) {
                   stg.save(
@@ -242,7 +202,6 @@ void showSettingDialogWithTextField({
                     stg.save(
                       fontScaleFactor: double.parse(controller.text) / 100,
                     );
-                    restartToApplyChangesSnackBar(title, '');
                   }
                   if (dateTimeFormat != null) {
                     stg.save(

@@ -22,7 +22,7 @@ class ArtistCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gridCount = gridCountOverride ?? 2;
-    final fontSize = 16.0 - (gridCount * 1.8);
+    final fontSize = (16.0 - (gridCount * 1.8)).multipliedFontScale;
     // final shouldDisplayAlbumArtist = artist[0].albumArtist != '';
     return Container(
       width: Get.width / gridCount - 34.0,

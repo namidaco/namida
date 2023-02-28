@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -91,7 +92,7 @@ class VideoPlaybackSettings extends StatelessWidget {
                             ),
                             Text(
                               Language.inst.VIDEO_PLAYBACK_SOURCE_LOCAL_EXAMPLE_SUBTITLE,
-                              style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0, fontWeight: FontWeight.w600),
+                              style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0.multipliedFontScale, fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(
                               height: 12.0,

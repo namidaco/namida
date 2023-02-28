@@ -138,6 +138,12 @@ extension BorderRadiusSetting on double {
   }
 }
 
+extension FontScaleSetting on double {
+  double get multipliedFontScale {
+    return this * SettingsController.inst.fontScaleFactor.value;
+  }
+}
+
 extension TrackItemSubstring on TrackTileItem {
   String get label => toString().substring(14);
 }

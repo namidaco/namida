@@ -24,7 +24,7 @@ class AlbumCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gridCount = gridCountOverride ?? SettingsController.inst.albumGridCount.value;
-    final fontSize = 16.0 - (gridCount * 1.8);
+    final fontSize = (16.0 - (gridCount * 1.8)).multipliedFontScale;
     final shouldDisplayTopRightDate = SettingsController.inst.albumCardTopRightDate.value && album[0].year != 0;
     final shouldDisplayNormalDate = !SettingsController.inst.albumCardTopRightDate.value && album[0].year != 0;
     final shouldDisplayAlbumArtist = album[0].albumArtist != '';

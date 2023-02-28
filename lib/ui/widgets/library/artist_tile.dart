@@ -98,7 +98,7 @@ class ArtistTile extends StatelessWidget {
                         [
                           albumTracks.length,
                         ].join(' • '),
-                        style: Get.textTheme.displaySmall?.copyWith(fontSize: 11),
+                        style: Get.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],

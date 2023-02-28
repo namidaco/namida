@@ -502,7 +502,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                             "Playing from",
                                             style: TextStyle(
                                               color: onSecondary.withOpacity(.8),
-                                              fontSize: 15.0,
+                                              fontSize: 15.0.multipliedFontScale,
                                               fontWeight: FontWeight.w500,
                                             ),
                                           ),
@@ -512,7 +512,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                             maxLines: 1,
                                             softWrap: false,
                                             overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20.0, color: onSecondary.withOpacity(.9)),
+                                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20.0.multipliedFontScale, color: onSecondary.withOpacity(.9)),
                                           ),
                                         ],
                                       ),
@@ -867,9 +867,15 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                         width: 4.0,
                                       ),
                                       if (VideoController.inst.videoCurrentSize.value > 10)
-                                        Text("${VideoController.inst.videoCurrentSize.value.fileSizeFormatted}/", style: TextStyle(color: onSecondary, fontSize: 11.0)),
+                                        Text(
+                                          "${VideoController.inst.videoCurrentSize.value.fileSizeFormatted}/",
+                                          style: TextStyle(color: onSecondary, fontSize: 11.0.multipliedFontScale),
+                                        ),
                                       if (VideoController.inst.youtubeLink.value != '')
-                                        Text(VideoController.inst.videoTotalSize.value.fileSizeFormatted, style: TextStyle(color: onSecondary, fontSize: 11.0)),
+                                        Text(
+                                          VideoController.inst.videoTotalSize.value.fileSizeFormatted,
+                                          style: TextStyle(color: onSecondary, fontSize: 11.0.multipliedFontScale),
+                                        ),
                                     ]
                                   ],
                                 ),
@@ -1300,7 +1306,7 @@ class TrackInfo extends StatelessWidget {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: context.textTheme.displayMedium?.copyWith(
-                                          fontSize: vp(a: 15.0, b: 21.0, c: p),
+                                          fontSize: vp(a: 15.0, b: 21.0, c: p).multipliedFontScale,
                                           height: 1,
                                         ),
                                       ),
@@ -1312,7 +1318,7 @@ class TrackInfo extends StatelessWidget {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: context.textTheme.displayMedium?.copyWith(
-                                          fontSize: vp(a: 13.0, b: 16.0, c: p),
+                                          fontSize: vp(a: 13.0, b: 16.0, c: p).multipliedFontScale,
                                         ),
                                       ),
                                     ],

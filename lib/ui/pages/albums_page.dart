@@ -198,7 +198,7 @@ class AlbumTracksPage extends StatelessWidget {
                             [album.displayTrackKeyword, if (album.isNotEmpty) album.totalDurationFormatted].join(' - '),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                            style: context.textTheme.displayMedium?.copyWith(fontSize: 14),
+                            style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
                           ),
                         ),
                         const SizedBox(

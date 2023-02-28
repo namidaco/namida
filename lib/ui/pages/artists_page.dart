@@ -194,7 +194,7 @@ class ArtistTracksPage extends StatelessWidget {
                             [artist.displayTrackKeyword, if (artist.isNotEmpty) artist.totalDurationFormatted].join(' - '),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                            style: context.textTheme.displayMedium?.copyWith(fontSize: 14),
+                            style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
                           ),
                         ),
                         const SizedBox(

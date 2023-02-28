@@ -44,7 +44,6 @@ dependencies:
   device_info_plus: ^8.1.0
   enum_to_string: ^2.0.1
   intl: ^0.17.0
-  restart_app: ^1.1.1
   flutter_archive: ^5.0.0
 
   # Path/File Providers
