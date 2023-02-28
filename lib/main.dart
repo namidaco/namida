@@ -99,6 +99,11 @@ void main() async {
   await QueueController.inst.prepareQueueFile();
   await VideoController.inst.getVideoFiles();
 
+  /// updates values on startup
+  Indexer.inst.updateImageSizeInStorage();
+  Indexer.inst.updateWaveformSizeInStorage();
+  Indexer.inst.updateVideosSizeInStorage();
+
   runApp(const MyApp());
 }
 
