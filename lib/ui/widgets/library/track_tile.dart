@@ -133,17 +133,21 @@ class TrackTile extends StatelessWidget {
                     Stack(
                       alignment: Alignment.center,
                       children: [
-                        Container(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 0.0,
-                          ),
-                          width: thumnailSize,
-                          height: thumnailSize,
-                          child: ArtworkWidget(
-                            blur: 1.5,
-                            thumnailSize: thumnailSize,
-                            track: track,
-                            forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+                        AnimatedScale(
+                          duration: const Duration(milliseconds: 400),
+                          scale: isTrackCurrentlyPlaying ? 0.94 : 0.97,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 0.0,
+                            ),
+                            width: thumnailSize,
+                            height: thumnailSize,
+                            child: ArtworkWidget(
+                              blur: 1.5,
+                              thumnailSize: thumnailSize,
+                              track: track,
+                              forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+                            ),
                           ),
                         ),
                         if (draggableThumbnail)
