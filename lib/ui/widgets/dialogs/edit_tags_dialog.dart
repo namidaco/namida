@@ -324,45 +324,46 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
   RxList<Track> tracks = <Track>[].obs;
   tracks.assignAll(tracksPre);
 
-  final toBeEditedTracksColumn = Column(children: [
-    Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Text(
-        Language.inst.MULTIPLE_TRACKS_TAGS_EDIT_NOTE,
-        style: Get.textTheme.displayMedium,
+  final toBeEditedTracksColumn = Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const SizedBox(height: 12.0),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Text(
+          Language.inst.MULTIPLE_TRACKS_TAGS_EDIT_NOTE,
+          style: Get.textTheme.displayMedium,
+        ),
       ),
-    ),
-    const SizedBox(height: 12.0),
-    ...tracks.asMap().entries.map((e) {
-      RxBool isRemoved = false.obs;
-      return Row(
-        children: [
-          Expanded(
-            child: Stack(
-              children: [
-                Obx(
-                  () => TrackTile(
-                    track: e.value,
-                    bgColor: isRemoved.value ? Colors.black.withAlpha(0) : null,
+      const SizedBox(height: 12.0),
+      ...tracks.asMap().entries.map((e) {
+        return Row(
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  Obx(
+                    () => TrackTile(
+                      track: e.value,
+                      onTap: () => tracks.addIf(() => !tracks.contains(e.value), e.value),
+                      bgColor: tracks.contains(e.value) ? null : Colors.black.withAlpha(0),
+                      trailingWidget: IconButton(
+                        icon: const Icon(Broken.close_circle),
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () {
+                          tracks.remove(e.value);
+                        },
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 4.0),
-          IconButton(
-            icon: const Icon(Broken.close_circle),
-            visualDensity: VisualDensity.compact,
-            onPressed: () {
-              tracks.remove(e.value);
-              isRemoved.value = true;
-              // SelectedTracksController.inst.removeTrack(e.key);
-            },
-          )
-        ],
-      );
-    }).toList(),
-  ]);
+          ],
+        );
+      }).toList(),
+    ],
+  );
   // final info = await audioedit.readAudio(tracks.map((e) => e.path).toList());
 
   final albumController = TextEditingController();

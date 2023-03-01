@@ -21,6 +21,8 @@ class TrackTile extends StatelessWidget {
   final bool isInSelectedTracksPreview;
   final List<Track>? queue;
   final Color? bgColor;
+  final Widget? trailingWidget;
+  final void Function()? onTap;
   const TrackTile({
     super.key,
     required this.track,
@@ -29,6 +31,8 @@ class TrackTile extends StatelessWidget {
     this.isInSelectedTracksPreview = false,
     this.queue,
     this.bgColor,
+    this.onTap,
+    this.trailingWidget,
   });
 
   String getChoosenTrackTileItem(TrackTileItem trackItem) {
@@ -101,19 +105,22 @@ class TrackTile extends StatelessWidget {
             child: InkWell(
               highlightColor: const Color.fromARGB(60, 0, 0, 0),
               key: ValueKey(track),
-              onLongPress: () {
-                if (!isInSelectedTracksPreview) {
-                  SelectedTracksController.inst.selectOrUnselect(track);
-                }
-              },
-              onTap: () async {
-                if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
-                  SelectedTracksController.inst.selectOrUnselect(track);
-                } else {
-                  Player.inst.playOrPause(track: track, queue: queue);
-                  print(track.path);
-                }
-              },
+              onLongPress: onTap != null
+                  ? null
+                  : () {
+                      if (!isInSelectedTracksPreview) {
+                        SelectedTracksController.inst.selectOrUnselect(track);
+                      }
+                    },
+              onTap: onTap ??
+                  () async {
+                    if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
+                      SelectedTracksController.inst.selectOrUnselect(track);
+                    } else {
+                      Player.inst.playOrPause(track: track, queue: queue);
+                      print(track.path);
+                    }
+                  },
               child: Container(
                 alignment: Alignment.center,
                 padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -263,6 +270,12 @@ class TrackTile extends StatelessWidget {
                     const SizedBox(
                       width: 4.0,
                     ),
+                    if (trailingWidget != null) ...[
+                      trailingWidget!,
+                      const SizedBox(
+                        width: 4.0,
+                      ),
+                    ]
                   ],
                 ),
               ),
