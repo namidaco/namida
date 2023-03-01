@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:searchbar_animation/searchbar_animation.dart';
 
-import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/pages/search_page.dart';
@@ -31,7 +30,6 @@ class HomePage extends StatelessWidget {
         appBar: AppBar(
           titleSpacing: 0,
           automaticallyImplyLeading: false,
-          // title: Obx(() => Text("${Indexer.inst.tracksInfoList.length} ${Language.inst.OF} ${Indexer.inst.allTracksPaths}")),
           title: SearchBarAnimation(
             isSearchBoxOnRightSide: true,
             textAlignToRight: false,

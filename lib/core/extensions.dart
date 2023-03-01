@@ -72,7 +72,7 @@ extension TracksUtils on List<Track> {
   String get totalDurationFormatted {
     int totalDurationFinal = totalDuration;
     String formattedTotalTracksDuration =
-        "${Duration(seconds: totalDurationFinal).inHours == 0 ? "" : "${Duration(seconds: totalDurationFinal).inHours} h "}${Duration(seconds: totalDurationFinal).inMinutes.remainder(60) == 0 ? "" : "${Duration(seconds: totalDurationFinal).inMinutes.remainder(60) + 1} min"}";
+        "${Duration(seconds: totalDurationFinal).inHours == 0 ? "" : "${Duration(seconds: totalDurationFinal).inHours}h "}${Duration(seconds: totalDurationFinal).inMinutes.remainder(60) == 0 ? "" : "${Duration(seconds: totalDurationFinal).inMinutes.remainder(60) + 1}min"}";
     return formattedTotalTracksDuration;
   }
 

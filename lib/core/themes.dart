@@ -10,7 +10,7 @@ class AppThemes extends GetxController {
       elevation: 12.0,
       color: light
           ? Color.alphaBlend(
-              color.withAlpha(40),
+              color.withAlpha(35),
               const Color.fromARGB(255, 255, 255, 255),
             )
           : Color.alphaBlend(
@@ -23,7 +23,7 @@ class AppThemes extends GetxController {
     );
     final cardColor = light
         ? Color.alphaBlend(
-            color.withAlpha(30),
+            color.withAlpha(25),
             const Color.fromARGB(255, 255, 255, 255),
           )
         : Color.alphaBlend(
@@ -35,7 +35,7 @@ class AppThemes extends GetxController {
       useMaterial3: true,
       colorSchemeSeed: color,
       fontFamily: "LexendDeca",
-      scaffoldBackgroundColor: light ? Color.alphaBlend(color.withAlpha(60), Colors.white) : null,
+      scaffoldBackgroundColor: light ? Color.alphaBlend(color.withAlpha(50), Colors.white) : null,
       backgroundColor: light ? const Color.fromARGB(255, 235, 235, 235) : const Color.fromARGB(255, 20, 20, 20),
       splashColor: Colors.transparent,
       splashFactory: InkRipple.splashFactory,
@@ -61,7 +61,7 @@ class AppThemes extends GetxController {
         indent: 0.0,
         endIndent: 0.0,
       ),
-      selectedRowColor: const Color.fromARGB(150, 80, 80, 80),
+      selectedRowColor: light ? const Color.fromARGB(255, 211, 211, 211) : const Color.fromARGB(150, 80, 80, 80),
       dialogTheme: DialogTheme(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0.multipliedRadius))),
       listTileTheme: ListTileThemeData(
         horizontalTitleGap: 4.0,

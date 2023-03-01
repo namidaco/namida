@@ -22,7 +22,7 @@ class MultiArtworkContainer extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         color: context.theme.cardTheme.color?.withAlpha(180),
-        borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+        borderRadius: BorderRadius.circular(18.0.multipliedRadius),
         boxShadow: [
           BoxShadow(
             color: context.theme.shadowColor,
@@ -32,7 +32,7 @@ class MultiArtworkContainer extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+        borderRadius: BorderRadius.circular(16.0.multipliedRadius),
         child: Stack(
           children: [
             if (tracks != null)

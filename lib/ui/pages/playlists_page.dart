@@ -114,7 +114,7 @@ class PlaylistsPage extends StatelessWidget {
                             ),
                           ),
                         ),
-                      const SliverPadding(padding: EdgeInsets.only(top: 12.0)),
+                      const SliverPadding(padding: EdgeInsets.only(top: 6.0)),
                       if (playlistGridCount == 1)
                         SliverList(
                           delegate: SliverChildBuilderDelegate(

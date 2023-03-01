@@ -698,7 +698,7 @@ class CustomTagTextField extends StatelessWidget {
             borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 1.0),
           ),
           hintText: hintText,
-          hintStyle: context.textTheme.displaySmall?.copyWith(fontSize: 14.5.multipliedFontScale),
+          hintStyle: context.textTheme.displaySmall?.copyWith(fontSize: 14.5.multipliedFontScale, color: context.textTheme.displaySmall?.color?.withAlpha(120)),
         ),
       ),
     );

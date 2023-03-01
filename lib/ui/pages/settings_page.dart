@@ -11,6 +11,7 @@ import 'package:namida/ui/widgets/settings/backup_restore.dart';
 import 'package:namida/ui/widgets/settings/customizations.dart';
 import 'package:namida/ui/widgets/settings/extras.dart';
 import 'package:namida/ui/widgets/settings/indexer.dart';
+import 'package:namida/ui/widgets/settings/indexing_percentage.dart';
 import 'package:namida/ui/widgets/settings/theme_setting.dart';
 import 'package:namida/ui/widgets/settings/video_playback.dart';
 
@@ -120,6 +121,7 @@ class CollapsedSettingTiles extends StatelessWidget {
           subtitle: Language.inst.INDEXER_SUBTITLE,
           icon: Broken.component,
           page: IndexerSettings(),
+          trailing: const IndexingPercentage(size: 32.0),
         ),
         CustomCollapsedListTile(
           title: Language.inst.CUSTOMIZATIONS,
@@ -162,8 +164,9 @@ class CustomCollapsedListTile extends StatelessWidget {
   final String subtitle;
   final Widget page;
   final IconData? icon;
+  final Widget? trailing;
 
-  const CustomCollapsedListTile({super.key, required this.title, required this.subtitle, required this.page, this.icon});
+  const CustomCollapsedListTile({super.key, required this.title, required this.subtitle, required this.page, this.icon, this.trailing});
 
   @override
   Widget build(BuildContext context) {
@@ -172,8 +175,13 @@ class CustomCollapsedListTile extends StatelessWidget {
       title: title,
       subtitle: subtitle,
       icon: icon,
-      trailing: const Icon(
-        Broken.arrow_right_3,
+      trailing: Row(
+        children: [
+          if (trailing != null) ...[trailing!, const SizedBox(width: 8.0)],
+          const Icon(
+            Broken.arrow_right_3,
+          ),
+        ],
       ),
       onTap: () => Get.to(
         () => SettingsSubPage(

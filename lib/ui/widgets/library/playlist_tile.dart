@@ -24,6 +24,7 @@ class PlaylistTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 3.0),
       child: Material(
+        color: Colors.transparent,
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 120, 120, 120),
           onLongPress: () => NamidaDialogs.inst.showPlaylistDialog(playlist),
@@ -65,6 +66,15 @@ class PlaylistTile extends StatelessWidget {
                     ],
                   ),
                 ),
+                const SizedBox(width: 12.0),
+                Text(
+                  playlist.tracks.totalDurationFormatted,
+                  style: Get.textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(width: 2.0),
                 SizedBox(
                   height: 38.0,
                   width: 38.0,
