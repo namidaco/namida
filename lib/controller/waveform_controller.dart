@@ -40,7 +40,7 @@ class WaveformController extends GetxController {
         // A Delay to prevent glitches caused by theme change
         Future.delayed(const Duration(milliseconds: 400), () async {
           curentWaveform.assignAll(increaseListToMax(waveform)); //
-          curentScaleList.assignAll(changeListSize(waveform, track.duration ~/ 50)); // each 50ms
+          curentScaleList.assignAll(changeListSize(waveform, track.duration ~/ 50 - 1)); // each 50ms
         });
       } catch (e) {
         printInfo(info: e.toString());
@@ -51,7 +51,7 @@ class WaveformController extends GetxController {
       /// A Delay to prevent glitches caused by theme change
       Future.delayed(const Duration(milliseconds: 400), () async {
         curentWaveform.assignAll(kDefaultWaveFormData);
-        curentScaleList.assignAll(changeListSize(kDefaultScaleList, track.duration ~/ 50));
+        curentScaleList.assignAll(changeListSize(kDefaultScaleList, track.duration ~/ 50 - 1));
       });
 
       // no await since extraction process will take time anyway, hope this doesnt make problems

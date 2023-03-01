@@ -35,6 +35,8 @@ class VideoController extends GetxController {
 
   /// Always assigns to [VideoController.inst.youtubeLink] and [VideoController.inst.youtubeVideoId]
   void updateYTLink(Track track) {
+    youtubeLink.value = '';
+    videoCurrentSize.value = 0;
     isVideoReady.value = false;
     final link = extractYTLinkFromTrack(track);
     youtubeLink.value = link;
@@ -123,6 +125,7 @@ class VideoController extends GetxController {
   Future<void> updateLocalVidPath([Track? track]) async {
     track ??= Player.inst.nowPlayingTrack.value;
     localVidPath.value = '';
+    videoCurrentSize.value = 0;
 
     /// Video Found in Local Storage
     for (var vf in videoFilesPathList) {
