@@ -4,8 +4,10 @@ import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/pages/albums_page.dart';
+import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 
 class ArtistTile extends StatelessWidget {
   final String name;
@@ -18,8 +20,6 @@ class ArtistTile extends StatelessWidget {
     double artistthumnailSize = 65;
     double artistTileHeight = 65;
     final albums = name.artistAlbums;
-    final albumsList = albums.keys;
-    final albumTracks = albums.values;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
@@ -30,37 +30,27 @@ class ArtistTile extends StatelessWidget {
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 120, 120, 120),
           // key: ValueKey(track),
-          onLongPress: () {
-            // stc.selectOrUnselect(track);
-          },
+
+          onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, tracks),
           onTap: () {
-            Get.to(
-              // () => ArtistTracksPage(artist: tracks, name: name),
-              () => AlbumsPage(albums: albums),
-              //  duration: Duration(milliseconds: 300),
-            );
+            Get.to(() => ArtistTracksPage(name: name));
           },
           child: Container(
             alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(vertical: 3.0),
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
             height: artistTileHeight + 14,
             child: Row(
               children: [
                 const SizedBox(width: 8.0),
-                Container(
-                  // padding: const EdgeInsets.all(
-                  //   0.0,
-                  // ),
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: context.theme.cardColor),
-                  width: artistthumnailSize,
-                  height: artistthumnailSize,
-                  child: Hero(
-                    tag: 'artist$name',
+                Hero(
+                  tag: 'artist$name',
+                  child: ContainerWithBorder(
                     child: ArtworkWidget(
                       thumnailSize: artistthumnailSize,
                       track: tracks[0],
                       borderRadius: 64.0,
                       forceSquared: true,
+                      blur: 0,
                     ),
                   ),
                 ),
@@ -88,26 +78,16 @@ class ArtistTile extends StatelessWidget {
                       Text(
                         [
                           tracks.displayTrackKeyword,
-                          albumsList.length,
-                          tracks[0].year.yearFormatted,
-                        ].join(' • '),
-                        style: Get.textTheme.displaySmall,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        [
-                          albumTracks.length,
-                        ].join(' • '),
-                        style: Get.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
+                          albums.length.displayAlbumKeyword,
+                        ].join(' & '),
+                        style: Get.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ),
                 Text(
-                  [
-                    tracks.totalDurationFormatted,
-                  ].join(' - '),
+                  tracks.totalDurationFormatted,
                   style: Get.textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
@@ -115,7 +95,7 @@ class ArtistTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 4.0),
                 MoreIcon(
-                  onPressed: () {},
+                  onPressed: () => NamidaDialogs.inst.showArtistDialog(name, tracks),
                   padding: 6.0,
                 ),
               ],
