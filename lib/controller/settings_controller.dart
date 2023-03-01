@@ -33,6 +33,9 @@ class SettingsController extends GetxController {
   RxBool useAlbumStaggeredGridView = false.obs;
   RxBool useSettingCollapsedTiles = false.obs;
   RxInt albumGridCount = 2.obs;
+  RxInt artistGridCount = 3.obs;
+  RxInt genreGridCount = 2.obs;
+  RxInt playlistGridCount = 1.obs;
   RxBool enableBlurEffect = true.obs;
   RxBool enableGlowEffect = true.obs;
   RxBool hourFormat12 = true.obs;
@@ -47,9 +50,12 @@ class SettingsController extends GetxController {
   RxBool artistSortReversed = false.obs;
   Rx<GroupSortType> genreSort = GroupSortType.genresList.obs;
   RxBool genreSortReversed = false.obs;
+  Rx<GroupSortType> playlistSort = GroupSortType.title.obs;
+  RxBool playlistSortReversed = false.obs;
   RxInt indexMinDurationInSec = 5.obs;
   RxInt indexMinFileSizeInB = (100 * 1024).obs;
   RxList<String> trackSearchFilter = ['title', 'artist', 'album'].obs;
+  RxList<String> playlistSearchFilter = ['name', 'date', 'modes', 'comment'].obs;
   RxList<String> directoriesToScan = kDirectoriesPaths.toList().obs;
   RxList<String> directoriesToExclude = <String>[].obs;
   RxBool preventDuplicatedTracks = false.obs;
@@ -102,6 +108,9 @@ class SettingsController extends GetxController {
     useAlbumStaggeredGridView.value = getBool('useAlbumStaggeredGridView') ?? useAlbumStaggeredGridView.value;
     useSettingCollapsedTiles.value = getBool('useSettingCollapsedTiles') ?? useSettingCollapsedTiles.value;
     albumGridCount.value = getInt('albumGridCount') ?? albumGridCount.value;
+    artistGridCount.value = getInt('artistGridCount') ?? artistGridCount.value;
+    genreGridCount.value = getInt('genreGridCount') ?? genreGridCount.value;
+    playlistGridCount.value = getInt('playlistGridCount') ?? playlistGridCount.value;
     enableBlurEffect.value = getBool('enableBlurEffect') ?? enableBlurEffect.value;
     enableGlowEffect.value = getBool('enableGlowEffect') ?? enableGlowEffect.value;
     hourFormat12.value = getBool('hourFormat12') ?? hourFormat12.value;
@@ -116,10 +125,13 @@ class SettingsController extends GetxController {
     artistSortReversed.value = getBool('artistSortReversed') ?? artistSortReversed.value;
     genreSort.value = EnumToString.fromString(GroupSortType.values, getString('genreSort') ?? EnumToString.convertToString(genreSort.value))!;
     genreSortReversed.value = getBool('genreSortReversed') ?? genreSortReversed.value;
+    playlistSort.value = EnumToString.fromString(GroupSortType.values, getString('playlistSort') ?? EnumToString.convertToString(playlistSort.value))!;
+    playlistSortReversed.value = getBool('playlistSortReversed') ?? playlistSortReversed.value;
     trackTileSeparator.value = getString('trackTileSeparator') ?? trackTileSeparator.value;
     indexMinDurationInSec.value = getInt('indexMinDurationInSec') ?? indexMinDurationInSec.value;
     indexMinFileSizeInB.value = getInt('indexMinFileSizeInB') ?? indexMinFileSizeInB.value;
     trackSearchFilter.value = getListString('trackSearchFilter', ifNull: trackSearchFilter.toList());
+    playlistSearchFilter.value = getListString('playlistSearchFilter', ifNull: playlistSearchFilter.toList());
     directoriesToScan.value = getListString('directoriesToScan', ifNull: directoriesToScan.toList());
     directoriesToExclude.value = getListString('directoriesToExclude', ifNull: directoriesToExclude.toList());
     preventDuplicatedTracks.value = getBool('preventDuplicatedTracks') ?? preventDuplicatedTracks.value;
@@ -177,6 +189,9 @@ class SettingsController extends GetxController {
     bool? useAlbumStaggeredGridView,
     bool? useSettingCollapsedTiles,
     int? albumGridCount,
+    int? artistGridCount,
+    int? genreGridCount,
+    int? playlistGridCount,
     bool? enableBlurEffect,
     bool? enableGlowEffect,
     bool? hourFormat12,
@@ -191,12 +206,15 @@ class SettingsController extends GetxController {
     bool? artistSortReversed,
     GroupSortType? genreSort,
     bool? genreSortReversed,
+    GroupSortType? playlistSort,
+    bool? playlistSortReversed,
     bool? displayThirdRow,
     bool? displayThirdItemInEachRow,
     String? trackTileSeparator,
     int? indexMinDurationInSec,
     int? indexMinFileSizeInB,
     List<String>? trackSearchFilter,
+    List<String>? playlistSearchFilter,
     List<String>? directoriesToScan,
     List<String>? directoriesToExclude,
     bool? preventDuplicatedTracks,
@@ -311,6 +329,18 @@ class SettingsController extends GetxController {
       this.albumGridCount.value = albumGridCount;
       setData('albumGridCount', albumGridCount);
     }
+    if (artistGridCount != null) {
+      this.artistGridCount.value = artistGridCount;
+      setData('artistGridCount', artistGridCount);
+    }
+    if (genreGridCount != null) {
+      this.genreGridCount.value = genreGridCount;
+      setData('genreGridCount', genreGridCount);
+    }
+    if (playlistGridCount != null) {
+      this.playlistGridCount.value = playlistGridCount;
+      setData('playlistGridCount', playlistGridCount);
+    }
     if (enableBlurEffect != null) {
       this.enableBlurEffect.value = enableBlurEffect;
       setData('enableBlurEffect', enableBlurEffect);
@@ -367,6 +397,14 @@ class SettingsController extends GetxController {
       this.genreSortReversed.value = genreSortReversed;
       setData('genreSortReversed', genreSortReversed);
     }
+    if (playlistSort != null) {
+      this.playlistSort.value = playlistSort;
+      setData('playlistSort', EnumToString.convertToString(playlistSort));
+    }
+    if (playlistSortReversed != null) {
+      this.playlistSortReversed.value = playlistSortReversed;
+      setData('playlistSortReversed', playlistSortReversed);
+    }
     if (displayThirdRow != null) {
       this.displayThirdRow.value = displayThirdRow;
       setData('displayThirdRow', displayThirdRow);
@@ -395,6 +433,15 @@ class SettingsController extends GetxController {
       }
 
       setData('trackSearchFilter', List<String>.from(this.trackSearchFilter));
+    }
+    if (playlistSearchFilter != null) {
+      for (var f in playlistSearchFilter) {
+        if (!this.playlistSearchFilter.contains(f)) {
+          this.playlistSearchFilter.add(f);
+        }
+      }
+
+      setData('playlistSearchFilter', List<String>.from(this.playlistSearchFilter));
     }
     if (directoriesToScan != null) {
       for (var d in directoriesToScan) {
@@ -471,6 +518,8 @@ class SettingsController extends GetxController {
     String? trackGenresSeparator,
     String? trackSearchFilter1,
     List<String>? trackSearchFilterAll,
+    String? playlistSearchFilter1,
+    List<String>? playlistSearchFilterAll,
     String? directoriesToScan1,
     List<String>? directoriesToScanAll,
     String? directoriesToExclude1,
@@ -501,6 +550,18 @@ class SettingsController extends GetxController {
         }
       }
       setData('trackSearchFilter', List<String>.from(trackSearchFilter));
+    }
+    if (playlistSearchFilter1 != null) {
+      playlistSearchFilter.remove(playlistSearchFilter1);
+      setData('playlistSearchFilter', List<String>.from(playlistSearchFilter));
+    }
+    if (playlistSearchFilterAll != null) {
+      for (var f in playlistSearchFilterAll) {
+        if (playlistSearchFilter.contains(f)) {
+          playlistSearchFilter.remove(f);
+        }
+      }
+      setData('playlistSearchFilter', List<String>.from(playlistSearchFilter));
     }
     if (directoriesToScan1 != null) {
       directoriesToScan.remove(directoriesToScan1);

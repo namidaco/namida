@@ -19,9 +19,9 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/sort_by_button.dart';
 
 class ArtistsPage extends StatelessWidget {
-  final int gridCount;
-  ArtistsPage({super.key, this.gridCount = 3});
+  ArtistsPage({super.key});
   final ScrollController _scrollController = ScrollSearchController.inst.artistScrollcontroller.value;
+  final gridCount = SettingsController.inst.artistGridCount.value;
   @override
   Widget build(BuildContext context) {
     return CupertinoScrollbar(
@@ -31,6 +31,17 @@ class ArtistsPage extends StatelessWidget {
           () => Column(
             children: [
               ExpandableBox(
+                gridWidget: ChangeGridCountWidget(
+                  currentCount: SettingsController.inst.artistGridCount.value,
+                  onTap: () {
+                    final n = SettingsController.inst.artistGridCount.value;
+                    if (n < 4) {
+                      SettingsController.inst.save(artistGridCount: n + 1);
+                    } else {
+                      SettingsController.inst.save(artistGridCount: 1);
+                    }
+                  },
+                ),
                 isBarVisible: ScrollSearchController.inst.isArtistBarVisible.value,
                 showSearchBox: ScrollSearchController.inst.showArtistSearchBox.value,
                 leftText: Indexer.inst.artistSearchList.length.displayArtistKeyword,
@@ -84,7 +95,7 @@ class ArtistsPage extends StatelessWidget {
                   child: GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: gridCount,
-                      childAspectRatio: 0.7,
+                      childAspectRatio: 0.88,
                       mainAxisSpacing: 8.0,
                       // crossAxisSpacing: 4.0,
                     ),
@@ -104,7 +115,7 @@ class ArtistsPage extends StatelessWidget {
                             child: ArtistCard(
                               name: artist.key,
                               artist: artist.value.toList(),
-                              gridCountOverride: gridCount,
+                              gridCount: gridCount,
                             ),
                           ),
                         ),
@@ -121,24 +132,21 @@ class ArtistsPage extends StatelessWidget {
 }
 
 class ArtistTracksPage extends StatelessWidget {
-  final List<Track> artist;
   final String name;
-  ArtistTracksPage({super.key, required this.artist, required this.name});
-
+  ArtistTracksPage({super.key, required this.name});
   @override
   Widget build(BuildContext context) {
-    // final AlbumTracksController albumtracksc = AlbumTracksController(album);
+    final artist = Indexer.inst.artistSearchList[name]!.toList();
     return Obx(
       () => Scaffold(
         appBar: AppBar(
           leading: IconButton(onPressed: () => Get.back(), icon: const Icon(Broken.arrow_left_2)),
           title: Text(
-            artist[0].artistsList.toString(),
+            name,
             style: context.textTheme.displayLarge,
           ),
         ),
         body: ListView(
-          // cacheExtent: 1000,
           children: [
             // Top Container holding image and info and buttons
             Container(
@@ -157,7 +165,7 @@ class ArtistTracksPage extends StatelessWidget {
                     child: Hero(
                       tag: 'artist$name',
                       child: ArtworkWidget(
-                        thumnailSize: SettingsController.inst.albumThumbnailSizeinList.value,
+                        thumnailSize: 60,
                         track: artist.elementAt(0),
                         compressed: false,
                         // size: (SettingsController.inst.albumThumbnailSizeinList.value * 2).round(),
@@ -181,7 +189,7 @@ class ArtistTracksPage extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.only(left: 14.0),
                           child: Text(
-                            artist[0].album,
+                            name,
                             style: context.textTheme.displayLarge,
                           ),
                         ),
@@ -201,8 +209,6 @@ class ArtistTracksPage extends StatelessWidget {
                           height: 18.0,
                         ),
                         Row(
-                          // mainAxisAlignment:
-                          //     MainAxisAlignment.spaceEvenly,
                           children: [
                             const Spacer(),
                             FittedBox(

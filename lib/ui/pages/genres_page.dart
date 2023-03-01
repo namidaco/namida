@@ -16,9 +16,9 @@ import 'package:namida/ui/widgets/settings/sort_by_button.dart';
 class GenresPage extends StatelessWidget {
   GenresPage({super.key});
   final ScrollController _scrollController = ScrollSearchController.inst.genreScrollcontroller.value;
+  final countPerRow = SettingsController.inst.genreGridCount.value;
   @override
   Widget build(BuildContext context) {
-    const countPerRow = 2;
     return CupertinoScrollbar(
       controller: _scrollController,
       child: AnimationLimiter(
@@ -26,6 +26,17 @@ class GenresPage extends StatelessWidget {
           () => Column(
             children: [
               ExpandableBox(
+                gridWidget: ChangeGridCountWidget(
+                  currentCount: SettingsController.inst.genreGridCount.value,
+                  onTap: () {
+                    final n = SettingsController.inst.genreGridCount.value;
+                    if (n < 4) {
+                      SettingsController.inst.save(genreGridCount: n + 1);
+                    } else {
+                      SettingsController.inst.save(genreGridCount: 2);
+                    }
+                  },
+                ),
                 isBarVisible: ScrollSearchController.inst.isGenreBarVisible.value,
                 showSearchBox: ScrollSearchController.inst.showGenreSearchBox.value,
                 leftText: Indexer.inst.genreSearchList.length.displayGenreKeyword,
@@ -49,7 +60,7 @@ class GenresPage extends StatelessWidget {
               ),
               Expanded(
                 child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.8, mainAxisSpacing: 8.0),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.8, mainAxisSpacing: 8.0),
                   controller: _scrollController,
                   itemCount: Indexer.inst.genreSearchList.length,
                   padding: EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value),

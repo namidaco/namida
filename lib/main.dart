@@ -146,35 +146,16 @@ class MyApp extends StatelessWidget {
         builder: (context, widget) {
           return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
         },
-        home: WillPopScope(
-            onWillPop: () async {
-              return Future.value(true);
-            },
-            child:
-
-                // return AnnotatedRegion<SystemUiOverlayStyle>(
-                //     value: SystemUiOverlayStyle(
-                //       // statusBarBrightness: Brightness.light,
-                //       // statusBarColor: Colors.grey.shade900,
-                //       // statusBarIconBrightness: Brightness.light,
-                //       systemNavigationBarColor: Colors.white.withAlpha(25),
-                //       systemNavigationBarDividerColor: Get.theme.bottomNavigationBarTheme.backgroundColor,
-                //       systemNavigationBarIconBrightness: Brightness.light,
-                //     ),
-                //     child:
-                Stack(
-              children: [
-                HomePage(),
-                MiniPlayerParent(),
-                const Positioned(
-                  bottom: 60.0,
-                  child: SelectedTracksPreviewContainer(),
-                ),
-              ],
-            )
-            // );
-
+        home: Stack(
+          children: [
+            HomePage(),
+            MiniPlayerParent(),
+            const Positioned(
+              bottom: 60.0,
+              child: SelectedTracksPreviewContainer(),
             ),
+          ],
+        ),
         // child: AnimatedTheme(duration: Duration(seconds: 5), data: AppThemes().getAppTheme(CurrentColor.inst.color.value, light: false), child: HomePage())),
         // initialRoute: '/',
         // getPages: [
