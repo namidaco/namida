@@ -758,7 +758,6 @@ class ContainerWithBorder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      clipBehavior: Clip.antiAlias,
       padding: const EdgeInsets.all(3.0),
       decoration: BoxDecoration(
         color: borderColor ?? context.theme.cardColor,
@@ -772,15 +771,8 @@ class ContainerWithBorder extends StatelessWidget {
         ],
       ),
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: context.theme.shadowColor,
-              blurRadius: 4,
-              offset: const Offset(0, 2.0),
-            )
-          ],
         ),
         clipBehavior: Clip.antiAlias,
         child: child,

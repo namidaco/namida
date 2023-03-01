@@ -26,53 +26,49 @@ class ArtistCard extends StatelessWidget {
     double thumnailSize = (Get.width / gridCount) - horizontalPadding * 2;
     final fontSize = (18.0 - (gridCount * 1.7)).multipliedFontScale;
     return GridTile(
-      child: Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12.0.multipliedRadius)),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            highlightColor: const Color.fromARGB(60, 120, 120, 120),
-            onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, artist),
-            onTap: () => Get.to(() => ArtistTracksPage(name: name)),
-            child: Column(
-              children: [
-                Hero(
-                  tag: 'artist_artwork_${artist[0].path}',
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: horizontalPadding),
-                    child: ContainerWithBorder(
-                      child: ArtworkWidget(
-                        thumnailSize: thumnailSize,
-                        track: artist[0],
-                        borderRadius: 10.0,
-                        forceSquared: true,
-                        blur: 0,
-                      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          highlightColor: const Color.fromARGB(60, 120, 120, 120),
+          onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, artist),
+          onTap: () => Get.to(() => ArtistTracksPage(name: name)),
+          child: Column(
+            children: [
+              Hero(
+                tag: 'artist_artwork_${artist[0].path}',
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: horizontalPadding),
+                  child: ContainerWithBorder(
+                    child: ArtworkWidget(
+                      thumnailSize: thumnailSize,
+                      track: artist[0],
+                      borderRadius: 10.0,
+                      forceSquared: true,
+                      blur: 0,
                     ),
                   ),
                 ),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    width: double.infinity,
-                    alignment: Alignment.center,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (name != '')
-                          Text(
-                            name.overflow,
-                            style: Get.textTheme.displayMedium?.copyWith(fontSize: fontSize),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                      ],
-                    ),
+              ),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  width: double.infinity,
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (name != '')
+                        Text(
+                          name.overflow,
+                          style: Get.textTheme.displayMedium?.copyWith(fontSize: fontSize),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
