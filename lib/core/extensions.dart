@@ -94,6 +94,10 @@ extension DisplayKeywords on int {
     return '$this ${this == 1 ? Language.inst.GENRE : Language.inst.GENRES}';
   }
 
+  String get displayPlaylistKeyword {
+    return '$this ${this == 1 ? Language.inst.PLAYLIST : Language.inst.PLAYLISTS}';
+  }
+
   String get displayFolderKeyword {
     return '$this ${this == 1 ? Language.inst.FOLDER : Language.inst.FOLDERS}';
   }
@@ -389,6 +393,9 @@ extension SortToText on SortType {
 
 extension GroupSortToText on GroupSortType {
   String get toText {
+    if (this == GroupSortType.title) {
+      return Language.inst.TITLE;
+    }
     if (this == GroupSortType.album) {
       return Language.inst.ALBUM;
     }

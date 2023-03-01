@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
 
 class ScrollSearchController extends GetxController {
   static final ScrollSearchController inst = ScrollSearchController();
@@ -14,16 +15,19 @@ class ScrollSearchController extends GetxController {
   RxBool showAlbumSearchBox = false.obs;
   RxBool showArtistSearchBox = false.obs;
   RxBool showGenreSearchBox = false.obs;
+  RxBool showPlaylistSearchBox = false.obs;
 
   Rx<ScrollController> trackScrollcontroller = ScrollController().obs;
   Rx<ScrollController> albumScrollcontroller = ScrollController().obs;
   Rx<ScrollController> artistScrollcontroller = ScrollController().obs;
   Rx<ScrollController> genreScrollcontroller = ScrollController().obs;
+  Rx<ScrollController> playlistScrollcontroller = ScrollController().obs;
 
   RxBool isTrackBarVisible = true.obs;
   RxBool isAlbumBarVisible = true.obs;
   RxBool isArtistBarVisible = true.obs;
   RxBool isGenreBarVisible = true.obs;
+  RxBool isPlaylistBarVisible = true.obs;
 
   ScrollSearchController() {
     trackScrollcontroller.value.addListener(() {
@@ -57,6 +61,14 @@ class ScrollSearchController extends GetxController {
       }
       if (genreScrollcontroller.value.position.userScrollDirection == ScrollDirection.forward) {
         isGenreBarVisible.value = true;
+      }
+    });
+    playlistScrollcontroller.value.addListener(() {
+      if (playlistScrollcontroller.value.position.userScrollDirection == ScrollDirection.reverse) {
+        isPlaylistBarVisible.value = false;
+      }
+      if (playlistScrollcontroller.value.position.userScrollDirection == ScrollDirection.forward) {
+        isPlaylistBarVisible.value = true;
       }
     });
   }
@@ -147,5 +159,27 @@ class ScrollSearchController extends GetxController {
   void clearGenreSearchTextField() {
     Indexer.inst.searchGenres('');
     showGenreSearchBox.value = false;
+  }
+
+  /// Playlists
+  void switchPlaylistSearchBoxVisibilty({bool forceHide = false, bool forceShow = false}) {
+    if (forceHide) {
+      showPlaylistSearchBox.value = false;
+      return;
+    }
+    if (forceShow) {
+      showPlaylistSearchBox.value = true;
+      return;
+    }
+    if (PlaylistController.inst.playlistSearchController.value.text == '') {
+      showPlaylistSearchBox.value = !showPlaylistSearchBox.value;
+    } else {
+      showPlaylistSearchBox.value = true;
+    }
+  }
+
+  void clearPlaylistSearchTextField() {
+    PlaylistController.inst.searchPlaylists('');
+    showPlaylistSearchBox.value = false;
   }
 }

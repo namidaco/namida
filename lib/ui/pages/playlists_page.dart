@@ -4,132 +4,183 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
+import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_card.dart';
 import 'package:namida/ui/widgets/library/playlist_tile.dart';
+import 'package:namida/ui/widgets/settings/sort_by_button.dart';
 
 class PlaylistsPage extends StatelessWidget {
-  final int countPerRow;
+  final int? countPerRow;
   // final void Function()? onTap;
   final List<Track>? tracksToAdd;
   final bool displayTopRow;
   final bool disableBottomPadding;
   PlaylistsPage({
     super.key,
-    this.countPerRow = 1,
+    this.countPerRow,
     this.tracksToAdd,
     this.displayTopRow = true,
     this.disableBottomPadding = false,
   });
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollSearchController.inst.playlistScrollcontroller.value;
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () => CupertinoScrollbar(
-        controller: _scrollController,
-        child: AnimationLimiter(
-          child: CustomScrollView(
-            slivers: [
-              if (displayTopRow)
-                SliverToBoxAdapter(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        const SizedBox(
-                          width: 12.0,
-                        ),
-                        Expanded(
-                          child: Text(
-                            PlaylistController.inst.playlistList.displayPlaylistKeyword,
-                            style: Theme.of(context).textTheme.displayLarge,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const FittedBox(
-                          child: GeneratePlaylistButton(),
-                        ),
-                        const SizedBox(
-                          width: 8.0,
-                        ),
-                        const FittedBox(
-                          child: CreatePlaylistButton(),
-                        ),
-                        const SizedBox(
-                          width: 8.0,
-                        ),
-                      ],
-                    ),
+      () {
+        final playlistGridCount = countPerRow ?? SettingsController.inst.playlistGridCount.value;
+        return CupertinoScrollbar(
+          controller: _scrollController,
+          child: AnimationLimiter(
+            child: Column(
+              children: [
+                ExpandableBox(
+                  gridWidget: ChangeGridCountWidget(
+                    currentCount: SettingsController.inst.playlistGridCount.value,
+                    onTap: () {
+                      final n = SettingsController.inst.playlistGridCount.value;
+                      if (n < 4) {
+                        SettingsController.inst.save(playlistGridCount: n + 1);
+                      } else {
+                        SettingsController.inst.save(playlistGridCount: 1);
+                      }
+                    },
+                  ),
+                  isBarVisible: ScrollSearchController.inst.isPlaylistBarVisible.value,
+                  showSearchBox: ScrollSearchController.inst.showPlaylistSearchBox.value,
+                  leftText: PlaylistController.inst.playlistSearchList.length.displayPlaylistKeyword,
+                  onFilterIconTap: () => ScrollSearchController.inst.switchPlaylistSearchBoxVisibilty(),
+                  onCloseButtonPressed: () {
+                    ScrollSearchController.inst.clearPlaylistSearchTextField();
+                  },
+                  sortByMenuWidget: SortByMenu(
+                    title: SettingsController.inst.playlistSort.value.toText,
+                    popupMenuChild: const SortByMenuPlaylist(),
+                    isCurrentlyReversed: SettingsController.inst.playlistSortReversed.value,
+                    onReverseIconTap: () {
+                      PlaylistController.inst.sortPlaylists(reverse: !SettingsController.inst.playlistSortReversed.value);
+                      printError(info: PlaylistController.inst.playlistSearchList.first.name);
+                    },
+                  ),
+                  textField: CustomTextFiled(
+                    textFieldController: PlaylistController.inst.playlistSearchController.value,
+                    textFieldHintText: Language.inst.FILTER_PLAYLISTS,
+                    onTextFieldValueChanged: (value) => PlaylistController.inst.searchPlaylists(value),
                   ),
                 ),
-              if (countPerRow == 1)
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, i) {
-                      final playlist = PlaylistController.inst.playlistList[i];
-                      return AnimationConfiguration.staggeredList(
-                        position: i,
-                        duration: const Duration(milliseconds: 400),
-                        child: SlideAnimation(
-                          verticalOffset: 25.0,
-                          child: FadeInAnimation(
-                            duration: const Duration(milliseconds: 400),
-                            child: PlaylistTile(
-                              playlist: playlist,
-                              onTap: tracksToAdd != null ? () => PlaylistController.inst.addTracksToPlaylist(playlist.id, tracksToAdd!) : null,
+                Expanded(
+                  child: CustomScrollView(
+                    controller: _scrollController,
+                    slivers: [
+                      if (displayTopRow)
+                        SliverToBoxAdapter(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                const SizedBox(
+                                  width: 12.0,
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    PlaylistController.inst.playlistSearchList.displayPlaylistKeyword,
+                                    style: Theme.of(context).textTheme.displayLarge,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const FittedBox(
+                                  child: GeneratePlaylistButton(),
+                                ),
+                                const SizedBox(
+                                  width: 8.0,
+                                ),
+                                const FittedBox(
+                                  child: CreatePlaylistButton(),
+                                ),
+                                const SizedBox(
+                                  width: 8.0,
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      );
-                    },
-                    childCount: PlaylistController.inst.playlistList.length,
-                  ),
-                ),
-              if (countPerRow > 1)
-                SliverGrid(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: countPerRow,
-                    childAspectRatio: 0.8,
-                    mainAxisSpacing: 8.0,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, i) {
-                      final playlist = PlaylistController.inst.playlistList[i];
-                      return AnimationConfiguration.staggeredGrid(
-                        columnCount: PlaylistController.inst.playlistList.length,
-                        position: i,
-                        duration: const Duration(milliseconds: 400),
-                        child: SlideAnimation(
-                          verticalOffset: 25.0,
-                          child: FadeInAnimation(
-                            duration: const Duration(milliseconds: 400),
-                            child: MultiArtworkCard(
-                              tracks: playlist.tracks,
-                              name: playlist.name,
-                              gridCount: countPerRow,
-                              showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(playlist),
-                            ),
+                      const SliverPadding(padding: EdgeInsets.only(top: 12.0)),
+                      if (playlistGridCount == 1)
+                        SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, i) {
+                              final playlist = PlaylistController.inst.playlistSearchList[i];
+                              return AnimationConfiguration.staggeredList(
+                                position: i,
+                                duration: const Duration(milliseconds: 400),
+                                child: SlideAnimation(
+                                  verticalOffset: 25.0,
+                                  child: FadeInAnimation(
+                                    duration: const Duration(milliseconds: 400),
+                                    child: PlaylistTile(
+                                      playlist: playlist,
+                                      onTap: tracksToAdd != null ? () => PlaylistController.inst.addTracksToPlaylist(playlist.id, tracksToAdd!) : null,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                            childCount: PlaylistController.inst.playlistSearchList.length,
                           ),
                         ),
-                      );
-                    },
-                    childCount: PlaylistController.inst.playlistList.length,
+                      if (playlistGridCount > 1)
+                        SliverGrid(
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: playlistGridCount,
+                            childAspectRatio: 0.8,
+                            mainAxisSpacing: 8.0,
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, i) {
+                              final playlist = PlaylistController.inst.playlistSearchList[i];
+                              return AnimationConfiguration.staggeredGrid(
+                                columnCount: PlaylistController.inst.playlistSearchList.length,
+                                position: i,
+                                duration: const Duration(milliseconds: 400),
+                                child: SlideAnimation(
+                                  verticalOffset: 25.0,
+                                  child: FadeInAnimation(
+                                    duration: const Duration(milliseconds: 400),
+                                    child: MultiArtworkCard(
+                                      tracks: playlist.tracks,
+                                      name: playlist.name,
+                                      gridCount: playlistGridCount,
+                                      showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(playlist),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                            childCount: PlaylistController.inst.playlistSearchList.length,
+                          ),
+                        ),
+                      if (!disableBottomPadding)
+                        SliverPadding(
+                          padding: EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value),
+                        )
+                    ],
                   ),
                 ),
-              if (!disableBottomPadding)
-                SliverPadding(
-                  padding: EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value),
-                )
-            ],
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

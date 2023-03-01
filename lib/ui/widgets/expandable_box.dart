@@ -57,6 +57,7 @@ class ExpandableBox extends StatelessWidget {
                 const Spacer(),
                 if (gridWidget != null) gridWidget!,
                 // Sort By Menu
+                const SizedBox(width: 4),
                 sortByMenuWidget,
                 const SizedBox(width: 12),
                 SmallIconButton(

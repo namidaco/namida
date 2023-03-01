@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/playlist.dart';
-import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
@@ -53,10 +52,16 @@ class PlaylistTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        playlist.tracks.displayTrackKeyword,
-                        style: Get.textTheme.displaySmall,
+                        [playlist.tracks.displayTrackKeyword, playlist.date.dateFormatted].join(' • '),
+                        style: Get.textTheme.displaySmall?.copyWith(fontSize: 13.7),
                         overflow: TextOverflow.ellipsis,
                       ),
+                      if (playlist.modes.isNotEmpty)
+                        Text(
+                          playlist.modes.join(', ').overflow,
+                          style: Get.textTheme.displaySmall,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                     ],
                   ),
                 ),

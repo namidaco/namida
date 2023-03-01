@@ -2,18 +2,86 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/strings.dart';
 
 class PlaylistController extends GetxController {
   static PlaylistController inst = PlaylistController();
 
   RxList<Playlist> playlistList = <Playlist>[].obs;
+
+  RxList<Playlist> playlistSearchList = <Playlist>[].obs;
+  Rx<TextEditingController> playlistSearchController = TextEditingController().obs;
+
+  void searchPlaylists(String text) {
+    if (text == '') {
+      playlistSearchController.value.clear();
+      playlistSearchList.assignAll(playlistList);
+      return;
+    }
+    final psf = SettingsController.inst.playlistSearchFilter.toList();
+    final sTitle = psf.contains('name');
+    final sDate = psf.contains('date');
+    final sComment = psf.contains('comment');
+    final sModes = psf.contains('modes');
+    final formatDate = DateFormat('yyyMMdd');
+
+    playlistSearchList.clear();
+    for (var item in playlistList) {
+      final lctext = text.toLowerCase();
+      final dateFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.date));
+      if ((sTitle && item.name.toLowerCase().toString().contains(lctext)) ||
+          (sDate && dateFormatted.toString().contains(lctext)) ||
+          (sComment && item.comment.toLowerCase().toString().contains(lctext)) ||
+          (sModes && item.modes.any((element) => element.toLowerCase().toString().contains(lctext)))) {
+        playlistSearchList.add(item);
+      }
+    }
+  }
+
+  /// Sorts Playlists and Saves automatically to settings
+  void sortPlaylists({GroupSortType? sortBy, bool? reverse}) {
+    sortBy ??= SettingsController.inst.playlistSort.value;
+    reverse ??= SettingsController.inst.playlistSortReversed.value;
+    var preList = playlistList;
+    switch (sortBy) {
+      case GroupSortType.title:
+        preList.sort((a, b) => a.name.compareTo(a.name));
+        break;
+      case GroupSortType.year:
+        preList.sort((a, b) => a.date.compareTo(b.date));
+        break;
+      case GroupSortType.duration:
+        preList.sort((a, b) => a.tracks.totalDuration.compareTo(b.tracks.totalDuration));
+        break;
+      case GroupSortType.numberOfTracks:
+        preList.sort((a, b) => a.tracks.length.compareTo(b.tracks.length));
+        break;
+
+      default:
+        null;
+    }
+
+    if (reverse) {
+      playlistList.value = List.from(preList.reversed);
+    } else {
+      playlistList.value = List.from(preList);
+    }
+
+    SettingsController.inst.save(playlistSort: sortBy, playlistSortReversed: reverse);
+
+    searchPlaylists(playlistSearchController.value.text);
+  }
 
   void addNewPlaylist(
     String name, {
@@ -131,9 +199,12 @@ class PlaylistController extends GetxController {
       addNewPlaylist('Favourites', id: -1);
     }
     printInfo(info: "playlist: ${playlistList.length}");
+
+    searchPlaylists('');
   }
 
   void _writeToStorage() {
+    searchPlaylists('');
     playlistList.map((pl) => pl.toJson()).toList();
     File(kPlaylistsFilePath).writeAsStringSync(json.encode(playlistList));
   }

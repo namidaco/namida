@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -287,6 +288,48 @@ class SortByMenuGenres extends StatelessWidget {
               title: Language.inst.COMPOSER,
               active: genreSort == GroupSortType.composer,
               onTap: () => Indexer.inst.sortGenres(sortBy: GroupSortType.composer),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class SortByMenuPlaylist extends StatelessWidget {
+  const SortByMenuPlaylist({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () {
+        final playlistSort = SettingsController.inst.playlistSort.value;
+        return CustomSortByExpansionTile(
+          title: Language.inst.SORT_PLAYLISTS_BY,
+          children: [
+            ListTileWithCheckMark(
+              active: SettingsController.inst.playlistSortReversed.value,
+              onTap: () => PlaylistController.inst.sortPlaylists(reverse: !SettingsController.inst.playlistSortReversed.value),
+            ),
+            SmallListTile(
+              title: Language.inst.TITLE,
+              active: playlistSort == GroupSortType.title,
+              onTap: () => PlaylistController.inst.sortPlaylists(sortBy: GroupSortType.title),
+            ),
+            SmallListTile(
+              title: Language.inst.YEAR,
+              active: playlistSort == GroupSortType.year,
+              onTap: () => PlaylistController.inst.sortPlaylists(sortBy: GroupSortType.year),
+            ),
+            SmallListTile(
+              title: Language.inst.DURATION,
+              active: playlistSort == GroupSortType.duration,
+              onTap: () => PlaylistController.inst.sortPlaylists(sortBy: GroupSortType.duration),
+            ),
+            SmallListTile(
+              title: Language.inst.NUMBER_OF_TRACKS,
+              active: playlistSort == GroupSortType.numberOfTracks,
+              onTap: () => PlaylistController.inst.sortPlaylists(sortBy: GroupSortType.numberOfTracks),
             ),
           ],
         );

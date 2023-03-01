@@ -176,7 +176,7 @@ class CustomCollapsedListTile extends StatelessWidget {
         Broken.arrow_right_3,
       ),
       onTap: () => Get.to(
-        SettingsSubPage(
+        () => SettingsSubPage(
           title: title,
           child: page,
         ),
