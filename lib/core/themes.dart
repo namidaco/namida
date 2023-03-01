@@ -36,6 +36,7 @@ class AppThemes extends GetxController {
       colorSchemeSeed: color,
       fontFamily: "LexendDeca",
       scaffoldBackgroundColor: light ? Color.alphaBlend(color.withAlpha(60), Colors.white) : null,
+      backgroundColor: light ? const Color.fromARGB(255, 235, 235, 235) : const Color.fromARGB(255, 20, 20, 20),
       splashColor: Colors.transparent,
       splashFactory: InkRipple.splashFactory,
       highlightColor: Colors.white.withAlpha(10),

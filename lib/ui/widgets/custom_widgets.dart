@@ -408,6 +408,7 @@ class SmallListTile extends StatelessWidget {
   final bool active;
   final bool displayAnimatedCheck;
   final bool compact;
+  final Color? color;
   final void Function()? onTap;
   const SmallListTile(
       {super.key,
@@ -419,7 +420,8 @@ class SmallListTile extends StatelessWidget {
       this.trailingIcon,
       this.displayAnimatedCheck = false,
       this.compact = true,
-      this.subtitle});
+      this.subtitle,
+      this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -427,7 +429,7 @@ class SmallListTile extends StatelessWidget {
       leading: SizedBox(
         height: double.infinity,
         child: icon != null
-            ? Icon(icon)
+            ? Icon(icon, color: color != null ? Color.alphaBlend(color!.withAlpha(120), context.textTheme.displayMedium!.color!) : null)
             : active
                 ? const Icon(Broken.arrow_circle_right)
                 : const Icon(
@@ -436,8 +438,24 @@ class SmallListTile extends StatelessWidget {
                   ),
       ),
       visualDensity: compact ? VisualDensity.compact : null,
-      title: Text(title, style: context.textTheme.displayMedium),
-      subtitle: subtitle != null ? Text(subtitle!, style: context.textTheme.displaySmall) : null,
+      title: Text(title,
+          style: context.textTheme.displayMedium?.copyWith(
+              color: color != null
+                  ? Color.alphaBlend(
+                      color!.withAlpha(40),
+                      context.textTheme.displayMedium!.color!,
+                    )
+                  : null)),
+      subtitle: subtitle != null
+          ? Text(subtitle!,
+              style: context.textTheme.displaySmall?.copyWith(
+                  color: color != null
+                      ? Color.alphaBlend(
+                          color!.withAlpha(40),
+                          context.textTheme.displayMedium!.color!,
+                        )
+                      : null))
+          : null,
       trailing: displayAnimatedCheck
           ? SizedBox(
               height: 18.0,
@@ -445,14 +463,14 @@ class SmallListTile extends StatelessWidget {
               child: CheckMark(
                 // curve: Curves.easeInOutExpo,
                 strokeWidth: 2,
-                activeColor: context.theme.listTileTheme.iconColor!,
-                inactiveColor: context.theme.listTileTheme.iconColor!,
+                activeColor: color ?? context.theme.listTileTheme.iconColor!,
+                inactiveColor: color ?? context.theme.listTileTheme.iconColor!,
                 duration: const Duration(milliseconds: 400),
                 active: SettingsController.inst.artistSortReversed.value,
               ),
             )
           : trailingIcon != null
-              ? Icon(trailingIcon)
+              ? Icon(trailingIcon, color: color)
               : trailing,
       onTap: onTap,
     );
@@ -466,6 +484,10 @@ class CustomSortByExpansionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      // shrinkWrap: true,
+      children: children,
+    );
     return ExpansionTile(
         initiallyExpanded: true,
         // backgroundColor: context.theme.cardColor,
@@ -725,5 +747,44 @@ class NamidaBlurryContainer extends StatelessWidget {
             child: con,
           )
         : con;
+  }
+}
+
+class ContainerWithBorder extends StatelessWidget {
+  final Widget? child;
+  final Color? borderColor;
+  const ContainerWithBorder({super.key, this.child, this.borderColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      padding: const EdgeInsets.all(3.0),
+      decoration: BoxDecoration(
+        color: borderColor ?? context.theme.cardColor,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: context.theme.shadowColor,
+            blurRadius: 4,
+            offset: const Offset(0, 2.0),
+          )
+        ],
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: context.theme.shadowColor,
+              blurRadius: 4,
+              offset: const Offset(0, 2.0),
+            )
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: child,
+      ),
+    );
   }
 }

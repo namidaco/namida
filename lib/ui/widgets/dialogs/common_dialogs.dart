@@ -51,6 +51,7 @@ class NamidaDialogs {
       tracks,
       name,
       [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
+      extractColor: false,
     );
   }
 
@@ -58,9 +59,10 @@ class NamidaDialogs {
     await showGeneralPopupDialog(
       playlist.tracks,
       playlist.name,
-      playlist.modes.join(', ').overflow,
-      thirdLineText: playlist.date.dateFormatted,
+      [playlist.tracks.displayTrackKeyword, playlist.date.dateFormatted].join(' • '),
+      thirdLineText: playlist.modes.join(', ').overflow,
       playlist: playlist,
+      extractColor: false,
     );
   }
 }

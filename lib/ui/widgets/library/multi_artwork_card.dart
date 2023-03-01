@@ -53,7 +53,7 @@ class MultiArtworkCard extends StatelessWidget {
                       children: [
                         if (name != '')
                           Text(
-                            name,
+                            name.overflow,
                             style: Get.textTheme.displayMedium?.copyWith(fontSize: fontSize),
                             overflow: TextOverflow.ellipsis,
                           ),

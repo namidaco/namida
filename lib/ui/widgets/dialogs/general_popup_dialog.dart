@@ -7,6 +7,7 @@ import 'package:namida/controller/playlist_controller.dart';
 
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/ui/pages/albums_page.dart';
+import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/widgets/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
@@ -31,6 +32,7 @@ Future<void> showGeneralPopupDialog(
   bool forceSquared = false,
   bool? forceSingleArtwork,
   bool isTrackInPlaylist = false,
+  bool extractColor = true,
 }) async {
   // just in case a smart user pressed when selected tracks list is empty
   if (tracks.isEmpty) {
@@ -39,7 +41,7 @@ Future<void> showGeneralPopupDialog(
   forceSingleArtwork ??= tracks.length == 1;
   final isSingle = tracks.length == 1;
 
-  final colorDelightened = await generateDelightnedColor(isSingle ? tracks.first : null);
+  final colorDelightened = await generateDelightnedColor(extractColor ? tracks.first : null);
 
   final List<String> availableAlbums = tracks.map((e) => e.album).toSet().toList();
   final List<String> availableArtists = tracks.map((e) => e.artistsList).expand((list) => list).toSet().toList();
@@ -158,6 +160,7 @@ Future<void> showGeneralPopupDialog(
                 children: [
                   if (availableAlbums.length == 1)
                     SmallListTile(
+                      color: colorDelightened,
                       compact: true,
                       title: Language.inst.GO_TO_ALBUM,
                       subtitle: availableAlbums.first,
@@ -170,10 +173,15 @@ Future<void> showGeneralPopupDialog(
                   if (availableAlbums.length > 1)
                     ExpansionTile(
                       expandedAlignment: Alignment.centerLeft,
-                      leading: const Icon(Broken.music_dashboard),
+                      leading: Icon(
+                        Broken.music_dashboard,
+                        color: Color.alphaBlend(colorDelightened.withAlpha(120), Get.textTheme.displayMedium!.color!),
+                      ),
                       title: Text(
                         Language.inst.GO_TO_ALBUM,
-                        style: Get.textTheme.displayMedium,
+                        style: Get.textTheme.displayMedium?.copyWith(
+                          color: Color.alphaBlend(colorDelightened.withAlpha(40), Get.textTheme.displayMedium!.color!),
+                        ),
                       ),
                       childrenPadding: const EdgeInsets.symmetric(horizontal: 20.0).add(const EdgeInsets.only(bottom: 12.0)),
                       children: [
@@ -205,24 +213,29 @@ Future<void> showGeneralPopupDialog(
 
                   if (availableArtists.length == 1)
                     SmallListTile(
+                      color: colorDelightened,
                       compact: true,
                       title: Language.inst.GO_TO_ARTIST,
-                      subtitle: availableArtists.join(', '),
+                      subtitle: availableArtists.first,
                       icon: Broken.microphone,
                       onTap: () {
                         Get.close(1);
-
-                        // TODO:
+                        Get.to(() => ArtistTracksPage(name: availableArtists.first));
                       },
                     ),
 
                   if (availableArtists.length > 1)
                     ExpansionTile(
                       expandedAlignment: Alignment.centerLeft,
-                      leading: const Icon(Broken.profile_2user),
+                      leading: Icon(
+                        Broken.profile_2user,
+                        color: Color.alphaBlend(colorDelightened.withAlpha(120), Get.textTheme.displayMedium!.color!),
+                      ),
                       title: Text(
                         Language.inst.GO_TO_ARTIST,
-                        style: Get.textTheme.displayMedium,
+                        style: Get.textTheme.displayMedium?.copyWith(
+                          color: Color.alphaBlend(colorDelightened.withAlpha(40), Get.textTheme.displayMedium!.color!),
+                        ),
                       ),
                       childrenPadding: const EdgeInsets.symmetric(horizontal: 20.0).add(const EdgeInsets.only(bottom: 12.0)),
                       children: [
@@ -238,7 +251,7 @@ Future<void> showGeneralPopupDialog(
                                     padding: const EdgeInsets.all(2.0),
                                     child: InkWell(
                                         onTap: () {
-                                          // TODO
+                                          Get.to(() => ArtistTracksPage(name: e.value));
                                         },
                                         child: Text(
                                           "${e.value}, ",
@@ -253,6 +266,7 @@ Future<void> showGeneralPopupDialog(
                     ),
 
                   SmallListTile(
+                    color: colorDelightened,
                     compact: false,
                     title: Language.inst.ADD_TO_PLAYLIST,
                     icon: Broken.music_library_2,
@@ -262,6 +276,7 @@ Future<void> showGeneralPopupDialog(
                     },
                   ),
                   SmallListTile(
+                    color: colorDelightened,
                     compact: false,
                     title: Language.inst.EDIT_TAGS,
                     icon: Broken.edit,
@@ -275,6 +290,7 @@ Future<void> showGeneralPopupDialog(
                     },
                   ),
                   SmallListTile(
+                    color: colorDelightened,
                     compact: true,
                     title: Language.inst.CLEAR,
                     subtitle: Language.inst.CHOOSE_WHAT_TO_CLEAR,
@@ -283,6 +299,7 @@ Future<void> showGeneralPopupDialog(
                   ),
                   if (isSingle)
                     SmallListTile(
+                      color: colorDelightened,
                       compact: false,
                       title: Language.inst.SET_YOUTUBE_LINK,
                       icon: Broken.edit_2,
@@ -317,6 +334,7 @@ Future<void> showGeneralPopupDialog(
                     ),
                   if (playlist != null && !isTrackInPlaylist)
                     SmallListTile(
+                      color: colorDelightened,
                       compact: false,
                       title: Language.inst.SET_MOODS,
                       icon: Broken.edit_2,
@@ -370,6 +388,7 @@ Future<void> showGeneralPopupDialog(
                     ),
                   if (playlist != null && !isTrackInPlaylist)
                     SmallListTile(
+                      color: colorDelightened,
                       compact: true,
                       title: Language.inst.DELETE_PLAYLIST,
                       icon: Broken.pen_remove,
@@ -380,6 +399,7 @@ Future<void> showGeneralPopupDialog(
                     ),
                   if (playlist != null && isTrackInPlaylist)
                     SmallListTile(
+                      color: colorDelightened,
                       compact: true,
                       title: Language.inst.REMOVE_FROM_PLAYLIST,
                       icon: Broken.box_remove,
@@ -402,6 +422,7 @@ Future<void> showGeneralPopupDialog(
                       children: [
                         Expanded(
                           child: SmallListTile(
+                            color: colorDelightened,
                             compact: false,
                             title: Language.inst.PLAY_NEXT,
                             icon: Broken.next,
@@ -419,6 +440,7 @@ Future<void> showGeneralPopupDialog(
                         ),
                         Expanded(
                           child: SmallListTile(
+                            color: colorDelightened,
                             compact: false,
                             title: Language.inst.PLAY_LAST,
                             icon: Broken.play_cricle,
