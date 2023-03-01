@@ -90,30 +90,59 @@ class AlbumsPage extends StatelessWidget {
                             },
                           ),
                         )
-                      : Expanded(
-                          child: MasonryGridView.builder(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.symmetric(horizontal: 8.0).add(EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value)),
-                            itemCount: albums?.length ?? Indexer.inst.albumSearchList.length,
-                            mainAxisSpacing: 8.0,
-                            crossAxisSpacing: 6.0,
-                            gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(crossAxisCount: SettingsController.inst.albumGridCount.value),
-                            itemBuilder: (context, i) {
-                              final album = (albums ?? Indexer.inst.albumSearchList).entries.toList()[i].value.toList();
-                              return AnimationConfiguration.staggeredList(
-                                position: i,
-                                duration: const Duration(milliseconds: 400),
-                                child: SlideAnimation(
-                                  verticalOffset: 25.0,
-                                  child: FadeInAnimation(
+                      : SettingsController.inst.useAlbumStaggeredGridView.value
+                          ? Expanded(
+                              child: MasonryGridView.builder(
+                                controller: _scrollController,
+                                padding: EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value),
+                                itemCount: albums?.length ?? Indexer.inst.albumSearchList.length,
+                                mainAxisSpacing: 8.0,
+                                gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(crossAxisCount: SettingsController.inst.albumGridCount.value),
+                                itemBuilder: (context, i) {
+                                  final album = (albums ?? Indexer.inst.albumSearchList).entries.toList()[i].value.toList();
+                                  return AnimationConfiguration.staggeredList(
+                                    position: i,
                                     duration: const Duration(milliseconds: 400),
-                                    child: AlbumCard(album: album),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        );
+                                    child: SlideAnimation(
+                                      verticalOffset: 25.0,
+                                      child: FadeInAnimation(
+                                        duration: const Duration(milliseconds: 400),
+                                        child: AlbumCard(
+                                          album: album,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            )
+                          : Expanded(
+                              child: GridView.builder(
+                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: SettingsController.inst.albumGridCount.value, childAspectRatio: 0.77, mainAxisSpacing: 8.0),
+                                controller: _scrollController,
+                                itemCount: albums?.length ?? Indexer.inst.albumSearchList.length,
+                                padding: EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value),
+                                itemBuilder: (BuildContext context, int i) {
+                                  final album = (albums ?? Indexer.inst.albumSearchList).entries.toList()[i].value.toList();
+                                  return AnimationConfiguration.staggeredGrid(
+                                    columnCount: Indexer.inst.albumSearchList.length,
+                                    position: i,
+                                    duration: const Duration(milliseconds: 400),
+                                    child: SlideAnimation(
+                                      verticalOffset: 25.0,
+                                      child: FadeInAnimation(
+                                        duration: const Duration(milliseconds: 400),
+                                        child: AlbumCard(
+                                          album: album,
+                                          gridCountOverride: SettingsController.inst.albumGridCount.value,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
                 },
               ),
             ],

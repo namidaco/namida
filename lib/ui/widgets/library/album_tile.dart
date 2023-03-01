@@ -4,9 +4,10 @@ import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 
 class AlbumTile extends StatelessWidget {
   final List<Track> album;
@@ -38,9 +39,7 @@ class AlbumTile extends StatelessWidget {
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 120, 120, 120),
           // key: ValueKey(track),
-          onLongPress: () {
-            // stc.selectOrUnselect(track);
-          },
+          onLongPress: () => NamidaDialogs.inst.showAlbumDialog(album),
           onTap: () {
             // Future.delayed(
             //   Duration(seconds: 2),
@@ -145,21 +144,10 @@ class AlbumTile extends StatelessWidget {
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(
-                  height: 38.0,
-                  width: 38.0,
-                  child: RotatedBox(
-                    quarterTurns: 1,
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: BoxConstraints(),
-                      onPressed: () {},
-                      icon: const Icon(
-                        Broken.more,
-                        size: 20,
-                      ),
-                    ),
-                  ),
+                const SizedBox(width: 4.0),
+                MoreIcon(
+                  padding: 6.0,
+                  onPressed: () => NamidaDialogs.inst.showAlbumDialog(album),
                 ),
               ],
             ),
