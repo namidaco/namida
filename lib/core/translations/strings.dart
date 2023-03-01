@@ -16,7 +16,7 @@ class Language {
   String get CLEAR_TRACK_ITEM_MULTIPLE => 'Clear _NUMBER_ Tracks\'';
   String get MIN_CANT_BE_LESS_THAN_MAX => 'Minimum value can\'t be less than the maximum';
   String get MAX_CANT_BE_MORE_THAN_MIN => 'Maximum value can\'t be more than the minimum';
-  String get MULTIPLE_TRACKS_TAGS_EDIT_NOTE => 'You are about to edit these tracks,\nFields that weren\'t edited remains untouched.';
+  String get MULTIPLE_TRACKS_TAGS_EDIT_NOTE => 'You are about to edit these tracks,\nEmpty fields remains untouched.';
   String get DELETE_PLAYLIST => 'Delete Playlist';
   String get REMOVE_FROM_PLAYLIST => 'Remove From Playlist';
   String get GO_TO_ALBUM => 'Go to Album';
@@ -159,6 +159,7 @@ class Language {
   String get FILTER_ALBUMS => 'Filter Albums';
   String get FILTER_ARTISTS => 'Filter Artists';
   String get FILTER_GENRES => 'Filter Genres';
+  String get FILTER_PLAYLISTS => 'Filter Playlists';
 
   /// Player
   String get PLAY => 'Play';
@@ -267,6 +268,7 @@ class Language {
   String get SORT_ALBUMS_BY => 'Sort Albums By';
   String get SORT_ARTISTS_BY => 'Sort Artists By';
   String get SORT_GENRES_BY => 'Sort Genres By';
+  String get SORT_PLAYLISTS_BY => 'Sort Playlists By';
   String get REVERSE_ORDER => 'Reverse Order';
 
   /// Track/Group Info
