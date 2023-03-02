@@ -31,7 +31,7 @@ class CustomSwitchListTile extends StatelessWidget {
     return Theme(
       data: ThemeData(
         splashColor: Colors.transparent,
-        highlightColor: Colors.white.withAlpha(10),
+        highlightColor: context.isDarkMode ? Colors.white.withAlpha(12) : Colors.black.withAlpha(40),
       ),
       child: ListTile(
         shape: RoundedRectangleBorder(
@@ -186,7 +186,7 @@ class CustomListTile extends StatelessWidget {
     return Theme(
       data: context.theme.copyWith(
         splashColor: Colors.transparent,
-        highlightColor: Colors.white.withAlpha(10),
+        highlightColor: context.isDarkMode ? Colors.white.withAlpha(12) : Colors.black.withAlpha(40),
       ),
       child: ListTile(
         enabled: enabled,
@@ -215,7 +215,7 @@ class CustomListTile extends StatelessWidget {
               )
             : leading,
         title: Text(
-          title.overflow,
+          title,
           style: largeTitle ? context.theme.textTheme.displayLarge : context.theme.textTheme.displayMedium,
           maxLines: subtitle != null ? 1 : 2,
           overflow: TextOverflow.ellipsis,
@@ -476,35 +476,6 @@ class SmallListTile extends StatelessWidget {
     );
   }
 }
-
-class CustomSortByExpansionTile extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-  const CustomSortByExpansionTile({super.key, required this.title, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      // shrinkWrap: true,
-      children: children,
-    );
-    return ExpansionTile(
-        initiallyExpanded: true,
-        // backgroundColor: context.theme.cardColor,
-        trailing: const Icon(Broken.arrow_down_2),
-        title: Row(
-          children: [
-            const Icon(Broken.sort),
-            const SizedBox(
-              width: 10.0,
-            ),
-            Text(title),
-          ],
-        ),
-        children: children);
-  }
-}
-
 class ListTileWithCheckMark extends StatelessWidget {
   final bool active;
   final void Function()? onTap;

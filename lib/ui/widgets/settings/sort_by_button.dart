@@ -16,8 +16,7 @@ class SortByMenuTracks extends StatelessWidget {
     return Obx(
       () {
         final tracksSort = SettingsController.inst.tracksSort.value;
-        return CustomSortByExpansionTile(
-          title: Language.inst.SORT_TRACKS_BY,
+        return Column(
           children: [
             ListTileWithCheckMark(
               active: SettingsController.inst.tracksSortReversed.value,
@@ -108,8 +107,7 @@ class SortByMenuAlbums extends StatelessWidget {
     return Obx(
       () {
         final albumsort = SettingsController.inst.albumSort.value;
-        return CustomSortByExpansionTile(
-          title: Language.inst.SORT_ALBUMS_BY,
+        return Column(
           children: [
             ListTileWithCheckMark(
               active: SettingsController.inst.albumSortReversed.value,
@@ -170,8 +168,7 @@ class SortByMenuArtists extends StatelessWidget {
     return Obx(
       () {
         final artistSort = SettingsController.inst.artistSort.value;
-        return CustomSortByExpansionTile(
-          title: Language.inst.SORT_ARTISTS_BY,
+        return Column(
           children: [
             ListTileWithCheckMark(
               active: SettingsController.inst.artistSortReversed.value,
@@ -237,8 +234,7 @@ class SortByMenuGenres extends StatelessWidget {
     return Obx(
       () {
         final genreSort = SettingsController.inst.genreSort.value;
-        return CustomSortByExpansionTile(
-          title: Language.inst.SORT_GENRES_BY,
+        return Column(
           children: [
             ListTileWithCheckMark(
               active: SettingsController.inst.genreSortReversed.value,
@@ -304,8 +300,7 @@ class SortByMenuPlaylist extends StatelessWidget {
     return Obx(
       () {
         final playlistSort = SettingsController.inst.playlistSort.value;
-        return CustomSortByExpansionTile(
-          title: Language.inst.SORT_PLAYLISTS_BY,
+        return Column(
           children: [
             ListTileWithCheckMark(
               active: SettingsController.inst.playlistSortReversed.value,
