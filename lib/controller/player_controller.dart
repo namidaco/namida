@@ -7,6 +7,7 @@ import 'package:just_audio_background/just_audio_background.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -59,6 +60,7 @@ class Player extends GetxController {
     });
     currentIndex.listen((i) async {
       await updateAllAudioDependantListeners(i);
+      PlaylistController.inst.addToHistory();
       SettingsController.inst.setData('lastPlayedTrackPath', nowPlayingTrack.value.path);
     });
     nowPlayingTrack.listen((tr) {

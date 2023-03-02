@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -9,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -22,6 +24,32 @@ class PlaylistController extends GetxController {
 
   RxList<Playlist> playlistSearchList = <Playlist>[].obs;
   Rx<TextEditingController> playlistSearchController = TextEditingController().obs;
+
+  RxInt currentListenedSeconds = 0.obs;
+
+  void addToHistory() {
+    currentListenedSeconds.value = 0;
+    // if (playlistList.firstWhere((element) => element.id == -1).tracks.first == Player.inst.nowPlayingTrack.value) {
+    //   return;
+    // }
+    final sec = SettingsController.inst.isTrackPlayedSecondsCount.value;
+    final perSett = SettingsController.inst.isTrackPlayedPercentageCount.value;
+    final trDurInSec = Player.inst.nowPlayingTrack.value.duration / 1000;
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      final per = currentListenedSeconds.value / trDurInSec * 100;
+
+      debugPrint("Current percentage $per");
+      if (Player.inst.isPlaying.value) {
+        currentListenedSeconds++;
+      }
+      // TODO: bug possibilty, the percentage may be higher or lower by 1
+      if ((currentListenedSeconds.value == sec || per.toInt() == perSett)) {
+        addTracksToPlaylist(-2, [Player.inst.nowPlayingTrack.value], addAtFirst: true);
+        timer.cancel();
+        return;
+      }
+    });
+  }
 
   void searchPlaylists(String text) {
     if (text == '') {
@@ -131,11 +159,11 @@ class PlaylistController extends GetxController {
     _writeToStorage();
   }
 
-  void addTracksToPlaylist(int id, List<Track> tracks) {
+  void addTracksToPlaylist(int id, List<Track> tracks, {bool addAtFirst = false}) {
     final pl = playlistList.firstWhere((p0) => p0.id == id);
     final plIndex = playlistList.indexOf(pl);
-
-    final newPlaylist = Playlist(pl.id, pl.name, [...pl.tracks, ...tracks], pl.date, pl.comment, pl.modes);
+    final finalTracks = addAtFirst ? [...tracks, ...pl.tracks] : [...pl.tracks, ...tracks];
+    final newPlaylist = Playlist(pl.id, pl.name, finalTracks, pl.date, pl.comment, pl.modes);
 
     playlistList.remove(pl);
     playlistList.insert(plIndex, newPlaylist);
@@ -194,9 +222,11 @@ class PlaylistController extends GetxController {
     }
 
     /// Creates default playlists
-    if (fileStat.size < 80) {
+    if (!playlistList.toList().any((pl) => pl.id == -1 || pl.id == -2)) {
       // Favourites
       addNewPlaylist('Favourites', id: -1);
+      // History
+      addNewPlaylist('History', id: -2);
     }
     printInfo(info: "playlist: ${playlistList.length}");
 
