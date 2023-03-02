@@ -13,7 +13,7 @@ import 'package:namida/ui/widgets/settings/extras.dart';
 import 'package:namida/ui/widgets/settings/indexer.dart';
 import 'package:namida/ui/widgets/settings/indexing_percentage.dart';
 import 'package:namida/ui/widgets/settings/theme_setting.dart';
-import 'package:namida/ui/widgets/settings/video_playback.dart';
+import 'package:namida/ui/widgets/settings/playback.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -49,11 +49,11 @@ class SettingsPage extends StatelessWidget {
                 : ListView(
                     children: [
                       const ThemeSetting(),
-                      VideoPlaybackSettings(),
-                      BackupAndRestore(),
                       IndexerSettings(),
+                      const PlaybackSettings(),
                       CustomizationSettings(),
                       const ExtrasSettings(),
+                      const BackupAndRestore(),
                       AdvancedSettings(),
                     ],
                   ),
@@ -124,6 +124,12 @@ class CollapsedSettingTiles extends StatelessWidget {
           trailing: const IndexingPercentage(size: 32.0),
         ),
         CustomCollapsedListTile(
+          title: Language.inst.PLAYBACK_SETTING,
+          subtitle: Language.inst.PLAYBACK_SETTING_SUBTITLE,
+          icon: Broken.play_cricle,
+          page: const PlaybackSettings(),
+        ),
+        CustomCollapsedListTile(
           title: Language.inst.CUSTOMIZATIONS,
           subtitle: Language.inst.CUSTOMIZATIONS_SUBTITLE,
           icon: Broken.brush_1,
@@ -134,12 +140,6 @@ class CollapsedSettingTiles extends StatelessWidget {
           subtitle: Language.inst.EXTRAS_SUBTITLE,
           icon: Broken.command_square,
           page: const ExtrasSettings(),
-        ),
-        CustomCollapsedListTile(
-          title: Language.inst.PLAYBACK_SETTING,
-          subtitle: Language.inst.VIDEO_PLAYBACK_SETTING_SUBTITLE,
-          icon: Broken.video,
-          page: const VideoPlaybackSettings(),
         ),
         CustomCollapsedListTile(
           title: Language.inst.BACKUP_AND_RESTORE,

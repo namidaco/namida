@@ -12,6 +12,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/dialogs/setting_dialog_with_text_field.dart';
+import 'package:wheel_slider/wheel_slider.dart';
 
 class CustomSwitchListTile extends StatelessWidget {
   final bool value;
@@ -748,6 +749,74 @@ class ContainerWithBorder extends StatelessWidget {
         ),
         clipBehavior: Clip.antiAlias,
         child: child,
+      ),
+    );
+  }
+}
+
+class NamidaWheelSlider extends StatelessWidget {
+  final double width;
+  final double perspective;
+  final int totalCount;
+  final int initValue;
+  final double itemSize;
+  final double squeeze;
+  final bool isInfinite;
+  final String? text;
+  final String? topText;
+  final double? textPadding;
+  final double? topTextPadding;
+  final dynamic Function(dynamic val) onValueChanged;
+  const NamidaWheelSlider({
+    super.key,
+    this.width = 80,
+    this.perspective = 0.01,
+    required this.totalCount,
+    required this.initValue,
+    required this.itemSize,
+    this.squeeze = 1.0,
+    this.isInfinite = false,
+    required this.onValueChanged,
+    this.text,
+    this.topText,
+    this.textPadding = 2.0,
+    this.topTextPadding = 12.0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      child: Column(
+        children: [
+          if (topText != null) ...[
+            Text(
+              topText!,
+              style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            SizedBox(height: topTextPadding),
+          ],
+          WheelSlider(
+            perspective: perspective,
+            totalCount: totalCount,
+            initValue: initValue,
+            itemSize: itemSize,
+            squeeze: squeeze,
+            isInfinite: false,
+            lineColor: Get.iconColor,
+            pointerColor: context.theme.listTileTheme.textColor!,
+            pointerHeight: 38.0,
+            horizontalListHeight: 38.0,
+            onValueChanged: onValueChanged,
+            hapticFeedbackType: HapticFeedbackType.lightImpact,
+          ),
+          if (text != null) ...[
+            SizedBox(height: textPadding),
+            Text(text!, style: TextStyle(color: context.textTheme.displaySmall?.color)),
+          ]
+        ],
       ),
     );
   }

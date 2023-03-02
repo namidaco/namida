@@ -22,9 +22,6 @@ class Language {
   String get GO_TO_ALBUM => 'Go to Album';
   String get GO_TO_ARTIST => 'Go to Artist';
   String get EDIT_ARTWORK => 'Edit Artwork';
-  String get ANIMATING_THUMBNAIL_INTENSITY => 'Thumbnail Animation Intensity';
-  String get ANIMATING_THUMBNAIL_INVERSED => 'Inverse Animations';
-  String get ANIMATING_THUMBNAIL_INVERSED_SUBTITLE => 'High peaks will cause the thumbnail to get smaller';
   String get MIN_VALUE_TO_COUNT_TRACK_LISTEN => 'Minimum value to count a listen';
   String get SECONDS => 'Seconds';
   String get PERCENTAGE => 'Percentage';
@@ -43,14 +40,13 @@ class Language {
 
   /// Playback
   String get PLAYBACK_SETTING => 'Playback';
+  String get PLAYBACK_SETTING_SUBTITLE => 'Most of these setting can be accessed directly in the player by long pressing the video button';
   String get AUDIO => 'Audio';
   String get VIDEO => 'Video';
   String get VIDEO_CACHE => 'Video Cache';
   String get VIDEO_CACHE_FILE => 'Cached Video File';
   String get VIDEO_CACHE_FILES => 'Cached Video Files';
   String get CLEAR_VIDEO_CACHE => 'Clear Video Cache';
-
-  String get VIDEO_PLAYBACK_SETTING_SUBTITLE => 'Most of these setting can be accessed directly in the player by long pressing the video button';
   String get ENABLE_VIDEO_PLAYBACK => 'Enable Video Playback';
   String get VIDEO_PLAYBACK_SOURCE => 'Video Source';
   String get VIDEO_PLAYBACK_SOURCE_AUTO_SUBTITLE => 'This will give priority to local videos, if not found then it falls back to youtube video';
@@ -195,6 +191,12 @@ class Language {
   String get STAGGERED_ALBUM_GRID_VIEW => 'Staggered Album Gridview';
   String get ALBUM_THUMBNAIL_SIZE_IN_LIST => 'Size of Album Thumbnail';
   String get HEIGHT_OF_ALBUM_TILE => 'Height of Album Tile';
+
+  /// 3. Miniplayer Customization
+  String get MINIPLAYER_CUSTOMIZATION => 'Miniplayer Customization';
+  String get ANIMATING_THUMBNAIL_INTENSITY => 'Thumbnail Animation Intensity';
+  String get ANIMATING_THUMBNAIL_INVERSED => 'Inverse Animations';
+  String get ANIMATING_THUMBNAIL_INVERSED_SUBTITLE => 'High peaks will cause the thumbnail to get smaller';
 
   /// Extras
   String get DATE_TIME_FORMAT => 'Date Time Format';

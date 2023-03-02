@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:namida/main.dart';
-import 'package:wheel_slider/wheel_slider.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -12,6 +10,8 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/indexing_percentage.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
+
+import 'package:namida/main.dart';
 
 class IndexerSettings extends StatelessWidget {
   IndexerSettings({super.key});
@@ -135,33 +135,17 @@ class IndexerSettings extends StatelessWidget {
                 icon: Broken.unlimited,
                 title: Language.inst.MIN_FILE_SIZE,
                 subtitle: Language.inst.INDEX_REFRESH_REQUIRED,
-                trailing: SizedBox(
-                  width: 100,
-                  child: Column(
-                    children: [
-                      WheelSlider(
-                        perspective: 0.01,
-                        totalCount: 1024,
-                        initValue: SettingsController.inst.indexMinFileSizeInB.value.toInt() / 1024 ~/ 10,
-                        itemSize: 1,
-                        squeeze: 0.2,
-                        isInfinite: false,
-                        lineColor: Get.iconColor,
-                        pointerColor: context.theme.listTileTheme.textColor!,
-                        pointerHeight: 38.0,
-                        horizontalListHeight: 38.0,
-                        onValueChanged: (val) {
-                          final d = (val as int);
-                          SettingsController.inst.save(indexMinFileSizeInB: d * 1024 * 10);
-                        },
-                        hapticFeedbackType: HapticFeedbackType.lightImpact,
-                      ),
-                      const SizedBox(
-                        height: 2.0,
-                      ),
-                      Text(SettingsController.inst.indexMinFileSizeInB.value.fileSizeFormatted)
-                    ],
-                  ),
+                trailing: NamidaWheelSlider(
+                  width: 100.0,
+                  totalCount: 1024,
+                  squeeze: 0.2,
+                  initValue: SettingsController.inst.indexMinFileSizeInB.value.toInt() / 1024 ~/ 10,
+                  itemSize: 1,
+                  onValueChanged: (val) {
+                    final d = (val as int);
+                    SettingsController.inst.save(indexMinFileSizeInB: d * 1024 * 10);
+                  },
+                  text: SettingsController.inst.indexMinFileSizeInB.value.fileSizeFormatted,
                 ),
               ),
             ),
@@ -170,32 +154,16 @@ class IndexerSettings extends StatelessWidget {
                 icon: Broken.timer_1,
                 title: Language.inst.MIN_FILE_DURATION,
                 subtitle: Language.inst.INDEX_REFRESH_REQUIRED,
-                trailing: SizedBox(
-                  width: 100,
-                  child: Column(
-                    children: [
-                      WheelSlider(
-                        perspective: 0.01,
-                        totalCount: 180,
-                        initValue: SettingsController.inst.indexMinDurationInSec.value,
-                        itemSize: 5,
-                        isInfinite: false,
-                        lineColor: Get.iconColor,
-                        pointerColor: context.theme.listTileTheme.textColor!,
-                        pointerHeight: 38.0,
-                        horizontalListHeight: 38.0,
-                        onValueChanged: (val) {
-                          final d = (val as int);
-                          SettingsController.inst.save(indexMinDurationInSec: d);
-                        },
-                        hapticFeedbackType: HapticFeedbackType.lightImpact,
-                      ),
-                      const SizedBox(
-                        height: 2.0,
-                      ),
-                      Text("${SettingsController.inst.indexMinDurationInSec.value} s")
-                    ],
-                  ),
+                trailing: NamidaWheelSlider(
+                  width: 100.0,
+                  totalCount: 180,
+                  initValue: SettingsController.inst.indexMinDurationInSec.value,
+                  itemSize: 5,
+                  onValueChanged: (val) {
+                    final d = (val as int);
+                    SettingsController.inst.save(indexMinDurationInSec: d);
+                  },
+                  text: "${SettingsController.inst.indexMinDurationInSec.value} s",
                 ),
               ),
             ),

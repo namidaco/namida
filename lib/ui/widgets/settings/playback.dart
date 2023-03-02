@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:wheel_slider/wheel_slider.dart';
 
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -11,15 +10,15 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
-class VideoPlaybackSettings extends StatelessWidget {
+class PlaybackSettings extends StatelessWidget {
   final bool disableSubtitle;
-  const VideoPlaybackSettings({super.key, this.disableSubtitle = false});
+  const PlaybackSettings({super.key, this.disableSubtitle = false});
 
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
       title: Language.inst.PLAYBACK_SETTING,
-      subtitle: disableSubtitle ? null : Language.inst.VIDEO_PLAYBACK_SETTING_SUBTITLE,
+      subtitle: disableSubtitle ? null : Language.inst.PLAYBACK_SETTING_SUBTITLE,
       icon: Broken.play_cricle,
       child: Column(
         children: [
@@ -231,20 +230,22 @@ class VideoPlaybackSettings extends StatelessWidget {
               },
             ),
           ),
-          CustomSwitchListTile(
-            leading: StackedIcon(
-              baseIcon: Broken.play,
-              secondaryIcon: Broken.pause,
-              baseIconColor: context.theme.listTileTheme.iconColor,
-              secondaryIconColor: context.theme.listTileTheme.iconColor,
+          Obx(
+            () => CustomSwitchListTile(
+              leading: StackedIcon(
+                baseIcon: Broken.play,
+                secondaryIcon: Broken.pause,
+                baseIconColor: context.theme.listTileTheme.iconColor,
+                secondaryIconColor: context.theme.listTileTheme.iconColor,
+              ),
+              title: Language.inst.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE,
+              onChanged: (value) {
+                SettingsController.inst.save(
+                  enableVolumeFadeOnPlayPause: !value,
+                );
+              },
+              value: SettingsController.inst.enableVolumeFadeOnPlayPause.value,
             ),
-            title: Language.inst.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE,
-            onChanged: (value) {
-              SettingsController.inst.save(
-                enableVolumeFadeOnPlayPause: !value,
-              );
-            },
-            value: SettingsController.inst.enableVolumeFadeOnPlayPause.value,
           ),
           Obx(
             () => CustomListTile(
@@ -266,87 +267,33 @@ class VideoPlaybackSettings extends StatelessWidget {
                         () => Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            SizedBox(
-                              width: 80,
-                              child: Column(
-                                children: [
-                                  Text(
-                                    Language.inst.SECONDS,
-                                    style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(
-                                    height: 12.0,
-                                  ),
-                                  WheelSlider(
-                                    perspective: 0.01,
-                                    totalCount: 160,
-                                    initValue: SettingsController.inst.isTrackPlayedSecondsCount.value - 20,
-                                    itemSize: 6,
-                                    isInfinite: false,
-                                    lineColor: Get.iconColor,
-                                    pointerColor: context.theme.listTileTheme.textColor!,
-                                    pointerHeight: 38.0,
-                                    horizontalListHeight: 38.0,
-                                    onValueChanged: (val) {
-                                      final v = (val + 20) as int;
-                                      SettingsController.inst.save(isTrackPlayedSecondsCount: v);
-                                    },
-                                    hapticFeedbackType: HapticFeedbackType.lightImpact,
-                                  ),
-                                  const SizedBox(
-                                    height: 8.0,
-                                  ),
-                                  Text(
-                                    "${SettingsController.inst.isTrackPlayedSecondsCount.value}s",
-                                    style: context.textTheme.displayMedium,
-                                  )
-                                ],
-                              ),
+                            NamidaWheelSlider(
+                              totalCount: 160,
+                              initValue: SettingsController.inst.isTrackPlayedSecondsCount.value - 20,
+                              itemSize: 6,
+                              onValueChanged: (val) {
+                                final v = (val + 20) as int;
+                                SettingsController.inst.save(isTrackPlayedSecondsCount: v);
+                              },
+                              text: "${SettingsController.inst.isTrackPlayedSecondsCount.value}s",
+                              topText: Language.inst.SECONDS,
+                              textPadding: 8.0,
                             ),
                             Text(
                               Language.inst.OR,
                               style: context.textTheme.displayMedium,
                             ),
-                            SizedBox(
-                              width: 80,
-                              child: Column(
-                                children: [
-                                  Text(
-                                    Language.inst.PERCENTAGE,
-                                    style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(
-                                    height: 12.0,
-                                  ),
-                                  WheelSlider(
-                                    perspective: 0.01,
-                                    totalCount: 80,
-                                    initValue: SettingsController.inst.isTrackPlayedPercentageCount.value - 20,
-                                    itemSize: 6,
-                                    isInfinite: false,
-                                    lineColor: Get.iconColor,
-                                    pointerColor: context.theme.listTileTheme.textColor!,
-                                    pointerHeight: 38.0,
-                                    horizontalListHeight: 38.0,
-                                    onValueChanged: (val) {
-                                      final v = (val + 20) as int;
-                                      SettingsController.inst.save(isTrackPlayedPercentageCount: v);
-                                    },
-                                    hapticFeedbackType: HapticFeedbackType.lightImpact,
-                                  ),
-                                  const SizedBox(
-                                    height: 8.0,
-                                  ),
-                                  Text(
-                                    "${SettingsController.inst.isTrackPlayedPercentageCount.value}%",
-                                    style: context.textTheme.displayMedium,
-                                  )
-                                ],
-                              ),
+                            NamidaWheelSlider(
+                              totalCount: 80,
+                              initValue: SettingsController.inst.isTrackPlayedPercentageCount.value - 20,
+                              itemSize: 6,
+                              onValueChanged: (val) {
+                                final v = (val + 20) as int;
+                                SettingsController.inst.save(isTrackPlayedPercentageCount: v);
+                              },
+                              text: "${SettingsController.inst.isTrackPlayedPercentageCount.value}%",
+                              topText: Language.inst.PERCENTAGE,
+                              textPadding: 8.0,
                             ),
                           ],
                         ),
