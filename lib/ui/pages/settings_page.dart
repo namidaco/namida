@@ -136,7 +136,7 @@ class CollapsedSettingTiles extends StatelessWidget {
           page: const ExtrasSettings(),
         ),
         CustomCollapsedListTile(
-          title: Language.inst.VIDEO_PLAYBACK_SETTING,
+          title: Language.inst.PLAYBACK_SETTING,
           subtitle: Language.inst.VIDEO_PLAYBACK_SETTING_SUBTITLE,
           icon: Broken.video,
           page: const VideoPlaybackSettings(),

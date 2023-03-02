@@ -65,6 +65,10 @@ class SettingsController extends GetxController {
   RxBool enableVideoPlayback = true.obs;
   RxInt videoPlaybackSource = 0.obs;
   RxList<String> youtubeVideoQualities = ['144p', '240p', '360p', '480p'].obs;
+  RxInt animatingThumbnailIntensity = 25.obs;
+  RxBool animatingThumbnailInversed = false.obs;
+  RxInt isTrackPlayedSecondsCount = 40.obs;
+  RxInt isTrackPlayedPercentageCount = 40.obs;
 
   /// Track Items
   RxBool displayThirdRow = true.obs;
@@ -141,6 +145,10 @@ class SettingsController extends GetxController {
     enableVideoPlayback.value = getBool('enableVideoPlayback') ?? enableVideoPlayback.value;
     videoPlaybackSource.value = getInt('videoPlaybackSource') ?? videoPlaybackSource.value;
     youtubeVideoQualities.value = getListString('youtubeVideoQualities', ifNull: youtubeVideoQualities.toList());
+    animatingThumbnailIntensity.value = getInt('animatingThumbnailIntensity') ?? animatingThumbnailIntensity.value;
+    animatingThumbnailInversed.value = getBool('animatingThumbnailInversed') ?? animatingThumbnailInversed.value;
+    isTrackPlayedSecondsCount.value = getInt('isTrackPlayedSecondsCount') ?? isTrackPlayedSecondsCount.value;
+    isTrackPlayedPercentageCount.value = getInt('isTrackPlayedPercentageCount') ?? isTrackPlayedPercentageCount.value;
 
     /// Track Items
     displayThirdRow.value = getBool('displayThirdRow') ?? displayThirdRow.value;
@@ -224,6 +232,10 @@ class SettingsController extends GetxController {
     bool? enableVideoPlayback,
     int? videoPlaybackSource,
     List<String>? youtubeVideoQualities,
+    int? animatingThumbnailIntensity,
+    bool? animatingThumbnailInversed,
+    int? isTrackPlayedSecondsCount,
+    int? isTrackPlayedPercentageCount,
   }) {
     if (themeMode != null) {
       this.themeMode.value = themeMode;
@@ -494,6 +506,22 @@ class SettingsController extends GetxController {
     if (videoPlaybackSource != null) {
       this.videoPlaybackSource.value = videoPlaybackSource;
       setData('videoPlaybackSource', videoPlaybackSource);
+    }
+    if (animatingThumbnailIntensity != null) {
+      this.animatingThumbnailIntensity.value = animatingThumbnailIntensity;
+      setData('animatingThumbnailIntensity', animatingThumbnailIntensity);
+    }
+    if (animatingThumbnailInversed != null) {
+      this.animatingThumbnailInversed.value = animatingThumbnailInversed;
+      setData('animatingThumbnailInversed', animatingThumbnailInversed);
+    }
+    if (isTrackPlayedSecondsCount != null) {
+      this.isTrackPlayedSecondsCount.value = isTrackPlayedSecondsCount;
+      setData('isTrackPlayedSecondsCount', isTrackPlayedSecondsCount);
+    }
+    if (isTrackPlayedPercentageCount != null) {
+      this.isTrackPlayedPercentageCount.value = isTrackPlayedPercentageCount;
+      setData('isTrackPlayedPercentageCount', isTrackPlayedPercentageCount);
     }
     update();
   }

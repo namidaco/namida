@@ -476,6 +476,7 @@ class SmallListTile extends StatelessWidget {
     );
   }
 }
+
 class ListTileWithCheckMark extends StatelessWidget {
   final bool active;
   final void Function()? onTap;
