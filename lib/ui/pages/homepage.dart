@@ -16,8 +16,8 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 
 class HomePage extends StatelessWidget {
-  final Widget? folderChild;
-  HomePage({super.key, this.folderChild});
+  final Widget? child;
+  HomePage({super.key, this.child});
 
   final PageController _pageController = PageController(initialPage: SettingsController.inst.selectedLibraryTab.value.toInt);
 
@@ -28,6 +28,29 @@ class HomePage extends StatelessWidget {
       () => Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
+          leading: Hero(
+            tag: 'BACKICON',
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 2400),
+              child: child != null
+                  ? IconButton(
+                      key: ValueKey('arrowleft'),
+                      icon: Icon(Broken.arrow_left_2),
+                      onPressed: () {
+                        Get.back();
+                        Get.focusScope?.unfocus();
+                        ScrollSearchController.inst.isGlobalSearchMenuShown.value = false;
+                      },
+                    )
+                  : IconButton(
+                      key: ValueKey('drawericon'),
+                      icon: Icon(Broken.more_2),
+                      onPressed: () {
+                        // open drawer
+                      },
+                    ),
+            ),
+          ),
           titleSpacing: 0,
           automaticallyImplyLeading: false,
           title: SearchBarAnimation(
@@ -54,15 +77,21 @@ class HomePage extends StatelessWidget {
             cursorColour: context.theme.colorScheme.onBackground,
             buttonBorderColour: Colors.black45,
             // hintText: refresh.isCompleted ? Language.instance.SEARCH_WELCOME : Language.instance.COLLECTION_INDEXING_HINT,
-            buttonWidget: Icon(
-              Broken.search_normal,
-              color: context.theme.appBarTheme.actionsIconTheme?.color,
-              size: 22.0,
+            buttonWidget: Hero(
+              tag: 'SEARCHOPEN',
+              child: Icon(
+                Broken.search_normal,
+                color: context.theme.appBarTheme.actionsIconTheme?.color,
+                size: 22.0,
+              ),
             ),
-            secondaryButtonWidget: Icon(
-              Broken.search_status_1,
-              color: context.theme.appBarTheme.actionsIconTheme?.color,
-              size: 22.0,
+            secondaryButtonWidget: Hero(
+              tag: 'SEARCHCLOSE',
+              child: Icon(
+                Broken.search_status_1,
+                color: context.theme.appBarTheme.actionsIconTheme?.color,
+                size: 22.0,
+              ),
             ),
             trailingWidget: GestureDetector(
               onTap: () {
@@ -79,40 +108,48 @@ class HomePage extends StatelessWidget {
           actions: [
             // FilterSortByMenu(),
 
-            IconButton(
-              constraints: BoxConstraints(maxWidth: 60, minWidth: 56.0),
-              onPressed: () => Get.to(() => SettingsSubPage(
-                    title: Language.inst.STATS,
-                    child: Stats(),
-                  )),
-              icon: const Icon(Broken.chart_21),
+            Hero(
+              tag: 'STATICON',
+              child: IconButton(
+                constraints: BoxConstraints(maxWidth: 60, minWidth: 56.0),
+                onPressed: () => Get.to(() => SettingsSubPage(
+                      title: Language.inst.STATS,
+                      child: Stats(),
+                    )),
+                icon: const Icon(Broken.chart_21),
+              ),
             ),
-            IconButton(
-              constraints: BoxConstraints(maxWidth: 60, minWidth: 56.0),
-              onPressed: () => Get.to(() => SettingsPage()),
-              icon: const Icon(Broken.setting_2),
+            Hero(
+              tag: 'SETTINGICON',
+              child: IconButton(
+                constraints: BoxConstraints(maxWidth: 60, minWidth: 56.0),
+                onPressed: () => Get.to(() => SettingsPage()),
+                icon: const Icon(Broken.setting_2),
+              ),
             ),
           ],
         ),
         body: Stack(
           alignment: Alignment.bottomCenter,
           children: [
-            PageView(
-              controller: _pageController,
-              onPageChanged: (page) {
-                SettingsController.inst.save(selectedLibraryTab: page.toEnum);
-                printInfo(info: page.toString());
-              },
-              children: SettingsController.inst.libraryTabs
-                  .asMap()
-                  .entries
-                  .map(
-                    (e) => KeepAliveWrapper(
-                      child: e.value.toEnum.toWidget,
-                    ),
-                  )
-                  .toList(),
-            ),
+            child ??
+                PageView(
+                  controller: _pageController,
+                  onPageChanged: (page) {
+                    SettingsController.inst.save(selectedLibraryTab: page.toEnum);
+                    printInfo(info: page.toString());
+                  },
+                  children: SettingsController.inst.libraryTabs
+                      .asMap()
+                      .entries
+                      .map(
+                        (e) => KeepAliveWrapper(
+                          child: e.value.toEnum.toWidget,
+                        ),
+                      )
+                      .toList(),
+                ),
+            // if (child != null) Container(color: context.theme.scaffoldBackgroundColor, child: child!),
 
             // Search Box
             Positioned.fill(
@@ -145,29 +182,37 @@ class HomePage extends StatelessWidget {
           ),
         ), */
 
-        bottomNavigationBar: NavigationBar(
-          animationDuration: Duration(seconds: 1),
-          elevation: 22,
-          labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-          height: 64.0,
-          onDestinationSelected: (value) {
-            SettingsController.inst.save(selectedLibraryTab: value.toEnum);
-            _pageController.animateToPage(value, duration: Duration(milliseconds: 400), curve: Curves.easeInOutQuart);
-            printInfo(info: value.toString());
-          },
-          selectedIndex: SettingsController.inst.selectedLibraryTab.value.toInt,
-          // selectedIndex: SettingsController.inst.libraryTabs.indexOf(SettingsController.inst.selectedLibraryTab.value.toText),
-          // selectedIndex: 0,
-          destinations: SettingsController.inst.libraryTabs
-              .asMap()
-              .entries
-              .map(
-                (e) => NavigationDestination(
-                  icon: Icon(e.value.toEnum.toIcon),
-                  label: e.value.toEnum.toText,
-                ),
-              )
-              .toList(),
+        bottomNavigationBar: Hero(
+          tag: "NAVBAR",
+          child: NavigationBar(
+            animationDuration: Duration(seconds: 1),
+            elevation: 22,
+            labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+            height: 64.0,
+            onDestinationSelected: (value) async {
+              if (child != null) {
+                Get.back();
+              }
+
+              SettingsController.inst.save(selectedLibraryTab: value.toEnum);
+
+              _pageController.animateToPage(value, duration: Duration(milliseconds: 400), curve: Curves.easeInOutQuart);
+              printInfo(info: value.toString());
+            },
+            selectedIndex: SettingsController.inst.selectedLibraryTab.value.toInt,
+            // selectedIndex: SettingsController.inst.libraryTabs.indexOf(SettingsController.inst.selectedLibraryTab.value.toText),
+            // selectedIndex: 0,
+            destinations: SettingsController.inst.libraryTabs
+                .asMap()
+                .entries
+                .map(
+                  (e) => NavigationDestination(
+                    icon: Icon(e.value.toEnum.toIcon),
+                    label: e.value.toEnum.toText,
+                  ),
+                )
+                .toList(),
+          ),
         ),
       ),
     );

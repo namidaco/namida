@@ -19,6 +19,8 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/sort_by_button.dart';
 
+import 'package:namida/main.dart';
+
 class AlbumsPage extends StatelessWidget {
   final Map<String?, Set<Track>>? albums;
   AlbumsPage({super.key, this.albums});
@@ -154,23 +156,18 @@ class AlbumsPage extends StatelessWidget {
 }
 
 class AlbumTracksPage extends StatelessWidget {
+  final String? name;
   final List<Track> album;
-  const AlbumTracksPage({super.key, required this.album});
+  const AlbumTracksPage({super.key, required this.album, this.name});
 
   @override
   Widget build(BuildContext context) {
-    // final AlbumTracksController albumtracksc = AlbumTracksController(album);
+    if (album.isEmpty && name != null) {
+      album.assignAll(Indexer.inst.albumSearchList[name]!.toList());
+    }
     return Obx(
-      () => Scaffold(
-        appBar: AppBar(
-          leading: IconButton(onPressed: () => Get.back(), icon: const Icon(Broken.arrow_left_2)),
-          title: Text(
-            album[0].album,
-            style: context.textTheme.displayLarge,
-          ),
-        ),
-        body: ListView(
-          // cacheExtent: 1000,
+      () => MainPageWrapper(
+        child: ListView(
           children: [
             // Top Container holding image and info and buttons
             Container(
