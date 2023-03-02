@@ -327,7 +327,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Broken.magic_star, size: 14.0),
+                const Icon(Broken.magicpen, size: 14.0),
                 const SizedBox(width: 4.0),
                 Text(
                   Language.inst.AUTO_EXTRACT_TAGS_FROM_FILENAME,

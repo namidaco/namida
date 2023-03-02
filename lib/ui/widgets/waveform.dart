@@ -12,9 +12,6 @@ class WaveformComponent extends StatelessWidget {
   final Curve curve;
   final double? boxMaxHeight;
   final double? boxMaxWidth;
-  final double? width;
-  final double heightMultiplier;
-  // final List<double>? waveDataList;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final BorderRadiusGeometry? borderRadius;
@@ -27,12 +24,9 @@ class WaveformComponent extends StatelessWidget {
     this.curve = Curves.easeInOutQuart,
     this.boxMaxHeight,
     this.boxMaxWidth,
-    this.width,
-    this.heightMultiplier = 1.0,
-    // this.waveDataList,
     this.padding,
     this.margin,
-    this.borderRadius,
+    this.borderRadius = const BorderRadius.all(Radius.circular(12)),
   }) : super(key: key);
 
   @override
@@ -56,7 +50,7 @@ class WaveformComponent extends StatelessWidget {
                 (e) => AnimatedContainer(
                   duration: Duration(milliseconds: durationInMilliseconds),
                   // height: (e.value < (4 / 100) ? (3.0 + 2 * e.value) : e.value * 100) * heightMultiplier,
-                  height: (e.value * 100).clamp(4.0, 200.0),
+                  height: (e.value * 100).clamp(3.0, 200.0),
                   width: Get.width / downscaledList.length - 2,
                   curve: curve,
                   decoration: BoxDecoration(

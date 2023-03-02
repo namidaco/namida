@@ -36,7 +36,7 @@ class BackupAndRestore extends StatelessWidget {
           Obx(
             () => CustomListTile(
               title: Language.inst.CREATE_BACKUP,
-              icon: Broken.back_square,
+              icon: Broken.box_add,
               trailing: isCreatingBackup.value ? const LoadingIndicator() : null,
               onTap: () {
                 void onItemTap(String item) {
@@ -150,7 +150,7 @@ class BackupAndRestore extends StatelessWidget {
           Obx(
             () => CustomListTile(
               title: Language.inst.RESTORE_BACKUP,
-              icon: Broken.direct_inbox,
+              icon: Broken.back_square,
               trailing: isRestoringBackup.value ? const LoadingIndicator() : null,
               onTap: () async {
                 await Get.dialog(

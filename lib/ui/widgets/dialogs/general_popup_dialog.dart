@@ -35,9 +35,9 @@ Future<void> showGeneralPopupDialog(
   bool extractColor = true,
 }) async {
   // just in case a smart user pressed when selected tracks list is empty
-  if (tracks.isEmpty) {
-    return;
-  }
+  // if (tracks.isEmpty) {
+  //   return;
+  // }
   forceSingleArtwork ??= tracks.length == 1;
   final isSingle = tracks.length == 1;
 

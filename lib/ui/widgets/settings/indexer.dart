@@ -92,7 +92,7 @@ class IndexerSettings extends StatelessWidget {
               value: stg.preventDuplicatedTracks.value,
             ),
             CustomSwitchListTile(
-              icon: Broken.reserve,
+              icon: Broken.cd,
               title: Language.inst.RESPECT_NO_MEDIA,
               subtitle: "${Language.inst.RESPECT_NO_MEDIA_SUBTITLE}. ${Language.inst.INDEX_REFRESH_REQUIRED}",
               onChanged: (p0) async {
@@ -154,7 +154,7 @@ class IndexerSettings extends StatelessWidget {
                           final d = (val as int);
                           SettingsController.inst.save(indexMinFileSizeInB: d * 1024 * 10);
                         },
-                        hapticFeedbackType: HapticFeedbackType.heavyImpact,
+                        hapticFeedbackType: HapticFeedbackType.lightImpact,
                       ),
                       const SizedBox(
                         height: 2.0,
