@@ -104,6 +104,14 @@ class TrackTileCustomization extends StatelessWidget {
             ),
             value: stg.displayThirdItemInEachRow.value,
           ),
+          CustomSwitchListTile(
+            icon: Broken.heart,
+            title: Language.inst.DISPLAY_FAVOURITE_ICON_IN_TRACK_TILE,
+            onChanged: (_) => stg.save(
+              displayFavouriteIconInListTile: !stg.displayFavouriteIconInListTile.value,
+            ),
+            value: stg.displayFavouriteIconInListTile.value,
+          ),
           CustomListTile(
             icon: Broken.minus_square,
             title: Language.inst.TRACK_TILE_ITEMS_SEPARATOR,

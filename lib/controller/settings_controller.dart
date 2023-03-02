@@ -50,7 +50,7 @@ class SettingsController extends GetxController {
   RxBool artistSortReversed = false.obs;
   Rx<GroupSortType> genreSort = GroupSortType.genresList.obs;
   RxBool genreSortReversed = false.obs;
-  Rx<GroupSortType> playlistSort = GroupSortType.title.obs;
+  Rx<GroupSortType> playlistSort = GroupSortType.year.obs;
   RxBool playlistSortReversed = false.obs;
   RxInt indexMinDurationInSec = 5.obs;
   RxInt indexMinFileSizeInB = (100 * 1024).obs;
@@ -69,6 +69,7 @@ class SettingsController extends GetxController {
   RxBool animatingThumbnailInversed = false.obs;
   RxInt isTrackPlayedSecondsCount = 40.obs;
   RxInt isTrackPlayedPercentageCount = 40.obs;
+  RxBool displayFavouriteIconInListTile = true.obs;
 
   /// Track Items
   RxBool displayThirdRow = true.obs;
@@ -86,7 +87,6 @@ class SettingsController extends GetxController {
   Rx<TrackTileItem> row3Item3 = TrackTileItem.none.obs;
   Rx<TrackTileItem> rightItem1 = TrackTileItem.duration.obs;
   Rx<TrackTileItem> rightItem2 = TrackTileItem.none.obs;
-  Rx<TrackTileItem> rightItem3 = TrackTileItem.none.obs;
 
   SettingsController() {
     themeMode.value = EnumToString.fromString(ThemeMode.values, getString('themeMode') ?? EnumToString.convertToString(themeMode.value))!;
@@ -149,6 +149,7 @@ class SettingsController extends GetxController {
     animatingThumbnailInversed.value = getBool('animatingThumbnailInversed') ?? animatingThumbnailInversed.value;
     isTrackPlayedSecondsCount.value = getInt('isTrackPlayedSecondsCount') ?? isTrackPlayedSecondsCount.value;
     isTrackPlayedPercentageCount.value = getInt('isTrackPlayedPercentageCount') ?? isTrackPlayedPercentageCount.value;
+    displayFavouriteIconInListTile.value = getBool('displayFavouriteIconInListTile') ?? displayFavouriteIconInListTile.value;
 
     /// Track Items
     displayThirdRow.value = getBool('displayThirdRow') ?? displayThirdRow.value;
@@ -165,7 +166,6 @@ class SettingsController extends GetxController {
     row3Item3.value = EnumToString.fromString(TrackTileItem.values, getString('row3Item3') ?? EnumToString.convertToString(row3Item3.value))!;
     rightItem1.value = EnumToString.fromString(TrackTileItem.values, getString('rightItem1') ?? EnumToString.convertToString(rightItem1.value))!;
     rightItem2.value = EnumToString.fromString(TrackTileItem.values, getString('rightItem2') ?? EnumToString.convertToString(rightItem2.value))!;
-    rightItem3.value = EnumToString.fromString(TrackTileItem.values, getString('rightItem3') ?? EnumToString.convertToString(rightItem3.value))!;
 
     update();
   }
@@ -176,7 +176,6 @@ class SettingsController extends GetxController {
     bool? autoColor,
     int? staticColor,
     int? searchResultsPlayMode,
-    // int? selectedLibraryPageIndex,
     LibraryTab? selectedLibraryTab,
     bool? autoLibraryTab,
     List<String>? libraryTabs,
@@ -236,6 +235,7 @@ class SettingsController extends GetxController {
     bool? animatingThumbnailInversed,
     int? isTrackPlayedSecondsCount,
     int? isTrackPlayedPercentageCount,
+    bool? displayFavouriteIconInListTile,
   }) {
     if (themeMode != null) {
       this.themeMode.value = themeMode;
@@ -523,6 +523,10 @@ class SettingsController extends GetxController {
       this.isTrackPlayedPercentageCount.value = isTrackPlayedPercentageCount;
       setData('isTrackPlayedPercentageCount', isTrackPlayedPercentageCount);
     }
+    if (displayFavouriteIconInListTile != null) {
+      this.displayFavouriteIconInListTile.value = displayFavouriteIconInListTile;
+      setData('displayFavouriteIconInListTile', displayFavouriteIconInListTile);
+    }
     update();
   }
 
@@ -703,10 +707,6 @@ class SettingsController extends GetxController {
       case TrackTilePosition.rightItem2:
         rightItem2.value = i;
         saveFinal('rightItem2');
-        break;
-      case TrackTilePosition.rightItem3:
-        rightItem3.value = i;
-        saveFinal('rightItem3');
         break;
       default:
         null;

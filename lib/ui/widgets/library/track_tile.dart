@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -13,6 +14,8 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
+
+import 'package:namida/main.dart';
 
 class TrackTile extends StatelessWidget {
   final Track track;
@@ -90,10 +93,9 @@ class TrackTile extends StatelessWidget {
       () {
         double thumnailSize = SettingsController.inst.trackThumbnailSizeinList.value;
         double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
-        bool isTrackCurrentlyPlaying = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
-        // bool isTrackCurrentlyPlaying = Player.inst.nowPlayingTrack.value == track;
         bool isTrackSelected = SelectedTracksController.inst.selectedTracks.contains(track);
-        final textColor = isTrackCurrentlyPlaying ? Colors.white : null;
+        bool isTrackCurrentlyPlaying = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
+        final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
         return Container(
           margin: const EdgeInsets.only(bottom: 4.0),
           child: Material(
@@ -117,8 +119,8 @@ class TrackTile extends StatelessWidget {
                     if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
                       SelectedTracksController.inst.selectOrUnselect(track);
                     } else {
-                      Player.inst.playOrPause(track: track, queue: queue);
-                      print(track.path);
+                      Player.inst.playOrPause(track: track, queue: queue ?? Indexer.inst.trackSearchList.toList());
+                      debugPrint(track.path);
                     }
                   },
               child: Container(
@@ -151,7 +153,7 @@ class TrackTile extends StatelessWidget {
                           ),
                         ),
                         if (draggableThumbnail)
-                          ReorderableDragStartListener(
+                          CustomReorderableDelayedDragStartListener(
                             index: 0,
                             child: Container(
                               color: Colors.transparent,
@@ -214,46 +216,41 @@ class TrackTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 6.0),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (SettingsController.inst.rightItem1.value != TrackTileItem.none ||
-                            SettingsController.inst.rightItem2.value != TrackTileItem.none ||
-                            SettingsController.inst.rightItem3.value != TrackTileItem.none)
+                    if (SettingsController.inst.rightItem1.value != TrackTileItem.none || SettingsController.inst.rightItem2.value != TrackTileItem.none)
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
                           if (SettingsController.inst.rightItem1.value != TrackTileItem.none)
                             Text(
                               getChoosenTrackTileItem(SettingsController.inst.rightItem1.value),
                               style: Get.textTheme.displaySmall?.copyWith(
                                 fontWeight: FontWeight.w500,
-                                color: textColor?.withAlpha(160),
+                                color: textColor?.withAlpha(170),
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
-                        if (SettingsController.inst.rightItem2.value != TrackTileItem.none)
-                          Text(
-                            getChoosenTrackTileItem(SettingsController.inst.rightItem2.value),
-                            style: Get.textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.w500,
-                              color: textColor?.withAlpha(160),
+                          if (SettingsController.inst.rightItem2.value != TrackTileItem.none)
+                            Text(
+                              getChoosenTrackTileItem(SettingsController.inst.rightItem2.value),
+                              style: Get.textTheme.displaySmall?.copyWith(
+                                fontWeight: FontWeight.w500,
+                                color: textColor?.withAlpha(170),
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        // if (SettingsController.inst.rightItem3.value != TrackTileItem.none)
-                        //   Text(
-                        //     getChoosenTrackTileItem(SettingsController.inst.rightItem3.value),
-                        //     style: Get.textTheme.displaySmall?.copyWith(
-                        //       fontWeight: FontWeight.w500,
-                        //       color: textColor?.withAlpha(160),
-                        //     ),
-                        //     overflow: TextOverflow.ellipsis,
-                        //   ),
-                      ],
-                    ),
+                          if (SettingsController.inst.displayFavouriteIconInListTile.value)
+                            NamidaLikeButton(
+                              track: track,
+                              size: 22.0,
+                              color: textColor?.withAlpha(140) ?? context.textTheme.displayMedium?.color?.withAlpha(140),
+                            ),
+                        ],
+                      ),
                     if (displayRightDragHandler) ...[
                       const SizedBox(
                         width: 8.0,
                       ),
-                      ReorderableDragStartListener(
+                      CustomReorderableDelayedDragStartListener(
                         index: 0,
                         child: FittedBox(
                           child: Icon(

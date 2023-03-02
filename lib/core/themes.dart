@@ -61,11 +61,12 @@ class AppThemes extends GetxController {
         indent: 0.0,
         endIndent: 0.0,
       ),
-      selectedRowColor: light ? const Color.fromARGB(255, 211, 211, 211) : const Color.fromARGB(150, 80, 80, 80),
+      selectedRowColor: light ? const Color.fromARGB(200, 190, 190, 190) : const Color.fromARGB(150, 80, 80, 80),
       dialogTheme: DialogTheme(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0.multipliedRadius))),
       listTileTheme: ListTileThemeData(
         horizontalTitleGap: 4.0,
-        selectedColor: light ? const Color.fromARGB(255, 182, 182, 182) : Color.alphaBlend(color.withAlpha(40), const Color.fromARGB(255, 55, 55, 55)),
+        selectedColor:
+            light ? Color.alphaBlend(color.withAlpha(40), const Color.fromARGB(255, 182, 182, 182)) : Color.alphaBlend(color.withAlpha(40), const Color.fromARGB(255, 55, 55, 55)),
         iconColor: Color.alphaBlend(
           color.withAlpha(80),
           light ? const Color.fromARGB(200, 55, 55, 55) : const Color.fromARGB(255, 228, 228, 228),
