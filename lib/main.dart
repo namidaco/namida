@@ -146,22 +146,43 @@ class MyApp extends StatelessWidget {
         builder: (context, widget) {
           return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
         },
-        home: Stack(
-          children: [
-            HomePage(),
-            MiniPlayerParent(),
-            const Positioned(
-              bottom: 60.0,
-              child: SelectedTracksPreviewContainer(),
-            ),
-          ],
-        ),
+        home: const MainPageWrapper(),
         // child: AnimatedTheme(duration: Duration(seconds: 5), data: AppThemes().getAppTheme(CurrentColor.inst.color.value, light: false), child: HomePage())),
         // initialRoute: '/',
         // getPages: [
         //   GetPage(name: '/', page: () => HomePage()),
         //   GetPage(name: '/trackspage', page: () => TracksPage()),
         // ],
+      ),
+    );
+  }
+}
+
+class MainPageWrapper extends StatelessWidget {
+  final Widget? child;
+  const MainPageWrapper({super.key, this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () {
+        Get.focusScope?.unfocus();
+        return Future.value(true);
+      },
+      child: GestureDetector(
+        onTap: () => Get.focusScope?.unfocus(),
+        onPanUpdate: (details) => Get.focusScope?.unfocus(),
+        onVerticalDragUpdate: (details) => Get.focusScope?.unfocus(),
+        child: Stack(
+          children: [
+            HomePage(child: child),
+            Hero(tag: 'MINIPLAYER', child: MiniPlayerParent()),
+            const Positioned(
+              bottom: 60.0,
+              child: SelectedTracksPreviewContainer(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -202,13 +223,4 @@ class _KeepAliveWrapperState extends State<KeepAliveWrapper> with AutomaticKeepA
 
   @override
   bool get wantKeepAlive => true;
-}
-
-class MyNavigatorObserver extends NavigatorObserver {
-  @override
-  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    // Dismiss keyboard when a new screen is navigated to
-    Get.focusScope?.unfocus();
-    super.didPush(route, previousRoute);
-  }
 }
