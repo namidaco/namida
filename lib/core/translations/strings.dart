@@ -22,6 +22,13 @@ class Language {
   String get GO_TO_ALBUM => 'Go to Album';
   String get GO_TO_ARTIST => 'Go to Artist';
   String get EDIT_ARTWORK => 'Edit Artwork';
+  String get ANIMATING_THUMBNAIL_INTENSITY => 'Thumbnail Animation Intensity';
+  String get ANIMATING_THUMBNAIL_INVERSED => 'Inverse Animations';
+  String get ANIMATING_THUMBNAIL_INVERSED_SUBTITLE => 'High peaks will cause the thumbnail to get smaller';
+  String get MIN_VALUE_TO_COUNT_TRACK_LISTEN => 'Minimum value to count a listen';
+  String get SECONDS => 'Seconds';
+  String get PERCENTAGE => 'Percentage';
+  String get AUTO_EXTRACT_TAGS_FROM_FILENAME => 'Auto extract from filename';
 
   /// Main
   String get EXIT_APP => 'Exit';
@@ -34,14 +41,15 @@ class Language {
   String get METADATA_EDIT_FAILED => 'Failed to edit metadata';
   String get METADATA_EDIT_FAILED_SUBTITLE => 'Consider resetting SAF permission in the settings';
 
-  /// Video Playback
+  /// Playback
+  String get PLAYBACK_SETTING => 'Playback';
   String get AUDIO => 'Audio';
   String get VIDEO => 'Video';
   String get VIDEO_CACHE => 'Video Cache';
   String get VIDEO_CACHE_FILE => 'Cached Video File';
   String get VIDEO_CACHE_FILES => 'Cached Video Files';
   String get CLEAR_VIDEO_CACHE => 'Clear Video Cache';
-  String get VIDEO_PLAYBACK_SETTING => 'Video Playback';
+
   String get VIDEO_PLAYBACK_SETTING_SUBTITLE => 'Most of these setting can be accessed directly in the player by long pressing the video button';
   String get ENABLE_VIDEO_PLAYBACK => 'Enable Video Playback';
   String get VIDEO_PLAYBACK_SOURCE => 'Video Source';
@@ -206,11 +214,13 @@ class Language {
   String get CREATE => 'Create';
   String get REMOVE => 'Remove';
   String get CLEAR => 'Clear';
+  String get CHOOSE => 'Choose';
   String get SAVE => 'Save';
   String get DONE => 'Done';
   String get CONFIRM => 'Confirm';
   String get CANCEL => 'Cancel';
   String get OF => 'of';
+  String get OR => 'or';
   String get AUTO => 'Auto';
   String get NAME => 'Name';
   String get NOTE => 'Note';
@@ -264,11 +274,11 @@ class Language {
   String get WAVEFORMS => 'Waveforms';
 
   /// Sort
-  String get SORT_TRACKS_BY => 'Sort Tracks By';
-  String get SORT_ALBUMS_BY => 'Sort Albums By';
-  String get SORT_ARTISTS_BY => 'Sort Artists By';
-  String get SORT_GENRES_BY => 'Sort Genres By';
-  String get SORT_PLAYLISTS_BY => 'Sort Playlists By';
+  // String get SORT_TRACKS_BY => 'Sort Tracks By';
+  // String get SORT_ALBUMS_BY => 'Sort Albums By';
+  // String get SORT_ARTISTS_BY => 'Sort Artists By';
+  // String get SORT_GENRES_BY => 'Sort Genres By';
+  // String get SORT_PLAYLISTS_BY => 'Sort Playlists By';
   String get REVERSE_ORDER => 'Reverse Order';
 
   /// Track/Group Info
