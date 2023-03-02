@@ -311,6 +311,34 @@ Future<void> showEditTrackTagsDialog(Track track) async {
             ].join(' • '),
             style: Get.textTheme.displaySmall,
           ),
+          const SizedBox(height: 4.0),
+          InkWell(
+            onTap: () {
+              final strings = track.path.getFilenameWOExt.split(' - ');
+              if (strings.length == 3) {
+                artistController.text = strings[0];
+                titleController.text = strings[1];
+                albumController.text = strings[2];
+              } else {
+                artistController.text = strings.first;
+                titleController.text = strings.last;
+              }
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Broken.magic_star, size: 14.0),
+                const SizedBox(width: 4.0),
+                Text(
+                  Language.inst.AUTO_EXTRACT_TAGS_FROM_FILENAME,
+                  style: Get.textTheme.displaySmall?.copyWith(
+                    decoration: TextDecoration.underline,
+                    decorationStyle: TextDecorationStyle.dashed,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     ),
