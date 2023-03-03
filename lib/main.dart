@@ -136,23 +136,26 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () => GetMaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Namida',
-        theme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, light: true),
-        darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, light: false),
-        themeMode: SettingsController.inst.themeMode.value,
-        translations: MyTranslation(),
-        builder: (context, widget) {
-          return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
+      () => Listener(
+        onPointerDown: (_) {
+          // FocusScopeNode currentFocus = FocusScope.of(context);
+          // if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
+          //   currentFocus.focusedChild?.unfocus();
+          // }
+          Get.focusScope?.unfocus();
         },
-        home: const MainPageWrapper(),
-        // child: AnimatedTheme(duration: Duration(seconds: 5), data: AppThemes().getAppTheme(CurrentColor.inst.color.value, light: false), child: HomePage())),
-        // initialRoute: '/',
-        // getPages: [
-        //   GetPage(name: '/', page: () => HomePage()),
-        //   GetPage(name: '/trackspage', page: () => TracksPage()),
-        // ],
+        child: GetMaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Namida',
+          theme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, light: true),
+          darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, light: false),
+          themeMode: SettingsController.inst.themeMode.value,
+          translations: MyTranslation(),
+          builder: (context, widget) {
+            return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
+          },
+          home: const MainPageWrapper(),
+        ),
       ),
     );
   }
