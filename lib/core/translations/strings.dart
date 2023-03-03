@@ -179,6 +179,7 @@ class Language {
   String get HEIGHT_OF_TRACK_TILE => 'Height of Track Tile';
   String get DISPLAY_THIRD_ROW_IN_TRACK_TILE => 'Display Third Row';
   String get DISPLAY_THIRD_ITEM_IN_ROW_IN_TRACK_TILE => 'Display Third Item in each Row';
+  String get DISPLAY_FAVOURITE_ICON_IN_TRACK_TILE => 'Display Favourite Button';
   String get TRACK_TILE_ITEMS_SEPARATOR => 'Items Separator';
 
   /// 2. Album Tile Customization
@@ -197,6 +198,7 @@ class Language {
   String get ANIMATING_THUMBNAIL_INTENSITY => 'Thumbnail Animation Intensity';
   String get ANIMATING_THUMBNAIL_INVERSED => 'Inverse Animations';
   String get ANIMATING_THUMBNAIL_INVERSED_SUBTITLE => 'High peaks will cause the thumbnail to get smaller';
+  String get WAVEFORM_BARS_COUNT => 'Waveform Bars Count';
 
   /// Extras
   String get DATE_TIME_FORMAT => 'Date Time Format';

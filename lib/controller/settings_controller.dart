@@ -70,6 +70,7 @@ class SettingsController extends GetxController {
   RxInt isTrackPlayedSecondsCount = 40.obs;
   RxInt isTrackPlayedPercentageCount = 40.obs;
   RxBool displayFavouriteIconInListTile = true.obs;
+  RxInt waveformTotalBars = 140.obs;
 
   /// Track Items
   RxBool displayThirdRow = true.obs;
@@ -150,6 +151,7 @@ class SettingsController extends GetxController {
     isTrackPlayedSecondsCount.value = getInt('isTrackPlayedSecondsCount') ?? isTrackPlayedSecondsCount.value;
     isTrackPlayedPercentageCount.value = getInt('isTrackPlayedPercentageCount') ?? isTrackPlayedPercentageCount.value;
     displayFavouriteIconInListTile.value = getBool('displayFavouriteIconInListTile') ?? displayFavouriteIconInListTile.value;
+    waveformTotalBars.value = getInt('waveformTotalBars') ?? waveformTotalBars.value;
 
     /// Track Items
     displayThirdRow.value = getBool('displayThirdRow') ?? displayThirdRow.value;
@@ -236,6 +238,7 @@ class SettingsController extends GetxController {
     int? isTrackPlayedSecondsCount,
     int? isTrackPlayedPercentageCount,
     bool? displayFavouriteIconInListTile,
+    int? waveformTotalBars,
   }) {
     if (themeMode != null) {
       this.themeMode.value = themeMode;
@@ -526,6 +529,10 @@ class SettingsController extends GetxController {
     if (displayFavouriteIconInListTile != null) {
       this.displayFavouriteIconInListTile.value = displayFavouriteIconInListTile;
       setData('displayFavouriteIconInListTile', displayFavouriteIconInListTile);
+    }
+    if (waveformTotalBars != null) {
+      this.waveformTotalBars.value = waveformTotalBars;
+      setData('waveformTotalBars', waveformTotalBars);
     }
     update();
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -31,7 +32,7 @@ class WaveformComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final downscaledList = WaveformController.inst.changeListSize(WaveformController.inst.curentWaveform.toList(), Get.width ~/ 3);
+    final downscaledList = WaveformController.inst.changeListSize(WaveformController.inst.curentWaveform.toList(), SettingsController.inst.waveformTotalBars.value);
 
     return Container(
       width: boxMaxWidth ?? Get.width,
@@ -51,7 +52,7 @@ class WaveformComponent extends StatelessWidget {
                   duration: Duration(milliseconds: durationInMilliseconds),
                   // height: (e.value < (4 / 100) ? (3.0 + 2 * e.value) : e.value * 100) * heightMultiplier,
                   height: (e.value * 100).clamp(3.0, 200.0),
-                  width: Get.width / downscaledList.length - 2,
+                  width: Get.width / downscaledList.length * 0.45,
                   curve: curve,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5.0.multipliedRadius),
