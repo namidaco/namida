@@ -1,11 +1,11 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
-import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
@@ -63,7 +63,7 @@ class GenresPage extends StatelessWidget {
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.8, mainAxisSpacing: 8.0),
                   controller: _scrollController,
                   itemCount: Indexer.inst.genreSearchList.length,
-                  padding: EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value),
+                  padding: const EdgeInsets.only(bottom: kBottomPadding),
                   itemBuilder: (BuildContext context, int i) {
                     final genre = Indexer.inst.genreSearchList.entries.toList()[i];
                     return AnimationConfiguration.staggeredGrid(
@@ -75,6 +75,7 @@ class GenresPage extends StatelessWidget {
                         child: FadeInAnimation(
                           duration: const Duration(milliseconds: 400),
                           child: MultiArtworkCard(
+                            heroTag: 'genre_artwork_${genre.key}',
                             tracks: genre.value.toList(),
                             name: genre.key,
                             gridCount: countPerRow,

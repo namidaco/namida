@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -26,6 +27,7 @@ class TrackTile extends StatelessWidget {
   final Color? bgColor;
   final Widget? trailingWidget;
   final void Function()? onTap;
+  final Playlist? playlist;
   const TrackTile({
     super.key,
     required this.track,
@@ -36,6 +38,7 @@ class TrackTile extends StatelessWidget {
     this.bgColor,
     this.onTap,
     this.trailingWidget,
+    this.playlist,
   });
 
   String getChoosenTrackTileItem(TrackTileItem trackItem) {
@@ -266,7 +269,7 @@ class TrackTile extends StatelessWidget {
                     MoreIcon(
                       padding: 6.0,
                       iconColor: textColor?.withAlpha(160),
-                      onPressed: () => NamidaDialogs.inst.showTrackDialog(track),
+                      onPressed: () => NamidaDialogs.inst.showTrackDialog(track, playlist: playlist),
                     ),
                     const SizedBox(
                       width: 4.0,

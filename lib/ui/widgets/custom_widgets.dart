@@ -1,8 +1,11 @@
 import 'dart:ui';
 
 import 'package:checkmark/checkmark.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:like_button/like_button.dart';
+import 'package:namida/class/track.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -622,12 +625,11 @@ class SmallIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Icon(
-        icon,
-        size: 20.0,
-      ),
+    return NamidaIconButton(
+      icon: icon,
+      onPressed: onTap,
+      iconSize: 20.0,
+      horizontalPadding: 0,
     );
   }
 }
@@ -817,6 +819,67 @@ class NamidaWheelSlider extends StatelessWidget {
             Text(text!, style: TextStyle(color: context.textTheme.displaySmall?.color)),
           ]
         ],
+      ),
+    );
+  }
+}
+
+class NamidaLikeButton extends StatelessWidget {
+  final Track track;
+  final double size;
+  final Color? color;
+  const NamidaLikeButton({super.key, required this.track, this.size = 30.0, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return LikeButton(
+      bubblesColor: BubblesColor(
+        dotPrimaryColor: context.theme.colorScheme.primary,
+        dotSecondaryColor: context.theme.colorScheme.primaryContainer,
+      ),
+      circleColor: CircleColor(
+        start: context.theme.colorScheme.tertiary,
+        end: context.theme.colorScheme.tertiary,
+      ),
+      isLiked: track.isFavourite,
+      onTap: (isLiked) async {
+        PlaylistController.inst.favouriteButtonOnPressed(track);
+        return !isLiked;
+      },
+      likeBuilder: (value) => value
+          ? Icon(
+              Broken.heart_tick,
+              color: color ?? context.theme.colorScheme.primary,
+              size: size,
+            )
+          : Icon(
+              Broken.heart,
+              color: color ?? context.theme.colorScheme.onSecondaryContainer,
+              size: size,
+            ),
+    );
+  }
+}
+
+class NamidaIconButton extends StatelessWidget {
+  final EdgeInsetsGeometry? padding;
+  final double horizontalPadding;
+  final double verticalPadding;
+  final double? iconSize;
+  final IconData icon;
+  final void Function()? onPressed;
+  const NamidaIconButton({super.key, this.padding, this.horizontalPadding = 10.0, this.verticalPadding = 0.0, required this.icon, required this.onPressed, this.iconSize});
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoButton(
+      minSize: double.minPositive,
+      padding: padding ?? EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+      onPressed: onPressed,
+      child: Icon(
+        icon,
+        size: iconSize,
+        color: context.theme.colorScheme.secondary,
       ),
     );
   }

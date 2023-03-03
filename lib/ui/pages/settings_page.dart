@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -15,21 +16,18 @@ import 'package:namida/ui/widgets/settings/indexing_percentage.dart';
 import 'package:namida/ui/widgets/settings/theme_setting.dart';
 import 'package:namida/ui/widgets/settings/playback.dart';
 
+import 'package:namida/main.dart';
+
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(seconds: 4),
-      child: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Broken.arrow_left_2),
-            onPressed: () => Get.back(),
-          ),
-          title: Text(Language.inst.SETTINGS),
-        ),
-        body: Stack(
+    return MainPageWrapper(
+      title: Text(Language.inst.SETTINGS),
+      actions: const [],
+      child: AnimatedContainer(
+        duration: const Duration(seconds: 4),
+        child: Stack(
           children: [
             Container(
               height: context.height,
@@ -55,6 +53,7 @@ class SettingsPage extends StatelessWidget {
                       const ExtrasSettings(),
                       const BackupAndRestore(),
                       AdvancedSettings(),
+                      kBottomPaddingWidget,
                     ],
                   ),
           ],
@@ -70,17 +69,12 @@ class SettingsSubPage extends StatelessWidget {
   const SettingsSubPage({super.key, required this.child, required this.title});
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(seconds: 4),
-      child: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Broken.arrow_left_2),
-            onPressed: () => Get.back(),
-          ),
-          title: Text(title),
-        ),
-        body: Stack(
+    return MainPageWrapper(
+      title: Text(title),
+      actions: const [],
+      child: AnimatedContainer(
+        duration: const Duration(seconds: 4),
+        child: Stack(
           children: [
             Container(
               height: context.height,
@@ -95,7 +89,15 @@ class SettingsSubPage extends StatelessWidget {
                 ),
               ),
             ),
-            SingleChildScrollView(child: child)
+            SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  child,
+                  kBottomPaddingWidget,
+                ],
+              ),
+            )
           ],
         ),
       ),
@@ -153,7 +155,8 @@ class CollapsedSettingTiles extends StatelessWidget {
           icon: Broken.hierarchy_3,
           page: AdvancedSettings(),
         ),
-        const CollapsedSettingTileWidget()
+        const CollapsedSettingTileWidget(),
+        kBottomPaddingWidget,
       ],
     );
   }

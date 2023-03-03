@@ -9,7 +9,7 @@ import 'package:namida/ui/widgets/dialogs/general_popup_dialog.dart';
 class NamidaDialogs {
   static final NamidaDialogs inst = NamidaDialogs();
 
-  Future<void> showTrackDialog(Track track, [Widget? leading, Playlist? playlist]) async {
+  Future<void> showTrackDialog(Track track, {Widget? leading, Playlist? playlist}) async {
     await showGeneralPopupDialog(
       [track],
       track.artistsList.join(', ').overflow,

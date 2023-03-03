@@ -164,7 +164,10 @@ class MyApp extends StatelessWidget {
 
 class MainPageWrapper extends StatelessWidget {
   final Widget? child;
-  const MainPageWrapper({super.key, this.child});
+  final Widget? title;
+  final List<Widget>? actions;
+  final List<Widget>? actionsToAdd;
+  const MainPageWrapper({super.key, this.child, this.title, this.actions, this.actionsToAdd});
 
   @override
   Widget build(BuildContext context) {
@@ -173,20 +176,15 @@ class MainPageWrapper extends StatelessWidget {
         Get.focusScope?.unfocus();
         return Future.value(true);
       },
-      child: GestureDetector(
-        onTap: () => Get.focusScope?.unfocus(),
-        onPanUpdate: (details) => Get.focusScope?.unfocus(),
-        onVerticalDragUpdate: (details) => Get.focusScope?.unfocus(),
-        child: Stack(
-          children: [
-            HomePage(child: child),
-            Hero(tag: 'MINIPLAYER', child: MiniPlayerParent()),
-            const Positioned(
-              bottom: 60.0,
-              child: SelectedTracksPreviewContainer(),
-            ),
-          ],
-        ),
+      child: Stack(
+        children: [
+          HomePage(title: title, actions: actions, actionsToAdd: actionsToAdd, child: child),
+          Hero(tag: 'MINIPLAYER', child: MiniPlayerParent()),
+          const Positioned(
+            bottom: 60.0,
+            child: SelectedTracksPreviewContainer(),
+          ),
+        ],
       ),
     );
   }

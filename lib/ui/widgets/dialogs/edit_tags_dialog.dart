@@ -9,7 +9,6 @@ import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -549,6 +548,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                       children: [
                         Obx(
                           () => MultiArtworkContainer(
+                            heroTag: 'edittags_artwork',
                             size: Get.width / 3,
                             tracks: tracks,
                             onTopWidget: tracks.length > 3

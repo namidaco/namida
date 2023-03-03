@@ -11,38 +11,44 @@ class MultiArtworkContainer extends StatelessWidget {
   final Widget? onTopWidget;
   final List<Track>? tracks;
   final EdgeInsetsGeometry? margin;
-  const MultiArtworkContainer({super.key, required this.size, this.child, this.margin, this.tracks, this.onTopWidget});
+  final Object heroTag;
+  const MultiArtworkContainer({super.key, required this.size, this.child, this.margin, this.tracks, this.onTopWidget, required this.heroTag});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: margin ?? const EdgeInsets.symmetric(horizontal: 12.0),
-      padding: const EdgeInsets.all(3.0),
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: context.theme.cardTheme.color?.withAlpha(180),
-        borderRadius: BorderRadius.circular(18.0.multipliedRadius),
-        boxShadow: [
-          BoxShadow(
-            color: context.theme.shadowColor,
-            blurRadius: 8,
-            offset: const Offset(0, 2.0),
-          )
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-        child: Stack(
-          children: [
-            if (tracks != null)
-              MultiArtworks(
-                tracks: tracks!,
-                thumbnailSize: size - 6.0,
-              ),
-            if (child != null) child!,
-            if (onTopWidget != null) onTopWidget!,
+    return Hero(
+      tag: 'parent_$heroTag',
+      child: Container(
+        margin: margin ?? const EdgeInsets.symmetric(horizontal: 12.0),
+        padding: const EdgeInsets.all(3.0),
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: context.theme.cardTheme.color?.withAlpha(180),
+          borderRadius: BorderRadius.circular(18.0.multipliedRadius),
+          boxShadow: [
+            BoxShadow(
+              color: context.theme.shadowColor,
+              blurRadius: 8,
+              offset: const Offset(0, 2.0),
+            )
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+          child: Stack(
+            children: [
+              if (tracks != null)
+                MultiArtworks(
+                  heroTag: heroTag,
+                  disableHero: true,
+                  tracks: tracks!,
+                  thumbnailSize: size - 6.0,
+                ),
+              if (child != null) child!,
+              if (onTopWidget != null) onTopWidget!,
+            ],
+          ),
         ),
       ),
     );

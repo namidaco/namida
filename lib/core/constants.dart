@@ -7,7 +7,7 @@ String kInternalAppDirectoryPath = '';
 int kAudioFilesLength = 0;
 Set<String> kDirectoriesPaths = {};
 List<double> kDefaultWaveFormData = List<double>.generate(1000, (index) => 0.02);
-List<double> kDefaultScaleList = List<double>.generate(500, (index) => 0.9);
+List<double> kDefaultScaleList = List<double>.generate(500, (index) => 0.01);
 
 /// Main Color
 Color kMainColor = const Color.fromARGB(160, 117, 128, 224);
@@ -19,13 +19,18 @@ final String kSettingsFilePath = '$kAppDirectoryPath/NamidaSettings.gs';
 final String kTracksFilePath = '$kAppDirectoryPath/tracks.json';
 final String kPlaylistsFilePath = '$kAppDirectoryPath/playlists.json';
 final String kVideoPathsFilePath = '$kAppDirectoryPath/videoFilesPaths.txt';
-final String kQueueFilePath = '$kAppDirectoryPath/queue.json';
+final String kQueuesFilePath = '$kAppDirectoryPath/queue.json';
+final String kLatestQueueFilePath = '$kAppDirectoryPath/latestqueue.json';
 
 final String kArtworksDirPath = '$kAppDirectoryPath/Artworks/';
 final String kArtworksCompDirPath = '$kAppDirectoryPath/ArtworksCompressed/';
 final String kWaveformDirPath = '$kAppDirectoryPath/Waveforms/';
 final String kVideosCachePath = '$kAppDirectoryPath/Videos/';
 final String kVideosCacheTempPath = '$kAppDirectoryPath/Videos/Temp/';
+
+/// Dimensions
+const double kBottomPadding = 102.0;
+const Widget kBottomPaddingWidget = SizedBox(height: 102.0);
 
 /// Stock Library Tabs List
 final List<String> kLibraryTabsStock = [

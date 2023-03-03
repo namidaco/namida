@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/ui/pages/albums_page.dart';
+import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
@@ -12,7 +12,7 @@ import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 class AlbumTile extends StatelessWidget {
   final List<Track> album;
 
-  AlbumTile({
+  const AlbumTile({
     super.key,
     required this.album,
   });

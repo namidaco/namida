@@ -3,8 +3,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/ui/pages/albums_page.dart';
-import 'package:namida/ui/pages/artists_page.dart';
+import 'package:namida/ui/pages/subpages/artist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';

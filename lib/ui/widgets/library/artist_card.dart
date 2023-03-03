@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/ui/pages/artists_page.dart';
+import 'package:namida/ui/pages/subpages/artist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
@@ -35,7 +35,7 @@ class ArtistCard extends StatelessWidget {
           child: Column(
             children: [
               Hero(
-                tag: 'artist_artwork_${artist[0].path}',
+                tag: 'artist$name',
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: horizontalPadding),
                   child: ContainerWithBorder(
@@ -45,6 +45,7 @@ class ArtistCard extends StatelessWidget {
                       borderRadius: 10.0,
                       forceSquared: true,
                       blur: 0,
+                      iconSize: 32.0,
                     ),
                   ),
                 ),

@@ -9,10 +9,11 @@ class MultiArtworkCard extends StatelessWidget {
   final List<Track> tracks;
   final String name;
   final int gridCount;
+  final Object heroTag;
   final void Function()? onTap;
   final void Function()? showMenuFunction;
 
-  const MultiArtworkCard({super.key, required this.tracks, required this.name, required this.gridCount, this.onTap, this.showMenuFunction});
+  const MultiArtworkCard({super.key, required this.tracks, required this.name, required this.gridCount, this.onTap, this.showMenuFunction, required this.heroTag});
 
   @override
   Widget build(BuildContext context) {
@@ -33,14 +34,13 @@ class MultiArtworkCard extends StatelessWidget {
             onTap: onTap,
             child: Column(
               children: [
-                Hero(
-                  tag: 'multi_artwork_$name$tracks',
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                    child: MultiArtworks(
-                      tracks: tracks,
-                      thumbnailSize: thumnailSize,
-                    ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                  child: MultiArtworks(
+                    heroTag: heroTag,
+                    tracks: tracks,
+                    thumbnailSize: thumnailSize,
+                    iconSize: 92.0 - 14 * gridCount,
                   ),
                 ),
                 Expanded(

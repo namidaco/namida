@@ -82,12 +82,12 @@ class ExpandableBox extends StatelessWidget {
                   const SizedBox(width: 12.0),
                   Expanded(child: textField),
                   const SizedBox(width: 12.0),
-                  IconButton(
+                  NamidaIconButton(
                     onPressed: () {
                       onCloseButtonPressed();
                       Get.focusScope?.unfocus();
                     },
-                    icon: const Icon(Broken.close_circle),
+                    icon: Broken.close_circle,
                   ),
                   const SizedBox(width: 8.0),
                 ],

@@ -1,16 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
-import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/strings.dart';
+import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
@@ -129,7 +129,9 @@ class PlaylistsPage extends StatelessWidget {
                                     duration: const Duration(milliseconds: 400),
                                     child: PlaylistTile(
                                       playlist: playlist,
-                                      onTap: tracksToAdd != null ? () => PlaylistController.inst.addTracksToPlaylist(playlist.id, tracksToAdd!) : null,
+                                      onTap: tracksToAdd != null
+                                          ? () => PlaylistController.inst.addTracksToPlaylist(playlist.id, tracksToAdd!)
+                                          : () => Get.to(() => PlaylistracksPage(playlist: playlist)),
                                     ),
                                   ),
                                 ),
@@ -157,10 +159,12 @@ class PlaylistsPage extends StatelessWidget {
                                   child: FadeInAnimation(
                                     duration: const Duration(milliseconds: 400),
                                     child: MultiArtworkCard(
+                                      heroTag: 'parent_playlist_artwork_${playlist.id}',
                                       tracks: playlist.tracks,
                                       name: playlist.name,
                                       gridCount: playlistGridCount,
                                       showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(playlist),
+                                      onTap: () => Get.to(() => PlaylistracksPage(playlist: playlist)),
                                     ),
                                   ),
                                 ),
@@ -170,8 +174,8 @@ class PlaylistsPage extends StatelessWidget {
                           ),
                         ),
                       if (!disableBottomPadding)
-                        SliverPadding(
-                          padding: EdgeInsets.only(bottom: SelectedTracksController.inst.bottomPadding.value),
+                        const SliverPadding(
+                          padding: EdgeInsets.only(bottom: kBottomPadding),
                         )
                     ],
                   ),

@@ -4,20 +4,20 @@ import 'package:namida/class/track.dart';
 class SelectedTracksController extends GetxController {
   static SelectedTracksController inst = SelectedTracksController();
   RxList<Track> selectedTracks = <Track>[].obs;
-  RxDouble bottomPadding = 102.0.obs;
+  // RxDouble bottomPadding = 102.0.obs;
 
   RxBool isMenuMinimized = true.obs;
   RxBool isExpanded = false.obs;
 
-  SelectedTracksController() {
-    selectedTracks.listen((st) {
-      if (st.isNotEmpty) {
-        bottomPadding.value = 102.0;
-      } else {
-        bottomPadding.value = 0.0;
-      }
-    });
-  }
+  // SelectedTracksController() {
+  //   selectedTracks.listen((st) {
+  //     if (st.isNotEmpty) {
+  //       bottomPadding.value = 102.0;
+  //     } else {
+  //       bottomPadding.value = 102.0;
+  //     }
+  //   });
+  // }
 
   void selectOrUnselect(Track track) {
     if (selectedTracks.contains(track)) {

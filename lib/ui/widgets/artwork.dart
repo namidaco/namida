@@ -111,7 +111,7 @@ class ArtworkWidget extends StatelessWidget {
             height: height ?? thumnailSize,
             key: const ValueKey("empty"),
             decoration: BoxDecoration(
-              color: bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.colorScheme.background),
+              color: bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
               borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
             ),
             child: Icon(
@@ -170,11 +170,15 @@ class MultiArtworks extends StatelessWidget {
   final double thumbnailSize;
   final Color? bgcolor;
   final double borderRadius;
-  const MultiArtworks({super.key, required this.tracks, required this.thumbnailSize, this.bgcolor, this.borderRadius = 8.0});
+  final Object heroTag;
+  final bool disableHero;
+  final double iconSize;
+  const MultiArtworks(
+      {super.key, required this.tracks, required this.thumbnailSize, this.bgcolor, this.borderRadius = 8.0, required this.heroTag, this.disableHero = false, this.iconSize = 29.0});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final child = Container(
       height: thumbnailSize,
       width: thumbnailSize,
       clipBehavior: Clip.antiAlias,
@@ -189,7 +193,7 @@ class MultiArtworks extends StatelessWidget {
               forceDummyArtwork: true,
               bgcolor: bgcolor,
               borderRadius: borderRadius,
-              iconSize: 28.0,
+              iconSize: iconSize,
             )
           : tracks.length == 1
               ? ArtworkWidget(
@@ -211,6 +215,7 @@ class MultiArtworks extends StatelessWidget {
                           blur: 0,
                           borderRadius: 0,
                           cacheHeight: 480,
+                          iconSize: iconSize - 2.0,
                         ),
                         ArtworkWidget(
                           thumnailSize: thumbnailSize / 2,
@@ -220,6 +225,7 @@ class MultiArtworks extends StatelessWidget {
                           blur: 0,
                           borderRadius: 0,
                           cacheHeight: 480,
+                          iconSize: iconSize - 2.0,
                         ),
                       ],
                     )
@@ -234,6 +240,7 @@ class MultiArtworks extends StatelessWidget {
                                   forceSquared: true,
                                   blur: 0,
                                   borderRadius: 0,
+                                  iconSize: iconSize - 2.0,
                                 ),
                                 ArtworkWidget(
                                   thumnailSize: thumbnailSize / 2,
@@ -241,6 +248,7 @@ class MultiArtworks extends StatelessWidget {
                                   forceSquared: true,
                                   blur: 0,
                                   borderRadius: 0,
+                                  iconSize: iconSize - 2.0,
                                 ),
                               ],
                             ),
@@ -254,6 +262,7 @@ class MultiArtworks extends StatelessWidget {
                                   borderRadius: 0,
                                   height: thumbnailSize,
                                   cacheHeight: 480,
+                                  iconSize: iconSize,
                                 ),
                               ],
                             ),
@@ -269,6 +278,7 @@ class MultiArtworks extends StatelessWidget {
                                   forceSquared: true,
                                   blur: 0,
                                   borderRadius: 0,
+                                  iconSize: iconSize - 3.0,
                                 ),
                                 ArtworkWidget(
                                   thumnailSize: thumbnailSize / 2,
@@ -276,6 +286,7 @@ class MultiArtworks extends StatelessWidget {
                                   forceSquared: true,
                                   blur: 0,
                                   borderRadius: 0,
+                                  iconSize: iconSize - 3.0,
                                 ),
                               ],
                             ),
@@ -287,6 +298,7 @@ class MultiArtworks extends StatelessWidget {
                                   forceSquared: true,
                                   blur: 0,
                                   borderRadius: 0,
+                                  iconSize: iconSize - 3.0,
                                 ),
                                 ArtworkWidget(
                                   thumnailSize: thumbnailSize / 2,
@@ -294,6 +306,7 @@ class MultiArtworks extends StatelessWidget {
                                   forceSquared: true,
                                   blur: 0,
                                   borderRadius: 0,
+                                  iconSize: iconSize - 3.0,
                                   // width: 100,
                                 ),
                               ],
@@ -301,5 +314,11 @@ class MultiArtworks extends StatelessWidget {
                           ],
                         ),
     );
+    return disableHero
+        ? child
+        : Hero(
+            tag: heroTag,
+            child: child,
+          );
   }
 }

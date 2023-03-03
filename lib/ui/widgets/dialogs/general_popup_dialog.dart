@@ -6,8 +6,8 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 
 import 'package:namida/controller/video_controller.dart';
-import 'package:namida/ui/pages/albums_page.dart';
-import 'package:namida/ui/pages/artists_page.dart';
+import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
+import 'package:namida/ui/pages/subpages/artist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
@@ -78,16 +78,11 @@ Future<void> showGeneralPopupDialog(
                         ),
                       if (!forceSingleArtwork)
                         MultiArtworkContainer(
+                          heroTag: 'edittags_artwork',
                           size: 60,
                           tracks: tracks,
                           margin: EdgeInsets.zero,
                         ),
-                      // if (track == null && tracks == null)
-                      //   ArtworkWidget(
-                      //     track: Indexer.inst.tracksInfoList.first,
-                      //     thumnailSize: 60,
-                      //     forceDummyArtwork: true,
-                      //   ),
                       const SizedBox(width: 12.0),
                       Expanded(
                         child: Column(
@@ -97,7 +92,7 @@ Future<void> showGeneralPopupDialog(
                           children: [
                             if (title.isNotEmpty)
                               Text(
-                                title,
+                                title.overflow,
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                                 style: Get.textTheme.displayLarge?.copyWith(
@@ -110,7 +105,7 @@ Future<void> showGeneralPopupDialog(
                             ),
                             if (subtitle.isNotEmpty)
                               Text(
-                                subtitle,
+                                subtitle.overflow,
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                                 style: Get.textTheme.displayMedium?.copyWith(
@@ -123,7 +118,7 @@ Future<void> showGeneralPopupDialog(
                                 height: 1.0,
                               ),
                               Text(
-                                thirdLineText,
+                                thirdLineText.overflow,
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                                 style: Get.textTheme.displaySmall?.copyWith(
@@ -404,8 +399,7 @@ Future<void> showGeneralPopupDialog(
                       title: Language.inst.REMOVE_FROM_PLAYLIST,
                       icon: Broken.box_remove,
                       onTap: () {
-                        //TODO
-                        // PlaylistController.inst.removeTracksFromPlaylist(playlist,track);
+                        PlaylistController.inst.removeTracksFromPlaylist(playlist.id, tracks);
                         Get.close(1);
                       },
                     ),

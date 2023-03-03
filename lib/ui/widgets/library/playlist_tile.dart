@@ -35,12 +35,10 @@ class PlaylistTile extends StatelessWidget {
             height: playlistTileHeight + 14,
             child: Row(
               children: [
-                Hero(
-                  tag: 'playlist_artwork_${playlist.date}',
-                  child: MultiArtworkContainer(
-                    size: playlistThumnailSize,
-                    tracks: playlist.tracks,
-                  ),
+                MultiArtworkContainer(
+                  heroTag: 'playlist_artwork_${playlist.id}',
+                  size: playlistThumnailSize,
+                  tracks: playlist.tracks,
                 ),
                 Expanded(
                   child: Column(
