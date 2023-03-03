@@ -96,7 +96,8 @@ void main() async {
     Indexer.inst.prepareTracksFile(tfe);
   }
   await PlaylistController.inst.preparePlaylistFile();
-  await QueueController.inst.prepareQueueFile();
+  QueueController.inst.prepareQueuesFile();
+  await QueueController.inst.prepareLatestQueueFile();
   await VideoController.inst.getVideoFiles();
 
   /// updates values on startup

@@ -16,6 +16,8 @@ class QueueController extends GetxController {
 
   RxList<Queue> queueList = <Queue>[].obs;
 
+  RxList<Track> latestQueue = <Track>[].obs;
+
   void addNewQueue({
     String name = '',
     List<Track> tracks = const <Track>[],
@@ -49,6 +51,7 @@ class QueueController extends GetxController {
   }
 
   void updateLatestQueue(List<Track> tracks) {
+    latestQueue.assignAll(tracks);
     queueList.last.tracks.assignAll(tracks.map((e) => e.path).toList());
     _writeToStorage();
   }
@@ -78,8 +81,8 @@ class QueueController extends GetxController {
   // }
 
   ///
-  Future<void> prepareQueueFile({File? file}) async {
-    file ??= await File(kQueueFilePath).create();
+  Future<void> prepareQueuesFile({File? file}) async {
+    file ??= await File(kQueuesFilePath).create();
 
     String contents = await file.readAsString();
     if (contents.isNotEmpty) {
@@ -88,7 +91,6 @@ class QueueController extends GetxController {
       for (var p in jsonResponse) {
         Queue queue = Queue(
           p['name'],
-          // List<String>.from(p['tracks'].map((i) => Track.fromJson(i))),
           List<String>.from(p['tracks']),
           p['date'],
           p['comment'],
@@ -98,9 +100,28 @@ class QueueController extends GetxController {
         printInfo(info: "queue: ${queueList.length}");
       }
     }
+  }
+
+  ///
+  Future<void> prepareLatestQueueFile({File? file}) async {
+    file ??= await File(kLatestQueueFilePath).create();
+
+    String content = await file.readAsString();
+
+    if (content.isEmpty) {
+      return;
+    }
+    final res = List<String>.from(json.decode(content));
+
+    /// Since we are using paths instead of real Track Objects, we need to match all tracks with these paths
+    final matchingSet = HashSet<String>.from(res.toList());
+    final finalTracks = Indexer.inst.tracksInfoList.where((item) => matchingSet.contains(item.path));
+    latestQueue.assignAll(finalTracks);
+
+    printInfo(info: "latestqueue: ${latestQueue.length}");
 
     // Assign the last queue to the [Player]
-    if (queueList.isEmpty || await file.stat().then((value) => value.size < 100)) {
+    if (latestQueue.isEmpty || await file.stat().then((value) => value.size < 100)) {
       return;
     }
     final latestTrack = Indexer.inst.tracksInfoList.firstWhere(
@@ -108,15 +129,15 @@ class QueueController extends GetxController {
       orElse: () => Indexer.inst.tracksInfoList.first,
     );
 
-    final matchingSet = HashSet.from(queueList.last.tracks);
-    final finalTracks = Indexer.inst.tracksInfoList.where((item) => matchingSet.contains(item.path));
-
-    await Player.inst.playOrPause(track: latestTrack, queue: finalTracks.toList());
-    await Player.inst.pause();
+    await Player.inst.playOrPause(track: latestTrack, queue: latestQueue.toList(), disablePlay: true);
   }
 
   void _writeToStorage() {
+    /// latest queue file
+    File(kLatestQueueFilePath).writeAsStringSync(json.encode(queueList.last.tracks.map((pl) => pl).toList()));
+
+    /// all queues file
     queueList.map((pl) => pl.toJson()).toList();
-    File(kQueueFilePath).writeAsStringSync(json.encode(queueList));
+    File(kQueuesFilePath).writeAsStringSync(json.encode(queueList));
   }
 }
