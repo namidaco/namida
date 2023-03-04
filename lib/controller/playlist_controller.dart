@@ -29,9 +29,7 @@ class PlaylistController extends GetxController {
 
   void addToHistory(Track track) {
     currentListenedSeconds.value = 0;
-    // if (playlistList.firstWhere((element) => element.id == -1).tracks.first == Player.inst.nowPlayingTrack.value) {
-    //   return;
-    // }
+
     final sec = SettingsController.inst.isTrackPlayedSecondsCount.value;
     final perSett = SettingsController.inst.isTrackPlayedPercentageCount.value;
     final trDurInSec = Player.inst.nowPlayingTrack.value.duration / 1000;
@@ -42,8 +40,15 @@ class PlaylistController extends GetxController {
       if (Player.inst.isPlaying.value) {
         currentListenedSeconds++;
       }
+
+      Player.inst.nowPlayingTrack.listen((p0) {
+        if (track != p0) {
+          timer.cancel();
+          return;
+        }
+      });
       // TODO: bug possibilty, the percentage may be higher or lower by 1
-      if ((track != Player.inst.nowPlayingTrack.value || currentListenedSeconds.value == sec || per.toInt() == perSett)) {
+      if ((currentListenedSeconds.value == sec || per.toInt() == perSett)) {
         addTracksToPlaylist(-2, [Player.inst.nowPlayingTrack.value], addAtFirst: true);
         timer.cancel();
         return;
@@ -119,7 +124,14 @@ class PlaylistController extends GetxController {
   }) {
     id ??= playlistList.length + 1;
     date ??= DateTime.now().millisecondsSinceEpoch;
+
     playlistList.add(Playlist(id, name, tracks, date, comment, modes));
+
+    _writeToStorage();
+  }
+
+  void insertPlaylist(Playlist playlist, int index) {
+    playlistList.insert(index, playlist);
     _writeToStorage();
   }
 
@@ -163,6 +175,12 @@ class PlaylistController extends GetxController {
     } else {
       pl.tracks.addAll(tracks);
     }
+    _writeToStorage();
+  }
+
+  void insertTracksInPlaylist(int id, List<Track> tracks, int index) {
+    final pl = playlistList.firstWhere((p0) => p0.id == id);
+    pl.tracks.insertAll(index, tracks);
     _writeToStorage();
   }
 

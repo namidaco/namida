@@ -71,13 +71,6 @@ class Player extends GetxController {
       /// for video
       await updateVideoPlayingState();
     });
-    isPlaying.listen((p) {
-      if (p) {
-        Timer.periodic(const Duration(seconds: 1), (timer) {
-          SettingsController.inst.save(totalListenedTimeInSec: SettingsController.inst.totalListenedTimeInSec.value + 1);
-        });
-      }
-    });
 
     /// Position Stream
     player.positionStream.listen((event) {
@@ -103,39 +96,25 @@ class Player extends GetxController {
       await CurrentColor.inst.updatePlayerColor(tr);
       updateAllAudioDependantListeners(null, tr);
       PlaylistController.inst.addToHistory(nowPlayingTrack.value);
+      increaseListenTime(tr);
       SettingsController.inst.setData('lastPlayedTrackPath', tr.path);
     });
-
-    // currentQueue.listen((q) {
-    //   final playlist = ConcatenatingAudioSource(
-    //     useLazyPreparation: true,
-    //     shuffleOrder: DefaultShuffleOrder(),
-    //     children: q
-    //         .asMap()
-    //         .entries
-    //         .map(
-    //           (e) => AudioSource.uri(
-    //             Uri.parse(e.value.path),
-    //             tag: MediaItem(
-    //               id: e.key.toString(),
-    //               title: e.value.title,
-    //               displayTitle: e.value.title,
-    //               displaySubtitle: "${e.value.artistsList.take(3).join(', ')} - ${e.value.album}",
-    //               displayDescription: "${e.key + 1}/${q.length}",
-    //               artist: e.value.artistsList.take(3).join(', '),
-    //               album: e.value.album,
-    //               genre: e.value.genresList.take(3).join(', '),
-    //               duration: Duration(milliseconds: e.value.duration),
-    //               artUri: Uri.file(e.value.pathToImage),
-    //             ),
-    //           ),
-    //         )
-    //         .toList(),
-    //   );
-    //   player.setAudioSource(playlist, initialIndex: q.indexOf(nowPlayingTrack.value), initialPosition: Duration.zero);
-    //   printInfo(info: q.length.toString());
-    // });
   }
+
+  void increaseListenTime(Track track) {
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      nowPlayingTrack.listen((p0) {
+        if (track != p0) {
+          timer.cancel();
+          return;
+        }
+      });
+      if (isPlaying.value) {
+        SettingsController.inst.save(totalListenedTimeInSec: SettingsController.inst.totalListenedTimeInSec.value + 1);
+      }
+    });
+  }
+
   Future<void> updateAllAudioDependantListeners([int? i, Track? track]) async {
     i ??= player.currentIndex ?? 0;
     track ??= currentQueue.elementAt(i);
