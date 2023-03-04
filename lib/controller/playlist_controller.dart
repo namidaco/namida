@@ -27,7 +27,7 @@ class PlaylistController extends GetxController {
 
   RxInt currentListenedSeconds = 0.obs;
 
-  void addToHistory() {
+  void addToHistory(Track track) {
     currentListenedSeconds.value = 0;
     // if (playlistList.firstWhere((element) => element.id == -1).tracks.first == Player.inst.nowPlayingTrack.value) {
     //   return;
@@ -43,7 +43,7 @@ class PlaylistController extends GetxController {
         currentListenedSeconds++;
       }
       // TODO: bug possibilty, the percentage may be higher or lower by 1
-      if ((currentListenedSeconds.value == sec || per.toInt() == perSett)) {
+      if ((track != Player.inst.nowPlayingTrack.value || currentListenedSeconds.value == sec || per.toInt() == perSett)) {
         addTracksToPlaylist(-2, [Player.inst.nowPlayingTrack.value], addAtFirst: true);
         timer.cancel();
         return;
@@ -81,19 +81,18 @@ class PlaylistController extends GetxController {
   void sortPlaylists({GroupSortType? sortBy, bool? reverse}) {
     sortBy ??= SettingsController.inst.playlistSort.value;
     reverse ??= SettingsController.inst.playlistSortReversed.value;
-    var preList = playlistList;
     switch (sortBy) {
       case GroupSortType.title:
-        preList.sort((a, b) => a.name.compareTo(a.name));
+        playlistList.sort((a, b) => a.name.compareTo(a.name));
         break;
       case GroupSortType.year:
-        preList.sort((a, b) => a.date.compareTo(b.date));
+        playlistList.sort((a, b) => a.date.compareTo(b.date));
         break;
       case GroupSortType.duration:
-        preList.sort((a, b) => a.tracks.totalDuration.compareTo(b.tracks.totalDuration));
+        playlistList.sort((a, b) => a.tracks.totalDuration.compareTo(b.tracks.totalDuration));
         break;
       case GroupSortType.numberOfTracks:
-        preList.sort((a, b) => a.tracks.length.compareTo(b.tracks.length));
+        playlistList.sort((a, b) => a.tracks.length.compareTo(b.tracks.length));
         break;
 
       default:
@@ -101,9 +100,7 @@ class PlaylistController extends GetxController {
     }
 
     if (reverse) {
-      playlistList.value = List.from(preList.reversed);
-    } else {
-      playlistList.value = List.from(preList);
+      playlistList.assignAll(playlistList.toList().reversed);
     }
 
     SettingsController.inst.save(playlistSort: sortBy, playlistSortReversed: reverse);
@@ -161,12 +158,19 @@ class PlaylistController extends GetxController {
 
   void addTracksToPlaylist(int id, List<Track> tracks, {bool addAtFirst = false}) {
     final pl = playlistList.firstWhere((p0) => p0.id == id);
-    final plIndex = playlistList.indexOf(pl);
-    final finalTracks = addAtFirst ? [...tracks, ...pl.tracks] : [...pl.tracks, ...tracks];
-    final newPlaylist = Playlist(pl.id, pl.name, finalTracks, pl.date, pl.comment, pl.modes);
+    if (addAtFirst) {
+      pl.tracks.insertAll(0, tracks);
+    } else {
+      pl.tracks.addAll(tracks);
+    }
+    _writeToStorage();
+  }
 
-    playlistList.remove(pl);
-    playlistList.insert(plIndex, newPlaylist);
+  void removeTracksFromPlaylist(int id, List<Track> tracks) {
+    final pl = playlistList.firstWhere((p0) => p0.id == id);
+    for (final t in tracks) {
+      pl.tracks.remove(t);
+    }
     _writeToStorage();
   }
 
@@ -222,18 +226,18 @@ class PlaylistController extends GetxController {
     }
 
     /// Creates default playlists
-    if (!playlistList.toList().any((pl) => pl.id == -1 || pl.id == -2)) {
-      // Favourites
+    if (!playlistList.any((pl) => pl.id == -1)) {
       addNewPlaylist('Favourites', id: -1);
-      // History
+    }
+    if (!playlistList.any((pl) => pl.id == -2)) {
       addNewPlaylist('History', id: -2);
     }
-    printInfo(info: "playlist: ${playlistList.length}");
 
     searchPlaylists('');
   }
 
   void _writeToStorage() {
+    playlistList.refresh();
     searchPlaylists('');
     playlistList.map((pl) => pl.toJson()).toList();
     File(kPlaylistsFilePath).writeAsStringSync(json.encode(playlistList));
