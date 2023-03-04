@@ -273,6 +273,14 @@ void showSettingDialogWithTextField({
                   if (fontScaleFactor != null && (double.parse(value!) < 50 || double.parse(value) > 200)) {
                     return Language.inst.VALUE_BETWEEN_50_200;
                   }
+                  if (addNewPlaylist != null && (PlaylistController.inst.playlistList.any((element) => element.name == value))) {
+                    if (value!.isEmpty) {
+                      return Language.inst.PLEASE_ENTER_A_NAME;
+                    }
+                    if (PlaylistController.inst.playlistList.any((element) => element.name == value)) {
+                      return Language.inst.PLEASE_ENTER_A_DIFFERENT_NAME;
+                    }
+                  }
                   return null;
                 },
               ),

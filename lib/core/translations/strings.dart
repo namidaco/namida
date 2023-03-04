@@ -26,6 +26,8 @@ class Language {
   String get SECONDS => 'Seconds';
   String get PERCENTAGE => 'Percentage';
   String get AUTO_EXTRACT_TAGS_FROM_FILENAME => 'Auto extract from filename';
+  String get PLEASE_ENTER_A_NAME => 'Please enter a name';
+  String get PLEASE_ENTER_A_DIFFERENT_NAME => 'This name already exists :(\nplease try another fancy name';
 
   /// Main
   String get EXIT_APP => 'Exit';
