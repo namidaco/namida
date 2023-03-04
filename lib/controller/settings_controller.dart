@@ -61,7 +61,8 @@ class SettingsController extends GetxController {
   RxBool preventDuplicatedTracks = false.obs;
   RxBool respectNoMedia = false.obs;
   RxString defaultBackupLocation = kInternalAppDirectoryPath.obs;
-  RxList<String> backupItemslist = [kTracksFilePath, kQueuesFilePath, kLatestQueueFilePath, kPlaylistsFilePath, kSettingsFilePath, kWaveformDirPath, kArtworksCompDirPath].obs;
+  RxList<String> backupItemslist =
+      [kTracksFilePath, kQueuesFilePath, kLatestQueueFilePath, kPaletteDirPath, kPlaylistsFilePath, kSettingsFilePath, kWaveformDirPath, kArtworksCompDirPath].obs;
   RxBool enableVideoPlayback = true.obs;
   RxInt videoPlaybackSource = 0.obs;
   RxList<String> youtubeVideoQualities = ['144p', '240p', '360p', '480p'].obs;

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:namida/controller/current_color.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -327,6 +328,56 @@ class ExtrasSettings extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () {
                           WaveformController.inst.generateAllWaveforms();
+                          Get.close(1);
+                        },
+                        child: Text(Language.inst.GENERATE),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            },
+          ),
+          CustomListTile(
+            icon: Broken.colorfilter,
+            title: Language.inst.EXTRACT_ALL_COLOR_PALETTES,
+            trailing: Obx(
+              () => Column(
+                children: [
+                  Text("${Indexer.inst.colorPalettesInStorage.value}/${Indexer.inst.tracksInfoList.length}"),
+                  if (CurrentColor.inst.generatingAllColorPalettes.value) const LoadingIndicator(),
+                ],
+              ),
+            ),
+            onTap: () async {
+              if (CurrentColor.inst.generatingAllColorPalettes.value) {
+                await Get.dialog(
+                  CustomBlurryDialog(
+                    title: Language.inst.NOTE,
+                    bodyText: Language.inst.FORCE_STOP_COLOR_PALETTE_GENERATION,
+                    actions: [
+                      const CancelButton(),
+                      ElevatedButton(
+                        onPressed: () {
+                          CurrentColor.inst.generatingAllColorPalettes.value = false;
+                          Get.close(1);
+                        },
+                        child: Text(Language.inst.STOP),
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                await Get.dialog(
+                  CustomBlurryDialog(
+                    title: Language.inst.NOTE,
+                    bodyText: Language.inst.EXTRACT_ALL_COLOR_PALETTES_SUBTITLE
+                        .replaceFirst('_REMAINING_COLOR_PALETTES_', '${Indexer.inst.tracksInfoList.length - Indexer.inst.colorPalettesInStorage.value}'),
+                    actions: [
+                      const CancelButton(),
+                      ElevatedButton(
+                        onPressed: () {
+                          CurrentColor.inst.generateAllColorPalettes();
                           Get.close(1);
                         },
                         child: Text(Language.inst.GENERATE),

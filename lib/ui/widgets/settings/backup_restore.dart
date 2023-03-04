@@ -115,6 +115,15 @@ class BackupAndRestore extends StatelessWidget {
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
+                                active: isActive(kPaletteDirPath),
+                                title: Language.inst.COLOR_PALETTES,
+                                icon: Broken.colorfilter,
+                                onTap: () => onItemTap(kPaletteDirPath),
+                              ),
+                              const SizedBox(
+                                height: 12.0,
+                              ),
+                              ListTileWithCheckMark(
                                 active: isActive(kVideosCachePath),
                                 title: Language.inst.VIDEO_CACHE,
                                 icon: Broken.video,

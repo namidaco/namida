@@ -32,6 +32,7 @@ class Language {
   String get UNDO_CHANGES => 'Undo Changes?';
   String get UNDO_CHANGES_DELETED_TRACK => 'Undo deleted track';
   String get UNDO_CHANGES_DELETED_PLAYLIST => 'Undo deleted playlist';
+  String get COLOR_PALETTES => 'Color Palettes';
 
   /// Main
   String get EXIT_APP => 'Exit';
@@ -216,6 +217,9 @@ class Language {
 
   /// Advanced
   String get GENERATE_ALL_WAVEFORM_DATA => 'Generate All Waveform data';
+  String get EXTRACT_ALL_COLOR_PALETTES => 'Extract All Color Palettes';
+  String get EXTRACT_ALL_COLOR_PALETTES_SUBTITLE => 'Extract Remaining _REMAINING_COLOR_PALETTES_?';
+  String get FORCE_STOP_COLOR_PALETTE_GENERATION => 'Force stop extracting color palettes? you can still continue it later';
   String get GENERATE_ALL_WAVEFORM_DATA_SUBTITLE =>
       'You currently have _WAVEFORM_CURRENT_LENGTH_ waveforms generated out of _WAVEFORM_TOTAL_LENGTH_.\n\nThis is a heavy process and generating for all tracks at once will take quite a while, proceed?';
   String get FORCE_STOP_WAVEFORM_GENERATION => 'Force stop generating waveforms? you can still continue it later';

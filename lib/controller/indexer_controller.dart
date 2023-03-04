@@ -31,6 +31,7 @@ class Indexer extends GetxController {
   RxInt artworksInStorage = Directory(kArtworksDirPath).listSync().length.obs;
   RxInt artworksCompInStorage = Directory(kArtworksCompDirPath).listSync().length.obs;
   RxInt waveformsInStorage = Directory(kWaveformDirPath).listSync().length.obs;
+  RxInt colorPalettesInStorage = Directory(kPaletteDirPath).listSync().length.obs;
   RxInt videosInStorage = Directory(kWaveformDirPath).listSync().length.obs;
 
   RxInt artworksSizeInStorage = 0.obs;
@@ -818,6 +819,17 @@ class Indexer extends GetxController {
       if (entity is File) {
         waveformsInStorage.value++;
         waveformsSizeInStorage.value += entity.lengthSync();
+      }
+    });
+  }
+
+  void updateColorPalettesSizeInStorage() {
+    // resets values
+    colorPalettesInStorage.value = 0;
+
+    Directory(kPaletteDirPath).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
+      if (entity is File) {
+        colorPalettesInStorage.value++;
       }
     });
   }
