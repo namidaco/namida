@@ -388,7 +388,20 @@ Future<void> showGeneralPopupDialog(
                       title: Language.inst.DELETE_PLAYLIST,
                       icon: Broken.pen_remove,
                       onTap: () {
+                        final pl = playlist;
+                        final index = PlaylistController.inst.playlistList.indexOf(pl);
                         PlaylistController.inst.removePlaylist(playlist);
+                        Get.snackbar(
+                          Language.inst.UNDO_CHANGES,
+                          Language.inst.UNDO_CHANGES_DELETED_PLAYLIST,
+                          mainButton: TextButton(
+                            onPressed: () {
+                              PlaylistController.inst.insertPlaylist(playlist, index);
+                              Get.closeAllSnackbars();
+                            },
+                            child: Text(Language.inst.UNDO),
+                          ),
+                        );
                         Get.close(1);
                       },
                     ),
@@ -399,7 +412,28 @@ Future<void> showGeneralPopupDialog(
                       title: Language.inst.REMOVE_FROM_PLAYLIST,
                       icon: Broken.box_remove,
                       onTap: () {
+                        Map<int, Track> tr = {};
+                        for (final t in tracks) {
+                          tr.addAll({playlist.tracks.indexOf(t): t});
+                        }
                         PlaylistController.inst.removeTracksFromPlaylist(playlist.id, tracks);
+                        Get.snackbar(
+                          Language.inst.UNDO_CHANGES,
+                          Language.inst.UNDO_CHANGES_DELETED_TRACK,
+                          mainButton: TextButton(
+                            onPressed: () {
+                              tr.forEach((key, value) {
+                                PlaylistController.inst.insertTracksInPlaylist(
+                                  playlist.id,
+                                  [value],
+                                  key,
+                                );
+                              });
+                              Get.closeAllSnackbars();
+                            },
+                            child: Text(Language.inst.UNDO),
+                          ),
+                        );
                         Get.close(1);
                       },
                     ),

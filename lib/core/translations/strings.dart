@@ -28,6 +28,10 @@ class Language {
   String get AUTO_EXTRACT_TAGS_FROM_FILENAME => 'Auto extract from filename';
   String get PLEASE_ENTER_A_NAME => 'Please enter a name';
   String get PLEASE_ENTER_A_DIFFERENT_NAME => 'This name already exists :(\nplease try another fancy name';
+  String get UNDO => 'Undo';
+  String get UNDO_CHANGES => 'Undo Changes?';
+  String get UNDO_CHANGES_DELETED_TRACK => 'Undo deleted track';
+  String get UNDO_CHANGES_DELETED_PLAYLIST => 'Undo deleted playlist';
 
   /// Main
   String get EXIT_APP => 'Exit';
