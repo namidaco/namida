@@ -262,7 +262,6 @@ class Player extends GetxController {
       index = 0;
     }
     await player.seek(const Duration(microseconds: 0), index: index ?? currentQueue.indexOf(track));
-    player.play();
     player.setVolume(SettingsController.inst.playerVolume.value);
   }
 
@@ -297,13 +296,14 @@ class Player extends GetxController {
       track = finalQueue.first;
     }
 
+    nowPlayingTrack.value = track;
+
     /// if the queue is the same, it will skip instead of rebuilding the queue, certainly more performant
     if (const IterableEquality().equals(finalQueue, currentQueue.toList())) {
       await skipToQueueItem(track: track);
       printInfo(info: "Skipped");
       return;
     }
-    nowPlayingTrack.value = track;
 
     /// saves queue to storage before changing it
     QueueController.inst.addNewQueue(tracks: currentQueue.toList());
