@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:namida/controller/player_controller.dart';
 
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -240,11 +241,44 @@ class PlaybackSettings extends StatelessWidget {
               ),
               title: Language.inst.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE,
               onChanged: (value) {
-                SettingsController.inst.save(
-                  enableVolumeFadeOnPlayPause: !value,
-                );
+                SettingsController.inst.save(enableVolumeFadeOnPlayPause: !value);
+                Player.inst.setVolume(SettingsController.inst.playerVolume.value);
               },
               value: SettingsController.inst.enableVolumeFadeOnPlayPause.value,
+            ),
+          ),
+          Obx(
+            () => CustomListTile(
+              icon: Broken.play,
+              title: Language.inst.PLAY_FADE_DURATION,
+              trailing: NamidaWheelSlider(
+                totalCount: 1900,
+                initValue: SettingsController.inst.playerPlayFadeDurInMilli.value,
+                itemSize: 2,
+                squeeze: 0.4,
+                onValueChanged: (val) {
+                  final v = (val + 100) as int;
+                  SettingsController.inst.save(playerPlayFadeDurInMilli: v);
+                },
+                text: "${SettingsController.inst.playerPlayFadeDurInMilli.value}ms",
+              ),
+            ),
+          ),
+          Obx(
+            () => CustomListTile(
+              icon: Broken.pause,
+              title: Language.inst.PAUSE_FADE_DURATION,
+              trailing: NamidaWheelSlider(
+                totalCount: 1900,
+                initValue: SettingsController.inst.playerPauseFadeDurInMilli.value,
+                itemSize: 2,
+                squeeze: 0.4,
+                onValueChanged: (val) {
+                  final v = (val + 100) as int;
+                  SettingsController.inst.save(playerPauseFadeDurInMilli: v);
+                },
+                text: "${SettingsController.inst.playerPauseFadeDurInMilli.value}ms",
+              ),
             ),
           ),
           Obx(

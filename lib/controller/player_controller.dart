@@ -157,12 +157,65 @@ class Player extends GetxController {
     currentQueue.refresh();
   }
 
+  Future<void> setVolume(double volume) async {
+    await player.setVolume(volume);
+  }
+
+  bool wantToPause = false;
   Future<void> play() async {
-    await player.play();
+    wantToPause = false;
+    if (!SettingsController.inst.enableVolumeFadeOnPlayPause.value) {
+      player.play();
+      return;
+    }
+    final duration = SettingsController.inst.playerPlayFadeDurInMilli.value;
+    final interval = (0.1 * duration).toInt();
+    final steps = duration ~/ interval;
+    double vol = 0.0;
+    player.play();
+    Timer.periodic(Duration(milliseconds: interval), (timer) {
+      vol += 1 / steps;
+      printInfo(info: "VOLLLLLLLL PLAY ${vol.toString()}");
+      setVolume(vol);
+      if (vol >= SettingsController.inst.playerVolume.value || wantToPause) {
+        timer.cancel();
+      }
+    });
   }
 
   Future<void> pause() async {
-    await player.pause();
+    wantToPause = true;
+    if (!SettingsController.inst.enableVolumeFadeOnPlayPause.value) {
+      player.pause();
+      return;
+    }
+    // final AudioPlayer _player2 = AudioPlayer();
+    // try {
+    //   final track = nowPlayingTrack.value;
+    //   player.stop();
+    //   await _player2.setAudioSource(_getAudioSourcePlaylist([track]), initialPosition: nowPlayingPosition.value.milliseconds);
+
+    //   _player2.play();
+    // } catch (e) {
+    //   printError(info: e.toString());
+    // }
+    // player.pause();
+    // print('VOLLLLLLLL${_player2.audioSource?.sequence.first.tag}');
+
+    final duration = SettingsController.inst.playerPauseFadeDurInMilli.value;
+    final interval = (0.1 * duration).toInt();
+    final steps = duration ~/ interval;
+    double vol = player.volume;
+    Timer.periodic(Duration(milliseconds: interval), (timer) {
+      vol -= 1 / steps;
+      printInfo(info: "VOLLLLLLLL PAUSE ${vol.toString()}");
+      setVolume(vol);
+      if (vol <= 0.0) {
+        timer.cancel();
+        player.pause();
+      }
+    });
+    setVolume(player.volume);
   }
 
   Future<void> next() async {
@@ -187,6 +240,8 @@ class Player extends GetxController {
       index = 0;
     }
     await player.seek(const Duration(microseconds: 0), index: index ?? currentQueue.indexOf(track));
+    player.play();
+    player.setVolume(SettingsController.inst.playerVolume.value);
   }
 
   Future<void> seek(Duration position, {int? index}) async {

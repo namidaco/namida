@@ -43,6 +43,7 @@ class Language {
   String get PLAYBACK_SETTING_SUBTITLE => 'Most of these setting can be accessed directly in the player by long pressing the video button';
   String get AUDIO => 'Audio';
   String get VIDEO => 'Video';
+  String get LOCAL => 'Local';
   String get VIDEO_CACHE => 'Video Cache';
   String get VIDEO_CACHE_FILE => 'Cached Video File';
   String get VIDEO_CACHE_FILES => 'Cached Video Files';
@@ -59,6 +60,8 @@ class Language {
   String get VIDEO_QUALITY => 'Video Quality';
   String get VIDEO_QUALITY_SUBTITLE => 'Highest quality available will be picked.';
   String get VIDEO_QUALITY_SUBTITLE_NOTE => 'It\'s always good to keep more alternatives in case a quality isn\'t found, otherwise it will fallback to the worst quality';
+  String get PLAY_FADE_DURATION => 'Play Fade Duration';
+  String get PAUSE_FADE_DURATION => 'Pause Fade Duration';
 
   // String get PRESS_FOR_MORE_INFO => 'Press for more info';
 

@@ -71,6 +71,9 @@ class SettingsController extends GetxController {
   RxInt isTrackPlayedPercentageCount = 40.obs;
   RxBool displayFavouriteIconInListTile = true.obs;
   RxInt waveformTotalBars = 140.obs;
+  RxDouble playerVolume = 1.0.obs;
+  RxInt playerPlayFadeDurInMilli = 300.obs;
+  RxInt playerPauseFadeDurInMilli = 300.obs;
 
   /// Track Items
   RxBool displayThirdRow = true.obs;
@@ -152,6 +155,9 @@ class SettingsController extends GetxController {
     isTrackPlayedPercentageCount.value = getInt('isTrackPlayedPercentageCount') ?? isTrackPlayedPercentageCount.value;
     displayFavouriteIconInListTile.value = getBool('displayFavouriteIconInListTile') ?? displayFavouriteIconInListTile.value;
     waveformTotalBars.value = getInt('waveformTotalBars') ?? waveformTotalBars.value;
+    playerVolume.value = getDouble('playerVolume') ?? playerVolume.value;
+    playerPlayFadeDurInMilli.value = getInt('playerPlayFadeDurInMilli') ?? playerPlayFadeDurInMilli.value;
+    playerPauseFadeDurInMilli.value = getInt('playerPauseFadeDurInMilli') ?? playerPauseFadeDurInMilli.value;
 
     /// Track Items
     displayThirdRow.value = getBool('displayThirdRow') ?? displayThirdRow.value;
@@ -239,6 +245,9 @@ class SettingsController extends GetxController {
     int? isTrackPlayedPercentageCount,
     bool? displayFavouriteIconInListTile,
     int? waveformTotalBars,
+    double? playerVolume,
+    int? playerPlayFadeDurInMilli,
+    int? playerPauseFadeDurInMilli,
   }) {
     if (themeMode != null) {
       this.themeMode.value = themeMode;
@@ -533,6 +542,18 @@ class SettingsController extends GetxController {
     if (waveformTotalBars != null) {
       this.waveformTotalBars.value = waveformTotalBars;
       setData('waveformTotalBars', waveformTotalBars);
+    }
+    if (playerVolume != null) {
+      this.playerVolume.value = playerVolume;
+      setData('playerVolume', playerVolume);
+    }
+    if (playerPlayFadeDurInMilli != null) {
+      this.playerPlayFadeDurInMilli.value = playerPlayFadeDurInMilli;
+      setData('playerPlayFadeDurInMilli', playerPlayFadeDurInMilli);
+    }
+    if (playerPauseFadeDurInMilli != null) {
+      this.playerPauseFadeDurInMilli.value = playerPauseFadeDurInMilli;
+      setData('playerPauseFadeDurInMilli', playerPauseFadeDurInMilli);
     }
     update();
   }
