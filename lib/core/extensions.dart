@@ -1,8 +1,11 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' hide Playlist;
+import 'package:path/path.dart' as p;
 
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
@@ -460,4 +463,27 @@ extension YTVideoQuality on String {
     }
     return VideoQuality.low144;
   }
+}
+
+extension VideoSource on int {
+  String get toText {
+    if (this == 0) {
+      return Language.inst.AUTO;
+    }
+    if (this == 1) {
+      return Language.inst.VIDEO_PLAYBACK_SOURCE_LOCAL;
+    }
+    if (this == 2) {
+      return Language.inst.VIDEO_PLAYBACK_SOURCE_YOUTUBE;
+    }
+
+    return '';
+  }
+}
+
+extension FileNameUtils on String {
+  String get getFilename => p.basename(this);
+  String get getFilenameWOExt => p.basenameWithoutExtension(this);
+  String get getExtension => p.extension(this).substring(1);
+  String get getDirectoryName => p.dirname(this);
 }

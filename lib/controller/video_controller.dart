@@ -1,5 +1,3 @@
-// ignore_for_file: depend_on_referenced_packages
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -12,7 +10,6 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:path/path.dart' as p;
 import 'package:video_player/video_player.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
@@ -152,7 +149,7 @@ class VideoController extends GetxController {
     if (SettingsController.inst.videoPlaybackSource.value != 2 /* not youtube */) {
       final videoFiles = Directory(kVideosCachePath).listSync();
       for (var f in videoFiles) {
-        if (p.basename(f.path).contains(youtubeVideoId.value)) {
+        if (f.path.getFilename.contains(youtubeVideoId.value)) {
           await playAndInitializeVideo(f.path, track);
           final s = await f.stat();
           videoTotalSize.value = s.size;

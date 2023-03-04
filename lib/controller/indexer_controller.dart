@@ -1,5 +1,3 @@
-// ignore_for_file: depend_on_referenced_packages
-
 import 'dart:convert';
 import 'dart:io';
 
@@ -8,7 +6,6 @@ import 'package:get/get.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:on_audio_edit/on_audio_edit.dart' as audioedit;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:path/path.dart' as p;
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -123,8 +120,8 @@ class Indexer extends GetxController {
   }
 
   Future<void> extractOneArtwork(String path, {bool forceReExtract = false}) async {
-    final fileOfFull = File("$kArtworksDirPath${p.basename(path)}.png");
-    final fileOfComp = File("$kArtworksCompDirPath${p.basename(path)}.png");
+    final fileOfFull = File("$kArtworksDirPath${path.getFilename}.png");
+    final fileOfComp = File("$kArtworksCompDirPath${path.getFilename}.png");
 
     if (forceReExtract) {
       await fileOfFull.delete();
@@ -225,7 +222,7 @@ class Indexer extends GetxController {
           final trackInfo = await onAudioEdit.readAudio(track);
 
           /// skip duplicated tracks according to filename
-          if (SettingsController.inst.preventDuplicatedTracks.value && listOfCurrentFileNames.contains(p.basename(track))) {
+          if (SettingsController.inst.preventDuplicatedTracks.value && listOfCurrentFileNames.contains(track.getFilename)) {
             duplicatedTracksLength.value++;
             continue;
           }
@@ -278,12 +275,12 @@ class Indexer extends GetxController {
             fileStat.accessed.millisecondsSinceEpoch,
             fileStat.changed.millisecondsSinceEpoch,
             track,
-            "$kArtworksDirPath${p.basename(track)}.png",
-            "$kArtworksCompDirPath${p.basename(track)}.png",
-            p.dirname(track),
-            p.basename(track),
-            p.basenameWithoutExtension(track),
-            p.extension(track).substring(1),
+            "$kArtworksDirPath${track.getFilename}.png",
+            "$kArtworksCompDirPath${track.getFilename}.png",
+            track.getDirectoryName,
+            track.getFilename,
+            track.getFilenameWOExt,
+            track.getExtension,
             trackInfo.getMap['COMMENT'] ?? '',
             trackInfo.bitrate ?? 0,
             trackInfo.sampleRate ?? 0,
@@ -298,7 +295,7 @@ class Indexer extends GetxController {
           tracksInfoList.add(newTrackEntry);
           print(tracksInfoList.length);
 
-          listOfCurrentFileNames.add(p.basename(track));
+          listOfCurrentFileNames.add(track.getFilename);
           searchTracks('');
         } catch (e) {
           printError(info: e.toString());

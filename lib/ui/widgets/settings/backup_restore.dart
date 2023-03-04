@@ -1,5 +1,3 @@
-// ignore_for_file: depend_on_referenced_packages
-
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,11 +5,11 @@ import 'package:flutter_archive/flutter_archive.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart' as p;
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -239,7 +237,7 @@ Future<void> createBackupFile() async {
   try {
     for (var d in dirsOnly) {
       try {
-        final dirZipFile = File("$kAppDirectoryPath/TEMPDIR_${p.basename(d.path)}.zip");
+        final dirZipFile = File("$kAppDirectoryPath/TEMPDIR_${d.path.getFilename}.zip");
         await ZipFile.createFromDirectory(sourceDir: d, zipFile: dirZipFile);
         filesOnly.add(dirZipFile);
       } catch (e) {
@@ -253,7 +251,7 @@ Future<void> createBackupFile() async {
     // after finishing
     final all = sourceDir.listSync();
     for (var one in all) {
-      if (p.basename(one.path).startsWith('TEMPDIR_')) {
+      if (one.path.getFilename.startsWith('TEMPDIR_')) {
         await one.delete();
       }
     }
@@ -276,7 +274,7 @@ Future<void> restoreBackupOnTap(bool auto) async {
 
     List<File> filessss = [];
     for (var pf in possibleFiles) {
-      if (p.basename(pf.path).startsWith('Namida Backup - ')) {
+      if (pf.path.getFilename.startsWith('Namida Backup - ')) {
         if (pf is File) {
           filessss.add(pf);
         }
@@ -301,10 +299,10 @@ Future<void> restoreBackupOnTap(bool auto) async {
   // after finishing, extracts zip files inside the main zip
   final all = Directory(kAppDirectoryPath).listSync();
   for (var one in all) {
-    if (p.basename(one.path).startsWith('TEMPDIR_')) {
+    if (one.path.getFilename.startsWith('TEMPDIR_')) {
       if (one is File) {
         await ZipFile.extractToDirectory(
-            zipFile: one, destinationDir: Directory("$kAppDirectoryPath/${p.basename(one.path).replaceFirst('TEMPDIR_', '').replaceFirst('.zip', '')}"));
+            zipFile: one, destinationDir: Directory("$kAppDirectoryPath/${one.path.getFilename.replaceFirst('TEMPDIR_', '').replaceFirst('.zip', '')}"));
         await one.delete();
       }
     }

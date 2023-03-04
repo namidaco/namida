@@ -1,16 +1,14 @@
-// ignore_for_file: depend_on_referenced_packages
-
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:get/get.dart';
-import 'package:path/path.dart' as p;
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/extensions.dart';
 
 class WaveformController extends GetxController {
   static final WaveformController inst = WaveformController();
@@ -27,7 +25,7 @@ class WaveformController extends GetxController {
   ///
   /// <br>
   Future<void> generateWaveform(Track track) async {
-    final wavePath = "$kWaveformDirPath${p.basename(track.path)}.wave";
+    final wavePath = "$kWaveformDirPath${track.path.getFilename}.wave";
     final waveFile = File(wavePath);
     final waveFileStat = await waveFile.stat();
 

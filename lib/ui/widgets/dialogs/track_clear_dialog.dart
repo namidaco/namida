@@ -1,15 +1,13 @@
-// ignore_for_file: depend_on_referenced_packages
-
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:path/path.dart' as p;
 
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -31,7 +29,7 @@ void showTrackClearDialog(List<Track> tracks) {
               for (final track in tracks) {
                 final videoId = VideoController.inst.extractYTIDFromTrack(track);
                 for (final v in allvideo) {
-                  if (p.basename(v.path).startsWith(videoId)) {
+                  if (v.path.getFilename.startsWith(videoId)) {
                     await v.delete();
                   }
                 }
