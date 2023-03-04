@@ -74,6 +74,7 @@ class SettingsController extends GetxController {
   RxDouble playerVolume = 1.0.obs;
   RxInt playerPlayFadeDurInMilli = 300.obs;
   RxInt playerPauseFadeDurInMilli = 300.obs;
+  RxInt totalListenedTimeInSec = 0.obs;
 
   /// Track Items
   RxBool displayThirdRow = true.obs;
@@ -158,6 +159,7 @@ class SettingsController extends GetxController {
     playerVolume.value = getDouble('playerVolume') ?? playerVolume.value;
     playerPlayFadeDurInMilli.value = getInt('playerPlayFadeDurInMilli') ?? playerPlayFadeDurInMilli.value;
     playerPauseFadeDurInMilli.value = getInt('playerPauseFadeDurInMilli') ?? playerPauseFadeDurInMilli.value;
+    totalListenedTimeInSec.value = getInt('totalListenedTimeInSec') ?? totalListenedTimeInSec.value;
 
     /// Track Items
     displayThirdRow.value = getBool('displayThirdRow') ?? displayThirdRow.value;
@@ -248,6 +250,7 @@ class SettingsController extends GetxController {
     double? playerVolume,
     int? playerPlayFadeDurInMilli,
     int? playerPauseFadeDurInMilli,
+    int? totalListenedTimeInSec,
   }) {
     if (themeMode != null) {
       this.themeMode.value = themeMode;
@@ -554,6 +557,10 @@ class SettingsController extends GetxController {
     if (playerPauseFadeDurInMilli != null) {
       this.playerPauseFadeDurInMilli.value = playerPauseFadeDurInMilli;
       setData('playerPauseFadeDurInMilli', playerPauseFadeDurInMilli);
+    }
+    if (totalListenedTimeInSec != null) {
+      this.totalListenedTimeInSec.value = totalListenedTimeInSec;
+      setData('totalListenedTimeInSec', totalListenedTimeInSec);
     }
     update();
   }

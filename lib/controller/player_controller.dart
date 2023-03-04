@@ -71,6 +71,13 @@ class Player extends GetxController {
       /// for video
       await updateVideoPlayingState();
     });
+    isPlaying.listen((p) {
+      if (p) {
+        Timer.periodic(const Duration(seconds: 1), (timer) {
+          SettingsController.inst.save(totalListenedTimeInSec: SettingsController.inst.totalListenedTimeInSec.value + 1);
+        });
+      }
+    });
 
     /// Position Stream
     player.positionStream.listen((event) {

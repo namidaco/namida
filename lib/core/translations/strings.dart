@@ -74,7 +74,8 @@ class Language {
   /// Stats
   String get STATS => 'Statistics';
   String get STATS_SUBTITLE => 'Here are some info about your library';
-  String get TOTAL_TRACKS_DURATION => 'Total Tracks';
+  String get TOTAL_TRACKS_DURATION => 'Total Tracks Duration';
+  String get TOTAL_LISTEN_TIME => 'Total Listen Time';
 
   /// [Setting Values]
   ///
