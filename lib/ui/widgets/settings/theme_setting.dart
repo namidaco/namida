@@ -3,6 +3,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -149,9 +150,14 @@ class ThemeSetting extends StatelessWidget {
                 title: Language.inst.AUTO_COLORING,
                 subtitle: Language.inst.AUTO_COLORING_SUBTITLE,
                 value: SettingsController.inst.autoColor.value,
-                onChanged: (p0) {
+                onChanged: (p0) async {
                   SettingsController.inst.save(autoColor: !p0);
-                  CurrentColor.inst.color.value = playerStaticColor;
+                  if (p0) {
+                    CurrentColor.inst.color.value = playerStaticColor;
+                  } else {
+                    await CurrentColor.inst.setPlayerColor(Player.inst.nowPlayingTrack.value);
+                  }
+
                   CurrentColor.inst.updateThemeAndRefresh();
                 },
               ),
