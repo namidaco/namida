@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:external_path/external_path.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -21,7 +22,6 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/selected_tracks_preview.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/themes.dart';
@@ -82,7 +82,6 @@ void main() async {
   kInternalAppDirectoryPath = "${paths[0]}/Namida";
 
   Get.put(() => SettingsController());
-  Get.put(() => SelectedTracksController());
   Get.put(() => ScrollSearchController());
   Get.put(() => Player());
   Get.put(() => VideoController());
@@ -225,4 +224,21 @@ class _KeepAliveWrapperState extends State<KeepAliveWrapper> with AutomaticKeepA
 
   @override
   bool get wantKeepAlive => true;
+}
+
+class CustomReorderableDelayedDragStartListener extends ReorderableDragStartListener {
+  final Duration delay;
+
+  const CustomReorderableDelayedDragStartListener({
+    this.delay = const Duration(milliseconds: 1),
+    Key? key,
+    required Widget child,
+    required int index,
+    bool enabled = true,
+  }) : super(key: key, child: child, index: index, enabled: enabled);
+
+  @override
+  MultiDragGestureRecognizer createRecognizer() {
+    return DelayedMultiDragGestureRecognizer(delay: delay, debugOwner: this);
+  }
 }
