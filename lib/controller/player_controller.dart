@@ -1,5 +1,7 @@
 // ignore_for_file: depend_on_referenced_packages
 
+import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:collection/collection.dart';
 import 'package:just_audio/just_audio.dart';
@@ -13,14 +15,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/controller/indexer_controller.dart';
 
-//
-//
-//
-//
-//
-//
 class Player extends GetxController {
   static Player inst = Player();
   final player = AudioPlayer();
@@ -30,10 +25,43 @@ class Player extends GetxController {
   RxInt currentIndex = 0.obs;
   RxBool isPlaying = false.obs;
   RxInt nowPlayingPosition = 0.obs;
+  Rx<ConcatenatingAudioSource>? playlist;
 
   Player() {
+    playlist?.value = ConcatenatingAudioSource(
+      useLazyPreparation: true,
+      shuffleOrder: DefaultShuffleOrder(),
+      children: currentQueue
+          .asMap()
+          .entries
+          .map(
+            (e) => AudioSource.uri(
+              Uri.parse(e.value.path),
+              tag: MediaItem(
+                id: e.key.toString(),
+                title: e.value.title,
+                displayTitle: e.value.title,
+                displaySubtitle: "${e.value.artistsList.take(3).join(', ')} - ${e.value.album}",
+                displayDescription: "${e.key + 1}/${currentQueue.length}",
+                artist: e.value.artistsList.take(3).join(', '),
+                album: e.value.album,
+                genre: e.value.genresList.take(3).join(', '),
+                duration: Duration(milliseconds: e.value.duration),
+                artUri: Uri.file(e.value.pathToImage),
+              ),
+            ),
+          )
+          .toList(),
+    );
     player.playbackEventStream.listen((event) {
       QueueController.inst.updateLatestQueue(currentQueue.toList());
+    });
+
+    player.processingStateStream.listen((state) async {
+      if (state == ProcessingState.completed) {
+        await player.seek(const Duration(microseconds: 0), index: 0);
+        await player.pause();
+      }
     });
 
     /// isPlaying Stream
@@ -59,12 +87,15 @@ class Player extends GetxController {
       currentIndex.value = event ?? 0;
     });
     currentIndex.listen((i) async {
-      await updateAllAudioDependantListeners(i);
-      PlaylistController.inst.addToHistory();
-      SettingsController.inst.setData('lastPlayedTrackPath', nowPlayingTrack.value.path);
+      // await updateAllAudioDependantListeners(i);
+      nowPlayingTrack.value = currentQueue.elementAt(i);
+      // PlaylistController.inst.addToHistory(nowPlayingTrack.value);
+      // SettingsController.inst.setData('lastPlayedTrackPath', nowPlayingTrack.value.path);
     });
-    nowPlayingTrack.listen((tr) {
+    nowPlayingTrack.listen((tr) async {
+      await CurrentColor.inst.updatePlayerColor(tr);
       updateAllAudioDependantListeners(null, tr);
+      PlaylistController.inst.addToHistory(nowPlayingTrack.value);
       SettingsController.inst.setData('lastPlayedTrackPath', tr.path);
     });
 
@@ -106,12 +137,11 @@ class Player extends GetxController {
 
     nowPlayingTrack.value = track;
     WaveformController.inst.generateWaveform(track);
-    CurrentColor.inst.updatePlayerColor(track);
+    // await CurrentColor.inst.updatePlayerColor(track);
 
     /// for video
     if (SettingsController.inst.enableVideoPlayback.value) {
-      VideoController.inst.updateYTLink(track);
-      await VideoController.inst.updateLocalVidPath(track);
+      VideoController.inst.updateLocalVidPath(track);
     }
     await updateVideoPlayingState();
   }
@@ -124,6 +154,7 @@ class Player extends GetxController {
       VideoController.inst.pause();
     }
     await refreshVideoPosition();
+    // await VideoController.inst.vidcontroller?.setVolume(0.0);
   }
 
   /// refreshes video position, usually after a play/pause or after switching video display
@@ -146,15 +177,20 @@ class Player extends GetxController {
     if (insertNext) {
       // finalQueue.insertAll(currentIndex.value + 1, tracks);
       finalQueue = [...currentQueue.getRange(0, currentIndex.value + 1), ...tracks, ...currentQueue.getRange(currentIndex.value + tracks.length, currentQueue.length)];
+      currentQueue.assignAll(finalQueue);
+      await playlist?.value.insertAll(currentIndex.value + 1, tracks.map((e) => e.toAudioSource).toList());
       printInfo(info: finalQueue.map((e) => e.title).toString());
     } else {
       // finalQueue.addAll(tracks);
       finalQueue = [...currentQueue, ...tracks];
+      currentQueue.assignAll(finalQueue);
+      await playlist?.value.addAll(tracks.map((e) => e.toAudioSource).toList());
     }
 
-    await player.setAudioSource(_getAudioSourcePlaylist(finalQueue),
-        initialIndex: currentQueue.indexOf(nowPlayingTrack.value), initialPosition: Duration(milliseconds: nowPlayingPosition.value));
-    currentQueue.refresh();
+    // await player.setAudioSource(_getAudioSourcePlaylist(finalQueue),
+    //     initialIndex: currentQueue.indexOf(nowPlayingTrack.value), initialPosition: Duration(milliseconds: nowPlayingPosition.value));
+
+    QueueController.inst.updateLatestQueue(currentQueue.toList());
   }
 
   Future<void> setVolume(double volume) async {
@@ -249,46 +285,50 @@ class Player extends GetxController {
     VideoController.inst.seek(position, index: index);
   }
 
-  Future<void> playOrPause({Track? track, List<Track>? queue, bool playSingle = false, bool shuffle = false}) async {
+  Future<void> playOrPause({Track? track, List<Track> queue = const [], bool playSingle = false, bool shuffle = false, bool disablePlay = false}) async {
     track ??= nowPlayingTrack.value;
-    if (nowPlayingTrack.value == track) {
+
+    if (queue.isEmpty) {
       if (player.playerState.playing) {
         nowPlayingPosition.value = player.position.inMilliseconds;
 
-        player.pause();
+        await pause();
       } else {
-        await player.play();
-        await player.seek(Duration(milliseconds: nowPlayingPosition.value));
+        await play();
+        await seek(Duration(milliseconds: nowPlayingPosition.value));
       }
       return;
     }
+    List<Track> finalQueue = <Track>[];
 
     if (playSingle) {
-      queue = [track];
+      finalQueue.assign(track);
+    } else {
+      finalQueue.assignAll(queue);
+    }
+    if (shuffle) {
+      finalQueue.shuffle();
+      track = finalQueue.first;
     }
 
-    queue ??= Indexer.inst.trackSearchList.toList();
-
-    nowPlayingTrack.value = track;
-
     /// if the queue is the same, it will skip instead of rebuilding the queue, certainly more performant
-    if (const IterableEquality().equals(queue, currentQueue.toList())) {
+    if (const IterableEquality().equals(finalQueue, currentQueue.toList())) {
       await skipToQueueItem(track: track);
       printInfo(info: "Skipped");
       return;
     }
+    nowPlayingTrack.value = track;
 
     /// saves queue to storage before changing it
     QueueController.inst.addNewQueue(tracks: currentQueue.toList());
 
-    if (shuffle) {
-      queue.shuffle();
+    currentQueue.assignAll(finalQueue);
+
+    player.setAudioSource(_getAudioSourcePlaylist(finalQueue), initialIndex: finalQueue.indexOf(track), initialPosition: Duration.zero);
+    if (!disablePlay) {
+      player.play();
+      player.setVolume(SettingsController.inst.playerVolume.value);
     }
-
-    currentQueue.assignAll(queue);
-
-    player.setAudioSource(_getAudioSourcePlaylist(queue), initialIndex: queue.indexOf(track), initialPosition: Duration.zero);
-    player.play();
   }
 
   ConcatenatingAudioSource _getAudioSourcePlaylist(List<Track> playlist) {
@@ -323,5 +363,25 @@ class Player extends GetxController {
   void onClose() {
     Get.delete();
     super.onClose();
+  }
+}
+
+extension AUDIOSOURCEPLAYLIST on Track {
+  AudioSource get toAudioSource {
+    return AudioSource.uri(
+      Uri.parse(path),
+      tag: MediaItem(
+        id: path,
+        title: title,
+        displayTitle: title,
+        displaySubtitle: "${artistsList.take(3).join(', ')} - $album",
+        displayDescription: "${Player.inst.currentQueue.indexOf(this) + 1}/${Player.inst.currentQueue.length}",
+        artist: artistsList.take(3).join(', '),
+        album: album,
+        genre: genresList.take(3).join(', '),
+        duration: Duration(milliseconds: duration),
+        artUri: Uri.file(pathToImage),
+      ),
+    );
   }
 }
