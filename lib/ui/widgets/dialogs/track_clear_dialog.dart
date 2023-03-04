@@ -39,7 +39,7 @@ void showTrackClearDialog(List<Track> tracks) {
 
               Get.close(1);
               Player.inst.updateVideoPlayingState();
-              VideoController.inst.youtubeLink.value = '';
+              VideoController.inst.resetEverything();
             },
           ),
           CustomListTile(

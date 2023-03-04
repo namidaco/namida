@@ -11,6 +11,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/translations/strings.dart';
 import 'package:path/path.dart' as p;
 import 'package:video_player/video_player.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
@@ -25,22 +26,30 @@ class VideoController extends GetxController {
   /// Youtube
   RxString youtubeLink = ''.obs;
   RxString youtubeVideoId = ''.obs;
-  RxBool isVideoReady = false.obs;
   RxInt videoCurrentSize = 0.obs;
   RxString videoCurrentQuality = ''.obs;
   RxInt videoTotalSize = 0.obs;
-  // YoutubePlayerController? ytcontroller;
+  RxBool isLocal = false.obs;
   VideoPlayerController? vidcontroller;
   var ytexp = YoutubeExplode();
 
   /// Always assigns to [VideoController.inst.youtubeLink] and [VideoController.inst.youtubeVideoId]
   void updateYTLink(Track track) {
+    localVidPath.value = '';
     youtubeLink.value = '';
-    videoCurrentSize.value = 0;
-    isVideoReady.value = false;
+    resetEverything();
     final link = extractYTLinkFromTrack(track);
     youtubeLink.value = link;
     youtubeVideoId.value = extractIDFromYTLink(link);
+  }
+
+  void resetEverything() {
+    // youtubeLink.value = '';
+    // youtubeVideoId.value = '';
+    // isVideoReady.value = false;
+    videoCurrentSize.value = 0;
+    videoCurrentQuality.value = ' ? ';
+    videoTotalSize.value = 0;
   }
 
   String extractYTLinkFromTrack(Track track) {
@@ -124,20 +133,23 @@ class VideoController extends GetxController {
 
   Future<void> updateLocalVidPath([Track? track]) async {
     track ??= Player.inst.nowPlayingTrack.value;
-    localVidPath.value = '';
-    videoCurrentSize.value = 0;
+    resetEverything();
+    updateYTLink(track);
 
     /// Video Found in Local Storage
     for (var vf in videoFilesPathList) {
       if (vf.contains(track.displayNameWOExt)) {
+        await vidcontroller?.setVolume(0.0);
         await playAndInitializeVideo(vf, track);
+        await vidcontroller?.setVolume(0.0);
+        videoCurrentQuality.value = Language.inst.LOCAL;
         printInfo(info: 'RETURNED AFTER LOCAL');
         return;
       }
     }
 
     /// Video Found in Video Cache Directory
-    if (SettingsController.inst.videoPlaybackSource.value != 2) {
+    if (SettingsController.inst.videoPlaybackSource.value != 2 /* not youtube */) {
       final videoFiles = Directory(kVideosCachePath).listSync();
       for (var f in videoFiles) {
         if (p.basename(f.path).contains(youtubeVideoId.value)) {
@@ -151,27 +163,31 @@ class VideoController extends GetxController {
       }
     }
 
-    if (SettingsController.inst.videoPlaybackSource.value != 1) {
+    if (SettingsController.inst.videoPlaybackSource.value != 1 /* not local */) {
+      localVidPath.value = '';
+      youtubeLink.value = '';
       await playAndInitializeVideo(await downloadYoutubeVideo(youtubeVideoId.value, track), track);
       printInfo(info: 'RETURNED AFTER DOWNLOAD');
     }
+  }
 
-    // disposes the video controller in case no video was found
-    // if (localVidPath.value == '') {
-    //   vidcontroller?.dispose();
-    // }
+  void updateThingys() {
+    videoCurrentQuality.value = ' ? ';
+    videoTotalSize.value = 0;
   }
 
   /// track is important to initialize the player only if the user didnt skip the song
   Future<void> playAndInitializeVideo(String path, Track track) async {
     if (Player.inst.nowPlayingTrack.value == track) {
       final file = File(path);
+      await vidcontroller?.setVolume(0.0);
       vidcontroller = VideoPlayerController.file(file, videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true, allowBackgroundPlayback: true));
       await vidcontroller?.initialize();
-      vidcontroller?.setVolume(0);
+      await vidcontroller?.setVolume(0.0);
       localVidPath.value = path;
 
       await Player.inst.updateVideoPlayingState();
+      update();
     }
   }
 
@@ -250,7 +266,8 @@ class VideoController extends GetxController {
   Future<void> toggleVideoPlaybackInSetting() async {
     SettingsController.inst.save(enableVideoPlayback: !SettingsController.inst.enableVideoPlayback.value);
     if (!SettingsController.inst.enableVideoPlayback.value) {
-      VideoController.inst.localVidPath.value = '';
+      localVidPath.value = '';
+      youtubeLink.value = '';
     } else {
       await VideoController.inst.updateLocalVidPath();
       await Player.inst.updateVideoPlayingState();
