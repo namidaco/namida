@@ -218,8 +218,8 @@ Future<void> createBackupFile() async {
   final date = format.format(DateTime.now().toLocal());
 
   // creates directories and file
-  await Directory(kInternalAppDirectoryPath).create();
-  await File("$kInternalAppDirectoryPath/Namida Backup - $date.zip").create();
+  await Directory(SettingsController.inst.defaultBackupLocation.value).create();
+  await File("${SettingsController.inst.defaultBackupLocation.value}/Namida Backup - $date.zip").create();
   final sourceDir = Directory(kAppDirectoryPath);
 
   // prepares files
