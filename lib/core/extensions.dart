@@ -83,11 +83,16 @@ extension TracksUtils on List<Track> {
 
 extension TotalTime on int {
   String get getTimeFormatted {
-    if (this == 0) {
-      return '0s';
+    final durInSec = Duration(seconds: this).inSeconds.remainder(60);
+
+    if (Duration(seconds: this).inSeconds < 60) {
+      return '${Duration(seconds: this).inSeconds}s';
     }
+
+    final durInMin = Duration(seconds: this).inMinutes.remainder(60);
+    final finalDurInMin = durInSec > 30 ? durInMin + 1 : durInMin;
     final durInHour = Duration(seconds: this).inHours;
-    return "${durInHour == 0 ? "" : "${durInHour}h "}${Duration(seconds: this).inMinutes.remainder(60) == 0 ? "" : "${Duration(seconds: this).inMinutes.remainder(60) + 1}min"}";
+    return "${durInHour == 0 ? "" : "${durInHour}h "}${durInMin == 0 ? "" : "${finalDurInMin}min"}";
   }
 }
 
