@@ -170,13 +170,26 @@ class PlaylistController extends GetxController {
 
   void addTracksToPlaylist(int id, List<Track> tracks, {bool addAtFirst = false}) {
     final pl = playlistList.firstWhere((p0) => p0.id == id);
-    if (addAtFirst) {
-      pl.tracks.insertAll(0, tracks);
-    } else {
-      pl.tracks.addAll(tracks);
-    }
+    final plIndex = playlistList.indexOf(pl);
+    final finalTracks = addAtFirst ? [...tracks, ...pl.tracks] : [...pl.tracks, ...tracks];
+    final newPlaylist = Playlist(pl.id, pl.name, finalTracks, pl.date, pl.comment, pl.modes);
+
+    playlistList.remove(pl);
+    playlistList.insert(plIndex, newPlaylist);
     _writeToStorage();
   }
+
+  /// Unsupported operation: Cannot add to an unmodifiable list
+
+  // void addTracksToPlaylist(int id, List<Track> tracks, {bool addAtFirst = false}) {
+  //   final pl = playlistList.firstWhere((p0) => p0.id == id);
+  //   if (addAtFirst) {
+  //     pl.tracks.insertAll(0, tracks);
+  //   } else {
+  //     pl.tracks.addAll(tracks);
+  //   }
+  //   _writeToStorage();
+  // }
 
   void insertTracksInPlaylist(int id, List<Track> tracks, int index) {
     final pl = playlistList.firstWhere((p0) => p0.id == id);
