@@ -115,7 +115,7 @@ class ThemeSetting extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
                               InkWell(
-                                onTap: () => onThemeChangeTap(ThemeMode.system, context.theme.brightness != Brightness.light),
+                                onTap: () => onThemeChangeTap(ThemeMode.system, context.theme.brightness == Brightness.light),
                                 child: Icon(
                                   Broken.autobrightness,
                                   color: currentTheme == ThemeMode.system ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.background,
