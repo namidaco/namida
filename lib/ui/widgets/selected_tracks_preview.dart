@@ -93,6 +93,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                                     track: stc.selectedTracks[i],
                                                     displayRightDragHandler: true,
                                                     isInSelectedTracksPreview: true,
+                                                    queue: SelectedTracksController.inst.selectedTracks.toList(),
                                                   ),
                                                 ),
                                               );

@@ -115,31 +115,35 @@ class PlaylistsPage extends StatelessWidget {
                           ),
                         ),
                       const SliverPadding(padding: EdgeInsets.only(top: 6.0)),
-                      if (playlistGridCount == 1)
+                      if (playlistGridCount == 1) ...[
+                        // SliverToBoxAdapter(
+                        //   child: PlaylistTile(
+                        //     playlist: Playlist(-3, 'Top Music', PlaylistController.inst.playlistList.firstWhere((element) => element.id == -2).tracks, 0, '', ['']),
+                        //     onTap: () => Get.to(
+                        //       () => PlaylisTracksPage(
+                        //         playlist: Playlist(-3, 'Top Music', PlaylistController.inst.playlistList.firstWhere((element) => element.id == -2).tracks, 0, '', ['']),
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
                         SliverList(
                           delegate: SliverChildBuilderDelegate(
                             (context, i) {
                               final playlist = PlaylistController.inst.playlistSearchList[i];
-                              return AnimationConfiguration.staggeredList(
+                              return AnimatingTile(
                                 position: i,
-                                duration: const Duration(milliseconds: 400),
-                                child: SlideAnimation(
-                                  verticalOffset: 25.0,
-                                  child: FadeInAnimation(
-                                    duration: const Duration(milliseconds: 400),
-                                    child: PlaylistTile(
-                                      playlist: playlist,
-                                      onTap: tracksToAdd != null
-                                          ? () => PlaylistController.inst.addTracksToPlaylist(playlist.id, tracksToAdd!)
-                                          : () => Get.to(() => PlaylistracksPage(playlist: playlist)),
-                                    ),
-                                  ),
+                                child: PlaylistTile(
+                                  playlist: playlist,
+                                  onTap: tracksToAdd != null
+                                      ? () => PlaylistController.inst.addTracksToPlaylist(playlist.id, tracksToAdd!)
+                                      : () => Get.to(() => PlaylisTracksPage(playlist: playlist)),
                                 ),
                               );
                             },
                             childCount: PlaylistController.inst.playlistSearchList.length,
                           ),
                         ),
+                      ],
                       if (playlistGridCount > 1)
                         SliverGrid(
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -150,23 +154,16 @@ class PlaylistsPage extends StatelessWidget {
                           delegate: SliverChildBuilderDelegate(
                             (context, i) {
                               final playlist = PlaylistController.inst.playlistSearchList[i];
-                              return AnimationConfiguration.staggeredGrid(
+                              return AnimatingGrid(
                                 columnCount: PlaylistController.inst.playlistSearchList.length,
                                 position: i,
-                                duration: const Duration(milliseconds: 400),
-                                child: SlideAnimation(
-                                  verticalOffset: 25.0,
-                                  child: FadeInAnimation(
-                                    duration: const Duration(milliseconds: 400),
-                                    child: MultiArtworkCard(
-                                      heroTag: 'parent_playlist_artwork_${playlist.id}',
-                                      tracks: playlist.tracks,
-                                      name: playlist.name,
-                                      gridCount: playlistGridCount,
-                                      showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(playlist),
-                                      onTap: () => Get.to(() => PlaylistracksPage(playlist: playlist)),
-                                    ),
-                                  ),
+                                child: MultiArtworkCard(
+                                  heroTag: 'parent_playlist_artwork_${playlist.id}',
+                                  tracks: playlist.tracks,
+                                  name: playlist.name,
+                                  gridCount: playlistGridCount,
+                                  showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(playlist),
+                                  onTap: () => Get.to(() => PlaylisTracksPage(playlist: playlist)),
                                 ),
                               );
                             },

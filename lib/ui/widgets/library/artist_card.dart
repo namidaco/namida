@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/ui/pages/subpages/artist_tracks_subpage.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
@@ -30,8 +30,9 @@ class ArtistCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 120, 120, 120),
+          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
           onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, artist),
-          onTap: () => Get.to(() => ArtistTracksPage(name: name)),
+          onTap: () => NamidaOnTaps.inst.onArtistTap(name),
           child: Column(
             children: [
               Hero(

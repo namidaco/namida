@@ -34,14 +34,12 @@ class MultiArtworkCard extends StatelessWidget {
             onTap: onTap,
             child: Column(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                  child: MultiArtworks(
-                    heroTag: heroTag,
-                    tracks: tracks,
-                    thumbnailSize: thumnailSize,
-                    iconSize: 92.0 - 14 * gridCount,
-                  ),
+                MultiArtworks(
+                  borderRadius: 12.0.multipliedFontScale,
+                  heroTag: heroTag,
+                  tracks: tracks,
+                  thumbnailSize: thumnailSize,
+                  iconSize: 92.0 - 14 * gridCount,
                 ),
                 Expanded(
                   child: Container(

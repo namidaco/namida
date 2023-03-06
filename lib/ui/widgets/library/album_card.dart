@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
@@ -12,13 +12,15 @@ import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 class AlbumCard extends StatelessWidget {
   final int? gridCountOverride;
   final List<Track> album;
-  final bool? staggered;
+  final bool staggered;
+  final bool compact;
 
-  AlbumCard({
+  const AlbumCard({
     super.key,
     this.gridCountOverride,
     required this.album,
-    this.staggered,
+    required this.staggered,
+    this.compact = false,
   });
 
   @override
@@ -50,23 +52,19 @@ class AlbumCard extends StatelessWidget {
           child: InkWell(
             highlightColor: const Color.fromARGB(60, 120, 120, 120),
             onLongPress: () => NamidaDialogs.inst.showAlbumDialog(album),
-            onTap: () {
-              Get.to(
-                () => AlbumTracksPage(album: album),
-              );
-            },
+            onTap: () => NamidaOnTaps.inst.onAlbumTap(album[0].album),
             child: Column(
               children: [
                 Hero(
-                  tag: 'album_artwork_${album[0].album}',
+                  tag: 'parent_album_artwork_${album[0].album}',
                   child: ArtworkWidget(
                     thumnailSize: thumnailSize,
                     track: album[0],
                     borderRadius: 10.0,
                     blur: 0,
                     iconSize: 32.0,
-                    forceSquared: !(staggered ?? SettingsController.inst.useAlbumStaggeredGridView.value),
-                    staggered: staggered ?? SettingsController.inst.useAlbumStaggeredGridView.value,
+                    forceSquared: !staggered,
+                    staggered: staggered,
                     onTopWidget: shouldDisplayTopRightDate
                         ? Positioned(
                             top: 0,
@@ -82,7 +80,7 @@ class AlbumCard extends StatelessWidget {
                   ),
                 ),
                 Expanded(
-                  flex: SettingsController.inst.useAlbumStaggeredGridView.value ? 0 : 1,
+                  flex: staggered ? 0 : 1,
                   child: Stack(
                     children: [
                       Container(
@@ -92,7 +90,7 @@ class AlbumCard extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (SettingsController.inst.useAlbumStaggeredGridView.value) SizedBox(height: fontSize * 0.7),
+                            if (staggered && !compact) SizedBox(height: fontSize * 0.7),
                             Text(
                               album[0].album.overflow,
                               style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize * 1.16),
@@ -100,7 +98,7 @@ class AlbumCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                             if (!SettingsController.inst.albumCardTopRightDate.value || album[0].albumArtist != '') ...[
-                              const SizedBox(height: 2.0),
+                              // if (!compact) const SizedBox(height: 2.0),
                               if (shouldDisplayNormalDate || shouldDisplayAlbumArtist)
                                 Text(
                                   [
@@ -112,7 +110,7 @@ class AlbumCard extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                             ],
-                            if (SettingsController.inst.useAlbumStaggeredGridView.value) SizedBox(height: fontSize * 0.1),
+                            // if (staggered && !compact) SizedBox(height: fontSize * 0.1),
                             Text(
                               [
                                 album.displayTrackKeyword,
@@ -122,20 +120,8 @@ class AlbumCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            if (SettingsController.inst.useAlbumStaggeredGridView.value) SizedBox(height: fontSize * 0.7),
+                            if (staggered && !compact) SizedBox(height: fontSize * 0.7),
                           ],
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 4, horizontal: fontSize * 0.4),
-                          child: MoreIcon(
-                            rotated: false,
-                            iconSize: fontSize * 1.1,
-                            onPressed: () => NamidaDialogs.inst.showAlbumDialog(album),
-                          ),
                         ),
                       ),
                     ],

@@ -1,14 +1,15 @@
-import 'dart:async';
 import 'dart:ui';
 
 import 'package:checkmark/checkmark.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 import 'package:like_button/like_button.dart';
 import 'package:namida/class/track.dart';
 
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
@@ -980,5 +981,151 @@ class NamidaPartyContainer extends StatelessWidget {
               ),
       );
     }
+  }
+}
+
+class SubpagesTopContainer extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String thirdLineText;
+  final double? height;
+  final double verticalPadding;
+  final Widget imageWidget;
+  final List<Track> tracks;
+  const SubpagesTopContainer({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    this.thirdLineText = '',
+    this.height,
+    required this.imageWidget,
+    required this.tracks,
+    this.verticalPadding = 16.0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: Alignment.center,
+      padding: const EdgeInsets.all(12.0),
+      margin: EdgeInsets.symmetric(vertical: verticalPadding),
+      height: height,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          imageWidget,
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(
+                  height: 18.0,
+                ),
+                Container(
+                  padding: const EdgeInsets.only(left: 14.0),
+                  child: Text(
+                    title,
+                    style: context.textTheme.displayLarge,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(
+                  height: 2.0,
+                ),
+                Container(
+                  padding: const EdgeInsets.only(left: 14.0),
+                  child: Text(
+                    subtitle,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
+                  ),
+                ),
+                if (thirdLineText != '') ...[
+                  const SizedBox(
+                    height: 2.0,
+                  ),
+                  Container(
+                    padding: const EdgeInsets.only(left: 14.0),
+                    child: Text(
+                      thirdLineText,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
+                    ),
+                  ),
+                ],
+                const SizedBox(
+                  height: 18.0,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => Player.inst.playOrPause(
+                        queue: tracks,
+                        shuffle: true,
+                      ),
+                      child: const Icon(Broken.shuffle),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () => Player.inst.addToQueue(tracks),
+                      icon: const StackedIcon(baseIcon: Broken.play, secondaryIcon: Broken.add_circle),
+                      label: Text(Language.inst.PLAY_LAST),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class AnimatingTile extends StatelessWidget {
+  final int position;
+  final Widget child;
+  const AnimatingTile({super.key, required this.position, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimationConfiguration.staggeredList(
+      position: position,
+      duration: const Duration(milliseconds: 400),
+      child: SlideAnimation(
+        verticalOffset: 25.0,
+        child: FadeInAnimation(
+          duration: const Duration(milliseconds: 400),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class AnimatingGrid extends StatelessWidget {
+  final int position;
+  final int columnCount;
+  final Widget child;
+  const AnimatingGrid({super.key, required this.position, required this.columnCount, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimationConfiguration.staggeredGrid(
+      columnCount: columnCount,
+      position: position,
+      duration: const Duration(milliseconds: 400),
+      child: SlideAnimation(
+        verticalOffset: 25.0,
+        child: FadeInAnimation(
+          duration: const Duration(milliseconds: 400),
+          child: child,
+        ),
+      ),
+    );
   }
 }

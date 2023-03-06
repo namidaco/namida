@@ -8,6 +8,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/sort_by_button.dart';
@@ -52,17 +53,11 @@ class TracksPage extends StatelessWidget {
                   controller: _scrollController,
                   itemCount: Indexer.inst.trackSearchList.length,
                   itemBuilder: (BuildContext context, int i) {
-                    return AnimationConfiguration.staggeredList(
+                    return AnimatingTile(
                       position: i,
-                      duration: const Duration(milliseconds: 400),
-                      child: SlideAnimation(
-                        verticalOffset: 25.0,
-                        child: FadeInAnimation(
-                          duration: const Duration(milliseconds: 400),
-                          child: TrackTile(
-                            track: Indexer.inst.trackSearchList[i],
-                          ),
-                        ),
+                      child: TrackTile(
+                        track: Indexer.inst.trackSearchList[i],
+                        queue: Indexer.inst.trackSearchList.toList(),
                       ),
                     );
                   },

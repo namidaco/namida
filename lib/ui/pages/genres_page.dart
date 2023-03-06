@@ -6,8 +6,10 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_card.dart';
@@ -66,22 +68,16 @@ class GenresPage extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: kBottomPadding),
                   itemBuilder: (BuildContext context, int i) {
                     final genre = Indexer.inst.genreSearchList.entries.toList()[i];
-                    return AnimationConfiguration.staggeredGrid(
+                    return AnimatingGrid(
                       columnCount: Indexer.inst.genreSearchList.length,
                       position: i,
-                      duration: const Duration(milliseconds: 400),
-                      child: SlideAnimation(
-                        verticalOffset: 25.0,
-                        child: FadeInAnimation(
-                          duration: const Duration(milliseconds: 400),
-                          child: MultiArtworkCard(
-                            heroTag: 'genre_artwork_${genre.key}',
-                            tracks: genre.value.toList(),
-                            name: genre.key,
-                            gridCount: countPerRow,
-                            showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(genre.key, genre.value.toList()),
-                          ),
-                        ),
+                      child: MultiArtworkCard(
+                        heroTag: 'parent_genre_artwork_${genre.key}',
+                        tracks: genre.value.toList(),
+                        name: genre.key,
+                        gridCount: countPerRow,
+                        showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(genre.key, genre.value.toList()),
+                        onTap: () => NamidaOnTaps.inst.onGenreTap(genre.key),
                       ),
                     );
                   },

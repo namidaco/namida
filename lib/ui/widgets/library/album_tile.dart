@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
@@ -38,22 +38,8 @@ class AlbumTile extends StatelessWidget {
         color: context.theme.cardColor,
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 120, 120, 120),
-          // key: ValueKey(track),
           onLongPress: () => NamidaDialogs.inst.showAlbumDialog(album),
-          onTap: () {
-            // Future.delayed(
-            //   Duration(seconds: 2),
-            //   () => Get.to(AlbumTracksPage(album: album), duration: Duration(seconds: 3)),
-            // );
-            Get.to(
-              () => AlbumTracksPage(album: album),
-              //  duration: Duration(milliseconds: 300),
-            );
-            // Get.dialog(AlbumTracksPage(album: album));
-            // if (stc.selectedTracks.isNotEmpty) {
-            //   stc.selectOrUnselect(track);
-            // }
-          },
+          onTap: () => NamidaOnTaps.inst.onAlbumTap(album[0].album),
           child: Container(
             alignment: Alignment.center,
             padding: const EdgeInsets.only(top: 3.0, bottom: 3.0, right: 8.0),

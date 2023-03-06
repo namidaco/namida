@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -20,10 +19,10 @@ import 'package:namida/main.dart';
 
 class TrackTile extends StatelessWidget {
   final Track track;
+  final List<Track> queue;
   final bool displayRightDragHandler;
   final bool draggableThumbnail;
   final bool isInSelectedTracksPreview;
-  final List<Track>? queue;
   final Color? bgColor;
   final Widget? trailingWidget;
   final void Function()? onTap;
@@ -31,10 +30,10 @@ class TrackTile extends StatelessWidget {
   const TrackTile({
     super.key,
     required this.track,
+    required this.queue,
     this.displayRightDragHandler = false,
     this.draggableThumbnail = true,
     this.isInSelectedTracksPreview = false,
-    this.queue,
     this.bgColor,
     this.onTap,
     this.trailingWidget,
@@ -98,6 +97,8 @@ class TrackTile extends StatelessWidget {
         double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
         bool isTrackSelected = SelectedTracksController.inst.selectedTracks.contains(track);
         bool isTrackCurrentlyPlaying = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
+        // final finalqueue = queue ?? Indexer.inst.trackSearchList.toList();
+        // bool isTrackCurrentlyPlaying = finalqueue.isNotEmpty && finalqueue.elementAt(Player.inst.currentIndex.value) == track;
         final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
         return Container(
           margin: const EdgeInsets.only(bottom: 4.0),
@@ -122,7 +123,7 @@ class TrackTile extends StatelessWidget {
                     if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
                       SelectedTracksController.inst.selectOrUnselect(track);
                     } else {
-                      Player.inst.playOrPause(track: track, queue: queue ?? Indexer.inst.trackSearchList.toList());
+                      Player.inst.playOrPause(track: track, queue: queue);
                       debugPrint(track.path);
                     }
                   },
@@ -147,11 +148,14 @@ class TrackTile extends StatelessWidget {
                             ),
                             width: thumnailSize,
                             height: thumnailSize,
-                            child: ArtworkWidget(
-                              blur: 1.5,
-                              thumnailSize: thumnailSize,
-                              track: track,
-                              forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+                            child: Hero(
+                              tag: 'trackhero${track.path}',
+                              child: ArtworkWidget(
+                                blur: 1.5,
+                                thumnailSize: thumnailSize,
+                                track: track,
+                                forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+                              ),
                             ),
                           ),
                         ),

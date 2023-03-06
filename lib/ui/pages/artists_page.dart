@@ -8,6 +8,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/artist_card.dart';
 import 'package:namida/ui/widgets/library/artist_tile.dart';
@@ -67,18 +68,11 @@ class ArtistsPage extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: kBottomPadding),
                       itemBuilder: (BuildContext context, int i) {
                         final artist = Indexer.inst.artistSearchList.entries.toList()[i];
-                        return AnimationConfiguration.staggeredList(
+                        return AnimatingTile(
                           position: i,
-                          duration: const Duration(milliseconds: 400),
-                          child: SlideAnimation(
-                            verticalOffset: 25.0,
-                            child: FadeInAnimation(
-                              duration: const Duration(milliseconds: 400),
-                              child: ArtistTile(
-                                tracks: artist.value.toList(),
-                                name: artist.key,
-                              ),
-                            ),
+                          child: ArtistTile(
+                            tracks: artist.value.toList(),
+                            name: artist.key,
                           ),
                         );
                       },
@@ -92,27 +86,19 @@ class ArtistsPage extends StatelessWidget {
                       crossAxisCount: gridCount,
                       childAspectRatio: 0.88,
                       mainAxisSpacing: 8.0,
-                      // crossAxisSpacing: 4.0,
                     ),
                     controller: _scrollController,
                     itemCount: Indexer.inst.artistSearchList.length,
                     padding: const EdgeInsets.only(bottom: kBottomPadding),
                     itemBuilder: (BuildContext context, int i) {
                       final artist = Indexer.inst.artistSearchList.entries.toList()[i];
-                      return AnimationConfiguration.staggeredGrid(
+                      return AnimatingGrid(
                         columnCount: Indexer.inst.artistSearchList.length,
                         position: i,
-                        duration: const Duration(milliseconds: 400),
-                        child: SlideAnimation(
-                          verticalOffset: 25.0,
-                          child: FadeInAnimation(
-                            duration: const Duration(milliseconds: 400),
-                            child: ArtistCard(
-                              name: artist.key,
-                              artist: artist.value.toList(),
-                              gridCount: gridCount,
-                            ),
-                          ),
+                        child: ArtistCard(
+                          name: artist.key,
+                          artist: artist.value.toList(),
+                          gridCount: gridCount,
                         ),
                       );
                     },
