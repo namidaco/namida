@@ -207,6 +207,9 @@ class Language {
   /// 3. Miniplayer Customization
   String get MINIPLAYER_CUSTOMIZATION => 'Miniplayer Customization';
   String get ANIMATING_THUMBNAIL_INTENSITY => 'Thumbnail Animation Intensity';
+  String get ENABLE_PARTY_MODE => 'Enable Party Mode';
+  String get ENABLE_PARTY_MODE_SUBTITLE => 'Apply fancy edge breathing effect';
+  String get EDGE_COLORS_SWITCHING => 'Edge Colors Switching';
   String get ANIMATING_THUMBNAIL_INVERSED => 'Inverse Animations';
   String get ANIMATING_THUMBNAIL_INVERSED_SUBTITLE => 'High peaks will cause the thumbnail to get smaller';
   String get WAVEFORM_BARS_COUNT => 'Waveform Bars Count';

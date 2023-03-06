@@ -31,7 +31,7 @@ class SettingsController extends GetxController {
   RxBool forceSquaredTrackThumbnail = false.obs;
   RxBool forceSquaredAlbumThumbnail = false.obs;
   RxBool useAlbumStaggeredGridView = false.obs;
-  RxBool useSettingCollapsedTiles = false.obs;
+  RxBool useSettingCollapsedTiles = true.obs;
   RxInt albumGridCount = 2.obs;
   RxInt artistGridCount = 3.obs;
   RxInt genreGridCount = 2.obs;
@@ -61,13 +61,17 @@ class SettingsController extends GetxController {
   RxBool preventDuplicatedTracks = false.obs;
   RxBool respectNoMedia = false.obs;
   RxString defaultBackupLocation = kInternalAppDirectoryPath.obs;
+  RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
+  RxBool enableFoldersHierarchy = true.obs;
   RxList<String> backupItemslist =
       [kTracksFilePath, kQueuesFilePath, kLatestQueueFilePath, kPaletteDirPath, kPlaylistsFilePath, kSettingsFilePath, kWaveformDirPath, kArtworksCompDirPath].obs;
   RxBool enableVideoPlayback = true.obs;
   RxInt videoPlaybackSource = 0.obs;
-  RxList<String> youtubeVideoQualities = ['144p', '240p', '360p', '480p'].obs;
+  RxList<String> youtubeVideoQualities = ['480p', '360p', '240p', '144p'].obs;
   RxInt animatingThumbnailIntensity = 25.obs;
   RxBool animatingThumbnailInversed = false.obs;
+  RxBool enablePartyModeInMiniplayer = false.obs;
+  RxBool enablePartyModeColorSwap = true.obs;
   RxInt isTrackPlayedSecondsCount = 40.obs;
   RxInt isTrackPlayedPercentageCount = 40.obs;
   RxBool displayFavouriteIconInListTile = true.obs;
@@ -147,12 +151,16 @@ class SettingsController extends GetxController {
     preventDuplicatedTracks.value = getBool('preventDuplicatedTracks') ?? preventDuplicatedTracks.value;
     respectNoMedia.value = getBool('respectNoMedia') ?? respectNoMedia.value;
     defaultBackupLocation.value = getString('defaultBackupLocation') ?? defaultBackupLocation.value;
+    defaultFolderStartupLocation.value = getString('defaultFolderStartupLocation') ?? defaultFolderStartupLocation.value;
+    enableFoldersHierarchy.value = getBool('enableFoldersHierarchy') ?? enableFoldersHierarchy.value;
     backupItemslist.value = getListString('backupItemslist', ifNull: backupItemslist.toList());
     enableVideoPlayback.value = getBool('enableVideoPlayback') ?? enableVideoPlayback.value;
     videoPlaybackSource.value = getInt('videoPlaybackSource') ?? videoPlaybackSource.value;
     youtubeVideoQualities.value = getListString('youtubeVideoQualities', ifNull: youtubeVideoQualities.toList());
     animatingThumbnailIntensity.value = getInt('animatingThumbnailIntensity') ?? animatingThumbnailIntensity.value;
     animatingThumbnailInversed.value = getBool('animatingThumbnailInversed') ?? animatingThumbnailInversed.value;
+    enablePartyModeInMiniplayer.value = getBool('enablePartyModeInMiniplayer') ?? enablePartyModeInMiniplayer.value;
+    enablePartyModeColorSwap.value = getBool('enablePartyModeColorSwap') ?? enablePartyModeColorSwap.value;
     isTrackPlayedSecondsCount.value = getInt('isTrackPlayedSecondsCount') ?? isTrackPlayedSecondsCount.value;
     isTrackPlayedPercentageCount.value = getInt('isTrackPlayedPercentageCount') ?? isTrackPlayedPercentageCount.value;
     displayFavouriteIconInListTile.value = getBool('displayFavouriteIconInListTile') ?? displayFavouriteIconInListTile.value;
@@ -238,12 +246,16 @@ class SettingsController extends GetxController {
     bool? preventDuplicatedTracks,
     bool? respectNoMedia,
     String? defaultBackupLocation,
+    String? defaultFolderStartupLocation,
+    bool? enableFoldersHierarchy,
     List<String>? backupItemslist,
     bool? enableVideoPlayback,
     int? videoPlaybackSource,
     List<String>? youtubeVideoQualities,
     int? animatingThumbnailIntensity,
     bool? animatingThumbnailInversed,
+    bool? enablePartyModeInMiniplayer,
+    bool? enablePartyModeColorSwap,
     int? isTrackPlayedSecondsCount,
     int? isTrackPlayedPercentageCount,
     bool? displayFavouriteIconInListTile,
@@ -499,6 +511,14 @@ class SettingsController extends GetxController {
       this.defaultBackupLocation.value = defaultBackupLocation;
       setData('defaultBackupLocation', defaultBackupLocation);
     }
+    if (defaultFolderStartupLocation != null) {
+      this.defaultFolderStartupLocation.value = defaultFolderStartupLocation;
+      setData('defaultFolderStartupLocation', defaultFolderStartupLocation);
+    }
+    if (enableFoldersHierarchy != null) {
+      this.enableFoldersHierarchy.value = enableFoldersHierarchy;
+      setData('enableFoldersHierarchy', enableFoldersHierarchy);
+    }
     if (backupItemslist != null) {
       for (var d in backupItemslist) {
         if (!this.backupItemslist.contains(d)) {
@@ -530,6 +550,14 @@ class SettingsController extends GetxController {
     if (animatingThumbnailInversed != null) {
       this.animatingThumbnailInversed.value = animatingThumbnailInversed;
       setData('animatingThumbnailInversed', animatingThumbnailInversed);
+    }
+    if (enablePartyModeInMiniplayer != null) {
+      this.enablePartyModeInMiniplayer.value = enablePartyModeInMiniplayer;
+      setData('enablePartyModeInMiniplayer', enablePartyModeInMiniplayer);
+    }
+    if (enablePartyModeColorSwap != null) {
+      this.enablePartyModeColorSwap.value = enablePartyModeColorSwap;
+      setData('enablePartyModeColorSwap', enablePartyModeColorSwap);
     }
     if (isTrackPlayedSecondsCount != null) {
       this.isTrackPlayedSecondsCount.value = isTrackPlayedSecondsCount;

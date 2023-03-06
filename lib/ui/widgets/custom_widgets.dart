@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:checkmark/checkmark.dart';
@@ -26,8 +27,9 @@ class CustomSwitchListTile extends StatelessWidget {
   final IconData? icon;
   final Color? passedColor;
   final int? rotateIcon;
+  final bool enabled;
   const CustomSwitchListTile(
-      {Key? key, required this.value, required this.onChanged, required this.title, this.subtitle, this.leading, this.icon, this.passedColor, this.rotateIcon})
+      {Key? key, required this.value, required this.onChanged, required this.title, this.subtitle, this.leading, this.icon, this.passedColor, this.rotateIcon, this.enabled = true})
       : super(key: key);
 
   @override
@@ -38,6 +40,7 @@ class CustomSwitchListTile extends StatelessWidget {
         highlightColor: context.isDarkMode ? Colors.white.withAlpha(12) : Colors.black.withAlpha(40),
       ),
       child: ListTile(
+        enabled: enabled,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
@@ -606,7 +609,7 @@ class StackedIcon extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(6),
               boxShadow: [
-                BoxShadow(color: Get.theme.scaffoldBackgroundColor, spreadRadius: 1, blurRadius: 3.0),
+                BoxShadow(color: Get.theme.scaffoldBackgroundColor, spreadRadius: 0, blurRadius: 3.0),
               ],
             ),
             child: secondaryText != null ? Text(secondaryText!, style: context.textTheme.displaySmall) : Icon(secondaryIcon, size: 14, color: secondaryIconColor),
@@ -828,7 +831,8 @@ class NamidaLikeButton extends StatelessWidget {
   final Track track;
   final double size;
   final Color? color;
-  const NamidaLikeButton({super.key, required this.track, this.size = 30.0, this.color});
+  final bool isDummy;
+  const NamidaLikeButton({super.key, required this.track, this.size = 30.0, this.color, this.isDummy = false});
 
   @override
   Widget build(BuildContext context) {
@@ -843,7 +847,9 @@ class NamidaLikeButton extends StatelessWidget {
       ),
       isLiked: track.isFavourite,
       onTap: (isLiked) async {
-        PlaylistController.inst.favouriteButtonOnPressed(track);
+        if (!isDummy) {
+          PlaylistController.inst.favouriteButtonOnPressed(track);
+        }
         return !isLiked;
       },
       likeBuilder: (value) => value
@@ -882,5 +888,97 @@ class NamidaIconButton extends StatelessWidget {
         color: context.theme.colorScheme.secondary,
       ),
     );
+  }
+}
+
+class NamidaPartyContainer extends StatelessWidget {
+  final double spreadRadiusMultiplier;
+  final double finalScale;
+  final double? width;
+  final double? height;
+  final double opacity;
+  final RxList<Color> firstHalf;
+  final RxList<Color> secondHalf;
+  const NamidaPartyContainer({
+    super.key,
+    this.spreadRadiusMultiplier = 1.0,
+    required this.finalScale,
+    this.width,
+    this.height,
+    required this.opacity,
+    required this.firstHalf,
+    required this.secondHalf,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!SettingsController.inst.enablePartyModeColorSwap.value) {
+      return Opacity(
+        opacity: opacity,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 400),
+          height: height,
+          width: width,
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: CurrentColor.inst.color.value.withAlpha(150),
+                spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
+                blurRadius: 10 + (200 * finalScale),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      return Opacity(
+        opacity: opacity,
+        child: height != null
+            ? Row(
+                children: firstHalf
+                    .asMap()
+                    .entries
+                    .map(
+                      (e) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 400),
+                        height: height,
+                        width: width ?? context.width / firstHalf.length,
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: e.value.withAlpha(150),
+                              spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
+                              blurRadius: 10 + (200 * finalScale),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                    .toList(),
+              )
+            : Column(
+                children: secondHalf
+                    .asMap()
+                    .entries
+                    .map(
+                      (e) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 400),
+                        height: height ?? context.height / secondHalf.length,
+                        width: width,
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: e.value.withAlpha(150),
+                              spreadRadius: 140 * finalScale * spreadRadiusMultiplier,
+                              blurRadius: 10 + (200 * finalScale),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+      );
+    }
   }
 }
