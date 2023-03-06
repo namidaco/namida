@@ -72,11 +72,13 @@ void main() async {
   kAppDirectoryPath = await getApplicationDocumentsDirectory().then((value) => value.path);
   await Directory(kArtworksDirPath).create();
   await Directory(kArtworksCompDirPath).create();
+  await Directory(kPaletteDirPath).create();
   await Directory(kWaveformDirPath).create();
   await Directory(kVideosCachePath).create();
   await Directory(kVideosCacheTempPath).create();
 
   final paths = await ExternalPath.getExternalStorageDirectories();
+  kStoragePaths.assignAll(paths);
   kDirectoriesPaths = paths.map((path) => "$path/${ExternalPath.DIRECTORY_MUSIC}").toSet();
   kDirectoriesPaths.add('${paths[0]}/Download/');
   kInternalAppDirectoryPath = "${paths[0]}/Namida";

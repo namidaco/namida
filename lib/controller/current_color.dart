@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:palette_generator/palette_generator.dart';
@@ -59,7 +58,7 @@ class CurrentColor extends GetxController {
       return palette;
     }
 
-    if (await paletteFile.exists() && paletteFileStat.size > 0) {
+    if (await paletteFile.exists() && paletteFileStat.size > 2) {
       String content = await paletteFile.readAsString();
       final pl = List<int>.from(json.decode(content));
       palette.assignAll(pl.map((e) => Color(e)));
@@ -73,6 +72,7 @@ class CurrentColor extends GetxController {
       palette.assignAll(result.colors.toList());
       await paletteFile.create();
       await paletteFile.writeAsString(palette.map((e) => e.value).toList().toString());
+      Indexer.inst.updateColorPalettesSizeInStorage();
       debugPrint("COLORRRRR EXTRACTED");
     }
 
@@ -91,7 +91,6 @@ class CurrentColor extends GetxController {
       }
 
       await extractColors(tr.pathToImageComp);
-      Indexer.inst.updateColorPalettesSizeInStorage();
     }
 
     generatingAllColorPalettes.value = false;
@@ -113,13 +112,13 @@ class CurrentColor extends GetxController {
     return colorDelightened;
   }
 
-  Color getAlbumColorModifiedModern(List<Color>? value) {
+  Color getAlbumColorModifiedModern(List<Color> value) {
     final Color color;
-    if ((value?.length ?? 0) > 9) {
-      color = Color.alphaBlend(
-          value?.first.withAlpha(140) ?? Colors.transparent, Color.alphaBlend(value?.elementAt(7).withAlpha(155) ?? Colors.transparent, value?.elementAt(9) ?? Colors.transparent));
+    // return Color.alphaBlend(value.first.withAlpha(220), value.last);
+    if ((value.length) > 9) {
+      color = Color.alphaBlend(value.first.withAlpha(140), Color.alphaBlend(value.elementAt(7).withAlpha(155), value.elementAt(9)));
     } else {
-      color = Color.alphaBlend(value?.last.withAlpha(50) ?? Colors.transparent, value?.first ?? Colors.transparent);
+      color = Color.alphaBlend(value.last.withAlpha(50), value.first);
     }
     HSLColor hslColor = HSLColor.fromColor(color);
     Color colorDelightened;
