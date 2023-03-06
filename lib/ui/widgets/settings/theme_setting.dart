@@ -7,6 +7,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -17,6 +18,11 @@ class ThemeSetting extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    onThemeChangeTap(ThemeMode themeMode, bool light) {
+      SettingsController.inst.save(themeMode: themeMode);
+      Get.changeTheme(AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, light));
+    }
+
     final double containerWidth = Get.width / 2.8;
     return SettingsCard(
       title: Language.inst.THEME_SETTINGS,
@@ -109,27 +115,21 @@ class ThemeSetting extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
                               InkWell(
-                                onTap: () {
-                                  SettingsController.inst.save(themeMode: ThemeMode.system);
-                                },
+                                onTap: () => onThemeChangeTap(ThemeMode.system, context.theme.brightness != Brightness.light),
                                 child: Icon(
                                   Broken.autobrightness,
                                   color: currentTheme == ThemeMode.system ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.background,
                                 ),
                               ),
                               InkWell(
-                                onTap: () {
-                                  SettingsController.inst.save(themeMode: ThemeMode.light);
-                                },
+                                onTap: () => onThemeChangeTap(ThemeMode.light, true),
                                 child: Icon(
                                   Broken.sun_1,
                                   color: currentTheme == ThemeMode.light ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.background,
                                 ),
                               ),
                               InkWell(
-                                onTap: () {
-                                  SettingsController.inst.save(themeMode: ThemeMode.dark);
-                                },
+                                onTap: () => onThemeChangeTap(ThemeMode.dark, false),
                                 child: Icon(
                                   Broken.moon,
                                   color: currentTheme == ThemeMode.dark ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.background,

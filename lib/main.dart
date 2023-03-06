@@ -152,8 +152,8 @@ class MyApp extends StatelessWidget {
         child: GetMaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Namida',
-          theme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, light: true),
-          darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, light: false),
+          theme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, true),
+          darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, false),
           themeMode: SettingsController.inst.themeMode.value,
           translations: MyTranslation(),
           builder: (context, widget) {

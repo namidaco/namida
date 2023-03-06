@@ -66,7 +66,7 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
   Widget build(BuildContext context) {
     return DefaultTextStyle(
       style: Get.textTheme.displayMedium!,
-      child: Theme(
+      child: AnimatedTheme(
         data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, light: !context.isDarkMode),
         child: Stack(
           children: [

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/core/extensions.dart';
 
 class AppThemes extends GetxController {
   static final AppThemes inst = AppThemes();
 
-  ThemeData getAppTheme(Color color, {bool? light}) {
-    light ??= !Get.isDarkMode;
+  ThemeData getAppTheme([Color? color, bool? light]) {
+    color ??= CurrentColor.inst.color.value;
+    light ??= Get.theme.brightness == Brightness.light;
     final cardTheme = CardTheme(
       elevation: 12.0,
       color: light
