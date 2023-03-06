@@ -6,12 +6,16 @@ import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/artwork.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/dialogs/general_popup_dialog.dart';
 
 class FolderTile extends StatelessWidget {
   final String path;
   final List<Track> tracks;
-  const FolderTile({super.key, required this.path, required this.tracks});
+  final void Function()? onTap;
+  const FolderTile({super.key, required this.path, required this.tracks, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -22,13 +26,11 @@ class FolderTile extends StatelessWidget {
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 0, 0, 0),
           onLongPress: () {},
-          onTap: () {
-            Folders.inst.stepIn(path);
-          },
+          onTap: onTap ?? () => Folders.inst.stepIn(path),
           child: Container(
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(vertical: 4.0),
-            height: SettingsController.inst.trackThumbnailSizeinList.value + 4.0 + 4.0,
+            height: SettingsController.inst.trackListTileHeight.value + 4.0 + 4.0,
             child: Row(
               children: [
                 const SizedBox(
@@ -86,7 +88,7 @@ class FolderTile extends StatelessWidget {
                         [
                           tracks.displayTrackKeyword,
                           path.getDirectoriesInside.length.displayFolderKeyword,
-                        ].join(' & '),
+                        ].join(' ${Language.inst.IN} '),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                         style: context.textTheme.displaySmall!,
@@ -94,22 +96,22 @@ class FolderTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 6.0),
-                SizedBox(
-                  height: 36,
-                  width: 36,
-                  child: RotatedBox(
-                    quarterTurns: 1,
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () {},
-                      icon: const Icon(
-                        Broken.more,
-                        size: 20,
-                      ),
-                    ),
-                  ),
+                const SizedBox(
+                  width: 2.0,
+                ),
+                MoreIcon(
+                  padding: 6.0,
+                  onPressed: () {
+                    showGeneralPopupDialog(
+                      tracks,
+                      path.split('/').last,
+                      [
+                        tracks.displayTrackKeyword,
+                        tracks.totalDurationFormatted,
+                      ].join(' • '),
+                      thirdLineText: tracks.map((e) => e.size).reduce((a, b) => a + b).fileSizeFormatted,
+                    );
+                  },
                 ),
                 const SizedBox(
                   width: 4.0,

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/folders_controller.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -27,6 +28,17 @@ class ExtrasSettings extends StatelessWidget {
       child: Column(
         children: [
           const CollapsedSettingTileWidget(),
+          Obx(
+            () => CustomSwitchListTile(
+              icon: Broken.folder_open,
+              title: Language.inst.ENABLE_FOLDERS_HIERARCHY,
+              value: SettingsController.inst.enableFoldersHierarchy.value,
+              onChanged: (p0) {
+                SettingsController.inst.save(enableFoldersHierarchy: !p0);
+                Folders.inst.stepIn(SettingsController.inst.defaultFolderStartupLocation.value);
+              },
+            ),
+          ),
           Obx(
             () => CustomListTile(
               icon: Broken.receipt_1,
@@ -380,7 +392,7 @@ class ExtrasSettings extends StatelessWidget {
                           CurrentColor.inst.generateAllColorPalettes();
                           Get.close(1);
                         },
-                        child: Text(Language.inst.GENERATE),
+                        child: Text(Language.inst.EXTRACT),
                       ),
                     ],
                   ),
