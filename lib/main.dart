@@ -34,17 +34,13 @@ void main() async {
   /// Getting Device info
   DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
   AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-  final sdkVersion = androidInfo.version.sdkInt;
+  kSdkVersion = androidInfo.version.sdkInt;
 
-  /// Granting Storage Permission
-  if (await Permission.storage.status.isDenied || await Permission.storage.status.isPermanentlyDenied) {
+  /// Granting Storage Permission.
+  /// Requesting Granular media permissions for Android 13 (API 33) doesnt work for some reason.
+  /// Currently the target API is set to 32.
+  if (await Permission.storage.isDenied || await Permission.storage.isPermanentlyDenied) {
     final st = await Permission.storage.request();
-    if (!st.isGranted) {
-      SystemNavigator.pop();
-    }
-  }
-  if (sdkVersion >= 33 && (await Permission.audio.status.isDenied || await Permission.audio.status.isPermanentlyDenied)) {
-    final st = await Permission.audio.request();
     if (!st.isGranted) {
       SystemNavigator.pop();
     }
@@ -69,7 +65,8 @@ void main() async {
 
   await GetStorage.init('NamidaSettings');
 
-  kAppDirectoryPath = await getApplicationDocumentsDirectory().then((value) => value.path);
+  kAppDirectoryPath = await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
+
   await Directory(kArtworksDirPath).create();
   await Directory(kArtworksCompDirPath).create();
   await Directory(kPaletteDirPath).create();
@@ -90,14 +87,14 @@ void main() async {
   Get.put(() => Folders());
   await Player.inst.initializePlayer();
 
-  final tfe = await File(kTracksFilePath).exists() && await File(kTracksFilePath).stat().then((value) => value.size > 80);
+  final tfe = await File(kTracksFilePath).exists() && await File(kTracksFilePath).stat().then((value) => value.size > 5);
   if (tfe) {
     await Indexer.inst.prepareTracksFile(tfe);
   } else {
     Indexer.inst.prepareTracksFile(tfe);
   }
   await PlaylistController.inst.preparePlaylistFile();
-  QueueController.inst.prepareQueuesFile();
+  // QueueController.inst.prepareQueuesFile();
   await QueueController.inst.prepareLatestQueueFile();
   await VideoController.inst.getVideoFiles();
 
@@ -110,6 +107,9 @@ void main() async {
 }
 
 Future<bool> requestManageStoragePermission() async {
+  if (kSdkVersion < 30) {
+    return true;
+  }
   // final shouldRequest = !await Permission.manageExternalStorage.isGranted || await Permission.manageExternalStorage.isDenied;
   if (!await Permission.manageExternalStorage.isGranted) {
     await Permission.manageExternalStorage.request();
@@ -123,6 +123,9 @@ Future<bool> requestManageStoragePermission() async {
 }
 
 Future<void> resetSAFPermision() async {
+  if (kSdkVersion < 30) {
+    return;
+  }
   final didReset = await OnAudioEdit().resetComplexPermission();
   if (didReset) {
     Get.snackbar(Language.inst.PERMISSION_UPDATE, Language.inst.RESET_SAF_PERMISSION_RESET_SUCCESS);

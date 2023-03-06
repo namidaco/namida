@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:checkmark/checkmark.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:namida/core/constants.dart';
 import 'package:on_audio_edit/on_audio_edit.dart';
 import 'package:get/get.dart';
 
@@ -96,7 +97,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
         ),
         ElevatedButton.icon(
           onPressed: () async {
-            final copiedFile = await File(track.path).copy("${SettingsController.inst.defaultBackupLocation.value}/${track.displayName}");
+            // final copiedFile = kSdkVersion < 30 ? File(track.path) : await File(track.path).copy("${SettingsController.inst.defaultBackupLocation.value}/${track.displayName}");
 
             String ftitle = titleController.text;
             String falbum = albumController.text;
@@ -134,14 +135,9 @@ Future<void> showEditTrackTagsDialog(Track track) async {
               fyearInt = 0;
             }
 
-            // i tried many other ways to automate this task, nothing worked
-            // so yeah ask the user to select the specific folder
-            // and provide an option in the setting to reset this premission
-            await requestSAFpermission();
-
-            final didUpdate = await audioedit.editAudio(
-              copiedFile.path,
-              {
+            final didUpdate = await editTrackMetadata(
+              track,
+              tags: {
                 TagType.TITLE: ftitle,
                 TagType.ALBUM: falbum,
                 TagType.ARTIST: fartist,
@@ -151,28 +147,14 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                 TagType.COMMENT: fcomment,
                 if (fyearInt != null) TagType.YEAR: fyearInt,
               },
-              searchInsideFolders: true,
+              updateArtwork: currentImagePath.value != '',
             );
-
             debugPrint(didUpdate.toString());
 
             if (!didUpdate) {
               Get.snackbar(Language.inst.METADATA_EDIT_FAILED, Language.inst.METADATA_EDIT_FAILED_SUBTITLE);
-            } else {
-              // if user actually picked a pic
-              if (currentImagePath.value != '') {
-                final didUpdateImg = await audioedit.editArtwork(
-                  copiedFile.path,
-                  // imagePath: currentImagePath.value,
-                  searchInsideFolders: true,
-                  openFilePicker: true,
-                );
-              }
-              await copiedFile.copy(track.path);
-              Indexer.inst.updateTracks([track], updateArtwork: currentImagePath.value != '');
             }
 
-            await copiedFile.delete();
             Get.close(1);
           },
           icon: const Icon(Broken.pen_add),
@@ -313,7 +295,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
           const SizedBox(height: 4.0),
           InkWell(
             onTap: () {
-              final strings = track.path.getFilenameWOExt.split(' - ');
+              final strings = track.path.getFilenameWOExt.replaceAll('_', ' ').split(' - ');
               if (strings.length == 3) {
                 artistController.text = strings[0];
                 titleController.text = strings[1];
@@ -372,6 +354,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                   Obx(
                     () => TrackTile(
                       track: e.value,
+                      queue: [e.value],
                       onTap: () => tracks.addIf(() => !tracks.contains(e.value), e.value),
                       bgColor: tracks.contains(e.value) ? null : Colors.black.withAlpha(0),
                       trailingWidget: IconButton(
@@ -484,8 +467,6 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                         _fyear = _fyear.trim();
                       }
 
-                      await requestSAFpermission();
-
                       bool didUpdate = false;
                       for (final tr in tracks) {
                         int? fyearInt;
@@ -503,6 +484,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                             if (fcomment.isNotEmpty) TagType.COMMENT: fcomment,
                             if (fyearInt != null) TagType.YEAR: fyearInt,
                           },
+                          updateTracks: false,
                         );
                       }
 
@@ -700,13 +682,15 @@ class CustomTagTextField extends StatelessWidget {
   final int hintMaxLines;
   final int? maxLines;
   final int? maxLength;
-  const CustomTagTextField({super.key, required this.controller, required this.hintText, this.icon, this.hintMaxLines = 3, this.maxLines, this.maxLength});
+  final String? Function(String? value)? validator;
+  const CustomTagTextField({super.key, required this.controller, required this.hintText, this.icon, this.hintMaxLines = 3, this.maxLines, this.maxLength, this.validator});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: null,
-      child: TextField(
+      child: TextFormField(
+        validator: validator,
         maxLength: maxLength,
         controller: controller,
         textAlign: TextAlign.left,
@@ -733,10 +717,15 @@ class CustomTagTextField extends StatelessWidget {
   }
 }
 
-Future<bool> editTrackMetadata(Track track, {Map<TagType, dynamic>? tags, String insertComment = ''}) async {
+Future<bool> editTrackMetadata(Track track, {Map<TagType, dynamic>? tags, String insertComment = '', bool updateArtwork = false, bool updateTracks = true}) async {
+  // i tried many other ways to automate this task, nothing worked
+  // so yeah ask the user to select the specific folder
+  // and provide an option in the setting to reset this premission
+  await requestSAFpermission();
+
   final audioedit = OnAudioEdit();
   final info = await audioedit.readAudio(track.path);
-  final copiedFile = await File(track.path).copy("${SettingsController.inst.defaultBackupLocation.value}/${track.displayName}");
+  final copiedFile = kSdkVersion < 30 ? File(track.path) : await File(track.path).copy("${SettingsController.inst.defaultBackupLocation.value}/${track.displayName}");
   if (insertComment != '') {
     await audioedit.editAudio(
       copiedFile.path,
@@ -752,13 +741,28 @@ Future<bool> editTrackMetadata(Track track, {Map<TagType, dynamic>? tags, String
       searchInsideFolders: true,
     );
   }
-
-  await copiedFile.copy(track.path);
+  if (updateArtwork) {
+    await audioedit.editArtwork(
+      copiedFile.path,
+      // imagePath: currentImagePath.value,
+      searchInsideFolders: true,
+      openFilePicker: true,
+    );
+  }
+  if (kSdkVersion >= 30) {
+    await copiedFile.copy(track.path);
+  }
   await copiedFile.delete();
+  if (updateTracks) {
+    Indexer.inst.updateTracks([track], updateArtwork: updateArtwork);
+  }
   return didUpdateTags;
 }
 
 Future<void> requestSAFpermission() async {
+  if (kSdkVersion < 30) {
+    return;
+  }
   final audioedit = OnAudioEdit();
 
   if (await audioedit.complexPermissionStatus()) {

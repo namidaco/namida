@@ -5,7 +5,8 @@ import 'package:namida/core/extensions.dart';
 class AppThemes extends GetxController {
   static final AppThemes inst = AppThemes();
 
-  ThemeData getAppTheme(Color color, {bool light = true}) {
+  ThemeData getAppTheme(Color color, {bool? light}) {
+    light ??= !Get.isDarkMode;
     final cardTheme = CardTheme(
       elevation: 12.0,
       color: light

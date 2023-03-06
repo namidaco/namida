@@ -314,7 +314,7 @@ class Indexer extends GetxController {
 
     Future<void> extractAllArtworks() async {
       for (var track in audioFiles) {
-        print(track);
+        printInfo(info: track);
         try {
           await extractOneArtwork(track);
 
@@ -331,11 +331,11 @@ class Indexer extends GetxController {
           //   imgFileComp.writeAsBytesSync(artComp);
           // }
         } catch (e) {
-          print(e);
+          printError(info: e.toString());
           continue;
         }
       }
-      print('extractAllArtworks completed');
+      printInfo(info: 'extractAllArtworks completed');
     }
 
     // await Future.wait([
@@ -367,6 +367,8 @@ class Indexer extends GetxController {
     tracksInfoList.removeWhere(
       (tr) => tr.duration < minDur * 1000 || tr.size < minSize,
     );
+
+    /// removes duplicated tracks after a refresh
     if (SettingsController.inst.preventDuplicatedTracks.value) {
       Set<String> listOfCurrentFileNames = <String>{};
       var listOfTracksWithoutDuplicates = <Track>[];
