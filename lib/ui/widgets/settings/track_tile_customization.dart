@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -144,7 +145,7 @@ class TrackTileCustomization extends StatelessWidget {
                   height: SettingsController.inst.trackThumbnailSizeinList.value,
                   child: ArtworkWidget(
                     thumnailSize: SettingsController.inst.trackThumbnailSizeinList.value,
-                    track: Indexer.inst.tracksInfoList.first,
+                    track: Indexer.inst.tracksInfoList.isEmpty ? kDummyTrack : Indexer.inst.tracksInfoList.first,
                     forceSquared: stg.forceSquaredTrackThumbnail.value,
                   ),
                 ),
@@ -255,20 +256,20 @@ class TrackTileCustomization extends StatelessWidget {
                       onTap: () => _showTrackItemsDialog(TrackTilePosition.rightItem1, SettingsController.inst.rightItem1),
                     ),
                     const SizedBox(
-                      height: 6.0,
+                      height: 3.0,
                     ),
                     TrackItemSmallBox(
                       text: SettingsController.inst.rightItem2.value.label,
                       onTap: () => _showTrackItemsDialog(TrackTilePosition.rightItem2, SettingsController.inst.rightItem2),
                     ),
                     const SizedBox(
-                      height: 6.0,
+                      height: 3.0,
                     ),
-                    // if (SettingsController.inst.displayThirdItemInEachRow.value)
-                    //   TrackItemSmallBox(
-                    //     text: SettingsController.inst.rightItem3.value.label,
-                    //     onTap: () => _showTrackItemsDialog(TrackTilePosition.rightItem3, SettingsController.inst.rightItem3),
-                    //   ),
+                    if (SettingsController.inst.displayFavouriteIconInListTile.value)
+                      NamidaLikeButton(
+                        track: kDummyTrack,
+                        size: 20,
+                      ),
                   ],
                 ),
                 const SizedBox(width: 6.0),
