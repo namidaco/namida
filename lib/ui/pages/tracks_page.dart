@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:namida/controller/player_controller.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/core/extensions.dart';
@@ -28,6 +30,22 @@ class TracksPage extends StatelessWidget {
                 isBarVisible: ScrollSearchController.inst.isTrackBarVisible.value,
                 showSearchBox: ScrollSearchController.inst.showTrackSearchBox.value,
                 displayloadingIndicator: Indexer.inst.isIndexing.value,
+                leftWidgets: [
+                  NamidaIconButton(
+                    icon: Broken.shuffle,
+                    onPressed: () => Player.inst.playOrPause(queue: Indexer.inst.trackSearchList.toList(), shuffle: true),
+                    iconSize: 18.0,
+                    horizontalPadding: 0,
+                  ),
+                  const SizedBox(width: 12.0),
+                  NamidaIconButton(
+                    icon: Broken.play,
+                    onPressed: () => Player.inst.playOrPause(queue: Indexer.inst.trackSearchList.toList(), track: Indexer.inst.trackSearchList.first),
+                    iconSize: 18.0,
+                    horizontalPadding: 0,
+                  ),
+                  const SizedBox(width: 12.0),
+                ],
                 leftText: Indexer.inst.trackSearchList.toList().displayTrackKeyword,
                 onFilterIconTap: () => ScrollSearchController.inst.switchTrackSearchBoxVisibilty(),
                 onCloseButtonPressed: () {

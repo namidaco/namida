@@ -16,6 +16,7 @@ class ExpandableBox extends StatelessWidget {
   final SortByMenu sortByMenuWidget;
   final CustomTextFiled textField;
   final ChangeGridCountWidget? gridWidget;
+  final List<Widget>? leftWidgets;
   const ExpandableBox({
     super.key,
     required this.isBarVisible,
@@ -27,6 +28,7 @@ class ExpandableBox extends StatelessWidget {
     required this.sortByMenuWidget,
     required this.textField,
     this.gridWidget,
+    this.leftWidgets,
   });
 
   @override
@@ -47,6 +49,7 @@ class ExpandableBox extends StatelessWidget {
                 const SizedBox(width: 18.0),
                 Row(
                   children: [
+                    if (leftWidgets != null) ...leftWidgets!,
                     Text(
                       leftText,
                       style: Get.textTheme.displayMedium,
