@@ -1,5 +1,4 @@
 import 'package:namida/class/track.dart';
-import 'package:namida/core/translations/strings.dart';
 
 class Playlist {
   late int id;
@@ -20,7 +19,7 @@ class Playlist {
 
   Playlist.fromJson(Map<String, dynamic> json) {
     id = json['id'] ?? 0;
-    name = (json['name']).replaceFirst('AUTO_GENERATED', Language.inst.AUTO_GENERATED) ?? '';
+    name = json['name'] ?? '';
     tracks = List<TrackWithDate>.from(json['tracks'].map((track) => TrackWithDate.fromJson(track)).toList());
     date = json['date'] ?? DateTime.now().millisecondsSinceEpoch;
     comment = json['comment'] ?? '';

@@ -67,7 +67,6 @@ class PlaylistsPage extends StatelessWidget {
                     isCurrentlyReversed: SettingsController.inst.playlistSortReversed.value,
                     onReverseIconTap: () {
                       PlaylistController.inst.sortPlaylists(reverse: !SettingsController.inst.playlistSortReversed.value);
-                      printError(info: PlaylistController.inst.playlistSearchList.first.name);
                     },
                   ),
                   textField: CustomTextFiled(
@@ -150,7 +149,7 @@ class PlaylistsPage extends StatelessWidget {
                                 child: MultiArtworkCard(
                                   heroTag: 'parent_playlist_artwork_${playlist.id}',
                                   tracks: playlist.tracks.map((e) => e.track).toList(),
-                                  name: playlist.name,
+                                  name: playlist.name.translatePlaylistName,
                                   gridCount: playlistGridCount,
                                   showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(playlist),
                                   onTap: () => Get.to(() => PlaylisTracksPage(playlist: playlist)),

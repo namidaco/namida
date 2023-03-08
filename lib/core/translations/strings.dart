@@ -33,6 +33,11 @@ class Language {
   String get UNDO_CHANGES_DELETED_TRACK => 'Undo deleted track';
   String get UNDO_CHANGES_DELETED_PLAYLIST => 'Undo deleted playlist';
   String get COLOR_PALETTES => 'Color Palettes';
+  String get HOME => 'Home';
+  String get SET_AS_DEFAULT => 'Set as Default';
+  String get HISTORY => 'History';
+  String get FAVOURITES => 'Favourites';
+  String get TOP_MUSIC => 'Top Music';
 
   /// Main
   String get EXIT_APP => 'Exit';

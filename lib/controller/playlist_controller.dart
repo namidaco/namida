@@ -75,7 +75,7 @@ class PlaylistController extends GetxController {
     for (var item in playlistList) {
       final lctext = text.toLowerCase();
       final dateFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.date));
-      if ((sTitle && item.name.toLowerCase().toString().contains(lctext)) ||
+      if ((sTitle && item.name.translatePlaylistName.toLowerCase().toString().contains(lctext)) ||
           (sDate && dateFormatted.toString().contains(lctext)) ||
           (sComment && item.comment.toLowerCase().toString().contains(lctext)) ||
           (sModes && item.modes.any((element) => element.toLowerCase().toString().contains(lctext)))) {
@@ -90,7 +90,7 @@ class PlaylistController extends GetxController {
     reverse ??= SettingsController.inst.playlistSortReversed.value;
     switch (sortBy) {
       case GroupSortType.title:
-        playlistList.sort((a, b) => a.name.compareTo(a.name));
+        playlistList.sort((a, b) => a.name.translatePlaylistName.compareTo(a.name.translatePlaylistName));
         break;
       case GroupSortType.year:
         playlistList.sort((a, b) => a.date.compareTo(b.date));
@@ -230,9 +230,9 @@ class PlaylistController extends GetxController {
     for (int i = 0; i < randomNumber; i++) {
       randomList.add(Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)]);
     }
-    final l = playlistList.where((pl) => pl.name.startsWith('AUTO_GENERATED')).length;
+    final l = playlistList.where((pl) => pl.name.startsWith('_AUTO_GENERATED_')).length;
     PlaylistController.inst.addNewPlaylist(
-      'AUTO_GENERATED ${l + 1}',
+      '_AUTO_GENERATED_ ${l + 1}',
       tracks: randomList,
     );
   }
@@ -280,13 +280,13 @@ class PlaylistController extends GetxController {
 
     /// Creates default playlists
     if (!playlistList.any((pl) => pl.id == kPlaylistFavourites)) {
-      addNewPlaylist('Favourites', id: kPlaylistFavourites);
+      addNewPlaylist('_FAVOURITES_', id: kPlaylistFavourites);
     }
     if (!playlistList.any((pl) => pl.id == kPlaylistHistory)) {
-      addNewPlaylist('History', id: kPlaylistHistory);
+      addNewPlaylist('_HISTORY_', id: kPlaylistHistory);
     }
     if (!playlistList.any((pl) => pl.id == kPlaylistTopMusic)) {
-      addNewPlaylist('Top Music', id: kPlaylistTopMusic);
+      addNewPlaylist('_TOP_MUSIC_', id: kPlaylistTopMusic);
     }
 
     searchPlaylists('');

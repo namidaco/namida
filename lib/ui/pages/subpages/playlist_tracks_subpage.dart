@@ -37,7 +37,7 @@ class PlaylisTracksPage extends StatelessWidget {
               children: [
                 /// Top Container holding image and info and buttons
                 SubpagesTopContainer(
-                  title: playlist.name,
+                  title: playlist.name.translatePlaylistName,
                   subtitle: [finalTracks.displayTrackKeyword, playlist.date.dateFormatted].join(' - '),
                   thirdLineText: playlist.modes.isNotEmpty ? playlist.modes.join(', ') : '',
                   imageWidget: MultiArtworkContainer(

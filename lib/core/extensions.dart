@@ -509,3 +509,10 @@ extension EnumUtils on Enum {
 extension EnumListExtensions<T extends Object> on List<T> {
   T? getEnum(String? string) => firstWhereOrNull((element) => element.toString().split('.').last == string);
 }
+
+extension PLNAME on String {
+  String get translatePlaylistName => replaceFirst('_AUTO_GENERATED_', Language.inst.AUTO_GENERATED)
+      .replaceFirst('_FAVOURITES_', Language.inst.FAVOURITES)
+      .replaceFirst('_HISTORY_', Language.inst.HISTORY)
+      .replaceFirst('_TOP_MUSIC_', Language.inst.TOP_MUSIC);
+}

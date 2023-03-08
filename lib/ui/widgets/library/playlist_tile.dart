@@ -46,7 +46,7 @@ class PlaylistTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        playlist.name,
+                        playlist.name.translatePlaylistName,
                         style: Get.textTheme.displayMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
