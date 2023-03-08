@@ -67,8 +67,9 @@ class SettingsController extends GetxController {
   final RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
   final RxBool enableFoldersHierarchy = true.obs;
   final RxList<String> backupItemslist =
-      [kTracksFilePath, kQueuesFilePath, kLatestQueueFilePath, kPaletteDirPath, kPlaylistsFilePath, kSettingsFilePath, kWaveformDirPath, kArtworksCompDirPath].obs;
+      [kTracksFilePath, kQueuesFilePath, kLatestQueueFilePath, kPaletteDirPath, kLyricsDirPath, kPlaylistsFilePath, kSettingsFilePath, kWaveformDirPath, kArtworksCompDirPath].obs;
   final RxBool enableVideoPlayback = true.obs;
+  final RxBool enableLyrics = false.obs;
   final RxInt videoPlaybackSource = 0.obs;
   final RxList<String> youtubeVideoQualities = ['480p', '360p', '240p', '144p'].obs;
   final RxInt animatingThumbnailIntensity = 25.obs;
@@ -169,6 +170,7 @@ class SettingsController extends GetxController {
       enableFoldersHierarchy.value = json['enableFoldersHierarchy'] ?? enableFoldersHierarchy.value;
       backupItemslist.value = List<String>.from(json['backupItemslist'] ?? backupItemslist.toList());
       enableVideoPlayback.value = json['enableVideoPlayback'] ?? enableVideoPlayback.value;
+      enableLyrics.value = json['enableLyrics'] ?? enableLyrics.value;
       videoPlaybackSource.value = json['videoPlaybackSource'] ?? videoPlaybackSource.value;
       youtubeVideoQualities.value = List<String>.from(json['youtubeVideoQualities'] ?? youtubeVideoQualities.toList());
 
@@ -259,6 +261,7 @@ class SettingsController extends GetxController {
       'enableFoldersHierarchy': enableFoldersHierarchy.value,
       'backupItemslist': backupItemslist.toList(),
       'enableVideoPlayback': enableVideoPlayback.value,
+      'enableLyrics': enableLyrics.value,
       'videoPlaybackSource': videoPlaybackSource.value,
       'youtubeVideoQualities': youtubeVideoQualities.toList(),
       'animatingThumbnailIntensity': animatingThumbnailIntensity.value,
@@ -344,6 +347,7 @@ class SettingsController extends GetxController {
     bool? enableFoldersHierarchy,
     List<String>? backupItemslist,
     bool? enableVideoPlayback,
+    bool? enableLyrics,
     int? videoPlaybackSource,
     List<String>? youtubeVideoQualities,
     int? animatingThumbnailIntensity,
@@ -572,6 +576,9 @@ class SettingsController extends GetxController {
     }
     if (enableVideoPlayback != null) {
       this.enableVideoPlayback.value = enableVideoPlayback;
+    }
+    if (enableLyrics != null) {
+      this.enableLyrics.value = enableLyrics;
     }
     if (videoPlaybackSource != null) {
       this.videoPlaybackSource.value = videoPlaybackSource;

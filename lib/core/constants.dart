@@ -30,6 +30,7 @@ final String kPaletteDirPath = '$kAppDirectoryPath/Palettes/';
 final String kWaveformDirPath = '$kAppDirectoryPath/Waveforms/';
 final String kVideosCachePath = '$kAppDirectoryPath/Videos/';
 final String kVideosCacheTempPath = '$kAppDirectoryPath/Videos/Temp/';
+final String kLyricsDirPath = '$kAppDirectoryPath/Lyrics/';
 
 /// Dimensions
 const double kBottomPadding = 102.0;

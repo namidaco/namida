@@ -103,6 +103,15 @@ class BackupAndRestore extends StatelessWidget {
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
+                                active: isActive(kLyricsDirPath),
+                                title: Language.inst.LYRICS,
+                                icon: Broken.document,
+                                onTap: () => onItemTap(kLyricsDirPath),
+                              ),
+                              const SizedBox(
+                                height: 12.0,
+                              ),
+                              ListTileWithCheckMark(
                                 active: isActive(kQueuesFilePath) && isActive(kLatestQueueFilePath),
                                 title: Language.inst.QUEUE,
                                 icon: Broken.quote_up,

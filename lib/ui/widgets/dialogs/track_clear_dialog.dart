@@ -51,6 +51,16 @@ void showTrackClearDialog(List<Track> tracks) {
             },
           ),
           CustomListTile(
+            title: Language.inst.LYRICS,
+            icon: Broken.document,
+            onTap: () async {
+              Get.close(1);
+              for (final track in tracks) {
+                await File("$kLyricsDirPath${track.displayName}.txt").delete();
+              }
+            },
+          ),
+          CustomListTile(
             title: isSingle ? Language.inst.ARTWORK : Language.inst.ARTWORKS,
             icon: Broken.image,
             onTap: () async {

@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/themes.dart';
@@ -67,26 +68,9 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
     return DefaultTextStyle(
       style: Get.textTheme.displayMedium!,
       child: AnimatedTheme(
-        data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, light: !context.isDarkMode),
+        data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
         child: Stack(
           children: [
-            /// Player Wallpaper
-            // Positioned.fill(
-            //   child: AnimatedBuilder(
-            //     animation: animation,
-            //     builder: (context, child) {
-            //       if (animation.value > 0.01) {
-            //         return Opacity(
-            //           opacity: animation.value.clamp(0.0, 1.0),
-            //           child: const Wallpaper(gradient: false, particleOpacity: .3),
-            //         );
-            //       } else {
-            //         return const SizedBox();
-            //       }
-            //     },
-            //   ),
-            // ),
-
             /// MiniPlayer Wallpaper
             Positioned.fill(
               child: AnimatedBuilder(
@@ -1052,20 +1036,37 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                           width: 34,
                                           height: 34,
                                           child: IconButton(
+                                            tooltip: Language.inst.LYRICS,
                                             visualDensity: VisualDensity.compact,
-                                            onPressed: () {},
+                                            onPressed: () {
+                                              SettingsController.inst.save(enableLyrics: !SettingsController.inst.enableLyrics.value);
+                                              Lyrics.inst.updateLyrics(Player.inst.nowPlayingTrack.value);
+                                            },
                                             padding: const EdgeInsets.all(2.0),
-                                            icon: Icon(
-                                              Broken.document,
-                                              size: 20.0,
-                                              color: context.theme.colorScheme.onSecondaryContainer,
-                                            ),
+                                            icon: SettingsController.inst.enableLyrics.value
+                                                ? Lyrics.inst.currentLyrics.value == ''
+                                                    ? StackedIcon(
+                                                        baseIcon: Broken.document,
+                                                        secondaryText: !Lyrics.inst.lyricsAvailable.value ? 'x' : '?',
+                                                        iconSize: 20.0,
+                                                      )
+                                                    : Icon(
+                                                        Broken.document,
+                                                        size: 20.0,
+                                                        color: context.theme.colorScheme.onSecondaryContainer,
+                                                      )
+                                                : Icon(
+                                                    Broken.card_slash,
+                                                    size: 20.0,
+                                                    color: context.theme.colorScheme.onSecondaryContainer,
+                                                  ),
                                           ),
                                         ),
                                         SizedBox(
                                           width: 34,
                                           height: 34,
                                           child: IconButton(
+                                            tooltip: Language.inst.QUEUE,
                                             visualDensity: VisualDensity.compact,
                                             onPressed: () => snapToQueue(),
                                             padding: const EdgeInsets.all(2.0),
@@ -1478,25 +1479,32 @@ class TrackImage extends StatelessWidget {
                                     borderRadius: BorderRadius.circular((6.0 + 12.0 * cp).multipliedRadius),
                                     child: AspectRatio(
                                       aspectRatio: VideoController.inst.vidcontroller!.value.aspectRatio,
-                                      child: VideoPlayer(
-                                        VideoController.inst.vidcontroller!,
+                                      child: LyricsWrapper(
+                                        cp: cp,
+                                        child: VideoPlayer(
+                                          key: const ValueKey('video'),
+                                          VideoController.inst.vidcontroller!,
+                                        ),
                                       ),
                                     ),
                                   )
-                            : ArtworkWidget(
-                                key: const ValueKey('imagecontainer'),
-                                track: Player.inst.nowPlayingTrack.value,
-                                thumnailSize: Get.width,
-                                compressed: false,
-                                borderRadius: 6.0 + 12.0 * cp,
-                                forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: context.theme.shadowColor.withAlpha(100),
-                                    blurRadius: 24.0,
-                                    offset: const Offset(0.0, 8.0),
-                                  ),
-                                ],
+                            : LyricsWrapper(
+                                cp: cp,
+                                child: ArtworkWidget(
+                                  key: const ValueKey('imagecontainer'),
+                                  track: Player.inst.nowPlayingTrack.value,
+                                  thumnailSize: Get.width,
+                                  compressed: false,
+                                  borderRadius: 6.0 + 12.0 * cp,
+                                  forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: context.theme.shadowColor.withAlpha(100),
+                                      blurRadius: 24.0,
+                                      offset: const Offset(0.0, 8.0),
+                                    ),
+                                  ],
+                                ),
                               ),
                       ),
                     );
@@ -1506,6 +1514,54 @@ class TrackImage extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class LyricsWrapper extends StatelessWidget {
+  final Widget child;
+  final double cp;
+  const LyricsWrapper({super.key, this.child = const SizedBox(), required this.cp});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () => AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: !SettingsController.inst.enableLyrics.value || Lyrics.inst.currentLyrics.value == ''
+            ? child
+            : Stack(
+                alignment: Alignment.center,
+                children: [
+                  child,
+                  Opacity(
+                    opacity: cp,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(18.0.multipliedRadius),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
+                        child: Container(
+                          color: context.theme.scaffoldBackgroundColor.withAlpha(110),
+                          width: double.infinity,
+                          height: double.infinity,
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 16.0),
+                                Text(Lyrics.inst.currentLyrics.value),
+                                const SizedBox(height: 16.0),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }
