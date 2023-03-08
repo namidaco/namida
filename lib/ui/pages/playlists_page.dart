@@ -116,16 +116,6 @@ class PlaylistsPage extends StatelessWidget {
                         ),
                       const SliverPadding(padding: EdgeInsets.only(top: 6.0)),
                       if (playlistGridCount == 1) ...[
-                        // SliverToBoxAdapter(
-                        //   child: PlaylistTile(
-                        //     playlist: Playlist(-3, 'Top Music', PlaylistController.inst.playlistList.firstWhere((element) => element.id == -2).tracks, 0, '', ['']),
-                        //     onTap: () => Get.to(
-                        //       () => PlaylisTracksPage(
-                        //         playlist: Playlist(-3, 'Top Music', PlaylistController.inst.playlistList.firstWhere((element) => element.id == -2).tracks, 0, '', ['']),
-                        //       ),
-                        //     ),
-                        //   ),
-                        // ),
                         SliverList(
                           delegate: SliverChildBuilderDelegate(
                             (context, i) {
@@ -159,7 +149,7 @@ class PlaylistsPage extends StatelessWidget {
                                 position: i,
                                 child: MultiArtworkCard(
                                   heroTag: 'parent_playlist_artwork_${playlist.id}',
-                                  tracks: playlist.tracks,
+                                  tracks: playlist.tracks.map((e) => e.track).toList(),
                                   name: playlist.name,
                                   gridCount: playlistGridCount,
                                   showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(playlist),

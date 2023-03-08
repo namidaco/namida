@@ -25,6 +25,8 @@ class PlaylistController extends GetxController {
   RxList<Playlist> playlistSearchList = <Playlist>[].obs;
   Rx<TextEditingController> playlistSearchController = TextEditingController().obs;
 
+  final RxMap<Track, int> topTracksMap = <Track, int>{}.obs;
+
   RxInt currentListenedSeconds = 0.obs;
 
   void addToHistory(Track track) {
@@ -49,7 +51,7 @@ class PlaylistController extends GetxController {
       });
       // TODO: bug possibilty, the percentage may be higher or lower by 1
       if ((currentListenedSeconds.value == sec || per.toInt() == perSett)) {
-        addTracksToPlaylist(-2, [Player.inst.nowPlayingTrack.value], addAtFirst: true);
+        addTracksToPlaylist(kPlaylistHistory, [Player.inst.nowPlayingTrack.value], addAtFirst: true);
         timer.cancel();
         return;
       }
@@ -94,7 +96,7 @@ class PlaylistController extends GetxController {
         playlistList.sort((a, b) => a.date.compareTo(b.date));
         break;
       case GroupSortType.duration:
-        playlistList.sort((a, b) => a.tracks.totalDuration.compareTo(b.tracks.totalDuration));
+        playlistList.sort((a, b) => a.tracks.map((e) => e.track).toList().totalDuration.compareTo(b.tracks.map((e) => e.track).toList().totalDuration));
         break;
       case GroupSortType.numberOfTracks:
         playlistList.sort((a, b) => a.tracks.length.compareTo(b.tracks.length));
@@ -125,7 +127,7 @@ class PlaylistController extends GetxController {
     id ??= playlistList.length + 1;
     date ??= DateTime.now().millisecondsSinceEpoch;
 
-    playlistList.add(Playlist(id, name, tracks, date, comment, modes));
+    playlistList.add(Playlist(id, name, tracks.map((e) => TrackWithDate(DateTime.now().millisecondsSinceEpoch, e)).toList(), date, comment, modes));
 
     _writeToStorage();
   }
@@ -155,7 +157,7 @@ class PlaylistController extends GetxController {
     _writeToStorage();
   }
 
-  void updatePropertyInPlaylist(Playlist oldPlaylist, {String? name, List<Track>? tracks, List<Track>? tracksToAdd, int? date, String? comment, List<String>? modes}) {
+  void updatePropertyInPlaylist(Playlist oldPlaylist, {String? name, List<TrackWithDate>? tracks, List<Track>? tracksToAdd, int? date, String? comment, List<String>? modes}) {
     name ??= oldPlaylist.name;
     tracks ??= oldPlaylist.tracks;
     date ??= oldPlaylist.date;
@@ -171,7 +173,8 @@ class PlaylistController extends GetxController {
   void addTracksToPlaylist(int id, List<Track> tracks, {bool addAtFirst = false}) {
     final pl = playlistList.firstWhere((p0) => p0.id == id);
     final plIndex = playlistList.indexOf(pl);
-    final finalTracks = addAtFirst ? [...tracks, ...pl.tracks] : [...pl.tracks, ...tracks];
+    final tracksTobeAdded = tracks.map((e) => TrackWithDate(DateTime.now().millisecondsSinceEpoch, e)).toList();
+    final List<TrackWithDate> finalTracks = addAtFirst ? [...tracksTobeAdded, ...pl.tracks] : [...pl.tracks, ...tracksTobeAdded];
     final newPlaylist = Playlist(pl.id, pl.name, finalTracks, pl.date, pl.comment, pl.modes);
 
     playlistList.remove(pl);
@@ -191,13 +194,13 @@ class PlaylistController extends GetxController {
   //   _writeToStorage();
   // }
 
-  void insertTracksInPlaylist(int id, List<Track> tracks, int index) {
+  void insertTracksInPlaylist(int id, List<TrackWithDate> tracks, int index) {
     final pl = playlistList.firstWhere((p0) => p0.id == id);
-    pl.tracks.insertAll(index, tracks);
+    pl.tracks.insertAll(index, tracks.map((e) => e).toList());
     _writeToStorage();
   }
 
-  void removeTracksFromPlaylist(int id, List<Track> tracks) {
+  void removeTracksFromPlaylist(int id, List<TrackWithDate> tracks) {
     final pl = playlistList.firstWhere((p0) => p0.id == id);
     for (final t in tracks) {
       pl.tracks.remove(t);
@@ -207,11 +210,11 @@ class PlaylistController extends GetxController {
 
   void favouriteButtonOnPressed(Track track) {
     final fvPlaylist = PlaylistController.inst.playlistList.firstWhere(
-      (element) => element.id == -1,
+      (element) => element.id == kPlaylistFavourites,
     );
 
-    if (fvPlaylist.tracks.contains(track)) {
-      fvPlaylist.tracks.remove(track);
+    if (fvPlaylist.tracks.any((element) => element.track == track)) {
+      fvPlaylist.tracks.removeWhere((element) => element.track == track);
     } else {
       addTracksToPlaylist(fvPlaylist.id, [track]);
     }
@@ -227,47 +230,71 @@ class PlaylistController extends GetxController {
     for (int i = 0; i < randomNumber; i++) {
       randomList.add(Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)]);
     }
+    final l = playlistList.where((pl) => pl.name.startsWith('AUTO_GENERATED')).length;
     PlaylistController.inst.addNewPlaylist(
-      '${Language.inst.AUTO_GENERATED} ${PlaylistController.inst.playlistList.length + 1}',
+      'AUTO_GENERATED ${l + 1}',
       tracks: randomList,
     );
+  }
+
+  /// Top Music Playlist, relies totally on History Playlist.
+  void updateTopMusicPlaylist() {
+    final pltm = playlistList.firstWhere((p0) => p0.id == kPlaylistTopMusic);
+
+    final Map<String, int> topTracksPathMap = <String, int>{};
+    for (final t in playlistList.firstWhere((element) => element.id == kPlaylistHistory).tracks.map((e) => e.track).toList()) {
+      if (topTracksPathMap.containsKey(t.path)) {
+        topTracksPathMap.update(t.path, (value) => value + 1);
+      } else {
+        topTracksPathMap.addIf(true, t.path, 1);
+      }
+    }
+    topTracksPathMap.forEach((key, value) {
+      topTracksMap.addIf(true, playlistList.firstWhere((element) => element.id == kPlaylistHistory).tracks.firstWhere((element) => element.track.path == key).track, value);
+    });
+
+    final sortedEntries = topTracksMap.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    topTracksMap
+      ..clear()
+      ..addEntries(sortedEntries);
+    pltm.tracks.clear();
+    pltm.tracks.assignAll(topTracksMap.keys.map((e) => TrackWithDate(0, e)));
   }
 
   ///
   Future<void> preparePlaylistFile({File? file}) async {
     file ??= await File(kPlaylistsFilePath).create();
-    final fileStat = await file.stat();
-
-    String contents = await file.readAsString();
-    if (contents.isNotEmpty) {
-      var jsonResponse = jsonDecode(contents);
-
-      for (var p in jsonResponse) {
-        Playlist playlist = Playlist(
-          p['id'],
-          p['name'],
-          List<Track>.from(p['tracks'].map((i) => Track.fromJson(i))),
-          p['date'],
-          p['comment'],
-          List<String>.from(p['modes']),
-        );
-        playlistList.add(playlist);
-        printInfo(info: "playlist: ${playlistList.length}");
+    try {
+      String contents = await file.readAsString();
+      if (contents.isNotEmpty) {
+        var jsonResponse = jsonDecode(contents);
+        for (var p in jsonResponse) {
+          playlistList.add(Playlist.fromJson(p));
+          printInfo(info: "playlist: ${playlistList.length}");
+        }
       }
+    } catch (e) {
+      printError(info: e.toString());
+      await file.delete();
     }
 
     /// Creates default playlists
-    if (!playlistList.any((pl) => pl.id == -1)) {
-      addNewPlaylist('Favourites', id: -1);
+    if (!playlistList.any((pl) => pl.id == kPlaylistFavourites)) {
+      addNewPlaylist('Favourites', id: kPlaylistFavourites);
     }
-    if (!playlistList.any((pl) => pl.id == -2)) {
-      addNewPlaylist('History', id: -2);
+    if (!playlistList.any((pl) => pl.id == kPlaylistHistory)) {
+      addNewPlaylist('History', id: kPlaylistHistory);
+    }
+    if (!playlistList.any((pl) => pl.id == kPlaylistTopMusic)) {
+      addNewPlaylist('Top Music', id: kPlaylistTopMusic);
     }
 
     searchPlaylists('');
+    updateTopMusicPlaylist();
   }
 
   void _writeToStorage() {
+    updateTopMusicPlaylist();
     playlistList.refresh();
     searchPlaylists('');
     playlistList.map((pl) => pl.toJson()).toList();

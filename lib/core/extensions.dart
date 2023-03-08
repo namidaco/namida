@@ -195,9 +195,9 @@ extension Channels on String {
 extension FavouriteTrack on Track {
   bool get isFavourite {
     final favPlaylist = PlaylistController.inst.playlistList.firstWhere(
-      (element) => element.id == -1,
+      (element) => element.id == kPlaylistFavourites,
     );
-    return favPlaylist.tracks.contains(this);
+    return favPlaylist.tracks.map((e) => e.track).contains(this);
   }
 }
 

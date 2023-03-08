@@ -38,7 +38,7 @@ class PlaylistTile extends StatelessWidget {
                 MultiArtworkContainer(
                   heroTag: 'playlist_artwork_${playlist.id}',
                   size: playlistThumnailSize,
-                  tracks: playlist.tracks,
+                  tracks: playlist.tracks.map((e) => e.track).toList(),
                 ),
                 Expanded(
                   child: Column(
@@ -51,7 +51,7 @@ class PlaylistTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        [playlist.tracks.displayTrackKeyword, playlist.date.dateFormatted].join(' • '),
+                        [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.date.dateFormatted].join(' • '),
                         style: Get.textTheme.displaySmall?.copyWith(fontSize: 13.7),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -66,7 +66,7 @@ class PlaylistTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 12.0),
                 Text(
-                  playlist.tracks.totalDurationFormatted,
+                  playlist.tracks.map((e) => e.track).toList().totalDurationFormatted,
                   style: Get.textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),

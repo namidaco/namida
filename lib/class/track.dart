@@ -1,3 +1,26 @@
+class TrackWithDate {
+  late int dateAdded;
+  late Track track;
+
+  TrackWithDate(
+    this.dateAdded,
+    this.track,
+  );
+
+  TrackWithDate.fromJson(Map<String, dynamic> json) {
+    dateAdded = json['dateAdded'] ?? DateTime.now().millisecondsSinceEpoch;
+    track = Track.fromJson(json['track']);
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['dateAdded'] = dateAdded;
+    data['track'] = track;
+
+    return data;
+  }
+}
+
 class Track {
   late String title;
   late List<String> artistsList;
@@ -62,37 +85,6 @@ class Track {
   );
 
   Track.fromJson(Map<String, dynamic> json) {
-    // Track(
-    //   json['title'],
-    //   json['artistsList'],
-    //   json['album'],
-    //   json['albumArtist'],
-    //   json['genresList'],
-    //   json['composer'],
-    //   json['track'],
-    //   json['duration'],
-    //   json['year'],
-    //   json['size'],
-    //   json['dateAdded'],
-    //   json['dateModified'],
-    //   json['path'],
-    //   json['pathToImage'],
-    //   json['pathToImageComp'],
-    //   json['folderPath'],
-    //   json['displayName'],
-    //   json['displayNameWOExt'],
-    //   json['fileExtension'],
-    //   json['comment'],
-    //   json['bitrate'],
-    //   json['sampleRate'],
-    //   json['format'],
-    //   json['channels'],
-    //   json['discNo'],
-    //   json['language'],
-    //   json['lyricist'],
-    //   json['mood'],
-    //   json['tags'],
-    // );
     title = json['title'];
     artistsList = List<String>.from(json['artistsList']);
     album = json['album'];

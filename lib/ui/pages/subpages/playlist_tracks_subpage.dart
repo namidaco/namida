@@ -31,37 +31,63 @@ class PlaylisTracksPage extends StatelessWidget {
       child: Obx(
         () {
           final rxplaylist = PlaylistController.inst.playlistList.firstWhere((element) => element == playlist);
+          final finalTracks = playlist.id == kPlaylistTopMusic ? PlaylistController.inst.topTracksMap.keys.toList() : rxplaylist.tracks.map((e) => e.track).toList();
           return AnimationLimiter(
             child: ListView(
               children: [
                 /// Top Container holding image and info and buttons
                 SubpagesTopContainer(
                   title: playlist.name,
-                  subtitle: [playlist.tracks.displayTrackKeyword, playlist.date.dateFormatted].join(' - '),
+                  subtitle: [finalTracks.displayTrackKeyword, playlist.date.dateFormatted].join(' - '),
                   thirdLineText: playlist.modes.isNotEmpty ? playlist.modes.join(', ') : '',
                   imageWidget: MultiArtworkContainer(
                     heroTag: 'playlist_artwork_${playlist.id}',
-                    size: Get.width / 3,
-                    tracks: playlist.tracks,
+                    size: Get.width * 0.35,
+                    tracks: finalTracks,
                   ),
-                  tracks: playlist.tracks,
+                  tracks: finalTracks,
                 ),
 
-                /// Tracks
-                ...rxplaylist.tracks
-                    .asMap()
-                    .entries
-                    .map(
-                      (track) => AnimatingTile(
-                        position: track.key,
-                        child: TrackTile(
-                          track: track.value,
-                          queue: rxplaylist.tracks,
-                          playlist: rxplaylist,
+                /// Tracks for Top Music Playlist
+                if (rxplaylist.id == kPlaylistTopMusic) ...[
+                  ...PlaylistController.inst.topTracksMap.entries
+                      .map(
+                        (track) => AnimatingTile(
+                          position: PlaylistController.inst.topTracksMap.keys.toList().indexOf(track.key),
+                          child: TrackTile(
+                            track: track.key,
+                            queue: PlaylistController.inst.topTracksMap.keys.toList(),
+                            playlist: rxplaylist,
+                            trailingWidget: CircleAvatar(
+                              radius: 10.0,
+                              backgroundColor: context.theme.scaffoldBackgroundColor,
+                              child: Text(
+                                track.value.toString(),
+                                style: context.textTheme.displaySmall,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    )
-                    .toList(),
+                      )
+                      .toList(),
+                ],
+
+                /// Tracks
+                if (rxplaylist.id != kPlaylistTopMusic)
+                  ...rxplaylist.tracks
+                      .asMap()
+                      .entries
+                      .map(
+                        (track) => AnimatingTile(
+                          position: track.key,
+                          child: TrackTile(
+                            track: track.value.track,
+                            queue: rxplaylist.tracks.map((e) => e.track).toList(),
+                            playlist: rxplaylist,
+                          ),
+                        ),
+                      )
+                      .toList(),
                 kBottomPaddingWidget,
               ],
             ),

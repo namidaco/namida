@@ -33,6 +33,11 @@ final String kVideosCacheTempPath = '$kAppDirectoryPath/Videos/Temp/';
 const double kBottomPadding = 102.0;
 const Widget kBottomPaddingWidget = SizedBox(height: 102.0);
 
+/// Default Playlists IDs
+const kPlaylistFavourites = -1;
+const kPlaylistHistory = -2;
+const kPlaylistTopMusic = -3;
+
 /// Stock Library Tabs List
 final List<String> kLibraryTabsStock = [
   'albums',

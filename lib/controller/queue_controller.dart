@@ -89,14 +89,7 @@ class QueueController extends GetxController {
       var jsonResponse = jsonDecode(contents);
 
       for (var p in jsonResponse) {
-        Queue queue = Queue(
-          p['name'],
-          List<String>.from(p['tracks']),
-          p['date'],
-          p['comment'],
-          List<String>.from(p['modes']),
-        );
-        queueList.add(queue);
+        queueList.add(Queue.fromJson(p));
         printInfo(info: "queue: ${queueList.length}");
       }
     }
@@ -121,14 +114,13 @@ class QueueController extends GetxController {
     printInfo(info: "latestqueue: ${latestQueue.length}");
 
     // Assign the last queue to the [Player]
-    if (latestQueue.isEmpty || await file.stat().then((value) => value.size < 100)) {
+    if (latestQueue.isEmpty || await file.stat().then((value) => value.size <= 2)) {
       return;
     }
-    final latestTrack = Indexer.inst.tracksInfoList.firstWhere(
-      (element) => element.path == SettingsController.inst.getString('lastPlayedTrackPath'),
-      orElse: () => Indexer.inst.tracksInfoList.first,
+    final latestTrack = latestQueue.firstWhere(
+      (element) => element.path == SettingsController.inst.lastPlayedTrackPath.value,
+      orElse: () => latestQueue.first,
     );
-
     await Player.inst.playOrPause(track: latestTrack, queue: latestQueue.toList(), disablePlay: true);
   }
 

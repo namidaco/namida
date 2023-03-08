@@ -397,38 +397,7 @@ class Indexer extends GetxController {
       var jsonResponse = jsonDecode(contents);
 
       for (var p in jsonResponse) {
-        Track track = Track(
-          p['title'],
-          List<String>.from(p['artistsList']),
-          p['album'],
-          p['albumArtist'],
-          List<String>.from(p['genresList']),
-          p['composer'],
-          p['track'],
-          p['duration'],
-          p['year'],
-          p['size'],
-          p['dateAdded'],
-          p['dateModified'],
-          p['path'],
-          p['pathToImage'],
-          p['pathToImageComp'],
-          p['folderPath'],
-          p['displayName'],
-          p['displayNameWOExt'],
-          p['fileExtension'],
-          p['comment'],
-          p['bitrate'],
-          p['sampleRate'],
-          p['format'],
-          p['channels'],
-          p['discNo'],
-          p['language'],
-          p['lyricist'],
-          p['mood'],
-          p['tags'],
-        );
-        tracksInfoList.add(track);
+        tracksInfoList.add(Track.fromJson(p));
         print("hhhhhhhhhh: ${tracksInfoList.length}");
       }
     }
