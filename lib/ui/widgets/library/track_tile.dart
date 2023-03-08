@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/trackitem.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -93,10 +95,11 @@ class TrackTile extends StatelessWidget {
 
     return Obx(
       () {
-        double thumnailSize = SettingsController.inst.trackThumbnailSizeinList.value;
-        double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
-        bool isTrackSelected = SelectedTracksController.inst.selectedTracks.contains(track);
-        bool isTrackCurrentlyPlaying = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
+        final TrackItem tritem = SettingsController.inst.trackItem.value;
+        final double thumnailSize = SettingsController.inst.trackThumbnailSizeinList.value;
+        final double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
+        final bool isTrackSelected = SelectedTracksController.inst.selectedTracks.contains(track);
+        final bool isTrackCurrentlyPlaying = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
         // final finalqueue = queue ?? Indexer.inst.trackSearchList.toList();
         // bool isTrackCurrentlyPlaying = finalqueue.isNotEmpty && finalqueue.elementAt(Player.inst.currentIndex.value) == track;
         final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
@@ -120,6 +123,13 @@ class TrackTile extends StatelessWidget {
                     },
               onTap: onTap ??
                   () async {
+                    // final String lyrics = await Lyrics.inst.getLyrics(artist: track.artistsList.first, track: track.title);
+                    // RegExp exp = RegExp(r'<[^>]*>');
+                    // if (lyrics != '') {
+                    //   String formattedText = lyrics.replaceAll(exp, '').replaceAll('\n', ' ');
+                    //   print('SOOOOOOOOOOOONGGGGG $formattedText');
+                    // }
+
                     if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
                       SelectedTracksController.inst.selectOrUnselect(track);
                     } else {
@@ -148,14 +158,11 @@ class TrackTile extends StatelessWidget {
                             ),
                             width: thumnailSize,
                             height: thumnailSize,
-                            child: Hero(
-                              tag: 'trackhero${track.path}',
-                              child: ArtworkWidget(
-                                blur: 1.5,
-                                thumnailSize: thumnailSize,
-                                track: track,
-                                forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
-                              ),
+                            child: ArtworkWidget(
+                              blur: 1.5,
+                              thumnailSize: thumnailSize,
+                              track: track,
+                              forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
                             ),
                           ),
                         ),
@@ -179,25 +186,20 @@ class TrackTile extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // check if first row isnt empty
-                          if (SettingsController.inst.row1Item1.value != TrackTileItem.none ||
-                              SettingsController.inst.row1Item2.value != TrackTileItem.none ||
-                              SettingsController.inst.row1Item3.value != TrackTileItem.none)
+                          if (tritem.row1Item1 != TrackTileItem.none || tritem.row1Item2 != TrackTileItem.none || tritem.row1Item3 != TrackTileItem.none)
                             Text(
-                              joinTrackItems(SettingsController.inst.row1Item1.value, SettingsController.inst.row1Item2.value, SettingsController.inst.row1Item3.value),
+                              joinTrackItems(tritem.row1Item1, tritem.row1Item2, tritem.row1Item3),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                               style: context.textTheme.displayMedium!.copyWith(
-                                // fontSize: Configuration.instance.trackListTileHeight * 0.2,
                                 color: textColor?.withAlpha(170),
                               ),
                             ),
 
                           // check if second row isnt empty
-                          if (SettingsController.inst.row2Item1.value != TrackTileItem.none ||
-                              SettingsController.inst.row2Item2.value != TrackTileItem.none ||
-                              SettingsController.inst.row2Item3.value != TrackTileItem.none)
+                          if (tritem.row2Item1 != TrackTileItem.none || tritem.row2Item2 != TrackTileItem.none || tritem.row2Item3 != TrackTileItem.none)
                             Text(
-                              joinTrackItems(SettingsController.inst.row2Item1.value, SettingsController.inst.row2Item2.value, SettingsController.inst.row2Item3.value),
+                              joinTrackItems(tritem.row2Item1, tritem.row2Item2, tritem.row2Item3),
                               style: Get.textTheme.displaySmall?.copyWith(
                                 fontWeight: FontWeight.w500,
                                 color: textColor?.withAlpha(140),
@@ -208,11 +210,9 @@ class TrackTile extends StatelessWidget {
 
                           // check if third row isnt empty
                           if (SettingsController.inst.displayThirdRow.value)
-                            if (SettingsController.inst.row3Item1.value != TrackTileItem.none ||
-                                SettingsController.inst.row3Item2.value != TrackTileItem.none ||
-                                SettingsController.inst.row3Item3.value != TrackTileItem.none)
+                            if (tritem.row3Item1 != TrackTileItem.none || tritem.row3Item2 != TrackTileItem.none || tritem.row3Item3 != TrackTileItem.none)
                               Text(
-                                joinTrackItems(SettingsController.inst.row3Item1.value, SettingsController.inst.row3Item2.value, SettingsController.inst.row3Item3.value),
+                                joinTrackItems(tritem.row3Item1, tritem.row3Item2, tritem.row3Item3),
                                 style: Get.textTheme.displaySmall?.copyWith(
                                   color: textColor?.withAlpha(130),
                                 ),
@@ -223,22 +223,22 @@ class TrackTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 6.0),
-                    if (SettingsController.inst.rightItem1.value != TrackTileItem.none || SettingsController.inst.rightItem2.value != TrackTileItem.none)
+                    if (SettingsController.inst.displayFavouriteIconInListTile.value || tritem.rightItem1 != TrackTileItem.none || tritem.rightItem2 != TrackTileItem.none)
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          if (SettingsController.inst.rightItem1.value != TrackTileItem.none)
+                          if (tritem.rightItem1 != TrackTileItem.none)
                             Text(
-                              getChoosenTrackTileItem(SettingsController.inst.rightItem1.value),
+                              getChoosenTrackTileItem(tritem.rightItem1),
                               style: Get.textTheme.displaySmall?.copyWith(
                                 fontWeight: FontWeight.w500,
                                 color: textColor?.withAlpha(170),
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
-                          if (SettingsController.inst.rightItem2.value != TrackTileItem.none)
+                          if (tritem.rightItem2 != TrackTileItem.none)
                             Text(
-                              getChoosenTrackTileItem(SettingsController.inst.rightItem2.value),
+                              getChoosenTrackTileItem(tritem.rightItem2),
                               style: Get.textTheme.displaySmall?.copyWith(
                                 fontWeight: FontWeight.w500,
                                 color: textColor?.withAlpha(170),
@@ -275,13 +275,14 @@ class TrackTile extends StatelessWidget {
                       iconColor: textColor?.withAlpha(160),
                       onPressed: () => NamidaDialogs.inst.showTrackDialog(track, playlist: playlist),
                     ),
-                    const SizedBox(
-                      width: 4.0,
-                    ),
+                    if (trailingWidget == null)
+                      const SizedBox(
+                        width: 4.0,
+                      ),
                     if (trailingWidget != null) ...[
                       trailingWidget!,
                       const SizedBox(
-                        width: 4.0,
+                        width: 10.0,
                       ),
                     ]
                   ],

@@ -80,7 +80,7 @@ void main() async {
   kDirectoriesPaths.add('${paths[0]}/Download/');
   kInternalAppDirectoryPath = "${paths[0]}/Namida";
 
-  Get.put(() => SettingsController());
+  await SettingsController.inst.prepareSettingsFile();
   Get.put(() => ScrollSearchController());
   Get.put(() => Player());
   Get.put(() => VideoController());

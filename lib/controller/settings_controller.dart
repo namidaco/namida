@@ -1,192 +1,286 @@
-import 'package:enum_to_string/enum_to_string.dart';
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
+import 'package:namida/class/trackitem.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 
 class SettingsController extends GetxController {
   static SettingsController inst = SettingsController();
 
-  Rx<ThemeMode> themeMode = ThemeMode.system.obs;
-  RxBool autoColor = true.obs;
-  RxInt staticColor = kMainColor.value.obs;
-  Rx<LibraryTab> selectedLibraryTab = LibraryTab.tracks.obs;
-  RxBool autoLibraryTab = true.obs;
-  RxList<String> libraryTabs = kLibraryTabsStock.obs;
-  RxInt searchResultsPlayMode = 1.obs;
-  RxDouble borderRadiusMultiplier = 1.0.obs;
-  RxDouble fontScaleFactor = 1.0.obs;
-  RxDouble trackThumbnailSizeinList = 70.0.obs;
-  RxDouble trackListTileHeight = 70.0.obs;
-  RxDouble albumThumbnailSizeinList = 90.0.obs;
-  RxDouble albumListTileHeight = 90.0.obs;
-  RxDouble queueSheetMinHeight = 25.0.obs;
-  RxDouble queueSheetMaxHeight = 500.0.obs;
-  RxDouble nowPlayingImageContainerHeight = 400.0.obs;
+  final Rx<ThemeMode> themeMode = ThemeMode.system.obs;
+  final RxBool autoColor = true.obs;
+  final RxInt staticColor = kMainColor.value.obs;
+  final Rx<LibraryTab> selectedLibraryTab = LibraryTab.tracks.obs;
+  final RxBool autoLibraryTab = true.obs;
+  final RxList<String> libraryTabs = kLibraryTabsStock.obs;
+  final RxInt searchResultsPlayMode = 1.obs;
+  final RxDouble borderRadiusMultiplier = 1.0.obs;
+  final RxDouble fontScaleFactor = 1.0.obs;
+  final RxDouble trackThumbnailSizeinList = 70.0.obs;
+  final RxDouble trackListTileHeight = 70.0.obs;
+  final RxDouble albumThumbnailSizeinList = 90.0.obs;
+  final RxDouble albumListTileHeight = 90.0.obs;
+  final RxDouble queueSheetMinHeight = 25.0.obs;
+  final RxDouble queueSheetMaxHeight = 500.0.obs;
+  final RxDouble nowPlayingImageContainerHeight = 400.0.obs;
 
-  RxBool enableVolumeFadeOnPlayPause = true.obs;
-  RxBool displayTrackNumberinAlbumPage = true.obs;
-  RxBool albumCardTopRightDate = true.obs;
-  RxBool forceSquaredTrackThumbnail = false.obs;
-  RxBool forceSquaredAlbumThumbnail = false.obs;
-  RxBool useAlbumStaggeredGridView = false.obs;
-  RxBool useSettingCollapsedTiles = true.obs;
-  RxInt albumGridCount = 2.obs;
-  RxInt artistGridCount = 3.obs;
-  RxInt genreGridCount = 2.obs;
-  RxInt playlistGridCount = 1.obs;
-  RxBool enableBlurEffect = true.obs;
-  RxBool enableGlowEffect = true.obs;
-  RxBool hourFormat12 = true.obs;
-  RxString dateTimeFormat = 'MMM yyyy'.obs;
-  RxList<String> trackArtistsSeparators = <String>['&', ',', ';', '//'].obs;
-  RxList<String> trackGenresSeparators = <String>['&', ',', ';', '//'].obs;
-  Rx<SortType> tracksSort = SortType.title.obs;
-  RxBool tracksSortReversed = false.obs;
-  Rx<GroupSortType> albumSort = GroupSortType.album.obs;
-  RxBool albumSortReversed = false.obs;
-  Rx<GroupSortType> artistSort = GroupSortType.artistsList.obs;
-  RxBool artistSortReversed = false.obs;
-  Rx<GroupSortType> genreSort = GroupSortType.genresList.obs;
-  RxBool genreSortReversed = false.obs;
-  Rx<GroupSortType> playlistSort = GroupSortType.year.obs;
-  RxBool playlistSortReversed = false.obs;
-  RxInt indexMinDurationInSec = 5.obs;
-  RxInt indexMinFileSizeInB = (100 * 1024).obs;
-  RxList<String> trackSearchFilter = ['title', 'artist', 'album'].obs;
-  RxList<String> playlistSearchFilter = ['name', 'date', 'modes', 'comment'].obs;
-  RxList<String> directoriesToScan = kDirectoriesPaths.toList().obs;
-  RxList<String> directoriesToExclude = <String>[].obs;
-  RxBool preventDuplicatedTracks = false.obs;
-  RxBool respectNoMedia = false.obs;
-  RxString defaultBackupLocation = kInternalAppDirectoryPath.obs;
-  RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
-  RxBool enableFoldersHierarchy = true.obs;
-  RxList<String> backupItemslist =
+  final RxBool enableVolumeFadeOnPlayPause = true.obs;
+  final RxBool displayTrackNumberinAlbumPage = true.obs;
+  final RxBool albumCardTopRightDate = true.obs;
+  final RxBool forceSquaredTrackThumbnail = false.obs;
+  final RxBool forceSquaredAlbumThumbnail = false.obs;
+  final RxBool useAlbumStaggeredGridView = false.obs;
+  final RxBool useSettingCollapsedTiles = true.obs;
+  final RxInt albumGridCount = 2.obs;
+  final RxInt artistGridCount = 3.obs;
+  final RxInt genreGridCount = 2.obs;
+  final RxInt playlistGridCount = 1.obs;
+  final RxBool enableBlurEffect = true.obs;
+  final RxBool enableGlowEffect = true.obs;
+  final RxBool hourFormat12 = true.obs;
+  final RxString dateTimeFormat = 'MMM yyyy'.obs;
+  final RxList<String> trackArtistsSeparators = <String>['&', ',', ';', '//'].obs;
+  final RxList<String> trackGenresSeparators = <String>['&', ',', ';', '//'].obs;
+  final Rx<SortType> tracksSort = SortType.title.obs;
+  final RxBool tracksSortReversed = false.obs;
+  final Rx<GroupSortType> albumSort = GroupSortType.album.obs;
+  final RxBool albumSortReversed = false.obs;
+  final Rx<GroupSortType> artistSort = GroupSortType.artistsList.obs;
+  final RxBool artistSortReversed = false.obs;
+  final Rx<GroupSortType> genreSort = GroupSortType.genresList.obs;
+  final RxBool genreSortReversed = false.obs;
+  final Rx<GroupSortType> playlistSort = GroupSortType.year.obs;
+  final RxBool playlistSortReversed = false.obs;
+  final RxInt indexMinDurationInSec = 5.obs;
+  final RxInt indexMinFileSizeInB = (100 * 1024).obs;
+  final RxList<String> trackSearchFilter = ['title', 'artist', 'album'].obs;
+  final RxList<String> playlistSearchFilter = ['name', 'date', 'modes', 'comment'].obs;
+  final RxList<String> directoriesToScan = kDirectoriesPaths.toList().obs;
+  final RxList<String> directoriesToExclude = <String>[].obs;
+  final RxBool preventDuplicatedTracks = false.obs;
+  final RxBool respectNoMedia = false.obs;
+  final RxString defaultBackupLocation = kInternalAppDirectoryPath.obs;
+  final RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
+  final RxBool enableFoldersHierarchy = true.obs;
+  final RxList<String> backupItemslist =
       [kTracksFilePath, kQueuesFilePath, kLatestQueueFilePath, kPaletteDirPath, kPlaylistsFilePath, kSettingsFilePath, kWaveformDirPath, kArtworksCompDirPath].obs;
-  RxBool enableVideoPlayback = true.obs;
-  RxInt videoPlaybackSource = 0.obs;
-  RxList<String> youtubeVideoQualities = ['480p', '360p', '240p', '144p'].obs;
-  RxInt animatingThumbnailIntensity = 25.obs;
-  RxBool animatingThumbnailInversed = false.obs;
-  RxBool enablePartyModeInMiniplayer = false.obs;
-  RxBool enablePartyModeColorSwap = true.obs;
-  RxInt isTrackPlayedSecondsCount = 40.obs;
-  RxInt isTrackPlayedPercentageCount = 40.obs;
-  RxBool displayFavouriteIconInListTile = true.obs;
-  RxInt waveformTotalBars = 140.obs;
-  RxDouble playerVolume = 1.0.obs;
-  RxInt playerPlayFadeDurInMilli = 300.obs;
-  RxInt playerPauseFadeDurInMilli = 300.obs;
-  RxInt totalListenedTimeInSec = 0.obs;
+  final RxBool enableVideoPlayback = true.obs;
+  final RxInt videoPlaybackSource = 0.obs;
+  final RxList<String> youtubeVideoQualities = ['480p', '360p', '240p', '144p'].obs;
+  final RxInt animatingThumbnailIntensity = 25.obs;
+  final RxBool animatingThumbnailInversed = false.obs;
+  final RxBool enablePartyModeInMiniplayer = false.obs;
+  final RxBool enablePartyModeColorSwap = true.obs;
+  final RxInt isTrackPlayedSecondsCount = 40.obs;
+  final RxInt isTrackPlayedPercentageCount = 40.obs;
+  final RxInt waveformTotalBars = 140.obs;
+  final RxDouble playerVolume = 1.0.obs;
+  final RxInt playerPlayFadeDurInMilli = 300.obs;
+  final RxInt playerPauseFadeDurInMilli = 300.obs;
+  final RxInt totalListenedTimeInSec = 0.obs;
+  final RxString lastPlayedTrackPath = ''.obs;
 
   /// Track Items
-  RxBool displayThirdRow = true.obs;
-  RxBool displayThirdItemInEachRow = false.obs;
-  RxString trackTileSeparator = '•'.obs;
+  final RxBool displayThirdRow = true.obs;
+  final RxBool displayThirdItemInEachRow = false.obs;
+  final RxString trackTileSeparator = '•'.obs;
+  final RxBool displayFavouriteIconInListTile = true.obs;
+  final Rx<TrackItem> trackItem = TrackItem(
+    TrackTileItem.title,
+    TrackTileItem.none,
+    TrackTileItem.none,
+    TrackTileItem.artists,
+    TrackTileItem.none,
+    TrackTileItem.none,
+    TrackTileItem.album,
+    TrackTileItem.year,
+    TrackTileItem.none,
+    TrackTileItem.duration,
+    TrackTileItem.none,
+  ).obs;
 
-  Rx<TrackTileItem> row1Item1 = TrackTileItem.title.obs;
-  Rx<TrackTileItem> row1Item2 = TrackTileItem.none.obs;
-  Rx<TrackTileItem> row1Item3 = TrackTileItem.none.obs;
-  Rx<TrackTileItem> row2Item1 = TrackTileItem.artists.obs;
-  Rx<TrackTileItem> row2Item2 = TrackTileItem.none.obs;
-  Rx<TrackTileItem> row2Item3 = TrackTileItem.none.obs;
-  Rx<TrackTileItem> row3Item1 = TrackTileItem.album.obs;
-  Rx<TrackTileItem> row3Item2 = TrackTileItem.year.obs;
-  Rx<TrackTileItem> row3Item3 = TrackTileItem.none.obs;
-  Rx<TrackTileItem> rightItem1 = TrackTileItem.duration.obs;
-  Rx<TrackTileItem> rightItem2 = TrackTileItem.none.obs;
+  Future<void> prepareSettingsFile({File? file}) async {
+    file ??= await File(kSettingsFilePath).create(recursive: true);
+    try {
+      final String contents = await file.readAsString();
+      final json = jsonDecode(contents);
 
-  SettingsController() {
-    themeMode.value = EnumToString.fromString(ThemeMode.values, getString('themeMode') ?? EnumToString.convertToString(themeMode.value))!;
-    autoColor.value = getBool('autoColor') ?? autoColor.value;
-    staticColor.value = getInt('staticColor') ?? staticColor.value;
-    selectedLibraryTab.value = EnumToString.fromString(LibraryTab.values, getString('selectedLibraryTab') ?? EnumToString.convertToString(selectedLibraryTab.value))!;
-    autoLibraryTab.value = getBool('autoLibraryTab') ?? autoLibraryTab.value;
-    libraryTabs.value = getListString('libraryTabs', ifNull: libraryTabs.toList());
-    borderRadiusMultiplier.value = getDouble('borderRadiusMultiplier') ?? borderRadiusMultiplier.value;
-    fontScaleFactor.value = getDouble('fontScaleFactor') ?? fontScaleFactor.value;
-    trackThumbnailSizeinList.value = getDouble('trackThumbnailSizeinList') ?? trackThumbnailSizeinList.value;
-    trackListTileHeight.value = getDouble('trackListTileHeight') ?? trackListTileHeight.value;
-    albumThumbnailSizeinList.value = getDouble('albumThumbnailSizeinList') ?? albumThumbnailSizeinList.value;
-    albumListTileHeight.value = getDouble('albumListTileHeight') ?? albumListTileHeight.value;
-    queueSheetMinHeight.value = getDouble('queueSheetMinHeight') ?? queueSheetMinHeight.value;
-    queueSheetMaxHeight.value = getDouble('queueSheetMaxHeight') ?? queueSheetMaxHeight.value;
-    nowPlayingImageContainerHeight.value = getDouble('nowPlayingImageContainerHeight') ?? nowPlayingImageContainerHeight.value;
-    enableVolumeFadeOnPlayPause.value = getBool('enableVolumeFadeOnPlayPause') ?? enableVolumeFadeOnPlayPause.value;
-    displayTrackNumberinAlbumPage.value = getBool('displayTrackNumberinAlbumPage') ?? displayTrackNumberinAlbumPage.value;
-    albumCardTopRightDate.value = getBool('albumCardTopRightDate') ?? albumCardTopRightDate.value;
-    forceSquaredTrackThumbnail.value = getBool('forceSquaredTrackThumbnail') ?? forceSquaredTrackThumbnail.value;
-    forceSquaredAlbumThumbnail.value = getBool('forceSquaredAlbumThumbnail') ?? forceSquaredAlbumThumbnail.value;
-    useAlbumStaggeredGridView.value = getBool('useAlbumStaggeredGridView') ?? useAlbumStaggeredGridView.value;
-    useSettingCollapsedTiles.value = getBool('useSettingCollapsedTiles') ?? useSettingCollapsedTiles.value;
-    albumGridCount.value = getInt('albumGridCount') ?? albumGridCount.value;
-    artistGridCount.value = getInt('artistGridCount') ?? artistGridCount.value;
-    genreGridCount.value = getInt('genreGridCount') ?? genreGridCount.value;
-    playlistGridCount.value = getInt('playlistGridCount') ?? playlistGridCount.value;
-    enableBlurEffect.value = getBool('enableBlurEffect') ?? enableBlurEffect.value;
-    enableGlowEffect.value = getBool('enableGlowEffect') ?? enableGlowEffect.value;
-    hourFormat12.value = getBool('hourFormat12') ?? hourFormat12.value;
-    dateTimeFormat.value = getString('dateTimeFormat') ?? dateTimeFormat.value;
-    trackArtistsSeparators.value = getListString('trackArtistsSeparators', ifNull: trackArtistsSeparators.toList());
-    trackGenresSeparators.value = getListString('trackGenresSeparators', ifNull: trackGenresSeparators.toList());
-    tracksSort.value = EnumToString.fromString(SortType.values, getString('tracksSort') ?? EnumToString.convertToString(tracksSort.value))!;
-    tracksSortReversed.value = getBool('tracksSortReversed') ?? tracksSortReversed.value;
-    albumSort.value = EnumToString.fromString(GroupSortType.values, getString('albumSort') ?? EnumToString.convertToString(albumSort.value))!;
-    albumSortReversed.value = getBool('albumSortReversed') ?? albumSortReversed.value;
-    artistSort.value = EnumToString.fromString(GroupSortType.values, getString('artistSort') ?? EnumToString.convertToString(artistSort.value))!;
-    artistSortReversed.value = getBool('artistSortReversed') ?? artistSortReversed.value;
-    genreSort.value = EnumToString.fromString(GroupSortType.values, getString('genreSort') ?? EnumToString.convertToString(genreSort.value))!;
-    genreSortReversed.value = getBool('genreSortReversed') ?? genreSortReversed.value;
-    playlistSort.value = EnumToString.fromString(GroupSortType.values, getString('playlistSort') ?? EnumToString.convertToString(playlistSort.value))!;
-    playlistSortReversed.value = getBool('playlistSortReversed') ?? playlistSortReversed.value;
-    trackTileSeparator.value = getString('trackTileSeparator') ?? trackTileSeparator.value;
-    indexMinDurationInSec.value = getInt('indexMinDurationInSec') ?? indexMinDurationInSec.value;
-    indexMinFileSizeInB.value = getInt('indexMinFileSizeInB') ?? indexMinFileSizeInB.value;
-    trackSearchFilter.value = getListString('trackSearchFilter', ifNull: trackSearchFilter.toList());
-    playlistSearchFilter.value = getListString('playlistSearchFilter', ifNull: playlistSearchFilter.toList());
-    directoriesToScan.value = getListString('directoriesToScan', ifNull: directoriesToScan.toList());
-    directoriesToExclude.value = getListString('directoriesToExclude', ifNull: directoriesToExclude.toList());
-    preventDuplicatedTracks.value = getBool('preventDuplicatedTracks') ?? preventDuplicatedTracks.value;
-    respectNoMedia.value = getBool('respectNoMedia') ?? respectNoMedia.value;
-    defaultBackupLocation.value = getString('defaultBackupLocation') ?? defaultBackupLocation.value;
-    defaultFolderStartupLocation.value = getString('defaultFolderStartupLocation') ?? defaultFolderStartupLocation.value;
-    enableFoldersHierarchy.value = getBool('enableFoldersHierarchy') ?? enableFoldersHierarchy.value;
-    backupItemslist.value = getListString('backupItemslist', ifNull: backupItemslist.toList());
-    enableVideoPlayback.value = getBool('enableVideoPlayback') ?? enableVideoPlayback.value;
-    videoPlaybackSource.value = getInt('videoPlaybackSource') ?? videoPlaybackSource.value;
-    youtubeVideoQualities.value = getListString('youtubeVideoQualities', ifNull: youtubeVideoQualities.toList());
-    animatingThumbnailIntensity.value = getInt('animatingThumbnailIntensity') ?? animatingThumbnailIntensity.value;
-    animatingThumbnailInversed.value = getBool('animatingThumbnailInversed') ?? animatingThumbnailInversed.value;
-    enablePartyModeInMiniplayer.value = getBool('enablePartyModeInMiniplayer') ?? enablePartyModeInMiniplayer.value;
-    enablePartyModeColorSwap.value = getBool('enablePartyModeColorSwap') ?? enablePartyModeColorSwap.value;
-    isTrackPlayedSecondsCount.value = getInt('isTrackPlayedSecondsCount') ?? isTrackPlayedSecondsCount.value;
-    isTrackPlayedPercentageCount.value = getInt('isTrackPlayedPercentageCount') ?? isTrackPlayedPercentageCount.value;
-    displayFavouriteIconInListTile.value = getBool('displayFavouriteIconInListTile') ?? displayFavouriteIconInListTile.value;
-    waveformTotalBars.value = getInt('waveformTotalBars') ?? waveformTotalBars.value;
-    playerVolume.value = getDouble('playerVolume') ?? playerVolume.value;
-    playerPlayFadeDurInMilli.value = getInt('playerPlayFadeDurInMilli') ?? playerPlayFadeDurInMilli.value;
-    playerPauseFadeDurInMilli.value = getInt('playerPauseFadeDurInMilli') ?? playerPauseFadeDurInMilli.value;
-    totalListenedTimeInSec.value = getInt('totalListenedTimeInSec') ?? totalListenedTimeInSec.value;
+      /// Assigning Values
+      themeMode.value = ThemeMode.values.getEnum(json['themeMode']) ?? themeMode.value;
+      autoColor.value = json['autoColor'] ?? autoColor.value;
+      staticColor.value = json['staticColor'] ?? staticColor.value;
+      selectedLibraryTab.value = LibraryTab.values.getEnum(json['selectedLibraryTab']) ?? selectedLibraryTab.value;
+      autoLibraryTab.value = json['autoLibraryTab'] ?? autoLibraryTab.value;
+      libraryTabs.value = List<String>.from(json['libraryTabs'] ?? libraryTabs.toList());
+      searchResultsPlayMode.value = json['searchResultsPlayMode'] ?? searchResultsPlayMode.value;
+      borderRadiusMultiplier.value = json['borderRadiusMultiplier'] ?? borderRadiusMultiplier.value;
+      fontScaleFactor.value = json['fontScaleFactor'] ?? fontScaleFactor.value;
+      trackThumbnailSizeinList.value = json['trackThumbnailSizeinList'] ?? trackThumbnailSizeinList.value;
+      trackListTileHeight.value = json['trackListTileHeight'] ?? trackListTileHeight.value;
+      albumThumbnailSizeinList.value = json['albumThumbnailSizeinList'] ?? albumThumbnailSizeinList.value;
+      albumListTileHeight.value = json['albumListTileHeight'] ?? albumListTileHeight.value;
+      queueSheetMinHeight.value = json['queueSheetMinHeight'] ?? queueSheetMinHeight.value;
+      queueSheetMaxHeight.value = json['queueSheetMaxHeight'] ?? queueSheetMaxHeight.value;
+      nowPlayingImageContainerHeight.value = json['nowPlayingImageContainerHeight'] ?? nowPlayingImageContainerHeight.value;
 
-    /// Track Items
-    displayThirdRow.value = getBool('displayThirdRow') ?? displayThirdRow.value;
-    displayThirdItemInEachRow.value = getBool('displayThirdItemInEachRow') ?? displayThirdItemInEachRow.value;
+      enableVolumeFadeOnPlayPause.value = json['enableVolumeFadeOnPlayPause'] ?? enableVolumeFadeOnPlayPause.value;
+      displayTrackNumberinAlbumPage.value = json['displayTrackNumberinAlbumPage'] ?? displayTrackNumberinAlbumPage.value;
+      albumCardTopRightDate.value = json['albumCardTopRightDate'] ?? albumCardTopRightDate.value;
+      forceSquaredTrackThumbnail.value = json['forceSquaredTrackThumbnail'] ?? forceSquaredTrackThumbnail.value;
+      forceSquaredAlbumThumbnail.value = json['forceSquaredAlbumThumbnail'] ?? forceSquaredAlbumThumbnail.value;
+      useAlbumStaggeredGridView.value = json['useAlbumStaggeredGridView'] ?? useAlbumStaggeredGridView.value;
+      useSettingCollapsedTiles.value = json['useSettingCollapsedTiles'] ?? useSettingCollapsedTiles.value;
+      albumGridCount.value = json['albumGridCount'] ?? albumGridCount.value;
+      artistGridCount.value = json['artistGridCount'] ?? artistGridCount.value;
+      genreGridCount.value = json['genreGridCount'] ?? genreGridCount.value;
+      playlistGridCount.value = json['playlistGridCount'] ?? playlistGridCount.value;
+      enableBlurEffect.value = json['enableBlurEffect'] ?? enableBlurEffect.value;
+      enableGlowEffect.value = json['enableGlowEffect'] ?? enableGlowEffect.value;
+      hourFormat12.value = json['hourFormat12'] ?? hourFormat12.value;
+      dateTimeFormat.value = json['dateTimeFormat'] ?? dateTimeFormat.value;
 
-    row1Item1.value = EnumToString.fromString(TrackTileItem.values, getString('row1Item1') ?? EnumToString.convertToString(row1Item1.value))!;
-    row1Item2.value = EnumToString.fromString(TrackTileItem.values, getString('row1Item2') ?? EnumToString.convertToString(row1Item2.value))!;
-    row1Item3.value = EnumToString.fromString(TrackTileItem.values, getString('row1Item3') ?? EnumToString.convertToString(row1Item3.value))!;
-    row2Item1.value = EnumToString.fromString(TrackTileItem.values, getString('row2Item1') ?? EnumToString.convertToString(row2Item1.value))!;
-    row2Item2.value = EnumToString.fromString(TrackTileItem.values, getString('row2Item2') ?? EnumToString.convertToString(row2Item2.value))!;
-    row2Item3.value = EnumToString.fromString(TrackTileItem.values, getString('row2Item3') ?? EnumToString.convertToString(row2Item3.value))!;
-    row3Item1.value = EnumToString.fromString(TrackTileItem.values, getString('row3Item1') ?? EnumToString.convertToString(row3Item1.value))!;
-    row3Item2.value = EnumToString.fromString(TrackTileItem.values, getString('row3Item2') ?? EnumToString.convertToString(row3Item2.value))!;
-    row3Item3.value = EnumToString.fromString(TrackTileItem.values, getString('row3Item3') ?? EnumToString.convertToString(row3Item3.value))!;
-    rightItem1.value = EnumToString.fromString(TrackTileItem.values, getString('rightItem1') ?? EnumToString.convertToString(rightItem1.value))!;
-    rightItem2.value = EnumToString.fromString(TrackTileItem.values, getString('rightItem2') ?? EnumToString.convertToString(rightItem2.value))!;
+      trackArtistsSeparators.value = List<String>.from(json['trackArtistsSeparators'] ?? trackArtistsSeparators.toList());
+      trackGenresSeparators.value = List<String>.from(json['trackGenresSeparators'] ?? trackGenresSeparators.toList());
+      tracksSort.value = SortType.values.getEnum(json['tracksSort']) ?? tracksSort.value;
+      tracksSortReversed.value = json['tracksSortReversed'] ?? tracksSortReversed.value;
+      albumSort.value = GroupSortType.values.getEnum(json['albumSort']) ?? albumSort.value;
+      albumSortReversed.value = json['albumSortReversed'] ?? albumSortReversed.value;
+      artistSort.value = GroupSortType.values.getEnum(json['artistSort']) ?? artistSort.value;
+      artistSortReversed.value = json['artistSortReversed'] ?? artistSortReversed.value;
+      genreSort.value = GroupSortType.values.getEnum(json['genreSort']) ?? genreSort.value;
+      genreSortReversed.value = json['genreSortReversed'] ?? genreSortReversed.value;
+      playlistSort.value = GroupSortType.values.getEnum(json['playlistSort']) ?? playlistSort.value;
+      playlistSortReversed.value = json['playlistSortReversed'] ?? playlistSortReversed.value;
+      indexMinDurationInSec.value = json['indexMinDurationInSec'] ?? indexMinDurationInSec.value;
+      indexMinFileSizeInB.value = json['indexMinFileSizeInB'] ?? indexMinFileSizeInB.value;
 
-    update();
+      trackSearchFilter.value = List<String>.from(json['trackSearchFilter'] ?? trackSearchFilter.toList());
+      playlistSearchFilter.value = List<String>.from(json['playlistSearchFilter'] ?? playlistSearchFilter.toList());
+      directoriesToScan.value = List<String>.from(json['directoriesToScan'] ?? directoriesToScan.toList());
+      directoriesToExclude.value = List<String>.from(json['directoriesToExclude'] ?? directoriesToExclude.toList());
+      preventDuplicatedTracks.value = json['preventDuplicatedTracks'] ?? preventDuplicatedTracks.value;
+      respectNoMedia.value = json['respectNoMedia'] ?? respectNoMedia.value;
+      defaultBackupLocation.value = json['defaultBackupLocation'] ?? defaultBackupLocation.value;
+      defaultFolderStartupLocation.value = json['defaultFolderStartupLocation'] ?? defaultFolderStartupLocation.value;
+      enableFoldersHierarchy.value = json['enableFoldersHierarchy'] ?? enableFoldersHierarchy.value;
+      backupItemslist.value = List<String>.from(json['backupItemslist'] ?? backupItemslist.toList());
+      enableVideoPlayback.value = json['enableVideoPlayback'] ?? enableVideoPlayback.value;
+      videoPlaybackSource.value = json['videoPlaybackSource'] ?? videoPlaybackSource.value;
+      youtubeVideoQualities.value = List<String>.from(json['youtubeVideoQualities'] ?? youtubeVideoQualities.toList());
+
+      animatingThumbnailIntensity.value = json['animatingThumbnailIntensity'] ?? animatingThumbnailIntensity.value;
+      animatingThumbnailInversed.value = json['animatingThumbnailInversed'] ?? animatingThumbnailInversed.value;
+      enablePartyModeInMiniplayer.value = json['enablePartyModeInMiniplayer'] ?? enablePartyModeInMiniplayer.value;
+      enablePartyModeColorSwap.value = json['enablePartyModeColorSwap'] ?? enablePartyModeColorSwap.value;
+      isTrackPlayedSecondsCount.value = json['isTrackPlayedSecondsCount'] ?? isTrackPlayedSecondsCount.value;
+      isTrackPlayedPercentageCount.value = json['isTrackPlayedPercentageCount'] ?? isTrackPlayedPercentageCount.value;
+      waveformTotalBars.value = json['waveformTotalBars'] ?? waveformTotalBars.value;
+      playerVolume.value = json['playerVolume'] ?? playerVolume.value;
+      playerPlayFadeDurInMilli.value = json['playerPlayFadeDurInMilli'] ?? playerPlayFadeDurInMilli.value;
+      playerPauseFadeDurInMilli.value = json['playerPauseFadeDurInMilli'] as int? ?? playerPauseFadeDurInMilli.value;
+      totalListenedTimeInSec.value = json['totalListenedTimeInSec'] ?? totalListenedTimeInSec.value;
+      lastPlayedTrackPath.value = json['lastPlayedTrackPath'] ?? lastPlayedTrackPath.value;
+
+      /// Track Items
+      displayThirdRow.value = json['displayThirdRow'] ?? displayThirdRow.value;
+      displayThirdItemInEachRow.value = json['displayThirdItemInEachRow'] ?? displayThirdItemInEachRow.value;
+      trackTileSeparator.value = json['trackTileSeparator'] ?? trackTileSeparator.value;
+      displayFavouriteIconInListTile.value = json['displayFavouriteIconInListTile'] ?? displayFavouriteIconInListTile.value;
+      trackItem.value = TrackItem.fromJson(json['trackItem']);
+
+      ///
+    } catch (e) {
+      printError(info: e.toString());
+      await file.delete();
+    }
+  }
+
+  Future<void> _writeToStorage({File? file}) async {
+    file ??= File(kSettingsFilePath);
+    final res = {
+      'themeMode': themeMode.value.convertToString,
+      'autoColor': autoColor.value,
+      'staticColor': staticColor.value,
+      'selectedLibraryTab': selectedLibraryTab.value.convertToString,
+      'autoLibraryTab': autoLibraryTab.value,
+      'libraryTabs': libraryTabs.toList(),
+      'searchResultsPlayMode': searchResultsPlayMode.value,
+      'borderRadiusMultiplier': borderRadiusMultiplier.value,
+      'fontScaleFactor': fontScaleFactor.value,
+      'trackThumbnailSizeinList': trackThumbnailSizeinList.value,
+      'trackListTileHeight': trackListTileHeight.value,
+      'albumThumbnailSizeinList': albumThumbnailSizeinList.value,
+      'albumListTileHeight': albumListTileHeight.value,
+      'queueSheetMinHeight': queueSheetMinHeight.value,
+      'queueSheetMaxHeight': queueSheetMaxHeight.value,
+      'nowPlayingImageContainerHeight': nowPlayingImageContainerHeight.value,
+
+      'enableVolumeFadeOnPlayPause': enableVolumeFadeOnPlayPause.value,
+      'displayTrackNumberinAlbumPage': displayTrackNumberinAlbumPage.value,
+      'albumCardTopRightDate': albumCardTopRightDate.value,
+      'forceSquaredTrackThumbnail': forceSquaredTrackThumbnail.value,
+      'forceSquaredAlbumThumbnail': forceSquaredAlbumThumbnail.value,
+      'useAlbumStaggeredGridView': useAlbumStaggeredGridView.value,
+      'useSettingCollapsedTiles': useSettingCollapsedTiles.value,
+      'albumGridCount': albumGridCount.value,
+      'artistGridCount': artistGridCount.value,
+      'genreGridCount': genreGridCount.value,
+      'playlistGridCount': playlistGridCount.value,
+      'enableBlurEffect': enableBlurEffect.value,
+      'enableGlowEffect': enableGlowEffect.value,
+      'hourFormat12': hourFormat12.value,
+      'dateTimeFormat': dateTimeFormat.value,
+      'trackArtistsSeparators': trackArtistsSeparators.toList(),
+      'trackGenresSeparators': trackGenresSeparators.toList(),
+      'tracksSort': tracksSort.value.convertToString,
+      'tracksSortReversed': tracksSortReversed.value,
+      'albumSort': albumSort.value.convertToString,
+      'albumSortReversed': albumSortReversed.value,
+      'artistSort': artistSort.value.convertToString,
+      'artistSortReversed': artistSortReversed.value,
+      'genreSort': genreSort.value.convertToString,
+      'genreSortReversed': genreSortReversed.value,
+      'playlistSort': playlistSort.value.convertToString,
+      'playlistSortReversed': playlistSortReversed.value,
+      'indexMinDurationInSec': indexMinDurationInSec.value,
+      'indexMinFileSizeInB': indexMinFileSizeInB.value,
+      'trackSearchFilter': trackSearchFilter.toList(),
+      'playlistSearchFilter': playlistSearchFilter.toList(),
+      'directoriesToScan': directoriesToScan.toList(),
+      'directoriesToExclude': directoriesToExclude.toList(),
+      'preventDuplicatedTracks': preventDuplicatedTracks.value,
+      'respectNoMedia': respectNoMedia.value,
+      'defaultBackupLocation': defaultBackupLocation.value,
+      'defaultFolderStartupLocation': defaultFolderStartupLocation.value,
+      'enableFoldersHierarchy': enableFoldersHierarchy.value,
+      'backupItemslist': backupItemslist.toList(),
+      'enableVideoPlayback': enableVideoPlayback.value,
+      'videoPlaybackSource': videoPlaybackSource.value,
+      'youtubeVideoQualities': youtubeVideoQualities.toList(),
+      'animatingThumbnailIntensity': animatingThumbnailIntensity.value,
+      'animatingThumbnailInversed': animatingThumbnailInversed.value,
+      'enablePartyModeInMiniplayer': enablePartyModeInMiniplayer.value,
+      'enablePartyModeColorSwap': enablePartyModeColorSwap.value,
+      'isTrackPlayedSecondsCount': isTrackPlayedSecondsCount.value,
+      'isTrackPlayedPercentageCount': isTrackPlayedPercentageCount.value,
+      'waveformTotalBars': waveformTotalBars.value,
+      'playerVolume': playerVolume.value,
+      'playerPlayFadeDurInMilli': playerPlayFadeDurInMilli.value,
+      'playerPauseFadeDurInMilli': playerPauseFadeDurInMilli.value,
+      'totalListenedTimeInSec': totalListenedTimeInSec.value,
+      'lastPlayedTrackPath': lastPlayedTrackPath.value,
+
+      /// Track Items
+      'displayThirdRow': displayThirdRow.value,
+      'displayThirdItemInEachRow': displayThirdItemInEachRow.value,
+      'trackTileSeparator': trackTileSeparator.value, 'displayFavouriteIconInListTile': displayFavouriteIconInListTile.value,
+      'trackItem': trackItem.value.toJson(),
+    };
+    file.writeAsStringSync(json.encode(res));
   }
 
   /// Saves a value to the key, if [List] or [Set], then it will add to it.
@@ -264,28 +358,22 @@ class SettingsController extends GetxController {
     int? playerPlayFadeDurInMilli,
     int? playerPauseFadeDurInMilli,
     int? totalListenedTimeInSec,
+    String? lastPlayedTrackPath,
   }) {
     if (themeMode != null) {
       this.themeMode.value = themeMode;
-      setData('themeMode', EnumToString.convertToString(themeMode));
     }
     if (autoColor != null) {
       this.autoColor.value = autoColor;
-      setData('autoColor', autoColor);
     }
     if (staticColor != null) {
       this.staticColor.value = staticColor;
-      setData('staticColor', staticColor);
     }
     if (selectedLibraryTab != null) {
       this.selectedLibraryTab.value = selectedLibraryTab;
-      if (this.autoLibraryTab.value) {
-        setData('selectedLibraryTab', EnumToString.convertToString(selectedLibraryTab));
-      }
     }
     if (autoLibraryTab != null) {
       this.autoLibraryTab.value = autoLibraryTab;
-      setData('autoLibraryTab', autoLibraryTab);
     }
     if (libraryTabs != null) {
       for (var t in libraryTabs) {
@@ -293,177 +381,136 @@ class SettingsController extends GetxController {
           this.libraryTabs.add(t);
         }
       }
-      setData('libraryTabs', List<String>.from(this.libraryTabs));
     }
 
     if (searchResultsPlayMode != null) {
       this.searchResultsPlayMode.value = searchResultsPlayMode;
-      setData('searchResultsPlayMode', searchResultsPlayMode);
     }
     if (borderRadiusMultiplier != null) {
       this.borderRadiusMultiplier.value = borderRadiusMultiplier;
-      setData('borderRadiusMultiplier', borderRadiusMultiplier);
     }
     if (fontScaleFactor != null) {
       this.fontScaleFactor.value = fontScaleFactor;
-      setData('fontScaleFactor', fontScaleFactor);
     }
     if (trackThumbnailSizeinList != null) {
       this.trackThumbnailSizeinList.value = trackThumbnailSizeinList;
-      setData('trackThumbnailSizeinList', trackThumbnailSizeinList);
     }
     if (trackListTileHeight != null) {
       this.trackListTileHeight.value = trackListTileHeight;
-      setData('trackListTileHeight', trackListTileHeight);
     }
 
     if (albumThumbnailSizeinList != null) {
       this.albumThumbnailSizeinList.value = albumThumbnailSizeinList;
-      setData('albumThumbnailSizeinList', albumThumbnailSizeinList);
     }
     if (albumListTileHeight != null) {
       this.albumListTileHeight.value = albumListTileHeight;
-      setData('albumListTileHeight', albumListTileHeight);
     }
     if (queueSheetMinHeight != null) {
       this.queueSheetMinHeight.value = queueSheetMinHeight;
-      setData('queueSheetMinHeight', queueSheetMinHeight);
     }
     if (queueSheetMaxHeight != null) {
       this.queueSheetMaxHeight.value = queueSheetMaxHeight;
-      setData('queueSheetMaxHeight', queueSheetMaxHeight);
     }
     if (nowPlayingImageContainerHeight != null) {
       this.nowPlayingImageContainerHeight.value = nowPlayingImageContainerHeight;
-      setData('nowPlayingImageContainerHeight', nowPlayingImageContainerHeight);
     }
     if (enableVolumeFadeOnPlayPause != null) {
       this.enableVolumeFadeOnPlayPause.value = enableVolumeFadeOnPlayPause;
-      setData('enableVolumeFadeOnPlayPause', enableVolumeFadeOnPlayPause);
     }
     if (displayTrackNumberinAlbumPage != null) {
       this.displayTrackNumberinAlbumPage.value = displayTrackNumberinAlbumPage;
-      setData('displayTrackNumberinAlbumPage', displayTrackNumberinAlbumPage);
     }
     if (albumCardTopRightDate != null) {
       this.albumCardTopRightDate.value = albumCardTopRightDate;
-      setData('albumCardTopRightDate', albumCardTopRightDate);
     }
     if (forceSquaredTrackThumbnail != null) {
       this.forceSquaredTrackThumbnail.value = forceSquaredTrackThumbnail;
-      setData('forceSquaredTrackThumbnail', forceSquaredTrackThumbnail);
     }
     if (forceSquaredAlbumThumbnail != null) {
       this.forceSquaredAlbumThumbnail.value = forceSquaredAlbumThumbnail;
-      setData('forceSquaredAlbumThumbnail', forceSquaredAlbumThumbnail);
     }
     if (useAlbumStaggeredGridView != null) {
       this.useAlbumStaggeredGridView.value = useAlbumStaggeredGridView;
-      setData('useAlbumStaggeredGridView', useAlbumStaggeredGridView);
     }
     if (useSettingCollapsedTiles != null) {
       this.useSettingCollapsedTiles.value = useSettingCollapsedTiles;
-      setData('useSettingCollapsedTiles', useSettingCollapsedTiles);
     }
     if (albumGridCount != null) {
       this.albumGridCount.value = albumGridCount;
-      setData('albumGridCount', albumGridCount);
     }
     if (artistGridCount != null) {
       this.artistGridCount.value = artistGridCount;
-      setData('artistGridCount', artistGridCount);
     }
     if (genreGridCount != null) {
       this.genreGridCount.value = genreGridCount;
-      setData('genreGridCount', genreGridCount);
     }
     if (playlistGridCount != null) {
       this.playlistGridCount.value = playlistGridCount;
-      setData('playlistGridCount', playlistGridCount);
     }
     if (enableBlurEffect != null) {
       this.enableBlurEffect.value = enableBlurEffect;
-      setData('enableBlurEffect', enableBlurEffect);
     }
     if (enableGlowEffect != null) {
       this.enableGlowEffect.value = enableGlowEffect;
-      setData('enableGlowEffect', enableGlowEffect);
     }
     if (hourFormat12 != null) {
       this.hourFormat12.value = hourFormat12;
-      setData('hourFormat12', hourFormat12);
     }
     if (dateTimeFormat != null) {
       this.dateTimeFormat.value = dateTimeFormat;
-      setData('dateTimeFormat', dateTimeFormat);
     }
+
+    ///
     if (trackArtistsSeparators != null && !this.trackArtistsSeparators.contains(trackArtistsSeparators[0])) {
       this.trackArtistsSeparators.addAll(trackArtistsSeparators);
-      setData('trackArtistsSeparators', List<String>.from(this.trackArtistsSeparators));
     }
     if (trackGenresSeparators != null && !this.trackGenresSeparators.contains(trackGenresSeparators[0])) {
       this.trackGenresSeparators.addAll(trackGenresSeparators);
-      setData('trackGenresSeparators', List<String>.from(this.trackGenresSeparators));
     }
     if (tracksSort != null) {
       this.tracksSort.value = tracksSort;
-      setData('tracksSort', EnumToString.convertToString(tracksSort));
     }
     if (tracksSortReversed != null) {
       this.tracksSortReversed.value = tracksSortReversed;
-      setData('tracksSortReversed', tracksSortReversed);
     }
     if (albumSort != null) {
       this.albumSort.value = albumSort;
-      setData('albumSort', EnumToString.convertToString(albumSort));
     }
     if (albumSortReversed != null) {
       this.albumSortReversed.value = albumSortReversed;
-      setData('albumSortReversed', albumSortReversed);
     }
     if (artistSort != null) {
       this.artistSort.value = artistSort;
-      setData('artistSort', EnumToString.convertToString(artistSort));
     }
     if (artistSortReversed != null) {
       this.artistSortReversed.value = artistSortReversed;
-      setData('artistSortReversed', artistSortReversed);
     }
     if (genreSort != null) {
       this.genreSort.value = genreSort;
-      setData('genreSort', EnumToString.convertToString(genreSort));
     }
     if (genreSortReversed != null) {
       this.genreSortReversed.value = genreSortReversed;
-      setData('genreSortReversed', genreSortReversed);
     }
     if (playlistSort != null) {
       this.playlistSort.value = playlistSort;
-      setData('playlistSort', EnumToString.convertToString(playlistSort));
     }
     if (playlistSortReversed != null) {
       this.playlistSortReversed.value = playlistSortReversed;
-      setData('playlistSortReversed', playlistSortReversed);
     }
     if (displayThirdRow != null) {
       this.displayThirdRow.value = displayThirdRow;
-      setData('displayThirdRow', displayThirdRow);
     }
     if (displayThirdItemInEachRow != null) {
       this.displayThirdItemInEachRow.value = displayThirdItemInEachRow;
-      setData('displayThirdItemInEachRow', displayThirdItemInEachRow);
     }
     if (trackTileSeparator != null) {
       this.trackTileSeparator.value = trackTileSeparator;
-      setData('trackTileSeparator', trackTileSeparator);
     }
     if (indexMinDurationInSec != null) {
       this.indexMinDurationInSec.value = indexMinDurationInSec;
-      setData('indexMinDurationInSec', indexMinDurationInSec);
     }
     if (indexMinFileSizeInB != null) {
       this.indexMinFileSizeInB.value = indexMinFileSizeInB;
-      setData('indexMinFileSizeInB', indexMinFileSizeInB);
     }
     if (trackSearchFilter != null) {
       for (var f in trackSearchFilter) {
@@ -471,8 +518,6 @@ class SettingsController extends GetxController {
           this.trackSearchFilter.add(f);
         }
       }
-
-      setData('trackSearchFilter', List<String>.from(this.trackSearchFilter));
     }
     if (playlistSearchFilter != null) {
       for (var f in playlistSearchFilter) {
@@ -480,8 +525,6 @@ class SettingsController extends GetxController {
           this.playlistSearchFilter.add(f);
         }
       }
-
-      setData('playlistSearchFilter', List<String>.from(this.playlistSearchFilter));
     }
     if (directoriesToScan != null) {
       for (var d in directoriesToScan) {
@@ -489,7 +532,6 @@ class SettingsController extends GetxController {
           this.directoriesToScan.add(d);
         }
       }
-      setData('directoriesToScan', List<String>.from(this.directoriesToScan));
     }
     if (directoriesToExclude != null) {
       for (var d in directoriesToExclude) {
@@ -497,27 +539,21 @@ class SettingsController extends GetxController {
           this.directoriesToExclude.add(d);
         }
       }
-      setData('directoriesToExclude', List<String>.from(this.directoriesToExclude));
     }
     if (preventDuplicatedTracks != null) {
       this.preventDuplicatedTracks.value = preventDuplicatedTracks;
-      setData('preventDuplicatedTracks', preventDuplicatedTracks);
     }
     if (respectNoMedia != null) {
       this.respectNoMedia.value = respectNoMedia;
-      setData('respectNoMedia', respectNoMedia);
     }
     if (defaultBackupLocation != null) {
       this.defaultBackupLocation.value = defaultBackupLocation;
-      setData('defaultBackupLocation', defaultBackupLocation);
     }
     if (defaultFolderStartupLocation != null) {
       this.defaultFolderStartupLocation.value = defaultFolderStartupLocation;
-      setData('defaultFolderStartupLocation', defaultFolderStartupLocation);
     }
     if (enableFoldersHierarchy != null) {
       this.enableFoldersHierarchy.value = enableFoldersHierarchy;
-      setData('enableFoldersHierarchy', enableFoldersHierarchy);
     }
     if (backupItemslist != null) {
       for (var d in backupItemslist) {
@@ -525,7 +561,6 @@ class SettingsController extends GetxController {
           this.backupItemslist.add(d);
         }
       }
-      setData('backupItemslist', List<String>.from(this.backupItemslist));
     }
     if (youtubeVideoQualities != null) {
       for (var q in youtubeVideoQualities) {
@@ -533,64 +568,54 @@ class SettingsController extends GetxController {
           this.youtubeVideoQualities.add(q);
         }
       }
-      setData('youtubeVideoQualities', List<String>.from(this.youtubeVideoQualities));
+      print(youtubeVideoQualities.toList());
     }
     if (enableVideoPlayback != null) {
       this.enableVideoPlayback.value = enableVideoPlayback;
-      setData('enableVideoPlayback', enableVideoPlayback);
     }
     if (videoPlaybackSource != null) {
       this.videoPlaybackSource.value = videoPlaybackSource;
-      setData('videoPlaybackSource', videoPlaybackSource);
     }
     if (animatingThumbnailIntensity != null) {
       this.animatingThumbnailIntensity.value = animatingThumbnailIntensity;
-      setData('animatingThumbnailIntensity', animatingThumbnailIntensity);
     }
     if (animatingThumbnailInversed != null) {
       this.animatingThumbnailInversed.value = animatingThumbnailInversed;
-      setData('animatingThumbnailInversed', animatingThumbnailInversed);
     }
     if (enablePartyModeInMiniplayer != null) {
       this.enablePartyModeInMiniplayer.value = enablePartyModeInMiniplayer;
-      setData('enablePartyModeInMiniplayer', enablePartyModeInMiniplayer);
     }
     if (enablePartyModeColorSwap != null) {
       this.enablePartyModeColorSwap.value = enablePartyModeColorSwap;
-      setData('enablePartyModeColorSwap', enablePartyModeColorSwap);
     }
     if (isTrackPlayedSecondsCount != null) {
       this.isTrackPlayedSecondsCount.value = isTrackPlayedSecondsCount;
-      setData('isTrackPlayedSecondsCount', isTrackPlayedSecondsCount);
     }
     if (isTrackPlayedPercentageCount != null) {
       this.isTrackPlayedPercentageCount.value = isTrackPlayedPercentageCount;
-      setData('isTrackPlayedPercentageCount', isTrackPlayedPercentageCount);
     }
     if (displayFavouriteIconInListTile != null) {
       this.displayFavouriteIconInListTile.value = displayFavouriteIconInListTile;
-      setData('displayFavouriteIconInListTile', displayFavouriteIconInListTile);
     }
     if (waveformTotalBars != null) {
       this.waveformTotalBars.value = waveformTotalBars;
-      setData('waveformTotalBars', waveformTotalBars);
     }
     if (playerVolume != null) {
       this.playerVolume.value = playerVolume;
-      setData('playerVolume', playerVolume);
     }
     if (playerPlayFadeDurInMilli != null) {
       this.playerPlayFadeDurInMilli.value = playerPlayFadeDurInMilli;
-      setData('playerPlayFadeDurInMilli', playerPlayFadeDurInMilli);
     }
     if (playerPauseFadeDurInMilli != null) {
       this.playerPauseFadeDurInMilli.value = playerPauseFadeDurInMilli;
-      setData('playerPauseFadeDurInMilli', playerPauseFadeDurInMilli);
     }
     if (totalListenedTimeInSec != null) {
       this.totalListenedTimeInSec.value = totalListenedTimeInSec;
-      setData('totalListenedTimeInSec', totalListenedTimeInSec);
     }
+    if (lastPlayedTrackPath != null) {
+      this.lastPlayedTrackPath.value = lastPlayedTrackPath;
+    }
+    _writeToStorage();
     update();
   }
 
@@ -601,12 +626,11 @@ class SettingsController extends GetxController {
   }) {
     if (libraryTab1 != null) {
       libraryTabs.insert(index, libraryTab1);
-      setData('libraryTabs', List<String>.from(libraryTabs));
     }
     if (youtubeVideoQualities1 != null) {
       youtubeVideoQualities.insert(index, youtubeVideoQualities1);
-      setData('youtubeVideoQualities', List<String>.from(youtubeVideoQualities));
     }
+    _writeToStorage();
   }
 
   void removeFromList({
@@ -629,15 +653,12 @@ class SettingsController extends GetxController {
   }) {
     if (trackArtistsSeparator != null) {
       trackArtistsSeparators.remove(trackArtistsSeparator);
-      setData('trackArtistsSeparators', List<String>.from(trackArtistsSeparators));
     }
     if (trackGenresSeparator != null) {
       trackGenresSeparators.remove(trackGenresSeparator);
-      setData('trackGenresSeparators', List<String>.from(trackGenresSeparators));
     }
     if (trackSearchFilter1 != null) {
       trackSearchFilter.remove(trackSearchFilter1);
-      setData('trackSearchFilter', List<String>.from(trackSearchFilter));
     }
     if (trackSearchFilterAll != null) {
       for (var f in trackSearchFilterAll) {
@@ -645,11 +666,9 @@ class SettingsController extends GetxController {
           trackSearchFilter.remove(f);
         }
       }
-      setData('trackSearchFilter', List<String>.from(trackSearchFilter));
     }
     if (playlistSearchFilter1 != null) {
       playlistSearchFilter.remove(playlistSearchFilter1);
-      setData('playlistSearchFilter', List<String>.from(playlistSearchFilter));
     }
     if (playlistSearchFilterAll != null) {
       for (var f in playlistSearchFilterAll) {
@@ -657,11 +676,9 @@ class SettingsController extends GetxController {
           playlistSearchFilter.remove(f);
         }
       }
-      setData('playlistSearchFilter', List<String>.from(playlistSearchFilter));
     }
     if (directoriesToScan1 != null) {
       directoriesToScan.remove(directoriesToScan1);
-      setData('directoriesToScan', List<String>.from(directoriesToScan));
     }
     if (directoriesToScanAll != null) {
       for (var f in directoriesToScanAll) {
@@ -669,11 +686,9 @@ class SettingsController extends GetxController {
           directoriesToScan.remove(f);
         }
       }
-      setData('directoriesToScan', List<String>.from(directoriesToScan));
     }
     if (directoriesToExclude1 != null) {
       directoriesToExclude.remove(directoriesToExclude1);
-      setData('directoriesToExclude', List<String>.from(directoriesToExclude));
     }
     if (directoriesToExcludeAll != null) {
       for (var f in directoriesToExcludeAll) {
@@ -681,11 +696,9 @@ class SettingsController extends GetxController {
           directoriesToExclude.remove(f);
         }
       }
-      setData('directoriesToExclude', List<String>.from(directoriesToExclude));
     }
     if (libraryTab1 != null) {
       libraryTabs.remove(libraryTab1);
-      setData('libraryTabs', List<String>.from(libraryTabs));
     }
     if (libraryTabsAll != null) {
       for (var t in libraryTabsAll) {
@@ -693,11 +706,9 @@ class SettingsController extends GetxController {
           libraryTabs.remove(t);
         }
       }
-      setData('libraryTabs', List<String>.from(libraryTabs));
     }
     if (backupItemslist1 != null) {
       backupItemslist.remove(backupItemslist1);
-      setData('backupItemslist', List<String>.from(backupItemslist));
     }
     if (backupItemslistAll != null) {
       for (var t in backupItemslistAll) {
@@ -705,11 +716,9 @@ class SettingsController extends GetxController {
           backupItemslist.remove(t);
         }
       }
-      setData('backupItemslist', List<String>.from(backupItemslist));
     }
     if (youtubeVideoQualities1 != null) {
       youtubeVideoQualities.remove(youtubeVideoQualities1);
-      setData('youtubeVideoQualities', List<String>.from(youtubeVideoQualities));
     }
     if (youtubeVideoQualitiesAll != null) {
       for (var t in youtubeVideoQualitiesAll) {
@@ -717,77 +726,52 @@ class SettingsController extends GetxController {
           youtubeVideoQualities.remove(t);
         }
       }
-      setData('youtubeVideoQualities', List<String>.from(youtubeVideoQualities));
     }
+    _writeToStorage();
     update();
   }
 
   void updateTrackItemList(TrackTilePosition p, TrackTileItem i) {
-    saveFinal(String key) {
-      setData(key, EnumToString.convertToString(i));
-    }
-
     switch (p) {
       case TrackTilePosition.row1Item1:
-        row1Item1.value = i;
-        saveFinal('row1Item1');
+        trackItem.value.row1Item1 = i;
         break;
       case TrackTilePosition.row1Item2:
-        row1Item2.value = i;
-        saveFinal('row1Item2');
+        trackItem.value.row1Item2 = i;
         break;
       case TrackTilePosition.row1Item3:
-        row1Item3.value = i;
-        saveFinal('row1Item3');
+        trackItem.value.row1Item3 = i;
         break;
       case TrackTilePosition.row2Item1:
-        row2Item1.value = i;
-        saveFinal('row2Item1');
+        trackItem.value.row2Item1 = i;
         break;
       case TrackTilePosition.row2Item2:
-        row2Item2.value = i;
-        saveFinal('row2Item2');
+        trackItem.value.row2Item2 = i;
         break;
       case TrackTilePosition.row2Item3:
-        row2Item3.value = i;
-        saveFinal('row2Item3');
+        trackItem.value.row2Item3 = i;
         break;
       case TrackTilePosition.row3Item1:
-        row3Item1.value = i;
-        saveFinal('row3Item1');
+        trackItem.value.row3Item1 = i;
         break;
       case TrackTilePosition.row3Item2:
-        row3Item2.value = i;
-        saveFinal('row3Item2');
+        trackItem.value.row3Item2 = i;
         break;
       case TrackTilePosition.row3Item3:
-        row3Item3.value = i;
-        saveFinal('row3Item3');
+        trackItem.value.row3Item3 = i;
         break;
       case TrackTilePosition.rightItem1:
-        rightItem1.value = i;
-        saveFinal('rightItem1');
+        trackItem.value.rightItem1 = i;
         break;
       case TrackTilePosition.rightItem2:
-        rightItem2.value = i;
-        saveFinal('rightItem2');
+        trackItem.value.rightItem2 = i;
         break;
       default:
         null;
     }
+    trackItem.refresh();
+    _writeToStorage();
   }
-
-  /// GetStorage functions
-  final GetStorage storage = GetStorage('NamidaSettings');
-
-  void setData(String key, dynamic value) => storage.write(key, value);
-  int? getInt(String key) => storage.read(key);
-  String? getString(String key) => storage.read(key);
-  List<String> getListString(String key, {List<String> ifNull = const []}) => List<String>.from(storage.read(key) ?? ifNull);
-  bool? getBool(String key) => storage.read(key);
-  double? getDouble(String key) => storage.read(key);
-  dynamic getData(String key) => storage.read(key);
-  void clearData() async => storage.erase();
 
   @override
   void onClose() {

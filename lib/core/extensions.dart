@@ -1,9 +1,11 @@
 // ignore_for_file: depend_on_referenced_packages
 
 import 'dart:math';
+import 'package:collection/collection.dart';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:namida/core/constants.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' hide Playlist;
 import 'package:path/path.dart' as p;
 
@@ -498,4 +500,12 @@ extension FileNameUtils on String {
   String get getFilenameWOExt => p.basenameWithoutExtension(this);
   String get getExtension => p.extension(this).substring(1);
   String get getDirectoryName => p.dirname(this);
+}
+
+extension EnumUtils on Enum {
+  String get convertToString => toString().split('.').last;
+}
+
+extension EnumListExtensions<T extends Object> on List<T> {
+  T? getEnum(String? string) => firstWhereOrNull((element) => element.toString().split('.').last == string);
 }

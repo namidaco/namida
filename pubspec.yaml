@@ -39,7 +39,6 @@ dependencies:
 
   # Core
   get: ^4.6.5
-  get_storage: ^2.0.3
   permission_handler: ^10.2.0
   device_info_plus: ^8.1.0
   enum_to_string: ^2.0.1

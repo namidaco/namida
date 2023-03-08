@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:namida/class/track.dart';
 
 ///
+int kSdkVersion = 21;
 String kAppDirectoryPath = '';
 String kInternalAppDirectoryPath = '';
 int kAudioFilesLength = 0;
+Set<String> kStoragePaths = {};
 Set<String> kDirectoriesPaths = {};
 List<double> kDefaultWaveFormData = List<double>.generate(1000, (index) => 0.02);
 List<double> kDefaultScaleList = List<double>.generate(500, (index) => 0.01);
@@ -15,7 +17,7 @@ Color kMainColorLight = const Color.fromARGB(255, 116, 126, 219);
 Color kMainColorDark = const Color.fromARGB(255, 139, 149, 241);
 
 /// Directories and files used by Namida
-final String kSettingsFilePath = '$kAppDirectoryPath/NamidaSettings.gs';
+final String kSettingsFilePath = '$kAppDirectoryPath/namidaSettings.json';
 final String kTracksFilePath = '$kAppDirectoryPath/tracks.json';
 final String kPlaylistsFilePath = '$kAppDirectoryPath/playlists.json';
 final String kVideoPathsFilePath = '$kAppDirectoryPath/videoFilesPaths.txt';
