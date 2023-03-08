@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/core/extensions.dart';
@@ -28,7 +29,16 @@ class VideoController extends GetxController {
   RxInt videoTotalSize = 0.obs;
   RxBool isLocal = false.obs;
   VideoPlayerController? vidcontroller;
-  var ytexp = YoutubeExplode();
+  final connectivity = Connectivity();
+
+  VideoController() {
+    /// Listen for connection changes, start downloading if the link != ''
+    connectivity.onConnectivityChanged.listen((ConnectivityResult result) async {
+      if (result != ConnectivityResult.none && youtubeLink.value != '' && youtubeVideoId.value != '') {
+        await downloadYoutubeVideo(youtubeVideoId.value, Player.inst.nowPlayingTrack.value);
+      }
+    });
+  }
 
   /// Always assigns to [VideoController.inst.youtubeLink] and [VideoController.inst.youtubeVideoId]
   void updateYTLink(Track track) {
@@ -50,15 +60,10 @@ class VideoController extends GetxController {
   }
 
   String extractYTLinkFromTrack(Track track) {
-    final regex = RegExp(
-      r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)(?:\S+)?',
-      caseSensitive: false,
-    );
+    final match = track.comment.isEmpty ? null : kYoutubeRegex.firstMatch(track.comment)?[0];
+    final match2 = track.displayName.isEmpty ? null : kYoutubeRegex.firstMatch(track.displayName)?[0];
 
-    final match = regex.firstMatch(track.comment);
-    final match2 = regex.firstMatch(track.displayName);
-
-    final link = match?[0] ?? match2?[0] ?? '';
+    final link = match ?? match2 ?? '';
 
     return link;
   }
@@ -78,12 +83,13 @@ class VideoController extends GetxController {
   }
 
   Future<String> downloadYoutubeVideo(String videoId, Track track) async {
-    var manifest = await ytexp.videos.streamsClient.getManifest(videoId);
+    final ytexp = YoutubeExplode();
+    final manifest = await ytexp.videos.streamsClient.getManifest(videoId);
 
     /// Create a list of video qualities in descending order of preference
     final preferredQualities = SettingsController.inst.youtubeVideoQualities.map((element) => element.toVideoQuality);
 
-    var streamInfo = manifest.videoOnly.sortByVideoQuality();
+    final streamInfo = manifest.videoOnly.sortByVideoQuality();
 
     /// Find the first stream that matches one of the preferred qualities
     final streamToBeUsed = streamInfo.firstWhere(
@@ -92,11 +98,17 @@ class VideoController extends GetxController {
     );
 
     /// Get the actual stream
-    var stream = ytexp.videos.streamsClient.get(streamToBeUsed);
+    final stream = ytexp.videos.streamsClient.get(streamToBeUsed);
+
+    final file = File("$kVideosCacheTempPath${videoId}_${streamToBeUsed.videoQualityLabel}.mp4");
+
+    /// deletes file if it exists, fixes write issues/corrupted video
+    if (await file.exists()) {
+      await file.delete();
+    }
 
     /// Open a file for writing.
-    var file = File("$kVideosCacheTempPath${videoId}_${streamToBeUsed.videoQualityLabel}.mp4");
-    var fileStream = file.openWrite();
+    final fileStream = file.openWrite();
 
     /// update video size details
     videoTotalSize.value = streamToBeUsed.size.totalBytes;
@@ -122,6 +134,7 @@ class VideoController extends GetxController {
 
     await file.copy("$kVideosCachePath${videoId}_${streamToBeUsed.videoQualityLabel}.mp4");
     await file.delete();
+    ytexp.close();
 
     videoCurrentSize.value = 0;
     Indexer.inst.updateVideosSizeInStorage();
@@ -132,6 +145,15 @@ class VideoController extends GetxController {
     track ??= Player.inst.nowPlayingTrack.value;
     resetEverything();
     updateYTLink(track);
+
+    // final video = await ytexp.videos.get(extractYTLinkFromTrack(track));
+    // printInfo(info: 'SOOOOOOOOOOOONGGGGG ${video.title}');
+    // printInfo(info: 'SOOOOOOOOOOOONGGGGG ${video.description}');
+    // printInfo(info: 'SOOOOOOOOOOOONGGGGG ${video.channelId}');
+    // printInfo(info: 'SOOOOOOOOOOOONGGGGG ${video.author}');
+    // printInfo(info: 'SOOOOOOOOOOOONGGGGG ${video.keywords.map((e) => e)}');
+    // printInfo(info: 'SOOOOOOOOOOOONGGGGG ${video.uploadDate}');
+    // printInfo(info: 'SOOOOOOOOOOOONGGGGG ${video.uploadDateRaw}');
 
     /// Video Found in Local Storage
     for (var vf in videoFilesPathList) {
@@ -161,8 +183,14 @@ class VideoController extends GetxController {
     }
 
     if (SettingsController.inst.videoPlaybackSource.value != 1 /* not local */) {
+      /// return if no internet
+      final connectivityResult = await connectivity.checkConnectivity();
+      if (connectivityResult == ConnectivityResult.none) {
+        return;
+      }
       localVidPath.value = '';
       youtubeLink.value = '';
+
       await playAndInitializeVideo(await downloadYoutubeVideo(youtubeVideoId.value, track), track);
       printInfo(info: 'RETURNED AFTER DOWNLOAD');
     }
