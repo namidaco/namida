@@ -5,6 +5,7 @@ import 'package:collection/collection.dart';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' hide Playlist;
 import 'package:path/path.dart' as p;
@@ -515,4 +516,55 @@ extension PLNAME on String {
       .replaceFirst('_FAVOURITES_', Language.inst.FAVOURITES)
       .replaceFirst('_HISTORY_', Language.inst.HISTORY)
       .replaceFirst('_TOP_MUSIC_', Language.inst.TOP_MUSIC);
+}
+
+extension TRACKPLAYMODE on TrackPlayMode {
+  String get toText {
+    if (this == TrackPlayMode.selectedTrack) {
+      return Language.inst.TRACK_PLAY_MODE_SELECTED_ONLY;
+    }
+    if (this == TrackPlayMode.searchResults) {
+      return Language.inst.TRACK_PLAY_MODE_SEARCH_RESULTS;
+    }
+    if (this == TrackPlayMode.trackAlbum) {
+      return Language.inst.TRACK_PLAY_MODE_TRACK_ALBUM;
+    }
+    if (this == TrackPlayMode.trackArtist) {
+      return Language.inst.TRACK_PLAY_MODE_TRACK_ARTIST;
+    }
+    if (this == TrackPlayMode.trackGenre) {
+      return Language.inst.TRACK_PLAY_MODE_TRACK_GENRE;
+    }
+
+    return '';
+  }
+
+  void toggleSetting() {
+    final index = TrackPlayMode.values.indexOf(this);
+    if (SettingsController.inst.trackPlayMode.value.index + 1 == TrackPlayMode.values.length) {
+      SettingsController.inst.save(trackPlayMode: TrackPlayMode.values[0]);
+    } else {
+      SettingsController.inst.save(trackPlayMode: TrackPlayMode.values[index + 1]);
+    }
+  }
+
+  List<Track> getQueue(Track track) {
+    List<Track> queue = [];
+    if (this == TrackPlayMode.selectedTrack) {
+      queue = [track];
+    }
+    if (this == TrackPlayMode.searchResults) {
+      queue = Indexer.inst.trackSearchList.toList();
+    }
+    if (this == TrackPlayMode.trackAlbum) {
+      queue = Indexer.inst.albumsMap.entries.firstWhere((element) => element.key == track.album).value.toList();
+    }
+    if (this == TrackPlayMode.trackArtist) {
+      queue = Indexer.inst.groupedArtistsMap.entries.firstWhere((element) => element.key == track.artistsList.first).value.toList();
+    }
+    if (this == TrackPlayMode.trackGenre) {
+      queue = Indexer.inst.groupedGenresMap.entries.firstWhere((element) => element.key == track.genresList.first).value.toList();
+    }
+    return queue;
+  }
 }

@@ -6,7 +6,6 @@ import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/trackitem.dart';
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -122,14 +121,7 @@ class TrackTile extends StatelessWidget {
                       }
                     },
               onTap: onTap ??
-                  () async {
-                    // final String lyrics = await Lyrics.inst.getLyrics(artist: track.artistsList.first, track: track.title);
-                    // RegExp exp = RegExp(r'<[^>]*>');
-                    // if (lyrics != '') {
-                    //   String formattedText = lyrics.replaceAll(exp, '').replaceAll('\n', ' ');
-                    //   print('SOOOOOOOOOOOONGGGGG $formattedText');
-                    // }
-
+                  () {
                     if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
                       SelectedTracksController.inst.selectOrUnselect(track);
                     } else {

@@ -85,6 +85,8 @@ class SettingsController extends GetxController {
   final RxInt totalListenedTimeInSec = 0.obs;
   final RxString lastPlayedTrackPath = ''.obs;
 
+  final Rx<TrackPlayMode> trackPlayMode = TrackPlayMode.searchResults.obs;
+
   /// Track Items
   final RxBool displayThirdRow = true.obs;
   final RxBool displayThirdItemInEachRow = false.obs;
@@ -187,6 +189,8 @@ class SettingsController extends GetxController {
       totalListenedTimeInSec.value = json['totalListenedTimeInSec'] ?? totalListenedTimeInSec.value;
       lastPlayedTrackPath.value = json['lastPlayedTrackPath'] ?? lastPlayedTrackPath.value;
 
+      trackPlayMode.value = TrackPlayMode.values.getEnum(json['trackPlayMode']) ?? trackPlayMode.value;
+
       /// Track Items
       displayThirdRow.value = json['displayThirdRow'] ?? displayThirdRow.value;
       displayThirdItemInEachRow.value = json['displayThirdItemInEachRow'] ?? displayThirdItemInEachRow.value;
@@ -276,6 +280,7 @@ class SettingsController extends GetxController {
       'playerPauseFadeDurInMilli': playerPauseFadeDurInMilli.value,
       'totalListenedTimeInSec': totalListenedTimeInSec.value,
       'lastPlayedTrackPath': lastPlayedTrackPath.value,
+      'trackPlayMode': trackPlayMode.value.convertToString,
 
       /// Track Items
       'displayThirdRow': displayThirdRow.value,
@@ -363,6 +368,7 @@ class SettingsController extends GetxController {
     int? playerPauseFadeDurInMilli,
     int? totalListenedTimeInSec,
     String? lastPlayedTrackPath,
+    TrackPlayMode? trackPlayMode,
   }) {
     if (themeMode != null) {
       this.themeMode.value = themeMode;
@@ -621,6 +627,9 @@ class SettingsController extends GetxController {
     }
     if (lastPlayedTrackPath != null) {
       this.lastPlayedTrackPath.value = lastPlayedTrackPath;
+    }
+    if (trackPlayMode != null) {
+      this.trackPlayMode.value = trackPlayMode;
     }
     _writeToStorage();
     update();

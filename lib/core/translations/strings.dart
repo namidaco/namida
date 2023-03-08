@@ -43,6 +43,12 @@ class Language {
   String get FAVOURITES => 'Favourites';
   String get TOP_MUSIC => 'Top Music';
   String get LYRICS => 'Lyrics';
+  String get VIEW_ALL => 'View All';
+  String get TRACK_PLAY_MODE_SELECTED_ONLY => 'Selected track only';
+  String get TRACK_PLAY_MODE_SEARCH_RESULTS => 'Search Results';
+  String get TRACK_PLAY_MODE_TRACK_ALBUM => 'Track\'s Album';
+  String get TRACK_PLAY_MODE_TRACK_ARTIST => 'Track\'s Main Artist';
+  String get TRACK_PLAY_MODE_TRACK_GENRE => 'Track\'s Genre';
 
   /// Main
   String get EXIT_APP => 'Exit';

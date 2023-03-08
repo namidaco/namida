@@ -91,3 +91,11 @@ enum LibraryTab {
   playlists,
   folders,
 }
+
+enum TrackPlayMode {
+  selectedTrack,
+  searchResults,
+  trackAlbum,
+  trackArtist,
+  trackGenre,
+}
