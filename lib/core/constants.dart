@@ -10,6 +10,10 @@ Set<String> kStoragePaths = {};
 Set<String> kDirectoriesPaths = {};
 List<double> kDefaultWaveFormData = List<double>.generate(1000, (index) => 0.02);
 List<double> kDefaultScaleList = List<double>.generate(500, (index) => 0.01);
+final RegExp kYoutubeRegex = RegExp(
+  r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)(?:\S+)?',
+  caseSensitive: false,
+);
 
 /// Main Color
 Color kMainColor = const Color.fromARGB(160, 117, 128, 224);

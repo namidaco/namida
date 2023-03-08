@@ -44,6 +44,7 @@ dependencies:
   enum_to_string: ^2.0.1
   intl: ^0.17.0
   flutter_archive: ^5.0.0
+  url_launcher: ^6.1.10
 
   # Path/File Providers
   path_provider: ^2.0.12

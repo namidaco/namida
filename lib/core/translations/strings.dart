@@ -10,6 +10,8 @@ class Language {
   String get MINIMUM_ONE_QUALITY_SUBTITLE => 'At least 1 quality should remain';
   String get CHOOSE_WHAT_TO_CLEAR => 'Choose what to clear';
   String get SET_YOUTUBE_LINK => 'Set Youtube Link';
+  String get COULDNT_OPEN => 'Couldn\'t open :(';
+  String get COULDNT_OPEN_YT_LINK => 'No Youtube Link Available for this track.';
   String get WAVEFORM_DATA => 'Waveform data';
   String get WAVEFORMS_DATA => 'Waveforms data';
   String get CLEAR_TRACK_ITEM => 'Clear Track\'s';
@@ -28,6 +30,8 @@ class Language {
   String get AUTO_EXTRACT_TAGS_FROM_FILENAME => 'Auto extract from filename';
   String get PLEASE_ENTER_A_NAME => 'Please enter a name';
   String get PLEASE_ENTER_A_DIFFERENT_NAME => 'This name already exists :(\nplease try another fancy name';
+  String get PLEASE_ENTER_A_LINK => 'Please enter a link';
+  String get PLEASE_ENTER_A_LINK_SUBTITLE => 'umm.. is this a youtube link?';
   String get UNDO => 'Undo';
   String get UNDO_CHANGES => 'Undo Changes?';
   String get UNDO_CHANGES_DELETED_TRACK => 'Undo deleted track';
@@ -38,6 +42,7 @@ class Language {
   String get HISTORY => 'History';
   String get FAVOURITES => 'Favourites';
   String get TOP_MUSIC => 'Top Music';
+  String get LYRICS => 'Lyrics';
 
   /// Main
   String get EXIT_APP => 'Exit';
@@ -156,6 +161,7 @@ class Language {
   String get LIBRARY_TABS_REORDER => 'You can reorder the activated tabs.';
   String get DEFAULT_LIBRARY_TAB => 'Default Library Tab';
   String get USE_COLLAPSED_SETTING_TILES => 'Use Collapsed Setting Tiles';
+  String get ENABLE_FOLDERS_HIERARCHY => 'Enable Folders Hierarchy';
 
   /// Backup & Restore
 
@@ -165,7 +171,7 @@ class Language {
   String get CREATE_BACKUP => 'Create Backup';
   String get RESTORE_BACKUP => 'Restore Backup';
   String get AUTOMATIC_BACKUP => 'Automatic';
-  String get AUTOMATIC_BACKUP_SUBTITLE => 'Automatically aplies the most recent backup file found inside backup location';
+  String get AUTOMATIC_BACKUP_SUBTITLE => 'Automatically applies the most recent backup file found inside backup location';
   String get MANUAL_BACKUP => 'Manual';
   String get MANUAL_BACKUP_SUBTITLE => 'pick up a specific file';
   String get CREATED_BACKUP_SUCCESSFULLY => 'Created Backup';
@@ -247,6 +253,7 @@ class Language {
   String get CANCEL => 'Cancel';
   String get OF => 'of';
   String get OR => 'or';
+  String get IN => 'in';
   String get AUTO => 'Auto';
   String get NAME => 'Name';
   String get NOTE => 'Note';
@@ -255,6 +262,7 @@ class Language {
   String get MORE => 'More';
   String get GENERATE => 'Generate';
   String get AUTO_GENERATED => 'Auto Generated';
+  String get EXTRACT => 'Extract';
   String get GRANT_ACCESS => 'Grant Access';
   String get RESTORE_DEFAULTS => 'Restore Defaults';
   String get VALUE => 'Value';
