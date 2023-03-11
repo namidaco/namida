@@ -65,4 +65,24 @@ class NamidaDialogs {
       extractColor: false,
     );
   }
+
+  Future<void> openQueuesPage() async {
+    if (QueueController.inst.queueList.isEmpty) {
+      await QueueController.inst.prepareQueuesFile();
+    }
+    Get.to(() => QueuesPage());
+  }
+
+  Future<void> showQueueDialog(Queue queue) async {
+    await showGeneralPopupDialog(
+      queue.tracks,
+      queue.date.dateFormatted,
+      queue.date.clockFormatted,
+      thirdLineText: [
+        queue.tracks.displayTrackKeyword,
+        queue.tracks.totalDurationFormatted,
+      ].join(' - '),
+      extractColor: false,
+    );
+  }
 }
