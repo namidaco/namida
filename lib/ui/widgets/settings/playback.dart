@@ -252,12 +252,12 @@ class PlaybackSettings extends StatelessWidget {
               icon: Broken.play,
               title: Language.inst.PLAY_FADE_DURATION,
               trailing: NamidaWheelSlider(
-                totalCount: 1900,
-                initValue: SettingsController.inst.playerPlayFadeDurInMilli.value,
+                totalCount: 1900 ~/ 50,
+                initValue: SettingsController.inst.playerPlayFadeDurInMilli.value ~/ 50,
                 itemSize: 2,
                 squeeze: 0.4,
                 onValueChanged: (val) {
-                  final v = (val + 100) as int;
+                  final v = (val * 50 + 100) as int;
                   SettingsController.inst.save(playerPlayFadeDurInMilli: v);
                 },
                 text: "${SettingsController.inst.playerPlayFadeDurInMilli.value}ms",
@@ -269,12 +269,12 @@ class PlaybackSettings extends StatelessWidget {
               icon: Broken.pause,
               title: Language.inst.PAUSE_FADE_DURATION,
               trailing: NamidaWheelSlider(
-                totalCount: 1900,
-                initValue: SettingsController.inst.playerPauseFadeDurInMilli.value,
+                totalCount: 1900 ~/ 50,
+                initValue: SettingsController.inst.playerPauseFadeDurInMilli.value ~/ 50,
                 itemSize: 2,
                 squeeze: 0.4,
                 onValueChanged: (val) {
-                  final v = (val + 100) as int;
+                  final v = (val * 50 + 100) as int;
                   SettingsController.inst.save(playerPauseFadeDurInMilli: v);
                 },
                 text: "${SettingsController.inst.playerPauseFadeDurInMilli.value}ms",
