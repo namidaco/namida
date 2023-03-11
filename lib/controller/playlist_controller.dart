@@ -89,8 +89,11 @@ class PlaylistController extends GetxController {
     sortBy ??= SettingsController.inst.playlistSort.value;
     reverse ??= SettingsController.inst.playlistSortReversed.value;
     switch (sortBy) {
+      case GroupSortType.defaultSort:
+        playlistList.sort((a, b) => a.id.compareTo(b.id));
+        break;
       case GroupSortType.title:
-        playlistList.sort((a, b) => a.name.translatePlaylistName.compareTo(a.name.translatePlaylistName));
+        playlistList.sort((a, b) => a.name.translatePlaylistName.compareTo(b.name.translatePlaylistName));
         break;
       case GroupSortType.year:
         playlistList.sort((a, b) => a.date.compareTo(b.date));
@@ -172,27 +175,16 @@ class PlaylistController extends GetxController {
 
   void addTracksToPlaylist(int id, List<Track> tracks, {bool addAtFirst = false}) {
     final pl = playlistList.firstWhere((p0) => p0.id == id);
-    final plIndex = playlistList.indexOf(pl);
-    final tracksTobeAdded = tracks.map((e) => TrackWithDate(DateTime.now().millisecondsSinceEpoch, e)).toList();
-    final List<TrackWithDate> finalTracks = addAtFirst ? [...tracksTobeAdded, ...pl.tracks] : [...pl.tracks, ...tracksTobeAdded];
-    final newPlaylist = Playlist(pl.id, pl.name, finalTracks, pl.date, pl.comment, pl.modes);
-
-    playlistList.remove(pl);
-    playlistList.insert(plIndex, newPlaylist);
+    final newtracks = tracks.map((e) => TrackWithDate(DateTime.now().millisecondsSinceEpoch, e)).toList();
+    if (addAtFirst) {
+      final finaltracks = [...newtracks, ...pl.tracks];
+      pl.tracks.assignAll(finaltracks);
+    } else {
+      final finaltracks = [...pl.tracks, ...newtracks];
+      pl.tracks.assignAll(finaltracks);
+    }
     _writeToStorage();
   }
-
-  /// Unsupported operation: Cannot add to an unmodifiable list
-
-  // void addTracksToPlaylist(int id, List<Track> tracks, {bool addAtFirst = false}) {
-  //   final pl = playlistList.firstWhere((p0) => p0.id == id);
-  //   if (addAtFirst) {
-  //     pl.tracks.insertAll(0, tracks);
-  //   } else {
-  //     pl.tracks.addAll(tracks);
-  //   }
-  //   _writeToStorage();
-  // }
 
   void insertTracksInPlaylist(int id, List<TrackWithDate> tracks, int index) {
     final pl = playlistList.firstWhere((p0) => p0.id == id);
@@ -237,10 +229,12 @@ class PlaylistController extends GetxController {
     );
   }
 
-  /// Top Music Playlist, relies totally on History Playlist.
-  void updateTopMusicPlaylist() {
-    final pltm = playlistList.firstWhere((p0) => p0.id == kPlaylistTopMusic);
-
+  /// Most Played Playlist, relies totally on History Playlist.
+  void updateMostPlayedPlaylist() {
+    final plmp = playlistList.firstWhereOrNull((p0) => p0.id == kPlaylistMostPlayed);
+    if (plmp == null) {
+      return;
+    }
     final Map<String, int> topTracksPathMap = <String, int>{};
     for (final t in playlistList.firstWhere((element) => element.id == kPlaylistHistory).tracks.map((e) => e.track).toList()) {
       if (topTracksPathMap.containsKey(t.path)) {
@@ -257,8 +251,8 @@ class PlaylistController extends GetxController {
     topTracksMap
       ..clear()
       ..addEntries(sortedEntries);
-    pltm.tracks.clear();
-    pltm.tracks.assignAll(topTracksMap.keys.map((e) => TrackWithDate(0, e)));
+    plmp.tracks.clear();
+    plmp.tracks.assignAll(topTracksMap.keys.map((e) => TrackWithDate(0, e)));
   }
 
   ///
@@ -285,16 +279,16 @@ class PlaylistController extends GetxController {
     if (!playlistList.any((pl) => pl.id == kPlaylistHistory)) {
       addNewPlaylist('_HISTORY_', id: kPlaylistHistory);
     }
-    if (!playlistList.any((pl) => pl.id == kPlaylistTopMusic)) {
-      addNewPlaylist('_TOP_MUSIC_', id: kPlaylistTopMusic);
+    if (!playlistList.any((pl) => pl.id == kPlaylistMostPlayed)) {
+      addNewPlaylist('_MOST_PLAYED_', id: kPlaylistMostPlayed);
     }
 
     searchPlaylists('');
-    updateTopMusicPlaylist();
+    updateMostPlayedPlaylist();
   }
 
   void _writeToStorage() {
-    updateTopMusicPlaylist();
+    updateMostPlayedPlaylist();
     playlistList.refresh();
     searchPlaylists('');
     playlistList.map((pl) => pl.toJson()).toList();
