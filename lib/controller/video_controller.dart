@@ -61,7 +61,7 @@ class VideoController extends GetxController {
 
   String extractYTLinkFromTrack(Track track) {
     final match = track.comment.isEmpty ? null : kYoutubeRegex.firstMatch(track.comment)?[0];
-    final match2 = track.displayName.isEmpty ? null : kYoutubeRegex.firstMatch(track.displayName)?[0];
+    final match2 = track.filename.isEmpty ? null : kYoutubeRegex.firstMatch(track.filename)?[0];
 
     final link = match ?? match2 ?? '';
 
@@ -157,7 +157,7 @@ class VideoController extends GetxController {
 
     /// Video Found in Local Storage
     for (var vf in videoFilesPathList) {
-      if (vf.contains(track.displayNameWOExt)) {
+      if (vf.contains(track.filenameWOExt)) {
         await vidcontroller?.setVolume(0.0);
         await playAndInitializeVideo(vf, track);
         await vidcontroller?.setVolume(0.0);

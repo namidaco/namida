@@ -1,3 +1,4 @@
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
 class TrackWithDate {
@@ -37,11 +38,6 @@ class Track {
   late int dateAdded;
   late int dateModified;
   late String path;
-  late String pathToImage;
-  late String folderPath;
-  late String displayName;
-  late String displayNameWOExt;
-  late String fileExtension;
   late String comment;
   late int bitrate;
   late int sampleRate;
@@ -67,11 +63,6 @@ class Track {
     this.dateAdded,
     this.dateModified,
     this.path,
-    this.pathToImage,
-    this.folderPath,
-    this.displayName,
-    this.displayNameWOExt,
-    this.fileExtension,
     this.comment,
     this.bitrate,
     this.sampleRate,
@@ -98,11 +89,6 @@ class Track {
     dateAdded = json['dateAdded'];
     dateModified = json['dateModified'];
     path = json['path'];
-    pathToImage = json['pathToImage'];
-    folderPath = json['folderPath'];
-    displayName = json['displayName'];
-    displayNameWOExt = json['displayNameWOExt'];
-    fileExtension = json['fileExtension'];
     comment = json['comment'];
     bitrate = json['bitrate'];
     sampleRate = json['sampleRate'];
@@ -131,11 +117,6 @@ class Track {
     data['dateAdded'] = dateAdded;
     data['dateModified'] = dateModified;
     data['path'] = path;
-    data['pathToImage'] = pathToImage;
-    data['folderPath'] = folderPath;
-    data['displayName'] = displayName;
-    data['displayNameWOExt'] = displayNameWOExt;
-    data['fileExtension'] = fileExtension;
     data['comment'] = comment;
     data['bitrate'] = bitrate;
     data['sampleRate'] = sampleRate;
@@ -149,4 +130,13 @@ class Track {
 
     return data;
   }
+}
+
+extension TrackUtils on Track {
+  String get filename => path.getFilename;
+  String get filenameWOExt => path.getFilenameWOExt;
+  String get extension => path.getExtension;
+  String get folderPath => path.getDirectoryName;
+  String get folderName => folderPath.split('/').last;
+  String get pathToImage => "$kArtworksDirPath$filename.png";
 }

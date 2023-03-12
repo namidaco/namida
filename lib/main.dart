@@ -1,3 +1,5 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
@@ -5,6 +7,7 @@ import 'package:external_path/external_path.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
 import 'package:on_audio_edit/on_audio_edit.dart';
 import 'package:path_provider/path_provider.dart';
@@ -101,6 +104,7 @@ void main() async {
   await Player.inst.initializePlayer();
   await QueueController.inst.prepareLatestQueueFile();
 
+  FlutterNativeSplash.remove();
   runApp(const MyApp());
 }
 
@@ -142,17 +146,19 @@ class MyApp extends StatelessWidget {
       onPointerDown: (_) {
         Get.focusScope?.unfocus();
       },
-      child: GetMaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Namida',
-        theme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, true),
-        darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, false),
-        themeMode: SettingsController.inst.themeMode.value,
-        translations: MyTranslation(),
-        builder: (context, widget) {
-          return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
-        },
-        home: MainPageWrapper(),
+      child: Obx(
+        () => GetMaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Namida',
+          theme: AppThemes.inst.getAppTheme(Colors.transparent, true),
+          darkTheme: AppThemes.inst.getAppTheme(Colors.transparent, false),
+          themeMode: SettingsController.inst.themeMode.value,
+          translations: MyTranslation(),
+          builder: (context, widget) {
+            return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
+          },
+          home: MainPageWrapper(),
+        ),
       ),
     );
   }
@@ -183,7 +189,7 @@ class MainPageWrapper extends StatelessWidget {
       },
       child: Obx(
         () => AnimatedTheme(
-          duration: const Duration(milliseconds: 600),
+          duration: const Duration(milliseconds: 500),
           data: AppThemes.inst.getAppTheme(colorScheme ?? CurrentColor.inst.color.value, !context.isDarkMode),
           child: InnerDrawer(
             key: _innerDrawerKey,

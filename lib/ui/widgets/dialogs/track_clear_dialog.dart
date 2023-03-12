@@ -46,7 +46,7 @@ void showTrackClearDialog(List<Track> tracks) {
             onTap: () async {
               Get.close(1);
               for (final track in tracks) {
-                await File("$kWaveformDirPath${track.displayName}.wave").delete();
+                await File("$kWaveformDirPath${track.filename}.wave").delete();
               }
             },
           ),
@@ -56,7 +56,7 @@ void showTrackClearDialog(List<Track> tracks) {
             onTap: () async {
               Get.close(1);
               for (final track in tracks) {
-                await File("$kLyricsDirPath${track.displayName}.txt").delete();
+                await File("$kLyricsDirPath${track.filename}.txt").delete();
               }
             },
           ),
@@ -66,7 +66,7 @@ void showTrackClearDialog(List<Track> tracks) {
             onTap: () async {
               Get.close(1);
               for (final track in tracks) {
-                await File("$kArtworksDirPath${track.displayName}.png").delete();
+                await File("$kArtworksDirPath${track.filename}.png").delete();
               }
             },
           ),

@@ -10,7 +10,7 @@ enum SortType {
   bitrate,
   composer,
   discNo,
-  displayName,
+  filename,
   duration,
   sampleRate,
   size,

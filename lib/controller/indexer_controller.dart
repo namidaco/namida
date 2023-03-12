@@ -89,13 +89,13 @@ class Indexer extends GetxController {
     for (Track track in tracksInfoList) {
       albumsMap.putIfAbsent(track.album, () => {}).addIf(() {
         /// a check to not add tracks with the same filename to the album
-        return !(albumsMap[track.album] ?? {}).map((e) => e.displayName).contains(track.displayName);
+        return !(albumsMap[track.album] ?? {}).map((e) => e.filename).contains(track.filename);
       }, track);
     }
     for (Track map in tracksInfoList) {
       for (var artist in map.artistsList) {
         groupedArtistsMap.putIfAbsent(artist, () => {}).addIf(() {
-          return !(groupedArtistsMap[artist] ?? {}).map((e) => e.displayName).contains(map.displayName);
+          return !(groupedArtistsMap[artist] ?? {}).map((e) => e.filename).contains(map.filename);
         }, map);
       }
     }
@@ -103,7 +103,7 @@ class Indexer extends GetxController {
     for (Track map in tracksInfoList) {
       for (var genre in map.genresList) {
         groupedGenresMap.putIfAbsent(genre, () => {}).addIf(() {
-          return !(groupedGenresMap[genre] ?? {}).map((e) => e.displayName).contains(map.displayName);
+          return !(groupedGenresMap[genre] ?? {}).map((e) => e.filename).contains(map.filename);
         }, map);
       }
     }
@@ -159,7 +159,7 @@ class Indexer extends GetxController {
       if (track.artistsList.contains(artist)) {
         trackAlbumsMap.putIfAbsent(track.album, () => {}).addIf(() {
           /// a check to not add tracks with the same filename to the album
-          return !(trackAlbumsMap[track.album] ?? {}).map((e) => e.displayName).contains(track.displayName);
+          return !(trackAlbumsMap[track.album] ?? {}).map((e) => e.filename).contains(track.filename);
         }, track);
       }
     }
@@ -244,11 +244,6 @@ class Indexer extends GetxController {
             fileStat.accessed.millisecondsSinceEpoch,
             fileStat.changed.millisecondsSinceEpoch,
             track,
-            "$kArtworksDirPath${track.getFilename}.png",
-            track.getDirectoryName,
-            track.getFilename,
-            track.getFilenameWOExt,
-            track.getExtension,
             trackInfo.getMap['COMMENT'] ?? '',
             trackInfo.bitrate ?? 0,
             trackInfo.sampleRate ?? 0,
@@ -280,24 +275,8 @@ class Indexer extends GetxController {
       debugPrint('Extracted All Metadata');
     }
 
-    Future<void> extractAllArtworks() async {
-      for (var track in audioFiles) {
-        printInfo(info: track);
-        try {
-          await extractOneArtwork(track);
-        } catch (e) {
-          printError(info: e.toString());
-          continue;
-        }
-      }
-      printInfo(info: 'Extracted All Artworks Successfully');
-    }
-
     if (deletedPaths.isEmpty) {
-      await Future.wait([
-        extractAllMetadata(),
-        // extractAllArtworks(),
-      ]);
+      await extractAllMetadata();
     } else {
       for (var p in deletedPaths) {
         tracksInfoList.removeWhere((track) => track.path == p);
@@ -314,9 +293,9 @@ class Indexer extends GetxController {
       Set<String> listOfCurrentFileNames = <String>{};
       var listOfTracksWithoutDuplicates = <Track>[];
       for (var tr in tracksInfoList) {
-        if (!listOfCurrentFileNames.contains(tr.displayName)) {
+        if (!listOfCurrentFileNames.contains(tr.filename)) {
           listOfTracksWithoutDuplicates.add(tr);
-          listOfCurrentFileNames.add(tr.displayName);
+          listOfCurrentFileNames.add(tr.filename);
         } else {
           duplicatedTracksLength.value++;
         }
@@ -519,8 +498,8 @@ class Indexer extends GetxController {
       case SortType.discNo:
         tracksInfoList.sort((a, b) => (a.discNo).compareTo(b.discNo));
         break;
-      case SortType.displayName:
-        tracksInfoList.sort((a, b) => (a.displayName).compareTo(b.displayName));
+      case SortType.filename:
+        tracksInfoList.sort((a, b) => (a.filename).compareTo(b.filename));
         break;
       case SortType.duration:
         tracksInfoList.sort((a, b) => (a.duration).compareTo(b.duration));

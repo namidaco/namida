@@ -155,7 +155,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     queue.value.assignAll(tracks.toMediaItems);
     await _playlist.clear();
     await _playlist.addAll(children);
-    CurrentColor.inst.updatePlayerColor(track, currentIndex.value);
+    await CurrentColor.inst.updatePlayerColor(track, currentIndex.value);
     updateCurrentMediaItem(track);
     nowPlayingTrack.value = track;
     currentIndex.value = currentQueue.indexOf(track);

@@ -74,8 +74,8 @@ class SortByMenuTracks extends StatelessWidget {
             ),
             SmallListTile(
               title: Language.inst.FILE_NAME,
-              active: tracksSort == SortType.displayName,
-              onTap: () => Indexer.inst.sortTracks(sortBy: SortType.displayName),
+              active: tracksSort == SortType.filename,
+              onTap: () => Indexer.inst.sortTracks(sortBy: SortType.filename),
             ),
             SmallListTile(
               title: Language.inst.DURATION,

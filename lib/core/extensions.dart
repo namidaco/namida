@@ -173,7 +173,7 @@ extension FontScaleSetting on double {
 }
 
 extension TrackItemSubstring on TrackTileItem {
-  String get label => toString().substring(14);
+  String get label => convertToString;
 }
 
 extension EmptyString on String {
@@ -392,7 +392,7 @@ extension SortToText on SortType {
     if (this == SortType.discNo) {
       return Language.inst.DISC_NUMBER;
     }
-    if (this == SortType.displayName) {
+    if (this == SortType.filename) {
       return Language.inst.FILE_NAME;
     }
     if (this == SortType.duration) {

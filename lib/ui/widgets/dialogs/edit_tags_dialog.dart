@@ -726,7 +726,7 @@ Future<bool> editTrackMetadata(Track track, {Map<TagType, dynamic>? tags, String
 
   final audioedit = OnAudioEdit();
   final info = await audioedit.readAudio(track.path);
-  final copiedFile = kSdkVersion < 30 ? File(track.path) : await File(track.path).copy("${SettingsController.inst.defaultBackupLocation.value}/${track.displayName}");
+  final copiedFile = kSdkVersion < 30 ? File(track.path) : await File(track.path).copy("${SettingsController.inst.defaultBackupLocation.value}/${track.filename}");
   if (insertComment != '') {
     await audioedit.editAudio(
       copiedFile.path,
