@@ -98,8 +98,10 @@ class IndexerSettings extends StatelessWidget {
               onChanged: (p0) async {
                 if (!stg.respectNoMedia.value) {
                   if (await requestManageStoragePermission()) {
-                    stg.save(respectNoMedia: !p0);
+                    stg.save(respectNoMedia: true);
                   }
+                } else {
+                  stg.save(respectNoMedia: false);
                 }
               },
               value: stg.respectNoMedia.value,
