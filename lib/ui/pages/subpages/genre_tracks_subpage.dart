@@ -55,6 +55,7 @@ class GenreTracksPage extends StatelessWidget {
                   (track) => AnimatingTile(
                     position: track.key,
                     child: TrackTile(
+                      index: track.key,
                       track: track.value,
                       queue: tracks,
                     ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
@@ -19,6 +18,7 @@ import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 import 'package:namida/main.dart';
 
 class TrackTile extends StatelessWidget {
+  final int index;
   final Track track;
   final List<Track> queue;
   final bool displayRightDragHandler;
@@ -39,12 +39,12 @@ class TrackTile extends StatelessWidget {
     this.onTap,
     this.trailingWidget,
     this.playlist,
+    required this.index,
   });
 
   String getChoosenTrackTileItem(TrackTileItem trackItem) {
-    final formatClock = SettingsController.inst.hourFormat12.value ? DateFormat('hh:mm aa') : DateFormat('HH:mm');
-    final finalClock = formatClock.format(DateTime.fromMillisecondsSinceEpoch(track.dateModified));
     final finalDate = track.dateModified.dateFormatted;
+    final finalClock = track.dateModified.clockFormatted;
     String trackItemPlaceV = [
       if (trackItem == TrackTileItem.none) '',
       if (trackItem == TrackTileItem.title) track.title.overflow,
@@ -98,12 +98,13 @@ class TrackTile extends StatelessWidget {
         final double thumnailSize = SettingsController.inst.trackThumbnailSizeinList.value;
         final double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
         final bool isTrackSelected = SelectedTracksController.inst.selectedTracks.contains(track);
-        final bool isTrackCurrentlyPlaying = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
-        // final finalqueue = queue ?? Indexer.inst.trackSearchList.toList();
-        // bool isTrackCurrentlyPlaying = finalqueue.isNotEmpty && finalqueue.elementAt(Player.inst.currentIndex.value) == track;
+        bool isTrackSamePath = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
+        bool isRightIndex = index == CurrentColor.inst.currentPlayingIndex.value;
+        bool isTrackCurrentlyPlaying = isRightIndex && isTrackSamePath;
+
         final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
-        return Container(
-          margin: const EdgeInsets.only(bottom: 4.0),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 4.0),
           child: Material(
             color: bgColor ??
                 Color.alphaBlend(
@@ -125,7 +126,7 @@ class TrackTile extends StatelessWidget {
                     if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
                       SelectedTracksController.inst.selectOrUnselect(track);
                     } else {
-                      Player.inst.playOrPause(track: track, queue: queue);
+                      Player.inst.playOrPause(index, track, queue: queue);
                       debugPrint(track.path);
                     }
                   },
@@ -160,7 +161,7 @@ class TrackTile extends StatelessWidget {
                         ),
                         if (draggableThumbnail)
                           CustomReorderableDelayedDragStartListener(
-                            index: 0,
+                            index: index,
                             child: Container(
                               color: Colors.transparent,
                               height: trackTileHeight,
@@ -250,7 +251,7 @@ class TrackTile extends StatelessWidget {
                         width: 8.0,
                       ),
                       CustomReorderableDelayedDragStartListener(
-                        index: 0,
+                        index: index,
                         child: FittedBox(
                           child: Icon(
                             Broken.menu_1,

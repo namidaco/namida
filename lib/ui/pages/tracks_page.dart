@@ -1,12 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:namida/controller/player_controller.dart';
-import 'package:namida/core/icon_fonts/broken_icons.dart';
 
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -33,14 +33,14 @@ class TracksPage extends StatelessWidget {
                 leftWidgets: [
                   NamidaIconButton(
                     icon: Broken.shuffle,
-                    onPressed: () => Player.inst.playOrPause(queue: Indexer.inst.trackSearchList.toList(), shuffle: true),
+                    onPressed: () => Player.inst.playOrPause(0, Indexer.inst.trackSearchList.first, queue: Indexer.inst.trackSearchList.toList(), shuffle: true),
                     iconSize: 18.0,
                     horizontalPadding: 0,
                   ),
                   const SizedBox(width: 12.0),
                   NamidaIconButton(
                     icon: Broken.play,
-                    onPressed: () => Player.inst.playOrPause(queue: Indexer.inst.trackSearchList.toList(), track: Indexer.inst.trackSearchList.first),
+                    onPressed: () => Player.inst.playOrPause(0, Indexer.inst.trackSearchList.first, queue: Indexer.inst.trackSearchList.toList()),
                     iconSize: 18.0,
                     horizontalPadding: 0,
                   ),
@@ -74,6 +74,7 @@ class TracksPage extends StatelessWidget {
                     return AnimatingTile(
                       position: i,
                       child: TrackTile(
+                        index: i,
                         track: Indexer.inst.trackSearchList[i],
                         queue: Indexer.inst.trackSearchList.toList(),
                       ),

@@ -90,6 +90,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                                     stc.removeTrack(i);
                                                   },
                                                   child: TrackTile(
+                                                    index: i,
                                                     track: stc.selectedTracks[i],
                                                     displayRightDragHandler: true,
                                                     isInSelectedTracksPreview: true,

@@ -353,6 +353,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                 children: [
                   Obx(
                     () => TrackTile(
+                      index: e.key,
                       track: e.value,
                       queue: [e.value],
                       onTap: () => tracks.addIf(() => !tracks.contains(e.value), e.value),

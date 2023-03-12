@@ -102,6 +102,7 @@ class FoldersPage extends StatelessWidget {
                               key: UniqueKey(),
                               initialItemCount: Folders.inst.currentTracks.length,
                               itemBuilder: (context, i, animation) => TrackTile(
+                                index: i,
                                 track: Folders.inst.currentTracks.elementAt(i),
                                 queue: Folders.inst.currentTracks.toList(),
                               ),
@@ -155,6 +156,7 @@ class FoldersPage extends StatelessWidget {
                               .entries
                               .map(
                                 (e) => TrackTile(
+                                  index: e.key,
                                   track: e.value,
                                   queue: Folders.inst.currentTracks.toList(),
                                 ),
