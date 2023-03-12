@@ -156,6 +156,7 @@ class TrackTile extends StatelessWidget {
                               thumnailSize: thumnailSize,
                               track: track,
                               forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+                              cacheHeight: SettingsController.inst.trackThumbnailSizeinList.value.toInt(),
                             ),
                           ),
                         ),

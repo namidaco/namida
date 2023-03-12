@@ -202,10 +202,12 @@ class VideoController extends GetxController {
   }
 
   /// track is important to initialize the player only if the user didnt skip the song
+  /// happens quite often when the video is being downloaded.
   Future<void> playAndInitializeVideo(String path, Track track) async {
     if (Player.inst.nowPlayingTrack.value == track) {
       final file = File(path);
       await vidcontroller?.setVolume(0.0);
+      await vidcontroller?.dispose();
       vidcontroller = VideoPlayerController.file(file, videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true, allowBackgroundPlayback: true));
       await vidcontroller?.initialize();
       await vidcontroller?.setVolume(0.0);

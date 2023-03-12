@@ -47,7 +47,7 @@ class AlbumTile extends StatelessWidget {
             child: Row(
               children: [
                 Hero(
-                  tag: 'album_artwork_${album[0].path}',
+                  tag: 'parent_album_artwork_${album[0].album}',
                   child: Container(
                     margin: const EdgeInsets.symmetric(
                       horizontal: 12.0,
@@ -71,9 +71,6 @@ class AlbumTile extends StatelessWidget {
                         style: Get.textTheme.displayMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      // TracksFrom(
-                      //   id: album.id,
-                      // ),
                       if (album[0].albumArtist != '')
                         Text(
                           album[0].albumArtist,

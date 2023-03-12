@@ -67,7 +67,7 @@ class SettingsController extends GetxController {
   final RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
   final RxBool enableFoldersHierarchy = true.obs;
   final RxList<String> backupItemslist =
-      [kTracksFilePath, kQueuesFilePath, kLatestQueueFilePath, kPaletteDirPath, kLyricsDirPath, kPlaylistsFilePath, kSettingsFilePath, kWaveformDirPath, kArtworksCompDirPath].obs;
+      [kTracksFilePath, kQueuesFilePath, kLatestQueueFilePath, kPaletteDirPath, kLyricsDirPath, kPlaylistsFilePath, kSettingsFilePath, kWaveformDirPath].obs;
   final RxBool enableVideoPlayback = true.obs;
   final RxBool enableLyrics = false.obs;
   final RxInt videoPlaybackSource = 0.obs;
@@ -585,7 +585,6 @@ class SettingsController extends GetxController {
           this.youtubeVideoQualities.add(q);
         }
       }
-      print(youtubeVideoQualities.toList());
     }
     if (enableVideoPlayback != null) {
       this.enableVideoPlayback.value = enableVideoPlayback;

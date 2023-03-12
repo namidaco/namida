@@ -33,8 +33,8 @@ class CurrentColor extends GetxController {
   }
 
   Future<void> setPlayerColor(Track track) async {
-    palette.value = await extractColors(track.pathToImageComp);
-    color.value = await generateDelightnedColor(track.pathToImageComp, palette.toList());
+    palette.value = await extractColors(track.pathToImage);
+    color.value = await generateDelightnedColor(track.pathToImage, palette.toList());
   }
 
   // Future<Color> extractDelightnedColor(String path) async {
@@ -87,7 +87,7 @@ class CurrentColor extends GetxController {
         break;
       }
 
-      await extractColors(tr.pathToImageComp);
+      await extractColors(tr.pathToImage);
     }
 
     generatingAllColorPalettes.value = false;

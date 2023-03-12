@@ -271,6 +271,7 @@ class TrackTileCustomization extends StatelessWidget {
                       NamidaLikeButton(
                         track: kDummyTrack,
                         size: 20,
+                        isDummy: true,
                       ),
                   ],
                 ),

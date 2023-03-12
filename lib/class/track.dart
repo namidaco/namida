@@ -38,7 +38,6 @@ class Track {
   late int dateModified;
   late String path;
   late String pathToImage;
-  late String pathToImageComp;
   late String folderPath;
   late String displayName;
   late String displayNameWOExt;
@@ -69,7 +68,6 @@ class Track {
     this.dateModified,
     this.path,
     this.pathToImage,
-    this.pathToImageComp,
     this.folderPath,
     this.displayName,
     this.displayNameWOExt,
@@ -101,7 +99,6 @@ class Track {
     dateModified = json['dateModified'];
     path = json['path'];
     pathToImage = json['pathToImage'];
-    pathToImageComp = json['pathToImageComp'];
     folderPath = json['folderPath'];
     displayName = json['displayName'];
     displayNameWOExt = json['displayNameWOExt'];
@@ -135,7 +132,6 @@ class Track {
     data['dateModified'] = dateModified;
     data['path'] = path;
     data['pathToImage'] = pathToImage;
-    data['pathToImageComp'] = pathToImageComp;
     data['folderPath'] = folderPath;
     data['displayName'] = displayName;
     data['displayNameWOExt'] = displayNameWOExt;

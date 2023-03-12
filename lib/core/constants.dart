@@ -29,7 +29,6 @@ final String kQueuesFilePath = '$kAppDirectoryPath/queues.json';
 final String kLatestQueueFilePath = '$kAppDirectoryPath/latestqueue.json';
 
 final String kArtworksDirPath = '$kAppDirectoryPath/Artworks/';
-final String kArtworksCompDirPath = '$kAppDirectoryPath/ArtworksCompressed/';
 final String kPaletteDirPath = '$kAppDirectoryPath/Palettes/';
 final String kWaveformDirPath = '$kAppDirectoryPath/Waveforms/';
 final String kVideosCachePath = '$kAppDirectoryPath/Videos/';
@@ -151,7 +150,6 @@ final kDummyTrack = Track(
   0,
   0,
   '0',
-  '',
   '',
   '',
   '',

@@ -67,7 +67,6 @@ dependencies:
   youtube_explode_dart: ^1.12.3
 
   # Image Utilities
-  flutter_image_compress: ^1.1.3
   extended_image: ^6.3.4
   palette_generator: ^0.3.3+2
 

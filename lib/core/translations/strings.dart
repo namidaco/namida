@@ -129,8 +129,6 @@ class Language {
   String get TRACKS_INFO => 'Tracks Info';
   String get ARTWORK => 'Artwork';
   String get ARTWORKS => 'Artworks';
-  String get ARTWORK_COMPRESSED => 'Compressed Artwork';
-  String get ARTWORKS_COMPRESSED => 'Compressed Artworks';
   String get FILTERED_BY_SIZE_AND_DURATION => 'Tracks Filtered by size and duration';
   String get DUPLICATED_TRACKS => 'Duplicated Tracks';
   String get MIN_FILE_SIZE => 'Minimum File Size';

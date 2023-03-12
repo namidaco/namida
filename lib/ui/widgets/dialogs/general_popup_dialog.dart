@@ -38,7 +38,7 @@ Future<void> showGeneralPopupDialog(
   forceSingleArtwork ??= tracks.length == 1;
   final isSingle = tracks.length == 1;
 
-  final colorDelightened = extractColor ? await CurrentColor.inst.generateDelightnedColor(tracks.first.pathToImageComp) : CurrentColor.inst.color.value;
+  final colorDelightened = extractColor ? await CurrentColor.inst.generateDelightnedColor(tracks.first.pathToImage) : CurrentColor.inst.color.value;
 
   final List<String> availableAlbums = tracks.map((e) => e.album).toSet().toList();
   final List<String> availableArtists = tracks.map((e) => e.artistsList).expand((list) => list).toSet().toList();

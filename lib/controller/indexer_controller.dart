@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:on_audio_edit/on_audio_edit.dart' as audioedit;
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -14,7 +14,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
 class Indexer extends GetxController {
-  static Indexer inst = Indexer();
+  static final Indexer inst = Indexer();
 
   RxBool isIndexing = false.obs;
 
@@ -24,12 +24,7 @@ class Indexer extends GetxController {
   RxInt duplicatedTracksLength = 0.obs;
   Set<String> filteredPathsToBeDeleted = {};
 
-  // RxList<FileSystemEntity> artworksInStorage = Directory(kArtworksDirPath).listSync().obs;
-  // RxList<FileSystemEntity> artworksCompInStorage = Directory(kArtworksCompDirPath).listSync().obs;
-  // RxList<FileSystemEntity> waveformsInStorage = Directory(kWaveformDirPath).listSync().obs;
-
   RxInt artworksInStorage = Directory(kArtworksDirPath).listSync().length.obs;
-  RxInt artworksCompInStorage = Directory(kArtworksCompDirPath).listSync().length.obs;
   RxInt waveformsInStorage = Directory(kWaveformDirPath).listSync().length.obs;
   RxInt colorPalettesInStorage = Directory(kPaletteDirPath).listSync().length.obs;
   RxInt videosInStorage = Directory(kWaveformDirPath).listSync().length.obs;
@@ -60,14 +55,18 @@ class Indexer extends GetxController {
   final OnAudioQuery _query = OnAudioQuery();
   final onAudioEdit = audioedit.OnAudioEdit();
 
-  Future<void> prepareTracksFile(bool trackFileExists) async {
-    if (trackFileExists) {
+  Future<void> prepareTracksFile() async {
+    /// Only awaits if the track file exists, otherwise it will get into normally and start indexing.
+    if (await File(kTracksFilePath).exists() && await File(kTracksFilePath).stat().then((value) => value.size > 8)) {
       await readTrackData();
-    } else {
-      await File(kTracksFilePath).create();
-      await refreshLibraryAndCheckForDiff(forceReIndex: true);
+      afterIndexing();
     }
-    afterIndexing();
+
+    /// doesnt exists
+    else {
+      await File(kTracksFilePath).create();
+      refreshLibraryAndCheckForDiff(forceReIndex: true);
+    }
   }
 
   Future<void> refreshLibraryAndCheckForDiff({bool forceReIndex = false}) async {
@@ -76,16 +75,13 @@ class Indexer extends GetxController {
 
     Set<String> newFoundPaths = files.difference(Set.of(tracksInfoList.map((t) => t.path)));
     Set<String> deletedPaths = Set.of(tracksInfoList.map((t) => t.path)).difference(files);
-    // filteredPathsToBeDeleted.clear();
-    print(newFoundPaths);
-    print(deletedPaths);
+
     await fetchAllSongsAndWriteToFile(audioFiles: newFoundPaths, deletedPaths: deletedPaths, forceReIndex: forceReIndex || tracksInfoList.isEmpty);
     afterIndexing();
     isIndexing.value = false;
   }
 
   void afterIndexing() {
-    // albumsMap.assignAll(tracksInfoList.groupBy((p0) => p0.album));
     albumsMap.clear();
     groupedArtistsMap.clear();
     groupedGenresMap.clear();
@@ -120,28 +116,23 @@ class Indexer extends GetxController {
     sortGenres();
   }
 
-  Future<void> extractOneArtwork(String path, {bool forceReExtract = false}) async {
+  /// extracts artwork from [bytes] or [path] and save to file.
+  /// path is needed bothways for making the file name.
+  /// using path for extracting will call [onAudioEdit.readAudio] so it will be slower.
+  Future<void> extractOneArtwork(String path, {Uint8List? bytes, bool forceReExtract = false}) async {
     final fileOfFull = File("$kArtworksDirPath${path.getFilename}.png");
-    final fileOfComp = File("$kArtworksCompDirPath${path.getFilename}.png");
 
     if (forceReExtract) {
       await fileOfFull.delete();
-      await fileOfComp.delete();
     }
 
     /// prevent redundent re-creation of image file
-    if (!await fileOfFull.exists() || !await fileOfComp.exists()) {
-      final trackInfo = await onAudioEdit.readAudio(path);
-      final art = trackInfo.firstArtwork;
+    if (!await fileOfFull.exists()) {
+      final art = bytes ?? await onAudioEdit.readAudio(path).then((value) => value.firstArtwork);
       if (art != null) {
         final imgFile = await fileOfFull.create(recursive: true);
         imgFile.writeAsBytesSync(art);
-
-        final artComp = await FlutterImageCompress.compressWithList(art, quality: 40);
-        final imgFileComp = await fileOfComp.create(recursive: true);
-        imgFileComp.writeAsBytesSync(artComp);
       }
-      printInfo(info: "Created Artwork for ${trackInfo.title}");
     }
 
     updateImageSizeInStorage();
@@ -162,29 +153,7 @@ class Indexer extends GetxController {
     afterIndexing();
   }
 
-  // Map<String?, Set<Track>> getAlbumsForArtist(String artist) {
-  //   Set<Track> artistTracks = {};
-  //   Set<String> albumStrings = {};
-  //   Map<String?, Set<Track>> trackAlbumsMap = {};
-  //   groupedArtistsMap.forEach((key, value) {
-  //     if (key! == artist) {
-  //       artistTracks.assignAll(value);
-  //     }
-  //     for (var track in artistTracks) {
-  //       albumStrings.add(track.album);
-  //     }
-  //     print(albumStrings);
-  //     for (Track track in tracksInfoList) {
-  //       trackAlbumsMap.putIfAbsent(track.album, () => {}).addIf(() {
-  //         /// a check to not add tracks with the same filename to the album
-  //         return !(trackAlbumsMap[track.album] ?? {}).map((e) => e.displayName).contains(track.displayName);
-  //       }, track);
-  //     }
-  //   });
-  //   return trackAlbumsMap;
-  // }
   Map<String?, Set<Track>> getAlbumsForArtist(String artist) {
-    // Set<String> albumStrings = {};
     Map<String?, Set<Track>> trackAlbumsMap = {};
     for (Track track in tracksInfoList) {
       if (track.artistsList.contains(artist)) {
@@ -205,11 +174,10 @@ class Indexer extends GetxController {
     } else {
       audioFiles = audioFiles;
     }
-    debugPrint("LLLLLL ${audioFiles.length}");
-    debugPrint("LLLLLL ${deletedPaths.length}");
+    debugPrint("New Audio Files: ${audioFiles.length}");
+    debugPrint("Deleted Audio Files: ${deletedPaths.length}");
 
     List<SongModel> tracksOld = await _query.querySongs();
-    print("AUDIO FILES LENGTH ${audioFiles.length}");
     filteredForSizeDurationTracks.value = 0;
     duplicatedTracksLength.value = 0;
     final minDur = SettingsController.inst.indexMinDurationInSec.value; // Seconds
@@ -277,7 +245,6 @@ class Indexer extends GetxController {
             fileStat.changed.millisecondsSinceEpoch,
             track,
             "$kArtworksDirPath${track.getFilename}.png",
-            "$kArtworksCompDirPath${track.getFilename}.png",
             track.getDirectoryName,
             track.getFilename,
             track.getFilenameWOExt,
@@ -298,18 +265,19 @@ class Indexer extends GetxController {
 
           listOfCurrentFileNames.add(track.getFilename);
           searchTracks('');
+          extractOneArtwork(track, bytes: trackInfo.firstArtwork);
         } catch (e) {
           printError(info: e.toString());
 
           /// TODO: Should i add a dummy track that has a real path?
           // final fileStat = await File(track).stat();
           // tracksInfoList.add(Track(p.basenameWithoutExtension(track), ['Unkown Artist'], 'Unkown Album', 'Unkown Album Artist', ['Unkown Genre'], 'Unknown Composer', 0, 0, 0, fileStat.size, fileStat.accessed.millisecondsSinceEpoch, fileStat.changed.millisecondsSinceEpoch, track,
-          //     "$kAppDirectoryPath/Artworks/${p.basename(track)}.png", "$kAppDirectoryPath/ArtworksCompressed/${p.basename(track)}.png", p.dirname(track), p.basename(track), p.basenameWithoutExtension(track), p.extension(track).substring(1), '', 0, 0, '', '', 0, '', '', '', ''));
+          //     "$kAppDirectoryPath/Artworks/${p.basename(track)}.png", p.dirname(track), p.basename(track), p.basenameWithoutExtension(track), p.extension(track).substring(1), '', 0, 0, '', '', 0, '', '', '', ''));
 
           continue;
         }
       }
-      print('First task complete');
+      debugPrint('Extracted All Metadata');
     }
 
     Future<void> extractAllArtworks() async {
@@ -317,45 +285,18 @@ class Indexer extends GetxController {
         printInfo(info: track);
         try {
           await extractOneArtwork(track);
-
-          ///
-          // final fam = await MetadataRetriever.fromFile(File(track));
-          // final art = fam.albumArt;
-
-          // if (art != null) {
-          //   final imgFile = await File("$kAppDirectoryPath/Artworks/${p.basename(track)}.png").create(recursive: true);
-          //   imgFile.writeAsBytesSync(art);
-
-          //   final artComp = await FlutterImageCompress.compressWithList(art, quality: 40);
-          //   final imgFileComp = await File("$kAppDirectoryPath/ArtworksCompressed/${p.basename(track)}.png").create(recursive: true);
-          //   imgFileComp.writeAsBytesSync(artComp);
-          // }
         } catch (e) {
           printError(info: e.toString());
           continue;
         }
       }
-      printInfo(info: 'extractAllArtworks completed');
+      printInfo(info: 'Extracted All Artworks Successfully');
     }
 
-    // await Future.wait([
-    //   extractAllMetadata(),
-    //   extractAllArtworks(),
-    // ]);
-    // deletedPaths.addAll(filteredPathsToBeDeleted);
-    // if (deletedPaths.isNotEmpty) {
-    //   for (var p in deletedPaths) {
-    //     tracksInfoList.removeWhere((track) => track.path == p);
-    //   }
-    // }
-    // print("gfdgidfj ${filteredPathsToBeDeleted}");
-    // for (var p in filteredPathsToBeDeleted) {
-    //   tracksInfoList.removeWhere((track) => track.path == p);
-    // }
     if (deletedPaths.isEmpty) {
       await Future.wait([
         extractAllMetadata(),
-        extractAllArtworks(),
+        // extractAllArtworks(),
       ]);
     } else {
       for (var p in deletedPaths) {
@@ -391,14 +332,13 @@ class Indexer extends GetxController {
 
   Future<void> readTrackData({File? file}) async {
     file ??= File(kTracksFilePath);
-    // tracksInfoList.clear();
     String contents = await file.readAsString();
     if (contents.isNotEmpty) {
       var jsonResponse = jsonDecode(contents);
 
       for (var p in jsonResponse) {
         tracksInfoList.add(Track.fromJson(p));
-        print("hhhhhhhhhh: ${tracksInfoList.length}");
+        debugPrint("Tracks Info List Length From File: ${tracksInfoList.length}");
       }
     }
   }
@@ -412,6 +352,7 @@ class Indexer extends GetxController {
         final filesPre = directory.listSync(recursive: true, followLinks: true);
 
         /// Respects .nomedia
+        /// Typically Skips a directory if a .nomedia file was detected
         if (SettingsController.inst.respectNoMedia.value) {
           final basenames = <String>[];
           for (final b in filesPre) {
@@ -447,7 +388,7 @@ class Indexer extends GetxController {
               }
             }
           } catch (e) {
-            print(e);
+            printError(info: e.toString());
             continue;
           }
         }
@@ -479,7 +420,7 @@ class Indexer extends GetxController {
     final sGenre = tsf.contains('genre');
     final sComposer = tsf.contains('composer');
     final sYear = tsf.contains('year');
-    // SearchFilter.inst.textController.listen((p0) {});
+
     trackSearchList.clear();
     for (var item in tracksInfoList) {
       final lctext = text.toLowerCase();
@@ -747,22 +688,6 @@ class Indexer extends GetxController {
     searchGenres(genresSearchController.value.text);
   }
 
-  // void getImageCacheSize() {
-  //   var totalSizeImage = 0;
-  //   for (var file in artworksInStorage) {
-  //     var stat = file.statSync();
-  //     totalSizeImage += stat.size;
-  //   }
-  //   for (var file in artworksCompInStorage) {
-  //     var stat = file.statSync();
-  //     totalSizeImage += stat.size;
-  //   }
-  //   artworksInStorage.refresh();
-  //   artworksCompInStorage.refresh();
-
-  //   // return totalSizeImage;
-  // }
-
   void updateImageSizeInStorage() {
     // resets values
     artworksInStorage.value = 0;
@@ -771,11 +696,6 @@ class Indexer extends GetxController {
     Directory(kArtworksDirPath).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
       if (entity is File) {
         artworksInStorage.value++;
-        artworksSizeInStorage.value += entity.lengthSync();
-      }
-    });
-    Directory(kArtworksCompDirPath).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
-      if (entity is File) {
         artworksSizeInStorage.value += entity.lengthSync();
       }
     });
@@ -818,22 +738,9 @@ class Indexer extends GetxController {
     });
   }
 
-  // void getWaveformDataSize() {
-  //   var totalSizeWave = 0;
-  //   for (var file in waveformsInStorage) {
-  //     var stat = file.statSync();
-  //     totalSizeWave += stat.size;
-  //   }
-  //   waveformsInStorage.refresh();
-
-  //   // return totalSizeWave;
-  // }
-
   Future<void> clearImageCache() async {
     await Directory(kArtworksDirPath).delete(recursive: true);
-    await Directory(kArtworksCompDirPath).delete(recursive: true);
     await Directory(kArtworksDirPath).create();
-    await Directory(kArtworksCompDirPath).create();
     updateImageSizeInStorage();
   }
 

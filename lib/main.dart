@@ -71,7 +71,6 @@ void main() async {
 
   await Future.wait([
     Directory(kArtworksDirPath).create(),
-    Directory(kArtworksCompDirPath).create(),
     Directory(kPaletteDirPath).create(),
     Directory(kWaveformDirPath).create(),
     Directory(kVideosCachePath).create(),
@@ -89,13 +88,7 @@ void main() async {
   Get.put(() => ScrollSearchController());
   Get.put(() => VideoController());
 
-  /// Only awaits if the track file exists, otherwise it will get into normally and start indexing.
-  final tfe = await File(kTracksFilePath).exists() && await File(kTracksFilePath).stat().then((value) => value.size > 5);
-  if (tfe) {
-    await Indexer.inst.prepareTracksFile(tfe);
-  } else {
-    Indexer.inst.prepareTracksFile(tfe);
-  }
+  await Indexer.inst.prepareTracksFile();
 
   /// updates values on startup
   Indexer.inst.updateImageSizeInStorage();

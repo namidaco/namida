@@ -70,16 +70,6 @@ void showTrackClearDialog(List<Track> tracks) {
               }
             },
           ),
-          CustomListTile(
-            title: isSingle ? Language.inst.ARTWORK_COMPRESSED : Language.inst.ARTWORKS_COMPRESSED,
-            icon: Broken.gallery,
-            onTap: () async {
-              Get.close(1);
-              for (final track in tracks) {
-                await File("$kArtworksCompDirPath${track.displayName}.png").delete();
-              }
-            },
-          ),
         ],
       ),
     ),

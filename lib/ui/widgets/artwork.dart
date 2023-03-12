@@ -60,9 +60,7 @@ class ArtworkWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final anyImageExist =
-        FileSystemEntity.typeSync(track.pathToImage) != FileSystemEntityType.notFound || FileSystemEntity.typeSync(track.pathToImageComp) != FileSystemEntityType.notFound;
-    final extImageChild = anyImageExist && !forceDummyArtwork
+    final extImageChild = FileSystemEntity.typeSync(track.pathToImage) != FileSystemEntityType.notFound && !forceDummyArtwork
         ? Stack(
             alignment: Alignment.center,
             children: [
@@ -77,11 +75,11 @@ class ArtworkWidget extends StatelessWidget {
                       height: forceSquared ? context.width : null,
                     )
                   : Image.file(
-                      File(path ?? track.pathToImageComp),
+                      File(path ?? track.pathToImage),
                       gaplessPlayback: true,
                       fit: BoxFit.cover,
-                      cacheHeight: cacheHeight ?? 240,
-                      filterQuality: FilterQuality.high,
+                      cacheHeight: (cacheHeight ?? 200) * Get.mediaQuery.devicePixelRatio ~/ 1,
+                      filterQuality: FilterQuality.medium,
                       width: forceSquared ? context.width : null,
                       height: forceSquared ? context.width : null,
                       frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
@@ -98,7 +96,6 @@ class ArtworkWidget extends StatelessWidget {
                   gaplessPlayback: true,
                   fit: BoxFit.cover,
                   clearMemoryCacheWhenDispose: true,
-                  cacheWidth: 1080,
                   filterQuality: FilterQuality.high,
                   width: forceSquared ? context.width : null,
                   height: forceSquared ? context.width : null,
@@ -188,7 +185,6 @@ class MultiArtworks extends StatelessWidget {
               thumnailSize: thumbnailSize,
               track: Indexer.inst.tracksInfoList.first,
               forceSquared: true,
-              cacheHeight: 480,
               blur: 0,
               forceDummyArtwork: true,
               bgcolor: bgcolor,
@@ -202,7 +198,7 @@ class MultiArtworks extends StatelessWidget {
                   forceSquared: true,
                   blur: 0,
                   borderRadius: 0,
-                  cacheHeight: 480,
+                  compressed: false,
                 )
               : tracks.length == 2
                   ? Row(
@@ -214,7 +210,6 @@ class MultiArtworks extends StatelessWidget {
                           forceSquared: true,
                           blur: 0,
                           borderRadius: 0,
-                          cacheHeight: 480,
                           iconSize: iconSize - 2.0,
                         ),
                         ArtworkWidget(
@@ -224,7 +219,6 @@ class MultiArtworks extends StatelessWidget {
                           forceSquared: true,
                           blur: 0,
                           borderRadius: 0,
-                          cacheHeight: 480,
                           iconSize: iconSize - 2.0,
                         ),
                       ],
@@ -261,7 +255,6 @@ class MultiArtworks extends StatelessWidget {
                                   blur: 0,
                                   borderRadius: 0,
                                   height: thumbnailSize,
-                                  cacheHeight: 480,
                                   iconSize: iconSize,
                                 ),
                               ],
@@ -307,7 +300,6 @@ class MultiArtworks extends StatelessWidget {
                                   blur: 0,
                                   borderRadius: 0,
                                   iconSize: iconSize - 3.0,
-                                  // width: 100,
                                 ),
                               ],
                             ),

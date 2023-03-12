@@ -22,7 +22,7 @@ class NamidaOnTaps {
   Future<void> onArtistTap(String name) async {
     final tracks = Indexer.inst.artistSearchList[name]!.toList();
     final albums = name.artistAlbums;
-    final color = await CurrentColor.inst.generateDelightnedColor(tracks[0].pathToImageComp);
+    final color = await CurrentColor.inst.generateDelightnedColor(tracks[0].pathToImage);
     Get.to(
       () => ArtistTracksPage(
         name: name,
@@ -36,7 +36,7 @@ class NamidaOnTaps {
 
   Future<void> onAlbumTap(String name) async {
     final tracks = Indexer.inst.albumSearchList[name]!.toList();
-    final color = await CurrentColor.inst.generateDelightnedColor(tracks[0].pathToImageComp);
+    final color = await CurrentColor.inst.generateDelightnedColor(tracks[0].pathToImage);
 
     Get.to(
       () => AlbumTracksPage(

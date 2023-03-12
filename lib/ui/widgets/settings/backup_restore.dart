@@ -113,8 +113,8 @@ class BackupAndRestore extends StatelessWidget {
                               ),
                               ListTileWithCheckMark(
                                 active: isActive(kQueuesFilePath) && isActive(kLatestQueueFilePath),
-                                title: Language.inst.QUEUE,
-                                icon: Broken.quote_up,
+                                title: Language.inst.QUEUES,
+                                icon: Broken.driver,
                                 onTap: () {
                                   onItemTap(kQueuesFilePath);
                                   onItemTap(kLatestQueueFilePath);
@@ -146,15 +146,6 @@ class BackupAndRestore extends StatelessWidget {
                                 title: Language.inst.ARTWORKS,
                                 icon: Broken.image,
                                 onTap: () => onItemTap(kArtworksDirPath),
-                              ),
-                              const SizedBox(
-                                height: 12.0,
-                              ),
-                              ListTileWithCheckMark(
-                                active: isActive(kArtworksCompDirPath),
-                                title: Language.inst.ARTWORKS_COMPRESSED,
-                                icon: Broken.gallery,
-                                onTap: () => onItemTap(kArtworksCompDirPath),
                               ),
                             ],
                           ),

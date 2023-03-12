@@ -75,7 +75,7 @@ class WaveformController extends GetxController {
         curentWaveform.assignAll(increaseListToMax(waveformData)); //
         curentScaleList.assignAll(changeListSize(waveformData, track.duration ~/ 50)); // each 50ms
       }
-      // print("lengthhhhhh ${curentScaleList.length}");
+
       await waveFile.writeAsString(waveformData.toString());
       Indexer.inst.updateWaveformSizeInStorage();
     }
