@@ -1152,3 +1152,105 @@ class AnimatingGrid extends StatelessWidget {
     );
   }
 }
+
+class NamidaDrawerListTile extends StatelessWidget {
+  final void Function()? onTap;
+  final bool enabled;
+  final String title;
+  final IconData icon;
+  const NamidaDrawerListTile({super.key, this.onTap, required this.enabled, required this.title, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+      child: Material(
+        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            alignment: Alignment.center,
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
+            decoration: BoxDecoration(
+              color: enabled ? CurrentColor.inst.color.value : null,
+              borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+              boxShadow: enabled
+                  ? [
+                      BoxShadow(
+                        color: CurrentColor.inst.color.value,
+                        spreadRadius: 0.4,
+                        blurRadius: 12.0,
+                        offset: const Offset(0.0, 4.0),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: enabled ? Colors.white.withAlpha(200) : null,
+                ),
+                const SizedBox(width: 12.0),
+                Text(
+                  title,
+                  style: context.textTheme.displayMedium?.copyWith(
+                    color: enabled ? Colors.white.withAlpha(200) : null,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SearchPageTitleRow extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Widget? trailing;
+  final String? buttonText;
+  final IconData? buttonIcon;
+  final void Function()? onPressed;
+  const SearchPageTitleRow({
+    super.key,
+    required this.title,
+    required this.icon,
+    this.trailing,
+    this.buttonText,
+    this.buttonIcon,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const SizedBox(width: 16.0),
+        Row(
+          children: [
+            Icon(icon),
+            const SizedBox(width: 8.0),
+            Text(
+              title,
+              style: context.textTheme.displayLarge,
+            ),
+          ],
+        ),
+        const Spacer(),
+        TextButton.icon(
+          style: TextButton.styleFrom(foregroundColor: context.theme.listTileTheme.iconColor),
+          icon: Icon(buttonIcon, size: 20.0),
+          label: Text(buttonText ?? ''),
+          onPressed: onPressed,
+        ),
+        const SizedBox(width: 16.0),
+      ],
+    );
+  }
+}

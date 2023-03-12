@@ -3,6 +3,9 @@ import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/extensions.dart';
+import 'package:namida/main.dart';
 
 class ScrollSearchController extends GetxController {
   static final ScrollSearchController inst = ScrollSearchController();
@@ -10,6 +13,8 @@ class ScrollSearchController extends GetxController {
   RxDouble miniPlayerHeight = 0.1.obs;
 
   RxBool isGlobalSearchMenuShown = false.obs;
+  final TextEditingController searchTextEditingController = Indexer.inst.globalSearchController.value;
+  final PageController homepageController = PageController(initialPage: SettingsController.inst.selectedLibraryTab.value.toInt);
 
   RxBool showTrackSearchBox = false.obs;
   RxBool showAlbumSearchBox = false.obs;
@@ -71,6 +76,21 @@ class ScrollSearchController extends GetxController {
         isPlaylistBarVisible.value = true;
       }
     });
+  }
+  animatePageController(int animateTo, {bool shouldGoBack = false}) {
+    SettingsController.inst.save(selectedLibraryTab: animateTo.toEnum);
+    if (shouldGoBack) {
+      Get.offAll(() => MainPageWrapper());
+    } else {
+      homepageController.animateToPage(animateTo, duration: const Duration(milliseconds: 400), curve: Curves.easeInOutQuart);
+    }
+    clearGlobalSearchAndCloseThingys();
+    printInfo(info: animateTo.toEnum.toText);
+  }
+
+  clearGlobalSearchAndCloseThingys() {
+    isGlobalSearchMenuShown.value = false;
+    Indexer.inst.searchAll('');
   }
 
   /// Tracks

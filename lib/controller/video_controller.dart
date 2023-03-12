@@ -35,7 +35,7 @@ class VideoController extends GetxController {
     /// Listen for connection changes, start downloading if the link != ''
     connectivity.onConnectivityChanged.listen((ConnectivityResult result) async {
       if (result != ConnectivityResult.none && youtubeLink.value != '' && youtubeVideoId.value != '') {
-        await downloadYoutubeVideo(youtubeVideoId.value, Player.inst.nowPlayingTrack.value);
+        await updateLocalVidPath(Player.inst.nowPlayingTrack.value);
       }
     });
   }

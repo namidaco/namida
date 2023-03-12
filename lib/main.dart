@@ -6,17 +6,21 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:on_audio_edit/on_audio_edit.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'package:namida/core/functions.dart';
+import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/packages/inner_drawer.dart';
+import 'package:namida/ui/pages/settings_page.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/video_controller.dart';
-import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/selected_tracks_preview.dart';
@@ -63,17 +67,17 @@ void main() async {
   //   ),
   // );
 
-  await GetStorage.init('NamidaSettings');
-
   kAppDirectoryPath = await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
 
-  await Directory(kArtworksDirPath).create();
-  await Directory(kArtworksCompDirPath).create();
-  await Directory(kPaletteDirPath).create();
-  await Directory(kWaveformDirPath).create();
-  await Directory(kVideosCachePath).create();
-  await Directory(kVideosCacheTempPath).create();
-
+  await Future.wait([
+    Directory(kArtworksDirPath).create(),
+    Directory(kArtworksCompDirPath).create(),
+    Directory(kPaletteDirPath).create(),
+    Directory(kWaveformDirPath).create(),
+    Directory(kVideosCachePath).create(),
+    Directory(kVideosCacheTempPath).create(recursive: true),
+    Directory(kLyricsDirPath).create(),
+  ]);
   final paths = await ExternalPath.getExternalStorageDirectories();
   kStoragePaths.assignAll(paths);
   kDirectoriesPaths = paths.map((path) => "$path/${ExternalPath.DIRECTORY_MUSIC}").toSet();
@@ -81,27 +85,28 @@ void main() async {
   kInternalAppDirectoryPath = "${paths[0]}/Namida";
 
   await SettingsController.inst.prepareSettingsFile();
-  Get.put(() => ScrollSearchController());
-  Get.put(() => Player());
-  Get.put(() => VideoController());
-  Get.put(() => Folders());
-  await Player.inst.initializePlayer();
 
+  Get.put(() => ScrollSearchController());
+  Get.put(() => VideoController());
+
+  /// Only awaits if the track file exists, otherwise it will get into normally and start indexing.
   final tfe = await File(kTracksFilePath).exists() && await File(kTracksFilePath).stat().then((value) => value.size > 5);
   if (tfe) {
     await Indexer.inst.prepareTracksFile(tfe);
   } else {
     Indexer.inst.prepareTracksFile(tfe);
   }
-  await PlaylistController.inst.preparePlaylistFile();
-  // QueueController.inst.prepareQueuesFile();
-  await QueueController.inst.prepareLatestQueueFile();
-  await VideoController.inst.getVideoFiles();
 
   /// updates values on startup
   Indexer.inst.updateImageSizeInStorage();
   Indexer.inst.updateWaveformSizeInStorage();
   Indexer.inst.updateVideosSizeInStorage();
+
+  PlaylistController.inst.preparePlaylistFile();
+  VideoController.inst.getVideoFiles();
+
+  await Player.inst.initializePlayer();
+  await QueueController.inst.prepareLatestQueueFile();
 
   runApp(const MyApp());
 }
@@ -110,7 +115,7 @@ Future<bool> requestManageStoragePermission() async {
   if (kSdkVersion < 30) {
     return true;
   }
-  // final shouldRequest = !await Permission.manageExternalStorage.isGranted || await Permission.manageExternalStorage.isDenied;
+
   if (!await Permission.manageExternalStorage.isGranted) {
     await Permission.manageExternalStorage.request();
   }
@@ -140,27 +145,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => Listener(
-        onPointerDown: (_) {
-          // FocusScopeNode currentFocus = FocusScope.of(context);
-          // if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
-          //   currentFocus.focusedChild?.unfocus();
-          // }
-          Get.focusScope?.unfocus();
+    return Listener(
+      onPointerDown: (_) {
+        Get.focusScope?.unfocus();
+      },
+      child: GetMaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Namida',
+        theme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, true),
+        darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, false),
+        themeMode: SettingsController.inst.themeMode.value,
+        translations: MyTranslation(),
+        builder: (context, widget) {
+          return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
         },
-        child: GetMaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Namida',
-          theme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, true),
-          darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, false),
-          themeMode: SettingsController.inst.themeMode.value,
-          translations: MyTranslation(),
-          builder: (context, widget) {
-            return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
-          },
-          home: const MainPageWrapper(),
-        ),
+        home: MainPageWrapper(),
       ),
     );
   }
@@ -171,7 +170,16 @@ class MainPageWrapper extends StatelessWidget {
   final Widget? title;
   final List<Widget>? actions;
   final List<Widget>? actionsToAdd;
-  const MainPageWrapper({super.key, this.child, this.title, this.actions, this.actionsToAdd});
+  final Color? colorScheme;
+  MainPageWrapper({super.key, this.child, this.title, this.actions, this.actionsToAdd, this.colorScheme});
+
+  final GlobalKey<InnerDrawerState> _innerDrawerKey = GlobalKey<InnerDrawerState>();
+  void toggleDrawer() {
+    if (child != null) {
+      Get.offAll(() => MainPageWrapper());
+    }
+    _innerDrawerKey.currentState?.toggle();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -180,15 +188,92 @@ class MainPageWrapper extends StatelessWidget {
         Get.focusScope?.unfocus();
         return Future.value(true);
       },
-      child: Stack(
-        children: [
-          HomePage(title: title, actions: actions, actionsToAdd: actionsToAdd, child: child),
-          Hero(tag: 'MINIPLAYER', child: MiniPlayerParent()),
-          const Positioned(
-            bottom: 60.0,
-            child: SelectedTracksPreviewContainer(),
+      child: Obx(
+        () => AnimatedTheme(
+          duration: const Duration(milliseconds: 600),
+          data: AppThemes.inst.getAppTheme(colorScheme ?? CurrentColor.inst.color.value, !context.isDarkMode),
+          child: InnerDrawer(
+            key: _innerDrawerKey,
+            onTapClose: true,
+            colorTransitionChild: context.theme.scaffoldBackgroundColor,
+            colorTransitionScaffold: Colors.black54,
+            offset: const IDOffset.only(left: 0.0),
+            proportionalChildArea: true,
+            borderRadius: 32.0.multipliedRadius,
+            leftAnimationType: InnerDrawerAnimation.quadratic,
+            rightAnimationType: InnerDrawerAnimation.quadratic,
+            backgroundDecoration: BoxDecoration(color: context.theme.cardColor),
+            duration: const Duration(milliseconds: 400),
+            tapScaffoldEnabled: false,
+            velocity: 0.01,
+            innerDrawerCallback: (a) => print(a),
+            leftChild: Container(
+              color: context.theme.cardColor,
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Obx(
+                      () => ListView(
+                        children: [
+                          ...kLibraryTabsStock
+                              .asMap()
+                              .entries
+                              .map(
+                                (e) => NamidaDrawerListTile(
+                                  enabled: SettingsController.inst.selectedLibraryTab.value == e.value.toEnum,
+                                  title: e.value.toEnum.toText,
+                                  icon: e.value.toEnum.toIcon,
+                                  onTap: () async {
+                                    ScrollSearchController.inst.animatePageController(e.value.toEnum.toInt);
+                                    await Future.delayed(const Duration(milliseconds: 100));
+                                    toggleDrawer();
+                                  },
+                                ),
+                              )
+                              .toList(),
+                          NamidaDrawerListTile(
+                            enabled: false,
+                            title: Language.inst.QUEUES,
+                            icon: Broken.driver,
+                            onTap: () {
+                              NamidaOnTaps.inst.openQueuesPage();
+                              _innerDrawerKey.currentState?.toggle();
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  NamidaDrawerListTile(
+                    enabled: false,
+                    title: Language.inst.SETTINGS,
+                    icon: Broken.setting,
+                    onTap: () {
+                      Get.to(() => const SettingsPage());
+                      toggleDrawer();
+                    },
+                  ),
+                ],
+              ),
+            ),
+            scaffold: Stack(
+              children: [
+                HomePage(
+                  title: title,
+                  actions: actions,
+                  actionsToAdd: actionsToAdd,
+                  onDrawerIconPressed: () => toggleDrawer(),
+                  child: child,
+                ),
+                const Hero(tag: 'MINIPLAYER', child: MiniPlayerParent()),
+                const Positioned(
+                  bottom: 60.0,
+                  child: SelectedTracksPreviewContainer(),
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -235,7 +320,7 @@ class CustomReorderableDelayedDragStartListener extends ReorderableDragStartList
   final Duration delay;
 
   const CustomReorderableDelayedDragStartListener({
-    this.delay = const Duration(milliseconds: 1),
+    this.delay = const Duration(milliseconds: 50),
     Key? key,
     required Widget child,
     required int index,

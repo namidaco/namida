@@ -1,11 +1,20 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/class/playlist.dart';
+import 'package:namida/class/queue.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/translations/strings.dart';
+import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/artist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/genre_tracks_subpage.dart';
+import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 
 class NamidaOnTaps {
   static final NamidaOnTaps inst = NamidaOnTaps();
@@ -48,6 +57,48 @@ class NamidaOnTaps {
         tracks: tracks,
       ),
       preventDuplicates: false,
+    );
+  }
+
+  Future<void> onQueueTap(Queue queue) async {
+    Get.to(
+      () => QueueTracksPage(queue: queue),
+      preventDuplicates: false,
+    );
+  }
+
+  Future<void> openQueuesPage() async {
+    if (QueueController.inst.queueList.isEmpty) {
+      await QueueController.inst.prepareQueuesFile();
+    }
+    Get.to(() => QueuesPage());
+  }
+
+  void onRemoveTrackFromPlaylist(List<Track> tracks, Playlist playlist) {
+    Map<int, TrackWithDate> playlisttracks = {};
+    for (final t in tracks) {
+      final pltr = playlist.tracks.firstWhere((element) => element.track == t);
+      playlisttracks.addAll({playlist.tracks.indexOf(pltr): pltr});
+    }
+    for (final t in tracks) {
+      PlaylistController.inst.removeTracksFromPlaylist(playlist.id, playlist.tracks.where((element) => element.track == t).toList());
+    }
+    Get.snackbar(
+      Language.inst.UNDO_CHANGES,
+      Language.inst.UNDO_CHANGES_DELETED_TRACK,
+      mainButton: TextButton(
+        onPressed: () {
+          playlisttracks.forEach((key, value) {
+            PlaylistController.inst.insertTracksInPlaylist(
+              playlist.id,
+              [value],
+              key,
+            );
+          });
+          Get.closeAllSnackbars();
+        },
+        child: Text(Language.inst.UNDO),
+      ),
     );
   }
 }
