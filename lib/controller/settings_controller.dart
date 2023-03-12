@@ -84,6 +84,7 @@ class SettingsController extends GetxController {
   final RxInt playerPauseFadeDurInMilli = 300.obs;
   final RxInt totalListenedTimeInSec = 0.obs;
   final RxString lastPlayedTrackPath = ''.obs;
+  final RxBool displayFavouriteButtonInNotification = false.obs;
 
   final Rx<TrackPlayMode> trackPlayMode = TrackPlayMode.searchResults.obs;
 
@@ -110,6 +111,9 @@ class SettingsController extends GetxController {
     file ??= await File(kSettingsFilePath).create(recursive: true);
     try {
       final String contents = await file.readAsString();
+      if (contents.isEmpty) {
+        return;
+      }
       final json = jsonDecode(contents);
 
       /// Assigning Values
@@ -188,6 +192,7 @@ class SettingsController extends GetxController {
       playerPauseFadeDurInMilli.value = json['playerPauseFadeDurInMilli'] as int? ?? playerPauseFadeDurInMilli.value;
       totalListenedTimeInSec.value = json['totalListenedTimeInSec'] ?? totalListenedTimeInSec.value;
       lastPlayedTrackPath.value = json['lastPlayedTrackPath'] ?? lastPlayedTrackPath.value;
+      displayFavouriteButtonInNotification.value = json['displayFavouriteButtonInNotification'] ?? displayFavouriteButtonInNotification.value;
 
       trackPlayMode.value = TrackPlayMode.values.getEnum(json['trackPlayMode']) ?? trackPlayMode.value;
 
@@ -280,6 +285,7 @@ class SettingsController extends GetxController {
       'playerPauseFadeDurInMilli': playerPauseFadeDurInMilli.value,
       'totalListenedTimeInSec': totalListenedTimeInSec.value,
       'lastPlayedTrackPath': lastPlayedTrackPath.value,
+      'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
       'trackPlayMode': trackPlayMode.value.convertToString,
 
       /// Track Items
@@ -368,6 +374,7 @@ class SettingsController extends GetxController {
     int? playerPauseFadeDurInMilli,
     int? totalListenedTimeInSec,
     String? lastPlayedTrackPath,
+    bool? displayFavouriteButtonInNotification,
     TrackPlayMode? trackPlayMode,
   }) {
     if (themeMode != null) {
@@ -627,6 +634,9 @@ class SettingsController extends GetxController {
     }
     if (lastPlayedTrackPath != null) {
       this.lastPlayedTrackPath.value = lastPlayedTrackPath;
+    }
+    if (displayFavouriteButtonInNotification != null) {
+      this.displayFavouriteButtonInNotification.value = displayFavouriteButtonInNotification;
     }
     if (trackPlayMode != null) {
       this.trackPlayMode.value = trackPlayMode;

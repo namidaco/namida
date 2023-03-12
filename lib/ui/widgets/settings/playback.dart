@@ -233,6 +233,17 @@ class PlaybackSettings extends StatelessWidget {
           ),
           Obx(
             () => CustomSwitchListTile(
+              title: Language.inst.DISPLAY_FAV_BUTTON_IN_NOTIFICATION,
+              icon: Broken.heart_tick,
+              value: SettingsController.inst.displayFavouriteButtonInNotification.value,
+              onChanged: (val) {
+                SettingsController.inst.save(displayFavouriteButtonInNotification: !val);
+                Player.inst.updateMediaItemForce();
+              },
+            ),
+          ),
+          Obx(
+            () => CustomSwitchListTile(
               leading: StackedIcon(
                 baseIcon: Broken.play,
                 secondaryIcon: Broken.pause,

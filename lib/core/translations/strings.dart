@@ -41,14 +41,18 @@ class Language {
   String get SET_AS_DEFAULT => 'Set as Default';
   String get HISTORY => 'History';
   String get FAVOURITES => 'Favourites';
-  String get TOP_MUSIC => 'Top Music';
+  String get MOST_PLAYED => 'Most Played';
   String get LYRICS => 'Lyrics';
   String get VIEW_ALL => 'View All';
+  String get TRACK_PLAY_MODE => 'Play Mode';
   String get TRACK_PLAY_MODE_SELECTED_ONLY => 'Selected track only';
   String get TRACK_PLAY_MODE_SEARCH_RESULTS => 'Search Results';
   String get TRACK_PLAY_MODE_TRACK_ALBUM => 'Track\'s Album';
   String get TRACK_PLAY_MODE_TRACK_ARTIST => 'Track\'s Main Artist';
   String get TRACK_PLAY_MODE_TRACK_GENRE => 'Track\'s Genre';
+  String get ENABLE_REORDERING => 'Enable Reordering';
+  String get DISABLE_REORDERING => 'Disable Reordering';
+  String get DISPLAY_FAV_BUTTON_IN_NOTIFICATION => 'Display Favourtie Button in Notification';
 
   /// Main
   String get EXIT_APP => 'Exit';
@@ -261,6 +265,7 @@ class Language {
   String get OR => 'or';
   String get IN => 'in';
   String get AUTO => 'Auto';
+  String get DEFAULT => 'Default';
   String get NAME => 'Name';
   String get NOTE => 'Note';
   String get STOP => 'Stop';
@@ -310,6 +315,7 @@ class Language {
   String get PLAYLISTS => 'Playlists';
   String get FOLDERS => 'Folders';
   String get QUEUE => 'Queue';
+  String get QUEUES => 'Queues';
   String get SETTINGS => 'Settings';
   String get WAVEFORMS => 'Waveforms';
 
