@@ -1,3 +1,5 @@
+import 'package:namida/core/extensions.dart';
+
 class TrackWithDate {
   late int dateAdded;
   late Track track;
@@ -9,13 +11,13 @@ class TrackWithDate {
 
   TrackWithDate.fromJson(Map<String, dynamic> json) {
     dateAdded = json['dateAdded'] ?? DateTime.now().millisecondsSinceEpoch;
-    track = Track.fromJson(json['track']);
+    track = (json['track'] as String).toTrack;
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['dateAdded'] = dateAdded;
-    data['track'] = track;
+    data['track'] = track.path;
 
     return data;
   }

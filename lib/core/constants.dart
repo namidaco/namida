@@ -25,7 +25,7 @@ final String kSettingsFilePath = '$kAppDirectoryPath/namidaSettings.json';
 final String kTracksFilePath = '$kAppDirectoryPath/tracks.json';
 final String kPlaylistsFilePath = '$kAppDirectoryPath/playlists.json';
 final String kVideoPathsFilePath = '$kAppDirectoryPath/videoFilesPaths.txt';
-final String kQueuesFilePath = '$kAppDirectoryPath/queue.json';
+final String kQueuesFilePath = '$kAppDirectoryPath/queues.json';
 final String kLatestQueueFilePath = '$kAppDirectoryPath/latestqueue.json';
 
 final String kArtworksDirPath = '$kAppDirectoryPath/Artworks/';
@@ -43,7 +43,7 @@ const Widget kBottomPaddingWidget = SizedBox(height: 102.0);
 /// Default Playlists IDs
 const kPlaylistFavourites = -1;
 const kPlaylistHistory = -2;
-const kPlaylistTopMusic = -3;
+const kPlaylistMostPlayed = -3;
 
 /// Stock Library Tabs List
 final List<String> kLibraryTabsStock = [

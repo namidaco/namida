@@ -1,11 +1,11 @@
 // ignore_for_file: depend_on_referenced_packages
 
+import 'dart:collection';
 import 'dart:math';
 import 'package:collection/collection.dart';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' hide Playlist;
 import 'package:path/path.dart' as p;
@@ -146,11 +146,17 @@ extension YearDateFormatted on int {
   }
 
   String get dateFormatted {
-    //TODO: Date Format
-    final formatDate = DateFormat('dd MMM yyyy');
+    final formatDate = DateFormat(SettingsController.inst.dateTimeFormat.value);
     final dateFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(this));
 
     return dateFormatted;
+  }
+
+  String get clockFormatted {
+    final formatClock = SettingsController.inst.hourFormat12.value ? DateFormat('hh:mm aa') : DateFormat('HH:mm');
+    final clockFormatted = formatClock.format(DateTime.fromMillisecondsSinceEpoch(this));
+
+    return clockFormatted;
   }
 }
 
@@ -411,6 +417,9 @@ extension SortToText on SortType {
 
 extension GroupSortToText on GroupSortType {
   String get toText {
+    if (this == GroupSortType.defaultSort) {
+      return Language.inst.DEFAULT;
+    }
     if (this == GroupSortType.title) {
       return Language.inst.TITLE;
     }
@@ -515,7 +524,7 @@ extension PLNAME on String {
   String get translatePlaylistName => replaceFirst('_AUTO_GENERATED_', Language.inst.AUTO_GENERATED)
       .replaceFirst('_FAVOURITES_', Language.inst.FAVOURITES)
       .replaceFirst('_HISTORY_', Language.inst.HISTORY)
-      .replaceFirst('_TOP_MUSIC_', Language.inst.TOP_MUSIC);
+      .replaceFirst('_MOST_PLAYED_', Language.inst.MOST_PLAYED);
 }
 
 extension TRACKPLAYMODE on TrackPlayMode {
@@ -566,5 +575,19 @@ extension TRACKPLAYMODE on TrackPlayMode {
       queue = Indexer.inst.groupedGenresMap.entries.firstWhere((element) => element.key == track.genresList.first).value.toList();
     }
     return queue;
+  }
+}
+
+extension StringsToTracks on List<String> {
+  List<Track> get toTracks {
+    final matchingSet = HashSet<String>.from(this);
+    final finalTracks = Indexer.inst.tracksInfoList.where((item) => matchingSet.contains(item.path));
+    return finalTracks.toList();
+  }
+}
+
+extension StringToTracks on String {
+  Track get toTrack {
+    return Indexer.inst.tracksInfoList.firstWhere((item) => item.path == this);
   }
 }

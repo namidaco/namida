@@ -17,6 +17,7 @@ enum SortType {
 }
 
 enum GroupSortType {
+  defaultSort,
   title,
   album,
   albumArtist,

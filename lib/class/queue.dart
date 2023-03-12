@@ -1,6 +1,9 @@
+import 'package:namida/class/track.dart';
+import 'package:namida/core/extensions.dart';
+
 class Queue {
   late String name;
-  late List<String> tracks;
+  late List<Track> tracks;
   late int date;
   late String comment;
   late List<String> modes;
@@ -14,8 +17,9 @@ class Queue {
   );
 
   Queue.fromJson(Map<String, dynamic> json) {
+    final List<String> res = List.castFrom<dynamic, String>(json['tracks'] ?? []);
     name = json['name'] ?? '';
-    tracks = List<String>.from(json['tracks'] ?? []);
+    tracks = res.toTracks;
     date = json['date'] ?? DateTime.now().millisecondsSinceEpoch;
     comment = json['comment'] ?? '';
     modes = List<String>.from(json['modes'] ?? []);
@@ -25,7 +29,7 @@ class Queue {
     final Map<String, dynamic> data = <String, dynamic>{};
 
     data['name'] = name;
-    data['tracks'] = tracks;
+    data['tracks'] = tracks.map((e) => e.path).toList();
     data['date'] = date;
     data['comment'] = comment;
     data['modes'] = modes;
