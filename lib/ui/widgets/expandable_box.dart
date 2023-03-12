@@ -198,6 +198,7 @@ class ChangeGridCountWidget extends StatelessWidget {
                     ? Broken.grid_1
                     : Broken.row_vertical,
         secondaryText: currentCount.toString(),
+        iconSize: 22.0,
       ),
     );
   }

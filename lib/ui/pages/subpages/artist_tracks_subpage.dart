@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/core/extensions.dart';
@@ -24,102 +23,101 @@ class ArtistTracksPage extends StatelessWidget {
   const ArtistTracksPage({super.key, required this.name, required this.colorScheme, required this.tracks, required this.albums});
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: AppThemes.inst.getAppTheme(colorScheme),
-      child: MainPageWrapper(
-        actionsToAdd: [
-          NamidaIconButton(
-            icon: Broken.more_2,
-            padding: const EdgeInsets.only(right: 14, left: 4.0),
-            onPressed: () => NamidaDialogs.inst.showArtistDialog(name, tracks),
-          )
-        ],
-        child: AnimationLimiter(
-          child: CustomScrollView(
-            slivers: [
-              // Top Container holding image and info and buttons
-              SliverToBoxAdapter(
-                child: SubpagesTopContainer(
-                  verticalPadding: 8.0,
-                  title: name,
-                  subtitle: [tracks.displayTrackKeyword, tracks[0].dateAdded.dateFormatted].join(' - '),
-                  imageWidget: Hero(
-                    tag: 'artist$name',
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 2),
-                      child: ContainerWithBorder(
-                        child: ArtworkWidget(
-                          thumnailSize: Get.width * 0.35,
-                          track: tracks[0],
-                          forceSquared: true,
-                          blur: 0,
-                          iconSize: 32.0,
-                        ),
+    return MainPageWrapper(
+      colorScheme: colorScheme,
+      actionsToAdd: [
+        NamidaIconButton(
+          icon: Broken.more_2,
+          padding: const EdgeInsets.only(right: 14, left: 4.0),
+          onPressed: () => NamidaDialogs.inst.showArtistDialog(name, tracks),
+        )
+      ],
+      child: AnimationLimiter(
+        child: CustomScrollView(
+          slivers: [
+            // Top Container holding image and info and buttons
+            SliverToBoxAdapter(
+              child: SubpagesTopContainer(
+                verticalPadding: 8.0,
+                title: name,
+                subtitle: [tracks.displayTrackKeyword, tracks[0].dateAdded.dateFormatted].join(' - '),
+                imageWidget: Hero(
+                  tag: 'artist$name',
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 2),
+                    child: ContainerWithBorder(
+                      child: ArtworkWidget(
+                        thumnailSize: Get.width * 0.35,
+                        track: tracks[0],
+                        forceSquared: true,
+                        blur: 0,
+                        iconSize: 32.0,
                       ),
                     ),
                   ),
-                  tracks: tracks,
                 ),
+                tracks: tracks,
               ),
+            ),
 
-              /// Albums
-              SliverToBoxAdapter(
-                  child: ExpansionTile(
-                leading: const Icon(Broken.music_dashboard),
-                trailing: const Icon(Broken.arrow_down_2),
-                title: Text(
-                  "${Language.inst.ALBUMS} ${albums.length}",
-                  style: context.textTheme.displayMedium,
-                ),
-                initiallyExpanded: true,
-                children: [
-                  SizedBox(
-                    height: 130,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: albums.entries
-                          .map(
-                            (e) => SizedBox(
-                              width: 100,
-                              child: AlbumCard(
-                                gridCountOverride: 4,
-                                album: e.value.toList(),
-                                staggered: false,
-                                compact: true,
-                              ),
+            /// Albums
+            SliverToBoxAdapter(
+                child: ExpansionTile(
+              leading: const Icon(Broken.music_dashboard),
+              trailing: const Icon(Broken.arrow_down_2),
+              title: Text(
+                "${Language.inst.ALBUMS} ${albums.length}",
+                style: context.textTheme.displayMedium,
+              ),
+              initiallyExpanded: true,
+              children: [
+                SizedBox(
+                  height: 130,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: albums.entries
+                        .map(
+                          (e) => SizedBox(
+                            width: 100,
+                            child: AlbumCard(
+                              gridCountOverride: 4,
+                              album: e.value.toList(),
+                              staggered: false,
+                              compact: true,
                             ),
-                          )
-                          .toList(),
-                    ),
+                          ),
+                        )
+                        .toList(),
                   ),
-                  const SizedBox(height: 12.0),
-                ],
-              )),
-              const SliverPadding(
-                padding: EdgeInsets.only(bottom: 12.0),
-              ),
-
-              /// Tracks
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) {
-                    return AnimatingTile(
-                      position: i,
-                      child: TrackTile(
-                        track: tracks[i],
-                        queue: tracks,
-                      ),
-                    );
-                  },
-                  childCount: tracks.length,
                 ),
-              ),
+                const SizedBox(height: 12.0),
+              ],
+            )),
+            const SliverPadding(
+              padding: EdgeInsets.only(bottom: 12.0),
+            ),
 
-              const SliverPadding(
-                padding: EdgeInsets.only(bottom: kBottomPadding),
-              )
-            ],
-          ),
+            /// Tracks
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, i) {
+                  return AnimatingTile(
+                    position: i,
+                    child: TrackTile(
+                      index: i,
+                      track: tracks[i],
+                      queue: tracks,
+                    ),
+                  );
+                },
+                childCount: tracks.length,
+              ),
+            ),
+
+            const SliverPadding(
+              padding: EdgeInsets.only(bottom: kBottomPadding),
+            )
+          ],
         ),
       ),
     );

@@ -14,6 +14,7 @@ import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/dialogs/setting_dialog_with_text_field.dart';
@@ -284,64 +285,67 @@ class CustomBlurryDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-      child: AlertDialog(
-        scrollable: scrollable,
-        insetPadding: insetPadding ?? const EdgeInsets.symmetric(horizontal: 50, vertical: 32),
-        clipBehavior: Clip.antiAlias,
-        titlePadding: normalTitleStyle ? const EdgeInsets.only(top: 24.0, left: 24.0, right: 24.0) : EdgeInsets.zero,
-        contentPadding: contentPadding ?? const EdgeInsets.all(14.0),
-        title: normalTitleStyle
-            ? Row(
-                children: [
-                  if (icon != null || isWarning) ...[
-                    Icon(
-                      isWarning ? Broken.warning_2 : icon,
-                    ),
-                    const SizedBox(
-                      width: 10.0,
-                    ),
-                  ],
-                  Text(
-                    isWarning ? Language.inst.WARNING : title ?? '',
-                    style: Get.textTheme.displayLarge,
-                  ),
-                ],
-              )
-            : Container(
-                color: context.theme.cardColor,
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+      child: Theme(
+        data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
+        child: AlertDialog(
+          scrollable: scrollable,
+          insetPadding: insetPadding ?? const EdgeInsets.symmetric(horizontal: 50, vertical: 32),
+          clipBehavior: Clip.antiAlias,
+          titlePadding: normalTitleStyle ? const EdgeInsets.only(top: 24.0, left: 24.0, right: 24.0) : EdgeInsets.zero,
+          contentPadding: contentPadding ?? const EdgeInsets.all(14.0),
+          title: normalTitleStyle
+              ? Row(
                   children: [
-                    if (icon != null) ...[
+                    if (icon != null || isWarning) ...[
                       Icon(
-                        icon,
+                        isWarning ? Broken.warning_2 : icon,
                       ),
                       const SizedBox(
                         width: 10.0,
                       ),
                     ],
                     Text(
-                      title ?? '',
-                      style: context.theme.textTheme.displayMedium,
-                      textAlign: TextAlign.center,
+                      isWarning ? Language.inst.WARNING : title ?? '',
+                      style: Get.textTheme.displayLarge,
                     ),
                   ],
-                ),
-              ),
-        content: SizedBox(
-          width: Get.width,
-          child: bodyText != null
-              ? Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Text(
-                    bodyText!,
-                    style: Get.textTheme.displayMedium,
-                  ),
                 )
-              : child,
+              : Container(
+                  color: context.theme.cardColor,
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (icon != null) ...[
+                        Icon(
+                          icon,
+                        ),
+                        const SizedBox(
+                          width: 10.0,
+                        ),
+                      ],
+                      Text(
+                        title ?? '',
+                        style: context.theme.textTheme.displayMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+          content: SizedBox(
+            width: Get.width,
+            child: bodyText != null
+                ? Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Text(
+                      bodyText!,
+                      style: Get.textTheme.displayMedium,
+                    ),
+                  )
+                : child,
+          ),
+          actions: actions,
         ),
-        actions: actions,
       ),
     );
   }
@@ -585,6 +589,8 @@ class StackedIcon extends StatelessWidget {
   final String? secondaryText;
   final Color? baseIconColor;
   final Color? secondaryIconColor;
+  final double? iconSize;
+  final double blurRadius;
 
   const StackedIcon({
     super.key,
@@ -593,6 +599,8 @@ class StackedIcon extends StatelessWidget {
     this.baseIconColor,
     this.secondaryIconColor,
     this.secondaryText,
+    this.iconSize,
+    this.blurRadius = 3.0,
   });
 
   @override
@@ -602,6 +610,7 @@ class StackedIcon extends StatelessWidget {
         Icon(
           baseIcon,
           color: baseIconColor,
+          size: iconSize,
         ),
         Positioned(
           bottom: 0,
@@ -610,10 +619,12 @@ class StackedIcon extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(6),
               boxShadow: [
-                BoxShadow(color: Get.theme.scaffoldBackgroundColor, spreadRadius: 0, blurRadius: 3.0),
+                BoxShadow(color: Get.theme.scaffoldBackgroundColor, spreadRadius: 0, blurRadius: blurRadius),
               ],
             ),
-            child: secondaryText != null ? Text(secondaryText!, style: context.textTheme.displaySmall) : Icon(secondaryIcon, size: 14, color: secondaryIconColor),
+            child: secondaryText != null
+                ? Text(secondaryText!, style: context.textTheme.displaySmall?.copyWith(color: context.theme.listTileTheme.iconColor))
+                : Icon(secondaryIcon, size: 14, color: secondaryIconColor),
           ),
         )
       ],
@@ -874,8 +885,18 @@ class NamidaIconButton extends StatelessWidget {
   final double verticalPadding;
   final double? iconSize;
   final IconData icon;
+  final Color? iconColor;
   final void Function()? onPressed;
-  const NamidaIconButton({super.key, this.padding, this.horizontalPadding = 10.0, this.verticalPadding = 0.0, required this.icon, required this.onPressed, this.iconSize});
+  const NamidaIconButton({
+    super.key,
+    this.padding,
+    this.horizontalPadding = 10.0,
+    this.verticalPadding = 0.0,
+    required this.icon,
+    required this.onPressed,
+    this.iconSize,
+    this.iconColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -886,7 +907,7 @@ class NamidaIconButton extends StatelessWidget {
       child: Icon(
         icon,
         size: iconSize,
-        color: context.theme.colorScheme.secondary,
+        color: iconColor ?? context.theme.colorScheme.secondary,
       ),
     );
   }
@@ -1065,6 +1086,8 @@ class SubpagesTopContainer extends StatelessWidget {
                   children: [
                     ElevatedButton(
                       onPressed: () => Player.inst.playOrPause(
+                        0,
+                        tracks.first,
                         queue: tracks,
                         shuffle: true,
                       ),

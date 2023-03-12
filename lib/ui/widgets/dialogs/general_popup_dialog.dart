@@ -2,8 +2,9 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:namida/controller/playlist_controller.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/functions.dart';
@@ -21,7 +22,6 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/dialogs/track_clear_dialog.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 
 Future<void> showGeneralPopupDialog(
   List<Track> tracks,
@@ -38,7 +38,7 @@ Future<void> showGeneralPopupDialog(
   forceSingleArtwork ??= tracks.length == 1;
   final isSingle = tracks.length == 1;
 
-  final colorDelightened = await CurrentColor.inst.generateDelightnedColor(extractColor ? tracks.first.pathToImageComp : null);
+  final colorDelightened = extractColor ? await CurrentColor.inst.generateDelightnedColor(tracks.first.pathToImageComp) : CurrentColor.inst.color.value;
 
   final List<String> availableAlbums = tracks.map((e) => e.album).toSet().toList();
   final List<String> availableArtists = tracks.map((e) => e.artistsList).expand((list) => list).toSet().toList();
@@ -438,31 +438,7 @@ Future<void> showGeneralPopupDialog(
                         title: Language.inst.REMOVE_FROM_PLAYLIST,
                         icon: Broken.box_remove,
                         onTap: () {
-                          Map<int, TrackWithDate> playlisttracks = {};
-                          for (final t in tracks) {
-                            final pltr = playlist.tracks.firstWhere((element) => element.track == t);
-                            playlisttracks.addAll({playlist.tracks.indexOf(pltr): pltr});
-                          }
-                          for (final t in tracks) {
-                            PlaylistController.inst.removeTracksFromPlaylist(playlist.id, playlist.tracks.where((element) => element.track == t).toList());
-                          }
-                          Get.snackbar(
-                            Language.inst.UNDO_CHANGES,
-                            Language.inst.UNDO_CHANGES_DELETED_TRACK,
-                            mainButton: TextButton(
-                              onPressed: () {
-                                playlisttracks.forEach((key, value) {
-                                  PlaylistController.inst.insertTracksInPlaylist(
-                                    playlist.id,
-                                    [value],
-                                    key,
-                                  );
-                                });
-                                Get.closeAllSnackbars();
-                              },
-                              child: Text(Language.inst.UNDO),
-                            ),
-                          );
+                          NamidaOnTaps.inst.onRemoveTrackFromPlaylist(tracks, playlist);
                           Get.close(1);
                         },
                       ),

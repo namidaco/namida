@@ -55,40 +55,42 @@ class ExtrasSettings extends StatelessWidget {
                   ],
                   child: SizedBox(
                     width: Get.width,
-                    child: ListView(shrinkWrap: true, children: [
-                      Container(
-                        margin: const EdgeInsets.all(4.0),
-                        child: Obx(
-                          () => ListTileWithCheckMark(
-                            title: Language.inst.AUTO,
-                            icon: Broken.recovery_convert,
-                            onTap: () => SettingsController.inst.save(autoLibraryTab: true),
-                            active: SettingsController.inst.autoLibraryTab.value,
+                    child: Column(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.all(4.0),
+                          child: Obx(
+                            () => ListTileWithCheckMark(
+                              title: Language.inst.AUTO,
+                              icon: Broken.recovery_convert,
+                              onTap: () => SettingsController.inst.save(autoLibraryTab: true),
+                              active: SettingsController.inst.autoLibraryTab.value,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 12.0),
-                      ...SettingsController.inst.libraryTabs
-                          .asMap()
-                          .entries
-                          .map(
-                            (e) => Obx(
-                              () => Container(
-                                margin: const EdgeInsets.all(4.0),
-                                child: ListTileWithCheckMark(
-                                  title: "${e.key + 1}. ${e.value.toEnum.toText}",
-                                  icon: e.value.toEnum.toIcon,
-                                  onTap: () {
-                                    SettingsController.inst.save(selectedLibraryTab: e.value.toEnum);
-                                    SettingsController.inst.save(autoLibraryTab: false);
-                                  },
-                                  active: SettingsController.inst.selectedLibraryTab.value == e.value.toEnum,
+                        const SizedBox(height: 12.0),
+                        ...SettingsController.inst.libraryTabs
+                            .asMap()
+                            .entries
+                            .map(
+                              (e) => Obx(
+                                () => Container(
+                                  margin: const EdgeInsets.all(4.0),
+                                  child: ListTileWithCheckMark(
+                                    title: "${e.key + 1}. ${e.value.toEnum.toText}",
+                                    icon: e.value.toEnum.toIcon,
+                                    onTap: () {
+                                      SettingsController.inst.save(selectedLibraryTab: e.value.toEnum);
+                                      SettingsController.inst.save(autoLibraryTab: false);
+                                    },
+                                    active: SettingsController.inst.selectedLibraryTab.value == e.value.toEnum,
+                                  ),
                                 ),
                               ),
-                            ),
-                          )
-                          .toList(),
-                    ]),
+                            )
+                            .toList(),
+                      ],
+                    ),
                   ),
                 ),
               ),

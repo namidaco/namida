@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -30,7 +31,7 @@ class WaveformController extends GetxController {
     final waveFileStat = await waveFile.stat();
 
     // If Waveform file exists in storage
-    if (await waveFile.exists() && waveFileStat.size > 80) {
+    if (await waveFile.exists() && waveFileStat.size > 10) {
       try {
         String content = await waveFile.readAsString();
         final waveform = List<double>.from(json.decode(content));
@@ -95,6 +96,16 @@ class WaveformController extends GetxController {
       await generateWaveform(tr);
     }
     generatingAllWaveforms.value = false;
+  }
+
+  double getAnimatingScale(List<double> curentScaleList) {
+    final scaleList = WaveformController.inst.curentScaleList;
+    final bitScale = Player.inst.nowPlayingPosition.value ~/ 50;
+    final dynamicScale = scaleList.asMap().containsKey(bitScale) ? scaleList[bitScale] : 0.01;
+    final intensity = SettingsController.inst.animatingThumbnailIntensity.value;
+    final finalScale = dynamicScale * (intensity / 100);
+
+    return finalScale;
   }
 
   List<double> changeListSize(List<double> list, int n) {

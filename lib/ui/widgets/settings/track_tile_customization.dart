@@ -3,12 +3,14 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -299,232 +301,235 @@ class TrackTileCustomization extends StatelessWidget {
     await Get.dialog(
       BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-        child: Dialog(
-          clipBehavior: Clip.antiAlias,
-          insetPadding: const EdgeInsets.all(64.0),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 8.0),
-                SmallListTile(
-                  title: Language.inst.NONE,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.none);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.none,
-                ),
-                SmallListTile(
-                  title: Language.inst.TITLE,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.title);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.title,
-                ),
-                SmallListTile(
-                  title: Language.inst.ARTISTS,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.artists);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.artists,
-                ),
-                SmallListTile(
-                  title: Language.inst.ALBUM,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.album);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.album,
-                ),
-                SmallListTile(
-                  title: Language.inst.ALBUM_ARTIST,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.albumArtist);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.albumArtist,
-                ),
-                SmallListTile(
-                  title: Language.inst.GENRES,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.genres);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.genres,
-                ),
-                SmallListTile(
-                  title: Language.inst.COMPOSER,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.composer);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.composer,
-                ),
-                SmallListTile(
-                  title: Language.inst.YEAR,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.year);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.year,
-                ),
-                SmallListTile(
-                  title: Language.inst.BITRATE,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.bitrate);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.bitrate,
-                ),
-                SmallListTile(
-                  title: Language.inst.CHANNELS,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.channels);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.channels,
-                ),
-                SmallListTile(
-                  title: Language.inst.COMMENT,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.comment);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.comment,
-                ),
-                SmallListTile(
-                  title: Language.inst.DATE_ADDED,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.dateAdded);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.dateAdded,
-                ),
-                SmallListTile(
-                  title: Language.inst.DATE_MODIFIED,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.dateModified);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.dateModified,
-                ),
-                SmallListTile(
-                  title: "${Language.inst.DATE_MODIFIED} (${Language.inst.CLOCK})",
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.dateModifiedClock);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.dateModifiedClock,
-                ),
-                SmallListTile(
-                  title: "${Language.inst.DATE_MODIFIED} (${Language.inst.DATE})",
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.dateModifiedDate);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.dateModifiedDate,
-                ),
-                SmallListTile(
-                  title: Language.inst.DISC_NUMBER,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.discNumber);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.discNumber,
-                ),
-                SmallListTile(
-                  title: Language.inst.TRACK_NUMBER,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.trackNumber);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.trackNumber,
-                ),
-                SmallListTile(
-                  title: Language.inst.DURATION,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.duration);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.duration,
-                ),
-                SmallListTile(
-                  title: Language.inst.FILE_NAME,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.fileName);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.fileName,
-                ),
-                SmallListTile(
-                  title: Language.inst.FILE_NAME_WO_EXT,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.fileNameWOExt);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.fileNameWOExt,
-                ),
-                SmallListTile(
-                  title: Language.inst.EXTENSION,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.extension);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.extension,
-                ),
-                SmallListTile(
-                  title: Language.inst.FOLDER_NAME,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.folder);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.folder,
-                ),
-                SmallListTile(
-                  title: Language.inst.FORMAT,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.format);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.format,
-                ),
-                SmallListTile(
-                  title: Language.inst.PATH,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.path);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.path,
-                ),
-                SmallListTile(
-                  title: Language.inst.SAMPLE_RATE,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.sampleRate);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.sampleRate,
-                ),
-                SmallListTile(
-                  title: Language.inst.SIZE,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.size);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.size,
-                ),
-                SmallListTile(
-                  title: Language.inst.YEAR,
-                  onTap: () {
-                    SettingsController.inst.updateTrackItemList(p, TrackTileItem.year);
-                    Get.close(1);
-                  },
-                  active: rowItemInSetting == TrackTileItem.year,
-                ),
-                const SizedBox(height: 8.0),
-              ],
+        child: Theme(
+          data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !Get.isDarkMode),
+          child: Dialog(
+            clipBehavior: Clip.antiAlias,
+            insetPadding: const EdgeInsets.all(64.0),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 8.0),
+                  SmallListTile(
+                    title: Language.inst.NONE,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.none);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.none,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.TITLE,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.title);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.title,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.ARTISTS,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.artists);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.artists,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.ALBUM,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.album);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.album,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.ALBUM_ARTIST,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.albumArtist);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.albumArtist,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.GENRES,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.genres);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.genres,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.COMPOSER,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.composer);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.composer,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.YEAR,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.year);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.year,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.BITRATE,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.bitrate);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.bitrate,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.CHANNELS,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.channels);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.channels,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.COMMENT,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.comment);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.comment,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.DATE_ADDED,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.dateAdded);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.dateAdded,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.DATE_MODIFIED,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.dateModified);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.dateModified,
+                  ),
+                  SmallListTile(
+                    title: "${Language.inst.DATE_MODIFIED} (${Language.inst.CLOCK})",
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.dateModifiedClock);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.dateModifiedClock,
+                  ),
+                  SmallListTile(
+                    title: "${Language.inst.DATE_MODIFIED} (${Language.inst.DATE})",
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.dateModifiedDate);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.dateModifiedDate,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.DISC_NUMBER,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.discNumber);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.discNumber,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.TRACK_NUMBER,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.trackNumber);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.trackNumber,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.DURATION,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.duration);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.duration,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.FILE_NAME,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.fileName);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.fileName,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.FILE_NAME_WO_EXT,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.fileNameWOExt);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.fileNameWOExt,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.EXTENSION,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.extension);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.extension,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.FOLDER_NAME,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.folder);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.folder,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.FORMAT,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.format);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.format,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.PATH,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.path);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.path,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.SAMPLE_RATE,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.sampleRate);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.sampleRate,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.SIZE,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.size);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.size,
+                  ),
+                  SmallListTile(
+                    title: Language.inst.YEAR,
+                    onTap: () {
+                      SettingsController.inst.updateTrackItemList(p, TrackTileItem.year);
+                      Get.close(1);
+                    },
+                    active: rowItemInSetting == TrackTileItem.year,
+                  ),
+                  const SizedBox(height: 8.0),
+                ],
+              ),
             ),
           ),
         ),

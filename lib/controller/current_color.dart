@@ -20,24 +20,21 @@ class CurrentColor extends GetxController {
   Rx<Color> color = playerStaticColor.obs;
   RxList<Color> palette = <Color>[].obs;
   RxString currentPlayingTrackPath = ''.obs;
+  RxInt currentPlayingIndex = 0.obs;
   RxBool generatingAllColorPalettes = false.obs;
 
-  Future<void> updatePlayerColor(Track track) async {
-    // Checking here will not require restart for changes to take effect
+  Future<void> updatePlayerColor(Track track, int index) async {
     if (SettingsController.inst.autoColor.value) {
       await setPlayerColor(track);
     }
     currentPlayingTrackPath.value = track.path;
+    currentPlayingIndex.value = index;
     updateThemeAndRefresh();
   }
 
   Future<void> setPlayerColor(Track track) async {
     palette.value = await extractColors(track.pathToImageComp);
     color.value = await generateDelightnedColor(track.pathToImageComp, palette.toList());
-
-    // color.value = result.darkMutedColor?.color ?? result.dominantColor?.color ?? Colors.red;
-    // color.value = mixColors([result.mutedColor?.color ?? result.vibrantColor?.color ?? result.darkMutedColor?.color ?? result.darkMutedColor?.color ?? result.dominantColor?.color ?? Colors.red]);
-    printInfo(info: "Extracted Color: $color");
   }
 
   // Future<Color> extractDelightnedColor(String path) async {
@@ -98,23 +95,21 @@ class CurrentColor extends GetxController {
 
   /// Returns [playerStaticColor] if [pathToImage] was null.
   Future<Color> generateDelightnedColor([String? pathToImage, List<Color>? palette]) async {
-    Color colorDelightened;
-    if (pathToImage == null) {
+    if (pathToImage == null || !await File(pathToImage).exists()) {
       return playerStaticColor;
     }
 
-    if (await File(pathToImage).exists()) {
-      final finalpalette = palette ?? await extractColors(pathToImage);
-      colorDelightened = getAlbumColorModifiedModern(finalpalette);
-    } else {
-      colorDelightened = playerStaticColor;
-    }
+    final finalpalette = palette ?? await extractColors(pathToImage);
+    final colorDelightened = mixIntColors(finalpalette.map((e) => e.value).toList());
+    // colorDelightened = getAlbumColorModifiedModern(finalpalette);
+
     return colorDelightened;
   }
 
   Color getAlbumColorModifiedModern(List<Color> value) {
     final Color color;
     // return Color.alphaBlend(value.first.withAlpha(220), value.last);
+
     if ((value.length) > 9) {
       color = Color.alphaBlend(value.first.withAlpha(140), Color.alphaBlend(value.elementAt(7).withAlpha(155), value.elementAt(9)));
     } else {
@@ -132,16 +127,24 @@ class CurrentColor extends GetxController {
     return colorDelightened;
   }
 
-  Color mixColors(List<Color> colors) {
-    Color mixedColor = colors[0];
-    for (int i = 1; i < colors.length; i++) {
-      mixedColor = Color.lerp(mixedColor, colors[i], 0.5) ?? Colors.transparent;
+  Color mixIntColors(List<int> colors) {
+    int red = 0;
+    int green = 0;
+    int blue = 0;
+
+    for (int color in colors) {
+      red += (color >> 16) & 0xFF;
+      green += (color >> 8) & 0xFF;
+      blue += color & 0xFF;
     }
-    HSLColor hslColor = HSLColor.fromColor(mixedColor);
-    if (hslColor.lightness > 0.65) {
-      mixedColor = hslColor.withLightness(0.55).toColor();
-    }
-    return mixedColor;
+
+    red ~/= colors.length;
+    green ~/= colors.length;
+    blue ~/= colors.length;
+
+    final hslColor = HSLColor.fromColor(Color.fromARGB(255, red, green, blue));
+    final modifiedColor = hslColor.withLightness(0.4).toColor();
+    return modifiedColor;
   }
 
   Color? delightnedColor(Color? color) {
