@@ -17,6 +17,7 @@ class SettingsController extends GetxController {
   final RxBool autoColor = true.obs;
   final RxInt staticColor = kMainColor.value.obs;
   final Rx<LibraryTab> selectedLibraryTab = LibraryTab.tracks.obs;
+  final Rx<LibraryTab> staticLibraryTab = LibraryTab.tracks.obs;
   final RxBool autoLibraryTab = true.obs;
   final RxList<String> libraryTabs = kLibraryTabsStock.obs;
   final RxInt searchResultsPlayMode = 1.obs;
@@ -122,7 +123,10 @@ class SettingsController extends GetxController {
       themeMode.value = ThemeMode.values.getEnum(json['themeMode']) ?? themeMode.value;
       autoColor.value = json['autoColor'] ?? autoColor.value;
       staticColor.value = json['staticColor'] ?? staticColor.value;
-      selectedLibraryTab.value = LibraryTab.values.getEnum(json['selectedLibraryTab']) ?? selectedLibraryTab.value;
+      selectedLibraryTab.value = autoLibraryTab.value
+          ? LibraryTab.values.getEnum(json['selectedLibraryTab']) ?? selectedLibraryTab.value
+          : LibraryTab.values.getEnum(json['staticLibraryTab']) ?? staticLibraryTab.value;
+      staticLibraryTab.value = LibraryTab.values.getEnum(json['staticLibraryTab']) ?? staticLibraryTab.value;
       autoLibraryTab.value = json['autoLibraryTab'] ?? autoLibraryTab.value;
       libraryTabs.value = List<String>.from(json['libraryTabs'] ?? libraryTabs.toList());
       searchResultsPlayMode.value = json['searchResultsPlayMode'] ?? searchResultsPlayMode.value;
@@ -219,6 +223,7 @@ class SettingsController extends GetxController {
       'autoColor': autoColor.value,
       'staticColor': staticColor.value,
       'selectedLibraryTab': selectedLibraryTab.value.convertToString,
+      'staticLibraryTab': staticLibraryTab.value.convertToString,
       'autoLibraryTab': autoLibraryTab.value,
       'libraryTabs': libraryTabs.toList(),
       'searchResultsPlayMode': searchResultsPlayMode.value,
@@ -306,6 +311,7 @@ class SettingsController extends GetxController {
     int? staticColor,
     int? searchResultsPlayMode,
     LibraryTab? selectedLibraryTab,
+    LibraryTab? staticLibraryTab,
     bool? autoLibraryTab,
     List<String>? libraryTabs,
     double? borderRadiusMultiplier,
@@ -390,6 +396,9 @@ class SettingsController extends GetxController {
     }
     if (selectedLibraryTab != null) {
       this.selectedLibraryTab.value = selectedLibraryTab;
+    }
+    if (staticLibraryTab != null) {
+      this.staticLibraryTab.value = staticLibraryTab;
     }
     if (autoLibraryTab != null) {
       this.autoLibraryTab.value = autoLibraryTab;

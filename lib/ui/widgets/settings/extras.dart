@@ -82,6 +82,7 @@ class ExtrasSettings extends StatelessWidget {
                                     icon: e.value.toEnum.toIcon,
                                     onTap: () {
                                       SettingsController.inst.save(selectedLibraryTab: e.value.toEnum);
+                                      SettingsController.inst.save(staticLibraryTab: e.value.toEnum);
                                       SettingsController.inst.save(autoLibraryTab: false);
                                     },
                                     active: SettingsController.inst.selectedLibraryTab.value == e.value.toEnum,
