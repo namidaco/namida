@@ -85,7 +85,7 @@ dependencies:
   checkmark: ^0.0.2+1
   like_button: ^2.0.5
 
- 
+  
 
 dev_dependencies:
   flutter_test:
@@ -97,6 +97,17 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
+  flutter_native_splash:
+
+flutter_native_splash:
+  image: assets/namida_icon.png
+  image_dark: assets/namida_icon.png
+  color: "#dfc6a7"
+  color_dark: "#dfc6a7"
+  android: true
+  ios: false
+  web: false
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -123,6 +134,7 @@ flutter:
   # To add custom fonts to your application, add a fonts section here,
   assets:
     - assets/fonts/
+    - assets/namida_icon.png
   fonts:
     - family: broken
       fonts:
