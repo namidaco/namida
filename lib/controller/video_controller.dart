@@ -4,15 +4,16 @@ import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
+import 'package:video_player/video_player.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+
 import 'package:namida/class/track.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:video_player/video_player.dart';
-import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 class VideoController extends GetxController {
   static final VideoController inst = VideoController();
@@ -157,8 +158,7 @@ class VideoController extends GetxController {
 
     /// Video Found in Local Storage
     for (var vf in videoFilesPathList) {
-      if (vf.contains(track.filenameWOExt)) {
-        await vidcontroller?.setVolume(0.0);
+      if (checkFileNameAudioVideo(vf, track.filenameWOExt)) {
         await playAndInitializeVideo(vf, track);
         await vidcontroller?.setVolume(0.0);
         videoCurrentQuality.value = Language.inst.LOCAL;
@@ -183,22 +183,20 @@ class VideoController extends GetxController {
     }
 
     if (SettingsController.inst.videoPlaybackSource.value != 1 /* not local */) {
-      /// return if no internet
-      final connectivityResult = await connectivity.checkConnectivity();
-      if (connectivityResult == ConnectivityResult.none) {
-        return;
-      }
       localVidPath.value = '';
       youtubeLink.value = '';
 
+      /// return if no internet
+      if (await connectivity.checkConnectivity() == ConnectivityResult.none) {
+        return;
+      }
       await playAndInitializeVideo(await downloadYoutubeVideo(youtubeVideoId.value, track), track);
       printInfo(info: 'RETURNED AFTER DOWNLOAD');
     }
   }
 
-  void updateThingys() {
-    videoCurrentQuality.value = ' ? ';
-    videoTotalSize.value = 0;
+  bool checkFileNameAudioVideo(String videoFileName, String audioFileName) {
+    return videoFileName.cleanUpForComparison.contains(audioFileName.cleanUpForComparison) || videoFileName.contains(audioFileName);
   }
 
   /// track is important to initialize the player only if the user didnt skip the song

@@ -2,19 +2,20 @@
 
 import 'dart:collection';
 import 'dart:math';
-import 'package:collection/collection.dart';
 
 import 'package:flutter/material.dart';
+
+import 'package:collection/collection.dart';
 import 'package:intl/intl.dart';
-import 'package:namida/core/constants.dart';
-import 'package:youtube_explode_dart/youtube_explode_dart.dart' hide Playlist;
 import 'package:path/path.dart' as p;
+import 'package:youtube_explode_dart/youtube_explode_dart.dart' hide Playlist;
 
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -578,7 +579,7 @@ extension TRACKPLAYMODE on TrackPlayMode {
   }
 }
 
-extension StringsToTracks on List<String> {
+extension PathsToTracks on List<String> {
   List<Track> get toTracks {
     final matchingSet = HashSet<String>.from(this);
     final finalTracks = Indexer.inst.tracksInfoList.where((item) => matchingSet.contains(item.path));
@@ -586,8 +587,12 @@ extension StringsToTracks on List<String> {
   }
 }
 
-extension StringToTracks on String {
+extension PathToTrack on String {
   Track get toTrack {
     return Indexer.inst.tracksInfoList.firstWhere((item) => item.path == this);
   }
+}
+
+extension CleanUp on String {
+  String get cleanUpForComparison => toLowerCase().replaceAll(RegExp(r'/[\W\S_]/'), '');
 }
