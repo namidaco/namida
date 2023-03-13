@@ -2,15 +2,16 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
-import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/core/constants.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:palette_generator/palette_generator.dart';
 
 import 'package:namida/class/track.dart';
-import 'package:namida/core/themes.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
+import 'package:namida/core/extensions.dart';
+import 'package:namida/core/themes.dart';
 
 Color get playerStaticColor => Color(SettingsController.inst.staticColor.value);
 
@@ -34,7 +35,7 @@ class CurrentColor extends GetxController {
 
   Future<void> setPlayerColor(Track track) async {
     palette.value = await extractColors(track.pathToImage);
-    color.value = await generateDelightnedColor(track.pathToImage, palette.toList());
+    color.value = (await generateDelightnedColor(track.pathToImage, palette.toList())).withAlpha(Get.isDarkMode ? 200 : 100);
   }
 
   // Future<Color> extractDelightnedColor(String path) async {

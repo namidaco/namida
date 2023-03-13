@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:namida/class/track.dart';
 
 ///
@@ -34,6 +35,8 @@ final String kWaveformDirPath = '$kAppDirectoryPath/Waveforms/';
 final String kVideosCachePath = '$kAppDirectoryPath/Videos/';
 final String kVideosCacheTempPath = '$kAppDirectoryPath/Videos/Temp/';
 final String kLyricsDirPath = '$kAppDirectoryPath/Lyrics/';
+
+final String kDefaultNamidaImagePath = '$kArtworksDirPath.NAMIDA_DEFAULT_ARTWORK.PNG';
 
 /// Dimensions
 const double kBottomPadding = 102.0;

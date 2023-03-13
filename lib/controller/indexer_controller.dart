@@ -3,9 +3,11 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import 'package:get/get.dart';
-import 'package:on_audio_query/on_audio_query.dart';
 import 'package:on_audio_edit/on_audio_edit.dart' as audioedit;
+import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -307,6 +309,13 @@ class Indexer extends GetxController {
 
     tracksInfoList.map((track) => track.toJson()).toList();
     File(kTracksFilePath).writeAsStringSync(json.encode(tracksInfoList));
+
+    /// Creating Default Artwork
+    if (!await File(kDefaultNamidaImagePath).exists()) {
+      ByteData byteData = await rootBundle.load('assets/namida_icon.png');
+      File file = await File(kDefaultNamidaImagePath).create(recursive: true);
+      await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+    }
   }
 
   Future<void> readTrackData({File? file}) async {

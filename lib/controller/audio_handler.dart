@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:get/get.dart';
@@ -13,6 +14,7 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
 class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHandler {
@@ -307,7 +309,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     } else {
       skipToQueueItem(0);
     }
-    await _player.play();
+    await play();
   }
 
   @override
@@ -317,7 +319,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     } else {
       skipToQueueItem(currentQueue.length - 1);
     }
-    await _player.play();
+    await play();
   }
 
   @override
@@ -409,7 +411,7 @@ extension TrackToAudioSourceMediaItem on Track {
         album: album,
         genre: genresList.take(3).join(', '),
         duration: Duration(milliseconds: duration),
-        artUri: Uri.file(pathToImage),
+        artUri: Uri.file(File(pathToImage).existsSync() ? pathToImage : kDefaultNamidaImagePath),
       );
 }
 
