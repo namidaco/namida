@@ -7,10 +7,10 @@ import 'dart:io';
 
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/extensions.dart';
 
 class Lyrics {
   static final Lyrics inst = Lyrics();

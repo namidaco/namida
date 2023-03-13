@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
-import 'package:get/get.dart';
+
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:get/get.dart';
 
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/core/constants.dart';

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:namida/controller/indexer_controller.dart';
 
+import 'package:get/get.dart';
+
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
-import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/widgets/dialogs/edit_tags_dialog.dart';

@@ -1,8 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_archive/flutter_archive.dart';
+
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_archive/flutter_archive.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
@@ -12,11 +13,10 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
+import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extras.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
-
-import 'package:namida/main.dart';
 
 final RxBool isCreatingBackup = false.obs;
 final RxBool isRestoringBackup = false.obs;

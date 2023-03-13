@@ -1,13 +1,14 @@
 import 'package:flutter/cupertino.dart';
-import 'package:get/get.dart';
+
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:get/get.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/translations/strings.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/artist_card.dart';

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
 
 import 'package:namida/controller/current_color.dart';
@@ -6,6 +7,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
+import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/advanced.dart';
 import 'package:namida/ui/widgets/settings/backup_restore.dart';
@@ -13,10 +15,8 @@ import 'package:namida/ui/widgets/settings/customizations.dart';
 import 'package:namida/ui/widgets/settings/extras.dart';
 import 'package:namida/ui/widgets/settings/indexer.dart';
 import 'package:namida/ui/widgets/settings/indexing_percentage.dart';
-import 'package:namida/ui/widgets/settings/theme_setting.dart';
 import 'package:namida/ui/widgets/settings/playback.dart';
-
-import 'package:namida/main.dart';
+import 'package:namida/ui/widgets/settings/theme_setting.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -64,8 +64,8 @@ class SettingsPage extends StatelessWidget {
 }
 
 class SettingsSubPage extends StatelessWidget {
-  final Widget child;
   final String title;
+  final Widget child;
   const SettingsSubPage({super.key, required this.child, required this.title});
   @override
   Widget build(BuildContext context) {

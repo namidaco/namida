@@ -3,8 +3,8 @@
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
-import 'package:get/get.dart';
 import 'package:collection/collection.dart';
+import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/audio_handler.dart';

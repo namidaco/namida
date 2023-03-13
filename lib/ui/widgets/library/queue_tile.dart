@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
 
 import 'package:namida/class/queue.dart';
-import 'package:namida/core/functions.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';

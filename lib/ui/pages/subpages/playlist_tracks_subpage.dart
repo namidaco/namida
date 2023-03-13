@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/playlist.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/strings.dart';
+import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
-
-import 'package:namida/main.dart';
 
 class PlaylisTracksPage extends StatelessWidget {
   final Playlist playlist;

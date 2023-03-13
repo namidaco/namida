@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
+
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/core/extensions.dart';
 

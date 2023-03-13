@@ -1,15 +1,16 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+
 import 'package:checkmark/checkmark.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:namida/core/constants.dart';
-import 'package:on_audio_edit/on_audio_edit.dart';
 import 'package:get/get.dart';
+import 'package:on_audio_edit/on_audio_edit.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';

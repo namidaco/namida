@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+
 import 'package:file_picker/file_picker.dart';
+import 'package:get/get.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
+import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/indexing_percentage.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
-
-import 'package:namida/main.dart';
 
 class IndexerSettings extends StatelessWidget {
   IndexerSettings({super.key});

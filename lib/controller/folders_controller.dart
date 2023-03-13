@@ -38,11 +38,9 @@ class Folders extends GetxController {
   }
 
   stepOut() {
-    // printInfo(info: currentPath.value);
-
     final parts = currentPath.split('/');
     parts.removeLast();
-    print(kStoragePaths.last);
+    printInfo(info: kStoragePaths.last);
     if (currentPath.value == kStoragePaths.first || currentPath.value == kStoragePaths.last) {
       isHome.value = true;
       return;

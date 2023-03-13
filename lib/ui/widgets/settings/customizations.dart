@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
-import 'package:namida/ui/widgets/settings/miniplayer_customization.dart';
 
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -9,6 +9,7 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/widgets/settings/album_tile_customization.dart';
+import 'package:namida/ui/widgets/settings/miniplayer_customization.dart';
 import 'package:namida/ui/widgets/settings/track_tile_customization.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 

@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
+
+import 'package:extended_image/extended_image.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';

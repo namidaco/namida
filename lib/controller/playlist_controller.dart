@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
+
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
@@ -15,7 +16,6 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/translations/strings.dart';
 
 class PlaylistController extends GetxController {
   static PlaylistController inst = PlaylistController();
