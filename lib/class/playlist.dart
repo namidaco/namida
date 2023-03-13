@@ -20,7 +20,7 @@ class Playlist {
   Playlist.fromJson(Map<String, dynamic> json) {
     id = json['id'] ?? 0;
     name = json['name'] ?? '';
-    tracks = List<TrackWithDate>.from(json['tracks'].map((track) => TrackWithDate.fromJson(track)).toList());
+    tracks = List<TrackWithDate>.from((json['tracks'] ?? []).map((track) => TrackWithDate.fromJson(track)).toList());
     date = json['date'] ?? DateTime.now().millisecondsSinceEpoch;
     comment = json['comment'] ?? '';
     modes = List<String>.from(json['modes'] ?? []);

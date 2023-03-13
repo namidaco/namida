@@ -1,13 +1,15 @@
 import 'dart:ui';
 
-import 'package:checkmark/checkmark.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+import 'package:checkmark/checkmark.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 import 'package:like_button/like_button.dart';
-import 'package:namida/class/track.dart';
+import 'package:wheel_slider/wheel_slider.dart';
 
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -18,7 +20,6 @@ import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/dialogs/setting_dialog_with_text_field.dart';
-import 'package:wheel_slider/wheel_slider.dart';
 
 class CustomSwitchListTile extends StatelessWidget {
   final bool value;
@@ -1163,26 +1164,27 @@ class NamidaDrawerListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.5),
       child: Material(
+        color: enabled ? CurrentColor.inst.color.value : context.theme.cardColor,
         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
         child: InkWell(
           onTap: onTap,
+          highlightColor: context.theme.scaffoldBackgroundColor.withAlpha(100),
           borderRadius: BorderRadius.circular(8.0.multipliedRadius),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             alignment: Alignment.center,
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
+            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
             decoration: BoxDecoration(
-              color: enabled ? CurrentColor.inst.color.value : null,
               borderRadius: BorderRadius.circular(8.0.multipliedRadius),
               boxShadow: enabled
                   ? [
                       BoxShadow(
-                        color: CurrentColor.inst.color.value,
-                        spreadRadius: 0.4,
-                        blurRadius: 12.0,
+                        color: CurrentColor.inst.color.value.withAlpha(100),
+                        spreadRadius: 0.2,
+                        blurRadius: 8.0,
                         offset: const Offset(0.0, 4.0),
                       ),
                     ]
@@ -1199,6 +1201,7 @@ class NamidaDrawerListTile extends StatelessWidget {
                   title,
                   style: context.textTheme.displayMedium?.copyWith(
                     color: enabled ? Colors.white.withAlpha(200) : null,
+                    fontSize: context.width / 28,
                   ),
                 ),
               ],
@@ -1251,6 +1254,79 @@ class SearchPageTitleRow extends StatelessWidget {
         ),
         const SizedBox(width: 16.0),
       ],
+    );
+  }
+}
+
+class NamidaLogoContainer extends StatelessWidget {
+  const NamidaLogoContainer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0).add(const EdgeInsets.only(top: 16.0, bottom: 8.0)),
+      child: Material(
+        borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+        child: InkWell(
+          onTap: () {},
+          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            alignment: Alignment.center,
+            width: double.infinity,
+            height: 54.0,
+            padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+            decoration: BoxDecoration(
+              color: Get.isDarkMode ? const Color(0xffb9a48b).withAlpha(200) : const Color(0xffdfc6a7).withAlpha(255),
+              borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xffdfc6a7).withAlpha(Get.isDarkMode ? 40 : 100),
+                  spreadRadius: 0.2,
+                  blurRadius: 8.0,
+                  offset: const Offset(0.0, 4.0),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Image.asset(
+                  'assets/namida_icon.png',
+                  width: 40.0,
+                  height: 40.0,
+                  cacheHeight: 240,
+                  cacheWidth: 240,
+                ),
+                const SizedBox(width: 8.0),
+                Text(
+                  'Namida',
+                  style: context.textTheme.displayLarge?.copyWith(
+                    color: Color.alphaBlend(const Color(0xffdfc6a7).withAlpha(90), Colors.white),
+                    fontSize: context.width / 26,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class NamidaContainerDivider extends StatelessWidget {
+  const NamidaContainerDivider({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 3,
+      width: 42.0,
+      margin: const EdgeInsets.all(10.0),
+      decoration: BoxDecoration(
+        color: context.theme.dividerColor.withAlpha(Get.isDarkMode ? 100 : 20),
+        borderRadius: BorderRadius.circular(18.0.multipliedRadius),
+      ),
     );
   }
 }

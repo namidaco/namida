@@ -2,38 +2,41 @@
 
 import 'dart:io';
 
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:external_path/external_path.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:external_path/external_path.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
 import 'package:on_audio_edit/on_audio_edit.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import 'package:namida/core/functions.dart';
-import 'package:namida/core/extensions.dart';
-import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/packages/inner_drawer.dart';
-import 'package:namida/ui/pages/settings_page.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/packages/miniplayer.dart';
+import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
-import 'package:namida/controller/scroll_search_controller.dart';
-import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
-import 'package:namida/core/translations/strings.dart';
-import 'package:namida/ui/widgets/selected_tracks_preview.dart';
-import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
+import 'package:namida/core/translations/strings.dart';
 import 'package:namida/core/translations/translations.dart';
+import 'package:namida/packages/inner_drawer.dart';
+import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/ui/pages/homepage.dart';
+import 'package:namida/ui/pages/queues_page.dart';
+import 'package:namida/ui/pages/settings_page.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/selected_tracks_preview.dart';
+import 'package:namida/ui/widgets/settings/customizations.dart';
+import 'package:namida/ui/widgets/settings/theme_setting.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,14 +75,21 @@ void main() async {
 
   kAppDirectoryPath = await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
 
-  await Future.wait([
-    Directory(kArtworksDirPath).create(),
-    Directory(kPaletteDirPath).create(),
-    Directory(kWaveformDirPath).create(),
-    Directory(kVideosCachePath).create(),
-    Directory(kVideosCacheTempPath).create(recursive: true),
-    Directory(kLyricsDirPath).create(),
+  Future<void> createDirectories(List<String> paths) async {
+    for (final p in paths) {
+      await Directory(p).create(recursive: true);
+    }
+  }
+
+  await createDirectories([
+    kArtworksDirPath,
+    kPaletteDirPath,
+    kWaveformDirPath,
+    kVideosCachePath,
+    kVideosCacheTempPath,
+    kLyricsDirPath,
   ]);
+
   final paths = await ExternalPath.getExternalStorageDirectories();
   kStoragePaths.assignAll(paths);
   kDirectoriesPaths = paths.map((path) => "$path/${ExternalPath.DIRECTORY_MUSIC}").toSet();
@@ -98,11 +108,11 @@ void main() async {
   Indexer.inst.updateWaveformSizeInStorage();
   Indexer.inst.updateVideosSizeInStorage();
 
-  PlaylistController.inst.preparePlaylistFile();
   VideoController.inst.getVideoFiles();
 
+  await PlaylistController.inst.preparePlaylistFile();
   await Player.inst.initializePlayer();
-  await QueueController.inst.prepareLatestQueueFile();
+  await QueueController.inst.prepareQueuesFile();
 
   FlutterNativeSplash.remove();
   runApp(const MyApp());
@@ -146,19 +156,17 @@ class MyApp extends StatelessWidget {
       onPointerDown: (_) {
         Get.focusScope?.unfocus();
       },
-      child: Obx(
-        () => GetMaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Namida',
-          theme: AppThemes.inst.getAppTheme(Colors.transparent, true),
-          darkTheme: AppThemes.inst.getAppTheme(Colors.transparent, false),
-          themeMode: SettingsController.inst.themeMode.value,
-          translations: MyTranslation(),
-          builder: (context, widget) {
-            return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
-          },
-          home: MainPageWrapper(),
-        ),
+      child: GetMaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Namida',
+        theme: AppThemes.inst.getAppTheme(Colors.transparent, true),
+        darkTheme: AppThemes.inst.getAppTheme(Colors.transparent, false),
+        themeMode: SettingsController.inst.themeMode.value,
+        translations: MyTranslation(),
+        builder: (context, widget) {
+          return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
+        },
+        home: MainPageWrapper(),
       ),
     );
   }
@@ -177,6 +185,7 @@ class MainPageWrapper extends StatelessWidget {
     if (child != null) {
       Get.offAll(() => MainPageWrapper());
     }
+    ScrollSearchController.inst.isGlobalSearchMenuShown.value = false;
     _innerDrawerKey.currentState?.toggle();
   }
 
@@ -190,30 +199,31 @@ class MainPageWrapper extends StatelessWidget {
       child: Obx(
         () => AnimatedTheme(
           duration: const Duration(milliseconds: 500),
-          data: AppThemes.inst.getAppTheme(colorScheme ?? CurrentColor.inst.color.value, !context.isDarkMode),
+          data: AppThemes.inst.getAppTheme(colorScheme ?? CurrentColor.inst.color.value, !Get.isDarkMode),
           child: InnerDrawer(
             key: _innerDrawerKey,
             onTapClose: true,
-            colorTransitionChild: context.theme.scaffoldBackgroundColor,
+            colorTransitionChild: Colors.black54,
             colorTransitionScaffold: Colors.black54,
             offset: const IDOffset.only(left: 0.0),
             proportionalChildArea: true,
             borderRadius: 32.0.multipliedRadius,
             leftAnimationType: InnerDrawerAnimation.quadratic,
             rightAnimationType: InnerDrawerAnimation.quadratic,
-            backgroundDecoration: BoxDecoration(color: context.theme.cardColor),
+            backgroundDecoration: BoxDecoration(color: context.theme.scaffoldBackgroundColor),
             duration: const Duration(milliseconds: 400),
             tapScaffoldEnabled: false,
             velocity: 0.01,
-            innerDrawerCallback: (a) => print(a),
             leftChild: Container(
-              color: context.theme.cardColor,
+              color: context.theme.scaffoldBackgroundColor,
               child: Column(
                 children: [
                   Expanded(
                     child: Obx(
                       () => ListView(
                         children: [
+                          const NamidaLogoContainer(),
+                          const NamidaContainerDivider(),
                           ...kLibraryTabsStock
                               .asMap()
                               .entries
@@ -235,13 +245,34 @@ class MainPageWrapper extends StatelessWidget {
                             title: Language.inst.QUEUES,
                             icon: Broken.driver,
                             onTap: () {
-                              NamidaOnTaps.inst.openQueuesPage();
-                              _innerDrawerKey.currentState?.toggle();
+                              Get.to(() => QueuesPage());
+                              toggleDrawer();
                             },
                           ),
                         ],
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 12.0),
+                  Material(
+                    borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                    child: ToggleThemeModeContainer(
+                      width: Get.width / 2.3,
+                      blurRadius: 3.0,
+                    ),
+                  ),
+                  const SizedBox(height: 8.0),
+                  NamidaDrawerListTile(
+                    enabled: false,
+                    title: Language.inst.CUSTOMIZATIONS,
+                    icon: Broken.brush_1,
+                    onTap: () {
+                      Get.to(() => SettingsSubPage(
+                            title: Language.inst.CUSTOMIZATIONS,
+                            child: CustomizationSettings(),
+                          ));
+                      toggleDrawer();
+                    },
                   ),
                   NamidaDrawerListTile(
                     enabled: false,
@@ -252,24 +283,31 @@ class MainPageWrapper extends StatelessWidget {
                       toggleDrawer();
                     },
                   ),
+                  const SizedBox(height: 8.0),
                 ],
               ),
             ),
-            scaffold: Stack(
-              children: [
-                HomePage(
-                  title: title,
-                  actions: actions,
-                  actionsToAdd: actionsToAdd,
-                  onDrawerIconPressed: () => toggleDrawer(),
-                  child: child,
+            scaffold: Obx(
+              () => AnimatedTheme(
+                duration: const Duration(milliseconds: 500),
+                data: AppThemes.inst.getAppTheme(colorScheme ?? CurrentColor.inst.color.value, !Get.isDarkMode),
+                child: Stack(
+                  children: [
+                    HomePage(
+                      title: title,
+                      actions: actions,
+                      actionsToAdd: actionsToAdd,
+                      onDrawerIconPressed: () => toggleDrawer(),
+                      child: child,
+                    ),
+                    const Hero(tag: 'MINIPLAYER', child: MiniPlayerParent()),
+                    const Positioned(
+                      bottom: 60.0,
+                      child: SelectedTracksPreviewContainer(),
+                    ),
+                  ],
                 ),
-                const Hero(tag: 'MINIPLAYER', child: MiniPlayerParent()),
-                const Positioned(
-                  bottom: 60.0,
-                  child: SelectedTracksPreviewContainer(),
-                ),
-              ],
+              ),
             ),
           ),
         ),

@@ -97,6 +97,7 @@ class QueueController extends GetxController {
       sortQueues();
       printInfo(info: "All Queues: ${queueList.length}");
     }
+    await prepareLatestQueueFile();
   }
 
   void sortQueues() {
