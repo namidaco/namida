@@ -51,6 +51,10 @@ class Player {
     _audioHandler?.reorderTrack(oldIndex, newIndex);
   }
 
+  void shuffleNextTracks() {
+    _audioHandler?.shuffleNextTracks();
+  }
+
   Future<void> addToQueue(List<Track> tracks, {bool insertNext = false}) async {
     await _audioHandler?.addToQueue(tracks, insertNext: insertNext);
   }

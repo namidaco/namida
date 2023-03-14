@@ -30,6 +30,8 @@ class ScrollSearchController extends GetxController {
   Rx<ScrollController> genreScrollcontroller = ScrollController().obs;
   Rx<ScrollController> playlistScrollcontroller = ScrollController().obs;
 
+  ScrollController queueScrollController = ScrollController();
+
   RxBool isTrackBarVisible = true.obs;
   RxBool isAlbumBarVisible = true.obs;
   RxBool isArtistBarVisible = true.obs;
@@ -203,5 +205,15 @@ class ScrollSearchController extends GetxController {
   void clearPlaylistSearchTextField() {
     PlaylistController.inst.searchPlaylists('');
     showPlaylistSearchBox.value = false;
+  }
+
+  void animateQueueToCurrentTrack(int index) {
+    if (queueScrollController.hasClients) {
+      queueScrollController.animateTo(
+        (SettingsController.inst.trackListTileHeight.value * 1.15) * index - 120,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOutQuint,
+      );
+    }
   }
 }

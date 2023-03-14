@@ -1,8 +1,6 @@
 // This is originally a part of [Tear Music](https://github.com/tearone/tearmusic), edited to fit Namida.
 // Credits goes for the original author @55nknown
 
-// ignore: prefer_const_constructors_in_immutables
-
 import 'dart:async';
 import 'dart:ui';
 
@@ -146,6 +144,10 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
   bool bounceUp = false;
   bool bounceDown = false;
   RxDouble seekValue = 0.0.obs;
+  bool isPlayPauseButtonHighlighted = false;
+  bool isReorderingQueue = false;
+  final scrollController = ScrollSearchController.inst.queueScrollController;
+  RxBool isArrowDown = true.obs;
   @override
   void initState() {
     super.initState();
@@ -165,6 +167,13 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
+    scrollController.addListener(() {
+      if (scrollController.position.pixels > (SettingsController.inst.trackListTileHeight.value * 1.15) * Player.inst.currentIndex.value - 120) {
+        isArrowDown.value = false;
+      } else {
+        isArrowDown.value = true;
+      }
+    });
   }
 
   @override
@@ -225,7 +234,6 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
     offset = maxOffset * 2;
     bounceUp = false;
     snap(haptic: haptic);
-    ScrollSearchController.inst.animateQueueToCurrentTrack(Player.inst.currentIndex.value);
   }
 
   void snap({bool haptic = true}) {
@@ -241,55 +249,36 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
     if (haptic && (prevOffset - offset).abs() > actuationOffset) HapticFeedback.lightImpact();
   }
 
-  void snapToPrev() {
+  void snapToPrev() async {
     sOffset = -sMaxOffset;
-    sAnim
-        .animateTo(
-      -1.0,
-      curve: bouncingCurve,
-      duration: const Duration(milliseconds: 300),
-    )
-        .then((_) {
-      Player.inst.previous();
+
+    await sAnim.animateTo(-1.0, curve: bouncingCurve, duration: const Duration(milliseconds: 300)).then((_) {
       sOffset = 0;
       sAnim.animateTo(0.0, duration: Duration.zero);
     });
+    await Player.inst.previous();
     if ((sPrevOffset - sOffset).abs() > actuationOffset) HapticFeedback.lightImpact();
   }
 
   void snapToCurrent() {
     sOffset = 0;
-    sAnim.animateTo(
-      0.0,
-      curve: bouncingCurve,
-      duration: const Duration(milliseconds: 300),
-    );
-
+    sAnim.animateTo(0.0, curve: bouncingCurve, duration: const Duration(milliseconds: 300));
     if ((sPrevOffset - sOffset).abs() > actuationOffset) HapticFeedback.lightImpact();
   }
 
-  void snapToNext() {
+  void snapToNext() async {
     sOffset = sMaxOffset;
-    sAnim
-        .animateTo(
-      1.0,
-      curve: bouncingCurve,
-      duration: const Duration(milliseconds: 300),
-    )
-        .then((_) {
-      Player.inst.next();
+
+    await sAnim.animateTo(1.0, curve: bouncingCurve, duration: const Duration(milliseconds: 300)).then((_) {
       sOffset = 0;
       sAnim.animateTo(0.0, duration: Duration.zero);
     });
+    await Player.inst.next();
     if ((sPrevOffset - sOffset).abs() > actuationOffset) HapticFeedback.lightImpact();
   }
 
-  bool isPlayPauseButtonHighlighted = false;
-  bool isReorderingQueue = false;
-  final scrollController = ScrollSearchController.inst.queueScrollController;
   @override
   Widget build(BuildContext context) {
-    ScrollSearchController.inst.animateQueueToCurrentTrack(Player.inst.currentIndex.value);
     return WillPopScope(
       onWillPop: () {
         bool val = true;
@@ -338,7 +327,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
           setState(() => queueScrollable = offset >= maxOffset * 2);
         },
         onPointerUp: (event) {
-          if (offset <= maxOffset) return;
+          if (offset <= maxOffset || offset > maxOffset) return;
           if (scrollController.positions.isNotEmpty && scrollController.positions.first.pixels > 0.0 && offset >= maxOffset * 2) return;
 
           setState(() => queueScrollable = true);
@@ -687,28 +676,6 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                         ),
                                       ),
                                     ),
-                                  // if (fastOpacity > 0.0)
-                                  //   Opacity(
-                                  //     opacity: fastOpacity,
-                                  //     child: Padding(
-                                  //       padding: EdgeInsets.symmetric(horizontal: 96.0 * (2 * (!bounceDown ? icp : 0.0) + 1)),
-                                  //       child: Row(
-                                  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  //         children: [
-                                  //           IconButton(
-                                  //             iconSize: 32.0,
-                                  //             icon: Icon(Broken.previous, color: onSecondary),
-                                  //             onPressed: snapToPrev,
-                                  //           ),
-                                  //           IconButton(
-                                  //             iconSize: 32.0,
-                                  //             icon: Icon(Broken.next, color: onSecondary),
-                                  //             onPressed: snapToNext,
-                                  //           ),
-                                  //         ],
-                                  //       ),
-                                  //     ),
-                                  //   ),
                                   Padding(
                                       padding: EdgeInsets.symmetric(vertical: 20.0 * icp, horizontal: 2.0 * (1 - cp)).add(EdgeInsets.only(
                                           right: !bounceDown
@@ -930,20 +897,6 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                           width: 34,
                                           height: 34,
                                           child: IconButton(
-                                            visualDensity: VisualDensity.compact,
-                                            onPressed: () {},
-                                            padding: const EdgeInsets.all(2.0),
-                                            icon: Icon(
-                                              Broken.shuffle,
-                                              size: 20.0,
-                                              color: context.theme.colorScheme.onSecondaryContainer,
-                                            ),
-                                          ),
-                                        ),
-                                        SizedBox(
-                                          width: 34,
-                                          height: 34,
-                                          child: IconButton(
                                             tooltip: Language.inst.LYRICS,
                                             visualDensity: VisualDensity.compact,
                                             onPressed: () {
@@ -1145,28 +1098,52 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                   child: ClipRRect(
                                     borderRadius: const BorderRadius.only(topLeft: Radius.circular(38.0), topRight: Radius.circular(38.0)),
                                     child: Obx(
-                                      () => ReorderableListView.builder(
-                                        scrollController: scrollController,
-                                        onReorderStart: (index) {
-                                          isReorderingQueue = true;
-                                        },
-                                        onReorderEnd: (index) {
-                                          isReorderingQueue = false;
-                                        },
-                                        onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
-                                        physics: queueScrollable ? const AlwaysScrollableScrollPhysics() : const NeverScrollableScrollPhysics(),
-                                        itemCount: Player.inst.currentQueue.length,
-                                        itemBuilder: (context, i) {
-                                          final track = Player.inst.currentQueue[i];
-                                          return TrackTile(
-                                            index: i,
-                                            key: ValueKey(i.toString()),
-                                            track: track,
-                                            displayRightDragHandler: true,
-                                            draggableThumbnail: true,
-                                            queue: Player.inst.currentQueue.toList(),
-                                          );
-                                        },
+                                      () => Stack(
+                                        alignment: Alignment.bottomRight,
+                                        children: [
+                                          ReorderableListView.builder(
+                                            scrollController: scrollController,
+                                            padding: const EdgeInsets.only(bottom: 58.0),
+                                            onReorderStart: (index) {
+                                              isReorderingQueue = true;
+                                            },
+                                            onReorderEnd: (index) {
+                                              isReorderingQueue = false;
+                                            },
+                                            onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
+                                            physics: queueScrollable ? const AlwaysScrollableScrollPhysics() : const NeverScrollableScrollPhysics(),
+                                            itemCount: Player.inst.currentQueue.length,
+                                            itemBuilder: (context, i) {
+                                              return TrackTile(
+                                                index: i,
+                                                key: ValueKey(i.toString()),
+                                                track: Player.inst.currentQueue[i],
+                                                displayRightDragHandler: true,
+                                                draggableThumbnail: true,
+                                                queue: Player.inst.currentQueue.toList(),
+                                              );
+                                            },
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.end,
+                                              children: [
+                                                ElevatedButton(
+                                                  onPressed: () => ScrollSearchController.inst.animateQueueToCurrentTrack(Player.inst.currentIndex.value),
+                                                  child: Icon(isArrowDown.value ? Broken.arrow_down : Broken.arrow_up_1),
+                                                ),
+                                                const SizedBox(width: 6.0),
+                                                ElevatedButton.icon(
+                                                  onPressed: () => Player.inst.shuffleNextTracks(),
+                                                  label: Text(Language.inst.SHUFFLE),
+                                                  icon: const Icon(Broken.shuffle),
+                                                ),
+                                                const SizedBox(width: 8.0),
+                                              ],
+                                            ),
+                                          )
+                                        ],
                                       ),
                                     ),
                                   ),
