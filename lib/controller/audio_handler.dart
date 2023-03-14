@@ -195,14 +195,18 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     if (newIndex > oldIndex) {
       newIndex -= 1;
     }
-    int i = 0;
+    int i = currentIndex.value;
     if (oldIndex == currentIndex.value) {
       i = newIndex;
     }
-    if (oldIndex < currentIndex.value) {
+
+    /// Track is dragged from after the currentTrack to before the currentTrack.
+    if (oldIndex < currentIndex.value && newIndex > currentIndex.value) {
       i = currentIndex.value - 1;
     }
-    if (oldIndex > currentIndex.value) {
+
+    /// Track is dragged from before the currentTrack to after the currentTrack.
+    if (oldIndex > currentIndex.value && newIndex < currentIndex.value) {
       i = currentIndex.value + 1;
     }
 

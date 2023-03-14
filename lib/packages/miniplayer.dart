@@ -2,41 +2,42 @@
 // Credits goes for the original author @55nknown
 
 // ignore: prefer_const_constructors_in_immutables
+
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import 'package:animated_background/animated_background.dart';
 import 'package:animations/animations.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:namida/controller/lyrics_controller.dart';
-import 'package:namida/controller/scroll_search_controller.dart';
-import 'package:namida/core/functions.dart';
-import 'package:namida/core/themes.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/artwork.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/playback.dart';
 import 'package:namida/ui/widgets/waveform.dart';
 
 class MiniPlayerParent extends StatefulWidget {
-  // ignore: prefer_const_constructors_in_immutables
-  MiniPlayerParent({super.key});
+  const MiniPlayerParent({super.key});
 
   @override
   State<MiniPlayerParent> createState() => _MiniPlayerParentState();
@@ -65,42 +66,40 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTextStyle(
-      style: Get.textTheme.displayMedium!,
-      child: AnimatedTheme(
-        data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
-        child: Stack(
-          children: [
-            /// MiniPlayer Wallpaper
-            Positioned.fill(
-              child: AnimatedBuilder(
-                animation: animation,
-                builder: (context, child) {
-                  if (animation.value > 0.01) {
-                    return Opacity(
-                      opacity: animation.value.clamp(0.0, 1.0),
-                      child: const Wallpaper(gradient: false, particleOpacity: .3),
-                    );
-                  } else {
-                    return const SizedBox();
-                  }
-                },
-              ),
+    return AnimatedTheme(
+      duration: const Duration(milliseconds: 600),
+      data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
+      child: Stack(
+        children: [
+          /// MiniPlayer Wallpaper
+          Positioned.fill(
+            child: AnimatedBuilder(
+              animation: animation,
+              builder: (context, child) {
+                if (animation.value > 0.01) {
+                  return Opacity(
+                    opacity: animation.value.clamp(0.0, 1.0),
+                    child: const Wallpaper(gradient: false, particleOpacity: .3),
+                  );
+                } else {
+                  return const SizedBox();
+                }
+              },
             ),
+          ),
 
-            /// MiniMiniPlayer
-            Obx(
-              () => AnimatedSwitcher(
-                duration: const Duration(milliseconds: 600),
-                child: Player.inst.nowPlayingTrack.value == kDummyTrack
-                    ? const SizedBox(
-                        key: Key('emptyminiplayer'),
-                      )
-                    : MiniPlayer(key: const Key('actualminiplayer'), animation: animation),
-              ),
-            )
-          ],
-        ),
+          /// MiniMiniPlayer
+          Obx(
+            () => AnimatedSwitcher(
+              duration: const Duration(milliseconds: 600),
+              child: Player.inst.nowPlayingTrack.value == kDummyTrack
+                  ? const SizedBox(
+                      key: Key('emptyminiplayer'),
+                    )
+                  : MiniPlayer(key: const Key('actualminiplayer'), animation: animation),
+            ),
+          )
+        ],
       ),
     );
   }
@@ -143,7 +142,6 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
 
   late AnimationController playPauseAnim;
 
-  late ScrollController scrollController;
   bool queueScrollable = false;
   bool bounceUp = false;
   bool bounceDown = false;
@@ -167,13 +165,12 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    scrollController = ScrollController();
   }
 
   @override
   void dispose() {
     sAnim.dispose();
-    scrollController.dispose();
+    // scrollController.dispose();
     super.dispose();
   }
 
@@ -228,6 +225,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
     offset = maxOffset * 2;
     bounceUp = false;
     snap(haptic: haptic);
+    ScrollSearchController.inst.animateQueueToCurrentTrack(Player.inst.currentIndex.value);
   }
 
   void snap({bool haptic = true}) {
@@ -245,7 +243,6 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
 
   void snapToPrev() {
     sOffset = -sMaxOffset;
-    Player.inst.previous();
     sAnim
         .animateTo(
       -1.0,
@@ -253,6 +250,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 300),
     )
         .then((_) {
+      Player.inst.previous();
       sOffset = 0;
       sAnim.animateTo(0.0, duration: Duration.zero);
     });
@@ -272,7 +270,6 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
 
   void snapToNext() {
     sOffset = sMaxOffset;
-    Player.inst.next();
     sAnim
         .animateTo(
       1.0,
@@ -280,6 +277,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 300),
     )
         .then((_) {
+      Player.inst.next();
       sOffset = 0;
       sAnim.animateTo(0.0, duration: Duration.zero);
     });
@@ -288,8 +286,10 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
 
   bool isPlayPauseButtonHighlighted = false;
   bool isReorderingQueue = false;
+  final scrollController = ScrollSearchController.inst.queueScrollController;
   @override
   Widget build(BuildContext context) {
+    ScrollSearchController.inst.animateQueueToCurrentTrack(Player.inst.currentIndex.value);
     return WillPopScope(
       onWillPop: () {
         bool val = true;
@@ -559,7 +559,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                           child: NamidaPartyContainer(
                             finalScale: finalScale,
                             height: 2,
-                            spreadRadiusMultiplier: 0.6,
+                            spreadRadiusMultiplier: 0.8,
                             opacity: cp,
                             firstHalf: firstHalf,
                             secondHalf: secondtHalf,
@@ -768,16 +768,16 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                                       shape: BoxShape.circle,
                                                       boxShadow: [
                                                         BoxShadow(
-                                                          color: CurrentColor.inst.color.value,
+                                                          color: CurrentColor.inst.color.value.withAlpha(160),
                                                           blurRadius: 8.0,
                                                           spreadRadius: isPlayPauseButtonHighlighted ? 3.0 : 1.0,
-                                                          offset: const Offset(0, 2),
+                                                          offset: const Offset(0.0, 2.0),
                                                         ),
                                                       ],
                                                     ),
                                                     child: IconButton(
                                                       highlightColor: Colors.transparent,
-                                                      onPressed: Player.inst.playOrPause,
+                                                      onPressed: () => Player.inst.playOrPause(Player.inst.currentIndex.value, Player.inst.nowPlayingTrack.value),
                                                       icon: Padding(
                                                         padding: EdgeInsets.all(6.0 * cp * rcp),
                                                         child: Obx(
@@ -812,99 +812,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                             onPressed: snapToNext,
                                           ),
                                         ],
-                                      )
-                                      //  Text("WHAT IS THISSS SO MUCHHHHH"),
-
-                                      // Builder(builder: (context) {
-                                      //   final audioLoading = context.select<currentTrackProvider, AudioLoadingState>((value) => value.audioLoading);
-                                      //   Widget playbackIndicator;
-
-                                      //   if (audioLoading == AudioLoadingState.loading) {
-                                      //     playbackIndicator = SizedBox(
-                                      //       key: const Key("loading"),
-                                      //       height: vp(a: 60.0, b: 80.0, c: rp),
-                                      //       width: vp(a: 60.0, b: 80.0, c: rp),
-                                      //       child: Center(
-                                      //         child: LoadingAnimationWidget.staggeredDotsWave(
-                                      //           color: context.theme.colorScheme.secondary,
-                                      //           size: 42.0,
-                                      //         ),
-                                      //       ),
-                                      //     );
-                                      //   } else if (audioLoading == AudioLoadingState.error) {
-                                      //     playbackIndicator = SizedBox(
-                                      //       key: const Key("error"),
-                                      //       height: vp(a: 60.0, b: 80.0, c: rp),
-                                      //       width: vp(a: 60.0, b: 80.0, c: rp),
-                                      //       child: Center(
-                                      //         child: Icon(
-                                      //           Icons.warning,
-                                      //           size: 42.0,
-                                      //           color: context.theme.colorScheme.error,
-                                      //         ),
-                                      //       ),
-                                      //     );
-                                      //   } else {
-                                      //     playbackIndicator = MultiProvider(
-                                      //       key: const Key("ready"),
-                                      //       providers: [
-                                      //         StreamProvider(create: (_) => currentTrack.MiniPlayer.positionStream, initialData: currentTrack.MiniPlayer.position),
-                                      //         StreamProvider(create: (_) => currentTrack.MiniPlayer.playingStream, initialData: currentTrack.MiniPlayer.playing),
-                                      //       ],
-                                      //       builder: (context, snapshot) => Consumer2<bool, Duration>(
-                                      //         builder: (context, value1, value2, child) {
-                                      //           if (value1) {
-                                      //             playPauseAnim.forward();
-                                      //           } else {
-                                      //             playPauseAnim.reverse();
-                                      //           }
-                                      //           return Container(
-                                      //             decoration: BoxDecoration(
-                                      //               color: Colors.black,
-                                      //               borderRadius: BorderRadius.circular(16.0),
-                                      //             ),
-                                      //             child: CustomPaint(
-                                      //               painter: MiniMiniPlayerProgressPainter(currentTrack.progress * (1 - rcp)),
-                                      //               child: FloatingActionButton(
-                                      //                 heroTag: currentTrack.playing,
-                                      //                 onPressed: () {
-                                      //                   if (currentTrack.MiniPlayer.playing) {
-                                      //                     currentTrack.pause();
-                                      //                     playPauseAnim.reverse();
-                                      //                   } else {
-                                      //                     currentTrack.play();
-                                      //                     playPauseAnim.forward();
-                                      //                   }
-                                      //                 },
-                                      //                 elevation: 0,
-                                      //                 backgroundColor: context.theme.colorScheme.surfaceTint.withOpacity(.3),
-                                      //                 child: AnimatedIcon(
-                                      //                   progress: playPauseAnim,
-                                      //                   icon: AnimatedIcons.play_pause,
-                                      //                 ),
-                                      //               ),
-                                      //             ),
-                                      //           );
-                                      //         },
-                                      //       ),
-                                      //     );
-                                      //   }
-
-                                      //   return PageTransitionSwitcher(
-                                      //     transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
-                                      //       return FadeThroughTransition(
-                                      //         animation: primaryAnimation,
-                                      //         secondaryAnimation: secondaryAnimation,
-                                      //         fillColor: Colors.transparent,
-                                      //         child: child,
-                                      //       );
-                                      //     },
-                                      //     child: playbackIndicator,
-                                      //   );
-                                      // }
-                                      // ),
-                                      // ),
-                                      ),
+                                      )),
                                 ],
                               ),
                             ),
@@ -1049,6 +957,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                                         baseIcon: Broken.document,
                                                         secondaryText: !Lyrics.inst.lyricsAvailable.value ? 'x' : '?',
                                                         iconSize: 20.0,
+                                                        blurRadius: 6.0,
                                                       )
                                                     : Icon(
                                                         Broken.document,
@@ -1072,7 +981,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                             padding: const EdgeInsets.all(2.0),
                                             icon: Icon(
                                               Broken.row_vertical,
-                                              size: 20.0,
+                                              size: 19.0,
                                               color: context.theme.colorScheme.onSecondaryContainer,
                                             ),
                                           ),
@@ -1113,24 +1022,9 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                       bottomOffset: bottomOffset,
                                       maxOffset: maxOffset,
                                       screenSize: screenSize,
-                                      // ),
                                     ),
                                   ),
                                 ),
-                                // Opacity(
-                                //   opacity: sAnim.value.clamp(0.0, 1.0),
-                                //   child: Transform.translate(
-                                //     offset: Offset(-sAnim.value * sMaxOffset / stParallax + sMaxOffset / stParallax, 0),
-                                //     child: TrackInfo(
-                                //         artist: tracks[2].artists.map((e) => e.name).join(", "),
-                                //         title: tracks[2].name,
-                                //         cp: cp,
-                                //         p: p,
-                                //         bottomOffset: bottomOffset,
-                                //         maxOffset: maxOffset,
-                                //         screenSize: screenSize),
-                                //   ),
-                                // ),
                               ],
                             );
                           },
@@ -1180,49 +1074,53 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                       final percentage = position / dur;
                                       return Padding(
                                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                                        child: ShaderMask(
-                                          blendMode: BlendMode.srcATop,
-                                          shaderCallback: (Rect bounds) {
-                                            return LinearGradient(
-                                              tileMode: TileMode.decal,
-                                              stops: [0.0, percentage, percentage + 0.005, 1.0],
-                                              colors: [
-                                                CurrentColor.inst.color.value.withAlpha(220),
-                                                CurrentColor.inst.color.value.withAlpha(180),
-                                                Colors.transparent,
-                                                Colors.transparent
-                                              ],
-                                            ).createShader(bounds);
-                                          },
-                                          child: Stack(
-                                            alignment: Alignment.center,
-                                            children: [
-                                              WaveformComponent(
-                                                color: context.theme.colorScheme.onBackground.withAlpha(110),
-                                              ),
-                                              // Slider
-                                              Opacity(
-                                                opacity: 0.0,
-                                                child: Material(
-                                                  child: Slider(
-                                                    value: percentage,
-                                                    onChanged: (double newValue) {
-                                                      seekValue.value = newValue;
-                                                    },
-                                                    min: 0.0,
-                                                    max: dur.toDouble(),
-                                                    onChangeStart: (_) {
-                                                      // Disable scrolling or other gestures while the slider is active
-                                                    },
-                                                    onChangeEnd: (newValue) {
-                                                      Player.inst.seek(Duration(milliseconds: newValue.toInt()));
-                                                      seekValue.value = 0.0;
-                                                    },
+                                        child: Stack(
+                                          children: [
+                                            WaveformComponent(
+                                              color: context.theme.colorScheme.onBackground.withAlpha(40),
+                                            ),
+                                            ShaderMask(
+                                              blendMode: BlendMode.srcIn,
+                                              shaderCallback: (Rect bounds) {
+                                                return LinearGradient(
+                                                  tileMode: TileMode.decal,
+                                                  stops: [0.0, percentage, percentage + 0.005, 1.0],
+                                                  colors: [
+                                                    Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(220), context.theme.colorScheme.onBackground).withAlpha(255),
+                                                    Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.onBackground).withAlpha(255),
+                                                    Colors.transparent,
+                                                    Colors.transparent,
+                                                  ],
+                                                ).createShader(bounds);
+                                              },
+                                              child: Stack(
+                                                alignment: Alignment.center,
+                                                children: [
+                                                  WaveformComponent(
+                                                    color: context.theme.colorScheme.onBackground.withAlpha(110),
                                                   ),
-                                                ),
-                                              )
-                                            ],
-                                          ),
+                                                  // Slider
+                                                  Opacity(
+                                                    opacity: 0.0,
+                                                    child: Material(
+                                                      child: Slider(
+                                                        value: percentage,
+                                                        onChanged: (double newValue) {
+                                                          seekValue.value = newValue;
+                                                        },
+                                                        min: 0.0,
+                                                        max: dur.toDouble(),
+                                                        onChangeEnd: (newValue) {
+                                                          Player.inst.seek(Duration(milliseconds: newValue.toInt()));
+                                                          seekValue.value = 0.0;
+                                                        },
+                                                      ),
+                                                    ),
+                                                  )
+                                                ],
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       );
                                     },
@@ -1239,47 +1137,42 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                           child: Transform.translate(
                             offset: Offset(0, (1 - queueOffset) * maxOffset),
                             child: IgnorePointer(
-                                ignoring: !queueScrollable,
-                                child: SafeArea(
-                                  bottom: false,
-                                  child: Padding(
-                                    padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 70),
-                                    child: ClipRRect(
-                                      borderRadius: const BorderRadius.only(topLeft: Radius.circular(38.0), topRight: Radius.circular(38.0)),
-                                      child: Obx(
-                                        () => ReorderableListView(
-                                          scrollController: scrollController,
-                                          cacheExtent: Get.height * 2,
-                                          onReorderStart: (index) {
-                                            isReorderingQueue = true;
-                                          },
-                                          onReorderEnd: (index) {
-                                            isReorderingQueue = false;
-                                          },
-                                          onReorder: (oldIndex, newIndex) {},
-                                          physics: queueScrollable ? const AlwaysScrollableScrollPhysics() : const NeverScrollableScrollPhysics(),
-
-                                          // padding: EdgeInsets.only(top: context.mediaQuery.padding.top + 180),
-                                          // controller: scrollController,
-                                          children: Player.inst.currentQueue
-                                              .asMap()
-                                              .entries
-                                              .map((e) => TrackTile(
-                                                    key: ValueKey(e.toString()),
-                                                    track: e.value,
-                                                    displayRightDragHandler: true,
-                                                    draggableThumbnail: true,
-                                                    queue: Player.inst.currentQueue.toList(),
-                                                  ))
-                                              .toList(),
-                                        ),
+                              ignoring: !queueScrollable,
+                              child: SafeArea(
+                                bottom: false,
+                                child: Padding(
+                                  padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 70),
+                                  child: ClipRRect(
+                                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(38.0), topRight: Radius.circular(38.0)),
+                                    child: Obx(
+                                      () => ReorderableListView.builder(
+                                        scrollController: scrollController,
+                                        onReorderStart: (index) {
+                                          isReorderingQueue = true;
+                                        },
+                                        onReorderEnd: (index) {
+                                          isReorderingQueue = false;
+                                        },
+                                        onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
+                                        physics: queueScrollable ? const AlwaysScrollableScrollPhysics() : const NeverScrollableScrollPhysics(),
+                                        itemCount: Player.inst.currentQueue.length,
+                                        itemBuilder: (context, i) {
+                                          final track = Player.inst.currentQueue[i];
+                                          return TrackTile(
+                                            index: i,
+                                            key: ValueKey(i.toString()),
+                                            track: track,
+                                            displayRightDragHandler: true,
+                                            draggableThumbnail: true,
+                                            queue: Player.inst.currentQueue.toList(),
+                                          );
+                                        },
                                       ),
                                     ),
                                   ),
-                                )
-
-                                // QueueView(controller: scrollController),
                                 ),
+                              ),
+                            ),
                           ),
                         ),
                     ],
@@ -1504,6 +1397,7 @@ class TrackImage extends StatelessWidget {
                                       offset: const Offset(0.0, 8.0),
                                     ),
                                   ],
+                                  iconSize: 24.0 + 114 * cp,
                                 ),
                               ),
                       ),
@@ -1526,6 +1420,9 @@ class LyricsWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (cp == 0.0) {
+      return child;
+    }
     return Obx(
       () => AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
