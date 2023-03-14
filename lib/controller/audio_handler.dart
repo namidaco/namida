@@ -282,8 +282,12 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
 
   @override
   Future<void> seek(Duration position) async {
-    await _player.seek(position);
-    await VideoController.inst.seek(position);
+    int p = position.inMilliseconds;
+    if (p < 0) {
+      p = 0;
+    }
+    await _player.seek(p.milliseconds);
+    await VideoController.inst.seek(p.milliseconds);
   }
 
   @override

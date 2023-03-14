@@ -664,13 +664,25 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text(
-                                              Player.inst.nowPlayingPosition.value.milliseconds.label,
-                                              style: context.textTheme.displaySmall,
+                                            GestureDetector(
+                                              onTap: () => Player.inst.seekSecondsBackward(),
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(8.0),
+                                                child: Text(
+                                                  Player.inst.nowPlayingPosition.value.milliseconds.label,
+                                                  style: context.textTheme.displaySmall,
+                                                ),
+                                              ),
                                             ),
-                                            Text(
-                                              Player.inst.nowPlayingTrack.value.duration.milliseconds.label,
-                                              style: context.textTheme.displaySmall,
+                                            GestureDetector(
+                                              onTap: () => Player.inst.seekSecondsForward(),
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(8.0),
+                                                child: Text(
+                                                  Player.inst.nowPlayingTrack.value.duration.milliseconds.label,
+                                                  style: context.textTheme.displaySmall,
+                                                ),
+                                              ),
                                             ),
                                           ],
                                         ),

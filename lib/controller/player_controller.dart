@@ -94,6 +94,14 @@ class Player {
     await _audioHandler?.seek(position);
   }
 
+  Future<void> seekSecondsForward([int seconds = 5]) async {
+    await _audioHandler?.seek(Duration(milliseconds: nowPlayingPosition.value + seconds * 1000));
+  }
+
+  Future<void> seekSecondsBackward([int seconds = 5]) async {
+    await _audioHandler?.seek(Duration(milliseconds: nowPlayingPosition.value - seconds * 1000));
+  }
+
   Future<void> playOrPause(
     int index,
     Track track, {
