@@ -112,6 +112,14 @@ class NamidaOnTaps {
   }
 }
 
-bool checkIfQueuesSameAsCurrent(List<Track> queue) {
-  return const IterableEquality().equals(queue, Player.inst.currentQueue.toList());
+bool checkIfQueuesSimilar(List<Track> q1, List<Track> q2) {
+  return const IterableEquality().equals(q1.map((e) => e.path).toList(), q2.map((element) => element.path).toList());
+}
+
+bool checkIfQueueSameAsCurrent(List<Track> queue) {
+  return checkIfQueuesSimilar(queue, Player.inst.currentQueue.toList());
+}
+
+bool checkIfQueueSameAsAllTracks(List<Track> queue) {
+  return checkIfQueuesSimilar(queue, Indexer.inst.tracksInfoList.toList());
 }

@@ -24,11 +24,11 @@ class ScrollSearchController extends GetxController {
   RxBool showGenreSearchBox = false.obs;
   RxBool showPlaylistSearchBox = false.obs;
 
-  Rx<ScrollController> trackScrollcontroller = ScrollController().obs;
-  Rx<ScrollController> albumScrollcontroller = ScrollController().obs;
-  Rx<ScrollController> artistScrollcontroller = ScrollController().obs;
-  Rx<ScrollController> genreScrollcontroller = ScrollController().obs;
-  Rx<ScrollController> playlistScrollcontroller = ScrollController().obs;
+  ScrollController trackScrollcontroller = ScrollController();
+  ScrollController albumScrollcontroller = ScrollController();
+  ScrollController artistScrollcontroller = ScrollController();
+  ScrollController genreScrollcontroller = ScrollController();
+  ScrollController playlistScrollcontroller = ScrollController();
 
   ScrollController queueScrollController = ScrollController();
 
@@ -39,44 +39,44 @@ class ScrollSearchController extends GetxController {
   RxBool isPlaylistBarVisible = true.obs;
 
   ScrollSearchController() {
-    trackScrollcontroller.value.addListener(() {
-      if (trackScrollcontroller.value.position.userScrollDirection == ScrollDirection.reverse) {
+    trackScrollcontroller.addListener(() {
+      if (trackScrollcontroller.position.userScrollDirection == ScrollDirection.reverse) {
         isTrackBarVisible.value = false;
       }
-      if (trackScrollcontroller.value.position.userScrollDirection == ScrollDirection.forward) {
+      if (trackScrollcontroller.position.userScrollDirection == ScrollDirection.forward) {
         isTrackBarVisible.value = true;
       }
     });
 
-    albumScrollcontroller.value.addListener(() {
-      if (albumScrollcontroller.value.position.userScrollDirection == ScrollDirection.reverse) {
+    albumScrollcontroller.addListener(() {
+      if (albumScrollcontroller.position.userScrollDirection == ScrollDirection.reverse) {
         isAlbumBarVisible.value = false;
       }
-      if (albumScrollcontroller.value.position.userScrollDirection == ScrollDirection.forward) {
+      if (albumScrollcontroller.position.userScrollDirection == ScrollDirection.forward) {
         isAlbumBarVisible.value = true;
       }
     });
-    artistScrollcontroller.value.addListener(() {
-      if (artistScrollcontroller.value.position.userScrollDirection == ScrollDirection.reverse) {
+    artistScrollcontroller.addListener(() {
+      if (artistScrollcontroller.position.userScrollDirection == ScrollDirection.reverse) {
         isArtistBarVisible.value = false;
       }
-      if (artistScrollcontroller.value.position.userScrollDirection == ScrollDirection.forward) {
+      if (artistScrollcontroller.position.userScrollDirection == ScrollDirection.forward) {
         isArtistBarVisible.value = true;
       }
     });
-    genreScrollcontroller.value.addListener(() {
-      if (genreScrollcontroller.value.position.userScrollDirection == ScrollDirection.reverse) {
+    genreScrollcontroller.addListener(() {
+      if (genreScrollcontroller.position.userScrollDirection == ScrollDirection.reverse) {
         isGenreBarVisible.value = false;
       }
-      if (genreScrollcontroller.value.position.userScrollDirection == ScrollDirection.forward) {
+      if (genreScrollcontroller.position.userScrollDirection == ScrollDirection.forward) {
         isGenreBarVisible.value = true;
       }
     });
-    playlistScrollcontroller.value.addListener(() {
-      if (playlistScrollcontroller.value.position.userScrollDirection == ScrollDirection.reverse) {
+    playlistScrollcontroller.addListener(() {
+      if (playlistScrollcontroller.position.userScrollDirection == ScrollDirection.reverse) {
         isPlaylistBarVisible.value = false;
       }
-      if (playlistScrollcontroller.value.position.userScrollDirection == ScrollDirection.forward) {
+      if (playlistScrollcontroller.position.userScrollDirection == ScrollDirection.forward) {
         isPlaylistBarVisible.value = true;
       }
     });

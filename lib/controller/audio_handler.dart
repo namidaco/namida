@@ -70,21 +70,6 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   /// for ensuring stabilty while fade effect is on.
   bool wantToPause = false;
 
-  // void updateAllTrackListeners(Track tr) {
-  //   CurrentColor.inst.updatePlayerColor(tr, currentIndex.value);
-  //   WaveformController.inst.generateWaveform(tr);
-  //   PlaylistController.inst.addToHistory(nowPlayingTrack.value);
-  //   increaseListenTime(tr);
-  //   SettingsController.inst.save(lastPlayedTrackPath: tr.path);
-  //   Lyrics.inst.updateLyrics(tr);
-
-  //   /// for video
-  //   if (SettingsController.inst.enableVideoPlayback.value) {
-  //     VideoController.inst.updateLocalVidPath(tr);
-  //   }
-  //   updateVideoPlayingState();
-  // }
-
   void increaseListenTime(Track track) {
     Timer.periodic(const Duration(seconds: 1), (timer) {
       nowPlayingTrack.listen((p0) {
@@ -120,14 +105,22 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
 
   ///
   /// Namida Methods.
-  Future<void> setAudioSource(int index, {bool preload = true}) async {
+  Future<void> setAudioSource(int index, {bool preload = true, bool startPlaying = true}) async {
     final tr = currentQueue.elementAt(index);
-    _player.setFilePath(tr.path, preload: preload);
-    updateCurrentMediaItem(tr);
     nowPlayingTrack.value = tr;
     currentIndex.value = index;
-
     CurrentColor.inst.updatePlayerColor(tr, index);
+    await _player.setFilePath(tr.path, preload: preload);
+
+    /// Te whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture] don't get detected.
+    /// Currently it will pause only in case the pause is coming from such an event.
+    _player.pause();
+
+    if (startPlaying) {
+      _player.play();
+    }
+    updateCurrentMediaItem(tr);
+
     WaveformController.inst.generateWaveform(tr);
     PlaylistController.inst.addToHistory(nowPlayingTrack.value);
     increaseListenTime(tr);
@@ -188,7 +181,6 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
         _player.pause();
       }
     });
-    setVolume(currentVolume.value);
   }
 
   void reorderTrack(int oldIndex, int newIndex) {
@@ -201,12 +193,12 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     }
 
     /// Track is dragged from after the currentTrack to before the currentTrack.
-    if (oldIndex < currentIndex.value && newIndex > currentIndex.value) {
+    if (oldIndex < currentIndex.value && newIndex - 1 > currentIndex.value) {
       i = currentIndex.value - 1;
     }
 
     /// Track is dragged from before the currentTrack to after the currentTrack.
-    if (oldIndex > currentIndex.value && newIndex < currentIndex.value) {
+    if (oldIndex > currentIndex.value && newIndex - 1 < currentIndex.value) {
       i = currentIndex.value + 1;
     }
 

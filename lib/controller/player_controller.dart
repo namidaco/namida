@@ -8,7 +8,6 @@ import 'package:namida/controller/audio_handler.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/functions.dart';
 
 class Player {
   static Player inst = Player();
@@ -101,7 +100,7 @@ class Player {
     List<Track> queue = const [],
     bool playSingle = false,
     bool shuffle = false,
-    bool disablePlay = false,
+    bool startPlaying = true,
     bool dontAddQueue = false,
   }) async {
     if (index == currentIndex.value && track == nowPlayingTrack.value) {
@@ -121,25 +120,15 @@ class Player {
       track = finalQueue.first;
     }
 
-    /// if the queue is the same, it will skip instead of rebuilding the queue, certainly more performant
-    if (checkIfQueuesSameAsCurrent(finalQueue)) {
-      await skipToQueueItem(index);
-      printInfo(info: "Skipped To Queue Item");
-      return;
-    }
-
-    /// saves queue to storage before changing it
-    if (!dontAddQueue) {
-      QueueController.inst.addNewQueue(tracks: currentQueue.toList());
-    }
     if (finalQueue.isEmpty) {
       return;
     }
-    currentQueue.assignAll(finalQueue);
-    await _audioHandler?.setAudioSource(finalQueue.indexOf(track));
-    if (!disablePlay) {
-      play();
-      setVolume(SettingsController.inst.playerVolume.value);
+
+    if (!dontAddQueue) {
+      QueueController.inst.addNewQueue(tracks: finalQueue.toList());
     }
+
+    currentQueue.assignAll(finalQueue);
+    await _audioHandler?.setAudioSource(finalQueue.indexOf(track), startPlaying: startPlaying);
   }
 }

@@ -13,34 +13,24 @@ class AppThemes extends GetxController {
     light ??= Get.theme.brightness == Brightness.light;
     final cardTheme = CardTheme(
       elevation: 12.0,
-      color: light
-          ? Color.alphaBlend(
-              color.withAlpha(35),
-              const Color.fromARGB(255, 255, 255, 255),
-            )
-          : Color.alphaBlend(
-              color.withAlpha(40),
-              const Color.fromARGB(255, 35, 35, 35),
-            ),
+      color: Color.alphaBlend(
+        color.withAlpha(40),
+        light ? const Color.fromARGB(255, 255, 255, 255) : const Color.fromARGB(255, 35, 35, 35),
+      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14.0),
       ),
     );
-    final cardColor = light
-        ? Color.alphaBlend(
-            color.withAlpha(25),
-            const Color.fromARGB(255, 255, 255, 255),
-          )
-        : Color.alphaBlend(
-            color.withAlpha(30),
-            const Color.fromARGB(255, 35, 35, 35),
-          );
+    final cardColor = Color.alphaBlend(
+      color.withAlpha(30),
+      light ? const Color.fromARGB(255, 255, 255, 255) : const Color.fromARGB(255, 35, 35, 35),
+    );
     return ThemeData(
       brightness: light ? Brightness.light : Brightness.dark,
       useMaterial3: true,
       colorSchemeSeed: color,
       fontFamily: "LexendDeca",
-      scaffoldBackgroundColor: light ? Color.alphaBlend(color.withAlpha(50), Colors.white) : null,
+      scaffoldBackgroundColor: light ? Color.alphaBlend(color.withAlpha(60), Colors.white) : null,
       backgroundColor: light ? const Color.fromARGB(255, 235, 235, 235) : const Color.fromARGB(255, 20, 20, 20),
       splashColor: Colors.transparent,
       splashFactory: InkRipple.splashFactory,

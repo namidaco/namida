@@ -123,7 +123,7 @@ class SettingsController extends GetxController {
       themeMode.value = ThemeMode.values.getEnum(json['themeMode']) ?? themeMode.value;
       autoColor.value = json['autoColor'] ?? autoColor.value;
       staticColor.value = json['staticColor'] ?? staticColor.value;
-      selectedLibraryTab.value = autoLibraryTab.value
+      selectedLibraryTab.value = json['autoLibraryTab'] ?? autoLibraryTab.value
           ? LibraryTab.values.getEnum(json['selectedLibraryTab']) ?? selectedLibraryTab.value
           : LibraryTab.values.getEnum(json['staticLibraryTab']) ?? staticLibraryTab.value;
       staticLibraryTab.value = LibraryTab.values.getEnum(json['staticLibraryTab']) ?? staticLibraryTab.value;

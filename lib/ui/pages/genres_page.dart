@@ -18,7 +18,7 @@ import 'package:namida/ui/widgets/settings/sort_by_button.dart';
 
 class GenresPage extends StatelessWidget {
   GenresPage({super.key});
-  final ScrollController _scrollController = ScrollSearchController.inst.genreScrollcontroller.value;
+  final ScrollController _scrollController = ScrollSearchController.inst.genreScrollcontroller;
   final countPerRow = SettingsController.inst.genreGridCount.value;
   @override
   Widget build(BuildContext context) {

@@ -32,7 +32,7 @@ class PlaylistsPage extends StatelessWidget {
     this.displayTopRow = true,
     this.disableBottomPadding = false,
   });
-  final ScrollController _scrollController = ScrollSearchController.inst.playlistScrollcontroller.value;
+  final ScrollController _scrollController = ScrollSearchController.inst.playlistScrollcontroller;
   @override
   Widget build(BuildContext context) {
     return Obx(

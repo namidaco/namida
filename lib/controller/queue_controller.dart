@@ -9,6 +9,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 
 class QueueController extends GetxController {
   static QueueController inst = QueueController();
@@ -24,6 +25,11 @@ class QueueController extends GetxController {
     String comment = '',
     List<String> modes = const [],
   }) {
+    /// if the queue is the same, it will skip instead of saving the same queue, certainly more performant.
+    if (checkIfQueueSameAsCurrent(tracks)) {
+      printInfo(info: "Didnt Save Queue: Similar as Current");
+      return;
+    }
     printInfo(info: "Added New Queue");
     date ??= DateTime.now().millisecondsSinceEpoch;
     queueList.add(Queue(name, tracks, date, comment, modes));
@@ -137,7 +143,7 @@ class QueueController extends GetxController {
       latestQueue.indexOf(latestTrack),
       latestTrack,
       queue: latestQueue.toList(),
-      disablePlay: true,
+      startPlaying: false,
       dontAddQueue: true,
     );
   }

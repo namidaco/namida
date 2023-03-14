@@ -17,7 +17,7 @@ import 'package:namida/ui/widgets/settings/sort_by_button.dart';
 
 class ArtistsPage extends StatelessWidget {
   ArtistsPage({super.key});
-  final ScrollController _scrollController = ScrollSearchController.inst.artistScrollcontroller.value;
+  final ScrollController _scrollController = ScrollSearchController.inst.artistScrollcontroller;
   final gridCount = SettingsController.inst.artistGridCount.value;
   @override
   Widget build(BuildContext context) {

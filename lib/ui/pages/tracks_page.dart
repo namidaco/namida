@@ -18,7 +18,7 @@ import 'package:namida/ui/widgets/settings/sort_by_button.dart';
 
 class TracksPage extends StatelessWidget {
   TracksPage({super.key});
-  final ScrollController _scrollController = ScrollSearchController.inst.trackScrollcontroller.value;
+  final ScrollController _scrollController = ScrollSearchController.inst.trackScrollcontroller;
   @override
   Widget build(BuildContext context) {
     return CupertinoScrollbar(
