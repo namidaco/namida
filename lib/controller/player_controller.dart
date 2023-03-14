@@ -1,9 +1,6 @@
-// ignore_for_file: depend_on_referenced_packages
-
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
-import 'package:collection/collection.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
@@ -11,6 +8,7 @@ import 'package:namida/controller/audio_handler.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/functions.dart';
 
 class Player {
   static Player inst = Player();
@@ -47,6 +45,10 @@ class Player {
 
   Future<void> setVolume(double volume) async {
     await _audioHandler?.setVolume(volume);
+  }
+
+  void reorderTrack(int oldIndex, int newIndex) {
+    _audioHandler?.reorderTrack(oldIndex, newIndex);
   }
 
   Future<void> addToQueue(List<Track> tracks, {bool insertNext = false}) async {
@@ -116,7 +118,7 @@ class Player {
     }
 
     /// if the queue is the same, it will skip instead of rebuilding the queue, certainly more performant
-    if (const IterableEquality().equals(finalQueue, currentQueue.toList())) {
+    if (checkIfQueuesSameAsCurrent(finalQueue)) {
       await skipToQueueItem(index);
       printInfo(info: "Skipped To Queue Item");
       return;
@@ -126,8 +128,11 @@ class Player {
     if (!dontAddQueue) {
       QueueController.inst.addNewQueue(tracks: currentQueue.toList());
     }
-
-    await _audioHandler?.setAudioSource(finalQueue, track, initialIndex: finalQueue.indexOf(track), initialPosition: Duration.zero);
+    if (finalQueue.isEmpty) {
+      return;
+    }
+    currentQueue.assignAll(finalQueue);
+    await _audioHandler?.setAudioSource(finalQueue.indexOf(track));
     if (!disablePlay) {
       play();
       setVolume(SettingsController.inst.playerVolume.value);

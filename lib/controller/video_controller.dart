@@ -143,6 +143,9 @@ class VideoController extends GetxController {
   }
 
   Future<void> updateLocalVidPath([Track? track]) async {
+    if (!SettingsController.inst.enableVideoPlayback.value) {
+      return;
+    }
     track ??= Player.inst.nowPlayingTrack.value;
     resetEverything();
     updateYTLink(track);

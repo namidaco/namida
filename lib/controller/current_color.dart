@@ -35,18 +35,8 @@ class CurrentColor extends GetxController {
 
   Future<void> setPlayerColor(Track track) async {
     palette.value = await extractColors(track.pathToImage);
-    color.value = (await generateDelightnedColor(track.pathToImage, palette.toList())).withAlpha(Get.isDarkMode ? 200 : 100);
+    color.value = (await generateDelightnedColor(track.pathToImage, palette.toList())).withAlpha(Get.isDarkMode ? 200 : 120);
   }
-
-  // Future<Color> extractDelightnedColor(String path) async {
-  //   if (await FileSystemEntity.type(path) != FileSystemEntityType.notFound) {
-  //     final palette = await extractColors(path);
-  //     final color = getAlbumColorModifiedModern(palette);
-  //     return color;
-  //   } else {
-  //     return playerStaticColor;
-  //   }
-  // }
 
   Future<List<Color>> extractColors(String pathofimage) async {
     final paletteFile = File("$kPaletteDirPath${pathofimage.getFilename}.palette");

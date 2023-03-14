@@ -19,7 +19,6 @@ import 'package:namida/core/extensions.dart';
 
 class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHandler {
   final _player = AudioPlayer();
-  final _playlist = ConcatenatingAudioSource(children: []);
 
   final Player namidaPlayer;
 
@@ -41,8 +40,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
 
     _player.processingStateStream.listen((state) async {
       if (state == ProcessingState.completed) {
-        await _player.pause();
-        await _player.seek(const Duration(microseconds: 0), index: 0);
+        skipToNext();
       }
     });
 
@@ -67,45 +65,25 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     _player.positionDiscontinuityStream.listen((event) async {
       await updateVideoPlayingState();
     });
-
-    _player.currentIndexStream.listen((i) async {
-      i ??= 0;
-      currentIndex.value = i;
-    });
-
-    currentIndex.listen((i) {
-      if (currentQueue.isNotEmpty && shouldUpdateIndex) {
-        final tr = currentQueue.elementAt(i);
-        updateCurrentMediaItem(tr);
-        nowPlayingTrack.value = tr;
-      }
-    });
-
-    nowPlayingTrack.listen((tr) {
-      updateAllTrackListeners(tr);
-    });
   }
-
-  /// for ensuring stabilty when calling [setAudioSource].
-  bool shouldUpdateIndex = true;
 
   /// for ensuring stabilty while fade effect is on.
   bool wantToPause = false;
 
-  void updateAllTrackListeners(Track tr) {
-    CurrentColor.inst.updatePlayerColor(tr, currentIndex.value);
-    WaveformController.inst.generateWaveform(tr);
-    PlaylistController.inst.addToHistory(nowPlayingTrack.value);
-    increaseListenTime(tr);
-    SettingsController.inst.save(lastPlayedTrackPath: tr.path);
-    Lyrics.inst.updateLyrics(tr);
+  // void updateAllTrackListeners(Track tr) {
+  //   CurrentColor.inst.updatePlayerColor(tr, currentIndex.value);
+  //   WaveformController.inst.generateWaveform(tr);
+  //   PlaylistController.inst.addToHistory(nowPlayingTrack.value);
+  //   increaseListenTime(tr);
+  //   SettingsController.inst.save(lastPlayedTrackPath: tr.path);
+  //   Lyrics.inst.updateLyrics(tr);
 
-    /// for video
-    if (SettingsController.inst.enableVideoPlayback.value) {
-      VideoController.inst.updateLocalVidPath(tr);
-    }
-    updateVideoPlayingState();
-  }
+  //   /// for video
+  //   if (SettingsController.inst.enableVideoPlayback.value) {
+  //     VideoController.inst.updateLocalVidPath(tr);
+  //   }
+  //   updateVideoPlayingState();
+  // }
 
   void increaseListenTime(Track track) {
     Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -142,26 +120,23 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
 
   ///
   /// Namida Methods.
-  Future<void> setAudioSource(
-    List<Track> tracks,
-    Track track, {
-    bool preload = true,
-    int? initialIndex,
-    Duration? initialPosition,
-  }) async {
-    shouldUpdateIndex = false;
-    await _player.setAudioSource(tracks.toConcatenatingAudioSource, preload: preload, initialIndex: initialIndex, initialPosition: initialPosition);
+  Future<void> setAudioSource(int index, {bool preload = true}) async {
+    final tr = currentQueue.elementAt(index);
+    _player.setFilePath(tr.path, preload: preload);
+    updateCurrentMediaItem(tr);
+    nowPlayingTrack.value = tr;
+    currentIndex.value = index;
 
-    final children = tracks.toAudioSources;
-    currentQueue.assignAll(tracks);
-    queue.value.assignAll(tracks.toMediaItems);
-    await _playlist.clear();
-    await _playlist.addAll(children);
-    await CurrentColor.inst.updatePlayerColor(track, currentIndex.value);
-    updateCurrentMediaItem(track);
-    nowPlayingTrack.value = track;
-    currentIndex.value = currentQueue.indexOf(track);
-    shouldUpdateIndex = true;
+    CurrentColor.inst.updatePlayerColor(tr, index);
+    WaveformController.inst.generateWaveform(tr);
+    PlaylistController.inst.addToHistory(nowPlayingTrack.value);
+    increaseListenTime(tr);
+    SettingsController.inst.save(lastPlayedTrackPath: tr.path);
+    Lyrics.inst.updateLyrics(tr);
+
+    /// for video
+    VideoController.inst.updateLocalVidPath(tr);
+    updateVideoPlayingState();
   }
 
   /// if [force] is enabled, [track] will not be used.
@@ -216,49 +191,53 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     setVolume(currentVolume.value);
   }
 
-  Future<void> addToQueue(List<Track> tracks, {bool insertNext = false}) async {
-    final source = _player.audioSource as ConcatenatingAudioSource;
-    final children = tracks.toAudioSources;
+  void reorderTrack(int oldIndex, int newIndex) {
+    if (newIndex > oldIndex) {
+      newIndex -= 1;
+    }
+    int i = 0;
+    if (oldIndex == currentIndex.value) {
+      i = newIndex;
+    }
+    if (oldIndex < currentIndex.value) {
+      i = currentIndex.value - 1;
+    }
+    if (oldIndex > currentIndex.value) {
+      i = currentIndex.value + 1;
+    }
 
+    currentIndex.value = i;
+    CurrentColor.inst.currentPlayingIndex.value = i;
+    final item = currentQueue.elementAt(oldIndex);
+    removeFromQueue(oldIndex);
+    insertInQueue([item], newIndex);
+  }
+
+  Future<void> addToQueue(List<Track> tracks, {bool insertNext = false}) async {
     if (insertNext) {
       insertInQueue(tracks, currentIndex.value + 1);
     } else {
       currentQueue.addAll(tracks);
-      queue.value.addAll(tracks.toMediaItems);
-      await _playlist.addAll(children);
-      await source.addAll(children);
     }
-    updateCurrentMediaItem();
-    QueueController.inst.updateLatestQueue(currentQueue.toList());
+    afterQueueChange();
   }
 
   Future<void> insertInQueue(List<Track> tracks, int index) async {
-    final source = _player.audioSource as ConcatenatingAudioSource;
     currentQueue.insertAll(index, tracks);
-    queue.value.insertAll(index, tracks.toMediaItems);
-    await _playlist.insertAll(index, tracks.toAudioSources);
-    await source.insertAll(index, tracks.toAudioSources);
-
-    updateCurrentMediaItem();
-    QueueController.inst.updateLatestQueue(currentQueue.toList());
+    afterQueueChange();
   }
 
   Future<void> removeFromQueue(int index) async {
-    final source = _player.audioSource as ConcatenatingAudioSource;
     currentQueue.removeAt(index);
-    queue.value.removeAt(index);
-    await _playlist.removeAt(index);
-    await source.removeAt(index);
-    updateCurrentMediaItem();
-    QueueController.inst.updateLatestQueue(currentQueue.toList());
+    afterQueueChange();
   }
 
   Future<void> removeRangeFromQueue(int start, int end) async {
-    final source = _player.audioSource as ConcatenatingAudioSource;
     currentQueue.removeRange(start, end);
-    queue.value.removeRange(start, end);
-    await _playlist.removeRange(start, end);
-    await source.removeRange(start, end);
+    afterQueueChange();
+  }
+
+  void afterQueueChange() {
     updateCurrentMediaItem();
     QueueController.inst.updateLatestQueue(currentQueue.toList());
   }
@@ -275,7 +254,8 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   @override
   Future<void> play() async {
     wantToPause = false;
-    if (SettingsController.inst.enableVolumeFadeOnPlayPause.value && nowPlayingPosition.value > 10) {
+
+    if (SettingsController.inst.enableVolumeFadeOnPlayPause.value && nowPlayingPosition.value > 200) {
       await playWithFadeEffect();
     } else {
       _player.play();
@@ -286,7 +266,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   @override
   Future<void> pause() async {
     wantToPause = true;
-    if (SettingsController.inst.enableVolumeFadeOnPlayPause.value && nowPlayingPosition.value > 10) {
+    if (SettingsController.inst.enableVolumeFadeOnPlayPause.value && nowPlayingPosition.value > 200) {
       await pauseWithFadeEffect();
     } else {
       _player.pause();
@@ -296,7 +276,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   @override
   Future<void> seek(Duration position) async {
     await _player.seek(position);
-    VideoController.inst.seek(position);
+    await VideoController.inst.seek(position);
   }
 
   @override
@@ -304,30 +284,26 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
 
   @override
   Future<void> skipToNext() async {
-    if (_player.hasNext) {
-      await _player.seekToNext();
-    } else {
+    if (currentIndex.value == currentQueue.length - 1) {
       skipToQueueItem(0);
+    } else {
+      skipToQueueItem(currentIndex.value + 1);
     }
-    await play();
   }
 
   @override
   Future<void> skipToPrevious() async {
-    if (_player.hasPrevious) {
-      await _player.seekToPrevious();
-    } else {
+    if (currentIndex.value == 0) {
       skipToQueueItem(currentQueue.length - 1);
+    } else {
+      skipToQueueItem(currentIndex.value - 1);
     }
-    await play();
   }
 
   @override
   Future<void> skipToQueueItem(int index) async {
-    await _player.seek(const Duration(microseconds: 0), index: index);
-    _player.play();
-    currentIndex.value = index;
-    setVolume(SettingsController.inst.playerVolume.value);
+    await play();
+    await setAudioSource(index);
   }
 
   /// End of  audio_service overriden methods.
