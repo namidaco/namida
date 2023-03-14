@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:namida/controller/player_controller.dart';
 
 import 'package:namida/controller/selected_tracks_controller.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/selected_tracks_row.dart';
 
@@ -22,7 +24,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
               ? Center(
                   child: Container(
                     width: MediaQuery.of(context).size.width,
-                    padding: const EdgeInsets.all(12.0),
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
                     child: Column(
                       children: [
                         GestureDetector(

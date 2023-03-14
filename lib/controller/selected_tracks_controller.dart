@@ -5,6 +5,7 @@ import 'package:namida/class/track.dart';
 class SelectedTracksController extends GetxController {
   static SelectedTracksController inst = SelectedTracksController();
   RxList<Track> selectedTracks = <Track>[].obs;
+  RxList<Track> currentAllTracks = <Track>[].obs;
   // RxDouble bottomPadding = 102.0.obs;
 
   RxBool isMenuMinimized = true.obs;

@@ -1,18 +1,26 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:collection/collection.dart';
+
+import 'dart:async';
 
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/artist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/genre_tracks_subpage.dart';
+import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 
 class NamidaOnTaps {
@@ -31,6 +39,7 @@ class NamidaOnTaps {
       ),
       preventDuplicates: false,
     );
+    SelectedTracksController.inst.currentAllTracks.assignAll(tracks);
   }
 
   Future<void> onAlbumTap(String name) async {
@@ -45,6 +54,7 @@ class NamidaOnTaps {
       ),
       preventDuplicates: false,
     );
+    SelectedTracksController.inst.currentAllTracks.assignAll(tracks);
   }
 
   Future<void> onGenreTap(String name) async {
@@ -57,6 +67,12 @@ class NamidaOnTaps {
       ),
       preventDuplicates: false,
     );
+    SelectedTracksController.inst.currentAllTracks.assignAll(tracks);
+  }
+
+  Future<void> onPlaylistTap(Playlist playlist) async {
+    Get.to(() => PlaylisTracksPage(playlist: playlist));
+    SelectedTracksController.inst.currentAllTracks.assignAll(playlist.tracks.map((e) => e.track).toList());
   }
 
   Future<void> onQueueTap(Queue queue) async {
@@ -64,6 +80,7 @@ class NamidaOnTaps {
       () => QueueTracksPage(queue: queue),
       preventDuplicates: false,
     );
+    SelectedTracksController.inst.currentAllTracks.assignAll(queue.tracks);
   }
 
   void onRemoveTrackFromPlaylist(List<Track> tracks, Playlist playlist) {
@@ -93,4 +110,8 @@ class NamidaOnTaps {
       ),
     );
   }
+}
+
+bool checkIfQueuesSameAsCurrent(List<Track> queue) {
+  return const IterableEquality().equals(queue, Player.inst.currentQueue.toList());
 }

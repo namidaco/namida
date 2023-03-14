@@ -10,8 +10,8 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
@@ -126,7 +126,7 @@ class PlaylistsPage extends StatelessWidget {
                                   playlist: playlist,
                                   onTap: tracksToAdd != null
                                       ? () => PlaylistController.inst.addTracksToPlaylist(playlist.id, tracksToAdd!)
-                                      : () => Get.to(() => PlaylisTracksPage(playlist: playlist)),
+                                      : () => NamidaOnTaps.inst.onPlaylistTap(playlist),
                                 ),
                               );
                             },
@@ -153,7 +153,7 @@ class PlaylistsPage extends StatelessWidget {
                                   name: playlist.name.translatePlaylistName,
                                   gridCount: playlistGridCount,
                                   showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(playlist),
-                                  onTap: () => Get.to(() => PlaylisTracksPage(playlist: playlist)),
+                                  onTap: () => NamidaOnTaps.inst.onPlaylistTap(playlist),
                                 ),
                               );
                             },

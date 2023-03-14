@@ -27,10 +27,10 @@ class SelectedTracksRow extends StatelessWidget {
             IconButton(
               onPressed: () {
                 stc.selectedTracks.clear();
+                stc.currentAllTracks.assignAll(Indexer.inst.tracksInfoList.toList());
                 stc.isMenuMinimized.value = true;
               },
               icon: const Icon(Broken.close_circle),
-              splashRadius: 20.0,
             ),
             SizedBox(
               width: 140,
@@ -53,16 +53,12 @@ class SelectedTracksRow extends StatelessWidget {
               width: 32,
             ),
             IconButton(
-              onPressed: () {
-                editMultipleTracksTags(tracks);
-              },
+              onPressed: () => editMultipleTracksTags(tracks),
               tooltip: Language.inst.EDIT_TAGS,
               icon: const Icon(Broken.edit),
             ),
             IconButton(
-              onPressed: () {
-                showAddToPlaylistDialog(tracks);
-              },
+              onPressed: () => showAddToPlaylistDialog(tracks),
               tooltip: Language.inst.ADD_TO_PLAYLIST,
               icon: const Icon(Broken.music_playlist),
             ),
@@ -89,8 +85,8 @@ class SelectedTracksRow extends StatelessWidget {
             ),
             IconButton(
               onPressed: () {
-                SelectedTracksController.inst.selectedTracks.clear();
-                SelectedTracksController.inst.selectedTracks.addAll(Indexer.inst.trackSearchList.toList());
+                stc.selectedTracks.clear();
+                stc.selectedTracks.addAll(SelectedTracksController.inst.currentAllTracks.toList());
               },
               icon: const Icon(Broken.category),
               splashRadius: 20.0,
