@@ -27,9 +27,9 @@ class Player {
       config: const AudioServiceConfig(
         androidNotificationChannelId: 'com.msob7y.namida',
         androidNotificationChannelName: 'Namida',
-        androidNotificationOngoing: true,
         androidNotificationChannelDescription: 'Namida Media Notification',
         androidNotificationIcon: 'drawable/ic_stat_musicnote',
+        androidStopForegroundOnPause: false,
       ),
     );
   }
@@ -104,32 +104,22 @@ class Player {
 
   Future<void> playOrPause(
     int index,
-    Track track, {
-    List<Track> queue = const [],
-    bool playSingle = false,
+    List<Track> queue, {
     bool shuffle = false,
     bool startPlaying = true,
     bool dontAddQueue = false,
   }) async {
-    if (index == currentIndex.value && track == nowPlayingTrack.value) {
+    if (queue.isEmpty || index == currentIndex.value) {
       _audioHandler?.togglePlayPause();
       return;
     }
 
     List<Track> finalQueue = <Track>[];
+    finalQueue.assignAll(queue);
 
-    if (playSingle) {
-      finalQueue.assign(track);
-    } else {
-      finalQueue.assignAll(queue);
-    }
     if (shuffle) {
       finalQueue.shuffle();
-      track = finalQueue.first;
-    }
-
-    if (finalQueue.isEmpty) {
-      return;
+      index = 0;
     }
 
     if (!dontAddQueue) {
@@ -137,6 +127,6 @@ class Player {
     }
 
     currentQueue.assignAll(finalQueue);
-    await _audioHandler?.setAudioSource(finalQueue.indexOf(track), startPlaying: startPlaying);
+    await _audioHandler?.setAudioSource(index, startPlaying: startPlaying);
   }
 }

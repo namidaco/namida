@@ -357,7 +357,7 @@ class CustomReorderableDelayedDragStartListener extends ReorderableDragStartList
   final Duration delay;
 
   const CustomReorderableDelayedDragStartListener({
-    this.delay = const Duration(milliseconds: 100),
+    this.delay = const Duration(milliseconds: 20),
     Key? key,
     required Widget child,
     required int index,

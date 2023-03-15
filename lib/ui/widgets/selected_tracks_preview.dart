@@ -81,7 +81,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                           decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
                                           child: ReorderableListView.builder(
                                             onReorder: (oldIndex, newIndex) => stc.reorderTracks(oldIndex, newIndex),
-                                            physics: const BouncingScrollPhysics(),
+                                            proxyDecorator: (child, index, animation) => child,
                                             padding: EdgeInsets.zero,
                                             itemCount: stc.selectedTracks.length,
                                             itemBuilder: (context, i) {

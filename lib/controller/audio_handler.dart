@@ -29,6 +29,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   RxInt get currentIndex => namidaPlayer.currentIndex;
   RxDouble get currentVolume => namidaPlayer.currentVolume;
   RxBool get isPlaying => namidaPlayer.isPlaying;
+  bool get isLastTrack => currentIndex.value == currentQueue.length - 1;
 
   NamidaAudioVideoHandler(this.namidaPlayer) {
     _player.playbackEventStream.listen((event) {
@@ -41,10 +42,9 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
 
     _player.processingStateStream.listen((state) async {
       if (state == ProcessingState.completed) {
-        final isLast = currentIndex.value != currentQueue.length - 1;
         final repeat = SettingsController.inst.playerRepeatMode.value;
         if (repeat == RepeatMode.none) {
-          skipToNext(isLast);
+          skipToNext(!isLastTrack);
         }
         if (repeat == RepeatMode.one) {
           skipToQueueItem(currentIndex.value);
@@ -78,7 +78,8 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     });
   }
 
-  /// for ensuring stabilty while fade effect is on.
+  /// For ensuring stabilty while fade effect is on.
+  /// Typically stops ongoing [playWithFadeEffect] to prevent multiple [setVolume] interferring.
   bool wantToPause = false;
 
   void increaseListenTime(Track track) {
@@ -95,8 +96,8 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     });
   }
 
-  ///
-  /// Video Methods
+  //
+  // Video Methods
   Future<void> updateVideoPlayingState() async {
     await refreshVideoPosition();
     if (isPlaying.value) {
@@ -111,24 +112,23 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     await VideoController.inst.seek(Duration(milliseconds: nowPlayingPosition.value));
   }
 
-  /// End of Video Methods.
-  ///
+  // End of Video Methods.
+  //
 
-  ///
-  /// Namida Methods.
+  //
+  // Namida Methods.
   Future<void> setAudioSource(int index, {bool preload = true, bool startPlaying = true}) async {
     final tr = currentQueue.elementAt(index);
     nowPlayingTrack.value = tr;
     currentIndex.value = index;
     CurrentColor.inst.updatePlayerColor(tr, index);
-    await _player.setFilePath(tr.path, preload: preload);
+    _player.pause();
+    _player.setFilePath(tr.path, preload: preload);
 
     /// Te whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture] don't get detected.
-    /// Currently it will pause only in case the pause is coming from such an event.
-    _player.pause();
-
     if (startPlaying) {
       _player.play();
+      setVolume(SettingsController.inst.playerVolume.value);
     }
     updateCurrentMediaItem(tr);
 
@@ -164,9 +164,10 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
 
   Future<void> playWithFadeEffect() async {
     final duration = SettingsController.inst.playerPlayFadeDurInMilli.value;
-    final interval = (0.1 * duration).toInt();
+    final interval = (0.05 * duration).toInt();
     final steps = duration ~/ interval;
     double vol = 0.0;
+    await setVolume(0.0);
     _player.play();
     Timer.periodic(Duration(milliseconds: interval), (timer) {
       vol += 1 / steps;
@@ -180,7 +181,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
 
   Future<void> pauseWithFadeEffect() async {
     final duration = SettingsController.inst.playerPauseFadeDurInMilli.value;
-    final interval = (0.1 * duration).toInt();
+    final interval = (0.05 * duration).toInt();
     final steps = duration ~/ interval;
     double vol = currentVolume.value;
     Timer.periodic(Duration(milliseconds: interval), (timer) {
@@ -204,12 +205,12 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     }
 
     /// Track is dragged from after the currentTrack to before the currentTrack.
-    if (oldIndex < currentIndex.value && newIndex - 1 > currentIndex.value) {
+    if (oldIndex < currentIndex.value && newIndex >= currentIndex.value) {
       i = currentIndex.value - 1;
     }
 
     /// Track is dragged from before the currentTrack to after the currentTrack.
-    if (oldIndex > currentIndex.value && newIndex - 1 < currentIndex.value) {
+    if (oldIndex > currentIndex.value && newIndex - 1 <= currentIndex.value) {
       i = currentIndex.value + 1;
     }
 
@@ -246,7 +247,21 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   }
 
   Future<void> removeFromQueue(int index) async {
+    if (index == currentIndex.value) {
+      if (currentQueue.isNotEmpty) {
+        if (isLastTrack) {
+          setAudioSource(index - 1);
+        } else {
+          setAudioSource(index);
+        }
+      }
+    }
     currentQueue.removeAt(index);
+    final ci = currentIndex.value;
+    if (index < ci) {
+      currentIndex.value = ci - 1;
+      CurrentColor.inst.currentPlayingIndex.value = ci - 1;
+    }
     afterQueueChange();
   }
 
@@ -264,11 +279,11 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     await _player.setVolume(volume);
   }
 
-  /// End of Namida Methods.
-  ///
+  // End of Namida Methods.
+  //
 
-  ///
-  /// audio_service overriden methods.
+  //
+  // audio_service overriden methods.
   @override
   Future<void> play() async {
     wantToPause = false;
@@ -277,8 +292,8 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
       await playWithFadeEffect();
     } else {
       _player.play();
+      setVolume(SettingsController.inst.playerVolume.value);
     }
-    setVolume(SettingsController.inst.playerVolume.value);
   }
 
   @override
@@ -306,7 +321,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
 
   @override
   Future<void> skipToNext([bool andPlay = true]) async {
-    if (currentIndex.value == currentQueue.length - 1) {
+    if (isLastTrack) {
       skipToQueueItem(0, andPlay);
     } else {
       skipToQueueItem(currentIndex.value + 1);
@@ -327,11 +342,11 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     await setAudioSource(index, startPlaying: andPlay);
   }
 
-  /// End of  audio_service overriden methods.
-  ///
+  // End of  audio_service overriden methods.
+  //
 
-  ///
-  /// Media Control Specific
+  //
+  // Media Control Specific
   @override
   Future<void> fastForward() async {
     PlaylistController.inst.favouriteButtonOnPressed(Player.inst.nowPlayingTrack.value);

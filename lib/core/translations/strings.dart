@@ -53,11 +53,14 @@ class Language {
   String get ENABLE_REORDERING => 'Enable Reordering';
   String get DISABLE_REORDERING => 'Disable Reordering';
   String get DISPLAY_FAV_BUTTON_IN_NOTIFICATION => 'Display Favourtie Button in Notification';
+  String get DISPLAY_FAV_BUTTON_IN_NOTIFICATION_SUBTITLE => 'Thumbnail might get displaced.';
   String get REPEAT_MODE_ALL => 'Repeat All Queue';
   String get REPEAT_MODE_NONE => 'Stop on Last Track';
   String get REPEAT_MODE_ONE => 'Repeat Current Track';
   String get ENABLE_SEARCH_CLEANUP => 'Enable Search Cleanup';
   String get ENABLE_SEARCH_CLEANUP_SUBTITLE => 'All Symbols and Spaces will be neglected';
+  String get ENABLE_BOTTOM_NAV_BAR => 'Enable Bottom Navigation Bar';
+  String get ENABLE_BOTTOM_NAV_BAR_SUBTITLE => 'Items are inside the drawer bothways';
 
   /// Main
   String get EXIT_APP => 'Exit';

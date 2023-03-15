@@ -34,14 +34,14 @@ class TracksPage extends StatelessWidget {
                 leftWidgets: [
                   NamidaIconButton(
                     icon: Broken.shuffle,
-                    onPressed: () => Player.inst.playOrPause(0, Indexer.inst.trackSearchList.first, queue: Indexer.inst.trackSearchList.toList(), shuffle: true),
+                    onPressed: () => Player.inst.playOrPause(0, Indexer.inst.trackSearchList.toList(), shuffle: true),
                     iconSize: 18.0,
                     horizontalPadding: 0,
                   ),
                   const SizedBox(width: 12.0),
                   NamidaIconButton(
                     icon: Broken.play,
-                    onPressed: () => Player.inst.playOrPause(0, Indexer.inst.trackSearchList.first, queue: Indexer.inst.trackSearchList.toList()),
+                    onPressed: () => Player.inst.playOrPause(0, Indexer.inst.trackSearchList.toList()),
                     iconSize: 18.0,
                     horizontalPadding: 0,
                   ),

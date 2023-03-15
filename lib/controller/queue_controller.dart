@@ -141,8 +141,7 @@ class QueueController extends GetxController {
 
     await Player.inst.playOrPause(
       latestQueue.indexOf(latestTrack),
-      latestTrack,
-      queue: latestQueue.toList(),
+      latestQueue.toList(),
       startPlaying: false,
       dontAddQueue: true,
     );

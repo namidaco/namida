@@ -1088,8 +1088,7 @@ class SubpagesTopContainer extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () => Player.inst.playOrPause(
                         0,
-                        tracks.first,
-                        queue: tracks,
+                        tracks,
                         shuffle: true,
                       ),
                       child: const Icon(Broken.shuffle),

@@ -207,7 +207,8 @@ class ScrollSearchController extends GetxController {
     showPlaylistSearchBox.value = false;
   }
 
-  void animateQueueToCurrentTrack(int index) {
+  void animateQueueToCurrentTrack([int? index]) {
+    index ??= Player.inst.currentIndex.value;
     if (queueScrollController.hasClients) {
       queueScrollController.animateTo(
         (SettingsController.inst.trackListTileHeight.value * 1.15) * index - 120,

@@ -98,6 +98,7 @@ class PlaylisTracksPage extends StatelessWidget {
                         child: ReorderableListView(
                           header: topContainer,
                           buildDefaultDragHandles: shouldReorder.value,
+                          proxyDecorator: (child, index, animation) => child,
                           onReorder: (oldIndex, newIndex) {
                             if (newIndex > oldIndex) {
                               newIndex -= 1;

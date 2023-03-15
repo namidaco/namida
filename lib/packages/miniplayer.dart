@@ -138,8 +138,6 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
   late double sMaxOffset;
   late AnimationController sAnim;
 
-  late AnimationController playPauseAnim;
-
   bool queueScrollable = false;
   bool bounceUp = false;
   bool bounceDown = false;
@@ -162,10 +160,6 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
       lowerBound: -1,
       upperBound: 1,
       value: 0.0,
-    );
-    playPauseAnim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
     );
     scrollController.addListener(() {
       if (scrollController.position.pixels > (SettingsController.inst.trackListTileHeight.value * 1.15) * Player.inst.currentIndex.value - 120) {
@@ -234,6 +228,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
     offset = maxOffset * 2;
     bounceUp = false;
     snap(haptic: haptic);
+    queueScrollable = true;
   }
 
   void snap({bool haptic = true}) {
@@ -245,6 +240,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
     )
         .then((_) {
       bounceUp = false;
+      ScrollSearchController.inst.animateQueueToCurrentTrack();
     });
     if (haptic && (prevOffset - offset).abs() > actuationOffset) HapticFeedback.lightImpact();
   }
@@ -355,13 +351,11 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
 
           /// Horizontal
           onHorizontalDragStart: (details) {
-            return;
             if (offset > maxOffset) return;
 
             sPrevOffset = sOffset;
           },
           onHorizontalDragUpdate: (details) {
-            return;
             if (offset > maxOffset) return;
             if (details.globalPosition.dy > screenSize.height - deadSpace) return;
 
@@ -371,7 +365,6 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
             sAnim.animateTo(sOffset / sMaxOffset, duration: Duration.zero);
           },
           onHorizontalDragEnd: (details) {
-            return;
             if (offset > maxOffset) return;
 
             final distance = sPrevOffset - sOffset;
@@ -424,7 +417,6 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                 bottomLeft: Radius.circular(20.0 * (1 - p * 10 + 9).clamp(0, 1)),
                 bottomRight: Radius.circular(20.0 * (1 - p * 10 + 9).clamp(0, 1)),
               );
-              final double bottomOffset = (-60 * icp + p.clamp(-1, 0) * -200) - (bottomInset * icp);
               final double opacity = (bcp * 5 - 4).clamp(0, 1);
               final double fastOpacity = (bcp * 10 - 9).clamp(0, 1);
               double panelHeight = maxOffset / 1.6;
@@ -438,6 +430,11 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
               final List<Color> palette = CurrentColor.inst.palette.toList();
               RxList<Color> firstHalf = palette.getRange(0, palette.length ~/ 3).toList().obs;
               RxList<Color> secondtHalf = palette.getRange(palette.length ~/ 3, palette.length).toList().obs;
+              final miniplayerbottomnavheight = SettingsController.inst.enableBottomNavBar.value ? 60.0 : 0.0;
+              final double bottomOffset = (-miniplayerbottomnavheight * icp + p.clamp(-1, 0) * -200) - (bottomInset * icp);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ScrollSearchController.inst.miniplayerHeightPercentage.value = cp;
+              });
 
               return Obx(
                 () {
@@ -689,93 +686,92 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                       ),
                                     ),
                                   Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 20.0 * icp, horizontal: 2.0 * (1 - cp)).add(EdgeInsets.only(
-                                          right: !bounceDown
-                                              ? !bounceUp
-                                                  ? screenSize.width * rcp / 2 - (80 + 32.0 * 3) * rcp / 1.82 + (qp * 2.0)
-                                                  : screenSize.width * cp / 2 - (80 + 32.0 * 3) * cp / 1.82
-                                              : screenSize.width * bcp / 2 - (80 + 32.0 * 3) * bcp / 1.82 + (qp * 2.0))),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          NamidaIconButton(
-                                            icon: Broken.previous,
-                                            iconSize: 22.0 + 10 * rcp,
-                                            onPressed: snapToPrev,
-                                          ),
-                                          SizedBox(width: 7 * rcp),
-                                          SizedBox(
-                                            key: const Key("playpause"),
-                                            height: (vp(a: 60.0, b: 80.0, c: rcp) - 8) + 8 * rcp - 8 * icp,
-                                            width: (vp(a: 60.0, b: 80.0, c: rcp) - 8) + 8 * rcp - 8 * icp,
-                                            child: Center(
-                                              child: GestureDetector(
-                                                onTapDown: (value) {
-                                                  setState(() {
-                                                    isPlayPauseButtonHighlighted = true;
-                                                  });
-                                                },
-                                                onTapUp: (value) {
-                                                  setState(() {
-                                                    isPlayPauseButtonHighlighted = false;
-                                                  });
-                                                },
-                                                onTapCancel: () {
-                                                  setState(() {
-                                                    isPlayPauseButtonHighlighted = !isPlayPauseButtonHighlighted;
-                                                  });
-                                                },
-                                                child: AnimatedScale(
+                                    padding: EdgeInsets.symmetric(vertical: 20.0 * icp, horizontal: 2.0 * (1 - cp)).add(EdgeInsets.only(
+                                        right: !bounceDown
+                                            ? !bounceUp
+                                                ? screenSize.width * rcp / 2 - (80 + 32.0 * 3) * rcp / 1.82 + (qp * 2.0)
+                                                : screenSize.width * cp / 2 - (80 + 32.0 * 3) * cp / 1.82
+                                            : screenSize.width * bcp / 2 - (80 + 32.0 * 3) * bcp / 1.82 + (qp * 2.0))),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        NamidaIconButton(
+                                          icon: Broken.previous,
+                                          iconSize: 22.0 + 10 * rcp,
+                                          onPressed: snapToPrev,
+                                        ),
+                                        SizedBox(width: 7 * rcp),
+                                        SizedBox(
+                                          key: const Key("playpause"),
+                                          height: (vp(a: 60.0, b: 80.0, c: rcp) - 8) + 8 * rcp - 8 * icp,
+                                          width: (vp(a: 60.0, b: 80.0, c: rcp) - 8) + 8 * rcp - 8 * icp,
+                                          child: Center(
+                                            child: GestureDetector(
+                                              onTapDown: (value) {
+                                                setState(() {
+                                                  isPlayPauseButtonHighlighted = true;
+                                                });
+                                              },
+                                              onTapUp: (value) {
+                                                setState(() {
+                                                  isPlayPauseButtonHighlighted = false;
+                                                });
+                                              },
+                                              onTapCancel: () {
+                                                setState(() {
+                                                  isPlayPauseButtonHighlighted = !isPlayPauseButtonHighlighted;
+                                                });
+                                              },
+                                              child: AnimatedScale(
+                                                duration: const Duration(milliseconds: 400),
+                                                scale: isPlayPauseButtonHighlighted ? 0.97 : 1.0,
+                                                child: AnimatedContainer(
                                                   duration: const Duration(milliseconds: 400),
-                                                  scale: isPlayPauseButtonHighlighted ? 0.97 : 1.0,
-                                                  child: AnimatedContainer(
-                                                    duration: const Duration(milliseconds: 400),
-                                                    decoration: BoxDecoration(
-                                                      color: isPlayPauseButtonHighlighted
-                                                          ? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(233), Colors.white)
-                                                          : CurrentColor.inst.color.value,
-                                                      gradient: LinearGradient(
-                                                        begin: Alignment.topLeft,
-                                                        end: Alignment.bottomRight,
-                                                        colors: [
-                                                          CurrentColor.inst.color.value,
-                                                          Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(200), Colors.grey),
-                                                        ],
-                                                        stops: const [0, 0.7],
-                                                      ),
-                                                      shape: BoxShape.circle,
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: CurrentColor.inst.color.value.withAlpha(160),
-                                                          blurRadius: 8.0,
-                                                          spreadRadius: isPlayPauseButtonHighlighted ? 3.0 : 1.0,
-                                                          offset: const Offset(0.0, 2.0),
-                                                        ),
+                                                  decoration: BoxDecoration(
+                                                    color: isPlayPauseButtonHighlighted
+                                                        ? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(233), Colors.white)
+                                                        : CurrentColor.inst.color.value,
+                                                    gradient: LinearGradient(
+                                                      begin: Alignment.topLeft,
+                                                      end: Alignment.bottomRight,
+                                                      colors: [
+                                                        CurrentColor.inst.color.value,
+                                                        Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(200), Colors.grey),
                                                       ],
+                                                      stops: const [0, 0.7],
                                                     ),
-                                                    child: IconButton(
-                                                      highlightColor: Colors.transparent,
-                                                      onPressed: () => Player.inst.playOrPause(Player.inst.currentIndex.value, Player.inst.nowPlayingTrack.value),
-                                                      icon: Padding(
-                                                        padding: EdgeInsets.all(6.0 * cp * rcp),
-                                                        child: Obx(
-                                                          () => AnimatedSwitcher(
-                                                            duration: const Duration(milliseconds: 200),
-                                                            child: Player.inst.isPlaying.value
-                                                                ? Icon(
-                                                                    Broken.pause,
-                                                                    size: (vp(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp,
-                                                                    key: const Key("pauseicon"),
-                                                                    color: Colors.white.withAlpha(180),
-                                                                  )
-                                                                : Icon(
-                                                                    Broken.play,
-                                                                    size: (vp(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp,
-                                                                    key: const Key("playicon"),
-                                                                    color: Colors.white.withAlpha(180),
-                                                                  ),
-                                                          ),
+                                                    shape: BoxShape.circle,
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: CurrentColor.inst.color.value.withAlpha(160),
+                                                        blurRadius: 8.0,
+                                                        spreadRadius: isPlayPauseButtonHighlighted ? 3.0 : 1.0,
+                                                        offset: const Offset(0.0, 2.0),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: IconButton(
+                                                    highlightColor: Colors.transparent,
+                                                    onPressed: () => Player.inst.playOrPause(Player.inst.currentIndex.value, [Player.inst.nowPlayingTrack.value]),
+                                                    icon: Padding(
+                                                      padding: EdgeInsets.all(6.0 * cp * rcp),
+                                                      child: Obx(
+                                                        () => AnimatedSwitcher(
+                                                          duration: const Duration(milliseconds: 200),
+                                                          child: Player.inst.isPlaying.value
+                                                              ? Icon(
+                                                                  Broken.pause,
+                                                                  size: (vp(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp,
+                                                                  key: const Key("pauseicon"),
+                                                                  color: Colors.white.withAlpha(180),
+                                                                )
+                                                              : Icon(
+                                                                  Broken.play,
+                                                                  size: (vp(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp,
+                                                                  key: const Key("playicon"),
+                                                                  color: Colors.white.withAlpha(180),
+                                                                ),
                                                         ),
                                                       ),
                                                     ),
@@ -784,14 +780,16 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                               ),
                                             ),
                                           ),
-                                          SizedBox(width: 7 * rcp),
-                                          NamidaIconButton(
-                                            icon: Broken.next,
-                                            iconSize: 22.0 + 10 * rcp,
-                                            onPressed: snapToNext,
-                                          ),
-                                        ],
-                                      )),
+                                        ),
+                                        SizedBox(width: 7 * rcp),
+                                        NamidaIconButton(
+                                          icon: Broken.next,
+                                          iconSize: 22.0 + 10 * rcp,
+                                          onPressed: snapToNext,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -1115,6 +1113,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                         alignment: Alignment.bottomRight,
                                         children: [
                                           ReorderableListView.builder(
+                                            proxyDecorator: (child, index, animation) => child,
                                             scrollController: scrollController,
                                             padding: const EdgeInsets.only(bottom: 58.0),
                                             onReorderStart: (index) {
@@ -1128,16 +1127,27 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                             itemCount: Player.inst.currentQueue.length,
                                             itemBuilder: (context, i) {
                                               final track = Player.inst.currentQueue[i];
-                                              return FadeDismissible(
-                                                key: Key("Diss_$i${track.path}"),
-                                                onDismissed: (direction) => Player.inst.removeFromQueue(i),
-                                                child: TrackTile(
-                                                  index: i,
-                                                  key: ValueKey(i.toString()),
-                                                  track: track,
-                                                  displayRightDragHandler: true,
-                                                  draggableThumbnail: true,
-                                                  queue: Player.inst.currentQueue.toList(),
+                                              return GestureDetector(
+                                                key: Key("$i"),
+                                                onHorizontalDragStart: (details) {
+                                                  isReorderingQueue = true;
+                                                },
+                                                onHorizontalDragEnd: (details) {
+                                                  isReorderingQueue = false;
+                                                },
+                                                child: FadeDismissible(
+                                                  key: Key("Diss_$i${track.path}"),
+                                                  onDismissed: (direction) {
+                                                    Player.inst.removeFromQueue(i);
+                                                  },
+                                                  child: TrackTile(
+                                                    index: i,
+                                                    key: ValueKey(i.toString()),
+                                                    track: track,
+                                                    displayRightDragHandler: true,
+                                                    draggableThumbnail: true,
+                                                    queue: Player.inst.currentQueue.toList(),
+                                                  ),
                                                 ),
                                               );
                                             },
@@ -1148,7 +1158,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                               mainAxisAlignment: MainAxisAlignment.end,
                                               children: [
                                                 ElevatedButton(
-                                                  onPressed: () => ScrollSearchController.inst.animateQueueToCurrentTrack(Player.inst.currentIndex.value),
+                                                  onPressed: () => ScrollSearchController.inst.animateQueueToCurrentTrack(),
                                                   child: Icon(isArrowDown.value ? Broken.arrow_down : Broken.arrow_up_1),
                                                 ),
                                                 const SizedBox(width: 6.0),
@@ -1380,7 +1390,7 @@ class TrackImage extends StatelessWidget {
                                 cp: cp,
                                 child: ArtworkWidget(
                                   key: const ValueKey('imagecontainer'),
-                                  track: Player.inst.nowPlayingTrack.value,
+                                  track: track ?? Player.inst.nowPlayingTrack.value,
                                   thumnailSize: Get.width,
                                   compressed: false,
                                   borderRadius: 6.0 + 12.0 * cp,
