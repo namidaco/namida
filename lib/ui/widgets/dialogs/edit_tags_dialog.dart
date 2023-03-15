@@ -296,15 +296,9 @@ Future<void> showEditTrackTagsDialog(Track track) async {
           const SizedBox(height: 4.0),
           InkWell(
             onTap: () {
-              final strings = track.path.getFilenameWOExt.replaceAll('_', ' ').split(' - ');
-              if (strings.length == 3) {
-                artistController.text = strings[0];
-                titleController.text = strings[1];
-                albumController.text = strings[2];
-              } else {
-                artistController.text = strings.first;
-                titleController.text = strings.last;
-              }
+              final strings = track.path.getFilenameWOExt.replaceAll('_', ' ').replaceFirst('-', 'BETSOMETHINGCOULDBESIMILARTOTHIS').split('BETSOMETHINGCOULDBESIMILARTOTHIS');
+              artistController.text = strings.first.trim();
+              titleController.text = strings.last.trim();
             },
             child: Row(
               mainAxisSize: MainAxisSize.min,
