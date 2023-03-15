@@ -89,6 +89,7 @@ class SettingsController extends GetxController {
   final RxString lastPlayedTrackPath = ''.obs;
   final RxBool displayFavouriteButtonInNotification = false.obs;
 
+  final Rx<RepeatMode> playerRepeatMode = RepeatMode.none.obs;
   final Rx<TrackPlayMode> trackPlayMode = TrackPlayMode.searchResults.obs;
 
   /// Track Items
@@ -200,6 +201,7 @@ class SettingsController extends GetxController {
       lastPlayedTrackPath.value = json['lastPlayedTrackPath'] ?? lastPlayedTrackPath.value;
       displayFavouriteButtonInNotification.value = json['displayFavouriteButtonInNotification'] ?? displayFavouriteButtonInNotification.value;
 
+      playerRepeatMode.value = RepeatMode.values.getEnum(json['playerRepeatMode']) ?? playerRepeatMode.value;
       trackPlayMode.value = TrackPlayMode.values.getEnum(json['trackPlayMode']) ?? trackPlayMode.value;
 
       /// Track Items
@@ -293,6 +295,7 @@ class SettingsController extends GetxController {
       'totalListenedTimeInSec': totalListenedTimeInSec.value,
       'lastPlayedTrackPath': lastPlayedTrackPath.value,
       'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
+      'playerRepeatMode': playerRepeatMode.value.convertToString,
       'trackPlayMode': trackPlayMode.value.convertToString,
 
       /// Track Items
@@ -383,6 +386,7 @@ class SettingsController extends GetxController {
     int? totalListenedTimeInSec,
     String? lastPlayedTrackPath,
     bool? displayFavouriteButtonInNotification,
+    RepeatMode? playerRepeatMode,
     TrackPlayMode? trackPlayMode,
   }) {
     if (themeMode != null) {
@@ -647,6 +651,9 @@ class SettingsController extends GetxController {
     }
     if (displayFavouriteButtonInNotification != null) {
       this.displayFavouriteButtonInNotification.value = displayFavouriteButtonInNotification;
+    }
+    if (playerRepeatMode != null) {
+      this.playerRepeatMode.value = playerRepeatMode;
     }
     if (trackPlayMode != null) {
       this.trackPlayMode.value = trackPlayMode;

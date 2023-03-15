@@ -15,6 +15,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
 class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHandler {
@@ -40,7 +41,17 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
 
     _player.processingStateStream.listen((state) async {
       if (state == ProcessingState.completed) {
-        skipToNext();
+        final isLast = currentIndex.value != currentQueue.length - 1;
+        final repeat = SettingsController.inst.playerRepeatMode.value;
+        if (repeat == RepeatMode.none) {
+          skipToNext(isLast);
+        }
+        if (repeat == RepeatMode.one) {
+          skipToQueueItem(currentIndex.value);
+        }
+        if (repeat == RepeatMode.all) {
+          skipToNext();
+        }
       }
     });
 
@@ -294,9 +305,9 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   Future<void> stop() async => await _player.stop();
 
   @override
-  Future<void> skipToNext() async {
+  Future<void> skipToNext([bool andPlay = true]) async {
     if (currentIndex.value == currentQueue.length - 1) {
-      skipToQueueItem(0);
+      skipToQueueItem(0, andPlay);
     } else {
       skipToQueueItem(currentIndex.value + 1);
     }
@@ -312,9 +323,8 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   }
 
   @override
-  Future<void> skipToQueueItem(int index) async {
-    await play();
-    await setAudioSource(index);
+  Future<void> skipToQueueItem(int index, [bool andPlay = true]) async {
+    await setAudioSource(index, startPlaying: andPlay);
   }
 
   /// End of  audio_service overriden methods.

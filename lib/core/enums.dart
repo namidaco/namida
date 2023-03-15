@@ -100,3 +100,9 @@ enum TrackPlayMode {
   trackArtist,
   trackGenre,
 }
+
+enum RepeatMode {
+  none,
+  one,
+  all,
+}

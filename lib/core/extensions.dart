@@ -579,6 +579,44 @@ extension TRACKPLAYMODE on TrackPlayMode {
   }
 }
 
+extension PlayerRepeatModeUtils on RepeatMode {
+  String get toText {
+    if (this == RepeatMode.none) {
+      return Language.inst.REPEAT_MODE_NONE;
+    }
+    if (this == RepeatMode.one) {
+      return Language.inst.REPEAT_MODE_ONE;
+    }
+    if (this == RepeatMode.all) {
+      return Language.inst.REPEAT_MODE_ALL;
+    }
+    return '';
+  }
+
+  IconData get toIcon {
+    if (this == RepeatMode.none) {
+      return Broken.repeate_music;
+    }
+    if (this == RepeatMode.one) {
+      return Broken.repeate_one;
+    }
+    if (this == RepeatMode.all) {
+      return Broken.repeat;
+    }
+
+    return Broken.repeat;
+  }
+
+  void toggleSetting() {
+    final index = RepeatMode.values.indexOf(this);
+    if (SettingsController.inst.playerRepeatMode.value.index + 1 == RepeatMode.values.length) {
+      SettingsController.inst.save(playerRepeatMode: RepeatMode.values[0]);
+    } else {
+      SettingsController.inst.save(playerRepeatMode: RepeatMode.values[index + 1]);
+    }
+  }
+}
+
 extension PathsToTracks on List<String> {
   List<Track> get toTracks {
     final matchingSet = HashSet<String>.from(this);

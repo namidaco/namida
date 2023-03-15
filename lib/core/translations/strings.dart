@@ -53,6 +53,9 @@ class Language {
   String get ENABLE_REORDERING => 'Enable Reordering';
   String get DISABLE_REORDERING => 'Disable Reordering';
   String get DISPLAY_FAV_BUTTON_IN_NOTIFICATION => 'Display Favourtie Button in Notification';
+  String get REPEAT_MODE_ALL => 'Repeat All Queue';
+  String get REPEAT_MODE_NONE => 'Stop on Last Track';
+  String get REPEAT_MODE_ONE => 'Repeat Current Track';
 
   /// Main
   String get EXIT_APP => 'Exit';

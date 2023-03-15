@@ -896,10 +896,11 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                           height: 34,
                                           child: IconButton(
                                             visualDensity: VisualDensity.compact,
-                                            onPressed: () {},
+                                            tooltip: SettingsController.inst.playerRepeatMode.value.toText,
+                                            onPressed: () => SettingsController.inst.playerRepeatMode.value.toggleSetting(),
                                             padding: const EdgeInsets.all(2.0),
                                             icon: Icon(
-                                              Broken.repeat,
+                                              SettingsController.inst.playerRepeatMode.value.toIcon,
                                               size: 20.0,
                                               color: context.theme.colorScheme.onSecondaryContainer,
                                             ),
