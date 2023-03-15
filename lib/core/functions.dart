@@ -15,6 +15,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
@@ -122,4 +123,8 @@ bool checkIfQueueSameAsCurrent(List<Track> queue) {
 
 bool checkIfQueueSameAsAllTracks(List<Track> queue) {
   return checkIfQueuesSimilar(queue, Indexer.inst.tracksInfoList.toList());
+}
+
+String textCleanedForSearch(String textToClean) {
+  return SettingsController.inst.enableSearchCleanup.value ? textToClean.cleanUpForComparison : textToClean.toLowerCase();
 }

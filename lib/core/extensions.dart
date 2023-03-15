@@ -632,5 +632,5 @@ extension PathToTrack on String {
 }
 
 extension CleanUp on String {
-  String get cleanUpForComparison => toLowerCase().replaceAll(RegExp(r'/[\W\S_]/'), '');
+  String get cleanUpForComparison => toLowerCase().replaceAll(RegExp(r'[\W\s_]'), '');
 }

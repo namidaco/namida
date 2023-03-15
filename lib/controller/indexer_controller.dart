@@ -14,6 +14,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 
 class Indexer extends GetxController {
   static final Indexer inst = Indexer();
@@ -411,22 +412,19 @@ class Indexer extends GetxController {
 
     trackSearchList.clear();
     for (var item in tracksInfoList) {
-      final lctext = text.toLowerCase();
+      final lctext = textCleanedForSearch(text);
 
-      if ((sTitle && item.title.toLowerCase().contains(lctext)) ||
-          (sAlbum && item.album.toLowerCase().contains(lctext)) ||
-          (sAlbumArtist && item.albumArtist.toLowerCase().contains(lctext)) ||
-          (sArtist && item.artistsList.any((element) => element.toLowerCase().contains(lctext))) ||
-          (sGenre && item.genresList.any((element) => element.toLowerCase().contains(lctext))) ||
-          (sComposer && item.composer.toLowerCase().contains(lctext)) ||
-          (sYear && item.year.toString().contains(lctext))) {
+      if ((sTitle && textCleanedForSearch(item.title).contains(lctext)) ||
+          (sAlbum && textCleanedForSearch(item.album).contains(lctext)) ||
+          (sAlbumArtist && textCleanedForSearch(item.albumArtist).contains(lctext)) ||
+          (sArtist && item.artistsList.any((element) => textCleanedForSearch(element).contains(lctext))) ||
+          (sGenre && item.genresList.any((element) => textCleanedForSearch(element).contains(lctext))) ||
+          (sComposer && textCleanedForSearch(item.composer).contains(lctext)) ||
+          (sYear && textCleanedForSearch(item.year.toString()).contains(lctext))) {
         trackSearchList.add(item);
       }
-
-      print(item.title);
     }
-    print(trackSearchList.length);
-    // sortTracks();
+    printInfo(info: "Tracks Found: ${trackSearchList.length}");
   }
 
   void searchAlbums(String text) {
@@ -437,7 +435,7 @@ class Indexer extends GetxController {
     }
     Map<String, Set<Track>> newMap = <String, Set<Track>>{};
     for (var album in albumsMap.entries) {
-      newMap.addAllIf(album.key.toLowerCase().contains(text.toLowerCase()), {album.key: album.value});
+      newMap.addAllIf(textCleanedForSearch(album.key).contains(textCleanedForSearch(text)), {album.key: album.value});
     }
     albumSearchList.assignAll(newMap);
   }
@@ -450,7 +448,7 @@ class Indexer extends GetxController {
     }
     Map<String, Set<Track>> newMap = <String, Set<Track>>{};
     for (var artist in groupedArtistsMap.entries) {
-      newMap.addAllIf(artist.key.toLowerCase().contains(text.toLowerCase()), {artist.key: artist.value});
+      newMap.addAllIf(textCleanedForSearch(artist.key).contains(textCleanedForSearch(text)), {artist.key: artist.value});
     }
     artistSearchList.assignAll(newMap);
   }
@@ -464,7 +462,7 @@ class Indexer extends GetxController {
 
     Map<String, Set<Track>> newMap = <String, Set<Track>>{};
     for (var genre in groupedGenresMap.entries) {
-      newMap.addAllIf(genre.key.toLowerCase().contains(text.toLowerCase()), {genre.key: genre.value});
+      newMap.addAllIf(textCleanedForSearch(genre.key).contains(textCleanedForSearch(text)), {genre.key: genre.value});
     }
     genreSearchList.assignAll(newMap);
   }

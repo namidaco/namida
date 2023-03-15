@@ -303,6 +303,15 @@ class ExtrasSettings extends StatelessWidget {
               ),
             ),
           ),
+          Obx(
+            () => CustomSwitchListTile(
+              icon: Broken.document_filter,
+              title: Language.inst.ENABLE_SEARCH_CLEANUP,
+              subtitle: Language.inst.ENABLE_SEARCH_CLEANUP_SUBTITLE,
+              value: SettingsController.inst.enableSearchCleanup.value,
+              onChanged: (p0) => SettingsController.inst.save(enableSearchCleanup: !p0),
+            ),
+          ),
           CustomListTile(
             icon: Broken.sound,
             title: Language.inst.GENERATE_ALL_WAVEFORM_DATA,

@@ -56,6 +56,8 @@ class Language {
   String get REPEAT_MODE_ALL => 'Repeat All Queue';
   String get REPEAT_MODE_NONE => 'Stop on Last Track';
   String get REPEAT_MODE_ONE => 'Repeat Current Track';
+  String get ENABLE_SEARCH_CLEANUP => 'Enable Search Cleanup';
+  String get ENABLE_SEARCH_CLEANUP_SUBTITLE => 'All Symbols and Spaces will be neglected';
 
   /// Main
   String get EXIT_APP => 'Exit';

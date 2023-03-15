@@ -88,6 +88,7 @@ class SettingsController extends GetxController {
   final RxInt totalListenedTimeInSec = 0.obs;
   final RxString lastPlayedTrackPath = ''.obs;
   final RxBool displayFavouriteButtonInNotification = false.obs;
+  final RxBool enableSearchCleanup = false.obs;
 
   final Rx<RepeatMode> playerRepeatMode = RepeatMode.none.obs;
   final Rx<TrackPlayMode> trackPlayMode = TrackPlayMode.searchResults.obs;
@@ -200,6 +201,7 @@ class SettingsController extends GetxController {
       totalListenedTimeInSec.value = json['totalListenedTimeInSec'] ?? totalListenedTimeInSec.value;
       lastPlayedTrackPath.value = json['lastPlayedTrackPath'] ?? lastPlayedTrackPath.value;
       displayFavouriteButtonInNotification.value = json['displayFavouriteButtonInNotification'] ?? displayFavouriteButtonInNotification.value;
+      enableSearchCleanup.value = json['enableSearchCleanup'] ?? enableSearchCleanup.value;
 
       playerRepeatMode.value = RepeatMode.values.getEnum(json['playerRepeatMode']) ?? playerRepeatMode.value;
       trackPlayMode.value = TrackPlayMode.values.getEnum(json['trackPlayMode']) ?? trackPlayMode.value;
@@ -295,6 +297,7 @@ class SettingsController extends GetxController {
       'totalListenedTimeInSec': totalListenedTimeInSec.value,
       'lastPlayedTrackPath': lastPlayedTrackPath.value,
       'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
+      'enableSearchCleanup': enableSearchCleanup.value,
       'playerRepeatMode': playerRepeatMode.value.convertToString,
       'trackPlayMode': trackPlayMode.value.convertToString,
 
@@ -386,6 +389,7 @@ class SettingsController extends GetxController {
     int? totalListenedTimeInSec,
     String? lastPlayedTrackPath,
     bool? displayFavouriteButtonInNotification,
+    bool? enableSearchCleanup,
     RepeatMode? playerRepeatMode,
     TrackPlayMode? trackPlayMode,
   }) {
@@ -651,6 +655,9 @@ class SettingsController extends GetxController {
     }
     if (displayFavouriteButtonInNotification != null) {
       this.displayFavouriteButtonInNotification.value = displayFavouriteButtonInNotification;
+    }
+    if (enableSearchCleanup != null) {
+      this.enableSearchCleanup.value = enableSearchCleanup;
     }
     if (playerRepeatMode != null) {
       this.playerRepeatMode.value = playerRepeatMode;

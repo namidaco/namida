@@ -16,6 +16,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 
 class PlaylistController extends GetxController {
   static PlaylistController inst = PlaylistController();
@@ -73,12 +74,13 @@ class PlaylistController extends GetxController {
 
     playlistSearchList.clear();
     for (var item in playlistList) {
-      final lctext = text.toLowerCase();
+      final lctext = textCleanedForSearch(text);
       final dateFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.date));
-      if ((sTitle && item.name.translatePlaylistName.toLowerCase().toString().contains(lctext)) ||
-          (sDate && dateFormatted.toString().contains(lctext)) ||
-          (sComment && item.comment.toLowerCase().toString().contains(lctext)) ||
-          (sModes && item.modes.any((element) => element.toLowerCase().toString().contains(lctext)))) {
+
+      if ((sTitle && textCleanedForSearch(item.name.translatePlaylistName).contains(lctext)) ||
+          (sDate && textCleanedForSearch(dateFormatted.toString()).contains(lctext)) ||
+          (sComment && textCleanedForSearch(item.comment).contains(lctext)) ||
+          (sModes && item.modes.any((element) => textCleanedForSearch(element).contains(lctext)))) {
         playlistSearchList.add(item);
       }
     }
