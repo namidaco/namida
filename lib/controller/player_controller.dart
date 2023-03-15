@@ -8,6 +8,7 @@ import 'package:namida/controller/audio_handler.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/functions.dart';
 
 class Player {
   static Player inst = Player();
@@ -109,7 +110,7 @@ class Player {
     bool startPlaying = true,
     bool dontAddQueue = false,
   }) async {
-    if (queue.isEmpty || index == currentIndex.value) {
+    if ((queue.isEmpty || index == currentIndex.value) && checkIfQueueSameAsCurrent(queue)) {
       _audioHandler?.togglePlayPause();
       return;
     }

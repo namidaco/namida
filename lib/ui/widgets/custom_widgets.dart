@@ -42,57 +42,61 @@ class CustomSwitchListTile extends StatelessWidget {
         splashColor: Colors.transparent,
         highlightColor: context.isDarkMode ? Colors.white.withAlpha(12) : Colors.black.withAlpha(40),
       ),
-      child: ListTile(
-        enabled: enabled,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        onTap: () {
-          onChanged(value);
-        },
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
-        horizontalTitleGap: 0.0,
-        minVerticalPadding: 8.0,
-        leading: icon != null
-            ? SizedBox(
-                height: double.infinity,
-                child: rotateIcon != null
-                    ? RotatedBox(
-                        quarterTurns: rotateIcon!,
-                        child: Icon(
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 400),
+        opacity: enabled ? 1.0 : 0.5,
+        child: ListTile(
+          enabled: enabled,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          onTap: () {
+            onChanged(value);
+          },
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+          horizontalTitleGap: 0.0,
+          minVerticalPadding: 8.0,
+          leading: icon != null
+              ? SizedBox(
+                  height: double.infinity,
+                  child: rotateIcon != null
+                      ? RotatedBox(
+                          quarterTurns: rotateIcon!,
+                          child: Icon(
+                            icon,
+                            color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(100), context.theme.colorScheme.onBackground),
+                          ),
+                        )
+                      : Icon(
                           icon,
                           color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(100), context.theme.colorScheme.onBackground),
                         ),
-                      )
-                    : Icon(
-                        icon,
-                        color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(100), context.theme.colorScheme.onBackground),
-                      ),
-              )
-            : leading,
-        title: Text(
-          title,
-          style: context.theme.textTheme.displayMedium,
-          maxLines: subtitle != null ? 1 : 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: subtitle != null
-            ? Text(
-                subtitle!,
-                style: context.theme.textTheme.displaySmall,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              )
-            : null,
-        trailing: IgnorePointer(
-          child: FittedBox(
-            child: Row(
-              children: [
-                const SizedBox(
-                  width: 12.0,
-                ),
-                CustomSwitch(active: value),
-              ],
+                )
+              : leading,
+          title: Text(
+            title,
+            style: context.theme.textTheme.displayMedium,
+            maxLines: subtitle != null ? 1 : 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: subtitle != null
+              ? Text(
+                  subtitle!,
+                  style: context.theme.textTheme.displaySmall,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                )
+              : null,
+          trailing: IgnorePointer(
+            child: FittedBox(
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 12.0,
+                  ),
+                  CustomSwitch(active: value),
+                ],
+              ),
             ),
           ),
         ),
@@ -198,60 +202,64 @@ class CustomListTile extends StatelessWidget {
         splashColor: Colors.transparent,
         highlightColor: context.isDarkMode ? Colors.white.withAlpha(12) : Colors.black.withAlpha(40),
       ),
-      child: ListTile(
-        enabled: enabled,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.0.multipliedRadius),
-        ),
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
-        horizontalTitleGap: 0.0,
-        minVerticalPadding: 8.0,
-        leading: icon != null
-            ? SizedBox(
-                height: double.infinity,
-                child: rotateIcon != null
-                    ? RotatedBox(
-                        quarterTurns: rotateIcon!,
-                        child: Icon(
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 400),
+        opacity: enabled ? 1.0 : 0.5,
+        child: ListTile(
+          enabled: enabled,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0.multipliedRadius),
+          ),
+          onTap: onTap,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+          horizontalTitleGap: 0.0,
+          minVerticalPadding: 8.0,
+          leading: icon != null
+              ? SizedBox(
+                  height: double.infinity,
+                  child: rotateIcon != null
+                      ? RotatedBox(
+                          quarterTurns: rotateIcon!,
+                          child: Icon(
+                            icon,
+                            color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(100), context.theme.colorScheme.onBackground),
+                          ),
+                        )
+                      : Icon(
                           icon,
                           color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(100), context.theme.colorScheme.onBackground),
                         ),
-                      )
-                    : Icon(
-                        icon,
-                        color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(100), context.theme.colorScheme.onBackground),
+                )
+              : leading,
+          title: Text(
+            title,
+            style: largeTitle ? context.theme.textTheme.displayLarge : context.theme.textTheme.displayMedium,
+            maxLines: subtitle != null ? 1 : 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: subtitle != null
+              ? Text(
+                  subtitle!,
+                  style: context.theme.textTheme.displaySmall,
+                  maxLines: maxSubtitleLines,
+                  overflow: TextOverflow.ellipsis,
+                )
+              : null,
+          trailing: trailingText != null
+              ? Text(
+                  trailingText!,
+                  style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
+                )
+              : (trailing != null
+                  ? FittedBox(
+                      child: AnimatedContainer(
+                        margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                        duration: const Duration(milliseconds: 400),
+                        child: trailing,
                       ),
-              )
-            : leading,
-        title: Text(
-          title,
-          style: largeTitle ? context.theme.textTheme.displayLarge : context.theme.textTheme.displayMedium,
-          maxLines: subtitle != null ? 1 : 2,
-          overflow: TextOverflow.ellipsis,
+                    )
+                  : null),
         ),
-        subtitle: subtitle != null
-            ? Text(
-                subtitle!,
-                style: context.theme.textTheme.displaySmall,
-                maxLines: maxSubtitleLines,
-                overflow: TextOverflow.ellipsis,
-              )
-            : null,
-        trailing: trailingText != null
-            ? Text(
-                trailingText!,
-                style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
-              )
-            : (trailing != null
-                ? FittedBox(
-                    child: AnimatedContainer(
-                      margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                      duration: const Duration(milliseconds: 400),
-                      child: trailing,
-                    ),
-                  )
-                : null),
       ),
     );
   }

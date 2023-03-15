@@ -90,40 +90,36 @@ class ThemeSetting extends StatelessWidget {
               ),
             ),
             Obx(
-              () => AnimatedOpacity(
-                opacity: SettingsController.inst.autoColor.value ? 0.5 : 1.0,
-                duration: const Duration(milliseconds: 400),
-                child: CustomListTile(
-                  enabled: !SettingsController.inst.autoColor.value,
-                  icon: Broken.bucket,
-                  title: Language.inst.DEFAULT_COLOR,
-                  subtitle: Language.inst.DEFAULT_COLOR_SUBTITLE,
-                  trailing: CircleAvatar(
-                    minRadius: 12,
-                    backgroundColor: playerStaticColor,
-                  ),
-                  onTap: () => Get.dialog(
-                    CustomBlurryDialog(
-                      actions: [
-                        IconButton(
-                          icon: const Icon(Broken.refresh),
-                          tooltip: Language.inst.RESTORE_DEFAULTS,
-                          onPressed: () {
-                            _updateColor(kMainColor);
-                            Get.close(1);
-                          },
-                        ),
-                        ElevatedButton(
-                          onPressed: () => Get.close(1),
-                          child: Text(Language.inst.DONE),
-                        ),
-                      ],
-                      child: ColorPicker(
-                        pickerColor: playerStaticColor,
-                        onColorChanged: (value) {
-                          _updateColor(value);
+              () => CustomListTile(
+                enabled: !SettingsController.inst.autoColor.value,
+                icon: Broken.bucket,
+                title: Language.inst.DEFAULT_COLOR,
+                subtitle: Language.inst.DEFAULT_COLOR_SUBTITLE,
+                trailing: CircleAvatar(
+                  minRadius: 12,
+                  backgroundColor: playerStaticColor,
+                ),
+                onTap: () => Get.dialog(
+                  CustomBlurryDialog(
+                    actions: [
+                      IconButton(
+                        icon: const Icon(Broken.refresh),
+                        tooltip: Language.inst.RESTORE_DEFAULTS,
+                        onPressed: () {
+                          _updateColor(kMainColor);
+                          Get.close(1);
                         },
                       ),
+                      ElevatedButton(
+                        onPressed: () => Get.close(1),
+                        child: Text(Language.inst.DONE),
+                      ),
+                    ],
+                    child: ColorPicker(
+                      pickerColor: playerStaticColor,
+                      onColorChanged: (value) {
+                        _updateColor(value);
+                      },
                     ),
                   ),
                 ),

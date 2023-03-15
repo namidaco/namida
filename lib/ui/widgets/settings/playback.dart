@@ -263,46 +263,38 @@ class PlaybackSettings extends StatelessWidget {
             ),
           ),
           Obx(
-            () => AnimatedOpacity(
-              duration: const Duration(milliseconds: 300),
-              opacity: SettingsController.inst.enableVolumeFadeOnPlayPause.value ? 1.0 : 0.5,
-              child: CustomListTile(
-                enabled: SettingsController.inst.enableVolumeFadeOnPlayPause.value,
-                icon: Broken.play,
-                title: Language.inst.PLAY_FADE_DURATION,
-                trailing: NamidaWheelSlider(
-                  totalCount: 1900 ~/ 50,
-                  initValue: SettingsController.inst.playerPlayFadeDurInMilli.value ~/ 50,
-                  itemSize: 2,
-                  squeeze: 0.4,
-                  onValueChanged: (val) {
-                    final v = (val * 50 + 100) as int;
-                    SettingsController.inst.save(playerPlayFadeDurInMilli: v);
-                  },
-                  text: "${SettingsController.inst.playerPlayFadeDurInMilli.value}ms",
-                ),
+            () => CustomListTile(
+              enabled: SettingsController.inst.enableVolumeFadeOnPlayPause.value,
+              icon: Broken.play,
+              title: Language.inst.PLAY_FADE_DURATION,
+              trailing: NamidaWheelSlider(
+                totalCount: 1900 ~/ 50,
+                initValue: SettingsController.inst.playerPlayFadeDurInMilli.value ~/ 50,
+                itemSize: 2,
+                squeeze: 0.4,
+                onValueChanged: (val) {
+                  final v = (val * 50 + 100) as int;
+                  SettingsController.inst.save(playerPlayFadeDurInMilli: v);
+                },
+                text: "${SettingsController.inst.playerPlayFadeDurInMilli.value}ms",
               ),
             ),
           ),
           Obx(
-            () => AnimatedOpacity(
-              duration: const Duration(milliseconds: 300),
-              opacity: SettingsController.inst.enableVolumeFadeOnPlayPause.value ? 1.0 : 0.5,
-              child: CustomListTile(
-                enabled: SettingsController.inst.enableVolumeFadeOnPlayPause.value,
-                icon: Broken.pause,
-                title: Language.inst.PAUSE_FADE_DURATION,
-                trailing: NamidaWheelSlider(
-                  totalCount: 1900 ~/ 50,
-                  initValue: SettingsController.inst.playerPauseFadeDurInMilli.value ~/ 50,
-                  itemSize: 2,
-                  squeeze: 0.4,
-                  onValueChanged: (val) {
-                    final v = (val * 50 + 100) as int;
-                    SettingsController.inst.save(playerPauseFadeDurInMilli: v);
-                  },
-                  text: "${SettingsController.inst.playerPauseFadeDurInMilli.value}ms",
-                ),
+            () => CustomListTile(
+              enabled: SettingsController.inst.enableVolumeFadeOnPlayPause.value,
+              icon: Broken.pause,
+              title: Language.inst.PAUSE_FADE_DURATION,
+              trailing: NamidaWheelSlider(
+                totalCount: 1900 ~/ 50,
+                initValue: SettingsController.inst.playerPauseFadeDurInMilli.value ~/ 50,
+                itemSize: 2,
+                squeeze: 0.4,
+                onValueChanged: (val) {
+                  final v = (val * 50 + 100) as int;
+                  SettingsController.inst.save(playerPauseFadeDurInMilli: v);
+                },
+                text: "${SettingsController.inst.playerPauseFadeDurInMilli.value}ms",
               ),
             ),
           ),

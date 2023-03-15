@@ -106,9 +106,6 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
     );
   }
 }
-// ignore_for_file: dead_code
-
-enum MiniPlayerState { mini, expanded, queue }
 
 class MiniPlayer extends StatefulWidget {
   const MiniPlayer({Key? key, required this.animation}) : super(key: key);

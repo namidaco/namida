@@ -39,20 +39,16 @@ class MiniplayerCustomization extends StatelessWidget {
             },
             value: SettingsController.inst.enablePartyModeInMiniplayer.value,
           ),
-          AnimatedOpacity(
-            duration: const Duration(milliseconds: 400),
-            opacity: SettingsController.inst.enablePartyModeInMiniplayer.value ? 1.0 : 0.5,
-            child: CustomSwitchListTile(
-              enabled: SettingsController.inst.enablePartyModeInMiniplayer.value,
-              icon: Broken.colors_square,
-              title: Language.inst.EDGE_COLORS_SWITCHING,
-              onChanged: (value) {
-                SettingsController.inst.save(
-                  enablePartyModeColorSwap: !value,
-                );
-              },
-              value: SettingsController.inst.enablePartyModeColorSwap.value,
-            ),
+          CustomSwitchListTile(
+            enabled: SettingsController.inst.enablePartyModeInMiniplayer.value,
+            icon: Broken.colors_square,
+            title: Language.inst.EDGE_COLORS_SWITCHING,
+            onChanged: (value) {
+              SettingsController.inst.save(
+                enablePartyModeColorSwap: !value,
+              );
+            },
+            value: SettingsController.inst.enablePartyModeColorSwap.value,
           ),
           CustomListTile(
             icon: Broken.flash,
