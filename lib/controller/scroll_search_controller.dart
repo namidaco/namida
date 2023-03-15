@@ -4,6 +4,7 @@ import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
@@ -12,7 +13,8 @@ import 'package:namida/main.dart';
 class ScrollSearchController extends GetxController {
   static final ScrollSearchController inst = ScrollSearchController();
 
-  RxDouble miniPlayerHeight = 0.1.obs;
+  RxDouble miniplayerHeightPercentage = 0.0.obs;
+  RxDouble miniplayerHeightPercentageQueue = 0.0.obs;
 
   RxBool isGlobalSearchMenuShown = false.obs;
   final TextEditingController searchTextEditingController = Indexer.inst.globalSearchController.value;
@@ -86,7 +88,9 @@ class ScrollSearchController extends GetxController {
     if (shouldGoBack) {
       Get.offAll(() => MainPageWrapper());
     } else {
-      homepageController.animateToPage(animateTo, duration: const Duration(milliseconds: 400), curve: Curves.easeInOutQuart);
+      if (SettingsController.inst.enableBottomNavBar.value) {
+        homepageController.animateToPage(animateTo, duration: const Duration(milliseconds: 400), curve: Curves.easeInOutQuart);
+      }
     }
     clearGlobalSearchAndCloseThingys();
     printInfo(info: animateTo.toEnum.toText);

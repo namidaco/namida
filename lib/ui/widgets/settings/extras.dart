@@ -31,6 +31,15 @@ class ExtrasSettings extends StatelessWidget {
           const CollapsedSettingTileWidget(),
           Obx(
             () => CustomSwitchListTile(
+              icon: Broken.direct,
+              title: Language.inst.ENABLE_BOTTOM_NAV_BAR,
+              subtitle: Language.inst.ENABLE_BOTTOM_NAV_BAR_SUBTITLE,
+              value: SettingsController.inst.enableBottomNavBar.value,
+              onChanged: (p0) => SettingsController.inst.save(enableBottomNavBar: !p0),
+            ),
+          ),
+          Obx(
+            () => CustomSwitchListTile(
               icon: Broken.folder_open,
               title: Language.inst.ENABLE_FOLDERS_HIERARCHY,
               value: SettingsController.inst.enableFoldersHierarchy.value,

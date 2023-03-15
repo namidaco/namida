@@ -89,6 +89,7 @@ class SettingsController extends GetxController {
   final RxString lastPlayedTrackPath = ''.obs;
   final RxBool displayFavouriteButtonInNotification = false.obs;
   final RxBool enableSearchCleanup = false.obs;
+  final RxBool enableBottomNavBar = true.obs;
 
   final Rx<RepeatMode> playerRepeatMode = RepeatMode.none.obs;
   final Rx<TrackPlayMode> trackPlayMode = TrackPlayMode.searchResults.obs;
@@ -202,6 +203,7 @@ class SettingsController extends GetxController {
       lastPlayedTrackPath.value = json['lastPlayedTrackPath'] ?? lastPlayedTrackPath.value;
       displayFavouriteButtonInNotification.value = json['displayFavouriteButtonInNotification'] ?? displayFavouriteButtonInNotification.value;
       enableSearchCleanup.value = json['enableSearchCleanup'] ?? enableSearchCleanup.value;
+      enableBottomNavBar.value = json['enableBottomNavBar'] ?? enableBottomNavBar.value;
 
       playerRepeatMode.value = RepeatMode.values.getEnum(json['playerRepeatMode']) ?? playerRepeatMode.value;
       trackPlayMode.value = TrackPlayMode.values.getEnum(json['trackPlayMode']) ?? trackPlayMode.value;
@@ -298,6 +300,7 @@ class SettingsController extends GetxController {
       'lastPlayedTrackPath': lastPlayedTrackPath.value,
       'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
       'enableSearchCleanup': enableSearchCleanup.value,
+      'enableBottomNavBar': enableBottomNavBar.value,
       'playerRepeatMode': playerRepeatMode.value.convertToString,
       'trackPlayMode': trackPlayMode.value.convertToString,
 
@@ -390,6 +393,7 @@ class SettingsController extends GetxController {
     String? lastPlayedTrackPath,
     bool? displayFavouriteButtonInNotification,
     bool? enableSearchCleanup,
+    bool? enableBottomNavBar,
     RepeatMode? playerRepeatMode,
     TrackPlayMode? trackPlayMode,
   }) {
@@ -658,6 +662,9 @@ class SettingsController extends GetxController {
     }
     if (enableSearchCleanup != null) {
       this.enableSearchCleanup.value = enableSearchCleanup;
+    }
+    if (enableBottomNavBar != null) {
+      this.enableBottomNavBar.value = enableBottomNavBar;
     }
     if (playerRepeatMode != null) {
       this.playerRepeatMode.value = playerRepeatMode;

@@ -292,6 +292,7 @@ class MainPageWrapper extends StatelessWidget {
                 duration: const Duration(milliseconds: 500),
                 data: AppThemes.inst.getAppTheme(colorScheme ?? CurrentColor.inst.color.value, !Get.isDarkMode),
                 child: Stack(
+                  alignment: Alignment.bottomCenter,
                   children: [
                     HomePage(
                       title: title,
@@ -301,9 +302,17 @@ class MainPageWrapper extends StatelessWidget {
                       child: child,
                     ),
                     const Hero(tag: 'MINIPLAYER', child: MiniPlayerParent()),
-                    const Positioned(
-                      bottom: 60.0,
-                      child: SelectedTracksPreviewContainer(),
+                    Positioned(
+                      bottom: 60 +
+                          60.0 * ScrollSearchController.inst.miniplayerHeightPercentage.value +
+                          (SettingsController.inst.enableBottomNavBar.value ? 0 : 32.0 * (1 - ScrollSearchController.inst.miniplayerHeightPercentageQueue.value)),
+                      child: Hero(
+                        tag: 'SELECTEDTRACKS',
+                        child: Opacity(
+                          opacity: 1 - ScrollSearchController.inst.miniplayerHeightPercentage.value,
+                          child: const SelectedTracksPreviewContainer(),
+                        ),
+                      ),
                     ),
                   ],
                 ),

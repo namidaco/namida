@@ -88,14 +88,18 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
 
           /// MiniMiniPlayer
           Obx(
-            () => AnimatedSwitcher(
-              duration: const Duration(milliseconds: 600),
-              child: Player.inst.nowPlayingTrack.value == kDummyTrack
-                  ? const SizedBox(
-                      key: Key('emptyminiplayer'),
-                    )
-                  : MiniPlayer(key: const Key('actualminiplayer'), animation: animation),
-            ),
+            () {
+              // to refresh after toggling [enableBottomNavBar]
+              SettingsController.inst.enableBottomNavBar.value;
+              return AnimatedSwitcher(
+                duration: const Duration(milliseconds: 600),
+                child: Player.inst.nowPlayingTrack.value == kDummyTrack
+                    ? const SizedBox(
+                        key: Key('emptyminiplayer'),
+                      )
+                    : MiniPlayer(key: const Key('actualminiplayer'), animation: animation),
+              );
+            },
           )
         ],
       ),
@@ -123,18 +127,18 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
   late double bottomInset;
   late double maxOffset;
   final velocity = VelocityTracker.withKind(PointerDeviceKind.touch);
-  static const Cubic bouncingCurve = Cubic(0.175, 0.885, 0.32, 1.125);
+  final Cubic bouncingCurve = const Cubic(0.175, 0.885, 0.32, 1.125);
 
-  static const headRoom = 50.0;
-  static const actuationOffset = 100.0; // min distance to snap
-  static const deadSpace = 100.0; // Distance from bottom to ignore swipes
+  final headRoom = 50.0;
+  final actuationOffset = SettingsController.inst.enableBottomNavBar.value ? 100 : 60.0; // min distance to snap
+  final deadSpace = SettingsController.inst.enableBottomNavBar.value ? 100 : 60.0; // Distance from bottom to ignore swipes
 
   /// Horizontal track switching
   double sOffset = 0.0;
   double sPrevOffset = 0.0;
   double stParallax = 1.0;
   double siParallax = 1.15;
-  static const sActuationMulti = 1.5;
+  final sActuationMulti = 1.5;
   late double sMaxOffset;
   late AnimationController sAnim;
 
@@ -240,7 +244,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
     )
         .then((_) {
       bounceUp = false;
-      ScrollSearchController.inst.animateQueueToCurrentTrack();
+      // ScrollSearchController.inst.animateQueueToCurrentTrack();
     });
     if (haptic && (prevOffset - offset).abs() > actuationOffset) HapticFeedback.lightImpact();
   }
@@ -433,7 +437,8 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
               final miniplayerbottomnavheight = SettingsController.inst.enableBottomNavBar.value ? 60.0 : 0.0;
               final double bottomOffset = (-miniplayerbottomnavheight * icp + p.clamp(-1, 0) * -200) - (bottomInset * icp);
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                ScrollSearchController.inst.miniplayerHeightPercentage.value = cp;
+                ScrollSearchController.inst.miniplayerHeightPercentage.value = rcp;
+                ScrollSearchController.inst.miniplayerHeightPercentageQueue.value = qp;
               });
 
               return Obx(

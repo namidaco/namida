@@ -126,7 +126,7 @@ class TrackTile extends StatelessWidget {
                     if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
                       SelectedTracksController.inst.selectOrUnselect(track);
                     } else {
-                      Player.inst.playOrPause(index, track, queue: queue);
+                      Player.inst.playOrPause(index, queue);
                       debugPrint(track.path);
                     }
                   },
@@ -163,6 +163,7 @@ class TrackTile extends StatelessWidget {
                         if (draggableThumbnail)
                           CustomReorderableDelayedDragStartListener(
                             index: index,
+                            delay: const Duration(milliseconds: 80),
                             child: Container(
                               color: Colors.transparent,
                               height: trackTileHeight,
