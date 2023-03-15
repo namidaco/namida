@@ -114,7 +114,7 @@ class PlaylisTracksPage extends StatelessWidget {
                                   (track) => AnimatingTile(
                                     key: ValueKey(track.key),
                                     position: track.key,
-                                    child: Dismissible(
+                                    child: FadeDismissible(
                                       key: UniqueKey(),
                                       direction: shouldReorder.value ? DismissDirection.horizontal : DismissDirection.none,
                                       onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTrackFromPlaylist([track.value.track], playlist),

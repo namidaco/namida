@@ -1330,3 +1330,36 @@ class NamidaContainerDivider extends StatelessWidget {
     );
   }
 }
+
+class FadeDismissible extends StatelessWidget {
+  final Widget child;
+  final void Function(DismissDirection)? onDismissed;
+  final DismissDirection direction;
+
+  FadeDismissible({
+    super.key,
+    required this.child,
+    this.onDismissed,
+    this.direction = DismissDirection.horizontal,
+  });
+
+  final RxDouble opacity = 1.0.obs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dismissible(
+      key: key!,
+      onDismissed: onDismissed,
+      onUpdate: (details) {
+        opacity.value = 1 - details.progress;
+      },
+      direction: direction,
+      child: Obx(
+        () => Opacity(
+          opacity: opacity.value,
+          child: child,
+        ),
+      ),
+    );
+  }
+}

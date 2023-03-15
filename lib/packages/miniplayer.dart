@@ -1127,13 +1127,18 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                             physics: queueScrollable ? const AlwaysScrollableScrollPhysics() : const NeverScrollableScrollPhysics(),
                                             itemCount: Player.inst.currentQueue.length,
                                             itemBuilder: (context, i) {
-                                              return TrackTile(
-                                                index: i,
-                                                key: ValueKey(i.toString()),
-                                                track: Player.inst.currentQueue[i],
-                                                displayRightDragHandler: true,
-                                                draggableThumbnail: true,
-                                                queue: Player.inst.currentQueue.toList(),
+                                              final track = Player.inst.currentQueue[i];
+                                              return FadeDismissible(
+                                                key: Key("Diss_$i${track.path}"),
+                                                onDismissed: (direction) => Player.inst.removeFromQueue(i),
+                                                child: TrackTile(
+                                                  index: i,
+                                                  key: ValueKey(i.toString()),
+                                                  track: track,
+                                                  displayRightDragHandler: true,
+                                                  draggableThumbnail: true,
+                                                  queue: Player.inst.currentQueue.toList(),
+                                                ),
                                               );
                                             },
                                           ),
