@@ -1438,7 +1438,7 @@ class LyricsWrapper extends StatelessWidget {
                             child: Column(
                               children: [
                                 const SizedBox(height: 16.0),
-                                Text(Lyrics.inst.currentLyrics.value),
+                                Text(Lyrics.inst.currentLyrics.value, style: context.textTheme.displayMedium),
                                 const SizedBox(height: 16.0),
                               ],
                             ),
