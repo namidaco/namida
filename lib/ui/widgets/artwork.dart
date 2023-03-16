@@ -61,6 +61,19 @@ class ArtworkWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final stockWidget = Container(
+      width: width ?? thumnailSize,
+      height: height ?? thumnailSize,
+      key: const ValueKey("empty"),
+      decoration: BoxDecoration(
+        color: bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
+        borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
+      ),
+      child: Icon(
+        Broken.musicnote,
+        size: iconSize,
+      ),
+    );
     final extImageChild = FileSystemEntity.typeSync(track.pathToImage) != FileSystemEntityType.notFound && !forceDummyArtwork
         ? Stack(
             alignment: Alignment.center,
@@ -90,6 +103,9 @@ class ArtworkWidget extends StatelessWidget {
                           child: frame != null ? child : const SizedBox(),
                         );
                       }),
+                      errorBuilder: (context, error, stackTrace) {
+                        return stockWidget;
+                      },
                     ),
               if (!compressed)
                 ExtendedImage.file(
@@ -104,19 +120,7 @@ class ArtworkWidget extends StatelessWidget {
               if (onTopWidget != null) onTopWidget!,
             ],
           )
-        : Container(
-            width: width ?? thumnailSize,
-            height: height ?? thumnailSize,
-            key: const ValueKey("empty"),
-            decoration: BoxDecoration(
-              color: bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
-              borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
-            ),
-            child: Icon(
-              Broken.musicnote,
-              size: iconSize,
-            ),
-          );
+        : stockWidget;
 
     return SettingsController.inst.enableGlowEffect.value && blur != 0.0
         ? SizedBox(

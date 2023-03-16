@@ -217,7 +217,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     currentIndex.value = i;
     CurrentColor.inst.currentPlayingIndex.value = i;
     final item = currentQueue.elementAt(oldIndex);
-    removeFromQueue(oldIndex);
+    currentQueue.removeAt(oldIndex);
     insertInQueue([item], newIndex);
   }
 

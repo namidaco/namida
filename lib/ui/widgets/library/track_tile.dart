@@ -98,9 +98,7 @@ class TrackTile extends StatelessWidget {
         final double thumnailSize = SettingsController.inst.trackThumbnailSizeinList.value;
         final double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
         final bool isTrackSelected = SelectedTracksController.inst.selectedTracks.contains(track);
-        bool isTrackSamePath = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
-        bool isRightIndex = index == CurrentColor.inst.currentPlayingIndex.value;
-        bool isTrackCurrentlyPlaying = isRightIndex && isTrackSamePath;
+        bool isTrackCurrentlyPlaying = index == CurrentColor.inst.currentPlayingIndex.value;
 
         final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
         return Padding(

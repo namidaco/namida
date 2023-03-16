@@ -324,11 +324,11 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
           setState(() => queueScrollable = offset >= maxOffset * 2);
         },
         onPointerUp: (event) {
+          verticalSnapping();
           if (offset <= maxOffset || offset > maxOffset) return;
           if (scrollController.positions.isNotEmpty && scrollController.positions.first.pixels > 0.0 && offset >= maxOffset * 2) return;
 
           setState(() => queueScrollable = true);
-          verticalSnapping();
         },
         child: GestureDetector(
           /// Tap
@@ -755,7 +755,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                                   ),
                                                   child: IconButton(
                                                     highlightColor: Colors.transparent,
-                                                    onPressed: () => Player.inst.playOrPause(Player.inst.currentIndex.value, [Player.inst.nowPlayingTrack.value]),
+                                                    onPressed: () => Player.inst.playOrPause(Player.inst.currentIndex.value, []),
                                                     icon: Padding(
                                                       padding: EdgeInsets.all(6.0 * cp * rcp),
                                                       child: Obx(

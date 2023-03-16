@@ -110,7 +110,7 @@ class Player {
     bool startPlaying = true,
     bool dontAddQueue = false,
   }) async {
-    if ((queue.isEmpty || index == currentIndex.value) && checkIfQueueSameAsCurrent(queue)) {
+    if (queue.isEmpty || (index == currentIndex.value && checkIfQueueSameAsCurrent(queue))) {
       _audioHandler?.togglePlayPause();
       return;
     }

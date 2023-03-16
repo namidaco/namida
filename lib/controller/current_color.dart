@@ -20,7 +20,6 @@ class CurrentColor extends GetxController {
 
   Rx<Color> color = playerStaticColor.obs;
   RxList<Color> palette = <Color>[].obs;
-  RxString currentPlayingTrackPath = ''.obs;
   RxInt currentPlayingIndex = 0.obs;
   RxBool generatingAllColorPalettes = false.obs;
 
@@ -28,7 +27,6 @@ class CurrentColor extends GetxController {
     if (SettingsController.inst.autoColor.value) {
       await setPlayerColor(track);
     }
-    currentPlayingTrackPath.value = track.path;
     currentPlayingIndex.value = index;
     updateThemeAndRefresh();
   }

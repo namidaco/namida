@@ -170,6 +170,10 @@ class VideoController extends GetxController {
       }
     }
 
+    if (youtubeVideoId.isEmpty) {
+      return;
+    }
+
     /// Video Found in Video Cache Directory
     if (SettingsController.inst.videoPlaybackSource.value != 2 /* not youtube */) {
       final videoFiles = Directory(kVideosCachePath).listSync();
@@ -205,9 +209,11 @@ class VideoController extends GetxController {
   /// track is important to initialize the player only if the user didnt skip the song
   /// happens quite often when the video is being downloaded.
   Future<void> playAndInitializeVideo(String path, Track track) async {
+    if (path.isEmpty) {
+      return;
+    }
     if (Player.inst.nowPlayingTrack.value == track) {
       final file = File(path);
-      await vidcontroller?.setVolume(0.0);
       await vidcontroller?.dispose();
       vidcontroller = VideoPlayerController.file(file, videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true, allowBackgroundPlayback: true));
       await vidcontroller?.initialize();

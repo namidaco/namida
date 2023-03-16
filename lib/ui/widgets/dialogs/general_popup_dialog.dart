@@ -52,7 +52,7 @@ Future<void> showGeneralPopupDialog(
         child: Dialog(
           insetPadding: const EdgeInsets.symmetric(horizontal: 34.0, vertical: 24.0),
           clipBehavior: Clip.antiAlias,
-          // backgroundColor: Color.alphaBlend(colorDelightened.withAlpha(10), Get.theme.backgroundColor),
+          backgroundColor: Color.alphaBlend(colorDelightened.withAlpha(10), Get.theme.backgroundColor),
           child: SingleChildScrollView(
             child: Column(
               children: [
