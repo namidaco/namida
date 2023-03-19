@@ -22,7 +22,8 @@ class HomePage extends StatelessWidget {
   final List<Widget>? actionsToAdd;
   final void Function() onDrawerIconPressed;
   final bool isFromDrawer;
-  const HomePage({super.key, this.child, this.title, this.actions, this.actionsToAdd, required this.onDrawerIconPressed, this.isFromDrawer = false});
+  final bool getOffAll;
+  const HomePage({super.key, this.child, this.title, this.actions, this.actionsToAdd, required this.onDrawerIconPressed, this.isFromDrawer = false, this.getOffAll = false});
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +43,11 @@ class HomePage extends StatelessWidget {
                           key: const ValueKey('arrowleft'),
                           icon: Broken.arrow_left_2,
                           onPressed: () {
-                            Get.back();
+                            if (getOffAll) {
+                              Get.offAll(MainPageWrapper());
+                            } else {
+                              Get.back();
+                            }
                             Get.focusScope?.unfocus();
                             ScrollSearchController.inst.clearGlobalSearchAndCloseThingys();
                           },
@@ -76,15 +81,17 @@ class HomePage extends StatelessWidget {
                         ScrollSearchController.inst.isGlobalSearchMenuShown.value = true;
                       }
                     },
-                    searchBoxWidth: context.width / 1.2, searchBoxHeight: 180,
+                    hintText: Language.inst.SEARCH,
+                    searchBoxWidth: context.width / 1.2,
+                    searchBoxHeight: 180,
                     buttonColour: Colors.transparent,
+                    enableBoxShadow: false,
                     buttonShadowColour: Colors.transparent,
                     hintTextColour: context.theme.colorScheme.onSurface,
-                    searchBoxColour: context.theme.cardColor,
+                    searchBoxColour: context.theme.cardColor.withAlpha(200),
                     enteredTextStyle: context.theme.textTheme.displayMedium,
                     cursorColour: context.theme.colorScheme.onBackground,
                     buttonBorderColour: Colors.black45,
-                    // hintText: refresh.isCompleted ? Language.instance.SEARCH_WELCOME : Language.instance.COLLECTION_INDEXING_HINT,
                     buttonWidget: Hero(
                       tag: 'SEARCHOPEN',
                       child: IgnorePointer(
@@ -115,6 +122,25 @@ class HomePage extends StatelessWidget {
                   ),
               actions: actions ??
                   [
+                    // Hero(
+                    //   tag: 'dsfdfds',
+                    //   child: NamidaIconButton(
+                    //     padding: const EdgeInsets.only(right: 12.0, left: 10.0),
+                    //     icon: Broken.ghost,
+                    //     onPressed: () async {
+                    //       // GoogleSignIn _googleSignIn = GoogleSignIn(
+                    //       //   scopes: [
+                    //       //     'email',
+                    //       //     'https://www.googleapis.com/auth/youtube',
+                    //       //     'https://www.googleapis.com/auth/youtube.readonly',
+                    //       //     'https://www.googleapis.com/auth/youtube.force-ssl',
+                    //       //   ],
+                    //       // );
+                    //       // final acc = await _googleSignIn.signIn();
+                    //       // print('ACCCCCCCCCC ${acc?.displayName ?? 'NULLLLLLL'}');
+                    //     },
+                    //   ),
+                    // ),
                     Hero(
                       tag: 'STATICON',
                       child: NamidaIconButton(
@@ -169,8 +195,19 @@ class HomePage extends StatelessWidget {
                           )
                         : SettingsController.inst.selectedLibraryTab.value.toWidget),
               ),
+
+              /// Search Box
+              Positioned.fill(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 400),
+                  child: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? SearchPage() : null,
+                ),
+              ),
+
+              ///
               Container(
-                height: 24.0,
+                height: 28.0,
+                transform: Matrix4.translationValues(0, 8.0, 0),
                 decoration: BoxDecoration(
                   boxShadow: [
                     BoxShadow(
@@ -179,13 +216,6 @@ class HomePage extends StatelessWidget {
                       blurRadius: 8.0,
                     ),
                   ],
-                ),
-              ),
-              // Search Box
-              Positioned.fill(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 400),
-                  child: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? SearchPage() : null,
                 ),
               ),
             ],

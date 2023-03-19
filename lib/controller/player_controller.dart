@@ -30,7 +30,7 @@ class Player {
         androidNotificationChannelName: 'Namida',
         androidNotificationChannelDescription: 'Namida Media Notification',
         androidNotificationIcon: 'drawable/ic_stat_musicnote',
-        androidStopForegroundOnPause: false,
+        androidNotificationOngoing: true,
       ),
     );
   }
@@ -55,20 +55,20 @@ class Player {
     _audioHandler?.shuffleNextTracks();
   }
 
-  Future<void> addToQueue(List<Track> tracks, {bool insertNext = false}) async {
-    await _audioHandler?.addToQueue(tracks, insertNext: insertNext);
+  void addToQueue(List<Track> tracks, {bool insertNext = false}) {
+    _audioHandler?.addToQueue(tracks, insertNext: insertNext);
   }
 
-  Future<void> insertInQueue(List<Track> tracks, int index) async {
-    await _audioHandler?.insertInQueue(tracks, index);
+  void insertInQueue(List<Track> tracks, int index) {
+    _audioHandler?.insertInQueue(tracks, index);
   }
 
   Future<void> removeFromQueue(int index) async {
     await _audioHandler?.removeFromQueue(index);
   }
 
-  Future<void> removeRangeFromQueue(int start, int end) async {
-    await _audioHandler?.removeRangeFromQueue(start, end);
+  void removeRangeFromQueue(int start, int end) {
+    _audioHandler?.removeRangeFromQueue(start, end);
   }
 
   Future<void> play() async {
@@ -128,6 +128,7 @@ class Player {
     }
 
     currentQueue.assignAll(finalQueue);
+
     await _audioHandler?.setAudioSource(index, startPlaying: startPlaying);
   }
 }

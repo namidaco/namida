@@ -52,7 +52,7 @@ class Stats extends StatelessWidget {
               ),
               Obx(
                 () => StatsContainer(
-                  icon: Broken.music_library_2,
+                  icon: Broken.timer_1,
                   title: '${Language.inst.TOTAL_LISTEN_TIME} :',
                   value: SettingsController.inst.totalListenedTimeInSec.value.getTimeFormatted,
                 ),

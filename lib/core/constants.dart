@@ -27,7 +27,6 @@ final String kTracksFilePath = '$kAppDirectoryPath/tracks.json';
 final String kPlaylistsFilePath = '$kAppDirectoryPath/playlists.json';
 final String kVideoPathsFilePath = '$kAppDirectoryPath/videoFilesPaths.txt';
 final String kQueuesFilePath = '$kAppDirectoryPath/queues.json';
-final String kLatestQueueFilePath = '$kAppDirectoryPath/latestqueue.json';
 
 final String kArtworksDirPath = '$kAppDirectoryPath/Artworks/';
 final String kPaletteDirPath = '$kAppDirectoryPath/Palettes/';

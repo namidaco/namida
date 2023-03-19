@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 
@@ -10,7 +9,6 @@ import 'package:intl/intl.dart';
 
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -216,18 +214,10 @@ class PlaylistController extends GetxController {
   }
 
   void generateRandomPlaylist() {
-    final List<Track> randomList = [];
-    final trackslist = Indexer.inst.tracksInfoList.length;
-    final min = trackslist ~/ 6;
-    final max = trackslist ~/ 3;
-    final int randomNumber = min + Random().nextInt(max - min);
-    for (int i = 0; i < randomNumber; i++) {
-      randomList.add(Indexer.inst.tracksInfoList.toList()[Random().nextInt(Indexer.inst.tracksInfoList.length)]);
-    }
     final l = playlistList.where((pl) => pl.name.startsWith('_AUTO_GENERATED_')).length;
     PlaylistController.inst.addNewPlaylist(
       '_AUTO_GENERATED_ ${l + 1}',
-      tracks: randomList,
+      tracks: getRandomTracks(),
     );
   }
 
@@ -237,8 +227,10 @@ class PlaylistController extends GetxController {
     if (plmp == null) {
       return;
     }
+    final historytracks = playlistList.firstWhere((element) => element.id == kPlaylistHistory).tracks;
+
     final Map<String, int> topTracksPathMap = <String, int>{};
-    for (final t in playlistList.firstWhere((element) => element.id == kPlaylistHistory).tracks.map((e) => e.track).toList()) {
+    for (final t in historytracks.map((e) => e.track).toList()) {
       if (topTracksPathMap.containsKey(t.path)) {
         topTracksPathMap.update(t.path, (value) => value + 1);
       } else {

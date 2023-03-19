@@ -57,20 +57,13 @@ class NamidaDialogs {
 
   Future<void> showPlaylistDialog(Playlist playlist, [Widget? leading]) async {
     await showGeneralPopupDialog(
-      playlist.tracks,
-      playlist.name,
-      [playlist.tracks.displayTrackKeyword, playlist.date.dateFormatted].join(' • '),
+      playlist.tracks.map((e) => e.track).toList(),
+      playlist.name.translatePlaylistName,
+      [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.date.dateFormatted].join(' • '),
       thirdLineText: playlist.modes.join(', ').overflow,
       playlist: playlist,
       extractColor: false,
     );
-  }
-
-  Future<void> openQueuesPage() async {
-    if (QueueController.inst.queueList.isEmpty) {
-      await QueueController.inst.prepareQueuesFile();
-    }
-    Get.to(() => QueuesPage());
   }
 
   Future<void> showQueueDialog(Queue queue) async {

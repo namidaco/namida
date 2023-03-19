@@ -367,11 +367,6 @@ class AddFolderButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
-      style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all(
-          context.theme.backgroundColor.withAlpha(200),
-        ),
-      ),
       icon: const Icon(
         Broken.folder_add,
         size: 18,
@@ -431,22 +426,29 @@ class SmallListTile extends StatelessWidget {
   final bool compact;
   final Color? color;
   final void Function()? onTap;
-  const SmallListTile(
-      {super.key,
-      required this.title,
-      this.onTap,
-      this.trailing,
-      this.active = false,
-      this.icon,
-      this.trailingIcon,
-      this.displayAnimatedCheck = false,
-      this.compact = true,
-      this.subtitle,
-      this.color});
+  final EdgeInsetsGeometry? padding;
+  final double? titleGap;
+  const SmallListTile({
+    super.key,
+    required this.title,
+    this.onTap,
+    this.trailing,
+    this.active = false,
+    this.icon,
+    this.trailingIcon,
+    this.displayAnimatedCheck = false,
+    this.compact = true,
+    this.subtitle,
+    this.color,
+    this.padding,
+    this.titleGap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      contentPadding: padding,
+      horizontalTitleGap: titleGap,
       leading: SizedBox(
         height: double.infinity,
         child: icon != null

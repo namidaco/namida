@@ -617,20 +617,35 @@ extension PlayerRepeatModeUtils on RepeatMode {
   }
 }
 
-extension PathsToTracks on List<String> {
+extension ConvertPathsToTracks on List<String> {
   List<Track> get toTracks {
     final matchingSet = HashSet<String>.from(this);
     final finalTracks = Indexer.inst.tracksInfoList.where((item) => matchingSet.contains(item.path));
-    return finalTracks.toList();
+    return finalTracks.sorted((a, b) => indexOf(a.path).compareTo(indexOf(b.path)));
   }
 }
 
-extension PathToTrack on String {
+extension ConvertPathToTrack on String {
   Track get toTrack {
     return Indexer.inst.tracksInfoList.firstWhere((item) => item.path == this);
   }
 }
 
+//TODO: catches non utf char
 extension CleanUp on String {
   String get cleanUpForComparison => toLowerCase().replaceAll(RegExp(r'[\W\s_]'), '');
+}
+
+extension YTLinkToID on String {
+  String get getYoutubeID {
+    String videoId = '';
+    if (length >= 11) {
+      videoId = substring(length - 11);
+    }
+    return videoId;
+  }
+}
+
+extension FORMATNUMBER on int? {
+  String formatDecimal([bool full = false]) => (full ? NumberFormat('#,###,###') : NumberFormat.compact()).format(this);
 }

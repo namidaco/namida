@@ -11,6 +11,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/youtube_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -28,7 +29,8 @@ class VideoController extends GetxController {
   RxInt videoCurrentSize = 0.obs;
   RxString videoCurrentQuality = ''.obs;
   RxInt videoTotalSize = 0.obs;
-  RxBool isLocal = false.obs;
+  // Rx<Video> currentYoutubeVideo = Video(VideoId(''), '', '', ChannelId(''), DateTime(0), '', DateTime(0), '', 0.milliseconds, ThumbnailSet(''), [], Engagement(0, 0, 0), false).obs;
+
   VideoPlayerController? vidcontroller;
   final connectivity = Connectivity();
 
@@ -46,9 +48,9 @@ class VideoController extends GetxController {
     localVidPath.value = '';
     youtubeLink.value = '';
     resetEverything();
-    final link = extractYTLinkFromTrack(track);
+    final link = track.youtubeLink;
     youtubeLink.value = link;
-    youtubeVideoId.value = extractIDFromYTLink(link);
+    youtubeVideoId.value = link.getYoutubeID;
   }
 
   void resetEverything() {
@@ -60,31 +62,8 @@ class VideoController extends GetxController {
     videoTotalSize.value = 0;
   }
 
-  String extractYTLinkFromTrack(Track track) {
-    final match = track.comment.isEmpty ? null : kYoutubeRegex.firstMatch(track.comment)?[0];
-    final match2 = track.filename.isEmpty ? null : kYoutubeRegex.firstMatch(track.filename)?[0];
-
-    final link = match ?? match2 ?? '';
-
-    return link;
-  }
-
-  String extractIDFromYTLink(String ytlink) {
-    String videoId = '';
-    if (ytlink.length >= 11) {
-      videoId = ytlink.substring(ytlink.length - 11);
-    }
-    return videoId;
-  }
-
-  String extractYTIDFromTrack(Track track) {
-    final ytlink = extractYTLinkFromTrack(track);
-    final id = extractIDFromYTLink(ytlink);
-    return id;
-  }
-
   Future<String> downloadYoutubeVideo(String videoId, Track track) async {
-    final ytexp = YoutubeExplode();
+    final ytexp = YoutubeExplode(YoutubeHttpClient(NamidaClient()));
     final manifest = await ytexp.videos.streamsClient.getManifest(videoId);
 
     /// Create a list of video qualities in descending order of preference
@@ -139,7 +118,7 @@ class VideoController extends GetxController {
 
     videoCurrentSize.value = 0;
     Indexer.inst.updateVideosSizeInStorage();
-    return Future.value(File("$kVideosCachePath${videoId}_${streamToBeUsed.qualityLabel}.mp4").path);
+    return File("$kVideosCachePath${videoId}_${streamToBeUsed.qualityLabel}.mp4").path;
   }
 
   Future<void> updateLocalVidPath([Track? track]) async {
@@ -150,14 +129,7 @@ class VideoController extends GetxController {
     resetEverything();
     updateYTLink(track);
 
-    // final video = await ytexp.videos.get(extractYTLinkFromTrack(track));
-    // printInfo(info: 'SOOOOOOOOOOOONGGGGG ${video.title}');
-    // printInfo(info: 'SOOOOOOOOOOOONGGGGG ${video.description}');
-    // printInfo(info: 'SOOOOOOOOOOOONGGGGG ${video.channelId}');
-    // printInfo(info: 'SOOOOOOOOOOOONGGGGG ${video.author}');
-    // printInfo(info: 'SOOOOOOOOOOOONGGGGG ${video.keywords.map((e) => e)}');
-    // printInfo(info: 'SOOOOOOOOOOOONGGGGG ${video.uploadDate}');
-    // printInfo(info: 'SOOOOOOOOOOOONGGGGG ${video.uploadDateRaw}');
+    // YoutubeController.inst.updateCurrentVideoMetadata(track.youtubeID);
 
     /// Video Found in Local Storage
     for (var vf in videoFilesPathList) {

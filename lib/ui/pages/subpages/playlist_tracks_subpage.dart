@@ -65,27 +65,28 @@ class PlaylisTracksPage extends StatelessWidget {
                 ? ListView(
                     children: [
                       topContainer,
-                      ...PlaylistController.inst.topTracksMap.entries
-                          .map(
-                            (track) => AnimatingTile(
-                              position: PlaylistController.inst.topTracksMap.keys.toList().indexOf(track.key),
-                              child: TrackTile(
-                                index: track.value,
-                                track: track.key,
-                                queue: PlaylistController.inst.topTracksMap.keys.toList(),
-                                playlist: rxplaylist,
-                                trailingWidget: CircleAvatar(
-                                  radius: 10.0,
-                                  backgroundColor: context.theme.scaffoldBackgroundColor,
-                                  child: Text(
-                                    track.value.toString(),
-                                    style: context.textTheme.displaySmall,
-                                  ),
+                      ...PlaylistController.inst.topTracksMap.entries.map(
+                        (track) {
+                          final index = PlaylistController.inst.topTracksMap.keys.toList().indexOf(track.key);
+                          return AnimatingTile(
+                            position: index,
+                            child: TrackTile(
+                              index: index,
+                              track: track.key,
+                              queue: PlaylistController.inst.topTracksMap.keys.toList(),
+                              playlist: rxplaylist,
+                              trailingWidget: CircleAvatar(
+                                radius: 10.0,
+                                backgroundColor: context.theme.scaffoldBackgroundColor,
+                                child: Text(
+                                  track.value.toString(),
+                                  style: context.textTheme.displaySmall,
                                 ),
                               ),
                             ),
-                          )
-                          .toList(),
+                          );
+                        },
+                      ).toList(),
                       kBottomPaddingWidget,
                     ],
                   )

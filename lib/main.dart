@@ -40,6 +40,7 @@ import 'package:namida/ui/widgets/settings/theme_setting.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Paint.enableDithering = true; // for smooth gradient effect.
 
   /// Getting Device info
   DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
@@ -110,11 +111,12 @@ void main() async {
 
   VideoController.inst.getVideoFiles();
 
+  FlutterNativeSplash.remove();
+
   await PlaylistController.inst.preparePlaylistFile();
   await Player.inst.initializePlayer();
   await QueueController.inst.prepareQueuesFile();
 
-  FlutterNativeSplash.remove();
   runApp(const MyApp());
 }
 
@@ -143,7 +145,7 @@ Future<void> resetSAFPermision() async {
     Get.snackbar(Language.inst.PERMISSION_UPDATE, Language.inst.RESET_SAF_PERMISSION_RESET_SUCCESS);
     debugPrint('Reset SAF Successully');
   } else {
-    debugPrint('Reset SAF Failture');
+    debugPrint('Reset SAF Failure');
   }
 }
 
@@ -302,18 +304,19 @@ class MainPageWrapper extends StatelessWidget {
                       child: child,
                     ),
                     const Hero(tag: 'MINIPLAYER', child: MiniPlayerParent()),
-                    Positioned(
-                      bottom: 60 +
-                          60.0 * ScrollSearchController.inst.miniplayerHeightPercentage.value +
-                          (SettingsController.inst.enableBottomNavBar.value ? 0 : 32.0 * (1 - ScrollSearchController.inst.miniplayerHeightPercentageQueue.value)),
-                      child: Hero(
-                        tag: 'SELECTEDTRACKS',
-                        child: Opacity(
-                          opacity: 1 - ScrollSearchController.inst.miniplayerHeightPercentage.value,
-                          child: const SelectedTracksPreviewContainer(),
+                    if (ScrollSearchController.inst.miniplayerHeightPercentage.value != 1.0)
+                      Positioned(
+                        bottom: 60 +
+                            60.0 * ScrollSearchController.inst.miniplayerHeightPercentage.value +
+                            (SettingsController.inst.enableBottomNavBar.value ? 0 : 32.0 * (1 - ScrollSearchController.inst.miniplayerHeightPercentageQueue.value)),
+                        child: Hero(
+                          tag: 'SELECTEDTRACKS',
+                          child: Opacity(
+                            opacity: 1 - ScrollSearchController.inst.miniplayerHeightPercentage.value,
+                            child: const SelectedTracksPreviewContainer(),
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),

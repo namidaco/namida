@@ -122,14 +122,18 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     nowPlayingTrack.value = tr;
     currentIndex.value = index;
     CurrentColor.inst.updatePlayerColor(tr, index);
-    _player.pause();
-    _player.setFilePath(tr.path, preload: preload);
 
     /// Te whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture] don't get detected.
+    if (startPlaying && !isPlaying.value) {
+      _player.play();
+    }
+    await _player.setFilePath(tr.path, preload: preload);
+    _player.pause();
     if (startPlaying) {
       _player.play();
       setVolume(SettingsController.inst.playerVolume.value);
     }
+
     updateCurrentMediaItem(tr);
 
     WaveformController.inst.generateWaveform(tr);
@@ -210,7 +214,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     }
 
     /// Track is dragged from before the currentTrack to after the currentTrack.
-    if (oldIndex > currentIndex.value && newIndex - 1 <= currentIndex.value) {
+    if (oldIndex > currentIndex.value && newIndex <= currentIndex.value) {
       i = currentIndex.value + 1;
     }
 
@@ -232,7 +236,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     insertInQueue(newTracks, first);
   }
 
-  Future<void> addToQueue(List<Track> tracks, {bool insertNext = false}) async {
+  void addToQueue(List<Track> tracks, {bool insertNext = false}) {
     if (insertNext) {
       insertInQueue(tracks, currentIndex.value + 1);
     } else {
@@ -241,7 +245,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     afterQueueChange();
   }
 
-  Future<void> insertInQueue(List<Track> tracks, int index) async {
+  void insertInQueue(List<Track> tracks, int index) {
     currentQueue.insertAll(index, tracks);
     afterQueueChange();
   }
@@ -250,9 +254,9 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     if (index == currentIndex.value) {
       if (currentQueue.isNotEmpty) {
         if (isLastTrack) {
-          setAudioSource(index - 1);
+          await setAudioSource(index - 1);
         } else {
-          setAudioSource(index);
+          await setAudioSource(index);
         }
       }
     }
@@ -265,7 +269,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     afterQueueChange();
   }
 
-  Future<void> removeRangeFromQueue(int start, int end) async {
+  void removeRangeFromQueue(int start, int end) {
     currentQueue.removeRange(start, end);
     afterQueueChange();
   }

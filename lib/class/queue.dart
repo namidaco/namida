@@ -20,9 +20,14 @@ class Queue {
 
   /// Converts empty queue to AllTracksList.
   Queue.fromJson(Map<String, dynamic> json) {
+    /// Since we are using paths instead of real Track Objects, we need to match all tracks with these paths
     final List<String> res = List.castFrom<dynamic, String>(json['tracks'] ?? []);
-    final finalTracks = res.toTracks;
-    if (finalTracks.isEmpty) finalTracks.addAll(Indexer.inst.tracksInfoList.toList());
+    final finalTracks = <Track>[];
+    if (res.isEmpty) {
+      finalTracks.addAll(Indexer.inst.tracksInfoList.toList());
+    } else {
+      finalTracks.addAll(res.toTracks);
+    }
 
     name = json['name'] ?? '';
     tracks = finalTracks;

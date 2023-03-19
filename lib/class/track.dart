@@ -139,4 +139,11 @@ extension TrackUtils on Track {
   String get folderPath => path.getDirectoryName;
   String get folderName => folderPath.split('/').last;
   String get pathToImage => "$kArtworksDirPath$filename.png";
+  String get youtubeLink {
+    final match = comment.isEmpty ? null : kYoutubeRegex.firstMatch(comment)?[0];
+    final match2 = filename.isEmpty ? null : kYoutubeRegex.firstMatch(filename)?[0];
+    return match ?? match2 ?? '';
+  }
+
+  String get youtubeID => youtubeLink.getYoutubeID;
 }

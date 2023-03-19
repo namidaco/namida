@@ -24,7 +24,8 @@ class QueuesPage extends StatelessWidget {
             () => ListView(
               children: [
                 const SizedBox(height: 12.0),
-                ...QueueController.inst.queueList
+                ...QueueController.inst.queueList.reversed
+                    .toList()
                     .asMap()
                     .entries
                     .map((e) => AnimatingTile(

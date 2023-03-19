@@ -34,7 +34,7 @@ class AppThemes extends GetxController {
       backgroundColor: light ? const Color.fromARGB(255, 235, 235, 235) : const Color.fromARGB(255, 20, 20, 20),
       splashColor: Colors.transparent,
       splashFactory: InkRipple.splashFactory,
-      highlightColor: Colors.white.withAlpha(10),
+      highlightColor: light ? Colors.black.withAlpha(20) : Colors.white.withAlpha(10),
       disabledColor: light ? const Color.fromARGB(0, 160, 160, 160) : const Color.fromARGB(200, 60, 60, 60),
       appBarTheme: AppBarTheme(
         backgroundColor: light
@@ -55,6 +55,11 @@ class AppThemes extends GetxController {
         thickness: 4,
         indent: 0.0,
         endIndent: 0.0,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: light ? Color.alphaBlend(color.withAlpha(25), Colors.white) : null,
+        ),
       ),
       selectedRowColor: light ? const Color.fromARGB(200, 190, 190, 190) : const Color.fromARGB(150, 80, 80, 80),
       dialogTheme: DialogTheme(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0.multipliedRadius))),

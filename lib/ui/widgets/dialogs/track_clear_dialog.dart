@@ -28,9 +28,8 @@ void showTrackClearDialog(List<Track> tracks) {
               final allvideo = Directory(kVideosCachePath).listSync();
 
               for (final track in tracks) {
-                final videoId = VideoController.inst.extractYTIDFromTrack(track);
                 for (final v in allvideo) {
-                  if (v.path.getFilename.startsWith(videoId)) {
+                  if (v.path.getFilename.startsWith(track.youtubeID)) {
                     await v.delete();
                   }
                 }
