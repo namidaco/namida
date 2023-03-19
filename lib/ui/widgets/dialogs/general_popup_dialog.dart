@@ -261,6 +261,28 @@ Future<void> showGeneralPopupDialog(
                           ],
                         ),
 
+                      if (isSingle)
+                        SmallListTile(
+                          color: colorDelightened,
+                          compact: false,
+                          title: Language.inst.SHARE,
+                          icon: Broken.share,
+                          onTap: () {
+                            Get.close(1);
+                            Share.shareXFiles([XFile(tracks.first.path)]);
+                          },
+                        ),
+                      if (!isSingle)
+                        SmallListTile(
+                          color: colorDelightened,
+                          compact: false,
+                          title: Language.inst.PLAY_ALL,
+                          icon: Broken.play_cricle,
+                          onTap: () {
+                            Get.close(1);
+                            Player.inst.playOrPause(0, tracks);
+                          },
+                        ),
                       SmallListTile(
                         color: colorDelightened,
                         compact: false,
