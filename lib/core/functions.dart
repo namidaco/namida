@@ -1,5 +1,7 @@
 // ignore_for_file: depend_on_referenced_packages
 
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
@@ -16,6 +18,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
@@ -127,4 +130,44 @@ bool checkIfQueueSameAsAllTracks(List<Track> queue) {
 
 String textCleanedForSearch(String textToClean) {
   return SettingsController.inst.enableSearchCleanup.value ? textToClean.cleanUpForComparison : textToClean.toLowerCase();
+}
+
+List<Track> getRandomTracks([int? min, int? max]) {
+  final List<Track> randomList = [];
+  final trackslist = Indexer.inst.tracksInfoList;
+  final trackslistLength = trackslist.length;
+
+  /// ignore min and max if the value is more than the alltrackslist.
+  if (max != null && max > Indexer.inst.tracksInfoList.length) {
+    max = null;
+    min = null;
+  }
+  min ??= trackslistLength ~/ 6;
+  max ??= trackslistLength ~/ 3;
+  final int randomNumber = min + Random().nextInt(max - min);
+  for (int i = 0; i < randomNumber; i++) {
+    randomList.add(trackslist.toList()[Random().nextInt(trackslistLength)]);
+  }
+  return randomList;
+}
+
+List<Track> generateRecommendedTrack(Track track) {
+  final gentracks = <Track>[];
+  final historytracks = PlaylistController.inst.playlistList.firstWhere((element) => element.id == kPlaylistHistory).tracks.map((e) => e.track).toList();
+  if (historytracks.isEmpty) {
+    return [];
+  }
+  for (int i = 0; i < historytracks.length; i++) {
+    final t = historytracks[i];
+    if (t == track) {
+      final length = (historytracks.length).clamp(0, 10);
+      gentracks.addAll(historytracks.getRange((i - length).clamp(0, 10), i + length));
+    }
+  }
+  gentracks.removeWhere((element) => element.path == track.path);
+
+  Map<Track, int> numberOf = {for (var x in gentracks.toSet()) x: gentracks.where((item) => item == x).length};
+  final sortedByValueMap = Map.fromEntries(numberOf.entries.toList()..sort((b, a) => a.value.compareTo(b.value)));
+
+  return sortedByValueMap.keys.take(20).toList();
 }

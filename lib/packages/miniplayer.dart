@@ -27,6 +27,7 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
+import 'package:namida/packages/youtube_miniplayer.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
@@ -97,7 +98,9 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
                     ? const SizedBox(
                         key: Key('emptyminiplayer'),
                       )
-                    : MiniPlayer(key: const Key('actualminiplayer'), animation: animation),
+                    : SettingsController.inst.useYoutubeMiniplayer.value
+                        ? YoutubeMiniPlayer(key: const Key('actualminiplayer'))
+                        : NamidaMiniPlayer(key: const Key('actualminiplayer'), animation: animation),
               );
             },
           )
@@ -107,16 +110,16 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
   }
 }
 
-class MiniPlayer extends StatefulWidget {
-  const MiniPlayer({Key? key, required this.animation}) : super(key: key);
+class NamidaMiniPlayer extends StatefulWidget {
+  const NamidaMiniPlayer({Key? key, required this.animation}) : super(key: key);
 
   final AnimationController animation;
 
   @override
-  State<MiniPlayer> createState() => _MiniPlayerState();
+  State<NamidaMiniPlayer> createState() => _NamidaMiniPlayerState();
 }
 
-class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
+class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProviderStateMixin {
   double offset = 0.0;
   double prevOffset = 0.0;
   late Size screenSize;
@@ -324,10 +327,10 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
           setState(() => queueScrollable = offset >= maxOffset * 2);
         },
         onPointerUp: (event) {
-          verticalSnapping();
-          if (offset <= maxOffset || offset > maxOffset) return;
-          if (scrollController.positions.isNotEmpty && scrollController.positions.first.pixels > 0.0 && offset >= maxOffset * 2) return;
+          if (offset <= maxOffset || offset >= (maxOffset * 2)) return;
 
+          if (scrollController.positions.isNotEmpty && scrollController.positions.first.pixels > 0.0 && offset >= maxOffset * 2) return;
+          verticalSnapping();
           setState(() => queueScrollable = true);
         },
         child: GestureDetector(
@@ -437,13 +440,11 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                 ScrollSearchController.inst.miniplayerHeightPercentage.value = rcp;
                 ScrollSearchController.inst.miniplayerHeightPercentageQueue.value = qp;
               });
-
               return Obx(
                 () {
                   final finalScale = WaveformController.inst.getAnimatingScale(WaveformController.inst.curentScaleList.toList());
                   if (SettingsController.inst.enablePartyModeColorSwap.value) {
-                    final sc = (0 + 100 * finalScale).clamp(0, 4).toInt();
-
+                    final sc = (100 * finalScale ~/ 1.5).clamp(1, 4);
                     for (int h = 1; h <= sc; h++) {
                       if (firstHalf.isEmpty || secondtHalf.isEmpty) {
                         break;
@@ -1159,6 +1160,55 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                                             child: Row(
                                               mainAxisAlignment: MainAxisAlignment.end,
                                               children: [
+                                                Tooltip(
+                                                  message: Language.inst.NEW_TRACKS_ADD,
+                                                  child: ElevatedButton(
+                                                    onPressed: () {
+                                                      Get.dialog(
+                                                        CustomBlurryDialog(
+                                                          normalTitleStyle: true,
+                                                          title: Language.inst.NEW_TRACKS_ADD,
+                                                          child: Column(
+                                                            children: [
+                                                              CustomListTile(
+                                                                title: Language.inst.NEW_TRACKS_RANDOM,
+                                                                subtitle: Language.inst.NEW_TRACKS_RANDOM_SUBTITLE,
+                                                                icon: Broken.format_circle,
+                                                                maxSubtitleLines: 22,
+                                                                onTap: () {
+                                                                  Get.close(1);
+                                                                  Player.inst.addToQueue(getRandomTracks(8, 10));
+                                                                },
+                                                              ),
+                                                              Obx(
+                                                                () => CustomListTile(
+                                                                  title: Language.inst.NEW_TRACKS_RECOMMENDED,
+                                                                  subtitle: Language.inst.NEW_TRACKS_RECOMMENDED_SUBTITLE.replaceFirst(
+                                                                    '_CURRENT_TRACK_',
+                                                                    '"${Player.inst.nowPlayingTrack.value.title}"',
+                                                                  ),
+                                                                  icon: Broken.bezier,
+                                                                  maxSubtitleLines: 22,
+                                                                  onTap: () {
+                                                                    Get.close(1);
+                                                                    final gentracks = generateRecommendedTrack(Player.inst.nowPlayingTrack.value);
+                                                                    if (gentracks.isEmpty) {
+                                                                      Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_IN_HISTORY);
+                                                                      return;
+                                                                    }
+                                                                    Player.inst.addToQueue(gentracks, insertNext: true);
+                                                                  },
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                    child: const Icon(Broken.add_circle),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6.0),
                                                 ElevatedButton(
                                                   onPressed: () => ScrollSearchController.inst.animateQueueToCurrentTrack(),
                                                   child: Icon(isArrowDown.value ? Broken.arrow_down : Broken.arrow_up_1),
@@ -1471,51 +1521,6 @@ class LyricsWrapper extends StatelessWidget {
   }
 }
 
-class MiniMiniPlayerProgressPainter extends CustomPainter {
-  MiniMiniPlayerProgressPainter(this.progress);
-
-  final double progress;
-  static const strokeWidth = 4.0;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.drawDRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        const Radius.circular(16.0),
-      ),
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(strokeWidth, strokeWidth, size.width - strokeWidth * 2, size.height - strokeWidth * 2),
-        const Radius.circular(12.0),
-      ),
-      Paint()..color = Colors.white.withOpacity(.25),
-    );
-    canvas.saveLayer(Rect.fromLTWH(-10, -10, size.width + 20, size.height + 20), Paint());
-    canvas.drawArc(
-      Rect.fromLTWH(-10, -10, size.width + 20, size.height + 20),
-      -1.570796,
-      6.283185 * (1 - progress) * -1,
-      true,
-      Paint()..color = Colors.black,
-    );
-    canvas.drawDRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(-10, -10, size.width + 20, size.height + 20),
-        const Radius.circular(0.0),
-      ),
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        const Radius.circular(16.0),
-      ),
-      Paint()..blendMode = BlendMode.clear,
-    );
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant MiniMiniPlayerProgressPainter oldDelegate) => oldDelegate.progress != progress;
-}
-
 double vp({
   required final double a,
   required final double b,
@@ -1592,11 +1597,12 @@ class _WallpaperState extends State<Wallpaper> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
-              AnimatedOpacity(
-                duration: const Duration(seconds: 1),
-                opacity: Player.inst.isPlaying.value ? 1 : 0,
-                child: background,
-              ),
+              if (SettingsController.inst.enableMiniplayerParticles.value)
+                AnimatedOpacity(
+                  duration: const Duration(seconds: 1),
+                  opacity: Player.inst.isPlaying.value ? 1 : 0,
+                  child: background,
+                ),
               if (widget.child != null) widget.child!,
             ],
           ),
