@@ -50,6 +50,12 @@ class MiniplayerCustomization extends StatelessWidget {
             },
             value: SettingsController.inst.enablePartyModeColorSwap.value,
           ),
+          CustomSwitchListTile(
+            icon: Broken.buy_crypto,
+            title: Language.inst.ENABLE_MINIPLAYER_PARTICLES,
+            onChanged: (value) => SettingsController.inst.save(enableMiniplayerParticles: !value),
+            value: SettingsController.inst.enableMiniplayerParticles.value,
+          ),
           CustomListTile(
             icon: Broken.flash,
             title: Language.inst.ANIMATING_THUMBNAIL_INTENSITY,
