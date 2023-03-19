@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
@@ -27,6 +29,7 @@ class AlbumCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gridCount = gridCountOverride ?? SettingsController.inst.albumGridCount.value;
+    final inverseGrid = 4 - gridCount;
     final fontSize = (16.0 - (gridCount * 1.8)).multipliedFontScale;
     final shouldDisplayTopRightDate = SettingsController.inst.albumCardTopRightDate.value && album[0].year != 0;
     final shouldDisplayNormalDate = !SettingsController.inst.albumCardTopRightDate.value && album[0].year != 0;
@@ -78,6 +81,37 @@ class AlbumCard extends StatelessWidget {
                             ),
                           )
                         : null,
+                    onTopWidgets: [
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          margin: EdgeInsets.all(4.0 + 2.0 * inverseGrid),
+                          decoration: BoxDecoration(
+                            color: context.theme.cardColor,
+                            borderRadius: BorderRadius.circular(10.0.multipliedRadius),
+                            boxShadow: [
+                              BoxShadow(
+                                offset: const Offset(0.0, 2.0),
+                                color: context.theme.cardColor,
+                              ),
+                            ],
+                          ),
+                          child: Material(
+                            color: context.theme.cardColor,
+                            borderRadius: BorderRadius.circular(10.0.multipliedRadius),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(10.0.multipliedRadius),
+                              onTap: () => Player.inst.playOrPause(0, album),
+                              child: Padding(
+                                padding: EdgeInsets.all(2.5 + 2.0 * inverseGrid),
+                                child: Icon(Broken.play, size: 12.5 + 4.0 * inverseGrid),
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    ],
                   ),
                 ),
                 Expanded(
