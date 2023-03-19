@@ -1,13 +1,20 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:checkmark/checkmark.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/main.dart';
+import 'package:namida/packages/youtube_miniplayer.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
@@ -97,14 +104,26 @@ class AdvancedSettings extends StatelessWidget {
               ),
               title: Language.inst.CLEAR_VIDEO_CACHE,
               trailingText: Indexer.inst.videosSizeInStorage.value.fileSizeFormatted,
-              onTap: () {
+              onTap: () async {
+                final allvideo = Directory(kVideosCachePath).listSync();
+                allvideo.sort((a, b) => b.statSync().size.compareTo(a.statSync().size));
+                allvideo.removeWhere((element) => element is Directory);
+
+                /// First Dialog
                 Get.dialog(
                   CustomBlurryDialog(
                     isWarning: true,
                     normalTitleStyle: true,
-                    title: Language.inst.CLEAR_VIDEO_CACHE,
-                    bodyText: Language.inst.CONFIRM,
+                    bodyText: "${_getVideoSubtitleText(allvideo)}\n${Language.inst.CLEAR_VIDEO_CACHE_NOTE}",
                     actions: [
+                      /// Pressing Choose
+                      ElevatedButton(
+                        onPressed: () {
+                          Get.close(1);
+                          _showChooseVideosToDeleteDialog(allvideo);
+                        },
+                        child: Text(Language.inst.CHOOSE),
+                      ),
                       const CancelButton(),
                       ElevatedButton(
                         onPressed: () async {
@@ -120,6 +139,101 @@ class AdvancedSettings extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  String _getVideoSubtitleText(List<FileSystemEntity> videos) {
+    return Language.inst.CLEAR_VIDEO_CACHE_SUBTITLE
+        .replaceFirst('_CURRENT_VIDEOS_COUNT_', videos.length.toString())
+        .replaceFirst('_TOTAL_SIZE_', videos.map((e) => e.statSync().size).reduce((a, b) => a + b).fileSizeFormatted);
+  }
+
+  _showChooseVideosToDeleteDialog(List<FileSystemEntity> videoFiles) {
+    RxList<FileSystemEntity> videosToDelete = <FileSystemEntity>[].obs;
+    Get.dialog(
+      CustomBlurryDialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
+        isWarning: true,
+        normalTitleStyle: true,
+        title: Language.inst.CHOOSE,
+        actions: [
+          const CancelButton(),
+
+          /// Clear after choosing
+          ElevatedButton(
+            onPressed: () async {
+              if (videosToDelete.isEmpty) {
+                return;
+              }
+              Get.dialog(
+                CustomBlurryDialog(
+                  isWarning: true,
+                  normalTitleStyle: true,
+                  actions: [
+                    const CancelButton(),
+
+                    /// final clear confirm
+                    ElevatedButton(
+                      onPressed: () async {
+                        Get.close(2);
+                        await Indexer.inst.clearVideoCache(videosToDelete);
+                      },
+                      child: Text(Language.inst.CLEAR.toUpperCase()),
+                    ),
+                  ],
+                  bodyText: _getVideoSubtitleText(videosToDelete),
+                ),
+              );
+            },
+            child: Text(Language.inst.CLEAR.toUpperCase()),
+          ),
+        ],
+        child: CupertinoScrollbar(
+          child: Column(
+            children: videoFiles.asMap().entries.map(
+              (e) {
+                final quality = e.value.path.getFilename.split('_').last.split('.').first;
+                final id = e.value.path.getFilename.split('').take(11).join();
+                return Obx(
+                  () => ListTile(
+                    horizontalTitleGap: 16.0,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    leading: YoutubeThumbnail(
+                      borderRadius: 8.0,
+                      url: ThumbnailSet(id).mediumResUrl,
+                      width: 70,
+                      height: 70 * 9 / 16,
+                    ),
+                    title: Text(id),
+                    subtitle: Text([quality, e.value.statSync().size.fileSizeFormatted].join(' - ')),
+                    trailing: IgnorePointer(
+                      child: SizedBox(
+                        height: 18.0,
+                        width: 18.0,
+                        child: CheckMark(
+                          strokeWidth: 2,
+                          activeColor: Get.theme.listTileTheme.iconColor!,
+                          inactiveColor: Get.theme.listTileTheme.iconColor!,
+                          duration: const Duration(milliseconds: 400),
+                          active: videosToDelete.contains(e.value),
+                        ),
+                      ),
+                    ),
+                    onTap: () {
+                      if (videosToDelete.contains(e.value)) {
+                        videosToDelete.remove(e.value);
+                      } else {
+                        videosToDelete.add(e.value);
+                      }
+                    },
+                  ),
+                );
+              },
+            ).toList(),
+          ),
+        ),
       ),
     );
   }

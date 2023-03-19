@@ -256,6 +256,9 @@ class Language {
   String get RESET_SAF_PERMISSION => 'Reset SAF Permission';
   String get RESET_SAF_PERMISSION_SUBTITLE => 'Use it only in case tag editing is not working';
   String get RESET_SAF_PERMISSION_RESET_SUCCESS => 'SAF Permission has been reset successfully';
+  String get CLEAR_VIDEO_CACHE => 'Clear Video Cache';
+  String get CLEAR_VIDEO_CACHE_SUBTITLE => 'Delete _CURRENT_VIDEOS_COUNT_ Videos Representing _TOTAL_SIZE_?';
+  String get CLEAR_VIDEO_CACHE_NOTE => 'You can choose what to delete.';
 
   /// Defaults
   String get ADD => 'Add';

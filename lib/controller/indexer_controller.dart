@@ -736,9 +736,17 @@ class Indexer extends GetxController {
     updateWaveformSizeInStorage();
   }
 
-  Future<void> clearVideoCache() async {
-    await Directory(kVideosCachePath).delete(recursive: true);
-    await Directory(kVideosCachePath).create();
+  /// Deletes specific videos or the whole cache.
+  Future<void> clearVideoCache([List<FileSystemEntity>? videosToDelete]) async {
+    if (videosToDelete != null) {
+      for (final v in videosToDelete) {
+        await v.delete();
+      }
+    } else {
+      await Directory(kVideosCachePath).delete(recursive: true);
+      await Directory(kVideosCachePath).create();
+    }
+
     updateVideosSizeInStorage();
   }
 
