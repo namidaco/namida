@@ -212,56 +212,48 @@ class Indexer extends GetxController {
 
     Future<void> extractAllMetadata() async {
       Set<String> listOfCurrentFileNames = <String>{};
-      for (final track in audioFiles) {
-        print(track);
+      for (final trackPath in audioFiles) {
+        printInfo(info: trackPath);
         try {
-          final trackInfo = await onAudioEdit.readAudio(track);
-
           /// skip duplicated tracks according to filename
-          if (SettingsController.inst.preventDuplicatedTracks.value && listOfCurrentFileNames.contains(track.getFilename)) {
+          if (SettingsController.inst.preventDuplicatedTracks.value && listOfCurrentFileNames.contains(trackPath.getFilename)) {
             duplicatedTracksLength.value++;
             continue;
           }
+
+          final trackInfo = await onAudioEdit.readAudio(trackPath);
 
           /// Since duration & dateAdded can't be accessed using [onAudioEdit] (jaudiotagger), im using [onAudioQuery] to access it
           int? duration;
           // int? dateAdded;
           for (final h in tracksOld) {
-            if (h.data == track) {
+            if (h.data == trackPath) {
               duration = h.duration;
               // dateAdded = h.dateAdded;
             }
           }
-          final fileStat = await File(track).stat();
+          final fileStat = await File(trackPath).stat();
 
           // breaks the loop early depending on size [byte] or duration [seconds]
           if ((duration ?? 0) < minDur * 1000 || fileStat.size < minSize) {
             filteredForSizeDurationTracks.value++;
-            filteredPathsToBeDeleted.add(track);
-            deletedPaths.add(track);
+            filteredPathsToBeDeleted.add(trackPath);
+            deletedPaths.add(trackPath);
             continue;
           }
 
           /// Split Artists
-          final List<String> _artistsListfinal = <String>[];
-          List<String> _artistsListPre = trackInfo.artist?.trim().multiSplit(SettingsController.inst.trackArtistsSeparators.toList()) ?? ['Unkown Artist'];
-          for (final element in _artistsListPre) {
-            _artistsListfinal.add(element.trim());
-          }
+          final artists = splitBySeparators(trackInfo.artist, SettingsController.inst.trackArtistsSeparators.toList(), 'Unkown Artist');
 
           /// Split Genres
-          final List<String> _genresListfinal = <String>[];
-          List<String> _genresListPre = trackInfo.genre?.trim().multiSplit(SettingsController.inst.trackGenresSeparators.toList()) ?? ['Unkown Genre'];
-          for (final element in _genresListPre) {
-            _genresListfinal.add(element.trim());
-          }
+          final genres = splitBySeparators(trackInfo.genre, SettingsController.inst.trackGenresSeparators.toList(), 'Unkown Genre');
 
           Track newTrackEntry = Track(
             trackInfo.title ?? '',
-            _artistsListfinal,
+            artists,
             trackInfo.album ?? 'Unknown Album',
             trackInfo.albumArtist ?? '',
-            _genresListfinal,
+            genres,
             trackInfo.composer ?? 'Unknown Composer',
             trackInfo.track ?? 0,
             duration ?? 0,
@@ -270,7 +262,7 @@ class Indexer extends GetxController {
             //TODO: REMOVE CREATION DATE
             fileStat.accessed.millisecondsSinceEpoch,
             fileStat.changed.millisecondsSinceEpoch,
-            track,
+            trackPath,
             trackInfo.getMap['COMMENT'] ?? '',
             trackInfo.bitrate ?? 0,
             trackInfo.sampleRate ?? 0,
@@ -285,9 +277,9 @@ class Indexer extends GetxController {
           tracksInfoList.add(newTrackEntry);
           print(tracksInfoList.length);
 
-          listOfCurrentFileNames.add(track.getFilename);
+          listOfCurrentFileNames.add(trackPath.getFilename);
           searchTracks('');
-          extractOneArtwork(track, bytes: trackInfo.firstArtwork);
+          extractOneArtwork(trackPath, bytes: trackInfo.firstArtwork);
         } catch (e) {
           printError(info: e.toString());
 
@@ -354,6 +346,15 @@ class Indexer extends GetxController {
         debugPrint("Tracks Info List Length From File: ${tracksInfoList.length}");
       }
     }
+  }
+
+  List<String> splitBySeparators(String? string, Iterable<String> separators, String fallback) {
+    final List<String> finalStrings = <String>[];
+    List<String> pre = string?.trim().multiSplit(separators) ?? [fallback];
+    for (final element in pre) {
+      finalStrings.add(element.trim());
+    }
+    return finalStrings;
   }
 
   Future<Set<String>> getAudioFiles() async {
