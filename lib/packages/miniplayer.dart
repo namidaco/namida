@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 
 import 'package:animated_background/animated_background.dart';
 import 'package:animations/animations.dart';
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
 
@@ -416,10 +417,10 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
               final double bcp = bp.clamp(0.0, 1.0);
 
               final BorderRadius borderRadius = BorderRadius.only(
-                topLeft: Radius.circular(20.0 + 6.0 * p),
-                topRight: Radius.circular(20.0 + 6.0 * p),
-                bottomLeft: Radius.circular(20.0 * (1 - p * 10 + 9).clamp(0, 1)),
-                bottomRight: Radius.circular(20.0 * (1 - p * 10 + 9).clamp(0, 1)),
+                topLeft: Radius.circular(20.0.multipliedRadius + 6.0 * p),
+                topRight: Radius.circular(20.0.multipliedRadius + 6.0 * p),
+                bottomLeft: Radius.circular(20.0.multipliedRadius * (1 - p * 10 + 9).clamp(0, 1)),
+                bottomRight: Radius.circular(20.0.multipliedRadius * (1 - p * 10 + 9).clamp(0, 1)),
               );
               final double opacity = (bcp * 5 - 4).clamp(0, 1);
               final double fastOpacity = (bcp * 10 - 9).clamp(0, 1);
@@ -1118,7 +1119,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                           ReorderableListView.builder(
                                             proxyDecorator: (child, index, animation) => child,
                                             scrollController: scrollController,
-                                            padding: const EdgeInsets.only(bottom: 58.0),
+                                            padding: const EdgeInsets.only(bottom: 56.0),
                                             onReorderStart: (index) {
                                               isReorderingQueue = true;
                                             },
@@ -1138,91 +1139,144 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                 onHorizontalDragEnd: (details) {
                                                   isReorderingQueue = false;
                                                 },
-                                                child: FadeDismissible(
-                                                  key: Key("Diss_$i${track.path}"),
-                                                  onDismissed: (direction) {
-                                                    Player.inst.removeFromQueue(i);
-                                                  },
-                                                  child: TrackTile(
-                                                    index: i,
-                                                    key: ValueKey(i.toString()),
-                                                    track: track,
-                                                    displayRightDragHandler: true,
-                                                    draggableThumbnail: true,
-                                                    queue: Player.inst.currentQueue.toList(),
+                                                child: AnimatedOpacity(
+                                                  duration: const Duration(milliseconds: 300),
+                                                  opacity: i < Player.inst.currentIndex.value ? 0.7 : 1.0,
+                                                  child: FadeDismissible(
+                                                    key: Key("Diss_$i${track.path}"),
+                                                    onDismissed: (direction) {
+                                                      Player.inst.removeFromQueue(i);
+                                                    },
+                                                    child: TrackTile(
+                                                      index: i,
+                                                      key: ValueKey(i.toString()),
+                                                      track: track,
+                                                      displayRightDragHandler: true,
+                                                      draggableThumbnail: true,
+                                                      queue: Player.inst.currentQueue.toList(),
+                                                    ),
                                                   ),
                                                 ),
                                               );
                                             },
                                           ),
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.end,
-                                              children: [
-                                                Tooltip(
-                                                  message: Language.inst.NEW_TRACKS_ADD,
-                                                  child: ElevatedButton(
-                                                    onPressed: () {
-                                                      Get.dialog(
-                                                        CustomBlurryDialog(
-                                                          normalTitleStyle: true,
-                                                          title: Language.inst.NEW_TRACKS_ADD,
-                                                          child: Column(
-                                                            children: [
-                                                              CustomListTile(
-                                                                title: Language.inst.NEW_TRACKS_RANDOM,
-                                                                subtitle: Language.inst.NEW_TRACKS_RANDOM_SUBTITLE,
-                                                                icon: Broken.format_circle,
-                                                                maxSubtitleLines: 22,
-                                                                onTap: () {
-                                                                  Get.close(1);
-                                                                  Player.inst.addToQueue(getRandomTracks(8, 10));
-                                                                },
-                                                              ),
-                                                              Obx(
-                                                                () => CustomListTile(
-                                                                  title: Language.inst.NEW_TRACKS_RECOMMENDED,
-                                                                  subtitle: Language.inst.NEW_TRACKS_RECOMMENDED_SUBTITLE.replaceFirst(
-                                                                    '_CURRENT_TRACK_',
-                                                                    '"${Player.inst.nowPlayingTrack.value.title}"',
-                                                                  ),
-                                                                  icon: Broken.bezier,
-                                                                  maxSubtitleLines: 22,
-                                                                  onTap: () {
-                                                                    Get.close(1);
-                                                                    final gentracks = generateRecommendedTrack(Player.inst.nowPlayingTrack.value);
-                                                                    if (gentracks.isEmpty) {
-                                                                      Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_IN_HISTORY);
-                                                                      return;
-                                                                    }
-                                                                    Player.inst.addToQueue(gentracks, insertNext: true);
-                                                                  },
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      );
-                                                    },
-                                                    child: const Icon(Broken.add_circle),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 6.0),
-                                                ElevatedButton(
-                                                  onPressed: () => ScrollSearchController.inst.animateQueueToCurrentTrack(),
-                                                  child: Icon(isArrowDown.value ? Broken.arrow_down : Broken.arrow_up_1),
-                                                ),
-                                                const SizedBox(width: 6.0),
-                                                ElevatedButton.icon(
-                                                  onPressed: () => Player.inst.shuffleNextTracks(),
-                                                  label: Text(Language.inst.SHUFFLE),
-                                                  icon: const Icon(Broken.shuffle),
-                                                ),
-                                                const SizedBox(width: 8.0),
-                                              ],
+                                          Container(
+                                            width: context.width,
+                                            decoration: BoxDecoration(
+                                              color: context.theme.scaffoldBackgroundColor,
+                                              borderRadius: BorderRadius.vertical(
+                                                top: Radius.circular(12.0.multipliedRadius),
+                                              ),
                                             ),
-                                          )
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(4.0).add(EdgeInsets.only(left: context.width * 0.3)),
+                                              child: FittedBox(
+                                                child: Row(
+                                                  mainAxisAlignment: MainAxisAlignment.end,
+                                                  children: [
+                                                    const SizedBox(width: 6.0),
+                                                    Tooltip(
+                                                      message: Language.inst.NEW_TRACKS_ADD,
+                                                      child: ElevatedButton(
+                                                        onPressed: () {
+                                                          Get.dialog(
+                                                            CustomBlurryDialog(
+                                                              normalTitleStyle: true,
+                                                              title: Language.inst.NEW_TRACKS_ADD,
+                                                              child: Column(
+                                                                children: [
+                                                                  CustomListTile(
+                                                                    title: Language.inst.NEW_TRACKS_RANDOM,
+                                                                    subtitle: Language.inst.NEW_TRACKS_RANDOM_SUBTITLE,
+                                                                    icon: Broken.format_circle,
+                                                                    maxSubtitleLines: 22,
+                                                                    onTap: () {
+                                                                      Get.close(1);
+                                                                      Player.inst.addToQueue(getRandomTracks(8, 11));
+                                                                    },
+                                                                  ),
+                                                                  CustomListTile(
+                                                                    title: Language.inst.GENERATE_FROM_DATES,
+                                                                    subtitle: Language.inst.GENERATE_FROM_DATES_SUBTITLE,
+                                                                    icon: Broken.calendar,
+                                                                    maxSubtitleLines: 22,
+                                                                    onTap: () {
+                                                                      Get.close(1);
+                                                                      List<int> dates = [];
+                                                                      Get.dialog(
+                                                                        CustomBlurryDialog(
+                                                                          normalTitleStyle: true,
+                                                                          insetPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+                                                                          actions: [
+                                                                            TextButton(
+                                                                              onPressed: () {
+                                                                                final tracks = generateTracksFromDates(dates.first, dates.last);
+                                                                                if (tracks.isEmpty) {
+                                                                                  Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES);
+                                                                                  return;
+                                                                                }
+                                                                                Player.inst.addToQueue(tracks);
+                                                                                Get.close(1);
+                                                                              },
+                                                                              child: Text(Language.inst.GENERATE),
+                                                                            ),
+                                                                          ],
+                                                                          child: CalendarDatePicker2(
+                                                                            onValueChanged: (value) => dates.assignAll(value.map((e) => e?.millisecondsSinceEpoch ?? 0).toList()),
+                                                                            config: CalendarDatePicker2Config(
+                                                                              calendarType: CalendarDatePicker2Type.range,
+                                                                            ),
+                                                                            initialValue: const [],
+                                                                          ),
+                                                                        ),
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                  Obx(
+                                                                    () => CustomListTile(
+                                                                      title: Language.inst.NEW_TRACKS_RECOMMENDED,
+                                                                      subtitle: Language.inst.NEW_TRACKS_RECOMMENDED_SUBTITLE.replaceFirst(
+                                                                        '_CURRENT_TRACK_',
+                                                                        '"${Player.inst.nowPlayingTrack.value.title}"',
+                                                                      ),
+                                                                      icon: Broken.bezier,
+                                                                      maxSubtitleLines: 22,
+                                                                      onTap: () {
+                                                                        Get.close(1);
+                                                                        final gentracks = generateRecommendedTrack(Player.inst.nowPlayingTrack.value);
+                                                                        if (gentracks.isEmpty) {
+                                                                          Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_IN_HISTORY);
+                                                                          return;
+                                                                        }
+                                                                        Player.inst.addToQueue(gentracks, insertNext: true);
+                                                                      },
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
+                                                        child: const Icon(Broken.add_circle),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 6.0),
+                                                    ElevatedButton(
+                                                      onPressed: () => ScrollSearchController.inst.animateQueueToCurrentTrack(),
+                                                      child: Icon(isArrowDown.value ? Broken.arrow_down : Broken.arrow_up_1),
+                                                    ),
+                                                    const SizedBox(width: 6.0),
+                                                    ElevatedButton.icon(
+                                                      onPressed: () => Player.inst.shuffleNextTracks(),
+                                                      label: Text(Language.inst.SHUFFLE),
+                                                      icon: const Icon(Broken.shuffle),
+                                                    ),
+                                                    const SizedBox(width: 8.0),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -1421,23 +1475,21 @@ class TrackImage extends StatelessWidget {
                       scale: isInversed ? 1.25 - finalScale : 1.13 + finalScale,
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
-                        child: shouldShowVideo
-                            ? isNull
-                                ? null
-                                : ClipRRect(
-                                    key: const ValueKey('videocontainer'),
-                                    borderRadius: BorderRadius.circular((6.0 + 12.0 * cp).multipliedRadius),
-                                    child: AspectRatio(
-                                      aspectRatio: VideoController.inst.vidcontroller!.value.aspectRatio,
-                                      child: LyricsWrapper(
-                                        cp: cp,
-                                        child: VideoPlayer(
-                                          key: const ValueKey('video'),
-                                          VideoController.inst.vidcontroller!,
-                                        ),
-                                      ),
+                        child: shouldShowVideo && !isNull
+                            ? ClipRRect(
+                                key: const ValueKey('videocontainer'),
+                                borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
+                                child: AspectRatio(
+                                  aspectRatio: VideoController.inst.vidcontroller!.value.aspectRatio,
+                                  child: LyricsWrapper(
+                                    cp: cp,
+                                    child: VideoPlayer(
+                                      key: const ValueKey('video'),
+                                      VideoController.inst.vidcontroller!,
                                     ),
-                                  )
+                                  ),
+                                ),
+                              )
                             : LyricsWrapper(
                                 cp: cp,
                                 child: ArtworkWidget(
@@ -1445,7 +1497,7 @@ class TrackImage extends StatelessWidget {
                                   track: track ?? Player.inst.nowPlayingTrack.value,
                                   thumnailSize: Get.width,
                                   compressed: false,
-                                  borderRadius: 6.0 + 12.0 * cp,
+                                  borderRadius: 6.0 + 10.0 * cp,
                                   forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
                                   boxShadow: [
                                     BoxShadow(
