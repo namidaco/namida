@@ -52,6 +52,9 @@ class YoutubeController {
   }
 
   Future<YTLVideo?> loadYoutubeVideoMetadata(String id, {bool forceReload = false}) async {
+    if (id == '') {
+      return null;
+    }
     final videometafile = File('$kMetadataDirPath$id.txt');
     YTLVideo? vid;
     if (!forceReload && await videometafile.exists()) {

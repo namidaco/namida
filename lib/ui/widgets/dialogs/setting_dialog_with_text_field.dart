@@ -17,8 +17,6 @@ void showSettingDialogWithTextField({
   bool? trackListTileHeight,
   bool? albumThumbnailSizeinList,
   bool? albumListTileHeight,
-  bool? queueSheetMinHeight,
-  bool? queueSheetMaxHeight,
   bool? nowPlayingImageContainerHeight,
   bool? borderRadiusMultiplier,
   bool? fontScaleFactor,
@@ -90,18 +88,7 @@ void showSettingDialogWithTextField({
                   );
                   showSnackBarWithTitle("${stg.albumListTileHeight.value}", title: title, iconWidget: iconWidget);
                 }
-                if (queueSheetMinHeight != null) {
-                  stg.save(
-                    queueSheetMinHeight: 25.0,
-                  );
-                  showSnackBarWithTitle("${stg.queueSheetMinHeight.value}", title: title, iconWidget: iconWidget);
-                }
-                if (queueSheetMaxHeight != null) {
-                  stg.save(
-                    queueSheetMaxHeight: 500.0,
-                  );
-                  showSnackBarWithTitle("${stg.queueSheetMaxHeight.value}", title: title, iconWidget: iconWidget);
-                }
+
                 if (nowPlayingImageContainerHeight != null) {
                   stg.save(
                     nowPlayingImageContainerHeight: 400.0,
@@ -160,35 +147,7 @@ void showSettingDialogWithTextField({
                       albumListTileHeight: double.parse(controller.text),
                     );
                   }
-                  if (queueSheetMinHeight != null) {
-                    // handling the case where the user enters a min value higher than the max
-                    if (double.parse(controller.text) > stg.queueSheetMaxHeight.value) {
-                      stg.save(
-                        queueSheetMinHeight: stg.queueSheetMaxHeight.value,
-                      );
-                      showSnackBarWithTitle(
-                        "${stg.queueSheetMinHeight}, ${Language.inst.MIN_CANT_BE_LESS_THAN_MAX}",
-                        duration: const Duration(seconds: 4),
-                        title: title,
-                      );
-                    } else {
-                      stg.save(
-                        queueSheetMinHeight: double.parse(controller.text),
-                      );
-                    }
-                  }
-                  if (queueSheetMaxHeight != null) {
-                    if (double.parse(controller.text) < stg.queueSheetMinHeight.value) {
-                      stg.save(
-                        queueSheetMaxHeight: stg.queueSheetMinHeight.value,
-                      );
-                      showSnackBarWithTitle("${stg.queueSheetMaxHeight}, ${Language.inst.MAX_CANT_BE_MORE_THAN_MIN}", duration: const Duration(seconds: 4), title: title);
-                    } else {
-                      stg.save(
-                        queueSheetMaxHeight: double.parse(controller.text),
-                      );
-                    }
-                  }
+
                   if (nowPlayingImageContainerHeight != null) {
                     stg.save(
                       nowPlayingImageContainerHeight: double.parse(controller.text),

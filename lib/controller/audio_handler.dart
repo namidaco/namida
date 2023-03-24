@@ -239,6 +239,12 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     insertInQueue(newTracks, first);
   }
 
+  /// Buggy
+  // void shuffleAllQueue() {
+  //   currentQueue.shuffle();
+  //   currentIndex.value == currentQueue.indexOf(nowPlayingTrack.value);
+  // }
+
   void addToQueue(List<Track> tracks, {bool insertNext = false}) {
     if (insertNext) {
       insertInQueue(tracks, currentIndex.value + 1);

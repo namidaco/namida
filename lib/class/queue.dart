@@ -31,7 +31,7 @@ class Queue {
   /// this should lower startup time and increase performance.
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    final finalTracks = checkIfQueueSameAsAllTracks(tracks) ? [] : tracks.map((e) => e.toJson()).toList();
+    final finalTracks = checkIfQueueSameAsAllTracks(tracks) ? [] : tracks.map((e) => e.path).toList();
     data['date'] = date;
     data['tracks'] = finalTracks;
     return data;

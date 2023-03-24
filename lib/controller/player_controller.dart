@@ -55,6 +55,10 @@ class Player {
     _audioHandler?.shuffleNextTracks();
   }
 
+  // void shuffleAllQueue() {
+  //   _audioHandler?.shuffleAllQueue();
+  // }
+
   void addToQueue(List<Track> tracks, {bool insertNext = false}) {
     _audioHandler?.addToQueue(tracks, insertNext: insertNext);
   }

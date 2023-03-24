@@ -190,7 +190,11 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                   title: Column(
                                                     crossAxisAlignment: CrossAxisAlignment.start,
                                                     children: [
-                                                      Text(ytvideo.video.title, maxLines: isTitleExpanded.value ? null : 1),
+                                                      Text(
+                                                        ytvideo.video.title,
+                                                        maxLines: isTitleExpanded.value ? null : 2,
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
                                                       const SizedBox(height: 4.0),
                                                       Obx(
                                                         () => Text(

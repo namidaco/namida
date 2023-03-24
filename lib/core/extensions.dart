@@ -615,7 +615,7 @@ extension ConvertPathsToTracks on List<String> {
   List<Track> get toTracks {
     // final matchingSet = HashSet<String>.from(this);
     // final finalTracks = Indexer.inst.tracksInfoList.where((item) => matchingSet.contains(item.path));
-    final finalTracks = map((e) => e.toTrack);
+    final finalTracks = map((e) => e.toTrack).toList();
     return finalTracks.sorted((a, b) => indexOf(a.path).compareTo(indexOf(b.path)));
   }
 }

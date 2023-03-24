@@ -27,8 +27,6 @@ class SettingsController extends GetxController {
   final RxDouble trackListTileHeight = 70.0.obs;
   final RxDouble albumThumbnailSizeinList = 90.0.obs;
   final RxDouble albumListTileHeight = 90.0.obs;
-  final RxDouble queueSheetMinHeight = 25.0.obs;
-  final RxDouble queueSheetMaxHeight = 500.0.obs;
   final RxDouble nowPlayingImageContainerHeight = 400.0.obs;
 
   final RxBool enableVolumeFadeOnPlayPause = true.obs;
@@ -140,8 +138,6 @@ class SettingsController extends GetxController {
       trackListTileHeight.value = json['trackListTileHeight'] ?? trackListTileHeight.value;
       albumThumbnailSizeinList.value = json['albumThumbnailSizeinList'] ?? albumThumbnailSizeinList.value;
       albumListTileHeight.value = json['albumListTileHeight'] ?? albumListTileHeight.value;
-      queueSheetMinHeight.value = json['queueSheetMinHeight'] ?? queueSheetMinHeight.value;
-      queueSheetMaxHeight.value = json['queueSheetMaxHeight'] ?? queueSheetMaxHeight.value;
       nowPlayingImageContainerHeight.value = json['nowPlayingImageContainerHeight'] ?? nowPlayingImageContainerHeight.value;
 
       enableVolumeFadeOnPlayPause.value = json['enableVolumeFadeOnPlayPause'] ?? enableVolumeFadeOnPlayPause.value;
@@ -242,8 +238,6 @@ class SettingsController extends GetxController {
       'trackListTileHeight': trackListTileHeight.value,
       'albumThumbnailSizeinList': albumThumbnailSizeinList.value,
       'albumListTileHeight': albumListTileHeight.value,
-      'queueSheetMinHeight': queueSheetMinHeight.value,
-      'queueSheetMaxHeight': queueSheetMaxHeight.value,
       'nowPlayingImageContainerHeight': nowPlayingImageContainerHeight.value,
 
       'enableVolumeFadeOnPlayPause': enableVolumeFadeOnPlayPause.value,
@@ -334,8 +328,6 @@ class SettingsController extends GetxController {
     double? trackListTileHeight,
     double? albumThumbnailSizeinList,
     double? albumListTileHeight,
-    double? queueSheetMinHeight,
-    double? queueSheetMaxHeight,
     double? nowPlayingImageContainerHeight,
     bool? enableVolumeFadeOnPlayPause,
     bool? displayTrackNumberinAlbumPage,
@@ -452,12 +444,7 @@ class SettingsController extends GetxController {
     if (albumListTileHeight != null) {
       this.albumListTileHeight.value = albumListTileHeight;
     }
-    if (queueSheetMinHeight != null) {
-      this.queueSheetMinHeight.value = queueSheetMinHeight;
-    }
-    if (queueSheetMaxHeight != null) {
-      this.queueSheetMaxHeight.value = queueSheetMaxHeight;
-    }
+
     if (nowPlayingImageContainerHeight != null) {
       this.nowPlayingImageContainerHeight.value = nowPlayingImageContainerHeight;
     }

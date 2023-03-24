@@ -42,8 +42,6 @@ class Language {
   String get WAVEFORMS_DATA => 'Waveforms data';
   String get CLEAR_TRACK_ITEM => 'Clear Track\'s';
   String get CLEAR_TRACK_ITEM_MULTIPLE => 'Clear _NUMBER_ Tracks\'';
-  String get MIN_CANT_BE_LESS_THAN_MAX => 'Minimum value can\'t be less than the maximum';
-  String get MAX_CANT_BE_MORE_THAN_MIN => 'Maximum value can\'t be more than the minimum';
   String get MULTIPLE_TRACKS_TAGS_EDIT_NOTE => 'You are about to edit these tracks,\nEmpty fields remains untouched.';
   String get DELETE_PLAYLIST => 'Delete Playlist';
   String get REMOVE_FROM_PLAYLIST => 'Remove From Playlist';
@@ -84,7 +82,7 @@ class Language {
   String get REPEAT_MODE_NONE => 'Stop on Last Track';
   String get REPEAT_MODE_ONE => 'Repeat Current Track';
   String get ENABLE_SEARCH_CLEANUP => 'Enable Search Cleanup';
-  String get ENABLE_SEARCH_CLEANUP_SUBTITLE => 'All Symbols and Spaces will be neglected';
+  String get ENABLE_SEARCH_CLEANUP_SUBTITLE => 'All Symbols and Spaces will be ignored';
   String get ENABLE_BOTTOM_NAV_BAR => 'Enable Bottom Navigation Bar';
   String get ENABLE_BOTTOM_NAV_BAR_SUBTITLE => 'Items are inside the drawer bothways';
   String get NEW_TRACKS_ADD => 'Add Tracks';
