@@ -1547,7 +1547,7 @@ class LyricsWrapper extends StatelessWidget {
                   Opacity(
                     opacity: cp,
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(18.0.multipliedRadius),
+                      borderRadius: BorderRadius.circular(16.0.multipliedRadius),
                       child: BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
                         child: Container(

@@ -34,6 +34,7 @@ class ArtworkWidget extends StatelessWidget {
   final double? iconSize;
   final bool staggered;
   final Widget? onTopWidget;
+  final List<Widget>? onTopWidgets;
   final List<BoxShadow>? boxShadow;
   const ArtworkWidget({
     super.key,
@@ -56,6 +57,7 @@ class ArtworkWidget extends StatelessWidget {
     this.staggered = false,
     this.onTopWidget,
     this.boxShadow,
+    this.onTopWidgets,
     this.path,
   });
 
@@ -92,7 +94,7 @@ class ArtworkWidget extends StatelessWidget {
                       File(path ?? track.pathToImage),
                       gaplessPlayback: true,
                       fit: BoxFit.cover,
-                      cacheHeight: (cacheHeight ?? 200) * Get.mediaQuery.devicePixelRatio ~/ 1,
+                      cacheHeight: (cacheHeight ?? 100) * (Get.mediaQuery.devicePixelRatio).round(),
                       filterQuality: FilterQuality.medium,
                       width: forceSquared ? context.width : null,
                       height: forceSquared ? context.width : null,
@@ -118,6 +120,7 @@ class ArtworkWidget extends StatelessWidget {
                   height: forceSquared ? context.width : null,
                 ),
               if (onTopWidget != null) onTopWidget!,
+              if (onTopWidgets != null) ...onTopWidgets!,
             ],
           )
         : stockWidget;
