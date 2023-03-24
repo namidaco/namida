@@ -1483,9 +1483,12 @@ class TrackImage extends StatelessWidget {
                                   aspectRatio: VideoController.inst.vidcontroller!.value.aspectRatio,
                                   child: LyricsWrapper(
                                     cp: cp,
-                                    child: VideoPlayer(
-                                      key: const ValueKey('video'),
-                                      VideoController.inst.vidcontroller!,
+                                    child: GestureDetector(
+                                      onTap: () => VideoController.inst.seek(Player.inst.nowPlayingPosition.value.milliseconds),
+                                      child: VideoPlayer(
+                                        key: const ValueKey('video'),
+                                        VideoController.inst.vidcontroller!,
+                                      ),
                                     ),
                                   ),
                                 ),
