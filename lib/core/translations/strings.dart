@@ -29,6 +29,8 @@ class Language {
   String get PARSED => 'parsed';
   String get ADDED => 'added';
   String get IMPORT_YOUTUBE_HISTORY => 'Import Youtube History';
+  String get ERROR => 'Error';
+  String get COULDNT_PLAY_FILE => 'Couldn\'t play file';
 
   ///
   String get REMOVE_WHITESPACES => 'Remove Whitespaces';

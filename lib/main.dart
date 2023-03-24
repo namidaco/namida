@@ -13,6 +13,7 @@ import 'package:get/get.dart';
 import 'package:on_audio_edit/on_audio_edit.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:receive_intent/receive_intent.dart' as intent;
 
 import 'package:namida/controller/youtube_controller.dart';
 import 'package:namida/controller/current_color.dart';
@@ -25,6 +26,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -123,7 +125,33 @@ void main() async {
     QueueController.inst.prepareQueuesFile(),
   ]);
 
+  /// Recieving Initial Android Shared Intent.
+  final intentfile = await intent.ReceiveIntent.getInitialIntent();
+  if (intentfile != null && intentfile.extra?['real_path'] != null) {
+    final playedsuccessfully = await playExternalFile(intentfile.extra?['real_path']);
+    if (!playedsuccessfully) {
+      Get.snackbar(Language.inst.ERROR, Language.inst.COULDNT_PLAY_FILE);
+    }
+  }
+
+  /// Listening to Android Shared Intents.
+  intent.ReceiveIntent.receivedIntentStream.listen((intent.Intent? intent) async {
+    playExternalFile(intent?.extra?['real_path']);
+  }, onError: (err) {
+    Get.snackbar(Language.inst.ERROR, Language.inst.COULDNT_PLAY_FILE);
+  });
+
   runApp(const MyApp());
+}
+
+/// returns [true] if played successfully.
+Future<bool> playExternalFile(String path) async {
+  final tr = await convertPathToTrack(path);
+  if (tr != null) {
+    Player.inst.playOrPause(0, [tr]);
+    return true;
+  }
+  return false;
 }
 
 Future<bool> requestManageStoragePermission() async {

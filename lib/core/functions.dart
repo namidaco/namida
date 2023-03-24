@@ -175,3 +175,12 @@ List<Track> generateTracksFromDates(int oldestDate, int newestDate) {
   final historytracks = PlaylistController.inst.playlistList.firstWhere((element) => element.id == kPlaylistHistory).tracks;
   return historytracks.where((element) => element.dateAdded >= oldestDate && element.dateAdded <= (newestDate + 1.days.inMilliseconds)).map((e) => e.track).toSet().toList();
 }
+
+Future<Track?> convertPathToTrack(String trackPath) async {
+  final trako = Indexer.inst.tracksInfoList.firstWhereOrNull((element) => element.path == trackPath);
+  if (trako != null) {
+    return trako;
+  }
+  await Indexer.inst.fetchAllSongsAndWriteToFile(audioFiles: {trackPath}, deletedPaths: {}, forceReIndex: false);
+  return Indexer.inst.tracksInfoList.firstWhereOrNull((element) => element.path == trackPath);
+}
