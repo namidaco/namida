@@ -4,18 +4,12 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 
 class Queue {
-  late String name;
-  late List<Track> tracks;
-  late int date;
-  late String comment;
-  late List<String> modes;
+  late final int date;
+  late final List<Track> tracks;
 
   Queue(
-    this.name,
-    this.tracks,
     this.date,
-    this.comment,
-    this.modes,
+    this.tracks,
   );
 
   /// Converts empty queue to AllTracksList.
@@ -29,24 +23,17 @@ class Queue {
       finalTracks.addAll(res.toTracks);
     }
 
-    name = json['name'] ?? '';
-    tracks = finalTracks;
     date = json['date'] ?? DateTime.now().millisecondsSinceEpoch;
-    comment = json['comment'] ?? '';
-    modes = List<String>.from(json['modes'] ?? []);
+    tracks = finalTracks;
   }
 
   /// Saves an empty queue in case its the same as the AllTracksList.
   /// this should lower startup time and increase performance.
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    final finalTracks = checkIfQueueSameAsAllTracks(tracks) ? [] : tracks.map((e) => e.path).toList();
-    data['name'] = name;
-    data['tracks'] = finalTracks;
+    final finalTracks = checkIfQueueSameAsAllTracks(tracks) ? [] : tracks.map((e) => e.toJson()).toList();
     data['date'] = date;
-    data['comment'] = comment;
-    data['modes'] = modes;
-
+    data['tracks'] = finalTracks;
     return data;
   }
 }

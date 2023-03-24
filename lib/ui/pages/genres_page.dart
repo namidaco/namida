@@ -56,7 +56,7 @@ class GenresPage extends StatelessWidget {
                   },
                 ),
                 textField: CustomTextFiled(
-                  textFieldController: Indexer.inst.genresSearchController.value,
+                  textFieldController: Indexer.inst.genresSearchController,
                   textFieldHintText: Language.inst.FILTER_GENRES,
                   onTextFieldValueChanged: (value) => Indexer.inst.searchGenres(value),
                 ),
@@ -68,17 +68,17 @@ class GenresPage extends StatelessWidget {
                   itemCount: Indexer.inst.genreSearchList.length,
                   padding: const EdgeInsets.only(bottom: kBottomPadding),
                   itemBuilder: (BuildContext context, int i) {
-                    final genre = Indexer.inst.genreSearchList.entries.toList()[i];
+                    final genre = Indexer.inst.genreSearchList[i];
                     return AnimatingGrid(
                       columnCount: Indexer.inst.genreSearchList.length,
                       position: i,
                       child: MultiArtworkCard(
-                        heroTag: 'parent_genre_artwork_${genre.key}',
-                        tracks: genre.value.toList(),
-                        name: genre.key,
+                        heroTag: 'parent_genre_artwork_${genre.name}',
+                        tracks: genre.tracks,
+                        name: genre.name,
                         gridCount: countPerRow,
-                        showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(genre.key, genre.value.toList()),
-                        onTap: () => NamidaOnTaps.inst.onGenreTap(genre.key),
+                        showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(genre.name, genre.tracks),
+                        onTap: () => NamidaOnTaps.inst.onGenreTap(genre.name),
                       ),
                     );
                   },

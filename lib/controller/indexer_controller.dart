@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
+import 'package:namida/class/group.dart';
+import 'package:namida/class/folder.dart';
 import 'package:on_audio_edit/on_audio_edit.dart' as audioedit;
 import 'package:on_audio_query/on_audio_query.dart';
 
@@ -19,41 +21,44 @@ import 'package:namida/core/functions.dart';
 class Indexer extends GetxController {
   static final Indexer inst = Indexer();
 
-  RxBool isIndexing = false.obs;
+  final RxBool isIndexing = false.obs;
 
-  RxInt allTracksPaths = 0.obs;
-  RxList<FileSystemEntity> tracksFileSystemEntity = <FileSystemEntity>[].obs;
-  RxInt filteredForSizeDurationTracks = 0.obs;
-  RxInt duplicatedTracksLength = 0.obs;
-  Set<String> filteredPathsToBeDeleted = {};
+  final RxInt allTracksPaths = 0.obs;
+  final RxList<FileSystemEntity> tracksFileSystemEntity = <FileSystemEntity>[].obs;
+  final RxInt filteredForSizeDurationTracks = 0.obs;
+  final RxInt duplicatedTracksLength = 0.obs;
+  final Set<String> filteredPathsToBeDeleted = {};
 
-  RxInt artworksInStorage = Directory(kArtworksDirPath).listSync().length.obs;
-  RxInt waveformsInStorage = Directory(kWaveformDirPath).listSync().length.obs;
-  RxInt colorPalettesInStorage = Directory(kPaletteDirPath).listSync().length.obs;
-  RxInt videosInStorage = Directory(kWaveformDirPath).listSync().length.obs;
+  final RxInt artworksInStorage = Directory(kArtworksDirPath).listSync().length.obs;
+  final RxInt waveformsInStorage = Directory(kWaveformDirPath).listSync().length.obs;
+  final RxInt colorPalettesInStorage = Directory(kPaletteDirPath).listSync().length.obs;
+  final RxInt videosInStorage = Directory(kWaveformDirPath).listSync().length.obs;
 
-  RxInt artworksSizeInStorage = 0.obs;
-  RxInt waveformsSizeInStorage = 0.obs;
-  RxInt videosSizeInStorage = 0.obs;
+  final RxInt artworksSizeInStorage = 0.obs;
+  final RxInt waveformsSizeInStorage = 0.obs;
+  final RxInt videosSizeInStorage = 0.obs;
 
-  Rx<TextEditingController> globalSearchController = TextEditingController().obs;
-  Rx<TextEditingController> tracksSearchController = TextEditingController().obs;
-  Rx<TextEditingController> albumsSearchController = TextEditingController().obs;
-  Rx<TextEditingController> artistsSearchController = TextEditingController().obs;
-  Rx<TextEditingController> genresSearchController = TextEditingController().obs;
-  // Rx<TextEditingController> foldersSearchController = TextEditingController().obs;
+  final TextEditingController globalSearchController = TextEditingController();
+  final TextEditingController tracksSearchController = TextEditingController();
+  final TextEditingController albumsSearchController = TextEditingController();
+  final TextEditingController artistsSearchController = TextEditingController();
+  final TextEditingController genresSearchController = TextEditingController();
 
-  RxList<Track> tracksInfoList = <Track>[].obs;
-  RxMap<String, Set<Track>> albumsMap = <String, Set<Track>>{}.obs;
-  RxMap<String, Set<Track>> groupedArtistsMap = <String, Set<Track>>{}.obs;
-  RxMap<String, Set<Track>> groupedGenresMap = <String, Set<Track>>{}.obs;
-  RxMap<String, List<Track>> groupedFoldersMap = <String, List<Track>>{}.obs;
+  final RxList<Track> tracksInfoList = <Track>[].obs;
+  final RxList<Group> albumsList = <Group>[].obs;
+  final RxList<Group> groupedArtistsList = <Group>[].obs;
+  final RxList<Group> groupedGenresList = <Group>[].obs;
+  final RxList<Folder> groupedFoldersList = <Folder>[].obs;
 
-  RxList<Track> trackSearchList = <Track>[].obs;
-  RxMap<String, Set<Track>> albumSearchList = <String, Set<Track>>{}.obs;
-  RxMap<String, Set<Track>> artistSearchList = <String, Set<Track>>{}.obs;
-  RxMap<String, Set<Track>> genreSearchList = <String, Set<Track>>{}.obs;
-  // RxMap<String, List<Track>> foldersSearchList = <String, List<Track>>{}.obs;
+  final RxList<Track> trackSearchList = <Track>[].obs;
+  final RxList<Group> albumSearchList = <Group>[].obs;
+  final RxList<Group> artistSearchList = <Group>[].obs;
+  final RxList<Group> genreSearchList = <Group>[].obs;
+
+  /// Temporary lists.
+  final RxList<Track> trackSearchTemp = <Track>[].obs;
+  final RxList<Group> albumSearchTemp = <Group>[].obs;
+  final RxList<Group> artistSearchTemp = <Group>[].obs;
 
   final OnAudioQuery _query = OnAudioQuery();
   final onAudioEdit = audioedit.OnAudioEdit();
@@ -85,33 +90,52 @@ class Indexer extends GetxController {
   }
 
   void afterIndexing() {
-    albumsMap.clear();
-    groupedArtistsMap.clear();
-    groupedGenresMap.clear();
-    groupedFoldersMap.clear();
-    for (Track track in tracksInfoList) {
-      albumsMap.putIfAbsent(track.album, () => {}).addIf(() {
-        /// a check to not add tracks with the same filename to the album
-        return !(albumsMap[track.album] ?? {}).map((e) => e.filename).contains(track.filename);
-      }, track);
-    }
-    for (Track map in tracksInfoList) {
-      for (var artist in map.artistsList) {
-        groupedArtistsMap.putIfAbsent(artist, () => {}).addIf(() {
-          return !(groupedArtistsMap[artist] ?? {}).map((e) => e.filename).contains(map.filename);
-        }, map);
+    albumsList.clear();
+    groupedArtistsList.clear();
+    groupedGenresList.clear();
+    groupedFoldersList.clear();
+
+    // albumsList.assignAll(tracksInfoList.groupBy((t) => t.album).entries.map((e) => Group(e.key, e.value)));
+    // final allartists = tracksInfoList.expand((element) => element.artistsList).toList();
+    // groupedArtistsList.assignAll(tracksInfoList.groupBy((t) => allartists).entries.map((e) => Group(e.key, e.value)));
+
+    for (Track tr in tracksInfoList) {
+      /// Assigning Albums
+      final album = albumsList.firstWhereOrNull((element) => element.name == tr.album);
+      if (album == null) {
+        albumsList.add(Group(tr.album, [tr]));
+      } else {
+        album.tracks.add(tr);
+      }
+
+      /// Assigning Artist
+      for (final artist in tr.artistsList) {
+        final art = groupedArtistsList.firstWhereOrNull((element) => element.name == artist);
+        if (art == null) {
+          groupedArtistsList.add(Group(artist, [tr]));
+        } else {
+          art.tracks.add(tr);
+        }
+      }
+
+      /// Assigning Genres
+      for (final genre in tr.genresList) {
+        final gen = groupedGenresList.firstWhereOrNull((element) => element.name == genre);
+        if (gen == null) {
+          groupedGenresList.add(Group(genre, [tr]));
+        } else {
+          gen.tracks.add(tr);
+        }
+      }
+
+      /// Assigning Folders
+      final folder = groupedFoldersList.firstWhereOrNull((element) => element.path == tr.folderPath);
+      if (folder == null) {
+        groupedFoldersList.add(Folder(tr.folderPath.split('/').length, tr.folderPath.split('/').last, tr.folderPath, [tr]));
+      } else {
+        folder.tracks.add(tr);
       }
     }
-
-    for (Track map in tracksInfoList) {
-      for (var genre in map.genresList) {
-        groupedGenresMap.putIfAbsent(genre, () => {}).addIf(() {
-          return !(groupedGenresMap[genre] ?? {}).map((e) => e.filename).contains(map.filename);
-        }, map);
-      }
-    }
-
-    groupedFoldersMap.assignAll(tracksInfoList.groupBy((p0) => p0.folderPath));
 
     sortTracks();
     sortAlbums();
@@ -188,7 +212,7 @@ class Indexer extends GetxController {
 
     Future<void> extractAllMetadata() async {
       Set<String> listOfCurrentFileNames = <String>{};
-      for (var track in audioFiles) {
+      for (final track in audioFiles) {
         print(track);
         try {
           final trackInfo = await onAudioEdit.readAudio(track);
@@ -202,7 +226,7 @@ class Indexer extends GetxController {
           /// Since duration & dateAdded can't be accessed using [onAudioEdit] (jaudiotagger), im using [onAudioQuery] to access it
           int? duration;
           // int? dateAdded;
-          for (var h in tracksOld) {
+          for (final h in tracksOld) {
             if (h.data == track) {
               duration = h.duration;
               // dateAdded = h.dateAdded;
@@ -212,7 +236,7 @@ class Indexer extends GetxController {
 
           // breaks the loop early depending on size [byte] or duration [seconds]
           if ((duration ?? 0) < minDur * 1000 || fileStat.size < minSize) {
-            filteredForSizeDurationTracks++;
+            filteredForSizeDurationTracks.value++;
             filteredPathsToBeDeleted.add(track);
             deletedPaths.add(track);
             continue;
@@ -221,14 +245,14 @@ class Indexer extends GetxController {
           /// Split Artists
           final List<String> _artistsListfinal = <String>[];
           List<String> _artistsListPre = trackInfo.artist?.trim().multiSplit(SettingsController.inst.trackArtistsSeparators.toList()) ?? ['Unkown Artist'];
-          for (var element in _artistsListPre) {
+          for (final element in _artistsListPre) {
             _artistsListfinal.add(element.trim());
           }
 
           /// Split Genres
           final List<String> _genresListfinal = <String>[];
           List<String> _genresListPre = trackInfo.genre?.trim().multiSplit(SettingsController.inst.trackGenresSeparators.toList()) ?? ['Unkown Genre'];
-          for (var element in _genresListPre) {
+          for (final element in _genresListPre) {
             _genresListfinal.add(element.trim());
           }
 
@@ -281,7 +305,7 @@ class Indexer extends GetxController {
     if (deletedPaths.isEmpty) {
       await extractAllMetadata();
     } else {
-      for (var p in deletedPaths) {
+      for (final p in deletedPaths) {
         tracksInfoList.removeWhere((track) => track.path == p);
       }
     }
@@ -294,8 +318,8 @@ class Indexer extends GetxController {
     /// removes duplicated tracks after a refresh
     if (SettingsController.inst.preventDuplicatedTracks.value) {
       Set<String> listOfCurrentFileNames = <String>{};
-      var listOfTracksWithoutDuplicates = <Track>[];
-      for (var tr in tracksInfoList) {
+      final listOfTracksWithoutDuplicates = <Track>[];
+      for (final tr in tracksInfoList) {
         if (!listOfCurrentFileNames.contains(tr.filename)) {
           listOfTracksWithoutDuplicates.add(tr);
           listOfCurrentFileNames.add(tr.filename);
@@ -323,9 +347,9 @@ class Indexer extends GetxController {
     file ??= File(kTracksFilePath);
     String contents = await file.readAsString();
     if (contents.isNotEmpty) {
-      var jsonResponse = jsonDecode(contents);
+      final jsonResponse = jsonDecode(contents);
 
-      for (var p in jsonResponse) {
+      for (final p in jsonResponse) {
         tracksInfoList.add(Track.fromJson(p));
         debugPrint("Tracks Info List Length From File: ${tracksInfoList.length}");
       }
@@ -389,15 +413,22 @@ class Indexer extends GetxController {
   }
 
   void searchAll(String text) {
-    searchTracks(text);
-    searchAlbums(text);
-    searchArtists(text);
+    searchTracks(text, temp: true);
+    searchAlbums(text, temp: true);
+    searchArtists(text, temp: true);
   }
 
-  void searchTracks(String text) {
+  void searchTracks(String text, {bool temp = false}) {
+    final finalList = temp ? trackSearchTemp : trackSearchList;
+    finalList.clear();
     if (text == '') {
-      tracksSearchController.value.clear();
-      trackSearchList.assignAll(tracksInfoList);
+      if (temp) {
+        trackSearchTemp.clear();
+      } else {
+        tracksSearchController.clear();
+        trackSearchList.assignAll(tracksInfoList);
+      }
+
       return;
     }
 
@@ -410,8 +441,7 @@ class Indexer extends GetxController {
     final sComposer = tsf.contains('composer');
     final sYear = tsf.contains('year');
 
-    trackSearchList.clear();
-    for (var item in tracksInfoList) {
+    for (final item in tracksInfoList) {
       final lctext = textCleanedForSearch(text);
 
       if ((sTitle && textCleanedForSearch(item.title).contains(lctext)) ||
@@ -421,50 +451,54 @@ class Indexer extends GetxController {
           (sGenre && item.genresList.any((element) => textCleanedForSearch(element).contains(lctext))) ||
           (sComposer && textCleanedForSearch(item.composer).contains(lctext)) ||
           (sYear && textCleanedForSearch(item.year.toString()).contains(lctext))) {
-        trackSearchList.add(item);
+        finalList.add(item);
       }
     }
     printInfo(info: "Tracks Found: ${trackSearchList.length}");
   }
 
-  void searchAlbums(String text) {
+  void searchAlbums(String text, {bool temp = false}) {
     if (text == '') {
-      albumsSearchController.value.clear();
-      albumSearchList.assignAll(albumsMap);
+      if (temp) {
+        albumSearchTemp.clear();
+      } else {
+        albumsSearchController.clear();
+        albumSearchList.assignAll(albumsList);
+      }
       return;
     }
-    Map<String, Set<Track>> newMap = <String, Set<Track>>{};
-    for (var album in albumsMap.entries) {
-      newMap.addAllIf(textCleanedForSearch(album.key).contains(textCleanedForSearch(text)), {album.key: album.value});
+    if (temp) {
+      albumSearchTemp.assignAll(albumsList.where((al) => textCleanedForSearch(al.name).contains(textCleanedForSearch(text))));
+    } else {
+      albumSearchList.assignAll(albumsList.where((al) => textCleanedForSearch(al.name).contains(textCleanedForSearch(text))));
     }
-    albumSearchList.assignAll(newMap);
   }
 
-  void searchArtists(String text) {
+  void searchArtists(String text, {bool temp = false}) {
     if (text == '') {
-      artistsSearchController.value.clear();
-      artistSearchList.assignAll(groupedArtistsMap);
+      if (temp) {
+        artistSearchTemp.clear();
+      } else {
+        artistsSearchController.clear();
+        artistSearchList.assignAll(groupedArtistsList);
+      }
+
       return;
     }
-    Map<String, Set<Track>> newMap = <String, Set<Track>>{};
-    for (var artist in groupedArtistsMap.entries) {
-      newMap.addAllIf(textCleanedForSearch(artist.key).contains(textCleanedForSearch(text)), {artist.key: artist.value});
+    if (temp) {
+      artistSearchTemp.assignAll(groupedArtistsList.where((ar) => textCleanedForSearch(ar.name).contains(textCleanedForSearch(text))));
+    } else {
+      artistSearchList.assignAll(groupedArtistsList.where((ar) => textCleanedForSearch(ar.name).contains(textCleanedForSearch(text))));
     }
-    artistSearchList.assignAll(newMap);
   }
 
   void searchGenres(String text) {
     if (text == '') {
-      genresSearchController.value.clear();
-      genreSearchList.assignAll(groupedGenresMap);
+      genresSearchController.clear();
+      genreSearchList.assignAll(groupedGenresList);
       return;
     }
-
-    Map<String, Set<Track>> newMap = <String, Set<Track>>{};
-    for (var genre in groupedGenresMap.entries) {
-      newMap.addAllIf(textCleanedForSearch(genre.key).contains(textCleanedForSearch(text)), {genre.key: genre.value});
-    }
-    genreSearchList.assignAll(newMap);
+    genreSearchList.assignAll(groupedGenresList.where((gen) => textCleanedForSearch(gen.name).contains(textCleanedForSearch(text))));
   }
 
   /// Sorts Tracks and Saves automatically to settings
@@ -533,32 +567,31 @@ class Indexer extends GetxController {
   void sortAlbums({GroupSortType? sortBy, bool? reverse}) {
     sortBy ??= SettingsController.inst.albumSort.value;
     reverse ??= SettingsController.inst.albumSortReversed.value;
-    var mapEntries = albumsMap.entries.toList();
     switch (sortBy) {
       case GroupSortType.album:
-        mapEntries.sort((a, b) => a.value.first.album.compareTo(b.value.first.album));
+        albumsList.sort((a, b) => a.name.compareTo(b.name));
         break;
       case GroupSortType.albumArtist:
-        mapEntries.sort((a, b) => a.value.first.albumArtist.compareTo(b.value.first.albumArtist));
+        albumsList.sort((a, b) => a.tracks.first.albumArtist.compareTo(b.tracks.first.albumArtist));
         break;
       case GroupSortType.year:
-        mapEntries.sort((a, b) => a.value.first.year.compareTo(b.value.first.year));
+        albumsList.sort((a, b) => a.tracks.first.year.compareTo(b.tracks.first.year));
         break;
       case GroupSortType.artistsList:
-        mapEntries.sort((a, b) => a.value.first.artistsList.toString().compareTo(b.value.first.artistsList.toString()));
+        albumsList.sort((a, b) => a.tracks.first.artistsList.toString().compareTo(b.tracks.first.artistsList.toString()));
         break;
 
       case GroupSortType.composer:
-        mapEntries.sort((a, b) => a.value.first.composer.compareTo(b.value.first.composer));
+        albumsList.sort((a, b) => a.tracks.first.composer.compareTo(b.tracks.first.composer));
         break;
       case GroupSortType.dateModified:
-        mapEntries.sort((a, b) => a.value.first.dateModified.compareTo(b.value.first.dateModified));
+        albumsList.sort((a, b) => a.tracks.first.dateModified.compareTo(b.tracks.first.dateModified));
         break;
       case GroupSortType.duration:
-        mapEntries.sort((a, b) => a.value.toList().totalDuration.compareTo(b.value.toList().totalDuration));
+        albumsList.sort((a, b) => a.tracks.toList().totalDuration.compareTo(b.tracks.toList().totalDuration));
         break;
       case GroupSortType.numberOfTracks:
-        mapEntries.sort((a, b) => a.value.length.compareTo(b.value.length));
+        albumsList.sort((a, b) => a.tracks.length.compareTo(b.tracks.length));
         break;
 
       default:
@@ -566,9 +599,7 @@ class Indexer extends GetxController {
     }
 
     if (reverse) {
-      albumsMap.value = Map.fromEntries(mapEntries.reversed);
-    } else {
-      albumsMap.value = Map.fromEntries(mapEntries);
+      albumsList.value = albumsList.reversed.toList();
     }
 
     SettingsController.inst.save(albumSort: sortBy, albumSortReversed: reverse);
@@ -580,44 +611,40 @@ class Indexer extends GetxController {
   void sortArtists({GroupSortType? sortBy, bool? reverse}) {
     sortBy ??= SettingsController.inst.artistSort.value;
     reverse ??= SettingsController.inst.artistSortReversed.value;
-    var mapEntries = groupedArtistsMap.entries.toList();
     switch (sortBy) {
       case GroupSortType.album:
-        mapEntries.sort((a, b) => a.value.elementAt(0).album.compareTo(b.value.elementAt(0).album));
+        groupedArtistsList.sort((a, b) => a.tracks.elementAt(0).album.compareTo(b.tracks.elementAt(0).album));
         break;
       case GroupSortType.albumArtist:
-        mapEntries.sort((a, b) => a.value.elementAt(0).albumArtist.compareTo(b.value.elementAt(0).albumArtist));
+        groupedArtistsList.sort((a, b) => a.tracks.elementAt(0).albumArtist.compareTo(b.tracks.elementAt(0).albumArtist));
         break;
       case GroupSortType.year:
-        mapEntries.sort((a, b) => a.value.elementAt(0).year.compareTo(b.value.elementAt(0).year));
+        groupedArtistsList.sort((a, b) => a.tracks.elementAt(0).year.compareTo(b.tracks.elementAt(0).year));
         break;
       case GroupSortType.artistsList:
-        // mapEntries.sort((a, b) => a.value.elementAt(0).artistsList.toString().compareTo(b.value.elementAt(0).artistsList.toString()));
-        mapEntries.sort(((a, b) => a.key.compareTo(b.key)));
+        // mapEntries.sort((a, b) => a.tracks.elementAt(0).artistsList.toString().compareTo(b.tracks.elementAt(0).artistsList.toString()));
+        groupedArtistsList.sort(((a, b) => a.name.compareTo(b.name)));
         break;
       case GroupSortType.genresList:
-        mapEntries.sort((a, b) => a.value.elementAt(0).genresList.toString().compareTo(b.value.elementAt(0).genresList.toString()));
+        groupedArtistsList.sort((a, b) => a.tracks.elementAt(0).genresList.toString().compareTo(b.tracks.elementAt(0).genresList.toString()));
         break;
       case GroupSortType.composer:
-        mapEntries.sort((a, b) => a.value.elementAt(0).composer.compareTo(b.value.elementAt(0).composer));
+        groupedArtistsList.sort((a, b) => a.tracks.elementAt(0).composer.compareTo(b.tracks.elementAt(0).composer));
         break;
       case GroupSortType.dateModified:
-        mapEntries.sort((a, b) => a.value.elementAt(0).dateModified.compareTo(b.value.elementAt(0).dateModified));
+        groupedArtistsList.sort((a, b) => a.tracks.elementAt(0).dateModified.compareTo(b.tracks.elementAt(0).dateModified));
         break;
       case GroupSortType.duration:
-        mapEntries.sort((a, b) => a.value.toList().totalDuration.compareTo(b.value.toList().totalDuration));
+        groupedArtistsList.sort((a, b) => a.tracks.toList().totalDuration.compareTo(b.tracks.toList().totalDuration));
         break;
       case GroupSortType.numberOfTracks:
-        mapEntries.sort((a, b) => a.value.length.compareTo(b.value.length));
+        groupedArtistsList.sort((a, b) => a.tracks.length.compareTo(b.tracks.length));
         break;
       default:
         null;
     }
-
     if (reverse) {
-      groupedArtistsMap.assignAll(Map.fromEntries(mapEntries.reversed));
-    } else {
-      groupedArtistsMap.assignAll(Map.fromEntries(mapEntries));
+      groupedArtistsList.value = groupedArtistsList.reversed.toList();
     }
 
     SettingsController.inst.save(artistSort: sortBy, artistSortReversed: reverse);
@@ -629,45 +656,40 @@ class Indexer extends GetxController {
   void sortGenres({GroupSortType? sortBy, bool? reverse}) {
     sortBy ??= SettingsController.inst.genreSort.value;
     reverse ??= SettingsController.inst.genreSortReversed.value;
-    var mapEntries = groupedGenresMap.entries.toList();
     switch (sortBy) {
       case GroupSortType.album:
-        mapEntries.sort((a, b) => a.value.elementAt(0).album.compareTo(b.value.elementAt(0).album));
+        groupedGenresList.sort((a, b) => a.tracks.elementAt(0).album.compareTo(b.tracks.elementAt(0).album));
         break;
       case GroupSortType.albumArtist:
-        mapEntries.sort((a, b) => a.value.elementAt(0).albumArtist.compareTo(b.value.elementAt(0).albumArtist));
+        groupedGenresList.sort((a, b) => a.tracks.elementAt(0).albumArtist.compareTo(b.tracks.elementAt(0).albumArtist));
         break;
       case GroupSortType.year:
-        mapEntries.sort((a, b) => a.value.elementAt(0).year.compareTo(b.value.elementAt(0).year));
+        groupedGenresList.sort((a, b) => a.tracks.elementAt(0).year.compareTo(b.tracks.elementAt(0).year));
         break;
       case GroupSortType.artistsList:
-        mapEntries.sort((a, b) => a.value.elementAt(0).artistsList.toString().compareTo(b.value.elementAt(0).artistsList.toString()));
+        groupedGenresList.sort((a, b) => a.tracks.elementAt(0).artistsList.toString().compareTo(b.tracks.elementAt(0).artistsList.toString()));
         break;
       case GroupSortType.genresList:
-        // mapEntries.sort((a, b) => a.value.elementAt(0).genresList.toString().compareTo(b.value.elementAt(0).genresList.toString()));
-        mapEntries.sort(((a, b) => a.key.compareTo(b.key)));
+        groupedGenresList.sort(((a, b) => a.name.compareTo(b.name)));
         break;
       case GroupSortType.composer:
-        mapEntries.sort((a, b) => a.value.elementAt(0).composer.compareTo(b.value.elementAt(0).composer));
+        groupedGenresList.sort((a, b) => a.tracks.elementAt(0).composer.compareTo(b.tracks.elementAt(0).composer));
         break;
       case GroupSortType.dateModified:
-        mapEntries.sort((a, b) => a.value.elementAt(0).dateModified.compareTo(b.value.elementAt(0).dateModified));
+        groupedGenresList.sort((a, b) => a.tracks.elementAt(0).dateModified.compareTo(b.tracks.elementAt(0).dateModified));
         break;
       case GroupSortType.duration:
-        mapEntries.sort((a, b) => a.value.toList().totalDuration.compareTo(b.value.toList().totalDuration));
+        groupedGenresList.sort((a, b) => a.tracks.toList().totalDuration.compareTo(b.tracks.toList().totalDuration));
         break;
       case GroupSortType.numberOfTracks:
-        mapEntries.sort((a, b) => a.value.length.compareTo(b.value.length));
+        groupedGenresList.sort((a, b) => a.tracks.length.compareTo(b.tracks.length));
         break;
 
       default:
         null;
     }
-
     if (reverse) {
-      groupedGenresMap.value = Map.fromEntries(mapEntries.reversed);
-    } else {
-      groupedGenresMap.value = Map.fromEntries(mapEntries);
+      groupedGenresList.value = groupedGenresList.reversed.toList();
     }
 
     SettingsController.inst.save(genreSort: sortBy, genreSortReversed: reverse);

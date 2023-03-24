@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/class/group.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -16,11 +17,13 @@ import 'package:namida/ui/widgets/library/artist_tile.dart';
 import 'package:namida/ui/widgets/settings/sort_by_button.dart';
 
 class ArtistsPage extends StatelessWidget {
-  ArtistsPage({super.key});
+  final List<Group>? artists;
+  ArtistsPage({super.key, this.artists});
   final ScrollController _scrollController = ScrollSearchController.inst.artistScrollcontroller;
   final gridCount = SettingsController.inst.artistGridCount.value;
   @override
   Widget build(BuildContext context) {
+    final finalArtists = artists ?? Indexer.inst.artistSearchList;
     return CupertinoScrollbar(
       controller: _scrollController,
       child: AnimationLimiter(
@@ -41,7 +44,7 @@ class ArtistsPage extends StatelessWidget {
                 ),
                 isBarVisible: ScrollSearchController.inst.isArtistBarVisible.value,
                 showSearchBox: ScrollSearchController.inst.showArtistSearchBox.value,
-                leftText: Indexer.inst.artistSearchList.length.displayArtistKeyword,
+                leftText: finalArtists.length.displayArtistKeyword,
                 onFilterIconTap: () => ScrollSearchController.inst.switchArtistSearchBoxVisibilty(),
                 onCloseButtonPressed: () {
                   ScrollSearchController.inst.clearArtistSearchTextField();
@@ -55,7 +58,7 @@ class ArtistsPage extends StatelessWidget {
                   },
                 ),
                 textField: CustomTextFiled(
-                  textFieldController: Indexer.inst.artistsSearchController.value,
+                  textFieldController: Indexer.inst.artistsSearchController,
                   textFieldHintText: Language.inst.FILTER_ARTISTS,
                   onTextFieldValueChanged: (value) => Indexer.inst.searchArtists(value),
                 ),
@@ -65,15 +68,15 @@ class ArtistsPage extends StatelessWidget {
                   child: Obx(
                     () => ListView.builder(
                       controller: _scrollController,
-                      itemCount: Indexer.inst.artistSearchList.length,
+                      itemCount: finalArtists.length,
                       padding: const EdgeInsets.only(bottom: kBottomPadding),
                       itemBuilder: (BuildContext context, int i) {
-                        final artist = Indexer.inst.artistSearchList.entries.toList()[i];
+                        final artist = finalArtists[i];
                         return AnimatingTile(
                           position: i,
                           child: ArtistTile(
-                            tracks: artist.value.toList(),
-                            name: artist.key,
+                            tracks: artist.tracks.toList(),
+                            name: artist.name,
                           ),
                         );
                       },
@@ -89,16 +92,16 @@ class ArtistsPage extends StatelessWidget {
                       mainAxisSpacing: 8.0,
                     ),
                     controller: _scrollController,
-                    itemCount: Indexer.inst.artistSearchList.length,
+                    itemCount: finalArtists.length,
                     padding: const EdgeInsets.only(bottom: kBottomPadding),
                     itemBuilder: (BuildContext context, int i) {
-                      final artist = Indexer.inst.artistSearchList.entries.toList()[i];
+                      final artist = finalArtists[i];
                       return AnimatingGrid(
-                        columnCount: Indexer.inst.artistSearchList.length,
+                        columnCount: finalArtists.length,
                         position: i,
                         child: ArtistCard(
-                          name: artist.key,
-                          artist: artist.value.toList(),
+                          name: artist.name,
+                          artist: artist.tracks,
                           gridCount: gridCount,
                         ),
                       );

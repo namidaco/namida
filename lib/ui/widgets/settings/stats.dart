@@ -33,17 +33,17 @@ class Stats extends StatelessWidget {
               StatsContainer(
                 icon: Broken.music_dashboard,
                 title: '${Language.inst.ALBUMS} :',
-                value: Indexer.inst.albumsMap.length.toString(),
+                value: Indexer.inst.albumsList.length.toString(),
               ),
               StatsContainer(
                 icon: Broken.microphone,
                 title: '${Language.inst.ARTISTS} :',
-                value: Indexer.inst.groupedArtistsMap.length.toString(),
+                value: Indexer.inst.groupedArtistsList.length.toString(),
               ),
               StatsContainer(
                 icon: Broken.smileys,
                 title: '${Language.inst.GENRES} :',
-                value: Indexer.inst.groupedGenresMap.length.toString(),
+                value: Indexer.inst.groupedGenresList.length.toString(),
               ),
               StatsContainer(
                 icon: Broken.music_library_2,

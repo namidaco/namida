@@ -46,8 +46,8 @@ extension PathFormat on String {
 
 extension AllDirInDir on String {
   List<String> get getDirectoriesInside {
-    final allFolders = Indexer.inst.groupedFoldersMap;
-    return allFolders.keys.where((key) => key.startsWith(this)).toList();
+    final allFolders = Indexer.inst.groupedFoldersList;
+    return allFolders.map((element) => element.path).where((key) => key.startsWith(this)).toList();
   }
 }
 
@@ -70,7 +70,7 @@ extension TracksUtils on List<Track> {
   int get totalDuration {
     int totalFinalDuration = 0;
 
-    for (var t in this) {
+    for (final t in this) {
       totalFinalDuration += t.duration ~/ 1000;
     }
     return totalFinalDuration;
@@ -146,19 +146,13 @@ extension YearDateFormatted on int {
     return yearFormatted;
   }
 
-  String get dateFormatted {
-    final formatDate = DateFormat(SettingsController.inst.dateTimeFormat.value);
-    final dateFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(this));
+  String get dateFormatted => DateFormat(SettingsController.inst.dateTimeFormat.value).format(DateTime.fromMillisecondsSinceEpoch(this));
 
-    return dateFormatted;
-  }
+  String get dateFormattedOriginal => DateFormat('dd MMM yyyy').format(DateTime.fromMillisecondsSinceEpoch(this));
 
-  String get clockFormatted {
-    final formatClock = SettingsController.inst.hourFormat12.value ? DateFormat('hh:mm aa') : DateFormat('HH:mm');
-    final clockFormatted = formatClock.format(DateTime.fromMillisecondsSinceEpoch(this));
+  String get clockFormatted => (SettingsController.inst.hourFormat12.value ? DateFormat('hh:mm aa') : DateFormat('HH:mm')).format(DateTime.fromMillisecondsSinceEpoch(this));
 
-    return clockFormatted;
-  }
+  String get dateAndClockFormattedOriginal => DateFormat('dd MMM yyyy - hh:mm aa').format(DateTime.fromMillisecondsSinceEpoch(this));
 }
 
 extension BorderRadiusSetting on double {
@@ -216,7 +210,7 @@ extension FileSizeFormat on int {
     const decimals = 2;
     if (this <= 0) return "0 B";
     const suffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-    var i = (log(this) / log(1024)).floor();
+    final i = (log(this) / log(1024)).floor();
     return '${(this / pow(1024, i)).toStringAsFixed(decimals)} ${suffixes[i]}';
   }
 }
@@ -558,22 +552,22 @@ extension TRACKPLAYMODE on TrackPlayMode {
     }
   }
 
-  List<Track> getQueue(Track track) {
+  List<Track> getQueue(Track track, {List<Track>? searchQueue}) {
     List<Track> queue = [];
     if (this == TrackPlayMode.selectedTrack) {
       queue = [track];
     }
     if (this == TrackPlayMode.searchResults) {
-      queue = Indexer.inst.trackSearchList.toList();
+      queue = searchQueue ?? Indexer.inst.trackSearchList.toList();
     }
     if (this == TrackPlayMode.trackAlbum) {
-      queue = Indexer.inst.albumsMap.entries.firstWhere((element) => element.key == track.album).value.toList();
+      queue = Indexer.inst.albumsList.firstWhere((al) => al.name == track.album).tracks;
     }
     if (this == TrackPlayMode.trackArtist) {
-      queue = Indexer.inst.groupedArtistsMap.entries.firstWhere((element) => element.key == track.artistsList.first).value.toList();
+      queue = Indexer.inst.groupedArtistsList.firstWhere((element) => element.name == track.artistsList.first).tracks;
     }
     if (this == TrackPlayMode.trackGenre) {
-      queue = Indexer.inst.groupedGenresMap.entries.firstWhere((element) => element.key == track.genresList.first).value.toList();
+      queue = Indexer.inst.groupedGenresList.firstWhere((element) => element.name == track.genresList.first).tracks;
     }
     return queue;
   }
@@ -619,15 +613,41 @@ extension PlayerRepeatModeUtils on RepeatMode {
 
 extension ConvertPathsToTracks on List<String> {
   List<Track> get toTracks {
-    final matchingSet = HashSet<String>.from(this);
-    final finalTracks = Indexer.inst.tracksInfoList.where((item) => matchingSet.contains(item.path));
+    // final matchingSet = HashSet<String>.from(this);
+    // final finalTracks = Indexer.inst.tracksInfoList.where((item) => matchingSet.contains(item.path));
+    final finalTracks = map((e) => e.toTrack);
     return finalTracks.sorted((a, b) => indexOf(a.path).compareTo(indexOf(b.path)));
   }
 }
 
 extension ConvertPathToTrack on String {
   Track get toTrack {
-    return Indexer.inst.tracksInfoList.firstWhere((item) => item.path == this);
+    return Indexer.inst.tracksInfoList.firstWhereOrNull((item) => item.path == this) ??
+        Track(
+          getFilenameWOExt,
+          [],
+          '',
+          '',
+          [],
+          '',
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          this,
+          '',
+          0,
+          0,
+          '',
+          '',
+          0,
+          '',
+          '',
+          '',
+          '',
+        );
   }
 }
 

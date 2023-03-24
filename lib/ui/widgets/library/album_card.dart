@@ -31,10 +31,10 @@ class AlbumCard extends StatelessWidget {
     final gridCount = gridCountOverride ?? SettingsController.inst.albumGridCount.value;
     final inverseGrid = 4 - gridCount;
     final fontSize = (16.0 - (gridCount * 1.8)).multipliedFontScale;
-    final shouldDisplayTopRightDate = SettingsController.inst.albumCardTopRightDate.value && album[0].year != 0;
-    final shouldDisplayNormalDate = !SettingsController.inst.albumCardTopRightDate.value && album[0].year != 0;
+    final finalYear = album.firstWhereOrNull((element) => element.year != 0)?.year.yearFormatted ?? '';
+    final shouldDisplayTopRightDate = SettingsController.inst.albumCardTopRightDate.value && finalYear != '';
+    final shouldDisplayNormalDate = !SettingsController.inst.albumCardTopRightDate.value && finalYear != '';
     final shouldDisplayAlbumArtist = album[0].albumArtist != '';
-
     const double horizontalPadding = 4.0;
     double thumnailSize = (Get.width / gridCount) - horizontalPadding * 2;
     return GridTile(
@@ -75,7 +75,7 @@ class AlbumCard extends StatelessWidget {
                             right: 0,
                             child: NamidaBlurryContainer(
                               child: Text(
-                                album[0].year.yearFormatted,
+                                finalYear,
                                 style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize, fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -137,7 +137,7 @@ class AlbumCard extends StatelessWidget {
                               if (shouldDisplayNormalDate || shouldDisplayAlbumArtist)
                                 Text(
                                   [
-                                    if (shouldDisplayNormalDate) album[0].year.yearFormatted,
+                                    if (shouldDisplayNormalDate) finalYear,
                                     if (shouldDisplayAlbumArtist) album[0].albumArtist.overflow,
                                   ].join(' - '),
                                   style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize * 1.08),
