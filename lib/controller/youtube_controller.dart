@@ -10,6 +10,7 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/translations/strings.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 
@@ -25,6 +26,7 @@ class YoutubeController {
 
   final RxInt parsedYTHistoryJson = 0.obs;
   final RxInt addedYTHistoryJsonToPlaylist = 0.obs;
+  final RxBool ythistoryjsonIsParsing = false.obs;
 
   Future<void> prepareHomePage() async {
     final ytexp = YoutubeExplode(YoutubeHttpClient(NamidaClient()));
@@ -126,36 +128,45 @@ class YoutubeController {
   Future<void> parseYTHistoryJson(File file) async {
     parsedYTHistoryJson.value = 0;
     addedYTHistoryJsonToPlaylist.value = 0;
-    String contents = await file.readAsString();
-    if (contents.isNotEmpty) {
-      final jsonResponse = jsonDecode(contents);
-      final list = <YoutubeVideoHistory>[];
+    ythistoryjsonIsParsing.value = true;
+    await Future.delayed(Duration.zero);
+    try {
+      String contents = await file.readAsString();
+      if (contents.isNotEmpty) {
+        final jsonResponse = jsonDecode(contents);
+        final list = <YoutubeVideoHistory>[];
 
-      for (final p in jsonResponse) {
-        final link = utf8.decode((p['titleUrl']).toString().codeUnits);
-        final id = link.length >= 11 ? link.substring(link.length - 11) : link;
-        final z = List<Map<String, dynamic>>.from((p['subtitles'] ?? []));
+        for (final p in jsonResponse) {
+          final link = utf8.decode((p['titleUrl']).toString().codeUnits);
+          final id = link.length >= 11 ? link.substring(link.length - 11) : link;
+          final z = List<Map<String, dynamic>>.from((p['subtitles'] ?? []));
 
-        final obj = list.firstWhereOrNull((element) => element.id == id);
-        if (obj == null) {
-          list.add(
-            YoutubeVideoHistory(
-              id,
-              (p['title'] as String).replaceFirst('Watched ', ''),
-              z.isNotEmpty ? z.first['name'] : '',
-              z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
-              [DateTime.parse(p['time'] ?? '').millisecondsSinceEpoch],
-              p['header'] == "YouTube Music",
-            ),
-          );
-        } else {
-          obj.datesWatched.add(DateTime.parse(p['time']).millisecondsSinceEpoch);
+          final obj = list.firstWhereOrNull((element) => element.id == id);
+          if (obj == null) {
+            list.add(
+              YoutubeVideoHistory(
+                id,
+                (p['title'] as String).replaceFirst('Watched ', ''),
+                z.isNotEmpty ? z.first['name'] : '',
+                z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
+                [DateTime.parse(p['time'] ?? '').millisecondsSinceEpoch],
+                p['header'] == "YouTube Music",
+              ),
+            );
+          } else {
+            obj.datesWatched.add(DateTime.parse(p['time']).millisecondsSinceEpoch);
+          }
+          parsedYTHistoryJson.value++;
         }
-        parsedYTHistoryJson.value++;
+        await File(kYoutubeStatsFilePath).writeAsString(jsonEncode(list));
       }
-      await File(kYoutubeStatsFilePath).writeAsString(jsonEncode(list));
+      await _addYTHistoryVideosToNamidaHistory();
+    } catch (e) {
+      printError(info: e.toString());
+      Get.snackbar(Language.inst.ERROR, Language.inst.CORRUPTED_FILE);
     }
-    await _addYTHistoryVideosToNamidaHistory();
+
+    ythistoryjsonIsParsing.value = false;
   }
 
   Future<void> _addYTHistoryVideosToNamidaHistory() async {

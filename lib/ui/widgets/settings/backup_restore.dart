@@ -212,30 +212,45 @@ class BackupAndRestore extends StatelessWidget {
           // TODO: Guide
           CustomListTile(
             title: Language.inst.IMPORT_YOUTUBE_HISTORY,
-            icon: Broken.direct_inbox,
-            onTap: () async {
-              final jsonfile = await FilePicker.platform.pickFiles(allowedExtensions: ['json'], type: FileType.custom);
-              if (jsonfile != null) {
-                Get.dialog(
-                  Obx(
-                    () => CustomBlurryDialog(
-                      normalTitleStyle: true,
-                      actions: [
-                        TextButton(
-                          child: Text(Language.inst.CONFIRM),
-                          onPressed: () => Get.close(1),
-                        )
-                      ],
-                      bodyText:
-                          "${Language.inst.DONT_TOUCH}\n\n${YoutubeController.inst.parsedYTHistoryJson.value} ${Language.inst.PARSED}\n\n${YoutubeController.inst.addedYTHistoryJsonToPlaylist.value} ${Language.inst.ADDED}",
-                    ),
+            icon: Broken.import_2,
+            onTap: () => Get.dialog(
+              CustomBlurryDialog(
+                title: Language.inst.GUIDE,
+                actions: [
+                  ElevatedButton(
+                    onPressed: () async {
+                      Get.close(1);
+                      final jsonfile = await FilePicker.platform.pickFiles(allowedExtensions: ['json'], type: FileType.custom);
+                      if (jsonfile != null) {
+                        Get.dialog(
+                          Obx(
+                            () => CustomBlurryDialog(
+                              normalTitleStyle: true,
+                              title: YoutubeController.inst.ythistoryjsonIsParsing.value ? Language.inst.DONT_TOUCH : 'nvm',
+                              actions: [
+                                TextButton(
+                                  child: Text(Language.inst.CONFIRM),
+                                  onPressed: () => Get.close(1),
+                                )
+                              ],
+                              bodyText:
+                                  "${YoutubeController.inst.parsedYTHistoryJson.value} ${Language.inst.PARSED}\n\n${YoutubeController.inst.addedYTHistoryJsonToPlaylist.value} ${Language.inst.ADDED}",
+                            ),
+                          ),
+                          barrierDismissible: !YoutubeController.inst.ythistoryjsonIsParsing.value,
+                        );
+                        await Future.delayed(const Duration(milliseconds: 300));
+                        YoutubeController.inst.parseYTHistoryJson(File(jsonfile.files.first.path!));
+                      }
+                    },
+                    child: Text(Language.inst.CONFIRM),
                   ),
-                  barrierDismissible: false,
-                );
-                await Future.delayed(const Duration(milliseconds: 300));
-                YoutubeController.inst.parseYTHistoryJson(File(jsonfile.files.first.path!));
-              }
-            },
+                ],
+                child: NamidaSelectableAutoLinkText(
+                  text: Language.inst.IMPORT_YOUTUBE_HISTORY_GUIDE.replaceFirst('_TAKEOUT_LINK_', 'https://takeout.google.com'),
+                ),
+              ),
+            ),
           ),
         ],
       ),

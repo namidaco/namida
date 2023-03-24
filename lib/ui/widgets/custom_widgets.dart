@@ -7,6 +7,8 @@ import 'package:checkmark/checkmark.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 import 'package:like_button/like_button.dart';
+import 'package:selectable_autolink_text/selectable_autolink_text.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'package:wheel_slider/wheel_slider.dart';
 
 import 'package:namida/class/track.dart';
@@ -1369,6 +1371,41 @@ class FadeDismissible extends StatelessWidget {
           child: child,
         ),
       ),
+    );
+  }
+}
+
+class NamidaSelectableAutoLinkText extends StatelessWidget {
+  final String text;
+  const NamidaSelectableAutoLinkText({super.key, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return SelectableAutoLinkText(
+      text,
+      style: context.textTheme.displayMedium?.copyWith(fontSize: 13.5),
+      linkStyle: context.textTheme.displayMedium?.copyWith(
+        color: context.theme.colorScheme.primary.withAlpha(210),
+        fontSize: 13.5,
+      ),
+      highlightedLinkStyle: TextStyle(
+        color: context.theme.colorScheme.primary.withAlpha(220),
+        backgroundColor: context.theme.colorScheme.onBackground.withAlpha(40),
+        fontSize: 13.5,
+      ),
+      // onTransformDisplayLink: AutoLinkUtils.shrinkUrl,
+      onTap: (url) async {
+        if (await canLaunchUrlString(url)) {
+          launchUrlString(
+            url,
+            mode: LaunchMode.externalNonBrowserApplication,
+          );
+        }
+      },
+      onLongPress: (url) {
+        // print('🍔LongPress: $url');
+        // Share.share(url);
+      },
     );
   }
 }

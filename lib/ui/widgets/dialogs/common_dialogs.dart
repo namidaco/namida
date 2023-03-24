@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import 'package:namida/class/playlist.dart';
+import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/dialogs/general_popup_dialog.dart';
 
 class NamidaDialogs {
@@ -18,6 +21,7 @@ class NamidaDialogs {
       forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
       isTrackInPlaylist: playlist != null,
       playlist: playlist,
+      index: index,
     );
   }
 
@@ -34,8 +38,7 @@ class NamidaDialogs {
   }
 
   Future<void> showArtistDialog(String name, List<Track> tracks, [Widget? leading]) async {
-    // final albumss = Indexer.inst.getAlbumsForArtist(name).keys;
-    var albums = tracks.map((e) => e.album).toList();
+    final albums = tracks.map((e) => e.album).toList();
     await showGeneralPopupDialog(
       tracks,
       name.overflow,
@@ -56,6 +59,10 @@ class NamidaDialogs {
   }
 
   Future<void> showPlaylistDialog(Playlist playlist, [Widget? leading]) async {
+    if (playlist.tracks.isEmpty) {
+      Get.snackbar('??', Language.inst.SUSSY_BAKA);
+      return;
+    }
     await showGeneralPopupDialog(
       playlist.tracks.map((e) => e.track).toList(),
       playlist.name.translatePlaylistName,

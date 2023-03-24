@@ -29,6 +29,10 @@ class Language {
   String get PARSED => 'parsed';
   String get ADDED => 'added';
   String get IMPORT_YOUTUBE_HISTORY => 'Import Youtube History';
+  String get GUIDE => 'Guide';
+  String get IMPORT_YOUTUBE_HISTORY_GUIDE =>
+      '1. Go to _TAKEOUT_LINK_\n\n2. Deselect All and select youtube only.\n\n3. Press "Multiple Formats" and beside "History" choose "JSON".\n\n4. Press "All Youtube data included", Deselect All and choose history only.\n\n5. Create Export, Download & Unzip.\n\n6. Choose "watch-history.json" from the next screen.';
+  String get CORRUPTED_FILE => 'Couldn\'t parse file, it might be corrupted';
   String get ERROR => 'Error';
   String get COULDNT_PLAY_FILE => 'Couldn\'t play file';
 

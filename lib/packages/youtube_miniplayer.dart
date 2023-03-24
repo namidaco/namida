@@ -210,32 +210,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                     ],
                                                   ),
                                                   children: [
-                                                    SelectableAutoLinkText(
-                                                      ytvideo.video.description,
-                                                      style: context.textTheme.displayMedium?.copyWith(fontSize: 13.5),
-                                                      linkStyle: context.textTheme.displayMedium?.copyWith(
-                                                        color: context.theme.colorScheme.primary.withAlpha(210),
-                                                        fontSize: 13.5,
-                                                      ),
-                                                      highlightedLinkStyle: TextStyle(
-                                                        color: context.theme.colorScheme.primary.withAlpha(220),
-                                                        backgroundColor: context.theme.colorScheme.onBackground.withAlpha(40),
-                                                        fontSize: 13.5,
-                                                      ),
-                                                      // onTransformDisplayLink: AutoLinkUtils.shrinkUrl,
-                                                      onTap: (url) async {
-                                                        if (await canLaunchUrlString(url)) {
-                                                          launchUrlString(
-                                                            url,
-                                                            mode: LaunchMode.externalNonBrowserApplication,
-                                                          );
-                                                        }
-                                                      },
-                                                      onLongPress: (url) {
-                                                        // print('🍔LongPress: $url');
-                                                        // Share.share(url);
-                                                      },
-                                                    )
+                                                    NamidaSelectableAutoLinkText(text: ytvideo.video.description),
                                                   ],
                                                 ),
                                                 Container(
