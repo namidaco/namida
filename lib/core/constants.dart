@@ -34,6 +34,8 @@ final String kWaveformDirPath = '$kAppDirectoryPath/Waveforms/';
 final String kVideosCachePath = '$kAppDirectoryPath/Videos/';
 final String kVideosCacheTempPath = '$kAppDirectoryPath/Videos/Temp/';
 final String kLyricsDirPath = '$kAppDirectoryPath/Lyrics/';
+final String kMetadataDirPath = '$kAppDirectoryPath/Metadata/';
+final String kMetadataCommentsDirPath = '$kAppDirectoryPath/Metadata/Comments/';
 
 final String kDefaultNamidaImagePath = '$kArtworksDirPath.NAMIDA_DEFAULT_ARTWORK.PNG';
 

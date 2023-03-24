@@ -14,6 +14,7 @@ import 'package:on_audio_edit/on_audio_edit.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'package:namida/controller/youtube_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -33,6 +34,7 @@ import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/ui/pages/homepage.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
+import 'package:namida/ui/pages/youtube_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/selected_tracks_preview.dart';
 import 'package:namida/ui/widgets/settings/customizations.dart';
@@ -89,6 +91,8 @@ void main() async {
     kVideosCachePath,
     kVideosCacheTempPath,
     kLyricsDirPath,
+    kMetadataDirPath,
+    kMetadataCommentsDirPath,
   ]);
 
   final paths = await ExternalPath.getExternalStorageDirectories();
@@ -113,9 +117,11 @@ void main() async {
 
   FlutterNativeSplash.remove();
 
-  await PlaylistController.inst.preparePlaylistFile();
   await Player.inst.initializePlayer();
-  await QueueController.inst.prepareQueuesFile();
+  await Future.wait([
+    PlaylistController.inst.preparePlaylistFile(),
+    QueueController.inst.prepareQueuesFile(),
+  ]);
 
   runApp(const MyApp());
 }
@@ -161,8 +167,8 @@ class MyApp extends StatelessWidget {
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Namida',
-        theme: AppThemes.inst.getAppTheme(Colors.transparent, true),
-        darkTheme: AppThemes.inst.getAppTheme(Colors.transparent, false),
+        theme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, true),
+        darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, false),
         themeMode: SettingsController.inst.themeMode.value,
         translations: MyTranslation(),
         builder: (context, widget) {
@@ -180,7 +186,8 @@ class MainPageWrapper extends StatelessWidget {
   final List<Widget>? actions;
   final List<Widget>? actionsToAdd;
   final Color? colorScheme;
-  MainPageWrapper({super.key, this.child, this.title, this.actions, this.actionsToAdd, this.colorScheme});
+  final bool getOffAll;
+  MainPageWrapper({super.key, this.child, this.title, this.actions, this.actionsToAdd, this.colorScheme, this.getOffAll = false});
 
   final GlobalKey<InnerDrawerState> _innerDrawerKey = GlobalKey<InnerDrawerState>();
   void toggleDrawer() {
@@ -196,6 +203,9 @@ class MainPageWrapper extends StatelessWidget {
     return WillPopScope(
       onWillPop: () {
         Get.focusScope?.unfocus();
+        if (getOffAll) {
+          Get.offAll(MainPageWrapper());
+        }
         return Future.value(true);
       },
       child: Obx(
@@ -251,6 +261,16 @@ class MainPageWrapper extends StatelessWidget {
                               toggleDrawer();
                             },
                           ),
+                          NamidaDrawerListTile(
+                            enabled: false,
+                            title: Language.inst.YOUTUBE,
+                            icon: Broken.video_square,
+                            onTap: () {
+                              YoutubeController.inst.prepareHomePage();
+                              Get.to(() => const YoutubePage());
+                              toggleDrawer();
+                            },
+                          ),
                         ],
                       ),
                     ),
@@ -301,6 +321,7 @@ class MainPageWrapper extends StatelessWidget {
                       actions: actions,
                       actionsToAdd: actionsToAdd,
                       onDrawerIconPressed: () => toggleDrawer(),
+                      getOffAll: getOffAll,
                       child: child,
                     ),
                     const Hero(tag: 'MINIPLAYER', child: MiniPlayerParent()),

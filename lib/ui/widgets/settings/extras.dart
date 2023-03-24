@@ -40,12 +40,20 @@ class ExtrasSettings extends StatelessWidget {
           ),
           Obx(
             () => CustomSwitchListTile(
+              icon: Broken.video_square,
+              title: Language.inst.USE_YOUTUBE_MINIPLAYER,
+              value: SettingsController.inst.useYoutubeMiniplayer.value,
+              onChanged: (p0) => SettingsController.inst.save(useYoutubeMiniplayer: !p0),
+            ),
+          ),
+          Obx(
+            () => CustomSwitchListTile(
               icon: Broken.folder_open,
               title: Language.inst.ENABLE_FOLDERS_HIERARCHY,
               value: SettingsController.inst.enableFoldersHierarchy.value,
               onChanged: (p0) {
                 SettingsController.inst.save(enableFoldersHierarchy: !p0);
-                Folders.inst.stepIn(SettingsController.inst.defaultFolderStartupLocation.value);
+                // Folders.inst.stepIn(SettingsController.inst.defaultFolderStartupLocation.value);
               },
             ),
           ),

@@ -5,6 +5,31 @@ import 'package:get/get.dart';
 class Language {
   static Language inst = Language();
 
+  /// Youtube Miniplayer:
+
+  String get YOUTUBE => 'Youtube';
+  String get USE_YOUTUBE_MINIPLAYER => 'Use Youtube Miniplayer';
+  String get AGO => 'ago';
+  String get SUBSCRIBER => 'Subscriber';
+  String get SUBSCRIBERS => 'Subscribers';
+  String get SHOW_MORE => 'Show more';
+  String get REPLIES => 'Replies';
+  String get COPY => 'Copy';
+  String get GO_TO_CHANNEL => 'Go to channel';
+  String get FROM_NOW => 'From Now';
+  String get A_MOMENT => 'a moment';
+  String get A_MINUTE => 'a minute';
+  String get MINUTES => 'minutes';
+  String get COMMENTS => 'Comments';
+  String get LIKE => 'Like';
+  String get DISLIKE => 'Dislike';
+  String get REFRESH => 'Refresh';
+  String get SUSSY_BAKA => 'Bruh no tracks';
+  String get DONT_TOUCH => 'DON\'T TOUCH ANYTHING';
+  String get PARSED => 'parsed';
+  String get ADDED => 'added';
+
+  ///
   String get REMOVE_WHITESPACES => 'Remove Whitespaces';
   String get MINIMUM_ONE_QUALITY => 'Couldn\'t remove quality';
   String get MINIMUM_ONE_QUALITY_SUBTITLE => 'At least 1 quality should remain';
@@ -61,6 +86,15 @@ class Language {
   String get ENABLE_SEARCH_CLEANUP_SUBTITLE => 'All Symbols and Spaces will be neglected';
   String get ENABLE_BOTTOM_NAV_BAR => 'Enable Bottom Navigation Bar';
   String get ENABLE_BOTTOM_NAV_BAR_SUBTITLE => 'Items are inside the drawer bothways';
+  String get NEW_TRACKS_ADD => 'Add Tracks';
+  String get NEW_TRACKS_RECOMMENDED => 'Recommended';
+  String get NEW_TRACKS_RECOMMENDED_SUBTITLE => 'Generate tracks you usually listened to with _CURRENT_TRACK_';
+  String get NEW_TRACKS_RANDOM => 'Random';
+  String get NEW_TRACKS_RANDOM_SUBTITLE => 'Pick up random tracks from your library';
+  String get NO_TRACKS_IN_HISTORY => 'You don\'t have enough tracks in history.';
+  String get GENERATE_FROM_DATES => 'Time Range';
+  String get GENERATE_FROM_DATES_SUBTITLE => 'Generate tracks you listened to in a time range';
+  String get NO_TRACKS_FOUND_BETWEEN_DATES => 'this timerange doesn\'t have any tracks.';
 
   /// Main
   String get EXIT_APP => 'Exit';
@@ -82,7 +116,6 @@ class Language {
   String get VIDEO_CACHE => 'Video Cache';
   String get VIDEO_CACHE_FILE => 'Cached Video File';
   String get VIDEO_CACHE_FILES => 'Cached Video Files';
-  String get CLEAR_VIDEO_CACHE => 'Clear Video Cache';
   String get ENABLE_VIDEO_PLAYBACK => 'Enable Video Playback';
   String get VIDEO_PLAYBACK_SOURCE => 'Video Source';
   String get VIDEO_PLAYBACK_SOURCE_AUTO_SUBTITLE => 'This will give priority to local videos, if not found then it falls back to youtube video';
@@ -237,6 +270,7 @@ class Language {
   String get ENABLE_PARTY_MODE => 'Enable Party Mode';
   String get ENABLE_PARTY_MODE_SUBTITLE => 'Apply fancy edge breathing effect';
   String get EDGE_COLORS_SWITCHING => 'Edge Colors Switching';
+  String get ENABLE_MINIPLAYER_PARTICLES => 'Enable moving particles';
   String get ANIMATING_THUMBNAIL_INVERSED => 'Inverse Animations';
   String get ANIMATING_THUMBNAIL_INVERSED_SUBTITLE => 'High peaks will cause the thumbnail to get smaller';
   String get WAVEFORM_BARS_COUNT => 'Waveform Bars Count';
@@ -268,11 +302,13 @@ class Language {
   String get CHOOSE => 'Choose';
   String get SAVE => 'Save';
   String get DONE => 'Done';
+  String get SHARE => 'Share';
+  String get SEARCH => 'Search';
   String get CONFIRM => 'Confirm';
   String get CANCEL => 'Cancel';
   String get OF => 'of';
   String get OR => 'or';
-  String get IN => 'in';
+  // String get IN => 'in';
   String get AUTO => 'Auto';
   String get DEFAULT => 'Default';
   String get NAME => 'Name';
