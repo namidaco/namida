@@ -80,6 +80,7 @@ class AlbumTracksPage extends StatelessWidget {
                           index: track.key,
                           track: track.value,
                           queue: tracks,
+                          displayIndex: SettingsController.inst.displayTrackNumberinAlbumPage.value,
                         ),
                       ),
                     )

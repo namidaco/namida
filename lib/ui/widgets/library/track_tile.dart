@@ -29,6 +29,7 @@ class TrackTile extends StatelessWidget {
   final void Function()? onTap;
   final Playlist? playlist;
   final String thirdLineText;
+  final bool displayIndex;
   const TrackTile({
     super.key,
     required this.track,
@@ -42,6 +43,7 @@ class TrackTile extends StatelessWidget {
     this.playlist,
     required this.index,
     this.thirdLineText = '',
+    this.displayIndex = false,
   });
 
   String getChoosenTrackTileItem(TrackTileItem trackItem) {
@@ -100,9 +102,9 @@ class TrackTile extends StatelessWidget {
         final double thumnailSize = SettingsController.inst.trackThumbnailSizeinList.value;
         final double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
         final bool isTrackSelected = SelectedTracksController.inst.selectedTracks.contains(track);
-        bool isTrackSamePath = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
-        bool isRightIndex = index == CurrentColor.inst.currentPlayingIndex.value;
-        bool isTrackCurrentlyPlaying = isRightIndex && isTrackSamePath;
+        final bool isTrackSamePath = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
+        final bool isRightIndex = index == CurrentColor.inst.currentPlayingIndex.value;
+        final bool isTrackCurrentlyPlaying = isRightIndex && isTrackSamePath;
 
         final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
         return Padding(
@@ -159,6 +161,22 @@ class TrackTile extends StatelessWidget {
                               track: track,
                               forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
                               cacheHeight: SettingsController.inst.trackThumbnailSizeinList.value.toInt(),
+                              onTopWidget: displayIndex
+                                  ? Positioned(
+                                      bottom: 0,
+                                      right: 0,
+                                      child: BlurryContainer(
+                                        borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
+                                        container: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
+                                          child: Text(
+                                            index.toString(),
+                                            style: context.textTheme.displaySmall,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : null,
                             ),
                           ),
                         ),
