@@ -2,21 +2,20 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
-import 'package:namida/class/track.dart';
+import 'package:namida/class/folder.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/general_popup_dialog.dart';
 
 class FolderTile extends StatelessWidget {
-  final String path;
-  final List<Track> tracks;
+  final Folder folder;
   final void Function()? onTap;
-  const FolderTile({super.key, required this.path, required this.tracks, this.onTap});
+  const FolderTile({super.key, required this.folder, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +26,7 @@ class FolderTile extends StatelessWidget {
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 0, 0, 0),
           onLongPress: () {},
-          onTap: onTap ?? () => Folders.inst.stepIn(path),
+          onTap: onTap ?? () => Folders.inst.stepIn(folder),
           child: Container(
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -61,7 +60,7 @@ class FolderTile extends StatelessWidget {
                                 blur: 0,
                                 borderRadius: 6,
                                 thumnailSize: SettingsController.inst.trackThumbnailSizeinList.value / 2.6,
-                                track: tracks[0],
+                                track: folder.tracks.isNotEmpty ? folder.tracks[0] : kDummyTrack,
                                 forceSquared: true,
                               ),
                             ),
@@ -80,16 +79,17 @@ class FolderTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        path.split('/').last,
+                        folder.folderName,
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                         style: context.textTheme.displayMedium!,
                       ),
                       Text(
                         [
-                          tracks.displayTrackKeyword,
-                          path.getDirectoriesInside.length.displayFolderKeyword,
-                        ].join(' ${Language.inst.IN} '),
+                          folder.tracks.displayTrackKeyword,
+                          //TODO: fix
+                          folder.path.getDirectoriesInside.length.displayFolderKeyword,
+                        ].join(' - '),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                         style: context.textTheme.displaySmall!,
@@ -104,13 +104,13 @@ class FolderTile extends StatelessWidget {
                   padding: 6.0,
                   onPressed: () {
                     showGeneralPopupDialog(
-                      tracks,
-                      path.split('/').last,
+                      folder.tracks,
+                      folder.folderName,
                       [
-                        tracks.displayTrackKeyword,
-                        tracks.totalDurationFormatted,
+                        folder.tracks.displayTrackKeyword,
+                        folder.tracks.totalDurationFormatted,
                       ].join(' • '),
-                      thirdLineText: tracks.map((e) => e.size).reduce((a, b) => a + b).fileSizeFormatted,
+                      thirdLineText: folder.tracks.map((e) => e.size).reduce((a, b) => a + b).fileSizeFormatted,
                     );
                   },
                 ),

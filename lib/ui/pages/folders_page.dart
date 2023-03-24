@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:namida/class/folder.dart';
 
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -19,22 +20,15 @@ class FoldersPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Folders.inst.stepOut();
-    // if (SettingsController.inst.defaultFolderStartupLocation.value != kStoragePaths.first) {
     if (SettingsController.inst.enableFoldersHierarchy.value) {
-      Folders.inst.stepIn();
+      Folders.inst.stepIn(Folders.inst.folderslist.firstWhere((element) => element.path.startsWith(SettingsController.inst.defaultFolderStartupLocation.value)));
     }
-    if (!SettingsController.inst.enableFoldersHierarchy.value) {
-      Folders.inst.currentTracks.clear();
-    }
-    // }
 
     return Obx(
       () => WillPopScope(
         onWillPop: () {
           if (!Folders.inst.isHome.value) {
             Folders.inst.stepOut();
-            Folders.inst.isInside.value = false;
             return Future.value(false);
           }
           return Future.value(true);
@@ -79,8 +73,12 @@ class FoldersPage extends StatelessWidget {
                                 .map(
                                   (e) => SliverToBoxAdapter(
                                     child: FolderTile(
-                                      path: e.value,
-                                      tracks: Folders.inst.foldersMap.entries.where((element) => element.key.startsWith(e.value)).expand((entry) => entry.value).toList(),
+                                      folder: Folder(
+                                        1,
+                                        e.value.split('/').last,
+                                        e.value,
+                                        Folders.inst.folderslist.where((element) => element.path.startsWith(e.value)).expand((entry) => entry.tracks).toList(),
+                                      ),
                                     ),
                                   ),
                                 )
@@ -89,14 +87,7 @@ class FoldersPage extends StatelessWidget {
                           if (!Folders.inst.isHome.value) ...[
                             SliverList(
                               delegate: SliverChildListDelegate(
-                                Folders.inst.currentFoldersMap.entries
-                                    .map(
-                                      (e) => FolderTile(
-                                        path: e.key,
-                                        tracks: Folders.inst.foldersMap.entries.where((element) => element.key.startsWith(e.key)).expand((entry) => entry.value).toList(),
-                                      ),
-                                    )
-                                    .toList(),
+                                Folders.inst.currentfolderslist.map((e) => FolderTile(folder: e)).toList(),
                               ),
                             ),
                             SliverAnimatedList(
@@ -127,9 +118,7 @@ class FoldersPage extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     onTap: () {
-                      // Folders.inst.stepOut();
-                      Folders.inst.isInside.value = false;
-                      Folders.inst.currentTracks.clear();
+                      Folders.inst.stepOut();
                       Folders.inst.currentPath.value = '';
                     },
                   ),
@@ -140,15 +129,14 @@ class FoldersPage extends StatelessWidget {
                         controller: _scrollController,
                         children: [
                           if (!Folders.inst.isInside.value)
-                            ...Folders.inst.foldersMap.entries
+                            ...Folders.inst.folderslist
                                 .map((e) => FolderTile(
-                                      path: e.key,
-                                      tracks: Folders.inst.foldersMap.entries.where((element) => element.key.startsWith(e.key)).expand((entry) => entry.value).toList(),
+                                      folder: e,
                                       onTap: () {
-                                        Folders.inst.currentTracks
-                                            .assignAll(Folders.inst.foldersMap.entries.where((element) => element.key.startsWith(e.key)).expand((entry) => entry.value).toList());
+                                        Folders.inst.currentTracks.assignAll(
+                                            Folders.inst.folderslist.where((element) => element.folderName.startsWith(e.folderName)).expand((entry) => entry.tracks).toList());
                                         Folders.inst.isInside.value = true;
-                                        Folders.inst.currentPath.value = e.key;
+                                        Folders.inst.currentPath.value = e.folderName;
                                       },
                                     ))
                                 .toList(),
