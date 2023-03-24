@@ -53,7 +53,29 @@ android {
         versionName flutterVersionName
     }
 
+    signingConfigs {
+        // debug {
+        //     keyAlias 'androiddebug'
+        //     keyPassword 'android'
+        //     storeFile file('mykey.jks')
+        //     storePassword 'android'
+        // } 
+
+        // release {
+        //     // keyAlias 'androiddebug'
+        //     // keyPassword 'android'
+        //     // storeFile file('mykey.jks')
+        //     // storePassword 'android'
+        // }
+    }
+
     buildTypes {
+        debug {
+            // TODO: Add your own signing config for the release build.
+            // Signing with the debug keys for now, so `flutter run --release` works.
+            signingConfig signingConfigs.debug
+        } 
+        
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
