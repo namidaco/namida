@@ -1,11 +1,12 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:sembast/sembast.dart';
+import 'package:sembast/sembast_io.dart';
 
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
@@ -19,14 +20,17 @@ import 'package:namida/core/functions.dart';
 class PlaylistController extends GetxController {
   static PlaylistController inst = PlaylistController();
 
-  RxList<Playlist> playlistList = <Playlist>[].obs;
+  final RxList<Playlist> playlistList = <Playlist>[].obs;
 
-  RxList<Playlist> playlistSearchList = <Playlist>[].obs;
-  Rx<TextEditingController> playlistSearchController = TextEditingController().obs;
+  final RxList<Playlist> playlistSearchList = <Playlist>[].obs;
+  final TextEditingController playlistSearchController = TextEditingController();
 
   final RxMap<Track, int> topTracksMap = <Track, int>{}.obs;
 
-  RxInt currentListenedSeconds = 0.obs;
+  final RxInt currentListenedSeconds = 0.obs;
+
+  late final Database _db;
+  late final StoreRef<Object?, Object?> _dbstore;
 
   void addToHistory(Track track) {
     currentListenedSeconds.value = 0;
@@ -39,7 +43,7 @@ class PlaylistController extends GetxController {
 
       debugPrint("Current percentage $per");
       if (Player.inst.isPlaying.value) {
-        currentListenedSeconds++;
+        currentListenedSeconds.value++;
       }
 
       Player.inst.nowPlayingTrack.listen((p0) {
@@ -59,19 +63,20 @@ class PlaylistController extends GetxController {
 
   void searchPlaylists(String text) {
     if (text == '') {
-      playlistSearchController.value.clear();
+      playlistSearchController.clear();
       playlistSearchList.assignAll(playlistList);
       return;
     }
+    // TODO: expose in settings
     final psf = SettingsController.inst.playlistSearchFilter.toList();
     final sTitle = psf.contains('name');
     final sDate = psf.contains('date');
     final sComment = psf.contains('comment');
     final sModes = psf.contains('modes');
-    final formatDate = DateFormat('yyyMMdd');
+    final formatDate = DateFormat('yyyyMMdd');
 
     playlistSearchList.clear();
-    for (var item in playlistList) {
+    for (final item in playlistList) {
       final lctext = textCleanedForSearch(text);
       final dateFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.date));
 
@@ -126,41 +131,57 @@ class PlaylistController extends GetxController {
     int? date,
     String comment = '',
     List<String> modes = const [],
-  }) {
+  }) async {
     id ??= playlistList.length + 1;
     date ??= DateTime.now().millisecondsSinceEpoch;
-
-    playlistList.add(Playlist(id, name, tracks.map((e) => TrackWithDate(DateTime.now().millisecondsSinceEpoch, e)).toList(), date, comment, modes));
+    final pl = Playlist(id, name, tracks.map((e) => TrackWithDate(DateTime.now().millisecondsSinceEpoch, e, false)).toList(), date, comment, modes);
+    playlistList.add(pl);
 
     _writeToStorage();
+
+    await _dbstore.record(id).put(_db, pl.toJson());
   }
 
-  void insertPlaylist(Playlist playlist, int index) {
+  void insertPlaylist(Playlist playlist, int index) async {
     playlistList.insert(index, playlist);
     _writeToStorage();
+    await _dbstore.record(playlist.id).put(_db, playlist.toJson());
   }
 
-  void removePlaylist(Playlist playlist) {
+  void removePlaylist(Playlist playlist) async {
     playlistList.remove(playlist);
     _writeToStorage();
+
+    await _dbstore.record(playlist.id).delete(_db);
   }
 
-  void removePlaylists(List<Playlist> playlists) {
-    for (var pl in playlists) {
-      playlistList.remove(pl);
-    }
+  // void removePlaylists(List<Playlist> playlists) {
+  //   for (final pl in playlists) {
+  //     playlistList.remove(pl);
+  //   }
 
-    _writeToStorage();
-  }
+  //   _writeToStorage();
+  // }
 
-  void updatePlaylist(Playlist oldPlaylist, Playlist newPlaylist) {
+  // Not used
+  void updatePlaylist(Playlist oldPlaylist, Playlist newPlaylist) async {
     final plIndex = playlistList.indexOf(oldPlaylist);
     playlistList.remove(oldPlaylist);
     playlistList.insert(plIndex, newPlaylist);
     _writeToStorage();
+
+    await _dbstore.record(oldPlaylist.id).update(_db, newPlaylist.toJson());
   }
 
-  void updatePropertyInPlaylist(Playlist oldPlaylist, {String? name, List<TrackWithDate>? tracks, List<Track>? tracksToAdd, int? date, String? comment, List<String>? modes}) {
+  void updatePropertyInPlaylist(
+    Playlist oldPlaylist, {
+    String? name,
+    List<TrackWithDate>? tracks,
+    List<Track>? tracksToAdd,
+    int? date,
+    String? comment,
+    List<String>? modes,
+  }) async {
     name ??= oldPlaylist.name;
     tracks ??= oldPlaylist.tracks;
     date ??= oldPlaylist.date;
@@ -168,14 +189,17 @@ class PlaylistController extends GetxController {
     modes ??= oldPlaylist.modes;
 
     final plIndex = playlistList.indexOf(oldPlaylist);
+    final newpl = Playlist(oldPlaylist.id, name, tracks, date, comment, modes);
     playlistList.remove(oldPlaylist);
-    playlistList.insert(plIndex, Playlist(oldPlaylist.id, name, tracks, date, comment, modes));
+    playlistList.insert(plIndex, newpl);
     _writeToStorage();
+
+    await _dbstore.record(oldPlaylist.id).update(_db, newpl.toJson());
   }
 
-  void addTracksToPlaylist(int id, List<Track> tracks, {bool addAtFirst = false}) {
+  void addTracksToPlaylist(int id, List<Track> tracks, {bool addAtFirst = false}) async {
     final pl = playlistList.firstWhere((p0) => p0.id == id);
-    final newtracks = tracks.map((e) => TrackWithDate(DateTime.now().millisecondsSinceEpoch, e)).toList();
+    final newtracks = tracks.map((e) => TrackWithDate(DateTime.now().millisecondsSinceEpoch, e, false)).toList();
     if (addAtFirst) {
       final finaltracks = [...newtracks, ...pl.tracks];
       pl.tracks.assignAll(finaltracks);
@@ -184,23 +208,46 @@ class PlaylistController extends GetxController {
       pl.tracks.assignAll(finaltracks);
     }
     _writeToStorage();
+
+    await _dbstore.record(id).update(_db, pl.toJson());
   }
 
-  void insertTracksInPlaylist(int id, List<TrackWithDate> tracks, int index) {
+  void addTrackToHistory(List<TrackWithDate> tracks) async {
+    final pl = playlistList.firstWhere((p0) => p0.id == kPlaylistHistory);
+    final finaltracks = [...pl.tracks, ...tracks];
+    pl.tracks.assignAll(finaltracks);
+    _writeToStorage();
+
+    await _dbstore.record(kPlaylistHistory).update(_db, pl.toJson());
+  }
+
+  void insertTracksInPlaylist(int id, List<TrackWithDate> tracks, int index) async {
     final pl = playlistList.firstWhere((p0) => p0.id == id);
     pl.tracks.insertAll(index, tracks.map((e) => e).toList());
     _writeToStorage();
+
+    await _dbstore.record(pl.id).update(_db, pl.toJson());
   }
 
-  void removeTracksFromPlaylist(int id, List<TrackWithDate> tracks) {
+  void removeTrackFromPlaylist(int id, int index) async {
     final pl = playlistList.firstWhere((p0) => p0.id == id);
-    for (final t in tracks) {
-      pl.tracks.remove(t);
-    }
+    pl.tracks.removeAt(index);
+
     _writeToStorage();
+
+    await _dbstore.record(id).update(_db, pl.toJson());
   }
 
-  void favouriteButtonOnPressed(Track track) {
+  void removeWhereFromPlaylist(int id, bool Function(TrackWithDate) test) async {
+    final pl = playlistList.firstWhere((p0) => p0.id == id);
+    pl.tracks.removeWhere(test);
+
+    _writeToStorage();
+
+    await _dbstore.record(id).update(_db, pl.toJson());
+  }
+
+  void favouriteButtonOnPressed(Track track) async {
     final fvPlaylist = PlaylistController.inst.playlistList.firstWhere(
       (element) => element.id == kPlaylistFavourites,
     );
@@ -211,6 +258,8 @@ class PlaylistController extends GetxController {
       addTracksToPlaylist(fvPlaylist.id, [track]);
     }
     _writeToStorage();
+
+    await _dbstore.record(fvPlaylist.id).update(_db, fvPlaylist.toJson());
   }
 
   void generateRandomPlaylist() {
@@ -246,24 +295,18 @@ class PlaylistController extends GetxController {
       ..clear()
       ..addEntries(sortedEntries);
     plmp.tracks.clear();
-    plmp.tracks.assignAll(topTracksMap.keys.map((e) => TrackWithDate(0, e)));
+    plmp.tracks.assignAll(topTracksMap.keys.map((e) => TrackWithDate(0, e, false)));
   }
 
   ///
   Future<void> preparePlaylistFile({File? file}) async {
-    file ??= await File(kPlaylistsFilePath).create();
-    try {
-      String contents = await file.readAsString();
-      if (contents.isNotEmpty) {
-        var jsonResponse = jsonDecode(contents);
-        for (var p in jsonResponse) {
-          playlistList.add(Playlist.fromJson(p));
-          printInfo(info: "playlist: ${playlistList.length}");
-        }
-      }
-    } catch (e) {
-      printError(info: e.toString());
-      await file.delete();
+    _db = await databaseFactoryIo.openDatabase(kPlaylistsDBPath);
+    _dbstore = StoreRef.main();
+    final plys = await _dbstore.find(_db);
+
+    for (final p in plys) {
+      playlistList.add(Playlist.fromJson(p.value as Map<String, dynamic>));
+      print(p.key);
     }
 
     /// Creates default playlists
@@ -281,11 +324,9 @@ class PlaylistController extends GetxController {
     updateMostPlayedPlaylist();
   }
 
-  void _writeToStorage() {
+  void _writeToStorage() async {
     updateMostPlayedPlaylist();
     playlistList.refresh();
     searchPlaylists('');
-    playlistList.map((pl) => pl.toJson()).toList();
-    File(kPlaylistsFilePath).writeAsStringSync(json.encode(playlistList));
   }
 }

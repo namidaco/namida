@@ -1,7 +1,8 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:get/get.dart';
+import 'package:sembast/sembast.dart';
+import 'package:sembast/sembast_io.dart';
 
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
@@ -13,17 +14,17 @@ import 'package:namida/core/functions.dart';
 class QueueController extends GetxController {
   static QueueController inst = QueueController();
 
-  RxList<Queue> queueList = <Queue>[].obs;
+  final RxList<Queue> queueList = <Queue>[].obs;
 
-  RxList<Track> latestQueue = <Track>[].obs;
+  final RxList<Track> latestQueue = <Track>[].obs;
+
+  late final Database _db;
+  late final StoreRef<Object?, Object?> _dbstore;
 
   void addNewQueue({
-    String name = '',
-    List<Track> tracks = const <Track>[],
     int? date,
-    String comment = '',
-    List<String> modes = const [],
-  }) {
+    List<Track> tracks = const <Track>[],
+  }) async {
     /// if the queue is the same, it will skip instead of saving the same queue.
     if (checkIfQueueSameAsCurrent(tracks)) {
       printInfo(info: "Didnt Save Queue: Similar as Current");
@@ -31,66 +32,62 @@ class QueueController extends GetxController {
     }
     printInfo(info: "Added New Queue");
     date ??= DateTime.now().millisecondsSinceEpoch;
-    queueList.add(Queue(name, tracks, date, comment, modes));
-    _writeToStorage();
+    final q = Queue(date, tracks);
+    queueList.add(q);
+    await _dbstore.record(q.date).put(_db, q.toJson());
   }
 
-  void removeQueue(Queue queue) {
+  void removeQueue(Queue queue) async {
     queueList.remove(queue);
-    _writeToStorage();
+    await _dbstore.record(queue.date).delete(_db);
   }
 
-  void removeQueues(List<Queue> queues) {
-    for (var pl in queues) {
-      queueList.remove(pl);
-    }
+  // void removeQueues(List<Queue> queues) async {
+  //   for (final pl in queues) {
+  //     queueList.remove(pl);
+  //   }
+  //   await _dbstore.delete(_db);
+  // }
 
-    _writeToStorage();
-  }
-
-  void updateQueue(Queue oldQueue, Queue newQueue) {
+  void updateQueue(Queue oldQueue, Queue newQueue) async {
     final plIndex = queueList.indexOf(oldQueue);
     queueList.remove(oldQueue);
     queueList.insert(plIndex, newQueue);
-    _writeToStorage();
+
+    await _dbstore.record(oldQueue.date).update(_db, newQueue.toJson());
   }
 
-  void updateLatestQueue(List<Track> tracks) {
+  void updateLatestQueue(List<Track> tracks) async {
     latestQueue.assignAll(tracks);
     if (queueList.isNotEmpty) {
       queueList.last.tracks.assignAll(tracks);
-      _writeToStorage();
+      await _dbstore.record(queueList.last.date).update(_db, queueList.last.toJson());
     }
   }
 
   ///
   Future<void> prepareQueuesFile({File? file}) async {
-    file ??= await File(kQueuesFilePath).create();
-
-    if (await file.stat().then((value) => value.size <= 2)) {
-      return;
-    }
-
-    String contents = await file.readAsString();
-    if (contents.isNotEmpty) {
-      var jsonResponse = jsonDecode(contents);
-
-      for (var p in jsonResponse) {
-        queueList.add(Queue.fromJson(p));
+    _db = await databaseFactoryIo.openDatabase(kQueuesDBPath);
+    _dbstore = StoreRef.main();
+    final trwt = await _dbstore.find(_db);
+    if (trwt.isNotEmpty) {
+      for (final t in trwt) {
+        queueList.add(Queue.fromJson(t.value as Map<String, dynamic>));
       }
-      printInfo(info: "All Queues: ${queueList.length}");
     }
+
     await prepareLatestQueueFile();
   }
 
   ///
   Future<void> prepareLatestQueueFile() async {
+    if (queueList.isEmpty || queueList.last.tracks.isEmpty) {
+      return;
+    }
     latestQueue.assignAll(queueList.last.tracks);
 
     // Assign the last queue to the [Player]
-    if (latestQueue.isEmpty) {
-      return;
-    }
+
     final latestTrack = latestQueue.firstWhere(
       (element) => element.path == SettingsController.inst.lastPlayedTrackPath.value,
       orElse: () => latestQueue.first,
@@ -102,9 +99,5 @@ class QueueController extends GetxController {
       startPlaying: false,
       dontAddQueue: true,
     );
-  }
-
-  void _writeToStorage() {
-    File(kQueuesFilePath).writeAsStringSync(json.encode(queueList.map((pl) => pl.toJson()).toList()));
   }
 }
