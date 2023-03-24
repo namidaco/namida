@@ -25,6 +25,7 @@ Color kMainColorDark = const Color.fromARGB(255, 139, 149, 241);
 final String kSettingsFilePath = '$kAppDirectoryPath/namidaSettings.json';
 final String kTracksFilePath = '$kAppDirectoryPath/tracks.json';
 final String kVideoPathsFilePath = '$kAppDirectoryPath/videoFilesPaths.txt';
+final String kYoutubeStatsFilePath = '$kAppDirectoryPath/ytstats.json';
 
 final String kQueuesDBPath = '$kAppDirectoryPath/queues.db';
 final String kPlaylistsDBPath = '$kAppDirectoryPath/playlists.db';

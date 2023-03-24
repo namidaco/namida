@@ -118,6 +118,71 @@ class YoutubeController {
     }
     ytexp.close();
   }
+
+  // Extras.
+  Future<void> parseYTHistoryJson(File file) async {
+    parsedYTHistoryJson.value = 0;
+    addedYTHistoryJsonToPlaylist.value = 0;
+    String contents = await file.readAsString();
+    if (contents.isNotEmpty) {
+      final jsonResponse = jsonDecode(contents);
+      final list = <YoutubeVideoHistory>[];
+
+      for (final p in jsonResponse) {
+        final link = utf8.decode((p['titleUrl']).toString().codeUnits);
+        final id = link.length >= 11 ? link.substring(link.length - 11) : link;
+        final z = List<Map<String, dynamic>>.from((p['subtitles'] ?? []));
+
+        final obj = list.firstWhereOrNull((element) => element.id == id);
+        if (obj == null) {
+          list.add(
+            YoutubeVideoHistory(
+              id,
+              (p['title'] as String).replaceFirst('Watched ', ''),
+              z.isNotEmpty ? z.first['name'] : '',
+              z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
+              [DateTime.parse(p['time'] ?? '').millisecondsSinceEpoch],
+              p['header'] == "YouTube Music",
+            ),
+          );
+        } else {
+          obj.datesWatched.add(DateTime.parse(p['time']).millisecondsSinceEpoch);
+        }
+        parsedYTHistoryJson.value++;
+      }
+      await File(kYoutubeStatsFilePath).writeAsString(jsonEncode(list));
+    }
+    await _addYTHistoryVideosToNamidaHistory();
+  }
+
+  Future<void> _addYTHistoryVideosToNamidaHistory() async {
+    final file = File(kYoutubeStatsFilePath);
+    String contents = await file.readAsString();
+    if (contents.isNotEmpty) {
+      final jsonResponse = jsonDecode(contents);
+      final historyPl = PlaylistController.inst.playlistList.firstWhere((p0) => p0.id == kPlaylistHistory);
+
+      /// Removing previous yt tracks.
+      removeYTTracksFromHistory();
+
+      /// Adding tracks that their link matches.
+      for (final p in jsonResponse) {
+        final vh = YoutubeVideoHistory.fromJson(p);
+        final tr = Indexer.inst.tracksInfoList.firstWhereOrNull((element) => element.youtubeID == vh.id);
+        if (tr != null) {
+          for (final d in vh.datesWatched) {
+            PlaylistController.inst.addTrackToHistory([TrackWithDate(d, tr, true)]);
+            addedYTHistoryJsonToPlaylist.value++;
+          }
+        }
+      }
+      historyPl.tracks.sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
+    }
+  }
+
+  void removeYTTracksFromHistory() {
+    PlaylistController.inst.removeWhereFromPlaylist(kPlaylistHistory, (element) => element.isYT);
+  }
 }
 
 class NamidaClient extends http.BaseClient {

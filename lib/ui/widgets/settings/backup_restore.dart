@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/youtube_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -206,6 +207,35 @@ class BackupAndRestore extends StatelessWidget {
                 }
               },
             ),
+          ),
+
+          // TODO: Guide
+          CustomListTile(
+            title: Language.inst.IMPORT_YOUTUBE_HISTORY,
+            icon: Broken.direct_inbox,
+            onTap: () async {
+              final jsonfile = await FilePicker.platform.pickFiles(allowedExtensions: ['json'], type: FileType.custom);
+              if (jsonfile != null) {
+                Get.dialog(
+                  Obx(
+                    () => CustomBlurryDialog(
+                      normalTitleStyle: true,
+                      actions: [
+                        TextButton(
+                          child: Text(Language.inst.CONFIRM),
+                          onPressed: () => Get.close(1),
+                        )
+                      ],
+                      bodyText:
+                          "${Language.inst.DONT_TOUCH}\n\n${YoutubeController.inst.parsedYTHistoryJson.value} ${Language.inst.PARSED}\n\n${YoutubeController.inst.addedYTHistoryJsonToPlaylist.value} ${Language.inst.ADDED}",
+                    ),
+                  ),
+                  barrierDismissible: false,
+                );
+                await Future.delayed(const Duration(milliseconds: 300));
+                YoutubeController.inst.parseYTHistoryJson(File(jsonfile.files.first.path!));
+              }
+            },
           ),
         ],
       ),

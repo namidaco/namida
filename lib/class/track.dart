@@ -4,21 +4,25 @@ import 'package:namida/core/extensions.dart';
 class TrackWithDate {
   late int dateAdded;
   late Track track;
+  late bool isYT;
 
   TrackWithDate(
     this.dateAdded,
     this.track,
+    this.isYT,
   );
 
   TrackWithDate.fromJson(Map<String, dynamic> json) {
     dateAdded = json['dateAdded'] ?? DateTime.now().millisecondsSinceEpoch;
     track = (json['track'] as String).toTrack;
+    isYT = json['isYT'] ?? false;
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['dateAdded'] = dateAdded;
     data['track'] = track.path;
+    data['isYT'] = isYT;
 
     return data;
   }
@@ -130,6 +134,17 @@ class Track {
 
     return data;
   }
+
+  @override
+  bool operator ==(other) {
+    if (other is! Track) {
+      return false;
+    }
+    return path == other.path && title == other.title && album == other.album && artistsList == other.artistsList;
+  }
+
+  @override
+  int get hashCode => (path + title + album + artistsList.toString()).hashCode;
 }
 
 extension TrackUtils on Track {

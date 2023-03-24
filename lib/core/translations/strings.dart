@@ -28,6 +28,7 @@ class Language {
   String get DONT_TOUCH => 'DON\'T TOUCH ANYTHING';
   String get PARSED => 'parsed';
   String get ADDED => 'added';
+  String get IMPORT_YOUTUBE_HISTORY => 'Import Youtube History';
 
   ///
   String get REMOVE_WHITESPACES => 'Remove Whitespaces';
