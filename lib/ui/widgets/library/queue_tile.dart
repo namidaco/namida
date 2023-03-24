@@ -53,10 +53,7 @@ class QueueTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      [
-                        queue.date.dateFormatted,
-                        queue.date.clockFormatted,
-                      ].join(' - '),
+                      queue.date.dateAndClockFormattedOriginal,
                       style: Get.textTheme.displayMedium?.copyWith(
                         fontSize: 14.0,
                       ),

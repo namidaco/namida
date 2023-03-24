@@ -340,37 +340,40 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
         ),
       ),
       const SizedBox(height: 12.0),
-      ...tracks.asMap().entries.map((e) {
-        return Row(
-          children: [
-            Expanded(
-              child: Stack(
-                children: [
-                  Obx(
-                    () => TrackTile(
-                      index: e.key,
-                      track: e.value,
-                      queue: [e.value],
-                      onTap: () => tracks.addIf(() => !tracks.contains(e.value), e.value),
-                      bgColor: tracks.contains(e.value) ? null : Colors.black.withAlpha(0),
-                      trailingWidget: IconButton(
-                        icon: const Icon(Broken.close_circle),
-                        visualDensity: VisualDensity.compact,
-                        onPressed: () {
-                          tracks.remove(e.value);
-                        },
+      ListView.builder(
+        itemCount: tracks.length,
+        itemBuilder: (context, index) {
+          final tr = tracks[index];
+          return Row(
+            children: [
+              Expanded(
+                child: Stack(
+                  children: [
+                    Obx(
+                      () => TrackTile(
+                        index: index,
+                        track: tr,
+                        queue: [tr],
+                        onTap: () => tracks.addIf(() => !tracks.contains(tr), tr),
+                        bgColor: tracks.contains(tr) ? null : Colors.black.withAlpha(0),
+                        trailingWidget: IconButton(
+                          icon: const Icon(Broken.close_circle),
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () {
+                            tracks.remove(tr);
+                          },
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
-        );
-      }).toList(),
+            ],
+          );
+        },
+      ),
     ],
   );
-  // final info = await audioedit.readAudio(tracks.map((e) => e.path).toList());
 
   final albumController = TextEditingController();
   final artistController = TextEditingController();
@@ -512,160 +515,184 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
           label: Text(Language.inst.SAVE),
         )
       ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: ListView(
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Stack(
-                      alignment: Alignment.bottomRight,
+      child: Obx(
+        () => tracks.isEmpty
+            ? SizedBox(
+                width: Get.width * 0.6,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Get.dialog(
+                      CustomBlurryDialog(
+                        insetPadding: const EdgeInsets.all(42.0),
+                        contentPadding: EdgeInsets.zero,
+                        child: toBeEditedTracksColumn,
+                      ),
+                    );
+                  },
+                  child: Obx(
+                    () => Text(
+                      tracks.displayTrackKeyword,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: ListView(
                       children: [
-                        Obx(
-                          () => MultiArtworkContainer(
-                            heroTag: 'edittags_artwork',
-                            size: Get.width / 3,
-                            tracks: tracks,
-                            onTopWidget: tracks.length > 3
-                                ? Positioned(
-                                    right: 0,
-                                    bottom: 0,
-                                    child: NamidaBlurryContainer(
-                                      width: Get.width / 6.2,
-                                      height: Get.width / 6.2,
-                                      borderRadius: BorderRadius.zero,
-                                      child: Center(
-                                        child: Text(
-                                          "+${tracks.length - 3}",
-                                          style: Get.textTheme.displayLarge,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Stack(
+                              alignment: Alignment.bottomRight,
+                              children: [
+                                Obx(
+                                  () => MultiArtworkContainer(
+                                    heroTag: 'edittags_artwork',
+                                    size: Get.width / 3,
+                                    tracks: tracks,
+                                    onTopWidget: tracks.length > 3
+                                        ? Positioned(
+                                            right: 0,
+                                            bottom: 0,
+                                            child: NamidaBlurryContainer(
+                                              width: Get.width / 6.2,
+                                              height: Get.width / 6.2,
+                                              borderRadius: BorderRadius.zero,
+                                              child: Center(
+                                                child: Text(
+                                                  "+${tracks.length - 3}",
+                                                  style: Get.textTheme.displayLarge,
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              width: 12.0,
+                            ),
+                            Expanded(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  const SizedBox(
+                                    height: 8.0,
+                                  ),
+                                  SizedBox(
+                                    width: Get.width,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        Get.dialog(
+                                          CustomBlurryDialog(
+                                            insetPadding: const EdgeInsets.all(42.0),
+                                            contentPadding: EdgeInsets.zero,
+                                            child: toBeEditedTracksColumn,
+                                          ),
+                                        );
+                                      },
+                                      child: Obx(
+                                        () => Text(
+                                          tracks.displayTrackKeyword,
+                                          textAlign: TextAlign.center,
                                         ),
                                       ),
                                     ),
-                                  )
-                                : null,
-                          ),
+                                  ),
+                                  const SizedBox(
+                                    height: 8.0,
+                                  ),
+                                  //TODO: Edit Multiple Artworks.
+                                  SizedBox(
+                                    width: Get.width,
+                                    child: ElevatedButton(
+                                      onPressed: () {},
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          Language.inst.EDIT_ARTWORK,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 12.0,
+                        ),
+                        const SizedBox(
+                          height: 8.0,
+                        ),
+                        CustomTagTextField(
+                          controller: artistController,
+                          hintText: Language.inst.ARTIST,
+                          icon: Broken.microphone,
+                        ),
+                        const SizedBox(
+                          height: 12.0,
+                        ),
+                        CustomTagTextField(
+                          controller: albumController,
+                          hintText: Language.inst.ALBUM,
+                          icon: Broken.music_dashboard,
+                        ),
+                        const SizedBox(
+                          height: 12.0,
+                        ),
+                        CustomTagTextField(
+                          controller: genreController,
+                          hintText: Language.inst.GENRE,
+                          icon: Broken.smileys,
+                        ),
+                        const SizedBox(
+                          height: 12.0,
+                        ),
+                        CustomTagTextField(
+                          controller: yearController,
+                          hintText: Language.inst.YEAR,
+                          icon: Broken.calendar,
+                          maxLength: 8,
+                        ),
+                        const SizedBox(
+                          height: 12.0,
+                        ),
+                        CustomTagTextField(
+                          controller: commentController,
+                          hintText: Language.inst.COMMENT,
+                          icon: Broken.text_block,
+                          maxLines: 4,
+                        ),
+                        const SizedBox(
+                          height: 12.0,
                         ),
                       ],
                     ),
-                    const SizedBox(
-                      width: 12.0,
+                  ),
+                  const SizedBox(
+                    height: 12.0,
+                  ),
+                  Obx(
+                    () => Text(
+                      [
+                        tracks.displayTrackKeyword,
+                        tracks.map((e) => e.size).reduce((a, b) => a + b).fileSizeFormatted,
+                        tracks.totalDurationFormatted,
+                      ].join(' • '),
+                      style: Get.textTheme.displaySmall,
                     ),
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          const SizedBox(
-                            height: 8.0,
-                          ),
-                          SizedBox(
-                            width: Get.width,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Get.dialog(
-                                  CustomBlurryDialog(
-                                    insetPadding: const EdgeInsets.all(42.0),
-                                    contentPadding: EdgeInsets.zero,
-                                    child: toBeEditedTracksColumn,
-                                  ),
-                                );
-                              },
-                              child: Obx(
-                                () => Text(
-                                  tracks.displayTrackKeyword,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 8.0,
-                          ),
-                          SizedBox(
-                            width: Get.width,
-                            child: ElevatedButton(
-                              onPressed: () {},
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  Language.inst.EDIT_ARTWORK,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 12.0,
-                ),
-                const SizedBox(
-                  height: 8.0,
-                ),
-                CustomTagTextField(
-                  controller: artistController,
-                  hintText: Language.inst.ARTIST,
-                  icon: Broken.microphone,
-                ),
-                const SizedBox(
-                  height: 12.0,
-                ),
-                CustomTagTextField(
-                  controller: albumController,
-                  hintText: Language.inst.ALBUM,
-                  icon: Broken.music_dashboard,
-                ),
-                const SizedBox(
-                  height: 12.0,
-                ),
-                CustomTagTextField(
-                  controller: genreController,
-                  hintText: Language.inst.GENRE,
-                  icon: Broken.smileys,
-                ),
-                const SizedBox(
-                  height: 12.0,
-                ),
-                CustomTagTextField(
-                  controller: yearController,
-                  hintText: Language.inst.YEAR,
-                  icon: Broken.calendar,
-                  maxLength: 8,
-                ),
-                const SizedBox(
-                  height: 12.0,
-                ),
-                CustomTagTextField(
-                  controller: commentController,
-                  hintText: Language.inst.COMMENT,
-                  icon: Broken.text_block,
-                  maxLines: 4,
-                ),
-                const SizedBox(
-                  height: 12.0,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(
-            height: 12.0,
-          ),
-          Obx(
-            () => Text(
-              [
-                tracks.displayTrackKeyword,
-                tracks.map((e) => e.size).reduce((a, b) => a + b).fileSizeFormatted,
-                tracks.totalDurationFormatted,
-              ].join(' • '),
-              style: Get.textTheme.displaySmall,
-            ),
-          ),
-        ],
+                  ),
+                ],
+              ),
       ),
     ),
   );

@@ -18,11 +18,11 @@ Color get playerStaticColor => Color(SettingsController.inst.staticColor.value);
 class CurrentColor extends GetxController {
   static final CurrentColor inst = CurrentColor();
 
-  Rx<Color> color = playerStaticColor.obs;
-  RxList<Color> palette = <Color>[].obs;
-  RxString currentPlayingTrackPath = ''.obs;
-  RxInt currentPlayingIndex = 0.obs;
-  RxBool generatingAllColorPalettes = false.obs;
+  final Rx<Color> color = playerStaticColor.obs;
+  final RxList<Color> palette = <Color>[].obs;
+  final RxString currentPlayingTrackPath = ''.obs;
+  final RxInt currentPlayingIndex = 0.obs;
+  final RxBool generatingAllColorPalettes = false.obs;
 
   Future<void> updatePlayerColor(Track track, int index) async {
     if (SettingsController.inst.autoColor.value) {
@@ -73,7 +73,7 @@ class CurrentColor extends GetxController {
     }
     generatingAllColorPalettes.value = true;
 
-    for (var tr in Indexer.inst.tracksInfoList.toList()) {
+    for (final tr in Indexer.inst.tracksInfoList.toList()) {
       if (!generatingAllColorPalettes.value) {
         break;
       }

@@ -69,8 +69,7 @@ class SettingsController extends GetxController {
   final RxString defaultBackupLocation = kInternalAppDirectoryPath.obs;
   final RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
   final RxBool enableFoldersHierarchy = true.obs;
-  final RxList<String> backupItemslist =
-      [kTracksFilePath, kQueuesFilePath, kLatestQueueFilePath, kPaletteDirPath, kLyricsDirPath, kPlaylistsFilePath, kSettingsFilePath, kWaveformDirPath].obs;
+  final RxList<String> backupItemslist = [kTracksFilePath, kQueuesDBPath, kPaletteDirPath, kLyricsDirPath, kPlaylistsDBPath, kSettingsFilePath, kWaveformDirPath].obs;
   final RxBool enableVideoPlayback = true.obs;
   final RxBool enableLyrics = false.obs;
   final RxInt videoPlaybackSource = 0.obs;
@@ -79,6 +78,7 @@ class SettingsController extends GetxController {
   final RxBool animatingThumbnailInversed = false.obs;
   final RxBool enablePartyModeInMiniplayer = false.obs;
   final RxBool enablePartyModeColorSwap = true.obs;
+  final RxBool enableMiniplayerParticles = true.obs;
   final RxInt isTrackPlayedSecondsCount = 40.obs;
   final RxInt isTrackPlayedPercentageCount = 40.obs;
   final RxInt waveformTotalBars = 140.obs;
@@ -90,6 +90,7 @@ class SettingsController extends GetxController {
   final RxBool displayFavouriteButtonInNotification = false.obs;
   final RxBool enableSearchCleanup = false.obs;
   final RxBool enableBottomNavBar = true.obs;
+  final RxBool useYoutubeMiniplayer = false.obs;
 
   final Rx<RepeatMode> playerRepeatMode = RepeatMode.none.obs;
   final Rx<TrackPlayMode> trackPlayMode = TrackPlayMode.searchResults.obs;
@@ -193,6 +194,7 @@ class SettingsController extends GetxController {
       animatingThumbnailInversed.value = json['animatingThumbnailInversed'] ?? animatingThumbnailInversed.value;
       enablePartyModeInMiniplayer.value = json['enablePartyModeInMiniplayer'] ?? enablePartyModeInMiniplayer.value;
       enablePartyModeColorSwap.value = json['enablePartyModeColorSwap'] ?? enablePartyModeColorSwap.value;
+      enableMiniplayerParticles.value = json['enableMiniplayerParticles'] ?? enableMiniplayerParticles.value;
       isTrackPlayedSecondsCount.value = json['isTrackPlayedSecondsCount'] ?? isTrackPlayedSecondsCount.value;
       isTrackPlayedPercentageCount.value = json['isTrackPlayedPercentageCount'] ?? isTrackPlayedPercentageCount.value;
       waveformTotalBars.value = json['waveformTotalBars'] ?? waveformTotalBars.value;
@@ -204,6 +206,7 @@ class SettingsController extends GetxController {
       displayFavouriteButtonInNotification.value = json['displayFavouriteButtonInNotification'] ?? displayFavouriteButtonInNotification.value;
       enableSearchCleanup.value = json['enableSearchCleanup'] ?? enableSearchCleanup.value;
       enableBottomNavBar.value = json['enableBottomNavBar'] ?? enableBottomNavBar.value;
+      useYoutubeMiniplayer.value = json['useYoutubeMiniplayer'] ?? useYoutubeMiniplayer.value;
 
       playerRepeatMode.value = RepeatMode.values.getEnum(json['playerRepeatMode']) ?? playerRepeatMode.value;
       trackPlayMode.value = TrackPlayMode.values.getEnum(json['trackPlayMode']) ?? trackPlayMode.value;
@@ -290,6 +293,7 @@ class SettingsController extends GetxController {
       'animatingThumbnailInversed': animatingThumbnailInversed.value,
       'enablePartyModeInMiniplayer': enablePartyModeInMiniplayer.value,
       'enablePartyModeColorSwap': enablePartyModeColorSwap.value,
+      'enableMiniplayerParticles': enableMiniplayerParticles.value,
       'isTrackPlayedSecondsCount': isTrackPlayedSecondsCount.value,
       'isTrackPlayedPercentageCount': isTrackPlayedPercentageCount.value,
       'waveformTotalBars': waveformTotalBars.value,
@@ -301,6 +305,7 @@ class SettingsController extends GetxController {
       'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
       'enableSearchCleanup': enableSearchCleanup.value,
       'enableBottomNavBar': enableBottomNavBar.value,
+      'useYoutubeMiniplayer': useYoutubeMiniplayer.value,
       'playerRepeatMode': playerRepeatMode.value.convertToString,
       'trackPlayMode': trackPlayMode.value.convertToString,
 
@@ -382,6 +387,7 @@ class SettingsController extends GetxController {
     bool? animatingThumbnailInversed,
     bool? enablePartyModeInMiniplayer,
     bool? enablePartyModeColorSwap,
+    bool? enableMiniplayerParticles,
     int? isTrackPlayedSecondsCount,
     int? isTrackPlayedPercentageCount,
     bool? displayFavouriteIconInListTile,
@@ -394,6 +400,7 @@ class SettingsController extends GetxController {
     bool? displayFavouriteButtonInNotification,
     bool? enableSearchCleanup,
     bool? enableBottomNavBar,
+    bool? useYoutubeMiniplayer,
     RepeatMode? playerRepeatMode,
     TrackPlayMode? trackPlayMode,
   }) {
@@ -416,7 +423,7 @@ class SettingsController extends GetxController {
       this.autoLibraryTab.value = autoLibraryTab;
     }
     if (libraryTabs != null) {
-      for (var t in libraryTabs) {
+      for (final t in libraryTabs) {
         if (!this.libraryTabs.contains(t)) {
           this.libraryTabs.add(t);
         }
@@ -553,28 +560,28 @@ class SettingsController extends GetxController {
       this.indexMinFileSizeInB.value = indexMinFileSizeInB;
     }
     if (trackSearchFilter != null) {
-      for (var f in trackSearchFilter) {
+      for (final f in trackSearchFilter) {
         if (!this.trackSearchFilter.contains(f)) {
           this.trackSearchFilter.add(f);
         }
       }
     }
     if (playlistSearchFilter != null) {
-      for (var f in playlistSearchFilter) {
+      for (final f in playlistSearchFilter) {
         if (!this.playlistSearchFilter.contains(f)) {
           this.playlistSearchFilter.add(f);
         }
       }
     }
     if (directoriesToScan != null) {
-      for (var d in directoriesToScan) {
+      for (final d in directoriesToScan) {
         if (!this.directoriesToScan.contains(d)) {
           this.directoriesToScan.add(d);
         }
       }
     }
     if (directoriesToExclude != null) {
-      for (var d in directoriesToExclude) {
+      for (final d in directoriesToExclude) {
         if (!this.directoriesToExclude.contains(d)) {
           this.directoriesToExclude.add(d);
         }
@@ -596,14 +603,14 @@ class SettingsController extends GetxController {
       this.enableFoldersHierarchy.value = enableFoldersHierarchy;
     }
     if (backupItemslist != null) {
-      for (var d in backupItemslist) {
+      for (final d in backupItemslist) {
         if (!this.backupItemslist.contains(d)) {
           this.backupItemslist.add(d);
         }
       }
     }
     if (youtubeVideoQualities != null) {
-      for (var q in youtubeVideoQualities) {
+      for (final q in youtubeVideoQualities) {
         if (!this.youtubeVideoQualities.contains(q)) {
           this.youtubeVideoQualities.add(q);
         }
@@ -629,6 +636,9 @@ class SettingsController extends GetxController {
     }
     if (enablePartyModeColorSwap != null) {
       this.enablePartyModeColorSwap.value = enablePartyModeColorSwap;
+    }
+    if (enableMiniplayerParticles != null) {
+      this.enableMiniplayerParticles.value = enableMiniplayerParticles;
     }
     if (isTrackPlayedSecondsCount != null) {
       this.isTrackPlayedSecondsCount.value = isTrackPlayedSecondsCount;
@@ -665,6 +675,9 @@ class SettingsController extends GetxController {
     }
     if (enableBottomNavBar != null) {
       this.enableBottomNavBar.value = enableBottomNavBar;
+    }
+    if (useYoutubeMiniplayer != null) {
+      this.useYoutubeMiniplayer.value = useYoutubeMiniplayer;
     }
     if (playerRepeatMode != null) {
       this.playerRepeatMode.value = playerRepeatMode;
@@ -718,7 +731,7 @@ class SettingsController extends GetxController {
       trackSearchFilter.remove(trackSearchFilter1);
     }
     if (trackSearchFilterAll != null) {
-      for (var f in trackSearchFilterAll) {
+      for (final f in trackSearchFilterAll) {
         if (trackSearchFilter.contains(f)) {
           trackSearchFilter.remove(f);
         }
@@ -728,7 +741,7 @@ class SettingsController extends GetxController {
       playlistSearchFilter.remove(playlistSearchFilter1);
     }
     if (playlistSearchFilterAll != null) {
-      for (var f in playlistSearchFilterAll) {
+      for (final f in playlistSearchFilterAll) {
         if (playlistSearchFilter.contains(f)) {
           playlistSearchFilter.remove(f);
         }
@@ -738,7 +751,7 @@ class SettingsController extends GetxController {
       directoriesToScan.remove(directoriesToScan1);
     }
     if (directoriesToScanAll != null) {
-      for (var f in directoriesToScanAll) {
+      for (final f in directoriesToScanAll) {
         if (directoriesToScan.contains(f)) {
           directoriesToScan.remove(f);
         }
@@ -748,7 +761,7 @@ class SettingsController extends GetxController {
       directoriesToExclude.remove(directoriesToExclude1);
     }
     if (directoriesToExcludeAll != null) {
-      for (var f in directoriesToExcludeAll) {
+      for (final f in directoriesToExcludeAll) {
         if (directoriesToExclude.contains(f)) {
           directoriesToExclude.remove(f);
         }
@@ -758,7 +771,7 @@ class SettingsController extends GetxController {
       libraryTabs.remove(libraryTab1);
     }
     if (libraryTabsAll != null) {
-      for (var t in libraryTabsAll) {
+      for (final t in libraryTabsAll) {
         if (libraryTabs.contains(t)) {
           libraryTabs.remove(t);
         }
@@ -768,7 +781,7 @@ class SettingsController extends GetxController {
       backupItemslist.remove(backupItemslist1);
     }
     if (backupItemslistAll != null) {
-      for (var t in backupItemslistAll) {
+      for (final t in backupItemslistAll) {
         if (backupItemslist.contains(t)) {
           backupItemslist.remove(t);
         }
@@ -778,7 +791,7 @@ class SettingsController extends GetxController {
       youtubeVideoQualities.remove(youtubeVideoQualities1);
     }
     if (youtubeVideoQualitiesAll != null) {
-      for (var t in youtubeVideoQualitiesAll) {
+      for (final t in youtubeVideoQualitiesAll) {
         if (youtubeVideoQualities.contains(t)) {
           youtubeVideoQualities.remove(t);
         }

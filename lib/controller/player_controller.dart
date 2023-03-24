@@ -15,12 +15,12 @@ class Player {
 
   NamidaAudioVideoHandler? _audioHandler;
 
-  Rx<Track> nowPlayingTrack = kDummyTrack.obs;
-  RxList<Track> currentQueue = <Track>[].obs;
-  RxInt currentIndex = 0.obs;
-  RxDouble currentVolume = SettingsController.inst.playerVolume.value.obs;
-  RxBool isPlaying = false.obs;
-  RxInt nowPlayingPosition = 0.obs;
+  final Rx<Track> nowPlayingTrack = kDummyTrack.obs;
+  final RxList<Track> currentQueue = <Track>[].obs;
+  final RxInt currentIndex = 0.obs;
+  final RxDouble currentVolume = SettingsController.inst.playerVolume.value.obs;
+  final RxBool isPlaying = false.obs;
+  final RxInt nowPlayingPosition = 0.obs;
 
   Future<void> initializePlayer() async {
     _audioHandler = await AudioService.init(

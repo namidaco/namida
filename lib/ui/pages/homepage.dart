@@ -204,20 +204,28 @@ class HomePage extends StatelessWidget {
                 ),
               ),
 
-              ///
-              Container(
-                height: 28.0,
-                transform: Matrix4.translationValues(0, 8.0, 0),
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: context.theme.scaffoldBackgroundColor,
-                      spreadRadius: 4.0,
-                      blurRadius: 8.0,
-                    ),
-                  ],
+              /// Bottom Glow/Shadow
+              Obx(
+                () => AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 600),
+                  child: Player.inst.nowPlayingTrack.value == kDummyTrack
+                      ? const SizedBox(key: Key('emptyglow'))
+                      : Container(
+                          key: const Key('actualglow'),
+                          height: 28.0,
+                          transform: Matrix4.translationValues(0, 8.0, 0),
+                          decoration: BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: context.theme.scaffoldBackgroundColor,
+                                spreadRadius: 4.0,
+                                blurRadius: 8.0,
+                              ),
+                            ],
+                          ),
+                        ),
                 ),
-              ),
+              )
             ],
           ),
           bottomNavigationBar: !SettingsController.inst.enableBottomNavBar.value

@@ -191,11 +191,15 @@ class AdvancedSettings extends StatelessWidget {
           ),
         ],
         child: CupertinoScrollbar(
-          child: Column(
-            children: videoFiles.asMap().entries.map(
-              (e) {
-                final quality = e.value.path.getFilename.split('_').last.split('.').first;
-                final id = e.value.path.getFilename.split('').take(11).join();
+          child: SizedBox(
+            width: Get.width,
+            height: Get.height / 1.5,
+            child: ListView.builder(
+              itemCount: videoFiles.length,
+              itemBuilder: (context, index) {
+                final file = videoFiles[index];
+                final quality = file.path.getFilename.split('_').last.split('.').first;
+                final id = file.path.getFilename.split('').take(11).join();
                 return Obx(
                   () => ListTile(
                     horizontalTitleGap: 16.0,
@@ -207,7 +211,7 @@ class AdvancedSettings extends StatelessWidget {
                       height: 70 * 9 / 16,
                     ),
                     title: Text(id),
-                    subtitle: Text([quality, e.value.statSync().size.fileSizeFormatted].join(' - ')),
+                    subtitle: Text([quality, file.statSync().size.fileSizeFormatted].join(' - ')),
                     trailing: IgnorePointer(
                       child: SizedBox(
                         height: 18.0,
@@ -217,21 +221,21 @@ class AdvancedSettings extends StatelessWidget {
                           activeColor: Get.theme.listTileTheme.iconColor!,
                           inactiveColor: Get.theme.listTileTheme.iconColor!,
                           duration: const Duration(milliseconds: 400),
-                          active: videosToDelete.contains(e.value),
+                          active: videosToDelete.contains(file),
                         ),
                       ),
                     ),
                     onTap: () {
-                      if (videosToDelete.contains(e.value)) {
-                        videosToDelete.remove(e.value);
+                      if (videosToDelete.contains(file)) {
+                        videosToDelete.remove(file);
                       } else {
-                        videosToDelete.add(e.value);
+                        videosToDelete.add(file);
                       }
                     },
                   ),
                 );
               },
-            ).toList(),
+            ),
           ),
         ),
       ),

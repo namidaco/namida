@@ -123,6 +123,8 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     currentIndex.value = index;
     CurrentColor.inst.updatePlayerColor(tr, index);
 
+    updateCurrentMediaItem(tr);
+
     /// Te whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture] don't get detected.
     if (startPlaying && !isPlaying.value) {
       _player.play();
@@ -133,8 +135,6 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
       _player.play();
       setVolume(SettingsController.inst.playerVolume.value);
     }
-
-    updateCurrentMediaItem(tr);
 
     WaveformController.inst.generateWaveform(tr);
     PlaylistController.inst.addToHistory(nowPlayingTrack.value);
@@ -226,6 +226,9 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   }
 
   void shuffleNextTracks() {
+    if (isLastTrack) {
+      return;
+    }
     final List<Track> newTracks = [];
     final first = currentIndex.value + 1;
     final last = currentQueue.length - 1;

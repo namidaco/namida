@@ -13,32 +13,32 @@ import 'package:namida/main.dart';
 class ScrollSearchController extends GetxController {
   static final ScrollSearchController inst = ScrollSearchController();
 
-  RxDouble miniplayerHeightPercentage = 0.0.obs;
-  RxDouble miniplayerHeightPercentageQueue = 0.0.obs;
+  final RxDouble miniplayerHeightPercentage = 0.0.obs;
+  final RxDouble miniplayerHeightPercentageQueue = 0.0.obs;
 
-  RxBool isGlobalSearchMenuShown = false.obs;
-  final TextEditingController searchTextEditingController = Indexer.inst.globalSearchController.value;
+  final RxBool isGlobalSearchMenuShown = false.obs;
+  final TextEditingController searchTextEditingController = Indexer.inst.globalSearchController;
   final PageController homepageController = PageController(initialPage: SettingsController.inst.selectedLibraryTab.value.toInt);
 
-  RxBool showTrackSearchBox = false.obs;
-  RxBool showAlbumSearchBox = false.obs;
-  RxBool showArtistSearchBox = false.obs;
-  RxBool showGenreSearchBox = false.obs;
-  RxBool showPlaylistSearchBox = false.obs;
+  final RxBool showTrackSearchBox = false.obs;
+  final RxBool showAlbumSearchBox = false.obs;
+  final RxBool showArtistSearchBox = false.obs;
+  final RxBool showGenreSearchBox = false.obs;
+  final RxBool showPlaylistSearchBox = false.obs;
 
-  ScrollController trackScrollcontroller = ScrollController();
-  ScrollController albumScrollcontroller = ScrollController();
-  ScrollController artistScrollcontroller = ScrollController();
-  ScrollController genreScrollcontroller = ScrollController();
-  ScrollController playlistScrollcontroller = ScrollController();
+  final ScrollController trackScrollcontroller = ScrollController();
+  final ScrollController albumScrollcontroller = ScrollController();
+  final ScrollController artistScrollcontroller = ScrollController();
+  final ScrollController genreScrollcontroller = ScrollController();
+  final ScrollController playlistScrollcontroller = ScrollController();
 
-  ScrollController queueScrollController = ScrollController();
+  final ScrollController queueScrollController = ScrollController();
 
-  RxBool isTrackBarVisible = true.obs;
-  RxBool isAlbumBarVisible = true.obs;
-  RxBool isArtistBarVisible = true.obs;
-  RxBool isGenreBarVisible = true.obs;
-  RxBool isPlaylistBarVisible = true.obs;
+  final RxBool isTrackBarVisible = true.obs;
+  final RxBool isAlbumBarVisible = true.obs;
+  final RxBool isArtistBarVisible = true.obs;
+  final RxBool isGenreBarVisible = true.obs;
+  final RxBool isPlaylistBarVisible = true.obs;
 
   ScrollSearchController() {
     trackScrollcontroller.addListener(() {
@@ -83,13 +83,13 @@ class ScrollSearchController extends GetxController {
       }
     });
   }
-  animatePageController(int animateTo, {bool shouldGoBack = false}) {
+  Future<void> animatePageController(int animateTo, {bool shouldGoBack = false}) async {
     SettingsController.inst.save(selectedLibraryTab: animateTo.toEnum);
     if (shouldGoBack) {
       Get.offAll(() => MainPageWrapper());
     } else {
       if (SettingsController.inst.enableBottomNavBar.value) {
-        homepageController.animateToPage(animateTo, duration: const Duration(milliseconds: 400), curve: Curves.easeInOutQuart);
+        await homepageController.animateToPage(animateTo, duration: const Duration(milliseconds: 400), curve: Curves.easeInOutQuart);
       }
     }
     clearGlobalSearchAndCloseThingys();

@@ -16,12 +16,13 @@ class QueuesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MainPageWrapper(
-      title: Text(Language.inst.QUEUES),
+      title: Text("${Language.inst.QUEUES} • ${QueueController.inst.queueList.length}"),
       child: AnimationLimiter(
         child: CupertinoScrollbar(
           controller: _scrollController,
           child: Obx(
             () => ListView(
+              controller: _scrollController,
               children: [
                 const SizedBox(height: 12.0),
                 ...QueueController.inst.queueList.reversed

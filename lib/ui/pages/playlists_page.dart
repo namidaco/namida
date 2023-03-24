@@ -71,7 +71,7 @@ class PlaylistsPage extends StatelessWidget {
                     },
                   ),
                   textField: CustomTextFiled(
-                    textFieldController: PlaylistController.inst.playlistSearchController.value,
+                    textFieldController: PlaylistController.inst.playlistSearchController,
                     textFieldHintText: Language.inst.FILTER_PLAYLISTS,
                     onTextFieldValueChanged: (value) => PlaylistController.inst.searchPlaylists(value),
                   ),

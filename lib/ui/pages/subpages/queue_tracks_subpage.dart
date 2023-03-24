@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
@@ -15,8 +15,9 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class QueueTracksPage extends StatelessWidget {
   final Queue queue;
-  const QueueTracksPage({super.key, required this.queue});
+  QueueTracksPage({super.key, required this.queue});
 
+  final ScrollController _scrollController = ScrollController();
   @override
   Widget build(BuildContext context) {
     return MainPageWrapper(
@@ -28,41 +29,45 @@ class QueueTracksPage extends StatelessWidget {
         )
       ],
       child: AnimationLimiter(
-        child: ListView(
-          children: [
-            /// Top Container holding image and info and buttons
-            SubpagesTopContainer(
-              title: [queue.date.dateFormatted].join(' - '),
-              subtitle: queue.date.clockFormatted,
-              thirdLineText: [
-                queue.tracks.displayTrackKeyword,
-                queue.tracks.totalDurationFormatted,
-              ].join(' - '),
-              imageWidget: MultiArtworkContainer(
-                size: Get.width * 0.35,
-                heroTag: 'queue_artwork_${queue.date}',
+        child: CupertinoScrollbar(
+          controller: _scrollController,
+          child: ListView(
+            controller: _scrollController,
+            children: [
+              /// Top Container holding image and info and buttons
+              SubpagesTopContainer(
+                title: queue.date.dateFormattedOriginal,
+                subtitle: queue.date.clockFormatted,
+                thirdLineText: [
+                  queue.tracks.displayTrackKeyword,
+                  queue.tracks.totalDurationFormatted,
+                ].join(' - '),
+                imageWidget: MultiArtworkContainer(
+                  size: Get.width * 0.35,
+                  heroTag: 'queue_artwork_${queue.date}',
+                  tracks: queue.tracks,
+                ),
                 tracks: queue.tracks,
               ),
-              tracks: queue.tracks,
-            ),
 
-            /// tracks
-            ...queue.tracks
-                .asMap()
-                .entries
-                .map(
-                  (track) => AnimatingTile(
-                    position: track.key,
-                    child: TrackTile(
-                      index: track.key,
-                      track: track.value,
-                      queue: queue.tracks,
+              /// tracks
+              ...queue.tracks
+                  .asMap()
+                  .entries
+                  .map(
+                    (track) => AnimatingTile(
+                      position: track.key,
+                      child: TrackTile(
+                        index: track.key,
+                        track: track.value,
+                        queue: queue.tracks,
+                      ),
                     ),
-                  ),
-                )
-                .toList(),
-            kBottomPaddingWidget,
-          ],
+                  )
+                  .toList(),
+              kBottomPaddingWidget,
+            ],
+          ),
         ),
       ),
     );

@@ -30,6 +30,7 @@ Future<void> showGeneralPopupDialog(
   String subtitle, {
   void Function()? onTopBarTap,
   Playlist? playlist,
+  int? index,
   String thirdLineText = '',
   bool forceSquared = false,
   bool? forceSingleArtwork,
@@ -43,6 +44,7 @@ Future<void> showGeneralPopupDialog(
 
   final List<String> availableAlbums = tracks.map((e) => e.album).toSet().toList();
   final List<String> availableArtists = tracks.map((e) => e.artistsList).expand((list) => list).toSet().toList();
+  final bool oneOfTheMainPlaylists = playlist?.id == kPlaylistFavourites || playlist?.id == kPlaylistHistory || playlist?.id == kPlaylistMostPlayed;
 
   await Get.dialog(
     BackdropFilter(
@@ -170,6 +172,7 @@ Future<void> showGeneralPopupDialog(
                             NamidaOnTaps.inst.onAlbumTap(availableAlbums.first);
                           },
                         ),
+
                       if (availableAlbums.length > 1)
                         ExpansionTile(
                           expandedAlignment: Alignment.centerLeft,
@@ -261,28 +264,40 @@ Future<void> showGeneralPopupDialog(
                           ],
                         ),
 
-                      if (isSingle)
-                        SmallListTile(
-                          color: colorDelightened,
-                          compact: false,
-                          title: Language.inst.SHARE,
-                          icon: Broken.share,
-                          onTap: () {
-                            Get.close(1);
-                            Share.shareXFiles([XFile(tracks.first.path)]);
-                          },
-                        ),
+                      SmallListTile(
+                        color: colorDelightened,
+                        compact: false,
+                        title: Language.inst.SHARE,
+                        icon: Broken.share,
+                        onTap: () {
+                          Get.close(1);
+                          Share.shareXFiles(tracks.map((e) => XFile(e.path)).toList());
+                        },
+                      ),
+
+                      SmallListTile(
+                        color: colorDelightened,
+                        compact: false,
+                        title: isSingle ? Language.inst.PLAY : Language.inst.PLAY_ALL,
+                        icon: Broken.play,
+                        onTap: () {
+                          Get.close(1);
+                          Player.inst.playOrPause(0, tracks);
+                        },
+                      ),
+
                       if (!isSingle)
                         SmallListTile(
                           color: colorDelightened,
                           compact: false,
-                          title: Language.inst.PLAY_ALL,
-                          icon: Broken.play_cricle,
+                          title: Language.inst.SHUFFLE,
+                          icon: Broken.shuffle,
                           onTap: () {
                             Get.close(1);
-                            Player.inst.playOrPause(0, tracks);
+                            Player.inst.playOrPause(0, tracks, shuffle: true);
                           },
                         ),
+
                       SmallListTile(
                         color: colorDelightened,
                         compact: false,
@@ -432,7 +447,7 @@ Future<void> showGeneralPopupDialog(
                             );
                           },
                         ),
-                      if (playlist != null && !isTrackInPlaylist)
+                      if (playlist != null && !isTrackInPlaylist && !oneOfTheMainPlaylists)
                         SmallListTile(
                           color: colorDelightened,
                           compact: true,
@@ -440,14 +455,14 @@ Future<void> showGeneralPopupDialog(
                           icon: Broken.pen_remove,
                           onTap: () {
                             final pl = playlist;
-                            final index = PlaylistController.inst.playlistList.indexOf(pl);
+                            final plindex = PlaylistController.inst.playlistList.indexOf(pl);
                             PlaylistController.inst.removePlaylist(playlist);
                             Get.snackbar(
                               Language.inst.UNDO_CHANGES,
                               Language.inst.UNDO_CHANGES_DELETED_PLAYLIST,
                               mainButton: TextButton(
                                 onPressed: () {
-                                  PlaylistController.inst.insertPlaylist(playlist, index);
+                                  PlaylistController.inst.insertPlaylist(playlist, plindex);
                                   Get.closeAllSnackbars();
                                 },
                                 child: Text(Language.inst.UNDO),
@@ -456,14 +471,14 @@ Future<void> showGeneralPopupDialog(
                             Get.close(1);
                           },
                         ),
-                      if (playlist != null && isTrackInPlaylist)
+                      if (playlist != null && index != null && isTrackInPlaylist)
                         SmallListTile(
                           color: colorDelightened,
                           compact: true,
                           title: Language.inst.REMOVE_FROM_PLAYLIST,
                           icon: Broken.box_remove,
                           onTap: () {
-                            NamidaOnTaps.inst.onRemoveTrackFromPlaylist(tracks, playlist);
+                            NamidaOnTaps.inst.onRemoveTrackFromPlaylist(index, playlist);
                             Get.close(1);
                           },
                         ),

@@ -20,16 +20,15 @@ class VideoController extends GetxController {
   static final VideoController inst = VideoController();
 
   /// Local Video
-  RxList<String> videoFilesPathList = <String>[].obs;
-  RxString localVidPath = ''.obs;
+  final RxList<String> videoFilesPathList = <String>[].obs;
+  final RxString localVidPath = ''.obs;
 
   /// Youtube
-  RxString youtubeLink = ''.obs;
-  RxString youtubeVideoId = ''.obs;
-  RxInt videoCurrentSize = 0.obs;
-  RxString videoCurrentQuality = ''.obs;
-  RxInt videoTotalSize = 0.obs;
-  // Rx<Video> currentYoutubeVideo = Video(VideoId(''), '', '', ChannelId(''), DateTime(0), '', DateTime(0), '', 0.milliseconds, ThumbnailSet(''), [], Engagement(0, 0, 0), false).obs;
+  final RxString youtubeLink = ''.obs;
+  final RxString youtubeVideoId = ''.obs;
+  final RxInt videoCurrentSize = 0.obs;
+  final RxString videoCurrentQuality = ''.obs;
+  final RxInt videoTotalSize = 0.obs;
 
   VideoPlayerController? vidcontroller;
   final connectivity = Connectivity();
@@ -129,10 +128,10 @@ class VideoController extends GetxController {
     resetEverything();
     updateYTLink(track);
 
-    // YoutubeController.inst.updateCurrentVideoMetadata(track.youtubeID);
+    YoutubeController.inst.updateCurrentVideoMetadata(track.youtubeID);
 
     /// Video Found in Local Storage
-    for (var vf in videoFilesPathList) {
+    for (final vf in videoFilesPathList) {
       if (checkFileNameAudioVideo(vf, track.filenameWOExt)) {
         await playAndInitializeVideo(vf, track);
         await vidcontroller?.setVolume(0.0);
@@ -149,7 +148,7 @@ class VideoController extends GetxController {
     /// Video Found in Video Cache Directory
     if (SettingsController.inst.videoPlaybackSource.value != 2 /* not youtube */) {
       final videoFiles = Directory(kVideosCachePath).listSync();
-      for (var f in videoFiles) {
+      for (final f in videoFiles) {
         if (f.path.getFilename.contains(youtubeVideoId.value)) {
           await playAndInitializeVideo(f.path, track);
           final s = await f.stat();
@@ -194,6 +193,10 @@ class VideoController extends GetxController {
 
       await Player.inst.updateVideoPlayingState();
       update();
+
+      /// video info
+      // final info = await VideoCompress.getMediaInfo(path);
+      // print("VVVVVVV ${info.toJson()}");
     }
   }
 

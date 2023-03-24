@@ -280,7 +280,7 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
   bool _previouslyOpened = false;
 
   void _move(DragUpdateDetails details) {
-    var delta = details.primaryDelta! / _width;
+    double delta = details.primaryDelta! / _width;
 
     if (delta > 0 && _controller.value == 1 && _leftChild != null) {
       _position = InnerDrawerDirection.start;
@@ -288,9 +288,9 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
       _position = InnerDrawerDirection.end;
     }
 
-    var offset = _position == InnerDrawerDirection.start ? widget.offset.left : widget.offset.right;
+    double offset = _position == InnerDrawerDirection.start ? widget.offset.left : widget.offset.right;
 
-    var ee = 1.0;
+    double ee = 1.0;
     if (offset <= 0.2) {
       ee = 1.7;
     } else if (offset <= 0.4) {
@@ -327,7 +327,7 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
   void _settle(DragEndDetails details) {
     if (_controller.isDismissed) return;
     if (details.velocity.pixelsPerSecond.dx.abs() >= _kMinFlingVelocity) {
-      var visualVelocity = (details.velocity.pixelsPerSecond.dx + _velocity) / _width;
+      double visualVelocity = (details.velocity.pixelsPerSecond.dx + _velocity) / _width;
 
       switch (_position) {
         case InnerDrawerDirection.end:
@@ -519,7 +519,7 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
 
   /// return widget with specific animation
   Widget _animatedChild() {
-    var child = _position == InnerDrawerDirection.start ? _leftChild : _rightChild;
+    Widget? child = _position == InnerDrawerDirection.start ? _leftChild : _rightChild;
     if (_swipeChild) {
       child = GestureDetector(
         onHorizontalDragUpdate: _move,
@@ -555,7 +555,7 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
   Widget? _trigger(AlignmentDirectional alignment, Widget? child) {
     final drawerIsStart = _position == InnerDrawerDirection.start;
     final padding = MediaQuery.of(context).padding;
-    var dragAreaWidth = drawerIsStart ? padding.left : padding.right;
+    double dragAreaWidth = drawerIsStart ? padding.left : padding.right;
 
     if (Directionality.of(context) == TextDirection.rtl) {
       dragAreaWidth = drawerIsStart ? padding.right : padding.left;

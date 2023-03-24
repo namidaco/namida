@@ -28,6 +28,7 @@ class TrackTile extends StatelessWidget {
   final Widget? trailingWidget;
   final void Function()? onTap;
   final Playlist? playlist;
+  final String thirdLineText;
   const TrackTile({
     super.key,
     required this.track,
@@ -40,6 +41,7 @@ class TrackTile extends StatelessWidget {
     this.trailingWidget,
     this.playlist,
     required this.index,
+    this.thirdLineText = '',
   });
 
   String getChoosenTrackTileItem(TrackTileItem trackItem) {
@@ -204,7 +206,7 @@ class TrackTile extends StatelessWidget {
                             ),
 
                           // check if third row isnt empty
-                          if (SettingsController.inst.displayThirdRow.value)
+                          if (thirdLineText == '' && SettingsController.inst.displayThirdRow.value)
                             if (tritem.row3Item1 != TrackTileItem.none || tritem.row3Item2 != TrackTileItem.none || tritem.row3Item3 != TrackTileItem.none)
                               Text(
                                 joinTrackItems(tritem.row3Item1, tritem.row3Item2, tritem.row3Item3),
@@ -214,6 +216,14 @@ class TrackTile extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
+
+                          if (thirdLineText != '')
+                            Text(
+                              thirdLineText,
+                              style: Get.textTheme.displaySmall?.copyWith(color: textColor?.withAlpha(130)),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                         ],
                       ),
                     ),
@@ -268,7 +278,7 @@ class TrackTile extends StatelessWidget {
                     MoreIcon(
                       padding: 6.0,
                       iconColor: textColor?.withAlpha(160),
-                      onPressed: () => NamidaDialogs.inst.showTrackDialog(track, playlist: playlist),
+                      onPressed: () => NamidaDialogs.inst.showTrackDialog(track, playlist: playlist, index: index),
                     ),
                     if (trailingWidget == null)
                       const SizedBox(

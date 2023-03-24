@@ -14,9 +14,9 @@ import 'package:namida/core/extensions.dart';
 class WaveformController extends GetxController {
   static final WaveformController inst = WaveformController();
 
-  RxList<double> curentWaveform = kDefaultWaveFormData.obs;
-  RxList<double> curentScaleList = kDefaultScaleList.obs;
-  RxBool generatingAllWaveforms = false.obs;
+  final RxList<double> curentWaveform = kDefaultWaveFormData.obs;
+  final RxList<double> curentScaleList = kDefaultScaleList.obs;
+  final RxBool generatingAllWaveforms = false.obs;
 
   int retryNumber = 0;
 
@@ -89,7 +89,7 @@ class WaveformController extends GetxController {
     }
     generatingAllWaveforms.value = true;
 
-    for (var tr in Indexer.inst.tracksInfoList) {
+    for (final tr in Indexer.inst.tracksInfoList) {
       if (!generatingAllWaveforms.value) {
         break;
       }
@@ -113,10 +113,10 @@ class WaveformController extends GetxController {
       // downscale
       final downscaledList = <double>[];
       final scaleFactor = (list.length / n).ceil();
-      for (var i = 0; i < n; i++) {
-        var sum = 0.0;
-        var count = 0;
-        for (var j = i * scaleFactor; j < (i + 1) * scaleFactor && j < list.length; j++) {
+      for (int i = 0; i < n; i++) {
+        double sum = 0.0;
+        int count = 0;
+        for (int j = i * scaleFactor; j < (i + 1) * scaleFactor && j < list.length; j++) {
           sum += list[j];
           count++;
         }
@@ -150,11 +150,11 @@ class WaveformController extends GetxController {
 
   List<double> interpolateList(List<double> list, int m) {
     final interpolatedList = <double>[];
-    for (var i = 0; i < list.length - 1; i++) {
+    for (int i = 0; i < list.length - 1; i++) {
       final start = list[i];
       final end = list[i + 1];
       final step = (end - start) / (m + 1);
-      for (var j = 1; j <= m; j++) {
+      for (int j = 1; j <= m; j++) {
         final value = start + j * step;
         interpolatedList.add(value);
       }

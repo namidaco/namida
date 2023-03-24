@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -21,6 +22,9 @@ class PlaylisTracksPage extends StatelessWidget {
   PlaylisTracksPage({super.key, required this.playlist});
 
   final RxBool shouldReorder = false.obs;
+
+  final ScrollController _scrollController = ScrollController();
+
   @override
   Widget build(BuildContext context) {
     final isMostPlayedPlaylist = playlist.id == kPlaylistMostPlayed;
@@ -62,33 +66,37 @@ class PlaylisTracksPage extends StatelessWidget {
 
             /// Top Music Playlist
             return isMostPlayedPlaylist
-                ? ListView(
-                    children: [
-                      topContainer,
-                      ...PlaylistController.inst.topTracksMap.entries.map(
-                        (track) {
-                          final index = PlaylistController.inst.topTracksMap.keys.toList().indexOf(track.key);
-                          return AnimatingTile(
-                            position: index,
-                            child: TrackTile(
-                              index: index,
-                              track: track.key,
-                              queue: PlaylistController.inst.topTracksMap.keys.toList(),
-                              playlist: rxplaylist,
-                              trailingWidget: CircleAvatar(
-                                radius: 10.0,
-                                backgroundColor: context.theme.scaffoldBackgroundColor,
-                                child: Text(
-                                  track.value.toString(),
-                                  style: context.textTheme.displaySmall,
+                ? CupertinoScrollbar(
+                    controller: _scrollController,
+                    child: ListView(
+                      controller: _scrollController,
+                      children: [
+                        topContainer,
+                        ...PlaylistController.inst.topTracksMap.entries.map(
+                          (track) {
+                            final index = PlaylistController.inst.topTracksMap.keys.toList().indexOf(track.key);
+                            return AnimatingTile(
+                              position: index,
+                              child: TrackTile(
+                                index: index,
+                                track: track.key,
+                                queue: PlaylistController.inst.topTracksMap.keys.toList(),
+                                playlist: rxplaylist,
+                                trailingWidget: CircleAvatar(
+                                  radius: 10.0,
+                                  backgroundColor: context.theme.scaffoldBackgroundColor,
+                                  child: Text(
+                                    track.value.toString(),
+                                    style: context.textTheme.displaySmall,
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        },
-                      ).toList(),
-                      kBottomPaddingWidget,
-                    ],
+                            );
+                          },
+                        ).toList(),
+                        kBottomPaddingWidget,
+                      ],
+                    ),
                   )
                 :
 
@@ -96,52 +104,57 @@ class PlaylisTracksPage extends StatelessWidget {
                 Column(
                     children: [
                       Expanded(
-                        child: ReorderableListView(
-                          header: topContainer,
-                          buildDefaultDragHandles: shouldReorder.value,
-                          proxyDecorator: (child, index, animation) => child,
-                          onReorder: (oldIndex, newIndex) {
-                            if (newIndex > oldIndex) {
-                              newIndex -= 1;
-                            }
-                            final item = rxplaylist.tracks.elementAt(oldIndex);
-                            PlaylistController.inst.removeTracksFromPlaylist(rxplaylist.id, [item]);
-                            PlaylistController.inst.insertTracksInPlaylist(rxplaylist.id, [item], newIndex);
-                          },
-                          children: [
-                            ...playlist.tracks
-                                .asMap()
-                                .entries
-                                .map(
-                                  (track) => AnimatingTile(
-                                    key: ValueKey(track.key),
-                                    position: track.key,
-                                    child: FadeDismissible(
-                                      key: UniqueKey(),
-                                      direction: shouldReorder.value ? DismissDirection.horizontal : DismissDirection.none,
-                                      onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTrackFromPlaylist([track.value.track], playlist),
-                                      child: Stack(
-                                        alignment: Alignment.centerLeft,
-                                        children: [
-                                          TrackTile(
-                                            index: track.key,
-                                            track: track.value.track,
-                                            queue: rxplaylist.tracks.map((e) => e.track).toList(),
-                                            playlist: rxplaylist,
-                                            draggableThumbnail: shouldReorder.value,
-                                          ),
-                                          Obx(() => ThreeLineSmallContainers(enabled: shouldReorder.value)),
-                                        ],
+                        child: CupertinoScrollbar(
+                          controller: _scrollController,
+                          child: ReorderableListView(
+                            scrollController: _scrollController,
+                            header: topContainer,
+                            buildDefaultDragHandles: shouldReorder.value,
+                            proxyDecorator: (child, index, animation) => child,
+                            onReorder: (oldIndex, newIndex) {
+                              if (newIndex > oldIndex) {
+                                newIndex -= 1;
+                              }
+                              final item = rxplaylist.tracks.elementAt(oldIndex);
+                              PlaylistController.inst.removeTrackFromPlaylist(rxplaylist.id, oldIndex);
+                              PlaylistController.inst.insertTracksInPlaylist(rxplaylist.id, [item], newIndex);
+                            },
+                            children: [
+                              ...playlist.tracks
+                                  .asMap()
+                                  .entries
+                                  .map(
+                                    (track) => AnimatingTile(
+                                      key: ValueKey(track.key),
+                                      position: track.key,
+                                      child: FadeDismissible(
+                                        key: UniqueKey(),
+                                        direction: shouldReorder.value ? DismissDirection.horizontal : DismissDirection.none,
+                                        onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTrackFromPlaylist(track.key, playlist),
+                                        child: Stack(
+                                          alignment: Alignment.centerLeft,
+                                          children: [
+                                            TrackTile(
+                                              index: track.key,
+                                              track: track.value.track,
+                                              queue: rxplaylist.tracks.map((e) => e.track).toList(),
+                                              playlist: rxplaylist,
+                                              draggableThumbnail: shouldReorder.value,
+                                              thirdLineText: playlist.id == kPlaylistHistory ? track.value.dateAdded.dateAndClockFormattedOriginal : '',
+                                            ),
+                                            Obx(() => ThreeLineSmallContainers(enabled: shouldReorder.value)),
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                )
-                                .toList(),
-                            const SizedBox(
-                              key: ValueKey("sizedbox"),
-                              height: kBottomPadding,
-                            )
-                          ],
+                                  )
+                                  .toList(),
+                              const SizedBox(
+                                key: ValueKey("sizedbox"),
+                                height: kBottomPadding,
+                              )
+                            ],
+                          ),
                         ),
                       ),
                     ],

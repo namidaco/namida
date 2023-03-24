@@ -76,10 +76,10 @@ class BackupAndRestore extends StatelessWidget {
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(kPlaylistsFilePath),
+                                active: isActive(kPlaylistsDBPath),
                                 title: Language.inst.PLAYLISTS,
                                 icon: Broken.music_library_2,
-                                onTap: () => onItemTap(kPlaylistsFilePath),
+                                onTap: () => onItemTap(kPlaylistsDBPath),
                               ),
                               const SizedBox(
                                 height: 12.0,
@@ -112,10 +112,10 @@ class BackupAndRestore extends StatelessWidget {
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(kQueuesFilePath),
+                                active: isActive(kQueuesDBPath),
                                 title: Language.inst.QUEUES,
                                 icon: Broken.driver,
-                                onTap: () => onItemTap(kQueuesFilePath),
+                                onTap: () => onItemTap(kQueuesDBPath),
                               ),
                               const SizedBox(
                                 height: 12.0,
@@ -232,7 +232,7 @@ Future<void> createBackupFile() async {
 
   List<File> filesOnly = [];
   List<Directory> dirsOnly = [];
-  for (var f in SettingsController.inst.backupItemslist.toList()) {
+  for (final f in SettingsController.inst.backupItemslist.toList()) {
     if (FileSystemEntity.typeSync(f) == FileSystemEntityType.file) {
       filesOnly.add(File(f));
     }
@@ -241,7 +241,7 @@ Future<void> createBackupFile() async {
     }
   }
   try {
-    for (var d in dirsOnly) {
+    for (final d in dirsOnly) {
       try {
         final dirZipFile = File("$kAppDirectoryPath/TEMPDIR_${d.path.getFilename}.zip");
         await ZipFile.createFromDirectory(sourceDir: d, zipFile: dirZipFile);
@@ -256,7 +256,7 @@ Future<void> createBackupFile() async {
 
     // after finishing
     final all = sourceDir.listSync();
-    for (var one in all) {
+    for (final one in all) {
       if (one.path.getFilename.startsWith('TEMPDIR_')) {
         await one.delete();
       }
@@ -279,7 +279,7 @@ Future<void> restoreBackupOnTap(bool auto) async {
     final possibleFiles = dir.listSync();
 
     List<File> filessss = [];
-    for (var pf in possibleFiles) {
+    for (final pf in possibleFiles) {
       if (pf.path.getFilename.startsWith('Namida Backup - ')) {
         if (pf is File) {
           filessss.add(pf);
@@ -304,7 +304,7 @@ Future<void> restoreBackupOnTap(bool auto) async {
 
   // after finishing, extracts zip files inside the main zip
   final all = Directory(kAppDirectoryPath).listSync();
-  for (var one in all) {
+  for (final one in all) {
     if (one.path.getFilename.startsWith('TEMPDIR_')) {
       if (one is File) {
         await ZipFile.extractToDirectory(

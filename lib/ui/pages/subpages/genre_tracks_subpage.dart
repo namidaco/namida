@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
@@ -16,12 +16,13 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 class GenreTracksPage extends StatelessWidget {
   final String name;
   final List<Track> tracks;
-  const GenreTracksPage({
+  GenreTracksPage({
     super.key,
     required this.name,
     required this.tracks,
   });
 
+  final ScrollController _scrollController = ScrollController();
   @override
   Widget build(BuildContext context) {
     return MainPageWrapper(
@@ -33,37 +34,41 @@ class GenreTracksPage extends StatelessWidget {
         )
       ],
       child: AnimationLimiter(
-        child: ListView(
-          children: [
-            /// Top Container holding image and info and buttons
-            SubpagesTopContainer(
-              title: name,
-              subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
-              imageWidget: MultiArtworkContainer(
-                size: Get.width * 0.35,
-                heroTag: 'genre_artwork_$name',
+        child: CupertinoScrollbar(
+          controller: _scrollController,
+          child: ListView(
+            controller: _scrollController,
+            children: [
+              /// Top Container holding image and info and buttons
+              SubpagesTopContainer(
+                title: name,
+                subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
+                imageWidget: MultiArtworkContainer(
+                  size: Get.width * 0.35,
+                  heroTag: 'genre_artwork_$name',
+                  tracks: tracks,
+                ),
                 tracks: tracks,
               ),
-              tracks: tracks,
-            ),
 
-            /// tracks
-            ...tracks
-                .asMap()
-                .entries
-                .map(
-                  (track) => AnimatingTile(
-                    position: track.key,
-                    child: TrackTile(
-                      index: track.key,
-                      track: track.value,
-                      queue: tracks,
+              /// tracks
+              ...tracks
+                  .asMap()
+                  .entries
+                  .map(
+                    (track) => AnimatingTile(
+                      position: track.key,
+                      child: TrackTile(
+                        index: track.key,
+                        track: track.value,
+                        queue: tracks,
+                      ),
                     ),
-                  ),
-                )
-                .toList(),
-            kBottomPaddingWidget,
-          ],
+                  )
+                  .toList(),
+              kBottomPaddingWidget,
+            ],
+          ),
         ),
       ),
     );

@@ -24,9 +24,10 @@ Color kMainColorDark = const Color.fromARGB(255, 139, 149, 241);
 /// Directories and files used by Namida
 final String kSettingsFilePath = '$kAppDirectoryPath/namidaSettings.json';
 final String kTracksFilePath = '$kAppDirectoryPath/tracks.json';
-final String kPlaylistsFilePath = '$kAppDirectoryPath/playlists.json';
 final String kVideoPathsFilePath = '$kAppDirectoryPath/videoFilesPaths.txt';
-final String kQueuesFilePath = '$kAppDirectoryPath/queues.json';
+
+final String kQueuesDBPath = '$kAppDirectoryPath/queues.db';
+final String kPlaylistsDBPath = '$kAppDirectoryPath/playlists.db';
 
 final String kArtworksDirPath = '$kAppDirectoryPath/Artworks/';
 final String kPaletteDirPath = '$kAppDirectoryPath/Palettes/';

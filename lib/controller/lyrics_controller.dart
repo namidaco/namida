@@ -15,8 +15,8 @@ import 'package:namida/core/constants.dart';
 class Lyrics {
   static final Lyrics inst = Lyrics();
 
-  RxString currentLyrics = ''.obs;
-  RxBool lyricsAvailable = true.obs;
+  final RxString currentLyrics = ''.obs;
+  final RxBool lyricsAvailable = true.obs;
 
   Future<void> updateLyrics(Track track) async {
     currentLyrics.value = '';
@@ -92,7 +92,7 @@ class Lyrics {
 
     final List<String> split = lyrics.split('\n');
     String result = '';
-    for (var i = 0; i < split.length; i++) {
+    for (int i = 0; i < split.length; i++) {
       result = '$result${split[i]}\n';
     }
     return result.trim();

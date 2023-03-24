@@ -43,10 +43,10 @@ class DropShadow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var left = 0.0;
-    var right = 0.0;
-    var top = 0.0;
-    var bottom = 0.0;
+    double left = 0.0;
+    double right = 0.0;
+    double top = 0.0;
+    double bottom = 0.0;
 
     left = (offset.dx.abs() + (blurRadius * 2)) * spread;
     right = (offset.dx + (blurRadius * 2)) * spread;
