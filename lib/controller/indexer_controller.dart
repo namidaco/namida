@@ -257,7 +257,7 @@ class Indexer extends GetxController {
             trackInfo.composer ?? 'Unknown Composer',
             trackInfo.track ?? 0,
             duration ?? 0,
-            trackInfo.year ?? 0,
+            int.tryParse((trackInfo.year ?? '').cleanUpForComparison) ?? 0,
             fileStat.size,
             //TODO: REMOVE CREATION DATE
             fileStat.accessed.millisecondsSinceEpoch,

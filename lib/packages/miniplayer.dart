@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:animated_background/animated_background.dart';
-import 'package:animations/animations.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
@@ -1226,7 +1225,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                                             config: CalendarDatePicker2Config(
                                                                               calendarType: CalendarDatePicker2Type.range,
                                                                             ),
-                                                                            initialValue: const [],
+                                                                            value: const [],
                                                                           ),
                                                                         ),
                                                                       );
@@ -1344,46 +1343,34 @@ class TrackInfo extends StatelessWidget {
                             child: InkWell(
                               borderRadius: BorderRadius.circular(12.0),
                               onTap: cp == 1 ? () => NamidaDialogs.inst.showTrackDialog(track) : null,
-                              child: PageTransitionSwitcher(
-                                transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
-                                  return SharedAxisTransition(
-                                    fillColor: Colors.transparent,
-                                    animation: primaryAnimation,
-                                    secondaryAnimation: secondaryAnimation,
-                                    transitionType: SharedAxisTransitionType.horizontal,
-                                    child: child,
-                                  );
-                                },
-                                layoutBuilder: (entries) => Stack(children: entries),
-                                child: Padding(
-                                  padding: EdgeInsets.only(left: 8.0 * cp),
-                                  child: Column(
-                                    key: Key(track.title),
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        track.artistsList.take(3).join(', ').overflow,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: context.textTheme.displayMedium?.copyWith(
-                                          fontSize: vp(a: 15.0, b: 20.0, c: p).multipliedFontScale,
-                                          height: 1,
-                                        ),
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 8.0 * cp),
+                                child: Column(
+                                  key: Key(track.title),
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      track.artistsList.take(3).join(', ').overflow,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: context.textTheme.displayMedium?.copyWith(
+                                        fontSize: vp(a: 15.0, b: 20.0, c: p).multipliedFontScale,
+                                        height: 1,
                                       ),
-                                      const SizedBox(
-                                        height: 4.0,
+                                    ),
+                                    const SizedBox(
+                                      height: 4.0,
+                                    ),
+                                    Text(
+                                      track.title.overflow,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: context.textTheme.displayMedium?.copyWith(
+                                        fontSize: vp(a: 13.0, b: 15.0, c: p).multipliedFontScale,
                                       ),
-                                      Text(
-                                        track.title.overflow,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: context.textTheme.displayMedium?.copyWith(
-                                          fontSize: vp(a: 13.0, b: 15.0, c: p).multipliedFontScale,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -1450,72 +1437,62 @@ class TrackImage extends StatelessWidget {
             width: size,
             child: Padding(
               padding: EdgeInsets.all(12.0 * (1 - cp)),
-              child: PageTransitionSwitcher(
-                transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
-                  return FadeThroughTransition(
-                    fillColor: Colors.transparent,
-                    animation: primaryAnimation,
-                    secondaryAnimation: secondaryAnimation,
-                    child: child,
-                  );
-                },
-                child: Obx(
-                  () {
-                    final isNull = VideoController.inst.vidcontroller == null;
-                    final shouldShowVideo =
-                        // SettingsController.inst.enableVideoPlayback.value &&
-                        !isNull &&
-                            (VideoController.inst.localVidPath.value != '' || VideoController.inst.youtubeLink.value != '') &&
-                            (VideoController.inst.vidcontroller?.value.isInitialized ?? false);
+              child: Obx(
+                () {
+                  final isNull = VideoController.inst.vidcontroller == null;
+                  final shouldShowVideo =
+                      // SettingsController.inst.enableVideoPlayback.value &&
+                      !isNull &&
+                          (VideoController.inst.localVidPath.value != '' || VideoController.inst.youtubeLink.value != '') &&
+                          (VideoController.inst.vidcontroller?.value.isInitialized ?? false);
 
-                    final finalScale = WaveformController.inst.getAnimatingScale(WaveformController.inst.curentScaleList);
-                    final isInversed = SettingsController.inst.animatingThumbnailInversed.value;
-                    return AnimatedScale(
-                      duration: const Duration(milliseconds: 100),
-                      scale: isInversed ? 1.25 - finalScale : 1.13 + finalScale,
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: shouldShowVideo && !isNull
-                            ? ClipRRect(
-                                key: const ValueKey('videocontainer'),
-                                borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
-                                child: AspectRatio(
-                                  aspectRatio: VideoController.inst.vidcontroller!.value.aspectRatio,
-                                  child: LyricsWrapper(
-                                    cp: cp,
-                                    child: GestureDetector(
-                                      onTap: () => VideoController.inst.seek(Player.inst.nowPlayingPosition.value.milliseconds),
-                                      child: VideoPlayer(
-                                        key: const ValueKey('video'),
-                                        VideoController.inst.vidcontroller!,
-                                      ),
+                  final finalScale = WaveformController.inst.getAnimatingScale(WaveformController.inst.curentScaleList);
+                  final isInversed = SettingsController.inst.animatingThumbnailInversed.value;
+                  return AnimatedScale(
+                    duration: const Duration(milliseconds: 100),
+                    scale: isInversed ? 1.25 - finalScale : 1.13 + finalScale,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: shouldShowVideo && !isNull
+                          ? ClipRRect(
+                              key: const ValueKey('videocontainer'),
+                              borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
+                              child: AspectRatio(
+                                aspectRatio: VideoController.inst.vidcontroller!.value.aspectRatio,
+                                child: LyricsWrapper(
+                                  cp: cp,
+                                  child: GestureDetector(
+                                    onTap: () => VideoController.inst.seek(Player.inst.nowPlayingPosition.value.milliseconds),
+                                    child: VideoPlayer(
+                                      key: const ValueKey('video'),
+                                      VideoController.inst.vidcontroller!,
                                     ),
                                   ),
                                 ),
-                              )
-                            : LyricsWrapper(
-                                cp: cp,
-                                child: ArtworkWidget(
-                                  key: const ValueKey('imagecontainer'),
-                                  track: track ?? Player.inst.nowPlayingTrack.value,
-                                  thumnailSize: Get.width,
-                                  compressed: false,
-                                  borderRadius: 6.0 + 10.0 * cp,
-                                  forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: context.theme.shadowColor.withAlpha(100),
-                                      blurRadius: 24.0,
-                                      offset: const Offset(0.0, 8.0),
-                                    ),
-                                  ],
-                                  iconSize: 24.0 + 114 * cp,
-                                ),
                               ),
-                      ),
-                    );
-                  },
-                ),
+                            )
+                          : LyricsWrapper(
+                              cp: cp,
+                              child: ArtworkWidget(
+                                key: const ValueKey('imagecontainer'),
+                                track: track ?? Player.inst.nowPlayingTrack.value,
+                                thumnailSize: Get.width,
+                                compressed: false,
+                                borderRadius: 6.0 + 10.0 * cp,
+                                forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: context.theme.shadowColor.withAlpha(100),
+                                    blurRadius: 24.0,
+                                    offset: const Offset(0.0, 8.0),
+                                  ),
+                                ],
+                                iconSize: 24.0 + 114 * cp,
+                              ),
+                            ),
+                    ),
+                  );
+                },
               ),
             ),
           ),
