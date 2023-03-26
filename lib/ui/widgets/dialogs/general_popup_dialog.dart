@@ -44,7 +44,7 @@ Future<void> showGeneralPopupDialog(
 
   final List<String> availableAlbums = tracks.map((e) => e.album).toSet().toList();
   final List<String> availableArtists = tracks.map((e) => e.artistsList).expand((list) => list).toSet().toList();
-  final bool oneOfTheMainPlaylists = playlist?.id == kPlaylistFavourites || playlist?.id == kPlaylistHistory || playlist?.id == kPlaylistMostPlayed;
+  final bool oneOfTheMainPlaylists = playlist?.name == kPlaylistFavourites || playlist?.name == kPlaylistHistory || playlist?.name == kPlaylistMostPlayed;
 
   await Get.dialog(
     BackdropFilter(
@@ -56,7 +56,8 @@ Future<void> showGeneralPopupDialog(
           child: Dialog(
             insetPadding: const EdgeInsets.symmetric(horizontal: 34.0, vertical: 24.0),
             clipBehavior: Clip.antiAlias,
-            backgroundColor: Get.theme.backgroundColor,
+            surfaceTintColor: Colors.transparent,
+            backgroundColor: Color.alphaBlend(colorDelightened.withAlpha(10), Get.theme.dialogBackgroundColor),
             child: SingleChildScrollView(
               child: Column(
                 children: [

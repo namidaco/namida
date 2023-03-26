@@ -13,7 +13,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/main.dart';
+import 'package:namida/main_page.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -40,17 +40,16 @@ class SearchPage extends StatelessWidget {
                   height: context.height,
                   child: Opacity(
                     opacity: 0.8,
-                    child: ImageFiltered(
-                      imageFilter: ScrollSearchController.inst.isGlobalSearchMenuShown.value
-                          ? ImageFilter.blur(
-                              sigmaX: 4.0,
-                              sigmaY: 4.0,
-                            )
-                          : ImageFilter.blur(
-                              sigmaX: 12.0,
-                              sigmaY: 12.0,
-                            ),
-                      child: Image.asset('assets/namida_icon.png'),
+                    child: TweenAnimationBuilder(
+                      tween: Tween<double>(begin: 4.0, end: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? 4.0 : 12.0),
+                      duration: const Duration(milliseconds: 500),
+                      builder: (context, value, child) => ImageFiltered(
+                        imageFilter: ImageFilter.blur(
+                          sigmaX: value,
+                          sigmaY: value,
+                        ),
+                        child: Image.asset('assets/namida_icon.png'),
+                      ),
                     ),
                   ),
                 )

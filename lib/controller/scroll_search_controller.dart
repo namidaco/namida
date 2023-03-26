@@ -8,7 +8,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/main.dart';
+import 'package:namida/main_page.dart';
 
 class ScrollSearchController extends GetxController {
   static final ScrollSearchController inst = ScrollSearchController();
@@ -88,7 +88,7 @@ class ScrollSearchController extends GetxController {
     if (shouldGoBack) {
       Get.offAll(() => MainPageWrapper());
     } else {
-      if (SettingsController.inst.enableBottomNavBar.value) {
+      if (SettingsController.inst.enableBottomNavBar.value && homepageController.hasClients) {
         await homepageController.animateToPage(animateTo, duration: const Duration(milliseconds: 400), curve: Curves.easeInOutQuart);
       }
     }

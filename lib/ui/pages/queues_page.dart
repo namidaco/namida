@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/main.dart';
+import 'package:namida/main_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/queue_tile.dart';
 

@@ -506,17 +506,20 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                         ),
                                       ),
                                       Obx(
-                                        () => Container(
-                                          height: 2 * (1 - cp),
-                                          width: ((Get.width * (Player.inst.nowPlayingPosition.value / Player.inst.nowPlayingTrack.value.duration)) * 0.9),
-                                          margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                                          decoration: BoxDecoration(
-                                            color: CurrentColor.inst.color.value,
-                                            borderRadius: BorderRadius.circular(50),
-                                            //  color: Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.color.value)
-                                            //   .withOpacity(vp(a: .3, b: .22, c: icp)),
-                                          ),
-                                        ),
+                                        () {
+                                          final w = Player.inst.nowPlayingPosition.value / Player.inst.nowPlayingTrack.value.duration;
+                                          return Container(
+                                            height: 2 * (1 - cp),
+                                            width: w > 0 ? ((Get.width * w) * 0.9) : 0,
+                                            margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                                            decoration: BoxDecoration(
+                                              color: CurrentColor.inst.color.value,
+                                              borderRadius: BorderRadius.circular(50),
+                                              //  color: Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.color.value)
+                                              //   .withOpacity(vp(a: .3, b: .22, c: icp)),
+                                            ),
+                                          );
+                                        },
                                       ),
                                     ],
                                   ),
@@ -1038,7 +1041,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                     () {
                                       final position = seekValue.value != 0.0 ? seekValue.value : Player.inst.nowPlayingPosition.value;
                                       final dur = Player.inst.nowPlayingTrack.value.duration;
-                                      final percentage = position / dur;
+                                      final percentage = (position / dur).clamp(0.0, dur.toDouble());
                                       return Padding(
                                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
                                         child: Stack(
@@ -1067,23 +1070,24 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                     color: context.theme.colorScheme.onBackground.withAlpha(110),
                                                   ),
                                                   // Slider
-                                                  Opacity(
-                                                    opacity: 0.0,
-                                                    child: Material(
-                                                      child: Slider(
-                                                        value: percentage,
-                                                        onChanged: (double newValue) {
-                                                          seekValue.value = newValue;
-                                                        },
-                                                        min: 0.0,
-                                                        max: dur.toDouble(),
-                                                        onChangeEnd: (newValue) {
-                                                          Player.inst.seek(Duration(milliseconds: newValue.toInt()));
-                                                          seekValue.value = 0.0;
-                                                        },
+                                                  if (percentage > 0)
+                                                    Opacity(
+                                                      opacity: 0.0,
+                                                      child: Material(
+                                                        child: Slider(
+                                                          value: percentage,
+                                                          onChanged: (double newValue) {
+                                                            seekValue.value = newValue;
+                                                          },
+                                                          min: 0.0,
+                                                          max: dur.toDouble(),
+                                                          onChangeEnd: (newValue) {
+                                                            Player.inst.seek(Duration(milliseconds: newValue.toInt()));
+                                                            seekValue.value = 0.0;
+                                                          },
+                                                        ),
                                                       ),
-                                                    ),
-                                                  )
+                                                    )
                                                 ],
                                               ),
                                             ),

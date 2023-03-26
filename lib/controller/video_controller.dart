@@ -128,7 +128,9 @@ class VideoController extends GetxController {
     resetEverything();
     updateYTLink(track);
 
-    YoutubeController.inst.updateCurrentVideoMetadata(track.youtubeID);
+    if (SettingsController.inst.useYoutubeMiniplayer.value) {
+      YoutubeController.inst.updateCurrentVideoMetadata(track.youtubeID);
+    }
 
     /// Video Found in Local Storage
     for (final vf in videoFilesPathList) {

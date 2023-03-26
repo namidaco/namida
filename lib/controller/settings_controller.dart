@@ -67,7 +67,8 @@ class SettingsController extends GetxController {
   final RxString defaultBackupLocation = kInternalAppDirectoryPath.obs;
   final RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
   final RxBool enableFoldersHierarchy = true.obs;
-  final RxList<String> backupItemslist = [kTracksFilePath, kQueuesDBPath, kPaletteDirPath, kLyricsDirPath, kPlaylistsDBPath, kSettingsFilePath, kWaveformDirPath].obs;
+  final RxList<String> backupItemslist =
+      [kTracksFilePath, kQueuesDBPath, kDefaultPlaylistsFilePath, kLatestQueueFilePath, kPaletteDirPath, kLyricsDirPath, kPlaylistsDBPath, kSettingsFilePath, kWaveformDirPath].obs;
   final RxBool enableVideoPlayback = true.obs;
   final RxBool enableLyrics = false.obs;
   final RxInt videoPlaybackSource = 0.obs;

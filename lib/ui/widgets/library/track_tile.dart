@@ -12,7 +12,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/main.dart';
+import 'package:namida/main_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
@@ -112,7 +112,7 @@ class TrackTile extends StatelessWidget {
           child: Material(
             color: bgColor ??
                 Color.alphaBlend(
-                  isTrackSelected & !isInSelectedTracksPreview ? context.theme.selectedRowColor : Colors.transparent,
+                  isTrackSelected & !isInSelectedTracksPreview ? context.theme.focusColor : Colors.transparent,
                   isTrackCurrentlyPlaying ? CurrentColor.inst.color.value : context.theme.cardTheme.color!,
                 ),
             child: InkWell(

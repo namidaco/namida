@@ -61,8 +61,9 @@ class AppThemes extends GetxController {
           backgroundColor: light ? Color.alphaBlend(color.withAlpha(25), Colors.white) : null,
         ),
       ),
-      selectedRowColor: light ? const Color.fromARGB(200, 190, 190, 190) : const Color.fromARGB(150, 80, 80, 80),
-      dialogTheme: DialogTheme(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0.multipliedRadius))),
+      dialogBackgroundColor: light ? Color.alphaBlend(color.withAlpha(40), Colors.white) : Color.alphaBlend(color.withAlpha(20), const Color.fromARGB(255, 12, 12, 12)),
+      focusColor: light ? const Color.fromARGB(200, 190, 190, 190) : const Color.fromARGB(150, 80, 80, 80),
+      dialogTheme: DialogTheme(surfaceTintColor: Colors.transparent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0.multipliedRadius))),
       listTileTheme: ListTileThemeData(
         horizontalTitleGap: 4.0,
         selectedColor:
@@ -76,10 +77,7 @@ class AppThemes extends GetxController {
           light ? const Color.fromARGB(200, 55, 55, 55) : const Color.fromARGB(255, 228, 228, 228),
         ),
       ),
-      // this is for the expansion tile
-      // dividerColor: Colors.transparent,
       dividerColor: light ? const Color.fromARGB(100, 100, 100, 100) : const Color.fromARGB(200, 50, 50, 50),
-
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
           color: Get.theme.colorScheme.background,
@@ -100,6 +98,7 @@ class AppThemes extends GetxController {
       cardColor: cardColor,
       cardTheme: cardTheme,
       popupMenuTheme: PopupMenuThemeData(
+          surfaceTintColor: Colors.transparent,
           elevation: 12.0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0.multipliedRadius),
@@ -125,14 +124,17 @@ class AppThemes extends GetxController {
         displayLarge: TextStyle(
           fontWeight: FontWeight.w700,
           fontSize: 17.0.multipliedFontScale,
+          color: light ? Colors.black.withAlpha(160) : Colors.white.withAlpha(210),
         ),
         displayMedium: TextStyle(
           fontWeight: FontWeight.w600,
           fontSize: 15.0.multipliedFontScale,
+          color: light ? Colors.black.withAlpha(150) : Colors.white.withAlpha(180),
         ),
         displaySmall: TextStyle(
           fontWeight: FontWeight.w400,
           fontSize: 13.0.multipliedFontScale,
+          color: light ? Colors.black.withAlpha(120) : Colors.white.withAlpha(170),
         ),
         headlineMedium: TextStyle(
           fontWeight: FontWeight.normal,

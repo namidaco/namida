@@ -204,7 +204,7 @@ class Indexer extends GetxController {
     debugPrint("New Audio Files: ${audioFiles.length}");
     debugPrint("Deleted Audio Files: ${deletedPaths.length}");
 
-    List<SongModel> tracksOld = await _query.querySongs();
+    List<AudioModel> tracksOld = await _query.querySongs();
     filteredForSizeDurationTracks.value = 0;
     duplicatedTracksLength.value = 0;
     final minDur = SettingsController.inst.indexMinDurationInSec.value; // Seconds
@@ -235,7 +235,7 @@ class Indexer extends GetxController {
           final fileStat = await File(trackPath).stat();
 
           // breaks the loop early depending on size [byte] or duration [seconds]
-          if ((duration ?? 0) < minDur * 1000 || fileStat.size < minSize) {
+          if ((duration ?? 999999) < minDur * 1000 || fileStat.size < minSize) {
             filteredForSizeDurationTracks.value++;
             filteredPathsToBeDeleted.add(trackPath);
             deletedPaths.add(trackPath);
