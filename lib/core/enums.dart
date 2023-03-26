@@ -17,7 +17,6 @@ enum SortType {
 }
 
 enum GroupSortType {
-  defaultSort,
   title,
   album,
   albumArtist,
@@ -105,4 +104,11 @@ enum RepeatMode {
   none,
   one,
   all,
+}
+
+enum TrackSource {
+  local,
+  youtube,
+  youtubeMusic,
+  lastfm,
 }

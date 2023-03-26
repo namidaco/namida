@@ -1,28 +1,29 @@
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
 class TrackWithDate {
   late int dateAdded;
   late Track track;
-  late bool isYT;
+  late TrackSource source;
 
   TrackWithDate(
     this.dateAdded,
     this.track,
-    this.isYT,
+    this.source,
   );
 
   TrackWithDate.fromJson(Map<String, dynamic> json) {
     dateAdded = json['dateAdded'] ?? DateTime.now().millisecondsSinceEpoch;
     track = (json['track'] as String).toTrack;
-    isYT = json['isYT'] ?? false;
+    source = TrackSource.values.getEnum(json['source']) ?? TrackSource.local;
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['dateAdded'] = dateAdded;
     data['track'] = track.path;
-    data['isYT'] = isYT;
+    data['source'] = source.convertToString;
 
     return data;
   }

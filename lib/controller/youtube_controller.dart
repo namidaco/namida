@@ -10,6 +10,7 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -174,10 +175,10 @@ class YoutubeController {
     String contents = await file.readAsString();
     if (contents.isNotEmpty) {
       final jsonResponse = jsonDecode(contents);
-      final historyPl = PlaylistController.inst.playlistList.firstWhere((p0) => p0.id == kPlaylistHistory);
+      final historyPl = PlaylistController.inst.playlistList.firstWhere((p0) => p0.name == kPlaylistHistory);
 
       /// Removing previous yt tracks.
-      removeYTTracksFromHistory();
+      PlaylistController.inst.removeSourceTracksFromHistory(TrackSource.youtube);
 
       /// Adding tracks that their link matches.
       for (final p in jsonResponse) {
@@ -185,17 +186,13 @@ class YoutubeController {
         final tr = Indexer.inst.tracksInfoList.firstWhereOrNull((element) => element.youtubeID == vh.id);
         if (tr != null) {
           for (final d in vh.datesWatched) {
-            PlaylistController.inst.addTrackToHistory([TrackWithDate(d, tr, true)]);
+            PlaylistController.inst.addTrackToHistory([TrackWithDate(d, tr, TrackSource.youtube)]);
             addedYTHistoryJsonToPlaylist.value++;
           }
         }
       }
       historyPl.tracks.sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
     }
-  }
-
-  void removeYTTracksFromHistory() {
-    PlaylistController.inst.removeWhereFromPlaylist(kPlaylistHistory, (element) => element.isYT);
   }
 }
 
