@@ -1409,3 +1409,60 @@ class NamidaSelectableAutoLinkText extends StatelessWidget {
     );
   }
 }
+
+class DefaultPlaylistCard extends StatelessWidget {
+  final Color colorScheme;
+  final IconData icon;
+  final String title;
+  final String text;
+  final String? playlistName;
+  final double? width;
+  final void Function()? onTap;
+
+  const DefaultPlaylistCard({super.key, required this.colorScheme, required this.icon, required this.title, this.text = '', this.playlistName, this.width, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      margin: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0),
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(colorScheme.withAlpha(10), context.theme.cardColor),
+        borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: colorScheme.withAlpha(200),
+                ),
+                const SizedBox(width: 10.0),
+                Expanded(
+                  child: Text(
+                    title.overflow,
+                    style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(10), context.textTheme.displayMedium!.color!)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 6.0),
+                Text(
+                  PlaylistController.inst.defaultPlaylists.firstWhereOrNull((element) => element.name == playlistName)?.tracks.length.toString() ?? text,
+                  style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(30), context.textTheme.displayMedium!.color!)),
+                ),
+                const SizedBox(width: 2.0),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

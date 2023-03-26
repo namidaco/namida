@@ -6,12 +6,15 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
+import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
@@ -115,7 +118,64 @@ class PlaylistsPage extends StatelessWidget {
                           ),
                         ),
                       const SliverPadding(padding: EdgeInsets.only(top: 6.0)),
-                      if (playlistGridCount == 1) ...[
+
+                      /// Default Playlists.
+                      SliverToBoxAdapter(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Column(
+                              children: [
+                                DefaultPlaylistCard(
+                                  width: context.width / 2.4,
+                                  colorScheme: Colors.grey,
+                                  icon: Broken.refresh,
+                                  title: Language.inst.HISTORY,
+                                  playlistName: kPlaylistHistory,
+                                  onTap: () => NamidaOnTaps.inst.onPlaylistTap(
+                                    PlaylistController.inst.defaultPlaylists.firstWhere((element) => element.name == kPlaylistHistory),
+                                  ),
+                                ),
+                                DefaultPlaylistCard(
+                                  width: context.width / 2.4,
+                                  colorScheme: Colors.red,
+                                  icon: Broken.heart,
+                                  title: Language.inst.FAVOURITES,
+                                  playlistName: kPlaylistFavourites,
+                                  onTap: () => NamidaOnTaps.inst.onPlaylistTap(
+                                    PlaylistController.inst.defaultPlaylists.firstWhere((element) => element.name == kPlaylistFavourites),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 12.0),
+                            Column(
+                              children: [
+                                DefaultPlaylistCard(
+                                  width: context.width / 2.4,
+                                  colorScheme: Colors.green,
+                                  icon: Broken.award,
+                                  title: Language.inst.MOST_PLAYED,
+                                  playlistName: kPlaylistMostPlayed,
+                                  onTap: () => NamidaOnTaps.inst.onPlaylistTap(
+                                    PlaylistController.inst.defaultPlaylists.firstWhere((element) => element.name == kPlaylistMostPlayed),
+                                  ),
+                                ),
+                                DefaultPlaylistCard(
+                                  width: context.width / 2.4,
+                                  colorScheme: Colors.blue,
+                                  icon: Broken.driver,
+                                  title: Language.inst.QUEUES,
+                                  text: QueueController.inst.queueList.length.toString(),
+                                  onTap: () => Get.to(() => QueuesPage()),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SliverPadding(padding: EdgeInsets.only(top: 10.0)),
+                      if (playlistGridCount == 1)
                         SliverList(
                           delegate: SliverChildBuilderDelegate(
                             (context, i) {
@@ -125,7 +185,7 @@ class PlaylistsPage extends StatelessWidget {
                                 child: PlaylistTile(
                                   playlist: playlist,
                                   onTap: tracksToAdd != null
-                                      ? () => PlaylistController.inst.addTracksToPlaylist(playlist.id, tracksToAdd!)
+                                      ? () => PlaylistController.inst.addTracksToPlaylist(playlist.name, tracksToAdd!)
                                       : () => NamidaOnTaps.inst.onPlaylistTap(playlist),
                                 ),
                               );
@@ -133,7 +193,6 @@ class PlaylistsPage extends StatelessWidget {
                             childCount: PlaylistController.inst.playlistSearchList.length,
                           ),
                         ),
-                      ],
                       if (playlistGridCount > 1)
                         SliverGrid(
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -148,7 +207,7 @@ class PlaylistsPage extends StatelessWidget {
                                 columnCount: PlaylistController.inst.playlistSearchList.length,
                                 position: i,
                                 child: MultiArtworkCard(
-                                  heroTag: 'parent_playlist_artwork_${playlist.id}',
+                                  heroTag: 'parent_playlist_artwork_${playlist.name}',
                                   tracks: playlist.tracks.map((e) => e.track).toList(),
                                   name: playlist.name.translatePlaylistName,
                                   gridCount: playlistGridCount,
