@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:namida/class/folder.dart';
 
+import 'package:namida/class/folder.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -49,13 +49,8 @@ class FoldersPage extends StatelessWidget {
                       message: Language.inst.SET_AS_DEFAULT,
                       child: NamidaIconButton(
                         icon: SettingsController.inst.defaultFolderStartupLocation.value == Folders.inst.currentPath.value ? Broken.archive_tick : Broken.save_2,
-                        onPressed: () {
-                          if (Folders.inst.isHome.value) {
-                            SettingsController.inst.save(defaultFolderStartupLocation: kStoragePaths.first);
-                          } else {
-                            SettingsController.inst.save(defaultFolderStartupLocation: Folders.inst.currentPath.value);
-                          }
-                        },
+                        onPressed: () =>
+                            SettingsController.inst.save(defaultFolderStartupLocation: Folders.inst.isHome.value ? kStoragePaths.first : Folders.inst.currentPath.value),
                       ),
                     ),
                   ),
