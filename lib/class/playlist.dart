@@ -1,7 +1,6 @@
 import 'package:namida/class/track.dart';
 
 class Playlist {
-  late int id;
   late String name;
   late List<TrackWithDate> tracks;
   late int date;
@@ -9,7 +8,6 @@ class Playlist {
   late List<String> modes;
 
   Playlist(
-    this.id,
     this.name,
     this.tracks,
     this.date,
@@ -18,7 +16,6 @@ class Playlist {
   );
 
   Playlist.fromJson(Map<String, dynamic> json) {
-    id = json['id'] ?? 0;
     name = json['name'] ?? '';
     tracks = List<TrackWithDate>.from((json['tracks'] ?? []).map((track) => TrackWithDate.fromJson(track)).toList());
     date = json['date'] ?? DateTime.now().millisecondsSinceEpoch;
@@ -28,8 +25,6 @@ class Playlist {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-
-    data['id'] = id;
     data['name'] = name;
     data['tracks'] = tracks.map((track) => track.toJson()).toList();
     data['date'] = date;

@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:get/get.dart';
 import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
 
+import 'package:namida/core/extensions.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -63,36 +65,43 @@ class QueueController extends GetxController {
       queueList.last.tracks.assignAll(tracks);
       await _dbstore.record(queueList.last.date).update(_db, queueList.last.toJson());
     }
+
+    await File(kLatestQueueFilePath).writeAsString(json.encode(tracks.map((element) => element.path).toList()));
   }
 
   ///
-  Future<void> prepareQueuesFile({File? file}) async {
+  Future<void> prepareQueuesFile() async {
     _db = await databaseFactoryIo.openDatabase(kQueuesDBPath);
     _dbstore = StoreRef.main();
     final trwt = await _dbstore.find(_db);
     if (trwt.isNotEmpty) {
       for (final t in trwt) {
+        // prevents freezing the ui. cheap alternative for Isolate/compute.
+        await Future.delayed(Duration.zero);
         queueList.add(Queue.fromJson(t.value as Map<String, dynamic>));
       }
     }
-
-    await prepareLatestQueueFile();
   }
 
   ///
   Future<void> prepareLatestQueueFile() async {
-    if (queueList.isEmpty || queueList.last.tracks.isEmpty) {
+    final file = await File(kLatestQueueFilePath).create();
+    final String content = await file.readAsString();
+    if (content.isNotEmpty) {
+      final txt = List<String>.from(json.decode(content));
+      latestQueue.assignAll(txt.map((e) => e.toTrack).toList());
+    }
+  }
+
+  /// Assigns the last queue to the [Player]
+  Future<void> putLatestQueue() async {
+    if (latestQueue.isEmpty) {
       return;
     }
-    latestQueue.assignAll(queueList.last.tracks);
-
-    // Assign the last queue to the [Player]
-
     final latestTrack = latestQueue.firstWhere(
       (element) => element.path == SettingsController.inst.lastPlayedTrackPath.value,
       orElse: () => latestQueue.first,
     );
-
     await Player.inst.playOrPause(
       latestQueue.indexOf(latestTrack),
       latestQueue.toList(),

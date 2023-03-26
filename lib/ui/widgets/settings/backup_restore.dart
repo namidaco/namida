@@ -77,10 +77,13 @@ class BackupAndRestore extends StatelessWidget {
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(kPlaylistsDBPath),
+                                active: isActive(kPlaylistsDBPath) && isActive(kDefaultPlaylistsFilePath),
                                 title: Language.inst.PLAYLISTS,
                                 icon: Broken.music_library_2,
-                                onTap: () => onItemTap(kPlaylistsDBPath),
+                                onTap: () {
+                                  onItemTap(kPlaylistsDBPath);
+                                  onItemTap(kDefaultPlaylistsFilePath);
+                                },
                               ),
                               const SizedBox(
                                 height: 12.0,
@@ -113,10 +116,13 @@ class BackupAndRestore extends StatelessWidget {
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(kQueuesDBPath),
+                                active: isActive(kQueuesDBPath) && isActive(kLatestQueueFilePath),
                                 title: Language.inst.QUEUES,
                                 icon: Broken.driver,
-                                onTap: () => onItemTap(kQueuesDBPath),
+                                onTap: () {
+                                  onItemTap(kQueuesDBPath);
+                                  onItemTap(kLatestQueueFilePath);
+                                },
                               ),
                               const SizedBox(
                                 height: 12.0,

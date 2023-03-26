@@ -308,11 +308,6 @@ class SortByMenuPlaylist extends StatelessWidget {
               onTap: () => PlaylistController.inst.sortPlaylists(reverse: !SettingsController.inst.playlistSortReversed.value),
             ),
             SmallListTile(
-              title: Language.inst.DEFAULT,
-              active: playlistSort == GroupSortType.defaultSort,
-              onTap: () => PlaylistController.inst.sortPlaylists(sortBy: GroupSortType.defaultSort),
-            ),
-            SmallListTile(
               title: Language.inst.TITLE,
               active: playlistSort == GroupSortType.title,
               onTap: () => PlaylistController.inst.sortPlaylists(sortBy: GroupSortType.title),

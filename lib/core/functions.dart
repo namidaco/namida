@@ -93,14 +93,14 @@ class NamidaOnTaps {
 
   void onRemoveTrackFromPlaylist(int index, Playlist playlist) {
     final track = playlist.tracks.elementAt(index);
-    PlaylistController.inst.removeTrackFromPlaylist(playlist.id, index);
+    PlaylistController.inst.removeTrackFromPlaylist(playlist.name, index);
     Get.snackbar(
       Language.inst.UNDO_CHANGES,
       Language.inst.UNDO_CHANGES_DELETED_TRACK,
       mainButton: TextButton(
         onPressed: () {
           PlaylistController.inst.insertTracksInPlaylist(
-            playlist.id,
+            playlist.name,
             [track],
             index,
           );
@@ -150,7 +150,7 @@ List<Track> getRandomTracks([int? min, int? max]) {
 
 List<Track> generateRecommendedTrack(Track track) {
   final gentracks = <Track>[];
-  final historytracks = PlaylistController.inst.playlistList.firstWhere((element) => element.id == kPlaylistHistory).tracks.map((e) => e.track).toList();
+  final historytracks = PlaylistController.inst.playlistList.firstWhere((element) => element.name == kPlaylistHistory).tracks.map((e) => e.track).toList();
   if (historytracks.isEmpty) {
     return [];
   }
@@ -172,12 +172,12 @@ List<Track> generateRecommendedTrack(Track track) {
 }
 
 List<Track> generateTracksFromDates(int oldestDate, int newestDate) {
-  final historytracks = PlaylistController.inst.playlistList.firstWhere((element) => element.id == kPlaylistHistory).tracks;
+  final historytracks = PlaylistController.inst.playlistList.firstWhere((element) => element.name == kPlaylistHistory).tracks;
   return historytracks.where((element) => element.dateAdded >= oldestDate && element.dateAdded <= (newestDate + 1.days.inMilliseconds)).map((e) => e.track).toSet().toList();
 }
 
 Future<Track?> convertPathToTrack(String trackPath) async {
-  final trako = Indexer.inst.tracksInfoList.firstWhereOrNull((element) => element.path == trackPath);
+  final trako = Indexer.inst.tracksInfoList.firstWhereOrNull((element) => element.filename == trackPath.getFilename);
   if (trako != null) {
     return trako;
   }

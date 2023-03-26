@@ -11,7 +11,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/main.dart';
+import 'package:namida/main_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
@@ -27,7 +27,7 @@ class PlaylisTracksPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMostPlayedPlaylist = playlist.id == kPlaylistMostPlayed;
+    final isMostPlayedPlaylist = playlist.name == kPlaylistMostPlayed;
     return MainPageWrapper(
       actionsToAdd: [
         if (!isMostPlayedPlaylist)
@@ -50,14 +50,15 @@ class PlaylisTracksPage extends StatelessWidget {
       child: AnimationLimiter(
         child: Obx(
           () {
-            final rxplaylist = PlaylistController.inst.playlistList.firstWhere((element) => element == playlist);
+            final rxplaylist = PlaylistController.inst.defaultPlaylists.firstWhereOrNull((element) => element == playlist) ??
+                PlaylistController.inst.playlistList.firstWhere((element) => element == playlist);
             final finalTracks = isMostPlayedPlaylist ? PlaylistController.inst.topTracksMap.keys.toList() : rxplaylist.tracks.map((e) => e.track).toList();
             final topContainer = SubpagesTopContainer(
               title: playlist.name.translatePlaylistName,
               subtitle: [finalTracks.displayTrackKeyword, playlist.date.dateFormatted].join(' - '),
               thirdLineText: playlist.modes.isNotEmpty ? playlist.modes.join(', ') : '',
               imageWidget: MultiArtworkContainer(
-                heroTag: 'playlist_artwork_${playlist.id}',
+                heroTag: 'playlist_artwork_${playlist.name}',
                 size: Get.width * 0.35,
                 tracks: finalTracks,
               ),
@@ -116,8 +117,8 @@ class PlaylisTracksPage extends StatelessWidget {
                                 newIndex -= 1;
                               }
                               final item = rxplaylist.tracks.elementAt(oldIndex);
-                              PlaylistController.inst.removeTrackFromPlaylist(rxplaylist.id, oldIndex);
-                              PlaylistController.inst.insertTracksInPlaylist(rxplaylist.id, [item], newIndex);
+                              PlaylistController.inst.removeTrackFromPlaylist(rxplaylist.name, oldIndex);
+                              PlaylistController.inst.insertTracksInPlaylist(rxplaylist.name, [item], newIndex);
                             },
                             children: [
                               ...playlist.tracks
@@ -140,7 +141,7 @@ class PlaylisTracksPage extends StatelessWidget {
                                               queue: rxplaylist.tracks.map((e) => e.track).toList(),
                                               playlist: rxplaylist,
                                               draggableThumbnail: shouldReorder.value,
-                                              thirdLineText: playlist.id == kPlaylistHistory ? track.value.dateAdded.dateAndClockFormattedOriginal : '',
+                                              thirdLineText: playlist.name == kPlaylistHistory ? track.value.dateAdded.dateAndClockFormattedOriginal : '',
                                             ),
                                             Obx(() => ThreeLineSmallContainers(enabled: shouldReorder.value)),
                                           ],
