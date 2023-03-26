@@ -3,13 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:searchbar_animation/searchbar_animation.dart';
 
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/main.dart';
+import 'package:namida/main_page.dart';
 import 'package:namida/ui/pages/search_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -27,6 +29,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ScrollSearchController.inst.animatePageController(SettingsController.inst.selectedLibraryTab.value.toInt);
     return Obx(
       () {
         return Scaffold(
@@ -176,7 +179,7 @@ class HomePage extends StatelessWidget {
               Transform.scale(
                 scale: 1 - (ScrollSearchController.inst.miniplayerHeightPercentage.value * 0.05),
                 child: child ??
-                    (SettingsController.inst.enableBottomNavBar.value
+                    (SettingsController.inst.enableBottomNavBar.value && SettingsController.inst.enableScrollingNavigation.value
                         ? PageView(
                             controller: ScrollSearchController.inst.homepageController,
                             onPageChanged: (page) {

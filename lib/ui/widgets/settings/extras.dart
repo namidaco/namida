@@ -40,6 +40,15 @@ class ExtrasSettings extends StatelessWidget {
           ),
           Obx(
             () => CustomSwitchListTile(
+              icon: Broken.slider_horizontal,
+              title: Language.inst.ENABLE_SCROLLING_NAVIGATION,
+              subtitle: Language.inst.ENABLE_SCROLLING_NAVIGATION_SUBTITLE,
+              value: SettingsController.inst.enableScrollingNavigation.value,
+              onChanged: (p0) => SettingsController.inst.save(enableScrollingNavigation: !p0),
+            ),
+          ),
+          Obx(
+            () => CustomSwitchListTile(
               icon: Broken.video_square,
               title: Language.inst.USE_YOUTUBE_MINIPLAYER,
               value: SettingsController.inst.useYoutubeMiniplayer.value,

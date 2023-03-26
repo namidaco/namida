@@ -88,6 +88,7 @@ class SettingsController extends GetxController {
   final RxBool displayFavouriteButtonInNotification = false.obs;
   final RxBool enableSearchCleanup = false.obs;
   final RxBool enableBottomNavBar = true.obs;
+  final RxBool enableScrollingNavigation = true.obs;
   final RxBool useYoutubeMiniplayer = false.obs;
 
   final Rx<RepeatMode> playerRepeatMode = RepeatMode.none.obs;
@@ -202,6 +203,7 @@ class SettingsController extends GetxController {
       displayFavouriteButtonInNotification.value = json['displayFavouriteButtonInNotification'] ?? displayFavouriteButtonInNotification.value;
       enableSearchCleanup.value = json['enableSearchCleanup'] ?? enableSearchCleanup.value;
       enableBottomNavBar.value = json['enableBottomNavBar'] ?? enableBottomNavBar.value;
+      enableScrollingNavigation.value = json['enableScrollingNavigation'] ?? enableScrollingNavigation.value;
       useYoutubeMiniplayer.value = json['useYoutubeMiniplayer'] ?? useYoutubeMiniplayer.value;
 
       playerRepeatMode.value = RepeatMode.values.getEnum(json['playerRepeatMode']) ?? playerRepeatMode.value;
@@ -299,6 +301,7 @@ class SettingsController extends GetxController {
       'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
       'enableSearchCleanup': enableSearchCleanup.value,
       'enableBottomNavBar': enableBottomNavBar.value,
+      'enableScrollingNavigation': enableScrollingNavigation.value,
       'useYoutubeMiniplayer': useYoutubeMiniplayer.value,
       'playerRepeatMode': playerRepeatMode.value.convertToString,
       'trackPlayMode': trackPlayMode.value.convertToString,
@@ -392,6 +395,7 @@ class SettingsController extends GetxController {
     bool? displayFavouriteButtonInNotification,
     bool? enableSearchCleanup,
     bool? enableBottomNavBar,
+    bool? enableScrollingNavigation,
     bool? useYoutubeMiniplayer,
     RepeatMode? playerRepeatMode,
     TrackPlayMode? trackPlayMode,
@@ -662,6 +666,9 @@ class SettingsController extends GetxController {
     }
     if (enableBottomNavBar != null) {
       this.enableBottomNavBar.value = enableBottomNavBar;
+    }
+    if (enableScrollingNavigation != null) {
+      this.enableScrollingNavigation.value = enableScrollingNavigation;
     }
     if (useYoutubeMiniplayer != null) {
       this.useYoutubeMiniplayer.value = useYoutubeMiniplayer;
