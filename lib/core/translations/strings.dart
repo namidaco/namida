@@ -216,6 +216,8 @@ class Language {
   String get DEFAULT_LIBRARY_TAB => 'Default Library Tab';
   String get USE_COLLAPSED_SETTING_TILES => 'Use Collapsed Setting Tiles';
   String get ENABLE_FOLDERS_HIERARCHY => 'Enable Folders Hierarchy';
+  String get ENABLE_SCROLLING_NAVIGATION => 'Enable Scrolling Navigation';
+  String get ENABLE_SCROLLING_NAVIGATION_SUBTITLE => 'Swipe horizontally to navigate between pages';
 
   /// Backup & Restore
 

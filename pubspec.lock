@@ -36,10 +36,11 @@ packages:
   audio_service:
     dependency: "direct main"
     description:
-      name: audio_service
-      sha256: "7e86d7ce23caad605199f7b25e548fe7b618fb0c150fa0585f47a910fe7e7a67"
-      url: "https://pub.dev"
-    source: hosted
+      path: audio_service
+      ref: HEAD
+      resolved-ref: de55a111e9cb60022e70988e45ad29596402b203
+      url: "https://github.com/MSOB7YY/audio_service"
+    source: git
     version: "0.18.9"
   audio_service_platform_interface:
     dependency: transitive
@@ -117,10 +118,10 @@ packages:
     dependency: transitive
     description:
       name: characters
-      sha256: "04a925763edad70e8443c99234dc3328f442e811f1d8fd1a72f1c8ad0f69a605"
+      sha256: e6a326c8af69605aec75ed6c187d06b349707a27fbff8222ca9cc2cff167975c
       url: "https://pub.dev"
     source: hosted
-    version: "1.3.0"
+    version: "1.2.1"
   checkmark:
     dependency: "direct main"
     description:
@@ -141,10 +142,10 @@ packages:
     dependency: transitive
     description:
       name: collection
-      sha256: "4a07be6cb69c84d677a6c3096fcf960cc3285a8330b4603e0d463d15d9bd934c"
+      sha256: cfc915e6923fe5ce6e153b0723c753045de46de1b4d63771530504004a45fae0
       url: "https://pub.dev"
     source: hosted
-    version: "1.17.1"
+    version: "1.17.0"
   connectivity_plus:
     dependency: "direct main"
     description:
@@ -492,10 +493,10 @@ packages:
     dependency: transitive
     description:
       name: js
-      sha256: f2c445dce49627136094980615a031419f7f3eb393237e4ecd97ac15dea343f3
+      sha256: "5528c2f391ededb7775ec1daa69e65a2d61276f7552de2b5f7b8d34ee9fd4ab7"
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.7"
+    version: "0.6.5"
   json_annotation:
     dependency: transitive
     description:
@@ -564,10 +565,10 @@ packages:
     dependency: transitive
     description:
       name: matcher
-      sha256: c94db23593b89766cda57aab9ac311e3616cf87c6fa4e9749df032f66f30dcb8
+      sha256: "16db949ceee371e9b99d22f88fa3a73c4e59fd0afed0bd25fc336eb76c198b72"
       url: "https://pub.dev"
     source: hosted
-    version: "0.12.14"
+    version: "0.12.13"
   material_color_utilities:
     dependency: transitive
     description:
@@ -580,10 +581,10 @@ packages:
     dependency: transitive
     description:
       name: meta
-      sha256: "12307e7f0605ce3da64cf0db90e5fcab0869f3ca03f76be6bb2991ce0a55e82b"
+      sha256: "6c268b42ed578a53088d834796959e4a1814b5e9e164f147f580a386e5decf42"
       url: "https://pub.dev"
     source: hosted
-    version: "1.9.0"
+    version: "1.8.0"
   mime:
     dependency: transitive
     description:
@@ -621,7 +622,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: c47809de42140aa507a0fa5cb2109efe6923f332
+      resolved-ref: "79f4eef9b6ed5eb0c2acfc64984de821a2369eb4"
       url: "https://github.com/MSOB7YY/on_audio_edit"
     source: git
     version: "1.5.1"
@@ -629,26 +630,34 @@ packages:
     dependency: "direct main"
     description:
       name: on_audio_query
-      sha256: bc07b82fc761c9599fe999b07b1a7c839c56604160acaf65777b4d5a00f68666
+      sha256: "6c00693f25aa6427d26ec398ce671c7580cc9ff614264f2756c33659194342ae"
       url: "https://pub.dev"
     source: hosted
-    version: "2.6.2"
+    version: "3.0.0-beta.0"
+  on_audio_query_android:
+    dependency: transitive
+    description:
+      name: on_audio_query_android
+      sha256: e38bc86dec85c640d612426596e74f0bce71278d4d2411f3b753978642191d8b
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0-prerelease.0"
+  on_audio_query_ios:
+    dependency: transitive
+    description:
+      name: on_audio_query_ios
+      sha256: "5d831c98ae21ba571641e1a91773e8f519fbeb936626c2ec719c0bd06559b6dc"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0-prerelease.0"
   on_audio_query_platform_interface:
     dependency: transitive
     description:
       name: on_audio_query_platform_interface
-      sha256: "3d4a3d6a4c4ceb4d64b715b21f0f887bf10718c0cf51d2965bdf9bf9371ca7b4"
+      sha256: "69a9ae65229df7479b0d1bfd01a224142300f5d08bb6ed0bedfdf0a9d8049bd6"
       url: "https://pub.dev"
     source: hosted
-    version: "1.4.0"
-  on_audio_query_web:
-    dependency: transitive
-    description:
-      name: on_audio_query_web
-      sha256: "4e7028187354530b1d88441fd1e18ecd63539dd5306cea5adc3dc6bf92382aed"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.3.2+2"
+    version: "2.0.0-beta.0"
   palette_generator:
     dependency: "direct main"
     description:
@@ -661,10 +670,10 @@ packages:
     dependency: transitive
     description:
       name: path
-      sha256: "8829d8a55c13fc0e37127c29fedf290c102f4e40ae94ada574091fe0ff96c917"
+      sha256: db9d4f58c908a4ba5953fcee2ae317c94889433e5024c27ce74a37f94267945b
       url: "https://pub.dev"
     source: hosted
-    version: "1.8.3"
+    version: "1.8.2"
   path_provider:
     dependency: "direct main"
     description:
@@ -741,10 +750,10 @@ packages:
     dependency: transitive
     description:
       name: permission_handler_apple
-      sha256: "9c370ef6a18b1c4b2f7f35944d644a56aa23576f23abee654cf73968de93f163"
+      sha256: ee96ac32f5a8e6f80756e25b25b9f8e535816c8e6665a96b6d70681f8c4f7e85
       url: "https://pub.dev"
     source: hosted
-    version: "9.0.7"
+    version: "9.0.8"
   permission_handler_platform_interface:
     dependency: transitive
     description:
@@ -765,10 +774,10 @@ packages:
     dependency: transitive
     description:
       name: petitparser
-      sha256: a9346a3fbba7546a28374bdbcd7f54ea48bb47772bf3a7ab4bfaadc40bc8b8c6
+      sha256: "49392a45ced973e8d94a85fdb21293fbb40ba805fc49f2965101ae748a3683b4"
       url: "https://pub.dev"
     source: hosted
-    version: "5.3.0"
+    version: "5.1.0"
   platform:
     dependency: transitive
     description:
@@ -825,6 +834,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.3"
+  receive_sharing_intent:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "7015e12bcef91734b6d9cc0acef73bd0cc249c57"
+      url: "https://github.com/FredJul/receive_sharing_intent"
+    source: git
+    version: "1.4.5"
   rxdart:
     dependency: transitive
     description:
@@ -962,10 +980,10 @@ packages:
     dependency: transitive
     description:
       name: test_api
-      sha256: "6182294da5abf431177fccc1ee02401f6df30f766bc6130a0852c6b6d7ee6b2d"
+      sha256: ad540f65f92caa91bf21dfc8ffb8c589d6e4dc0c2267818b4cc2792857706206
       url: "https://pub.dev"
     source: hosted
-    version: "0.4.18"
+    version: "0.4.16"
   timeago:
     dependency: "direct main"
     description:
@@ -1215,5 +1233,5 @@ packages:
     source: hosted
     version: "1.12.4"
 sdks:
-  dart: ">=3.0.0-290.1.beta <4.0.0"
+  dart: ">=2.19.4 <3.0.0"
   flutter: ">=3.7.0"

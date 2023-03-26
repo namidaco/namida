@@ -20,7 +20,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0-290.1.beta <4.0.0'
+  sdk: '>=2.19.4 <3.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -51,6 +51,9 @@ dependencies:
   readmore: ^2.2.0
   calendar_date_picker2: ^0.4.9
   receive_intent: ^0.2.3
+  receive_sharing_intent:
+    git:
+      url: https://github.com/FredJul/receive_sharing_intent
 
 
   # Path/File Providers
@@ -60,12 +63,15 @@ dependencies:
  
 
   # Audio Indexing & Playback
-  on_audio_query: ^2.6.2
+  on_audio_query: ^3.0.0-beta.0
   on_audio_edit:
     git:
       url: https://github.com/MSOB7YY/on_audio_edit
   just_audio: ^0.9.32
-  audio_service: ^0.18.9
+  audio_service:
+    git:
+      url: https://github.com/MSOB7YY/audio_service
+      path: audio_service/
   audio_waveforms: ^1.0.3
 
   # Video Playback
