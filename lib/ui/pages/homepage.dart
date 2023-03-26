@@ -29,7 +29,6 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ScrollSearchController.inst.animatePageController(SettingsController.inst.selectedLibraryTab.value.toInt);
     return Obx(
       () {
         return Scaffold(
@@ -86,7 +85,6 @@ class HomePage extends StatelessWidget {
                     },
                     hintText: Language.inst.SEARCH,
                     searchBoxWidth: context.width / 1.2,
-                    searchBoxHeight: 180,
                     buttonColour: Colors.transparent,
                     enableBoxShadow: false,
                     buttonShadowColour: Colors.transparent,
