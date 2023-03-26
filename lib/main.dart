@@ -2,7 +2,6 @@
 
 import 'dart:io';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -13,9 +12,9 @@ import 'package:get/get.dart';
 import 'package:on_audio_edit/on_audio_edit.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:receive_intent/receive_intent.dart' as intent;
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
-import 'package:namida/controller/youtube_controller.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -25,22 +24,12 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
-import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/core/translations/translations.dart';
-import 'package:namida/packages/inner_drawer.dart';
-import 'package:namida/packages/miniplayer.dart';
-import 'package:namida/ui/pages/homepage.dart';
-import 'package:namida/ui/pages/queues_page.dart';
-import 'package:namida/ui/pages/settings_page.dart';
-import 'package:namida/ui/pages/youtube_page.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/selected_tracks_preview.dart';
-import 'package:namida/ui/widgets/settings/customizations.dart';
-import 'package:namida/ui/widgets/settings/theme_setting.dart';
+
+import 'package:namida/main_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -125,35 +114,46 @@ void main() async {
   await PlaylistController.inst.prepareDefaultPlaylistsFile();
   await QueueController.inst.prepareLatestQueueFile();
   await Player.inst.initializePlayer();
-  await Future.wait([
-    PlaylistController.inst.preparePlaylistFile(),
-    QueueController.inst.prepareQueuesFile(),
-  ]);
+  await QueueController.inst.putLatestQueue();
+
+  /// Clearing files cached by intents
+  final cacheDirFiles = await getTemporaryDirectory().then((value) => value.listSync());
+  for (final cf in cacheDirFiles) {
+    if (cf is File) {
+      cf.deleteSync();
+    }
+  }
 
   /// Recieving Initial Android Shared Intent.
-  final intentfile = await intent.ReceiveIntent.getInitialIntent();
-  if (intentfile != null && intentfile.extra?['real_path'] != null) {
-    final playedsuccessfully = await playExternalFile(intentfile.extra?['real_path']);
+  final intentfiles = await ReceiveSharingIntent.getInitialMedia();
+  if (intentfiles.isNotEmpty) {
+    final playedsuccessfully = await playExternalFile(intentfiles.map((e) => e.path).toList());
     if (!playedsuccessfully) {
       Get.snackbar(Language.inst.ERROR, Language.inst.COULDNT_PLAY_FILE);
     }
   }
 
   /// Listening to Android Shared Intents.
-  intent.ReceiveIntent.receivedIntentStream.listen((intent.Intent? intent) async {
-    playExternalFile(intent?.extra?['real_path']);
+  /// Opening multiple files sometimes crashes the app.
+  ReceiveSharingIntent.getMediaStream().listen((event) async {
+    await playExternalFile(event.map((e) => e.path).toList());
   }, onError: (err) {
     Get.snackbar(Language.inst.ERROR, Language.inst.COULDNT_PLAY_FILE);
   });
-
   runApp(const MyApp());
 }
 
 /// returns [true] if played successfully.
-Future<bool> playExternalFile(String path) async {
-  final tr = await convertPathToTrack(path);
-  if (tr != null) {
-    Player.inst.playOrPause(0, [tr]);
+Future<bool> playExternalFile(List<String> paths) async {
+  final List<Track> trs = [];
+  for (final p in paths) {
+    final tr = await convertPathToTrack(p);
+    if (tr != null) {
+      trs.add(tr);
+    }
+  }
+  if (trs.isNotEmpty) {
+    await Player.inst.playOrPause(0, trs);
     return true;
   }
   return false;
