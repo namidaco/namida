@@ -193,22 +193,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      onPointerDown: (_) {
-        Get.focusScope?.unfocus();
+    return GetMaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Namida',
+      theme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, true),
+      darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, false),
+      themeMode: SettingsController.inst.themeMode.value,
+      translations: MyTranslation(),
+      builder: (context, widget) {
+        return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
       },
-      child: GetMaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Namida',
-        theme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, true),
-        darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, false),
-        themeMode: SettingsController.inst.themeMode.value,
-        translations: MyTranslation(),
-        builder: (context, widget) {
-          return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
-        },
-        home: MainPageWrapper(),
-      ),
+      home: MainPageWrapper(),
     );
   }
 }
