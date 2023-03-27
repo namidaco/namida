@@ -101,6 +101,12 @@ class MiniplayerCustomization extends StatelessWidget {
               ),
             ),
           ),
+          CustomSwitchListTile(
+            icon: Broken.text_block,
+            title: Language.inst.DISPLAY_AUDIO_INFO_IN_MINIPLAYER,
+            onChanged: (value) => SettingsController.inst.save(displayAudioInfoMiniplayer: !value),
+            value: SettingsController.inst.displayAudioInfoMiniplayer.value,
+          ),
         ],
       ),
     );

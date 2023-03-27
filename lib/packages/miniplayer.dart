@@ -837,11 +837,17 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                         const SizedBox(
                                           width: 8.0,
                                         ),
-                                        if (!SettingsController.inst.enableVideoPlayback.value)
+                                        if (!SettingsController.inst.enableVideoPlayback.value) ...[
                                           Text(
                                             Language.inst.AUDIO,
                                             style: TextStyle(color: onSecondary),
                                           ),
+                                          if (SettingsController.inst.displayAudioInfoMiniplayer.value)
+                                            Text(
+                                              " • ${Player.inst.nowPlayingTrack.value.audioInfoFormattedCompact}",
+                                              style: TextStyle(color: context.theme.colorScheme.onPrimaryContainer, fontSize: 10.0.multipliedFontScale),
+                                            ),
+                                        ],
                                         if (SettingsController.inst.enableVideoPlayback.value) ...[
                                           Text(
                                             Language.inst.VIDEO,

@@ -282,6 +282,7 @@ class Language {
   String get ANIMATING_THUMBNAIL_INVERSED => 'Inverse Animations';
   String get ANIMATING_THUMBNAIL_INVERSED_SUBTITLE => 'High peaks will cause the thumbnail to get smaller';
   String get WAVEFORM_BARS_COUNT => 'Waveform Bars Count';
+  String get DISPLAY_AUDIO_INFO_IN_MINIPLAYER => 'Display Audio Info';
 
   /// Extras
   String get DATE_TIME_FORMAT => 'Date Time Format';

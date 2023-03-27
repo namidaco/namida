@@ -92,6 +92,7 @@ class SettingsController extends GetxController {
   final RxBool enableScrollingNavigation = true.obs;
   final RxBool useYoutubeMiniplayer = false.obs;
   final RxBool playerPlayOnNextPrev = true.obs;
+  final RxBool displayAudioInfoMiniplayer = false.obs;
 
   final Rx<RepeatMode> playerRepeatMode = RepeatMode.none.obs;
   final Rx<TrackPlayMode> trackPlayMode = TrackPlayMode.searchResults.obs;
@@ -208,6 +209,7 @@ class SettingsController extends GetxController {
       enableScrollingNavigation.value = json['enableScrollingNavigation'] ?? enableScrollingNavigation.value;
       useYoutubeMiniplayer.value = json['useYoutubeMiniplayer'] ?? useYoutubeMiniplayer.value;
       playerPlayOnNextPrev.value = json['playerPlayOnNextPrev'] ?? playerPlayOnNextPrev.value;
+      displayAudioInfoMiniplayer.value = json['displayAudioInfoMiniplayer'] ?? displayAudioInfoMiniplayer.value;
 
       playerRepeatMode.value = RepeatMode.values.getEnum(json['playerRepeatMode']) ?? playerRepeatMode.value;
       trackPlayMode.value = TrackPlayMode.values.getEnum(json['trackPlayMode']) ?? trackPlayMode.value;
@@ -307,6 +309,7 @@ class SettingsController extends GetxController {
       'enableScrollingNavigation': enableScrollingNavigation.value,
       'useYoutubeMiniplayer': useYoutubeMiniplayer.value,
       'playerPlayOnNextPrev': playerPlayOnNextPrev.value,
+      'displayAudioInfoMiniplayer': displayAudioInfoMiniplayer.value,
       'playerRepeatMode': playerRepeatMode.value.convertToString,
       'trackPlayMode': trackPlayMode.value.convertToString,
 
@@ -402,6 +405,7 @@ class SettingsController extends GetxController {
     bool? enableScrollingNavigation,
     bool? useYoutubeMiniplayer,
     bool? playerPlayOnNextPrev,
+    bool? displayAudioInfoMiniplayer,
     RepeatMode? playerRepeatMode,
     TrackPlayMode? trackPlayMode,
   }) {
@@ -680,6 +684,9 @@ class SettingsController extends GetxController {
     }
     if (playerPlayOnNextPrev != null) {
       this.playerPlayOnNextPrev.value = playerPlayOnNextPrev;
+    }
+    if (displayAudioInfoMiniplayer != null) {
+      this.displayAudioInfoMiniplayer.value = displayAudioInfoMiniplayer;
     }
     if (playerRepeatMode != null) {
       this.playerRepeatMode.value = playerRepeatMode;

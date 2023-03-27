@@ -285,12 +285,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
             height: 4.0,
           ),
           Text(
-            [
-              track.duration.milliseconds.label,
-              track.size.fileSizeFormatted,
-              "${track.bitrate} kps",
-              "${track.sampleRate} hz",
-            ].join(' • '),
+            track.audioInfoFormatted,
             style: Get.textTheme.displaySmall,
           ),
           const SizedBox(height: 4.0),

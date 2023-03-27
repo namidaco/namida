@@ -162,4 +162,16 @@ extension TrackUtils on Track {
   }
 
   String get youtubeID => youtubeLink.getYoutubeID;
+  String get audioInfoFormatted => [
+        Duration(milliseconds: duration).label,
+        size.fileSizeFormatted,
+        "$bitrate kps",
+        "$sampleRate hz",
+      ].join(' • ');
+  String get audioInfoFormattedCompact => [
+        format,
+        "$channels ch",
+        "$bitrate kps",
+        "${sampleRate / 1000} khz",
+      ].join(' • ');
 }
