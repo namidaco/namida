@@ -333,7 +333,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   Future<void> stop() async => await _player.stop();
 
   @override
-  Future<void> skipToNext([bool andPlay = true]) async {
+  Future<void> skipToNext([bool? andPlay]) async {
     if (isLastTrack) {
       skipToQueueItem(0, andPlay);
     } else {
@@ -351,8 +351,8 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   }
 
   @override
-  Future<void> skipToQueueItem(int index, [bool andPlay = true]) async {
-    await setAudioSource(index, startPlaying: andPlay);
+  Future<void> skipToQueueItem(int index, [bool? andPlay]) async {
+    await setAudioSource(index, startPlaying: andPlay ?? (SettingsController.inst.playerPlayOnNextPrev.value || isPlaying.value));
   }
 
   // End of  audio_service overriden methods.

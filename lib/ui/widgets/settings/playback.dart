@@ -250,6 +250,19 @@ class PlaybackSettings extends StatelessWidget {
             () => CustomSwitchListTile(
               leading: StackedIcon(
                 baseIcon: Broken.play,
+                secondaryIcon: Broken.record,
+                baseIconColor: context.theme.listTileTheme.iconColor,
+                secondaryIconColor: context.theme.listTileTheme.iconColor,
+              ),
+              title: Language.inst.PLAY_AFTER_NEXT_PREV,
+              onChanged: (value) => SettingsController.inst.save(playerPlayOnNextPrev: !value),
+              value: SettingsController.inst.playerPlayOnNextPrev.value,
+            ),
+          ),
+          Obx(
+            () => CustomSwitchListTile(
+              leading: StackedIcon(
+                baseIcon: Broken.play,
                 secondaryIcon: Broken.pause,
                 baseIconColor: context.theme.listTileTheme.iconColor,
                 secondaryIconColor: context.theme.listTileTheme.iconColor,

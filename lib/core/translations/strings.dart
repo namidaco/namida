@@ -114,7 +114,7 @@ class Language {
 
   /// Playback
   String get PLAYBACK_SETTING => 'Playback';
-  String get PLAYBACK_SETTING_SUBTITLE => 'Most of these setting can be accessed directly in the player by long pressing the video button';
+  String get PLAYBACK_SETTING_SUBTITLE => 'Can be accessed directly in the player by long pressing the video button';
   String get AUDIO => 'Audio';
   String get VIDEO => 'Video';
   String get LOCAL => 'Local';
@@ -135,6 +135,7 @@ class Language {
   String get VIDEO_QUALITY_SUBTITLE_NOTE => 'It\'s always good to keep more alternatives in case a quality isn\'t found, otherwise it will fallback to the worst quality';
   String get PLAY_FADE_DURATION => 'Play Fade Duration';
   String get PAUSE_FADE_DURATION => 'Pause Fade Duration';
+  String get PLAY_AFTER_NEXT_PREV => 'Auto Play on Next/Previous';
 
   // String get PRESS_FOR_MORE_INFO => 'Press for more info';
 

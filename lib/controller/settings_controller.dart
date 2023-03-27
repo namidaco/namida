@@ -91,6 +91,7 @@ class SettingsController extends GetxController {
   final RxBool enableBottomNavBar = true.obs;
   final RxBool enableScrollingNavigation = true.obs;
   final RxBool useYoutubeMiniplayer = false.obs;
+  final RxBool playerPlayOnNextPrev = true.obs;
 
   final Rx<RepeatMode> playerRepeatMode = RepeatMode.none.obs;
   final Rx<TrackPlayMode> trackPlayMode = TrackPlayMode.searchResults.obs;
@@ -206,6 +207,7 @@ class SettingsController extends GetxController {
       enableBottomNavBar.value = json['enableBottomNavBar'] ?? enableBottomNavBar.value;
       enableScrollingNavigation.value = json['enableScrollingNavigation'] ?? enableScrollingNavigation.value;
       useYoutubeMiniplayer.value = json['useYoutubeMiniplayer'] ?? useYoutubeMiniplayer.value;
+      playerPlayOnNextPrev.value = json['playerPlayOnNextPrev'] ?? playerPlayOnNextPrev.value;
 
       playerRepeatMode.value = RepeatMode.values.getEnum(json['playerRepeatMode']) ?? playerRepeatMode.value;
       trackPlayMode.value = TrackPlayMode.values.getEnum(json['trackPlayMode']) ?? trackPlayMode.value;
@@ -304,6 +306,7 @@ class SettingsController extends GetxController {
       'enableBottomNavBar': enableBottomNavBar.value,
       'enableScrollingNavigation': enableScrollingNavigation.value,
       'useYoutubeMiniplayer': useYoutubeMiniplayer.value,
+      'playerPlayOnNextPrev': playerPlayOnNextPrev.value,
       'playerRepeatMode': playerRepeatMode.value.convertToString,
       'trackPlayMode': trackPlayMode.value.convertToString,
 
@@ -398,6 +401,7 @@ class SettingsController extends GetxController {
     bool? enableBottomNavBar,
     bool? enableScrollingNavigation,
     bool? useYoutubeMiniplayer,
+    bool? playerPlayOnNextPrev,
     RepeatMode? playerRepeatMode,
     TrackPlayMode? trackPlayMode,
   }) {
@@ -673,6 +677,9 @@ class SettingsController extends GetxController {
     }
     if (useYoutubeMiniplayer != null) {
       this.useYoutubeMiniplayer.value = useYoutubeMiniplayer;
+    }
+    if (playerPlayOnNextPrev != null) {
+      this.playerPlayOnNextPrev.value = playerPlayOnNextPrev;
     }
     if (playerRepeatMode != null) {
       this.playerRepeatMode.value = playerRepeatMode;
