@@ -83,6 +83,7 @@ class NamidaDialogs {
         queue.tracks.totalDurationFormatted,
       ].join(' - '),
       extractColor: false,
+      queue: queue,
     );
   }
 }

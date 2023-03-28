@@ -6,11 +6,13 @@ import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
+import 'package:namida/class/queue.dart';
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -30,6 +32,7 @@ Future<void> showGeneralPopupDialog(
   String subtitle, {
   void Function()? onTopBarTap,
   Playlist? playlist,
+  Queue? queue,
   int? index,
   String thirdLineText = '',
   bool forceSquared = false,
@@ -392,6 +395,30 @@ Future<void> showGeneralPopupDialog(
                                 ),
                               ),
                             );
+                          },
+                        ),
+                      if (queue != null)
+                        SmallListTile(
+                          color: colorDelightened,
+                          compact: false,
+                          title: Language.inst.REMOVE_QUEUE,
+                          icon: Broken.pen_remove,
+                          onTap: () {
+                            final q = queue;
+                            final qindex = QueueController.inst.queueList.indexOf(q);
+                            QueueController.inst.removeQueue(queue);
+                            Get.snackbar(
+                              Language.inst.UNDO_CHANGES,
+                              Language.inst.UNDO_CHANGES_DELETED_QUEUE,
+                              mainButton: TextButton(
+                                onPressed: () {
+                                  QueueController.inst.insertQueue(q, qindex);
+                                  Get.closeAllSnackbars();
+                                },
+                                child: Text(Language.inst.UNDO),
+                              ),
+                            );
+                            Get.close(1);
                           },
                         ),
                       if (playlist != null && !isTrackInPlaylist)

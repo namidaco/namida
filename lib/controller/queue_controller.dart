@@ -44,6 +44,11 @@ class QueueController extends GetxController {
     await _dbstore.record(queue.date).delete(_db);
   }
 
+  void insertQueue(Queue queue, int index) async {
+    queueList.insert(index, queue);
+    await _dbstore.record(queue.date).put(_db, queue.toJson());
+  }
+
   // void removeQueues(List<Queue> queues) async {
   //   for (final pl in queues) {
   //     queueList.remove(pl);
