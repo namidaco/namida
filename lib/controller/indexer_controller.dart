@@ -199,7 +199,7 @@ class Indexer extends GetxController {
 
   Future<void> fetchAllSongsAndWriteToFile({required Set<String> audioFiles, required Set<String> deletedPaths, bool forceReIndex = true}) async {
     if (forceReIndex) {
-      print(tracksInfoList.length);
+      debugPrint(tracksInfoList.length.toString());
       tracksInfoList.clear();
       audioFiles = await getAudioFiles();
     } else {
@@ -278,7 +278,8 @@ class Indexer extends GetxController {
             trackInfo.mood ?? '',
           );
           tracksInfoList.add(newTrackEntry);
-          print(tracksInfoList.length);
+
+          debugPrint(tracksInfoList.length.toString());
 
           listOfCurrentFileNames.add(trackPath.getFilename);
           searchTracks('');
@@ -398,8 +399,8 @@ class Indexer extends GetxController {
             if (file is Directory) {
               if (!SettingsController.inst.directoriesToExclude.toList().any((exc) => file.path.startsWith(exc))) {
                 tracksFileSystemEntity.add(file);
-                print("Added $file");
-                print("Added ${tracksFileSystemEntity.length}");
+                debugPrint("Added $file");
+                debugPrint("Added ${tracksFileSystemEntity.length}");
               }
             }
           } catch (e) {
@@ -409,7 +410,7 @@ class Indexer extends GetxController {
         }
       }
       allTracksPaths.value = allPaths.length;
-      print(allPaths.length);
+      debugPrint(allPaths.length.toString());
     }
     return allPaths;
   }

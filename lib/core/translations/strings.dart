@@ -1,12 +1,9 @@
 // ignore_for_file: non_constant_identifier_names
 
-import 'package:get/get.dart';
-
 class Language {
   static Language inst = Language();
 
   /// Youtube Miniplayer:
-
   String get YOUTUBE => 'Youtube';
   String get YOUTUBE_MUSIC => 'Youtube Music';
   String get USE_YOUTUBE_MINIPLAYER => 'Use Youtube Miniplayer';

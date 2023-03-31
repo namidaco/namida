@@ -33,7 +33,6 @@ class YoutubeController {
       searchChannels.add(await ytexp.channels.get(ch.channelId));
     }
     ytexp.close();
-    print("SSSS ${searchChannels.map((element) => element.logoUrl)}");
   }
 
   Future<void> updateCurrentVideoMetadata(String id, {bool forceReload = false}) async {

@@ -1,3 +1,5 @@
+// ignore_for_file: implementation_imports
+
 import 'package:namida/core/translations/strings.dart';
 import 'package:timeago/src/messages/lookupmessages.dart';
 

@@ -1,19 +1,17 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:fade_shimmer/fade_shimmer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:fade_shimmer/fade_shimmer.dart';
 import 'package:get/get.dart';
 import 'package:lazy_load_scrollview/lazy_load_scrollview.dart';
 import 'package:miniplayer/miniplayer.dart';
-import 'package:namida/class/track.dart';
 import 'package:readmore/readmore.dart';
-import 'package:selectable_autolink_text/selectable_autolink_text.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import 'package:url_launcher/url_launcher_string.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -604,6 +602,5 @@ class ShimmerCard extends StatelessWidget {
         ],
       ),
     );
-    ;
   }
 }

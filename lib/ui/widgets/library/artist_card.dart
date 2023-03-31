@@ -14,7 +14,7 @@ class ArtistCard extends StatelessWidget {
   final String name;
   final List<Track> artist;
 
-  ArtistCard({
+  const ArtistCard({
     super.key,
     required this.gridCount,
     required this.name,

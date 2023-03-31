@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:namida/controller/player_controller.dart';
 
 import 'package:namida/controller/selected_tracks_controller.dart';
-import 'package:namida/core/functions.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/selected_tracks_row.dart';
 
