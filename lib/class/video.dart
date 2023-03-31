@@ -6,16 +6,14 @@ class YoutubeVideoHistory {
   late final String title;
   late final String channel;
   late final String channelUrl;
-  late final List<int> datesWatched;
-  late final bool isYTMusic;
+  late final List<YTWatch> watches;
 
   YoutubeVideoHistory(
     this.id,
     this.title,
     this.channel,
     this.channelUrl,
-    this.datesWatched,
-    this.isYTMusic,
+    this.watches,
   );
 
   YoutubeVideoHistory.fromJson(Map<String, dynamic> json) {
@@ -23,8 +21,7 @@ class YoutubeVideoHistory {
     title = json['title'] ?? '';
     channel = json['channel'] ?? '';
     channelUrl = json['channelUrl'] ?? '';
-    datesWatched = List<int>.from(json['datesWatched'] ?? []);
-    isYTMusic = json['isYTMusic'] ?? false;
+    watches = List<YTWatch>.from((json['watches'] as List? ?? []).map((e) => YTWatch.fromJson(e)).toList());
   }
 
   Map<String, dynamic> toJson() {
@@ -33,7 +30,28 @@ class YoutubeVideoHistory {
     data['title'] = title;
     data['channel'] = channel;
     data['channelUrl'] = channelUrl;
-    data['datesWatched'] = datesWatched;
+    data['watches'] = watches;
+    return data;
+  }
+}
+
+class YTWatch {
+  late final int date;
+  late final bool isYTMusic;
+
+  YTWatch(
+    this.date,
+    this.isYTMusic,
+  );
+
+  YTWatch.fromJson(Map<String, dynamic> json) {
+    date = json['date'] ?? 0;
+    isYTMusic = json['isYTMusic'] ?? false;
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['date'] = date;
     data['isYTMusic'] = isYTMusic;
     return data;
   }
