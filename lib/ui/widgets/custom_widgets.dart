@@ -270,6 +270,7 @@ class CustomListTile extends StatelessWidget {
 
 class CustomBlurryDialog extends StatelessWidget {
   final Widget? child;
+  final Widget? trailing;
   final String? title;
   final IconData? icon;
   final List<Widget>? actions;
@@ -282,6 +283,7 @@ class CustomBlurryDialog extends StatelessWidget {
   const CustomBlurryDialog({
     super.key,
     this.child,
+    this.trailing,
     this.title,
     this.actions,
     this.icon,
@@ -320,10 +322,17 @@ class CustomBlurryDialog extends StatelessWidget {
                             width: 10.0,
                           ),
                         ],
-                        Text(
-                          isWarning ? Language.inst.WARNING : title ?? '',
-                          style: Get.textTheme.displayLarge,
+                        Expanded(
+                          child: Text(
+                            isWarning ? Language.inst.WARNING : title ?? '',
+                            style: Get.textTheme.displayLarge,
+                          ),
                         ),
+                        if (trailing != null)
+                          SizedBox(
+                            width: 40,
+                            child: trailing!,
+                          ),
                       ],
                     )
                   : Container(
@@ -874,6 +883,7 @@ class NamidaLikeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LikeButton(
+      size: size,
       bubblesColor: BubblesColor(
         dotPrimaryColor: context.theme.colorScheme.primary,
         dotSecondaryColor: context.theme.colorScheme.primaryContainer,

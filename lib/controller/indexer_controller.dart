@@ -275,9 +275,7 @@ class Indexer extends GetxController {
             trackInfo.discNo ?? 0,
             trackInfo.language ?? '',
             trackInfo.lyrics ?? '',
-            trackInfo.lyricist ?? '',
             trackInfo.mood ?? '',
-            trackInfo.tags ?? '',
           );
           tracksInfoList.add(newTrackEntry);
           print(tracksInfoList.length);

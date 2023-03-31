@@ -174,6 +174,4 @@ final kDummyTrack = Track(
   '',
   '',
   '',
-  '',
-  '',
 );

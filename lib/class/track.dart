@@ -51,9 +51,7 @@ class Track {
   late final int discNo;
   late final String language;
   late final String lyrics;
-  late final String lyricist;
   late final String mood;
-  late final String tags;
 
   Track(
     this.title,
@@ -77,9 +75,7 @@ class Track {
     this.discNo,
     this.language,
     this.lyrics,
-    this.lyricist,
     this.mood,
-    this.tags,
   );
 
   Track.fromJson(Map<String, dynamic> json) {
@@ -104,9 +100,7 @@ class Track {
     discNo = json['discNo'] ?? 0;
     language = json['language'] ?? '';
     lyrics = json['lyrics'] ?? '';
-    lyricist = json['lyricist'] ?? '';
     mood = json['mood'] ?? '';
-    tags = json['tags'] ?? '';
   }
 
   Map<String, dynamic> toJson() {
@@ -133,9 +127,7 @@ class Track {
     data['discNo'] = discNo;
     data['language'] = language;
     data['lyrics'] = lyrics;
-    data['lyricist'] = lyricist;
     data['mood'] = mood;
-    data['tags'] = tags;
 
     return data;
   }

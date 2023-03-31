@@ -648,8 +648,6 @@ extension ConvertPathToTrack on String {
           '',
           '',
           '',
-          '',
-          '',
         );
   }
 }
