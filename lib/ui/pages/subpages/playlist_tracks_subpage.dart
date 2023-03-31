@@ -28,9 +28,10 @@ class PlaylisTracksPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMostPlayedPlaylist = playlist.name == kPlaylistMostPlayed;
+    final isHistoryPlaylist = playlist.name == kPlaylistHistory;
     return MainPageWrapper(
       actionsToAdd: [
-        if (!isMostPlayedPlaylist)
+        if (!isMostPlayedPlaylist && !isHistoryPlaylist)
           Obx(
             () => Tooltip(
               message: shouldReorder.value ? Language.inst.DISABLE_REORDERING : Language.inst.ENABLE_REORDERING,
@@ -83,9 +84,13 @@ class PlaylisTracksPage extends StatelessWidget {
                                 track: track.key,
                                 queue: PlaylistController.inst.topTracksMap.keys.toList(),
                                 playlist: rxplaylist,
-                                trailingWidget: CircleAvatar(
-                                  radius: 10.0,
-                                  backgroundColor: context.theme.scaffoldBackgroundColor,
+                                canHaveDuplicates: true,
+                                trailingWidget: Container(
+                                  padding: const EdgeInsets.all(6.0),
+                                  decoration: BoxDecoration(
+                                    color: context.theme.scaffoldBackgroundColor,
+                                    shape: BoxShape.circle,
+                                  ),
                                   child: Text(
                                     track.value.toString(),
                                     style: context.textTheme.displaySmall,
@@ -107,11 +112,12 @@ class PlaylisTracksPage extends StatelessWidget {
                       Expanded(
                         child: CupertinoScrollbar(
                           controller: _scrollController,
-                          child: ReorderableListView(
+                          child: ReorderableListView.builder(
                             scrollController: _scrollController,
                             header: topContainer,
                             buildDefaultDragHandles: shouldReorder.value,
                             proxyDecorator: (child, index, animation) => child,
+                            padding: EdgeInsets.zero,
                             onReorder: (oldIndex, newIndex) {
                               if (newIndex > oldIndex) {
                                 newIndex -= 1;
@@ -120,41 +126,34 @@ class PlaylisTracksPage extends StatelessWidget {
                               PlaylistController.inst.removeTrackFromPlaylist(rxplaylist.name, oldIndex);
                               PlaylistController.inst.insertTracksInPlaylist(rxplaylist.name, [item], newIndex);
                             },
-                            children: [
-                              ...playlist.tracks
-                                  .asMap()
-                                  .entries
-                                  .map(
-                                    (track) => AnimatingTile(
-                                      key: ValueKey(track.key),
-                                      position: track.key,
-                                      child: FadeDismissible(
-                                        key: UniqueKey(),
-                                        direction: shouldReorder.value ? DismissDirection.horizontal : DismissDirection.none,
-                                        onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTrackFromPlaylist(track.key, playlist),
-                                        child: Stack(
-                                          alignment: Alignment.centerLeft,
-                                          children: [
-                                            TrackTile(
-                                              index: track.key,
-                                              track: track.value.track,
-                                              queue: rxplaylist.tracks.map((e) => e.track).toList(),
-                                              playlist: rxplaylist,
-                                              draggableThumbnail: shouldReorder.value,
-                                              thirdLineText: playlist.name == kPlaylistHistory ? track.value.dateAdded.dateAndClockFormattedOriginal : '',
-                                            ),
-                                            Obx(() => ThreeLineSmallContainers(enabled: shouldReorder.value)),
-                                          ],
-                                        ),
+                            itemCount: playlist.tracks.length,
+                            itemBuilder: (context, i) {
+                              final track = playlist.tracks[i];
+                              return AnimatingTile(
+                                key: ValueKey(i),
+                                position: i,
+                                child: FadeDismissible(
+                                  key: UniqueKey(),
+                                  direction: shouldReorder.value ? DismissDirection.horizontal : DismissDirection.none,
+                                  onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTrackFromPlaylist(i, playlist),
+                                  child: Stack(
+                                    alignment: Alignment.centerLeft,
+                                    children: [
+                                      TrackTile(
+                                        index: i,
+                                        track: track.track,
+                                        queue: rxplaylist.tracks.map((e) => e.track).toList(),
+                                        playlist: rxplaylist,
+                                        canHaveDuplicates: true,
+                                        draggableThumbnail: shouldReorder.value,
+                                        thirdLineText: isHistoryPlaylist ? track.dateAdded.dateAndClockFormattedOriginal : '',
                                       ),
-                                    ),
-                                  )
-                                  .toList(),
-                              const SizedBox(
-                                key: ValueKey("sizedbox"),
-                                height: kBottomPadding,
-                              )
-                            ],
+                                      Obx(() => ThreeLineSmallContainers(enabled: shouldReorder.value)),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),

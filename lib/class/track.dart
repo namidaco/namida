@@ -3,9 +3,9 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
 class TrackWithDate {
-  late int dateAdded;
-  late Track track;
-  late TrackSource source;
+  late final int dateAdded;
+  late final Track track;
+  late final TrackSource source;
 
   TrackWithDate(
     this.dateAdded,
@@ -30,29 +30,30 @@ class TrackWithDate {
 }
 
 class Track {
-  late String title;
-  late List<String> artistsList;
-  late String album;
-  late String albumArtist;
-  late List<String> genresList;
-  late String composer;
-  late int track;
-  late int duration;
-  late int year;
-  late int size;
-  late int dateAdded;
-  late int dateModified;
-  late String path;
-  late String comment;
-  late int bitrate;
-  late int sampleRate;
-  late String format;
-  late String channels;
-  late int discNo;
-  late String language;
-  late String lyricist;
-  late String mood;
-  late String tags;
+  late final String title;
+  late final List<String> artistsList;
+  late final String album;
+  late final String albumArtist;
+  late final List<String> genresList;
+  late final String composer;
+  late final int track;
+  late final int duration;
+  late final int year;
+  late final int size;
+  late final int dateAdded;
+  late final int dateModified;
+  late final String path;
+  late final String comment;
+  late final int bitrate;
+  late final int sampleRate;
+  late final String format;
+  late final String channels;
+  late final int discNo;
+  late final String language;
+  late final String lyrics;
+  late final String lyricist;
+  late final String mood;
+  late final String tags;
 
   Track(
     this.title,
@@ -75,35 +76,37 @@ class Track {
     this.channels,
     this.discNo,
     this.language,
+    this.lyrics,
     this.lyricist,
     this.mood,
     this.tags,
   );
 
   Track.fromJson(Map<String, dynamic> json) {
-    title = json['title'];
-    artistsList = List<String>.from(json['artistsList']);
-    album = json['album'];
-    albumArtist = json['albumArtist'];
-    genresList = List<String>.from(json['genresList']);
-    composer = json['composer'];
-    track = json['track'];
-    duration = json['duration'];
-    year = json['year'];
-    size = json['size'];
-    dateAdded = json['dateAdded'];
-    dateModified = json['dateModified'];
-    path = json['path'];
-    comment = json['comment'];
-    bitrate = json['bitrate'];
-    sampleRate = json['sampleRate'];
-    format = json['format'];
-    channels = json['channels'];
-    discNo = json['discNo'];
-    language = json['language'];
-    lyricist = json['lyricist'];
-    mood = json['mood'];
-    tags = json['tags'];
+    title = json['title'] ?? '';
+    artistsList = List<String>.from(json['artistsList'] ?? []);
+    album = json['album'] ?? '';
+    albumArtist = json['albumArtist'] ?? '';
+    genresList = List<String>.from(json['genresList'] ?? []);
+    composer = json['composer'] ?? '';
+    track = json['track'] ?? 0;
+    duration = json['duration'] ?? 0;
+    year = json['year'] ?? 0;
+    size = json['size'] ?? 0;
+    dateAdded = json['dateAdded'] ?? 0;
+    dateModified = json['dateModified'] ?? 0;
+    path = json['path'] ?? '';
+    comment = json['comment'] ?? '';
+    bitrate = json['bitrate'] ?? 0;
+    sampleRate = json['sampleRate'] ?? 0;
+    format = json['format'] ?? '';
+    channels = json['channels'] ?? '';
+    discNo = json['discNo'] ?? 0;
+    language = json['language'] ?? '';
+    lyrics = json['lyrics'] ?? '';
+    lyricist = json['lyricist'] ?? '';
+    mood = json['mood'] ?? '';
+    tags = json['tags'] ?? '';
   }
 
   Map<String, dynamic> toJson() {
@@ -129,6 +132,7 @@ class Track {
     data['channels'] = channels;
     data['discNo'] = discNo;
     data['language'] = language;
+    data['lyrics'] = lyrics;
     data['lyricist'] = lyricist;
     data['mood'] = mood;
     data['tags'] = tags;

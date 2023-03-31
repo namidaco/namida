@@ -77,7 +77,7 @@ class MainPageWrapper extends StatelessWidget {
                       () => ListView(
                         children: [
                           const NamidaLogoContainer(),
-                          const NamidaContainerDivider(),
+                          const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
                           ...kLibraryTabsStock
                               .asMap()
                               .entries
@@ -166,7 +166,7 @@ class MainPageWrapper extends StatelessWidget {
                       getOffAll: getOffAll,
                       child: child,
                     ),
-                    const Hero(tag: 'MINIPLAYER', child: MiniPlayerParent()),
+                    const MiniPlayerParent(),
                     if (ScrollSearchController.inst.miniplayerHeightPercentage.value != 1.0)
                       Positioned(
                         bottom: 60 +
@@ -214,6 +214,7 @@ class KeepAliveWrapper extends StatefulWidget {
   const KeepAliveWrapper({Key? key, required this.child}) : super(key: key);
 
   @override
+  // ignore: library_private_types_in_public_api
   _KeepAliveWrapperState createState() => _KeepAliveWrapperState();
 }
 

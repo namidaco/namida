@@ -1,11 +1,11 @@
 import 'package:namida/class/track.dart';
 
 class Playlist {
-  late String name;
-  late List<TrackWithDate> tracks;
-  late int date;
-  late String comment;
-  late List<String> modes;
+  late final String name;
+  late final List<TrackWithDate> tracks;
+  late final int date;
+  late final String comment;
+  late final List<String> modes;
 
   Playlist(
     this.name,

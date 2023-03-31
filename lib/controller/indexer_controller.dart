@@ -6,12 +6,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
-import 'package:namida/class/group.dart';
-import 'package:namida/class/folder.dart';
 import 'package:on_audio_edit/on_audio_edit.dart' as audioedit;
 import 'package:on_audio_query/on_audio_query.dart';
 
+import 'package:namida/class/folder.dart';
+import 'package:namida/class/group.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/delete_controller.dart';
+import 'package:namida/controller/folders_controller.dart';
+import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -85,7 +88,6 @@ class Indexer extends GetxController {
     Set<String> deletedPaths = Set.of(tracksInfoList.map((t) => t.path)).difference(files);
 
     await fetchAllSongsAndWriteToFile(audioFiles: newFoundPaths, deletedPaths: deletedPaths, forceReIndex: forceReIndex || tracksInfoList.isEmpty);
-    afterIndexing();
     isIndexing.value = false;
   }
 
@@ -107,6 +109,7 @@ class Indexer extends GetxController {
       } else {
         album.tracks.add(tr);
       }
+      album?.tracks.sort((a, b) => a.title.compareTo(b.title));
 
       /// Assigning Artist
       for (final artist in tr.artistsList) {
@@ -116,6 +119,7 @@ class Indexer extends GetxController {
         } else {
           art.tracks.add(tr);
         }
+        art?.tracks.sort((a, b) => a.title.compareTo(b.title));
       }
 
       /// Assigning Genres
@@ -126,6 +130,7 @@ class Indexer extends GetxController {
         } else {
           gen.tracks.add(tr);
         }
+        gen?.tracks.sort((a, b) => a.title.compareTo(b.title));
       }
 
       /// Assigning Folders
@@ -135,6 +140,7 @@ class Indexer extends GetxController {
       } else {
         folder.tracks.add(tr);
       }
+      Folders.inst.sortFolderTracks();
     }
 
     sortTracks();
@@ -167,12 +173,10 @@ class Indexer extends GetxController {
 
   Future<void> updateTracks(List<Track> tracks, {bool updateArtwork = false}) async {
     for (final track in tracks) {
-      if (updateArtwork) {
-        await extractOneArtwork(track.path, forceReExtract: true);
-      }
       await fetchAllSongsAndWriteToFile(audioFiles: {}, deletedPaths: {track.path}, forceReIndex: false);
       await fetchAllSongsAndWriteToFile(audioFiles: {track.path}, deletedPaths: {}, forceReIndex: false);
       if (updateArtwork) {
+        await DeleteController.inst.deleteArtwork(tracks);
         await extractOneArtwork(track.path, forceReExtract: true);
       }
     }
@@ -270,6 +274,7 @@ class Indexer extends GetxController {
             trackInfo.channels ?? '',
             trackInfo.discNo ?? 0,
             trackInfo.language ?? '',
+            trackInfo.lyrics ?? '',
             trackInfo.lyricist ?? '',
             trackInfo.mood ?? '',
             trackInfo.tags ?? '',
@@ -303,9 +308,7 @@ class Indexer extends GetxController {
     }
 
     /// removes tracks after increasing duration
-    tracksInfoList.removeWhere(
-      (tr) => tr.duration < minDur * 1000 || tr.size < minSize,
-    );
+    tracksInfoList.removeWhere((tr) => tr.duration < minDur * 1000 || tr.size < minSize);
 
     /// removes duplicated tracks after a refresh
     if (SettingsController.inst.preventDuplicatedTracks.value) {
@@ -322,10 +325,12 @@ class Indexer extends GetxController {
       tracksInfoList.assignAll(listOfTracksWithoutDuplicates);
     }
 
+    afterIndexing();
+
     printInfo(info: "FINAL: ${tracksInfoList.length}");
 
     tracksInfoList.map((track) => track.toJson()).toList();
-    File(kTracksFilePath).writeAsStringSync(json.encode(tracksInfoList));
+    await File(kTracksFilePath).writeAsString(json.encode(tracksInfoList));
 
     /// Creating Default Artwork
     if (!await File(kDefaultNamidaImagePath).exists()) {
@@ -335,12 +340,10 @@ class Indexer extends GetxController {
     }
   }
 
-  Future<void> readTrackData({File? file}) async {
-    file ??= File(kTracksFilePath);
-    String contents = await file.readAsString();
-    if (contents.isNotEmpty) {
-      final jsonResponse = jsonDecode(contents);
+  Future<void> readTrackData() async {
+    final jsonResponse = await JsonToHistoryParser.inst.readJSONFile(kTracksFilePath);
 
+    if (jsonResponse != null) {
       for (final p in jsonResponse) {
         tracksInfoList.add(Track.fromJson(p));
         debugPrint("Tracks Info List Length From File: ${tracksInfoList.length}");
@@ -350,9 +353,9 @@ class Indexer extends GetxController {
 
   List<String> splitBySeparators(String? string, Iterable<String> separators, String fallback) {
     final List<String> finalStrings = <String>[];
-    List<String> pre = string?.trim().multiSplit(separators) ?? [fallback];
+    final List<String> pre = string?.trim().multiSplit(separators) ?? [fallback];
     for (final element in pre) {
-      finalStrings.add(element.trim());
+      finalStrings.addIf(element != '', element.trim());
     }
     return finalStrings;
   }

@@ -92,15 +92,11 @@ void main() async {
   kDirectoriesPaths.add('${paths[0]}/Download/');
   kInternalAppDirectoryPath = "${paths[0]}/Namida";
 
-  await SettingsController.inst.prepareSettingsFile();
-
   Get.put(() => ScrollSearchController());
   Get.put(() => VideoController());
 
+  await SettingsController.inst.prepareSettingsFile();
   await Indexer.inst.prepareTracksFile();
-
-  PlaylistController.inst.preparePlaylistFile();
-  QueueController.inst.prepareQueuesFile();
 
   /// updates values on startup
   Indexer.inst.updateImageSizeInStorage();
@@ -111,7 +107,12 @@ void main() async {
 
   FlutterNativeSplash.remove();
 
+  // playlists should be prepared first since it can used as reference in queues.
   await PlaylistController.inst.prepareDefaultPlaylistsFile();
+
+  PlaylistController.inst.preparePlaylistFile();
+  QueueController.inst.prepareQueuesFile();
+
   await QueueController.inst.prepareLatestQueueFile();
   await Player.inst.initializePlayer();
   await QueueController.inst.putLatestQueue();

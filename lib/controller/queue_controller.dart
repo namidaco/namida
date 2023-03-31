@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
 
-import 'package:namida/core/extensions.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -23,10 +22,17 @@ class QueueController extends GetxController {
   late final Database _db;
   late final StoreRef<Object?, Object?> _dbstore;
 
+  /// doesnt save queues with more than 2000 tracks.
   void addNewQueue({
     int? date,
     List<Track> tracks = const <Track>[],
   }) async {
+    /// if there are more than 2000 tracks.
+    if (tracks.length > 2000) {
+      printInfo(info: "UWAH QUEUE DEKKA");
+      return;
+    }
+
     /// if the queue is the same, it will skip instead of saving the same queue.
     if (checkIfQueueSameAsCurrent(tracks)) {
       printInfo(info: "Didnt Save Queue: Similar as Current");
@@ -71,7 +77,7 @@ class QueueController extends GetxController {
       await _dbstore.record(queueList.last.date).update(_db, queueList.last.toJson());
     }
 
-    await File(kLatestQueueFilePath).writeAsString(json.encode(tracks.map((element) => element.path).toList()));
+    await File(kLatestQueueFilePath).writeAsString(json.encode(tracks.map((e) => e.toJson()).toList()));
   }
 
   ///
@@ -83,7 +89,7 @@ class QueueController extends GetxController {
       for (final t in trwt) {
         // prevents freezing the ui. cheap alternative for Isolate/compute.
         await Future.delayed(Duration.zero);
-        queueList.add(Queue.fromJson(t.value as Map<String, dynamic>));
+        QueueController.inst.queueList.add(Queue.fromJson(t.value as Map<String, dynamic>));
       }
     }
   }
@@ -93,8 +99,8 @@ class QueueController extends GetxController {
     final file = await File(kLatestQueueFilePath).create();
     final String content = await file.readAsString();
     if (content.isNotEmpty) {
-      final txt = List<String>.from(json.decode(content));
-      latestQueue.assignAll(txt.map((e) => e.toTrack).toList());
+      final txt = List.from(json.decode(content));
+      latestQueue.assignAll(txt.map((e) => Track.fromJson(e)).toList());
     }
   }
 

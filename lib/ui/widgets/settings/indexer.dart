@@ -10,7 +10,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/settings/indexing_percentage.dart';
+import 'package:namida/ui/widgets/settings/circular_percentages.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
 class IndexerSettings extends StatelessWidget {

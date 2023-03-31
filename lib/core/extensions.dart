@@ -548,13 +548,15 @@ extension TRACKPLAYMODE on TrackPlayMode {
     }
   }
 
+  bool get shouldBeIndex0 => this == TrackPlayMode.trackAlbum || this == TrackPlayMode.trackArtist || this == TrackPlayMode.trackGenre;
+
   List<Track> getQueue(Track track, {List<Track>? searchQueue}) {
     List<Track> queue = [];
     if (this == TrackPlayMode.selectedTrack) {
       queue = [track];
     }
     if (this == TrackPlayMode.searchResults) {
-      queue = searchQueue ?? Indexer.inst.trackSearchList.toList();
+      queue = searchQueue ?? (Indexer.inst.trackSearchTemp.isNotEmpty ? Indexer.inst.trackSearchTemp.toList() : Indexer.inst.trackSearchList.toList());
     }
     if (this == TrackPlayMode.trackAlbum) {
       queue = Indexer.inst.albumsList.firstWhere((al) => al.name == track.album).tracks;
@@ -564,6 +566,10 @@ extension TRACKPLAYMODE on TrackPlayMode {
     }
     if (this == TrackPlayMode.trackGenre) {
       queue = Indexer.inst.groupedGenresList.firstWhere((element) => element.name == track.genresList.first).tracks;
+    }
+    if (shouldBeIndex0) {
+      queue.remove(track);
+      queue.insert(0, track);
     }
     return queue;
   }
@@ -643,13 +649,14 @@ extension ConvertPathToTrack on String {
           '',
           '',
           '',
+          '',
         );
   }
 }
 
-//TODO: catches non utf char
 extension CleanUp on String {
-  String get cleanUpForComparison => toLowerCase().replaceAll(RegExp(r'[\W\s_]'), '');
+  String get cleanUpForComparison => toLowerCase()
+      .replaceAll(RegExp(r'''[\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\>\=\?\@\[\]\{\}\\\\\^\_\`\~\s\|\@\#\$\%\^\&\*\(\)\-\+\=\[\]\{\}\:\;\"\'\<\>\.\,\?\/\`\~\!\_\s]+'''), '');
 }
 
 extension YTLinkToID on String {

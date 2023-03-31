@@ -67,8 +67,8 @@ class Player {
     _audioHandler?.insertInQueue(tracks, index);
   }
 
-  Future<void> removeFromQueue(int index) async {
-    await _audioHandler?.removeFromQueue(index);
+  void removeFromQueue(int index) async {
+    _audioHandler?.removeFromQueue(index);
   }
 
   void removeRangeFromQueue(int start, int end) {

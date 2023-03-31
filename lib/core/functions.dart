@@ -9,10 +9,12 @@ import 'package:collection/collection.dart';
 
 import 'dart:async';
 
+import 'package:namida/class/folder.dart';
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -83,6 +85,11 @@ class NamidaOnTaps {
     SelectedTracksController.inst.currentAllTracks.assignAll(playlist.tracks.map((e) => e.track).toList());
   }
 
+  Future<void> onFolderOpen(Folder folder) async {
+    Folders.inst.stepIn(folder);
+    SelectedTracksController.inst.currentAllTracks.assignAll(folder.tracks);
+  }
+
   Future<void> onQueueTap(Queue queue) async {
     Get.to(
       () => QueueTracksPage(queue: queue),
@@ -134,13 +141,17 @@ List<Track> getRandomTracks([int? min, int? max]) {
   final trackslist = Indexer.inst.tracksInfoList;
   final trackslistLength = trackslist.length;
 
+  if (trackslist.length < 3) {
+    return [];
+  }
+
   /// ignore min and max if the value is more than the alltrackslist.
   if (max != null && max > Indexer.inst.tracksInfoList.length) {
     max = null;
     min = null;
   }
-  min ??= trackslistLength ~/ 6;
-  max ??= trackslistLength ~/ 3;
+  min ??= trackslistLength ~/ 12;
+  max ??= trackslistLength ~/ 8;
   final int randomNumber = min + Random().nextInt(max - min);
   for (int i = 0; i < randomNumber; i++) {
     randomList.add(trackslist.toList()[Random().nextInt(trackslistLength)]);
@@ -150,15 +161,16 @@ List<Track> getRandomTracks([int? min, int? max]) {
 
 List<Track> generateRecommendedTrack(Track track) {
   final gentracks = <Track>[];
-  final historytracks = PlaylistController.inst.playlistList.firstWhere((element) => element.name == kPlaylistHistory).tracks.map((e) => e.track).toList();
+  final historytracks = namidaHistoryPlaylist.tracks.map((e) => e.track).toList();
   if (historytracks.isEmpty) {
     return [];
   }
   for (int i = 0; i < historytracks.length; i++) {
     final t = historytracks[i];
     if (t == track) {
-      final length = (historytracks.length).clamp(0, 10);
-      gentracks.addAll(historytracks.getRange((i - length).clamp(0, 10), i + length));
+      const length = 10;
+      final max = historytracks.length;
+      gentracks.addAll(historytracks.getRange((i - length).clamp(0, max), (i + length).clamp(0, max)));
       // skip length since we already took 10 tracks.
       i += length;
     }
@@ -172,7 +184,7 @@ List<Track> generateRecommendedTrack(Track track) {
 }
 
 List<Track> generateTracksFromDates(int oldestDate, int newestDate) {
-  final historytracks = PlaylistController.inst.playlistList.firstWhere((element) => element.name == kPlaylistHistory).tracks;
+  final historytracks = namidaHistoryPlaylist.tracks;
   return historytracks.where((element) => element.dateAdded >= oldestDate && element.dateAdded <= (newestDate + 1.days.inMilliseconds)).map((e) => e.track).toSet().toList();
 }
 

@@ -2,17 +2,17 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
 class TrackItem {
-  late TrackTileItem row1Item1;
-  late TrackTileItem row1Item2;
-  late TrackTileItem row1Item3;
-  late TrackTileItem row2Item1;
-  late TrackTileItem row2Item2;
-  late TrackTileItem row2Item3;
-  late TrackTileItem row3Item1;
-  late TrackTileItem row3Item2;
-  late TrackTileItem row3Item3;
-  late TrackTileItem rightItem1;
-  late TrackTileItem rightItem2;
+  late final TrackTileItem row1Item1;
+  late final TrackTileItem row1Item2;
+  late final TrackTileItem row1Item3;
+  late final TrackTileItem row2Item1;
+  late final TrackTileItem row2Item2;
+  late final TrackTileItem row2Item3;
+  late final TrackTileItem row3Item1;
+  late final TrackTileItem row3Item2;
+  late final TrackTileItem row3Item3;
+  late final TrackTileItem rightItem1;
+  late final TrackTileItem rightItem2;
 
   TrackItem(
     this.row1Item1,

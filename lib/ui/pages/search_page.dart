@@ -183,7 +183,8 @@ class SearchPage extends StatelessWidget {
                                   child: TrackTile(
                                     index: i,
                                     track: track,
-                                    queue: SettingsController.inst.trackPlayMode.value.getQueue(track, searchQueue: Indexer.inst.trackSearchTemp.toList()),
+                                    queue: Indexer.inst.trackSearchTemp,
+                                    oiRespectPlayMode: true,
                                   ),
                                 );
                               },

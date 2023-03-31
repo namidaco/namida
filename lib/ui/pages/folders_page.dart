@@ -20,10 +20,6 @@ class FoldersPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (SettingsController.inst.enableFoldersHierarchy.value) {
-      Folders.inst.stepIn(Folders.inst.folderslist.firstWhere((element) => element.path.startsWith(SettingsController.inst.defaultFolderStartupLocation.value)));
-    }
-
     return Obx(
       () => WillPopScope(
         onWillPop: () {
@@ -102,6 +98,8 @@ class FoldersPage extends StatelessWidget {
                   ),
                 ],
               )
+
+            /// All Folders
             : Column(
                 children: [
                   ListTile(
@@ -128,8 +126,7 @@ class FoldersPage extends StatelessWidget {
                                 .map((e) => FolderTile(
                                       folder: e,
                                       onTap: () {
-                                        Folders.inst.currentTracks.assignAll(
-                                            Folders.inst.folderslist.where((element) => element.folderName.startsWith(e.folderName)).expand((entry) => entry.tracks).toList());
+                                        Folders.inst.stepIn(e);
                                         Folders.inst.isInside.value = true;
                                         Folders.inst.currentPath.value = e.folderName;
                                       },

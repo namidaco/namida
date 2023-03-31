@@ -1,14 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/player_controller.dart';
-import 'package:namida/controller/video_controller.dart';
-import 'package:namida/core/constants.dart';
-import 'package:namida/core/extensions.dart';
+import 'package:namida/controller/delete_controller.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -18,6 +13,7 @@ void showTrackClearDialog(List<Track> tracks) {
   Get.dialog(
     CustomBlurryDialog(
       normalTitleStyle: true,
+      icon: Broken.trash,
       title: isSingle ? Language.inst.CLEAR_TRACK_ITEM : Language.inst.CLEAR_TRACK_ITEM_MULTIPLE.replaceFirst('_NUMBER_', tracks.length.toString()),
       child: Column(
         children: [
@@ -25,49 +21,32 @@ void showTrackClearDialog(List<Track> tracks) {
             title: isSingle ? Language.inst.VIDEO_CACHE_FILE : Language.inst.VIDEO_CACHE_FILES,
             icon: Broken.video,
             onTap: () async {
-              final allvideo = Directory(kVideosCachePath).listSync();
-
-              for (final track in tracks) {
-                for (final v in allvideo) {
-                  if (v.path.getFilename.startsWith(track.youtubeID)) {
-                    await v.delete();
-                  }
-                }
-              }
-
+              await DeleteController.inst.deleteCachedVideos(tracks);
               Get.close(1);
-              Player.inst.updateVideoPlayingState();
-              VideoController.inst.resetEverything();
             },
           ),
           CustomListTile(
             title: isSingle ? Language.inst.WAVEFORM_DATA : Language.inst.WAVEFORMS_DATA,
             icon: Broken.sound,
             onTap: () async {
+              await DeleteController.inst.deleteWaveFormData(tracks);
               Get.close(1);
-              for (final track in tracks) {
-                await File("$kWaveformDirPath${track.filename}.wave").delete();
-              }
             },
           ),
           CustomListTile(
             title: Language.inst.LYRICS,
             icon: Broken.document,
             onTap: () async {
+              await DeleteController.inst.deleteLyrics(tracks);
               Get.close(1);
-              for (final track in tracks) {
-                await File("$kLyricsDirPath${track.filename}.txt").delete();
-              }
             },
           ),
           CustomListTile(
             title: isSingle ? Language.inst.ARTWORK : Language.inst.ARTWORKS,
             icon: Broken.image,
             onTap: () async {
+              await DeleteController.inst.deleteArtwork(tracks);
               Get.close(1);
-              for (final track in tracks) {
-                await File("$kArtworksDirPath${track.filename}.png").delete();
-              }
             },
           ),
         ],

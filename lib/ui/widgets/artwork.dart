@@ -14,6 +14,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/packages/drop_shadow.dart';
 
 /// Always displays compressed image, if not [compressed] then it will add the full res image on top of it.
+/// TODO: use path instead of track
 class ArtworkWidget extends StatelessWidget {
   final Track track;
   final Uint8List? bytes;
@@ -29,6 +30,7 @@ class ArtworkWidget extends StatelessWidget {
   final double? width;
   final double? height;
   final int? cacheHeight;
+  final bool useTrackTileCacheHeight;
   final bool forceDummyArtwork;
   final Color? bgcolor;
   final double? iconSize;
@@ -51,6 +53,7 @@ class ArtworkWidget extends StatelessWidget {
     this.width,
     this.height,
     this.cacheHeight,
+    this.useTrackTileCacheHeight = false,
     this.forceDummyArtwork = false,
     this.bgcolor,
     this.iconSize,
@@ -73,7 +76,7 @@ class ArtworkWidget extends StatelessWidget {
       ),
       child: Icon(
         Broken.musicnote,
-        size: iconSize,
+        size: iconSize ?? thumnailSize / 2,
       ),
     );
     final extImageChild = FileSystemEntity.typeSync(track.pathToImage) != FileSystemEntityType.notFound && !forceDummyArtwork
@@ -94,7 +97,11 @@ class ArtworkWidget extends StatelessWidget {
                       File(path ?? track.pathToImage),
                       gaplessPlayback: true,
                       fit: BoxFit.cover,
-                      cacheHeight: (cacheHeight ?? 100) * (Get.mediaQuery.devicePixelRatio).round(),
+                      cacheHeight: useTrackTileCacheHeight
+                          ? SettingsController.inst.trackThumbnailSizeinList.value.toInt() > 120
+                              ? null
+                              : 60 * (Get.mediaQuery.devicePixelRatio).round()
+                          : (cacheHeight ?? 100) * (Get.mediaQuery.devicePixelRatio).round(),
                       filterQuality: FilterQuality.medium,
                       width: forceSquared ? context.width : null,
                       height: forceSquared ? context.width : null,

@@ -16,6 +16,7 @@ import 'package:namida/main_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
+import 'package:namida/ui/widgets/dialogs/track_info_dialog.dart';
 
 class TrackTile extends StatelessWidget {
   final int index;
@@ -30,6 +31,9 @@ class TrackTile extends StatelessWidget {
   final Playlist? playlist;
   final String thirdLineText;
   final bool displayIndex;
+  final bool oiRespectPlayMode;
+  final bool comingFromQueue;
+  final bool canHaveDuplicates;
   const TrackTile({
     super.key,
     required this.track,
@@ -44,6 +48,9 @@ class TrackTile extends StatelessWidget {
     required this.index,
     this.thirdLineText = '',
     this.displayIndex = false,
+    this.oiRespectPlayMode = false,
+    this.comingFromQueue = false,
+    this.canHaveDuplicates = false,
   });
 
   String getChoosenTrackTileItem(TrackTileItem trackItem) {
@@ -103,7 +110,7 @@ class TrackTile extends StatelessWidget {
         final double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
         final bool isTrackSelected = SelectedTracksController.inst.selectedTracks.contains(track);
         final bool isTrackSamePath = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
-        final bool isRightIndex = index == CurrentColor.inst.currentPlayingIndex.value;
+        final bool isRightIndex = canHaveDuplicates ? index == CurrentColor.inst.currentPlayingIndex.value : true;
         final bool isTrackCurrentlyPlaying = isRightIndex && isTrackSamePath;
 
         final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
@@ -126,11 +133,20 @@ class TrackTile extends StatelessWidget {
                       }
                     },
               onTap: onTap ??
-                  () {
+                  () async {
                     if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
                       SelectedTracksController.inst.selectOrUnselect(track);
                     } else {
-                      Player.inst.playOrPause(index, queue);
+                      if (oiRespectPlayMode) {
+                        Get.focusScope?.unfocus();
+                        await Player.inst.playOrPause(
+                          SettingsController.inst.trackPlayMode.value.shouldBeIndex0 ? 0 : index,
+                          SettingsController.inst.trackPlayMode.value.getQueue(track),
+                        );
+                      } else {
+                        await Player.inst.playOrPause(index, queue);
+                      }
+
                       debugPrint(track.path);
                     }
                   },
@@ -148,35 +164,39 @@ class TrackTile extends StatelessWidget {
                       children: [
                         AnimatedScale(
                           duration: const Duration(milliseconds: 400),
-                          scale: isTrackCurrentlyPlaying ? 0.94 : 0.97,
+                          scale: isTrackCurrentlyPlaying ? 0.96 : 1.0,
+                          curve: Curves.easeInOut,
                           child: Container(
                             margin: const EdgeInsets.symmetric(
                               horizontal: 0.0,
                             ),
                             width: thumnailSize,
                             height: thumnailSize,
-                            child: ArtworkWidget(
-                              blur: 1.5,
-                              thumnailSize: thumnailSize,
-                              track: track,
-                              forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
-                              cacheHeight: SettingsController.inst.trackThumbnailSizeinList.value.toInt() > 120 ? null : 60,
-                              onTopWidget: displayIndex
-                                  ? Positioned(
-                                      bottom: 0,
-                                      right: 0,
-                                      child: BlurryContainer(
-                                        borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
-                                        container: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
-                                          child: Text(
-                                            index.toString(),
-                                            style: context.textTheme.displaySmall,
+                            child: Hero(
+                              tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
+                              child: ArtworkWidget(
+                                blur: 1.5,
+                                thumnailSize: thumnailSize,
+                                track: track,
+                                forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+                                useTrackTileCacheHeight: true,
+                                onTopWidget: displayIndex
+                                    ? Positioned(
+                                        bottom: 0,
+                                        right: 0,
+                                        child: BlurryContainer(
+                                          borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
+                                          container: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
+                                            child: Text(
+                                              index.toString(),
+                                              style: context.textTheme.displaySmall,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    )
-                                  : null,
+                                      )
+                                    : null,
+                              ),
                             ),
                           ),
                         ),
@@ -296,7 +316,8 @@ class TrackTile extends StatelessWidget {
                     MoreIcon(
                       padding: 6.0,
                       iconColor: textColor?.withAlpha(160),
-                      onPressed: () => NamidaDialogs.inst.showTrackDialog(track, playlist: playlist, index: index),
+                      onPressed: () => NamidaDialogs.inst.showTrackDialog(track, playlist: playlist, index: index, comingFromQueue: comingFromQueue),
+                      onLongPress: () => showTrackInfoDialog(track, comingFromQueue: comingFromQueue, index: index),
                     ),
                     if (trailingWidget == null)
                       const SizedBox(
@@ -307,7 +328,7 @@ class TrackTile extends StatelessWidget {
                       const SizedBox(
                         width: 10.0,
                       ),
-                    ]
+                    ],
                   ],
                 ),
               ),

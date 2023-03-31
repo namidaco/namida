@@ -277,20 +277,10 @@ class TrackTileCustomization extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(width: 6.0),
-                SizedBox(
-                  width: 26.0,
-                  child: IconButton(
-                    onPressed: null,
-                    icon: RotatedBox(
-                      quarterTurns: 1,
-                      child: Icon(
-                        Broken.more,
-                        color: context.theme.iconTheme.color,
-                      ),
-                    ),
-                    iconSize: 22.0,
-                  ),
+                const MoreIcon(
+                  iconSize: 20,
                 ),
+                const SizedBox(width: 6.0),
               ],
             ),
           )

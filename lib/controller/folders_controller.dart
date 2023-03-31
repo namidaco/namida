@@ -94,5 +94,6 @@ class Folders extends GetxController {
     currentTracks.sort((a, b) => a.filename.compareTo(b.filename));
 
     currentfolderslist.sort((a, b) => a.folderName.compareTo(b.folderName));
+    folderslist.sort((a, b) => a.folderName.compareTo(b.folderName));
   }
 }

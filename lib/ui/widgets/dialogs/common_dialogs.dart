@@ -12,7 +12,7 @@ import 'package:namida/ui/widgets/dialogs/general_popup_dialog.dart';
 class NamidaDialogs {
   static final NamidaDialogs inst = NamidaDialogs();
 
-  Future<void> showTrackDialog(Track track, {Widget? leading, Playlist? playlist, int? index}) async {
+  Future<void> showTrackDialog(Track track, {Widget? leading, Playlist? playlist, int? index, bool comingFromQueue = false}) async {
     await showGeneralPopupDialog(
       [track],
       track.artistsList.join(', ').overflow,
@@ -22,6 +22,8 @@ class NamidaDialogs {
       isTrackInPlaylist: playlist != null,
       playlist: playlist,
       index: index,
+      comingFromQueue: comingFromQueue,
+      useTrackTileCacheHeight: true,
     );
   }
 

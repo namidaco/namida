@@ -148,7 +148,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                 TagType.COMMENT: fcomment,
                 if (fyearInt != null) TagType.YEAR: fyearInt,
               },
-              updateArtwork: currentImagePath.value != '',
+              artworkPath: currentImagePath.value,
             );
             debugPrint(didUpdate.toString());
 
@@ -185,11 +185,10 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                               right: 0,
                               child: NamidaBlurryContainer(
                                 onTap: () async {
-                                  String path = '';
                                   final pickedFile = await FilePicker.platform.pickFiles(type: FileType.image);
-                                  path = pickedFile?.files.first.path ?? '';
+                                  final path = pickedFile?.files.first.path ?? '';
                                   if (pickedFile != null && path != '') {
-                                    final copiedImage = await File(path).copy("${SettingsController.inst.defaultBackupLocation.value}/${path.split('/').last}");
+                                    final copiedImage = await File(path).copy("${SettingsController.inst.defaultBackupLocation.value}/sussyimage.png");
                                     currentImagePath.value = copiedImage.path;
                                   }
                                 },
@@ -335,37 +334,31 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
         ),
       ),
       const SizedBox(height: 12.0),
-      ListView.builder(
-        itemCount: tracks.length,
-        itemBuilder: (context, index) {
-          final tr = tracks[index];
-          return Row(
-            children: [
-              Expanded(
-                child: Stack(
-                  children: [
-                    Obx(
-                      () => TrackTile(
-                        index: index,
-                        track: tr,
-                        queue: [tr],
-                        onTap: () => tracks.addIf(() => !tracks.contains(tr), tr),
-                        bgColor: tracks.contains(tr) ? null : Colors.black.withAlpha(0),
-                        trailingWidget: IconButton(
-                          icon: const Icon(Broken.close_circle),
-                          visualDensity: VisualDensity.compact,
-                          onPressed: () {
-                            tracks.remove(tr);
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
+      SizedBox(
+        width: Get.width,
+        height: Get.height / 2,
+        child: ListView.builder(
+          itemCount: tracks.length,
+          itemBuilder: (context, index) {
+            final tr = tracks[index];
+            return Obx(
+              () => TrackTile(
+                index: index,
+                track: tr,
+                queue: [tr],
+                onTap: () => tracks.addIf(() => !tracks.contains(tr), tr),
+                bgColor: tracks.contains(tr) ? null : Colors.black.withAlpha(0),
+                trailingWidget: IconButton(
+                  icon: const Icon(Broken.close_circle),
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () {
+                    tracks.remove(tr);
+                  },
                 ),
               ),
-            ],
-          );
-        },
+            );
+          },
+        ),
       ),
     ],
   );
@@ -385,6 +378,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
   // yearController.text = info.year != null ? info.year.toString() : '';
 
   RxBool trimWhiteSpaces = true.obs;
+  RxString currentImagePath = ''.obs;
   Get.dialog(
     CustomBlurryDialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
@@ -479,6 +473,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                             if (fyearInt != null) TagType.YEAR: fyearInt,
                           },
                           updateTracks: false,
+                          artworkPath: currentImagePath.value,
                         );
                       }
 
@@ -495,7 +490,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                         //   );
                         // }
                       }
-                      Indexer.inst.updateTracks(tracks, updateArtwork: false);
+                      Indexer.inst.updateTracks(tracks, updateArtwork: currentImagePath.value != '');
 
                       Get.close(2);
                     },
@@ -545,28 +540,34 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                               alignment: Alignment.bottomRight,
                               children: [
                                 Obx(
-                                  () => MultiArtworkContainer(
-                                    heroTag: 'edittags_artwork',
-                                    size: Get.width / 3,
-                                    tracks: tracks,
-                                    onTopWidget: tracks.length > 3
-                                        ? Positioned(
-                                            right: 0,
-                                            bottom: 0,
-                                            child: NamidaBlurryContainer(
-                                              width: Get.width / 6.2,
-                                              height: Get.width / 6.2,
-                                              borderRadius: BorderRadius.zero,
-                                              child: Center(
-                                                child: Text(
-                                                  "+${tracks.length - 3}",
-                                                  style: Get.textTheme.displayLarge,
-                                                ),
-                                              ),
-                                            ),
-                                          )
-                                        : null,
-                                  ),
+                                  () => currentImagePath.value != ''
+                                      ? ArtworkWidget(
+                                          track: tracks.first,
+                                          thumnailSize: Get.width / 3,
+                                          path: currentImagePath.value,
+                                        )
+                                      : MultiArtworkContainer(
+                                          heroTag: 'edittags_artwork',
+                                          size: Get.width / 3,
+                                          tracks: tracks,
+                                          onTopWidget: tracks.length > 3
+                                              ? Positioned(
+                                                  right: 0,
+                                                  bottom: 0,
+                                                  child: NamidaBlurryContainer(
+                                                    width: Get.width / 6.2,
+                                                    height: Get.width / 6.2,
+                                                    borderRadius: BorderRadius.zero,
+                                                    child: Center(
+                                                      child: Text(
+                                                        "+${tracks.length - 3}",
+                                                        style: Get.textTheme.displayLarge,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                )
+                                              : null,
+                                        ),
                                 ),
                               ],
                             ),
@@ -607,7 +608,14 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                                   SizedBox(
                                     width: Get.width,
                                     child: ElevatedButton(
-                                      onPressed: () {},
+                                      onPressed: () async {
+                                        final pickedFile = await FilePicker.platform.pickFiles(type: FileType.image);
+                                        final path = pickedFile?.files.first.path ?? '';
+                                        if (pickedFile != null && path != '') {
+                                          final copiedImage = await File(path).copy("${SettingsController.inst.defaultBackupLocation.value}/sussyimage.png");
+                                          currentImagePath.value = copiedImage.path;
+                                        }
+                                      },
                                       child: Padding(
                                         padding: const EdgeInsets.all(8.0),
                                         child: Text(
@@ -735,7 +743,13 @@ class CustomTagTextField extends StatelessWidget {
   }
 }
 
-Future<bool> editTrackMetadata(Track track, {Map<TagType, dynamic>? tags, String insertComment = '', bool updateArtwork = false, bool updateTracks = true}) async {
+Future<bool> editTrackMetadata(
+  Track track, {
+  Map<TagType, dynamic>? tags,
+  String insertComment = '',
+  String artworkPath = '',
+  bool updateTracks = true,
+}) async {
   // i tried many other ways to automate this task, nothing worked
   // so yeah ask the user to select the specific folder
   // and provide an option in the setting to reset this premission
@@ -745,9 +759,10 @@ Future<bool> editTrackMetadata(Track track, {Map<TagType, dynamic>? tags, String
   final info = await audioedit.readAudio(track.path);
   final copiedFile = kSdkVersion < 30 ? File(track.path) : await File(track.path).copy("${SettingsController.inst.defaultBackupLocation.value}/${track.filename}");
   if (insertComment != '') {
+    final finalcomm = ((info.comment ?? '').isEmpty) ? insertComment : '$insertComment\n${info.comment}';
     await audioedit.editAudio(
       copiedFile.path,
-      {TagType.COMMENT: "$insertComment ${info.comment}"},
+      {TagType.COMMENT: finalcomm},
       searchInsideFolders: true,
     );
   }
@@ -759,20 +774,28 @@ Future<bool> editTrackMetadata(Track track, {Map<TagType, dynamic>? tags, String
       searchInsideFolders: true,
     );
   }
-  if (updateArtwork) {
-    await audioedit.editArtwork(
-      copiedFile.path,
-      // imagePath: currentImagePath.value,
-      searchInsideFolders: true,
-      openFilePicker: true,
-    );
+
+  final shoulUpdateArtwork = artworkPath != '';
+
+  if (shoulUpdateArtwork) {
+    try {
+      await audioedit.editArtwork(
+        copiedFile.path,
+        imagePath: artworkPath,
+        searchInsideFolders: true,
+        description: artworkPath,
+        openFilePicker: false,
+      );
+    } catch (e) {
+      debugPrint(e.toString());
+    }
   }
   if (kSdkVersion >= 30) {
     await copiedFile.copy(track.path);
   }
   await copiedFile.delete();
   if (updateTracks) {
-    Indexer.inst.updateTracks([track], updateArtwork: updateArtwork);
+    Indexer.inst.updateTracks([track], updateArtwork: shoulUpdateArtwork);
   }
   return didUpdateTags;
 }

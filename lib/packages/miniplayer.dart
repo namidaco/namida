@@ -1163,6 +1163,8 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                       displayRightDragHandler: true,
                                                       draggableThumbnail: true,
                                                       queue: Player.inst.currentQueue.toList(),
+                                                      comingFromQueue: true,
+                                                      canHaveDuplicates: true,
                                                     ),
                                                   ),
                                                 ),
@@ -1201,7 +1203,12 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                                     maxSubtitleLines: 22,
                                                                     onTap: () {
                                                                       Get.close(1);
-                                                                      Player.inst.addToQueue(getRandomTracks(8, 11));
+                                                                      final rt = getRandomTracks(8, 11);
+                                                                      if (rt.isEmpty) {
+                                                                        Get.snackbar(Language.inst.ERROR, Language.inst.NO_ENOUGH_TRACKS);
+                                                                        return;
+                                                                      }
+                                                                      Player.inst.addToQueue(rt);
                                                                     },
                                                                   ),
                                                                   CustomListTile(

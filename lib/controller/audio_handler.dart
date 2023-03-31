@@ -231,7 +231,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     }
     final List<Track> newTracks = [];
     final first = currentIndex.value + 1;
-    final last = currentQueue.length - 1;
+    final last = currentQueue.length;
     newTracks
       ..assignAll(currentQueue.getRange(first, last))
       ..shuffle();

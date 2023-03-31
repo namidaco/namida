@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/playlist.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 
@@ -74,22 +74,11 @@ class PlaylistTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(width: 2.0),
-                SizedBox(
-                  height: 38.0,
-                  width: 38.0,
-                  child: RotatedBox(
-                    quarterTurns: 1,
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () => NamidaDialogs.inst.showPlaylistDialog(playlist),
-                      icon: const Icon(
-                        Broken.more,
-                        size: 20,
-                      ),
-                    ),
-                  ),
+                MoreIcon(
+                  iconSize: 20,
+                  onPressed: () => NamidaDialogs.inst.showPlaylistDialog(playlist),
                 ),
+                const SizedBox(width: 8.0),
               ],
             ),
           ),

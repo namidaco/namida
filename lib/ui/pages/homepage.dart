@@ -15,6 +15,7 @@ import 'package:namida/main_page.dart';
 import 'package:namida/ui/pages/search_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings/circular_percentages.dart';
 import 'package:namida/ui/widgets/settings/stats.dart';
 
 class HomePage extends StatelessWidget {
@@ -156,6 +157,7 @@ class HomePage extends StatelessWidget {
                         },
                       ),
                     ),
+                    const ParsingJsonPercentage(size: 30.0),
                     Hero(
                       tag: 'SETTINGICON',
                       child: NamidaIconButton(

@@ -61,6 +61,7 @@ class QueueTracksPage extends StatelessWidget {
                         index: track.key,
                         track: track.value,
                         queue: queue.tracks,
+                        canHaveDuplicates: true,
                       ),
                     ),
                   )

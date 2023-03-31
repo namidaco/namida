@@ -8,6 +8,7 @@ class Language {
   /// Youtube Miniplayer:
 
   String get YOUTUBE => 'Youtube';
+  String get YOUTUBE_MUSIC => 'Youtube Music';
   String get USE_YOUTUBE_MINIPLAYER => 'Use Youtube Miniplayer';
   String get AGO => 'ago';
   String get SUBSCRIBER => 'Subscriber';
@@ -25,16 +26,29 @@ class Language {
   String get DISLIKE => 'Dislike';
   String get REFRESH => 'Refresh';
   String get SUSSY_BAKA => 'Bruh no tracks';
-  String get DONT_TOUCH => 'DON\'T TOUCH ANYTHING';
+  String get EXTRACTING_INFO => 'Extracting Info';
+  String get LOADING_FILE => 'Loading File';
   String get PARSED => 'parsed';
   String get ADDED => 'added';
-  String get IMPORT_YOUTUBE_HISTORY => 'Import Youtube History';
   String get GUIDE => 'Guide';
+  String get IMPORT_YOUTUBE_HISTORY => 'Import Youtube History';
+  String get REMOVE_QUEUE => 'Remove Queue';
+  String get CONFIGURE => 'Configure';
+  String get TOTAL_LISTENS => 'Total Listens';
+
   String get IMPORT_YOUTUBE_HISTORY_GUIDE =>
       '1. Go to _TAKEOUT_LINK_\n\n2. Deselect All and select youtube only.\n\n3. Press "Multiple Formats" and beside "History" choose "JSON".\n\n4. Press "All Youtube data included", Deselect All and choose history only.\n\n5. Create Export, Download & Unzip.\n\n6. Choose "watch-history.json" from the next screen.';
+
+  String get IMPORT_LAST_FM_HISTORY => 'Import LastFm History';
+  String get IMPORT_LAST_FM_HISTORY_GUIDE => '1. Go to _LASTFM_CSV_LINK_\n\n2. Type your username, fetch and download csv file\n\n3. Choose the file from the next screen.';
+
   String get CORRUPTED_FILE => 'Couldn\'t parse file, it might be corrupted';
   String get ERROR => 'Error';
   String get COULDNT_PLAY_FILE => 'Couldn\'t play file';
+
+  String get SOURCE => 'Source';
+  String get MATCHING_TYPE => 'Matching type';
+  String get LINK => 'Link';
 
   ///
   String get REMOVE_WHITESPACES => 'Remove Whitespaces';
@@ -66,6 +80,7 @@ class Language {
   String get UNDO_CHANGES => 'Undo Changes?';
   String get UNDO_CHANGES_DELETED_TRACK => 'Undo deleted track';
   String get UNDO_CHANGES_DELETED_PLAYLIST => 'Undo deleted playlist';
+  String get UNDO_CHANGES_DELETED_QUEUE => 'Undo deleted Queue';
   String get COLOR_PALETTES => 'Color Palettes';
   String get HOME => 'Home';
   String get SET_AS_DEFAULT => 'Set as Default';
@@ -97,6 +112,7 @@ class Language {
   String get NEW_TRACKS_RANDOM => 'Random';
   String get NEW_TRACKS_RANDOM_SUBTITLE => 'Pick up random tracks from your library';
   String get NO_TRACKS_IN_HISTORY => 'You don\'t have enough tracks in history.';
+  String get NO_ENOUGH_TRACKS => 'You don\'t have much tracks..';
   String get GENERATE_FROM_DATES => 'Time Range';
   String get GENERATE_FROM_DATES_SUBTITLE => 'Generate tracks you listened to in a time range';
   String get NO_TRACKS_FOUND_BETWEEN_DATES => 'this timerange doesn\'t have any tracks.';
@@ -173,6 +189,7 @@ class Language {
   String get TRACK_ARTISTS_SEPARATOR => 'Artists Separators';
   String get TRACK_GENRES_SEPARATOR => 'Genres Separators';
   String get SEPARATORS_MESSAGE => 'No need to insert spaces, unless you wanna use a letter (like x)';
+  String get TRACK_INFO => 'Track Info';
   String get TRACKS_INFO => 'Tracks Info';
   String get ARTWORK => 'Artwork';
   String get ARTWORKS => 'Artworks';
@@ -372,13 +389,6 @@ class Language {
   String get QUEUES => 'Queues';
   String get SETTINGS => 'Settings';
   String get WAVEFORMS => 'Waveforms';
-
-  /// Sort
-  // String get SORT_TRACKS_BY => 'Sort Tracks By';
-  // String get SORT_ALBUMS_BY => 'Sort Albums By';
-  // String get SORT_ARTISTS_BY => 'Sort Artists By';
-  // String get SORT_GENRES_BY => 'Sort Genres By';
-  // String get SORT_PLAYLISTS_BY => 'Sort Playlists By';
   String get REVERSE_ORDER => 'Reverse Order';
 
   /// Track/Group Info

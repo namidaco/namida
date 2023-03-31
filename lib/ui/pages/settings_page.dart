@@ -14,7 +14,7 @@ import 'package:namida/ui/widgets/settings/backup_restore.dart';
 import 'package:namida/ui/widgets/settings/customizations.dart';
 import 'package:namida/ui/widgets/settings/extras.dart';
 import 'package:namida/ui/widgets/settings/indexer.dart';
-import 'package:namida/ui/widgets/settings/indexing_percentage.dart';
+import 'package:namida/ui/widgets/settings/circular_percentages.dart';
 import 'package:namida/ui/widgets/settings/playback.dart';
 import 'package:namida/ui/widgets/settings/theme_setting.dart';
 
@@ -148,6 +148,7 @@ class CollapsedSettingTiles extends StatelessWidget {
           subtitle: Language.inst.BACKUP_AND_RESTORE_SUBTITLE,
           icon: Broken.refresh_circle,
           page: const BackupAndRestore(),
+          trailing: const ParsingJsonPercentage(size: 32.0),
         ),
         CustomCollapsedListTile(
           title: Language.inst.ADVANCED_SETTINGS,

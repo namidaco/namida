@@ -120,60 +120,55 @@ class PlaylistsPage extends StatelessWidget {
                       const SliverPadding(padding: EdgeInsets.only(top: 6.0)),
 
                       /// Default Playlists.
-                      SliverToBoxAdapter(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Column(
-                              children: [
-                                DefaultPlaylistCard(
-                                  width: context.width / 2.4,
-                                  colorScheme: Colors.grey,
-                                  icon: Broken.refresh,
-                                  title: Language.inst.HISTORY,
-                                  playlistName: kPlaylistHistory,
-                                  onTap: () => NamidaOnTaps.inst.onPlaylistTap(
-                                    PlaylistController.inst.defaultPlaylists.firstWhere((element) => element.name == kPlaylistHistory),
+                      if (displayTopRow)
+                        SliverToBoxAdapter(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Column(
+                                children: [
+                                  DefaultPlaylistCard(
+                                    width: context.width / 2.4,
+                                    colorScheme: Colors.grey,
+                                    icon: Broken.refresh,
+                                    title: Language.inst.HISTORY,
+                                    playlistName: kPlaylistHistory,
+                                    onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaHistoryPlaylist),
                                   ),
-                                ),
-                                DefaultPlaylistCard(
-                                  width: context.width / 2.4,
-                                  colorScheme: Colors.red,
-                                  icon: Broken.heart,
-                                  title: Language.inst.FAVOURITES,
-                                  playlistName: kPlaylistFavourites,
-                                  onTap: () => NamidaOnTaps.inst.onPlaylistTap(
-                                    PlaylistController.inst.defaultPlaylists.firstWhere((element) => element.name == kPlaylistFavourites),
+                                  DefaultPlaylistCard(
+                                    width: context.width / 2.4,
+                                    colorScheme: Colors.red,
+                                    icon: Broken.heart,
+                                    title: Language.inst.FAVOURITES,
+                                    playlistName: kPlaylistFavourites,
+                                    onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaFavouritePlaylist),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: 12.0),
-                            Column(
-                              children: [
-                                DefaultPlaylistCard(
-                                  width: context.width / 2.4,
-                                  colorScheme: Colors.green,
-                                  icon: Broken.award,
-                                  title: Language.inst.MOST_PLAYED,
-                                  playlistName: kPlaylistMostPlayed,
-                                  onTap: () => NamidaOnTaps.inst.onPlaylistTap(
-                                    PlaylistController.inst.defaultPlaylists.firstWhere((element) => element.name == kPlaylistMostPlayed),
+                                ],
+                              ),
+                              const SizedBox(width: 12.0),
+                              Column(
+                                children: [
+                                  DefaultPlaylistCard(
+                                    width: context.width / 2.4,
+                                    colorScheme: Colors.green,
+                                    icon: Broken.award,
+                                    title: Language.inst.MOST_PLAYED,
+                                    playlistName: kPlaylistMostPlayed,
+                                    onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaMostPlayedPlaylist),
                                   ),
-                                ),
-                                DefaultPlaylistCard(
-                                  width: context.width / 2.4,
-                                  colorScheme: Colors.blue,
-                                  icon: Broken.driver,
-                                  title: Language.inst.QUEUES,
-                                  text: QueueController.inst.queueList.length.toString(),
-                                  onTap: () => Get.to(() => QueuesPage()),
-                                ),
-                              ],
-                            ),
-                          ],
+                                  DefaultPlaylistCard(
+                                    width: context.width / 2.4,
+                                    colorScheme: Colors.blue,
+                                    icon: Broken.driver,
+                                    title: Language.inst.QUEUES,
+                                    text: QueueController.inst.queueList.length.toString(),
+                                    onTap: () => Get.to(() => QueuesPage()),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
                       const SliverPadding(padding: EdgeInsets.only(top: 10.0)),
                       if (playlistGridCount == 1)
                         SliverList(

@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/folder.dart';
-import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -26,7 +26,7 @@ class FolderTile extends StatelessWidget {
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 0, 0, 0),
           onLongPress: () {},
-          onTap: onTap ?? () => Folders.inst.stepIn(folder),
+          onTap: onTap ?? () => NamidaOnTaps.inst.onFolderOpen(folder),
           child: Container(
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(vertical: 4.0),

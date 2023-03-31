@@ -8,6 +8,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 import 'package:like_button/like_button.dart';
 import 'package:selectable_autolink_text/selectable_autolink_text.dart';
+import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:wheel_slider/wheel_slider.dart';
 
@@ -298,64 +299,70 @@ class CustomBlurryDialog extends StatelessWidget {
       filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
       child: Theme(
         data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
-        child: AlertDialog(
-          scrollable: scrollable,
-          insetPadding: insetPadding ?? const EdgeInsets.symmetric(horizontal: 50, vertical: 32),
-          clipBehavior: Clip.antiAlias,
-          titlePadding: normalTitleStyle ? const EdgeInsets.only(top: 24.0, left: 24.0, right: 24.0) : EdgeInsets.zero,
-          contentPadding: contentPadding ?? const EdgeInsets.all(14.0),
-          title: normalTitleStyle
-              ? Row(
-                  children: [
-                    if (icon != null || isWarning) ...[
-                      Icon(
-                        isWarning ? Broken.warning_2 : icon,
-                      ),
-                      const SizedBox(
-                        width: 10.0,
-                      ),
-                    ],
-                    Text(
-                      isWarning ? Language.inst.WARNING : title ?? '',
-                      style: Get.textTheme.displayLarge,
-                    ),
-                  ],
-                )
-              : Container(
-                  color: context.theme.cardColor,
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (icon != null) ...[
-                        Icon(
-                          icon,
-                        ),
-                        const SizedBox(
-                          width: 10.0,
+        child: GestureDetector(
+          onTap: () => Get.close(1),
+          child: Container(
+            color: Colors.transparent,
+            child: AlertDialog(
+              scrollable: scrollable,
+              insetPadding: insetPadding ?? const EdgeInsets.symmetric(horizontal: 50, vertical: 32),
+              clipBehavior: Clip.antiAlias,
+              titlePadding: normalTitleStyle ? const EdgeInsets.only(top: 24.0, left: 24.0, right: 24.0) : EdgeInsets.zero,
+              contentPadding: contentPadding ?? const EdgeInsets.all(14.0),
+              title: normalTitleStyle
+                  ? Row(
+                      children: [
+                        if (icon != null || isWarning) ...[
+                          Icon(
+                            isWarning ? Broken.warning_2 : icon,
+                          ),
+                          const SizedBox(
+                            width: 10.0,
+                          ),
+                        ],
+                        Text(
+                          isWarning ? Language.inst.WARNING : title ?? '',
+                          style: Get.textTheme.displayLarge,
                         ),
                       ],
-                      Text(
-                        title ?? '',
-                        style: context.theme.textTheme.displayMedium,
-                        textAlign: TextAlign.center,
+                    )
+                  : Container(
+                      color: context.theme.cardColor,
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (icon != null) ...[
+                            Icon(
+                              icon,
+                            ),
+                            const SizedBox(
+                              width: 10.0,
+                            ),
+                          ],
+                          Text(
+                            title ?? '',
+                            style: context.theme.textTheme.displayMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-          content: SizedBox(
-            width: Get.width,
-            child: bodyText != null
-                ? Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Text(
-                      bodyText!,
-                      style: Get.textTheme.displayMedium,
                     ),
-                  )
-                : child,
+              content: SizedBox(
+                width: Get.width,
+                child: bodyText != null
+                    ? Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Text(
+                          bodyText!,
+                          style: Get.textTheme.displayMedium,
+                        ),
+                      )
+                    : child,
+              ),
+              actions: actions,
+            ),
           ),
-          actions: actions,
         ),
       ),
     );
@@ -565,11 +572,12 @@ class GeneratePlaylistButton extends StatelessWidget {
 
 class MoreIcon extends StatelessWidget {
   final void Function()? onPressed;
+  final void Function()? onLongPress;
   final bool rotated;
   final double padding;
   final Color? iconColor;
-  final double? iconSize;
-  const MoreIcon({super.key, this.onPressed, this.rotated = true, this.padding = 1.0, this.iconColor, this.iconSize});
+  final double iconSize;
+  const MoreIcon({super.key, this.onPressed, this.rotated = true, this.padding = 1.0, this.iconColor, this.iconSize = 18.0, this.onLongPress});
 
   @override
   Widget build(BuildContext context) {
@@ -582,11 +590,12 @@ class MoreIcon extends StatelessWidget {
           highlightColor: const Color.fromARGB(60, 120, 120, 120),
           borderRadius: BorderRadius.circular(34.0.multipliedRadius),
           onTap: onPressed,
+          onLongPress: onLongPress,
           child: Padding(
             padding: EdgeInsets.all(padding),
             child: Icon(
               Broken.more,
-              size: iconSize ?? 18.0,
+              size: iconSize,
               color: iconColor,
             ),
           ),
@@ -604,6 +613,7 @@ class StackedIcon extends StatelessWidget {
   final Color? secondaryIconColor;
   final double? iconSize;
   final double blurRadius;
+  final Widget? smallChild;
 
   const StackedIcon({
     super.key,
@@ -614,6 +624,7 @@ class StackedIcon extends StatelessWidget {
     this.secondaryText,
     this.iconSize,
     this.blurRadius = 3.0,
+    this.smallChild,
   });
 
   @override
@@ -635,9 +646,10 @@ class StackedIcon extends StatelessWidget {
                 BoxShadow(color: Get.theme.scaffoldBackgroundColor, spreadRadius: 0, blurRadius: blurRadius),
               ],
             ),
-            child: secondaryText != null
-                ? Text(secondaryText!, style: context.textTheme.displaySmall?.copyWith(color: context.theme.listTileTheme.iconColor))
-                : Icon(secondaryIcon, size: 14, color: secondaryIconColor),
+            child: smallChild ??
+                (secondaryText != null
+                    ? Text(secondaryText!, style: context.textTheme.displaySmall?.copyWith(color: context.theme.listTileTheme.iconColor))
+                    : Icon(secondaryIcon, size: 14, color: secondaryIconColor)),
           ),
         )
       ],
@@ -1326,16 +1338,20 @@ class NamidaLogoContainer extends StatelessWidget {
 }
 
 class NamidaContainerDivider extends StatelessWidget {
-  const NamidaContainerDivider({super.key});
+  final double? width;
+  final double height;
+  final Color? color;
+  final EdgeInsetsGeometry? margin;
+  const NamidaContainerDivider({super.key, this.width, this.height = 2.0, this.color, this.margin});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 3,
-      width: 42.0,
-      margin: const EdgeInsets.all(10.0),
+      height: height,
+      width: width,
+      margin: margin,
       decoration: BoxDecoration(
-        color: context.theme.dividerColor.withAlpha(Get.isDarkMode ? 100 : 20),
+        color: (color ?? context.theme.dividerColor).withAlpha(Get.isDarkMode ? 100 : 20),
         borderRadius: BorderRadius.circular(18.0.multipliedRadius),
       ),
     );
@@ -1463,6 +1479,49 @@ class DefaultPlaylistCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class NamidaCircularPercentage extends StatelessWidget {
+  final double size;
+  final double percentage;
+  const NamidaCircularPercentage({super.key, this.size = 48.0, required this.percentage});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        SleekCircularSlider(
+          appearance: CircularSliderAppearance(
+            customWidths: CustomSliderWidths(
+              trackWidth: size / 24,
+              progressBarWidth: size / 12,
+            ),
+            customColors: CustomSliderColors(
+              dotColor: Colors.transparent,
+              trackColor: context.theme.cardTheme.color,
+              dynamicGradient: true,
+              progressBarColors: [
+                context.theme.colorScheme.primary.withAlpha(100),
+                Colors.transparent,
+                context.theme.colorScheme.secondary.withAlpha(100),
+                Colors.transparent,
+                context.theme.colorScheme.primary.withAlpha(100),
+              ],
+              hideShadow: true,
+            ),
+            size: size,
+            spinnerMode: true,
+          ),
+        ),
+        if (percentage.isFinite)
+          Text(
+            "${(percentage * 100).toStringAsFixed(0)}%",
+            style: Get.textTheme.displaySmall?.copyWith(fontSize: size / 3.2),
+          )
+      ],
     );
   }
 }

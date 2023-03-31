@@ -1,8 +1,8 @@
 import 'package:namida/class/track.dart';
 
 class Group {
-  late String name;
-  late List<Track> tracks;
+  late final String name;
+  late final List<Track> tracks;
 
   Group(
     this.name,

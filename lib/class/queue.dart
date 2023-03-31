@@ -1,6 +1,5 @@
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 
 class Queue {
@@ -14,13 +13,12 @@ class Queue {
 
   /// Converts empty queue to AllTracksList.
   Queue.fromJson(Map<String, dynamic> json) {
-    /// Since we are using paths instead of real Track Objects, we need to match all tracks with these paths
-    final List<String> res = List.castFrom<dynamic, String>(json['tracks'] ?? []);
+    final List<Track> res = (json['tracks'] as List? ?? []).map((e) => Track.fromJson(e)).toList();
     final finalTracks = <Track>[];
     if (res.isEmpty) {
       finalTracks.addAll(Indexer.inst.tracksInfoList.toList());
     } else {
-      finalTracks.addAll(res.toTracks);
+      finalTracks.addAll(res);
     }
 
     date = json['date'] ?? DateTime.now().millisecondsSinceEpoch;
@@ -31,9 +29,9 @@ class Queue {
   /// this should lower startup time and increase performance.
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    final finalTracks = checkIfQueueSameAsAllTracks(tracks) ? [] : tracks.map((e) => e.path).toList();
+    final finalTracks = checkIfQueueSameAsAllTracks(tracks) ? <Track>[] : tracks;
     data['date'] = date;
-    data['tracks'] = finalTracks;
+    data['tracks'] = finalTracks.map((e) => e.toJson()).toList();
     return data;
   }
 }
