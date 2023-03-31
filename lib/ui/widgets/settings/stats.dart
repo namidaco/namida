@@ -20,7 +20,7 @@ class Stats extends StatelessWidget {
       subtitle: Language.inst.STATS_SUBTITLE,
       icon: Broken.chart_21,
       child: SizedBox(
-        width: MediaQuery.of(context).size.width,
+        width: context.width,
         child: Obx(
           () => Wrap(
             alignment: WrapAlignment.start,

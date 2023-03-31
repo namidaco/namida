@@ -128,13 +128,12 @@ class TrackTileCustomization extends StatelessWidget {
           ),
           Container(
             color: context.theme.cardTheme.color,
-            width: MediaQuery.of(context).size.width,
+            width: context.width,
             height: stg.trackListTileHeight * 1.4,
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(vertical: 7.0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
-              // mainAxisAlignment: MainAxisAlignment.spaceBetween,
               mainAxisSize: MainAxisSize.max,
               children: [
                 const SizedBox(

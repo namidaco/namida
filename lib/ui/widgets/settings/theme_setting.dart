@@ -24,7 +24,7 @@ class ThemeSetting extends StatelessWidget {
       subtitle: Language.inst.THEME_SETTINGS_SUBTITLE,
       icon: Broken.brush_2,
       child: SizedBox(
-        width: MediaQuery.of(context).size.width,
+        width: context.width,
         child: Column(
           children: [
             CustomListTile(

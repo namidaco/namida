@@ -172,12 +172,9 @@ class MainPageWrapper extends StatelessWidget {
                         bottom: 60 +
                             60.0 * ScrollSearchController.inst.miniplayerHeightPercentage.value +
                             (SettingsController.inst.enableBottomNavBar.value ? 0 : 32.0 * (1 - ScrollSearchController.inst.miniplayerHeightPercentageQueue.value)),
-                        child: Hero(
-                          tag: 'SELECTEDTRACKS',
-                          child: Opacity(
-                            opacity: 1 - ScrollSearchController.inst.miniplayerHeightPercentage.value,
-                            child: const SelectedTracksPreviewContainer(),
-                          ),
+                        child: Opacity(
+                          opacity: 1 - ScrollSearchController.inst.miniplayerHeightPercentage.value,
+                          child: const SelectedTracksPreviewContainer(),
                         ),
                       ),
                   ],
