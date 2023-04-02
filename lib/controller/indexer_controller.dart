@@ -247,10 +247,12 @@ class Indexer extends GetxController {
           }
 
           /// Split Artists
-          final artists = splitBySeparators(trackInfo.artist, SettingsController.inst.trackArtistsSeparators.toList(), 'Unkown Artist');
+          final artists = splitBySeparators(
+              trackInfo.artist, SettingsController.inst.trackArtistsSeparators.toList(), 'Unkown Artist', SettingsController.inst.trackArtistsSeparatorsBlacklist.toList());
 
           /// Split Genres
-          final genres = splitBySeparators(trackInfo.genre, SettingsController.inst.trackGenresSeparators.toList(), 'Unkown Genre');
+          final genres = splitBySeparators(
+              trackInfo.genre, SettingsController.inst.trackGenresSeparators.toList(), 'Unkown Genre', SettingsController.inst.trackGenresSeparatorsBlacklist.toList());
 
           Track newTrackEntry = Track(
             trackInfo.title ?? '',
@@ -350,9 +352,9 @@ class Indexer extends GetxController {
     }
   }
 
-  List<String> splitBySeparators(String? string, Iterable<String> separators, String fallback) {
+  List<String> splitBySeparators(String? string, Iterable<String> separators, String fallback, List<String> blacklist) {
     final List<String> finalStrings = <String>[];
-    final List<String> pre = string?.trim().multiSplit(separators) ?? [fallback];
+    final List<String> pre = string?.trim().multiSplit(separators, blacklist) ?? [fallback];
     for (final element in pre) {
       finalStrings.addIf(element != '', element.trim());
     }

@@ -32,6 +32,7 @@ class Language {
   String get REMOVE_QUEUE => 'Remove Queue';
   String get CONFIGURE => 'Configure';
   String get TOTAL_LISTENS => 'Total Listens';
+  String get BLACKLIST => 'Blacklist';
 
   String get IMPORT_YOUTUBE_HISTORY_GUIDE =>
       '1. Go to _TAKEOUT_LINK_\n\n2. Deselect All and select youtube only.\n\n3. Press "Multiple Formats" and beside "History" choose "JSON".\n\n4. Press "All Youtube data included", Deselect All and choose history only.\n\n5. Create Export, Download & Unzip.\n\n6. Choose "watch-history.json" from the next screen.';

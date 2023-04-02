@@ -51,11 +51,17 @@ extension AllDirInDir on String {
 }
 
 extension UtilExtensions on String {
-  List<String> multiSplit(Iterable<String> delimeters) => delimeters.isEmpty
-      ? [this]
-      : split(
-          RegExp(delimeters.map(RegExp.escape).join('|')),
-        );
+  List<String> multiSplit(Iterable<String> delimiters, Iterable<String> blacklist) {
+    if (blacklist.any((s) => contains(s))) {
+      return [this];
+    } else {
+      return delimiters.isEmpty
+          ? [this]
+          : split(
+              RegExp(delimiters.map(RegExp.escape).join('|')),
+            );
+    }
+  }
 }
 
 extension Iterables<E> on Iterable<E> {
@@ -197,10 +203,7 @@ extension Channels on String {
 
 extension FavouriteTrack on Track {
   bool get isFavourite {
-    final favPlaylist = PlaylistController.inst.defaultPlaylists.firstWhere(
-      (element) => element.name == kPlaylistFavourites,
-    );
-    return favPlaylist.tracks.map((e) => e.track).contains(this);
+    return namidaFavouritePlaylist.tracks.firstWhereOrNull((element) => element.track.path == path) != null;
   }
 }
 
@@ -295,7 +298,7 @@ extension LibraryTabToWidget on LibraryTab {
       return AlbumsPage();
     }
     if (this == LibraryTab.tracks) {
-      return TracksPage();
+      return const TracksPage();
     }
     if (this == LibraryTab.artists) {
       return ArtistsPage();

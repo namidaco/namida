@@ -325,13 +325,40 @@ class IndexerSettings extends StatelessWidget {
     );
   }
 
-  Future<void> _showSeparatorSymbolsDialog(String title, RxList<String> itemsList, {bool trackArtistsSeparators = false, bool trackGenresSeparators = false}) async {
+  Future<void> _showSeparatorSymbolsDialog(
+    String title,
+    RxList<String> itemsList, {
+    bool trackArtistsSeparators = false,
+    bool trackGenresSeparators = false,
+    bool trackArtistsSeparatorsBlacklist = false,
+    bool trackGenresSeparatorsBlacklist = false,
+  }) async {
     TextEditingController separatorsController = TextEditingController();
     await Get.dialog(
       transitionDuration: const Duration(milliseconds: 200),
       CustomBlurryDialog(
         title: title,
         actions: [
+          if (!(trackArtistsSeparatorsBlacklist || trackGenresSeparatorsBlacklist))
+            ElevatedButton(
+              onPressed: () {
+                if (trackArtistsSeparators) {
+                  _showSeparatorSymbolsDialog(
+                    Language.inst.BLACKLIST,
+                    SettingsController.inst.trackArtistsSeparatorsBlacklist,
+                    trackArtistsSeparatorsBlacklist: true,
+                  );
+                }
+                if (trackGenresSeparators) {
+                  _showSeparatorSymbolsDialog(
+                    Language.inst.BLACKLIST,
+                    SettingsController.inst.trackGenresSeparatorsBlacklist,
+                    trackGenresSeparatorsBlacklist: true,
+                  );
+                }
+              },
+              child: Text(Language.inst.BLACKLIST),
+            ),
           const CancelButton(),
           ElevatedButton(
             onPressed: () {
@@ -341,6 +368,12 @@ class IndexerSettings extends StatelessWidget {
                 }
                 if (trackGenresSeparators) {
                   stg.save(trackGenresSeparators: [separatorsController.text]);
+                }
+                if (trackArtistsSeparatorsBlacklist) {
+                  stg.save(trackArtistsSeparatorsBlacklist: [separatorsController.text]);
+                }
+                if (trackGenresSeparatorsBlacklist) {
+                  stg.save(trackGenresSeparatorsBlacklist: [separatorsController.text]);
                 }
                 separatorsController.clear();
               } else {
@@ -353,10 +386,11 @@ class IndexerSettings extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              Language.inst.SEPARATORS_MESSAGE,
-              style: Get.textTheme.displaySmall,
-            ),
+            if (!(trackArtistsSeparatorsBlacklist || trackGenresSeparatorsBlacklist))
+              Text(
+                Language.inst.SEPARATORS_MESSAGE,
+                style: Get.textTheme.displaySmall,
+              ),
             const SizedBox(
               height: 12.0,
             ),
@@ -380,6 +414,12 @@ class IndexerSettings extends StatelessWidget {
                             }
                             if (trackGenresSeparators) {
                               stg.removeFromList(trackGenresSeparator: e.value);
+                            }
+                            if (trackArtistsSeparatorsBlacklist) {
+                              stg.removeFromList(trackArtistsSeparatorsBlacklist1: e.value);
+                            }
+                            if (trackGenresSeparatorsBlacklist) {
+                              stg.removeFromList(trackGenresSeparatorsBlacklist1: e.value);
                             }
                           },
                           child: Row(
