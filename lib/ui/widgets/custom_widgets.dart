@@ -25,7 +25,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/pages/settings_page.dart';
-import 'package:namida/ui/widgets/dialogs/setting_dialog_with_text_field.dart';
+import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class CustomSwitchListTile extends StatelessWidget {
@@ -255,7 +255,7 @@ class CustomListTile extends StatelessWidget {
           trailing: trailingText != null
               ? Text(
                   trailingText!,
-                  style: Get.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
+                  style: context.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
                 )
               : (trailing != null
                   ? FittedBox(
@@ -329,7 +329,7 @@ class CustomBlurryDialog extends StatelessWidget {
                         Expanded(
                           child: Text(
                             isWarning ? Language.inst.WARNING : title ?? '',
-                            style: Get.textTheme.displayLarge,
+                            style: context.textTheme.displayLarge,
                           ),
                         ),
                         if (trailingWidgets != null)
@@ -370,7 +370,7 @@ class CustomBlurryDialog extends StatelessWidget {
                         padding: const EdgeInsets.all(12.0),
                         child: Text(
                           bodyText!,
-                          style: Get.textTheme.displayMedium,
+                          style: context.textTheme.displayMedium,
                         ),
                       )
                     : child,
@@ -1541,7 +1541,7 @@ class NamidaCircularPercentage extends StatelessWidget {
         if (percentage.isFinite)
           Text(
             "${(percentage * 100).toStringAsFixed(0)}%",
-            style: Get.textTheme.displaySmall?.copyWith(fontSize: size / 3.2),
+            style: context.textTheme.displaySmall?.copyWith(fontSize: size / 3.2),
           )
       ],
     );

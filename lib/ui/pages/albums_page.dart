@@ -15,7 +15,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/album_card.dart';
 import 'package:namida/ui/widgets/library/album_tile.dart';
-import 'package:namida/ui/widgets/settings/sort_by_button.dart';
+import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class AlbumsPage extends StatelessWidget {
   final List<Group>? albums;

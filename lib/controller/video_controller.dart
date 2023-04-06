@@ -16,7 +16,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/strings.dart';
 
-class VideoController extends GetxController {
+class VideoController {
   static final VideoController inst = VideoController();
 
   /// Local Video

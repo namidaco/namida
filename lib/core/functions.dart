@@ -132,7 +132,7 @@ bool checkIfQueueSameAsCurrent(List<Track> queue) {
 }
 
 bool checkIfQueueSameAsAllTracks(List<Track> queue) {
-  return checkIfQueuesSimilar(queue, Indexer.inst.tracksInfoList.toList()) == 1.0;
+  return checkIfQueuesSimilar(queue, allTracksInLibrary.toList()) == 1.0;
 }
 
 String textCleanedForSearch(String textToClean) {
@@ -141,7 +141,7 @@ String textCleanedForSearch(String textToClean) {
 
 List<Track> getRandomTracks([int? min, int? max]) {
   final List<Track> randomList = [];
-  final trackslist = Indexer.inst.tracksInfoList;
+  final trackslist = allTracksInLibrary;
   final trackslistLength = trackslist.length;
 
   if (trackslist.length < 3) {
@@ -149,7 +149,7 @@ List<Track> getRandomTracks([int? min, int? max]) {
   }
 
   /// ignore min and max if the value is more than the alltrackslist.
-  if (max != null && max > Indexer.inst.tracksInfoList.length) {
+  if (max != null && max > allTracksInLibrary.length) {
     max = null;
     min = null;
   }
@@ -192,10 +192,10 @@ List<Track> generateTracksFromDates(int oldestDate, int newestDate) {
 }
 
 Future<Track?> convertPathToTrack(String trackPath) async {
-  final trako = Indexer.inst.tracksInfoList.firstWhereOrNull((element) => element.filename == trackPath.getFilename);
+  final trako = allTracksInLibrary.firstWhereOrNull((element) => element.filename == trackPath.getFilename);
   if (trako != null) {
     return trako;
   }
   await Indexer.inst.fetchAllSongsAndWriteToFile(audioFiles: {trackPath}, deletedPaths: {}, forceReIndex: false);
-  return Indexer.inst.tracksInfoList.firstWhereOrNull((element) => element.path == trackPath);
+  return allTracksInLibrary.firstWhereOrNull((element) => element.path == trackPath);
 }

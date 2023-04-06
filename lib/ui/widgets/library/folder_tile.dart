@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/folder.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/general_popup_dialog.dart';
+import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 
 class FolderTile extends StatelessWidget {
   final Folder folder;
@@ -60,7 +60,7 @@ class FolderTile extends StatelessWidget {
                                 blur: 0,
                                 borderRadius: 6,
                                 thumnailSize: SettingsController.inst.trackThumbnailSizeinList.value / 2.6,
-                                track: folder.tracks.isNotEmpty ? folder.tracks[0] : kDummyTrack,
+                                path: folder.tracks.isNotEmpty ? folder.tracks[0].pathToImage : null,
                                 forceSquared: true,
                               ),
                             ),
@@ -87,7 +87,7 @@ class FolderTile extends StatelessWidget {
                       Text(
                         [
                           folder.tracks.displayTrackKeyword,
-                          //TODO: fix
+                          //TODO(MSOB7YY): fix
                           folder.path.getDirectoriesInside.length.displayFolderKeyword,
                         ].join(' - '),
                         overflow: TextOverflow.ellipsis,

@@ -39,6 +39,7 @@ class ExtrasSettings extends StatelessWidget {
           ),
           Obx(
             () => CustomSwitchListTile(
+              enabled: SettingsController.inst.enableBottomNavBar.value,
               icon: Broken.slider_horizontal,
               title: Language.inst.ENABLE_SCROLLING_NAVIGATION,
               subtitle: Language.inst.ENABLE_SCROLLING_NAVIGATION_SUBTITLE,
@@ -342,7 +343,7 @@ class ExtrasSettings extends StatelessWidget {
             trailing: Obx(
               () => Column(
                 children: [
-                  Text("${Indexer.inst.waveformsInStorage.value}/${Indexer.inst.tracksInfoList.length}"),
+                  Text("${Indexer.inst.waveformsInStorage.value}/${allTracksInLibrary.length}"),
                   if (WaveformController.inst.generatingAllWaveforms.value) const LoadingIndicator(),
                 ],
               ),
@@ -371,7 +372,7 @@ class ExtrasSettings extends StatelessWidget {
                     title: Language.inst.NOTE,
                     bodyText: Language.inst.GENERATE_ALL_WAVEFORM_DATA_SUBTITLE
                         .replaceFirst('_WAVEFORM_CURRENT_LENGTH_', '${Indexer.inst.waveformsInStorage.value}')
-                        .replaceFirst('_WAVEFORM_TOTAL_LENGTH_', '${Indexer.inst.tracksInfoList.length}'),
+                        .replaceFirst('_WAVEFORM_TOTAL_LENGTH_', '${allTracksInLibrary.length}'),
                     actions: [
                       const CancelButton(),
                       ElevatedButton(
@@ -393,7 +394,7 @@ class ExtrasSettings extends StatelessWidget {
             trailing: Obx(
               () => Column(
                 children: [
-                  Text("${Indexer.inst.colorPalettesInStorage.value}/${Indexer.inst.tracksInfoList.length}"),
+                  Text("${Indexer.inst.colorPalettesInStorage.value}/${allTracksInLibrary.length}"),
                   if (CurrentColor.inst.generatingAllColorPalettes.value) const LoadingIndicator(),
                 ],
               ),
@@ -421,7 +422,7 @@ class ExtrasSettings extends StatelessWidget {
                   CustomBlurryDialog(
                     title: Language.inst.NOTE,
                     bodyText: Language.inst.EXTRACT_ALL_COLOR_PALETTES_SUBTITLE
-                        .replaceFirst('_REMAINING_COLOR_PALETTES_', '${Indexer.inst.tracksInfoList.length - Indexer.inst.colorPalettesInStorage.value}'),
+                        .replaceFirst('_REMAINING_COLOR_PALETTES_', '${allTracksInLibrary.length - Indexer.inst.colorPalettesInStorage.value}'),
                     actions: [
                       const CancelButton(),
                       ElevatedButton(

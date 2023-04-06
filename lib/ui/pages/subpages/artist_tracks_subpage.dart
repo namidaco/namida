@@ -9,7 +9,7 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/main_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/library/album_card.dart';
 
 class ArtistTracksPage extends StatelessWidget {
@@ -47,7 +47,7 @@ class ArtistTracksPage extends StatelessWidget {
                   child: ContainerWithBorder(
                     child: ArtworkWidget(
                       thumnailSize: Get.width * 0.35,
-                      track: tracks[0],
+                      path: tracks[0].pathToImage,
                       forceSquared: true,
                       blur: 0,
                       iconSize: 32.0,

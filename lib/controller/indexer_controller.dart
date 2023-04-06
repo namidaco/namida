@@ -21,7 +21,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 
-class Indexer extends GetxController {
+class Indexer {
   static final Indexer inst = Indexer();
 
   final RxBool isIndexing = false.obs;
@@ -775,11 +775,5 @@ class Indexer extends GetxController {
     }
 
     updateVideosSizeInStorage();
-  }
-
-  @override
-  void onClose() {
-    Get.delete();
-    super.onClose();
   }
 }

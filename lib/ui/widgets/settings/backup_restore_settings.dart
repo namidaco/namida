@@ -15,8 +15,8 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/settings/circular_percentages.dart';
-import 'package:namida/ui/widgets/settings/extras.dart';
+import 'package:namida/ui/widgets/circular_percentages.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
 class BackupAndRestore extends StatelessWidget {

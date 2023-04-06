@@ -6,7 +6,7 @@ import 'package:namida/class/queue.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 
 class QueueTile extends StatelessWidget {
@@ -54,7 +54,7 @@ class QueueTile extends StatelessWidget {
                   children: [
                     Text(
                       queue.date.dateAndClockFormattedOriginal,
-                      style: Get.textTheme.displayMedium?.copyWith(
+                      style: context.textTheme.displayMedium?.copyWith(
                         fontSize: 14.0,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -62,7 +62,7 @@ class QueueTile extends StatelessWidget {
                     const SizedBox(height: 1.0),
                     Text(
                       queue.tracks.displayTrackKeyword,
-                      style: Get.textTheme.displaySmall?.copyWith(
+                      style: context.textTheme.displaySmall?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -72,7 +72,7 @@ class QueueTile extends StatelessWidget {
                 const Spacer(),
                 Text(
                   queue.tracks.totalDurationFormatted,
-                  style: Get.textTheme.displaySmall?.copyWith(
+                  style: context.textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.w500,
                     fontSize: 12.5,
                   ),

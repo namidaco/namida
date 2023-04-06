@@ -11,11 +11,10 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 
-class QueueController extends GetxController {
-  static QueueController inst = QueueController();
+class QueueController {
+  static final QueueController inst = QueueController();
 
   final RxList<Queue> queueList = <Queue>[].obs;
-
   final RxList<Track> latestQueue = <Track>[].obs;
 
   /// doesnt save queues with more than 2000 tracks.

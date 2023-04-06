@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -96,7 +95,6 @@ class YoutubePage extends StatelessWidget {
                                                 width: 22.0,
                                                 isCircle: true,
                                                 errorWidget: (context, url, error) => ArtworkWidget(
-                                                  track: kDummyTrack,
                                                   thumnailSize: 22.0,
                                                   forceDummyArtwork: true,
                                                   borderRadius: 124.0.multipliedRadius,

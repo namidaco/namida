@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:namida/class/playlist.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 
 class PlaylistTile extends StatelessWidget {
@@ -48,18 +48,18 @@ class PlaylistTile extends StatelessWidget {
                     children: [
                       Text(
                         playlist.name.translatePlaylistName,
-                        style: Get.textTheme.displayMedium,
+                        style: context.textTheme.displayMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.date.dateFormatted].join(' • '),
-                        style: Get.textTheme.displaySmall?.copyWith(fontSize: 13.7),
+                        style: context.textTheme.displaySmall?.copyWith(fontSize: 13.7),
                         overflow: TextOverflow.ellipsis,
                       ),
                       if (playlist.modes.isNotEmpty)
                         Text(
                           playlist.modes.join(', ').overflow,
-                          style: Get.textTheme.displaySmall,
+                          style: context.textTheme.displaySmall,
                           overflow: TextOverflow.ellipsis,
                         ),
                     ],
@@ -68,7 +68,7 @@ class PlaylistTile extends StatelessWidget {
                 const SizedBox(width: 12.0),
                 Text(
                   playlist.tracks.map((e) => e.track).toList().totalDurationFormatted,
-                  style: Get.textTheme.displaySmall?.copyWith(
+                  style: context.textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
                   overflow: TextOverflow.ellipsis,

@@ -16,11 +16,11 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_card.dart';
 import 'package:namida/ui/widgets/library/playlist_tile.dart';
-import 'package:namida/ui/widgets/settings/sort_by_button.dart';
+import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class PlaylistsPage extends StatelessWidget {
   final int? countPerRow;

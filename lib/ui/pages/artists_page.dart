@@ -14,7 +14,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/artist_card.dart';
 import 'package:namida/ui/widgets/library/artist_tile.dart';
-import 'package:namida/ui/widgets/settings/sort_by_button.dart';
+import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class ArtistsPage extends StatelessWidget {
   final List<Group>? artists;

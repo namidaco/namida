@@ -43,7 +43,7 @@ class MultiArtworkContainer extends StatelessWidget {
                 MultiArtworks(
                   heroTag: heroTag,
                   disableHero: true,
-                  tracks: tracks!,
+                  paths: tracks!.map((e) => e.pathToImage).toList(),
                   thumbnailSize: size - 6.0,
                 ),
               if (child != null) child!,

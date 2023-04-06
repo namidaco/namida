@@ -15,7 +15,7 @@ import 'package:namida/core/themes.dart';
 
 Color get playerStaticColor => Color(SettingsController.inst.staticColor.value);
 
-class CurrentColor extends GetxController {
+class CurrentColor {
   static final CurrentColor inst = CurrentColor();
 
   final Rx<Color> color = playerStaticColor.obs;
@@ -73,7 +73,7 @@ class CurrentColor extends GetxController {
     }
     generatingAllColorPalettes.value = true;
 
-    for (final tr in Indexer.inst.tracksInfoList.toList()) {
+    for (final tr in allTracksInLibrary.toList()) {
       if (!generatingAllColorPalettes.value) {
         break;
       }
@@ -155,13 +155,6 @@ class CurrentColor extends GetxController {
 
   void updateThemeAndRefresh() {
     Get.changeTheme(AppThemes.inst.getAppTheme(color.value));
-    update();
-  }
-
-  @override
-  void onClose() {
-    Get.delete();
-    super.onClose();
   }
 }
 

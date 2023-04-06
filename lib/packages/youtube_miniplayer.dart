@@ -16,7 +16,6 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/youtube_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -81,7 +80,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(finalbr),
                               ),
                               child: ArtworkWidget(
-                                track: currentTrack,
+                                path: currentTrack.pathToImage,
                                 thumnailSize: finalthumbnailsize,
                                 width: finalthumbnailsize,
                                 height: finalthumbnailsize * 9 / 16,
@@ -316,7 +315,6 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                                       width: 42.0,
                                                                       isCircle: true,
                                                                       errorWidget: (context, url, error) => ArtworkWidget(
-                                                                        track: kDummyTrack,
                                                                         thumnailSize: 42.0,
                                                                         forceDummyArtwork: true,
                                                                         borderRadius: 124.0.multipliedRadius,

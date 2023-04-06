@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/json_to_history_parser.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -18,7 +19,7 @@ class IndexingPercentage extends StatelessWidget {
           ? Hero(
               tag: 'indexingper',
               child: NamidaCircularPercentage(
-                percentage: Indexer.inst.tracksInfoList.length / Indexer.inst.allTracksPaths.value,
+                percentage: allTracksInLibrary.length / Indexer.inst.allTracksPaths.value,
                 size: size,
               ),
             )

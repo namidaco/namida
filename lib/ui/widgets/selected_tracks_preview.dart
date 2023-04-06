@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/add_to_playlist_dialog.dart';
-import 'package:namida/ui/widgets/dialogs/edit_tags_dialog.dart';
-import 'package:namida/ui/widgets/dialogs/general_popup_dialog.dart';
+import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
+import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
+import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class SelectedTracksPreviewContainer extends StatelessWidget {
@@ -71,12 +70,12 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                             ),
                             padding: const EdgeInsets.all(15),
                             child: stc.isMenuMinimized.value
-                                ? FittedBox(child: SelectedTracksRow())
+                                ? const FittedBox(child: SelectedTracksRow())
                                 : Column(
                                     mainAxisSize: MainAxisSize.max,
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      FittedBox(child: SelectedTracksRow()),
+                                      const FittedBox(child: SelectedTracksRow()),
                                       const SizedBox(
                                         height: 20,
                                       ),
@@ -89,20 +88,15 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                             onReorder: (oldIndex, newIndex) => stc.reorderTracks(oldIndex, newIndex),
                                             padding: EdgeInsets.zero,
                                             itemBuilder: (context, i) {
-                                              return Builder(
+                                              return Dismissible(
                                                 key: ValueKey(stc.selectedTracks[i]),
-                                                builder: (context) => Dismissible(
-                                                  key: ValueKey(stc.selectedTracks[i]),
-                                                  onDismissed: (direction) {
-                                                    stc.removeTrack(i);
-                                                  },
-                                                  child: TrackTile(
-                                                    index: i,
-                                                    track: stc.selectedTracks[i],
-                                                    displayRightDragHandler: true,
-                                                    isInSelectedTracksPreview: true,
-                                                    queue: SelectedTracksController.inst.selectedTracks.toList(),
-                                                  ),
+                                                onDismissed: (direction) => stc.removeTrack(i),
+                                                child: TrackTile(
+                                                  index: i,
+                                                  track: stc.selectedTracks[i],
+                                                  displayRightDragHandler: true,
+                                                  isInSelectedTracksPreview: true,
+                                                  queue: SelectedTracksController.inst.selectedTracks.toList(),
                                                 ),
                                               );
                                             },
@@ -125,9 +119,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
 }
 
 class SelectedTracksRow extends StatelessWidget {
-  SelectedTracksRow({super.key});
-  final SelectedTracksController stc = SelectedTracksController.inst;
-  final tracks = SelectedTracksController.inst.selectedTracks.toList();
+  const SelectedTracksRow({super.key});
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -135,11 +127,7 @@ class SelectedTracksRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         IconButton(
-          onPressed: () {
-            stc.selectedTracks.clear();
-            stc.currentAllTracks.assignAll(Indexer.inst.tracksInfoList.toList());
-            stc.isMenuMinimized.value = true;
-          },
+          onPressed: () => SelectedTracksController.inst.clearEverything(),
           icon: const Icon(Broken.close_circle),
         ),
         SizedBox(
@@ -149,12 +137,12 @@ class SelectedTracksRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  stc.selectedTracks.displayTrackKeyword,
+                  SelectedTracksController.inst.selectedTracks.displayTrackKeyword,
                   style: context.theme.textTheme.displayLarge!.copyWith(fontSize: 23.0.multipliedFontScale),
                 ),
-                if (!stc.isMenuMinimized.value)
+                if (!SelectedTracksController.inst.isMenuMinimized.value)
                   Text(
-                    stc.selectedTracks.totalDurationFormatted,
+                    SelectedTracksController.inst.selectedTracks.totalDurationFormatted,
                     style: context.theme.textTheme.displayMedium,
                   )
               ],
@@ -165,18 +153,19 @@ class SelectedTracksRow extends StatelessWidget {
           width: 32,
         ),
         IconButton(
-          onPressed: () => editMultipleTracksTags(tracks),
+          onPressed: () => editMultipleTracksTags(SelectedTracksController.inst.selectedTracks.toList()),
           tooltip: Language.inst.EDIT_TAGS,
           icon: const Icon(Broken.edit),
         ),
         IconButton(
-          onPressed: () => showAddToPlaylistDialog(tracks),
+          onPressed: () => showAddToPlaylistDialog(SelectedTracksController.inst.selectedTracks.toList()),
           tooltip: Language.inst.ADD_TO_PLAYLIST,
           icon: const Icon(Broken.music_playlist),
         ),
         IconButton(
           visualDensity: VisualDensity.compact,
           onPressed: () {
+            final tracks = SelectedTracksController.inst.selectedTracks.toList();
             showGeneralPopupDialog(
               tracks,
               tracks.displayTrackKeyword,
@@ -196,14 +185,11 @@ class SelectedTracksRow extends StatelessWidget {
           icon: const RotatedBox(quarterTurns: 1, child: Icon(Broken.more)),
         ),
         IconButton(
-          onPressed: () {
-            stc.selectedTracks.clear();
-            stc.selectedTracks.addAll(SelectedTracksController.inst.currentAllTracks.toList());
-          },
+          onPressed: () => SelectedTracksController.inst.selectAllTracks(),
           icon: const Icon(Broken.category),
           splashRadius: 20.0,
         ),
-        stc.isMenuMinimized.value ? const Icon(Broken.arrow_up_3) : const Icon(Broken.arrow_down_2)
+        SelectedTracksController.inst.isMenuMinimized.value ? const Icon(Broken.arrow_up_3) : const Icon(Broken.arrow_down_2)
       ],
     );
   }

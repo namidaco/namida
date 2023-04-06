@@ -15,8 +15,8 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/main_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
-import 'package:namida/ui/widgets/dialogs/track_info_dialog.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/track_info_dialog.dart';
 
 class TrackTile extends StatelessWidget {
   final int index;
@@ -131,13 +131,13 @@ class TrackTile extends StatelessWidget {
                   ? null
                   : () {
                       if (!isInSelectedTracksPreview) {
-                        SelectedTracksController.inst.selectOrUnselect(track);
+                        SelectedTracksController.inst.selectOrUnselect(track, queue);
                       }
                     },
               onTap: onTap ??
                   () async {
                     if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
-                      SelectedTracksController.inst.selectOrUnselect(track);
+                      SelectedTracksController.inst.selectOrUnselect(track, queue);
                     } else {
                       if (oiRespectPlayMode) {
                         Get.focusScope?.unfocus();
@@ -178,7 +178,7 @@ class TrackTile extends StatelessWidget {
                               tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
                               child: ArtworkWidget(
                                 thumnailSize: thumnailSize,
-                                track: track,
+                                path: track.pathToImage,
                                 forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
                                 useTrackTileCacheHeight: true,
                                 onTopWidget: displayIndex
@@ -238,7 +238,7 @@ class TrackTile extends StatelessWidget {
                           if (tritem.row2Item1 != TrackTileItem.none || tritem.row2Item2 != TrackTileItem.none || tritem.row2Item3 != TrackTileItem.none)
                             Text(
                               joinTrackItems(tritem.row2Item1, tritem.row2Item2, tritem.row2Item3),
-                              style: Get.textTheme.displaySmall?.copyWith(
+                              style: context.textTheme.displaySmall?.copyWith(
                                 fontWeight: FontWeight.w500,
                                 color: textColor?.withAlpha(140),
                               ),
@@ -251,7 +251,7 @@ class TrackTile extends StatelessWidget {
                             if (tritem.row3Item1 != TrackTileItem.none || tritem.row3Item2 != TrackTileItem.none || tritem.row3Item3 != TrackTileItem.none)
                               Text(
                                 joinTrackItems(tritem.row3Item1, tritem.row3Item2, tritem.row3Item3),
-                                style: Get.textTheme.displaySmall?.copyWith(
+                                style: context.textTheme.displaySmall?.copyWith(
                                   color: textColor?.withAlpha(130),
                                 ),
                                 maxLines: 1,
@@ -261,7 +261,7 @@ class TrackTile extends StatelessWidget {
                           if (thirdLineText != '')
                             Text(
                               thirdLineText,
-                              style: Get.textTheme.displaySmall?.copyWith(color: textColor?.withAlpha(130)),
+                              style: context.textTheme.displaySmall?.copyWith(color: textColor?.withAlpha(130)),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -276,7 +276,7 @@ class TrackTile extends StatelessWidget {
                           if (tritem.rightItem1 != TrackTileItem.none)
                             Text(
                               getChoosenTrackTileItem(tritem.rightItem1),
-                              style: Get.textTheme.displaySmall?.copyWith(
+                              style: context.textTheme.displaySmall?.copyWith(
                                 fontWeight: FontWeight.w500,
                                 color: textColor?.withAlpha(170),
                               ),
@@ -285,7 +285,7 @@ class TrackTile extends StatelessWidget {
                           if (tritem.rightItem2 != TrackTileItem.none)
                             Text(
                               getChoosenTrackTileItem(tritem.rightItem2),
-                              style: Get.textTheme.displaySmall?.copyWith(
+                              style: context.textTheme.displaySmall?.copyWith(
                                 fontWeight: FontWeight.w500,
                                 color: textColor?.withAlpha(170),
                               ),

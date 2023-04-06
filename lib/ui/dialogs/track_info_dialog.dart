@@ -64,7 +64,7 @@ Future<void> showTrackInfoDialog(Track track, {bool comingFromQueue = false, int
                           child: Hero(
                             tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
                             child: ArtworkWidget(
-                              track: track,
+                              path: track.pathToImage,
                               thumnailSize: Get.width,
                               compressed: false,
                               borderRadius: 0,
@@ -80,7 +80,7 @@ Future<void> showTrackInfoDialog(Track track, {bool comingFromQueue = false, int
                       child: Hero(
                         tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
                         child: ArtworkWidget(
-                          track: track,
+                          path: track.pathToImage,
                           thumnailSize: 120,
                           forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
                           useTrackTileCacheHeight: true,

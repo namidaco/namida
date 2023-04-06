@@ -11,7 +11,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/main_page.dart';
 
-class ScrollSearchController extends GetxController {
+class ScrollSearchController {
   static final ScrollSearchController inst = ScrollSearchController();
 
   final RxDouble miniplayerHeightPercentage = 0.0.obs;

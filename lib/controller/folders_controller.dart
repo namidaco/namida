@@ -6,7 +6,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 
-class Folders extends GetxController {
+class Folders {
   static final Folders inst = Folders();
 
   final folderslist = Indexer.inst.groupedFoldersList;

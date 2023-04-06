@@ -3,20 +3,22 @@ import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/core/extensions.dart';
 
-class SelectedTracksController extends GetxController {
-  static SelectedTracksController inst = SelectedTracksController();
+class SelectedTracksController {
+  static final SelectedTracksController inst = SelectedTracksController();
+
   final RxList<Track> selectedTracks = <Track>[].obs;
   final RxList<Track> currentAllTracks = <Track>[].obs;
 
   final RxBool isMenuMinimized = true.obs;
   final RxBool isExpanded = false.obs;
 
-  void selectOrUnselect(Track track) {
+  void selectOrUnselect(Track track, List<Track> queue) {
     if (selectedTracks.contains(track)) {
       selectedTracks.remove(track);
     } else {
       selectedTracks.add(track);
     }
+    currentAllTracks.assignAll(queue);
     printInfo(info: "length: ${selectedTracks.length}");
   }
 
@@ -33,9 +35,13 @@ class SelectedTracksController extends GetxController {
     selectedTracks.removeAt(index);
   }
 
-  @override
-  void onClose() {
-    Get.delete();
-    super.onClose();
+  void clearEverything() {
+    selectedTracks.clear();
+    isMenuMinimized.value = true;
+  }
+
+  void selectAllTracks() {
+    selectedTracks.clear();
+    selectedTracks.addAll(currentAllTracks.toList());
   }
 }

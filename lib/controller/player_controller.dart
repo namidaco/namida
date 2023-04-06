@@ -11,7 +11,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/functions.dart';
 
 class Player {
-  static Player inst = Player();
+  static final Player inst = Player();
 
   NamidaAudioVideoHandler? _audioHandler;
 

@@ -11,7 +11,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
-class WaveformController extends GetxController {
+class WaveformController {
   static final WaveformController inst = WaveformController();
 
   final RxList<double> curentWaveform = kDefaultWaveFormData.obs;
@@ -146,14 +146,8 @@ class WaveformController extends GetxController {
     }
   }
 
-  List<double> _increaseListToMax(List<double> list, [double max = 0.0]) {
+  List<double> _increaseListToMax(List<double> list) {
     final max = list.reduce((a, b) => a > b ? a : b);
     return list.map((value) => value / max / 2.0).toList();
-  }
-
-  @override
-  void onClose() {
-    Get.delete();
-    super.onClose();
   }
 }

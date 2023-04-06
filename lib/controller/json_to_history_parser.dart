@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -142,7 +141,7 @@ class JsonToHistoryParser {
 
       final vh = YoutubeVideoHistory.fromJson(p);
 
-      final tr = Indexer.inst.tracksInfoList.firstWhereOrNull((element) {
+      final tr = allTracksInLibrary.firstWhereOrNull((element) {
         return isMatchingTypeLink
             ? element.youtubeID == vh.id
 
@@ -189,7 +188,7 @@ class JsonToHistoryParser {
       /// matching has to meet 2 conditons:
       /// [csv artist] contains [track.artistsList.first]
       /// [csv title] contains [track.title]
-      final tr = Indexer.inst.tracksInfoList.firstWhereOrNull(
+      final tr = allTracksInLibrary.firstWhereOrNull(
         (tr) => pieces.first.cleanUpForComparison.contains(tr.artistsList.first.cleanUpForComparison) && pieces[2].cleanUpForComparison.contains(tr.title.cleanUpForComparison),
       );
       if (tr != null) {

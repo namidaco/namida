@@ -9,7 +9,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/main_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 
 class AlbumTracksPage extends StatelessWidget {
@@ -47,7 +47,7 @@ class AlbumTracksPage extends StatelessWidget {
                       child: ArtworkWidget(
                         thumnailSize: Get.width * 0.35,
                         forceSquared: false,
-                        track: tracks.first,
+                        path: tracks.first.pathToImage,
                         compressed: false,
                         borderRadius: 12.0,
                       ),

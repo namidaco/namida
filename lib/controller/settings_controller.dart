@@ -10,8 +10,8 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
-class SettingsController extends GetxController {
-  static SettingsController inst = SettingsController();
+class SettingsController {
+  static final SettingsController inst = SettingsController();
 
   final Rx<ThemeMode> themeMode = ThemeMode.system.obs;
   final RxBool autoColor = true.obs;
@@ -721,7 +721,6 @@ class SettingsController extends GetxController {
       this.trackPlayMode.value = trackPlayMode;
     }
     _writeToStorage();
-    update();
   }
 
   void insertInList(
@@ -841,7 +840,6 @@ class SettingsController extends GetxController {
       }
     }
     _writeToStorage();
-    update();
   }
 
   void updateTrackItemList(TrackTilePosition p, TrackTileItem i) {
@@ -884,11 +882,5 @@ class SettingsController extends GetxController {
     }
     trackItem.refresh();
     _writeToStorage();
-  }
-
-  @override
-  void onClose() {
-    Get.delete();
-    super.onClose();
   }
 }

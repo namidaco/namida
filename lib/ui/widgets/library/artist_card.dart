@@ -7,7 +7,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 
 class ArtistCard extends StatelessWidget {
   final int gridCount;
@@ -43,7 +43,7 @@ class ArtistCard extends StatelessWidget {
                   child: ContainerWithBorder(
                     child: ArtworkWidget(
                       thumnailSize: thumnailSize,
-                      track: artist[0],
+                      path: artist[0].pathToImage,
                       borderRadius: 10.0,
                       forceSquared: true,
                       blur: 0,
@@ -64,7 +64,7 @@ class ArtistCard extends StatelessWidget {
                       if (name != '')
                         Text(
                           name.overflow,
-                          style: Get.textTheme.displayMedium?.copyWith(fontSize: fontSize),
+                          style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize),
                           overflow: TextOverflow.ellipsis,
                         ),
                     ],

@@ -7,7 +7,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 
 class ArtistTile extends StatelessWidget {
   final String name;
@@ -43,7 +43,7 @@ class ArtistTile extends StatelessWidget {
                   child: ContainerWithBorder(
                     child: ArtworkWidget(
                       thumnailSize: artistthumnailSize,
-                      track: tracks[0],
+                      path: tracks[0].pathToImage,
                       borderRadius: 64.0,
                       forceSquared: true,
                       blur: 0,
@@ -58,7 +58,7 @@ class ArtistTile extends StatelessWidget {
                     children: [
                       Text(
                         name,
-                        style: Get.textTheme.displayMedium,
+                        style: context.textTheme.displayMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
                       // Text(
@@ -66,7 +66,7 @@ class ArtistTile extends StatelessWidget {
                       //     tracks.displayTrackKeyword,
                       //     tracks[0].year.yearFormatted,
                       //   ].join(' • '),
-                      //   style: Get.textTheme.displayMedium?.copyWith(
+                      //   style: context.textTheme.displayMedium?.copyWith(
                       //     fontWeight: FontWeight.w500,
                       //   ),
                       //   overflow: TextOverflow.ellipsis,
@@ -76,7 +76,7 @@ class ArtistTile extends StatelessWidget {
                           tracks.displayTrackKeyword,
                           albums.length.displayAlbumKeyword,
                         ].join(' & '),
-                        style: Get.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
+                        style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
@@ -84,7 +84,7 @@ class ArtistTile extends StatelessWidget {
                 ),
                 Text(
                   tracks.totalDurationFormatted,
-                  style: Get.textTheme.displaySmall?.copyWith(
+                  style: context.textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
                   overflow: TextOverflow.ellipsis,

@@ -20,7 +20,7 @@ class MiniplayerCustomization extends StatelessWidget {
       ),
       title: Text(
         Language.inst.MINIPLAYER_CUSTOMIZATION,
-        style: Get.textTheme.displayMedium,
+        style: context.textTheme.displayMedium,
       ),
       trailing: const Icon(
         Broken.arrow_down_2,

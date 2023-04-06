@@ -8,7 +8,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 
 class AlbumTile extends StatelessWidget {
   final List<Track> album;
@@ -58,7 +58,7 @@ class AlbumTile extends StatelessWidget {
                     height: albumthumnailSize,
                     child: ArtworkWidget(
                       thumnailSize: albumthumnailSize,
-                      track: album[0],
+                      path: album[0].pathToImage,
                       forceSquared: SettingsController.inst.forceSquaredAlbumThumbnail.value,
                     ),
                   ),
@@ -70,13 +70,13 @@ class AlbumTile extends StatelessWidget {
                     children: [
                       Text(
                         album[0].album,
-                        style: Get.textTheme.displayMedium,
+                        style: context.textTheme.displayMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
                       if (album[0].albumArtist != '')
                         Text(
                           album[0].albumArtist,
-                          style: Get.textTheme.displaySmall,
+                          style: context.textTheme.displaySmall,
                           overflow: TextOverflow.ellipsis,
                         ),
                       Text(
@@ -84,7 +84,7 @@ class AlbumTile extends StatelessWidget {
                           album.displayTrackKeyword,
                           album[0].year.yearFormatted,
                         ].join(' • '),
-                        style: Get.textTheme.displaySmall?.copyWith(
+                        style: context.textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.w500,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -96,7 +96,7 @@ class AlbumTile extends StatelessWidget {
                   [
                     album.totalDurationFormatted,
                   ].join(' - '),
-                  style: Get.textTheme.displaySmall?.copyWith(
+                  style: context.textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
                   overflow: TextOverflow.ellipsis,

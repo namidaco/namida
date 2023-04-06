@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/settings/extras.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 
 class ExpandableBox extends StatelessWidget {
   final bool isBarVisible;
@@ -53,7 +53,7 @@ class ExpandableBox extends StatelessWidget {
                     if (leftWidgets != null) ...leftWidgets!,
                     Text(
                       leftText,
-                      style: Get.textTheme.displayMedium,
+                      style: context.textTheme.displayMedium,
                     ),
                     if (displayloadingIndicator) ...[const SizedBox(width: 8.0), const LoadingIndicator()]
                   ],

@@ -5,12 +5,13 @@ import 'package:get/get.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/settings/circular_percentages.dart';
+import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
 class IndexerSettings extends StatelessWidget {
@@ -41,7 +42,7 @@ class IndexerSettings extends StatelessWidget {
                       () => StatsContainer(
                         icon: Broken.info_circle,
                         title: '${Language.inst.TRACKS_INFO} :',
-                        value: Indexer.inst.tracksInfoList.length.toString(),
+                        value: allTracksInLibrary.length.toString(),
                         total: Indexer.inst.allTracksPaths.value == 0 ? null : Indexer.inst.allTracksPaths.toString(),
                       ),
                     ),
@@ -61,7 +62,7 @@ class IndexerSettings extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Text(
                 Language.inst.INDEXER_NOTE,
-                style: Get.textTheme.displaySmall,
+                style: context.textTheme.displaySmall,
               ),
             ),
             Padding(
@@ -69,7 +70,7 @@ class IndexerSettings extends StatelessWidget {
               child: Obx(
                 () => Text(
                   '${Language.inst.DUPLICATED_TRACKS}: ${Indexer.inst.duplicatedTracksLength.value}',
-                  style: Get.textTheme.displaySmall,
+                  style: context.textTheme.displaySmall,
                 ),
               ),
             ),
@@ -78,7 +79,7 @@ class IndexerSettings extends StatelessWidget {
               child: Obx(
                 () => Text(
                   '${Language.inst.FILTERED_BY_SIZE_AND_DURATION}: ${Indexer.inst.filteredForSizeDurationTracks.value}',
-                  style: Get.textTheme.displaySmall,
+                  style: context.textTheme.displaySmall,
                 ),
               ),
             ),
@@ -230,7 +231,7 @@ class IndexerSettings extends StatelessWidget {
                     .map((e) => ListTile(
                           title: Text(
                             e.value,
-                            style: Get.textTheme.displayMedium,
+                            style: context.textTheme.displayMedium,
                           ),
                           trailing: TextButton(
                             onPressed: () {
@@ -258,7 +259,7 @@ class IndexerSettings extends StatelessWidget {
                                     ],
                                     child: Text(
                                       "${Language.inst.REMOVE} \"${e.value}\"?",
-                                      style: Get.textTheme.displayMedium,
+                                      style: context.textTheme.displayMedium,
                                     ),
                                   ),
                                 );
@@ -297,7 +298,7 @@ class IndexerSettings extends StatelessWidget {
                         ListTile(
                             title: Text(
                           Language.inst.NO_EXCLUDED_FOLDERS,
-                          style: Get.textTheme.displayMedium,
+                          style: context.textTheme.displayMedium,
                         ))
                       ]
                     : SettingsController.inst.directoriesToExclude
@@ -306,7 +307,7 @@ class IndexerSettings extends StatelessWidget {
                         .map((e) => ListTile(
                               title: Text(
                                 e.value,
-                                style: Get.textTheme.displayMedium,
+                                style: context.textTheme.displayMedium,
                               ),
                               trailing: TextButton(
                                 onPressed: () {

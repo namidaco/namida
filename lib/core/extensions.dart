@@ -12,7 +12,6 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart' hide Playlist;
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -619,7 +618,7 @@ extension PlayerRepeatModeUtils on RepeatMode {
 extension ConvertPathsToTracks on List<String> {
   List<Track> get toTracks {
     // final matchingSet = HashSet<String>.from(this);
-    // final finalTracks = Indexer.inst.tracksInfoList.where((item) => matchingSet.contains(item.path));
+    // final finalTracks = allTracksInLibrary.where((item) => matchingSet.contains(item.path));
     final finalTracks = map((e) => e.toTrack).toList();
     return finalTracks.sorted((a, b) => indexOf(a.path).compareTo(indexOf(b.path)));
   }
@@ -627,7 +626,7 @@ extension ConvertPathsToTracks on List<String> {
 
 extension ConvertPathToTrack on String {
   Track get toTrack {
-    return Indexer.inst.tracksInfoList.firstWhereOrNull((item) => item.path == this) ??
+    return allTracksInLibrary.firstWhereOrNull((item) => item.path == this) ??
         Track(
           getFilenameWOExt,
           [],

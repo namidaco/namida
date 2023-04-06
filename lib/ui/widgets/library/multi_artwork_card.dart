@@ -38,7 +38,7 @@ class MultiArtworkCard extends StatelessWidget {
                 MultiArtworks(
                   borderRadius: 12.0.multipliedFontScale,
                   heroTag: heroTag,
-                  tracks: tracks,
+                  paths: tracks.map((e) => e.pathToImage).toList(),
                   thumbnailSize: thumnailSize,
                   iconSize: 92.0 - 14 * gridCount,
                 ),
@@ -53,7 +53,7 @@ class MultiArtworkCard extends StatelessWidget {
                         if (name != '')
                           Text(
                             name.overflow,
-                            style: Get.textTheme.displayMedium?.copyWith(fontSize: fontSize),
+                            style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize),
                             overflow: TextOverflow.ellipsis,
                           ),
                         Text(

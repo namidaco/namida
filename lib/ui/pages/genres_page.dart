@@ -11,10 +11,10 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_card.dart';
-import 'package:namida/ui/widgets/settings/sort_by_button.dart';
+import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class GenresPage extends StatelessWidget {
   GenresPage({super.key});

@@ -9,14 +9,14 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/main_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/settings/advanced.dart';
-import 'package:namida/ui/widgets/settings/backup_restore.dart';
-import 'package:namida/ui/widgets/settings/customizations.dart';
-import 'package:namida/ui/widgets/settings/extras.dart';
-import 'package:namida/ui/widgets/settings/indexer.dart';
-import 'package:namida/ui/widgets/settings/circular_percentages.dart';
-import 'package:namida/ui/widgets/settings/playback.dart';
-import 'package:namida/ui/widgets/settings/theme_setting.dart';
+import 'package:namida/ui/widgets/settings/advanced_settings.dart';
+import 'package:namida/ui/widgets/settings/backup_restore_settings.dart';
+import 'package:namida/ui/widgets/settings/customization_settings.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/ui/widgets/settings/indexer_settings.dart';
+import 'package:namida/ui/widgets/circular_percentages.dart';
+import 'package:namida/ui/widgets/settings/playback_settings.dart';
+import 'package:namida/ui/widgets/settings/theme_settings.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});

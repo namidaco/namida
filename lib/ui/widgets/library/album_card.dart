@@ -10,7 +10,7 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 
 class AlbumCard extends StatelessWidget {
   final int? gridCountOverride;
@@ -63,7 +63,7 @@ class AlbumCard extends StatelessWidget {
                   tag: 'parent_album_artwork_${album[0].album}',
                   child: ArtworkWidget(
                     thumnailSize: thumnailSize,
-                    track: album[0],
+                    path: album[0].pathToImage,
                     borderRadius: 10.0,
                     blur: 0,
                     iconSize: 32.0,

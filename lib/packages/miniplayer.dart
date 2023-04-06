@@ -30,9 +30,9 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/packages/youtube_miniplayer.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
-import 'package:namida/ui/widgets/settings/playback.dart';
+import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
 
 class MiniPlayerParent extends StatefulWidget {
@@ -440,7 +440,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
               }
 
               // final double queueOpacity = ((p.clamp(1.0, 3.0) - 1).clamp(0.0, 1.0) * 4 - 3).clamp(0, 1);
-              final double queueOpacity = 1 - rcp;
+              // final double queueOpacity = 1 - rcp;
 
               final List<Color> palette = CurrentColor.inst.palette.toList();
               RxList<Color> firstHalf = palette.getRange(0, palette.length ~/ 3).toList().obs;
@@ -1028,13 +1028,16 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                 opacity: 1 - sAnim.value.abs(),
                                 child: Transform.translate(
                                   offset: Offset(-sAnim.value * sMaxOffset / siParallax, !bounceUp ? (-maxOffset + topInset + 108.0) * (!bounceDown ? qp : (1 - bp)) : 0.0),
-                                  child: TrackImage(
-                                    p: bp,
-                                    cp: bcp,
-                                    width: vp(a: 82.0, b: 92.0, c: qp),
-                                    screenSize: screenSize,
-                                    bottomOffset: bottomOffset,
-                                    maxOffset: maxOffset,
+                                  child: Obx(
+                                    () => TrackImage(
+                                      track: Player.inst.nowPlayingTrack.value,
+                                      p: bp,
+                                      cp: bcp,
+                                      width: vp(a: 82.0, b: 92.0, c: qp),
+                                      screenSize: screenSize,
+                                      bottomOffset: bottomOffset,
+                                      maxOffset: maxOffset,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -1433,7 +1436,7 @@ class TrackInfo extends StatelessWidget {
 class TrackImage extends StatelessWidget {
   const TrackImage({
     Key? key,
-    this.track,
+    required this.track,
     required this.bottomOffset,
     required this.maxOffset,
     required this.screenSize,
@@ -1443,7 +1446,7 @@ class TrackImage extends StatelessWidget {
     this.large = false,
   }) : super(key: key);
 
-  final Track? track;
+  final Track track;
   final bool large;
 
   final double width;
@@ -1509,7 +1512,7 @@ class TrackImage extends StatelessWidget {
                               cp: cp,
                               child: ArtworkWidget(
                                 key: const ValueKey('imagecontainer'),
-                                track: track ?? Player.inst.nowPlayingTrack.value,
+                                path: track.pathToImage,
                                 thumnailSize: Get.width,
                                 compressed: false,
                                 borderRadius: 6.0 + 10.0 * cp,

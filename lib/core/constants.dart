@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 
 ///
@@ -64,6 +65,7 @@ late final Playlist namidaFavouritePlaylist;
 late final Playlist namidaMostPlayedPlaylist;
 
 double get trackTileItemExtent => SettingsController.inst.trackListTileHeight.value + 4.0 * 3.0;
+List<Track> get allTracksInLibrary => Indexer.inst.tracksInfoList.toList();
 
 /// Stock Library Tabs List
 final List<String> kLibraryTabsStock = [

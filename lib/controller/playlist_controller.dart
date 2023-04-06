@@ -17,8 +17,8 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/strings.dart';
 
-class PlaylistController extends GetxController {
-  static PlaylistController inst = PlaylistController();
+class PlaylistController {
+  static final PlaylistController inst = PlaylistController();
 
   final RxList<Playlist> playlistList = <Playlist>[].obs;
   final RxList<Playlist> playlistSearchList = <Playlist>[].obs;
@@ -209,13 +209,6 @@ class PlaylistController extends GetxController {
     await _savePlaylistToStorageAndRefresh(pl);
   }
 
-  void removeWhereFromPlaylist(String name, bool Function(TrackWithDate) test) async {
-    final pl = _getPlaylistByName(name);
-    pl.tracks.removeWhere(test);
-
-    await _savePlaylistToStorageAndRefresh(pl);
-  }
-
   void generateRandomPlaylist() {
     final rt = getRandomTracks();
     if (rt.isEmpty) {
@@ -250,7 +243,7 @@ class PlaylistController extends GetxController {
     if (trfv != null) {
       fvPlaylist.tracks.remove(trfv);
     } else {
-      addTracksToPlaylist(fvPlaylist.name, [track]);
+      fvPlaylist.tracks.add(TrackWithDate(DateTime.now().millisecondsSinceEpoch, track, TrackSource.local));
     }
     _saveFavouritesToStorage();
   }
@@ -279,7 +272,7 @@ class PlaylistController extends GetxController {
     namidaMostPlayedPlaylist.tracks.addAll(topTracksMap.keys.map((e) => TrackWithDate(0, e, TrackSource.local)));
   }
 
-  Playlist _getPlaylistByName(String name) => defaultPlaylists.firstWhereOrNull((p0) => p0.name == name) ?? playlistList.firstWhere((p0) => p0.name == name);
+  Playlist _getPlaylistByName(String name) => playlistList.firstWhere((p0) => p0.name == name);
 
   /// saves only [k_PLAYLIST_NAME_FAV] and [k_PLAYLIST_NAME_HISTORY].
   /// most played is generated from history bothways.

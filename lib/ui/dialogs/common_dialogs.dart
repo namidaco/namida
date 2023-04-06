@@ -7,7 +7,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/ui/widgets/dialogs/general_popup_dialog.dart';
+import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 
 class NamidaDialogs {
   static final NamidaDialogs inst = NamidaDialogs();

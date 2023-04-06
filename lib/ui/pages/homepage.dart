@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:namida/ui/widgets/stats.dart';
 import 'package:searchbar_animation/searchbar_animation.dart';
 
 import 'package:namida/controller/player_controller.dart';
@@ -15,8 +16,7 @@ import 'package:namida/main_page.dart';
 import 'package:namida/ui/pages/search_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/settings/circular_percentages.dart';
-import 'package:namida/ui/widgets/settings/stats.dart';
+import 'package:namida/ui/widgets/circular_percentages.dart';
 
 class HomePage extends StatelessWidget {
   final Widget? child;
@@ -152,7 +152,7 @@ class HomePage extends StatelessWidget {
                           ScrollSearchController.inst.clearGlobalSearchAndCloseThingys();
                           Get.to(() => SettingsSubPage(
                                 title: Language.inst.STATS,
-                                child: const Stats(),
+                                child: const StatsSection(),
                               ));
                         },
                       ),

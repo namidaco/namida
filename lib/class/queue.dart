@@ -1,5 +1,5 @@
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/functions.dart';
 
 class Queue {
@@ -16,7 +16,7 @@ class Queue {
     final List<Track> res = (json['tracks'] as List? ?? []).map((e) => Track.fromJson(e)).toList();
     final finalTracks = <Track>[];
     if (res.isEmpty) {
-      finalTracks.addAll(Indexer.inst.tracksInfoList.toList());
+      finalTracks.addAll(allTracksInLibrary);
     } else {
       finalTracks.addAll(res);
     }

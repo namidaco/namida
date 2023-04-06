@@ -178,10 +178,9 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                       children: [
                         Obx(
                           () => ArtworkWidget(
-                            track: track,
                             thumnailSize: Get.width / 3,
                             bytes: currentImagePath.value != '' ? null : info.firstArtwork,
-                            path: currentImagePath.value != '' ? currentImagePath.value : null,
+                            path: currentImagePath.value != '' ? currentImagePath.value : track.pathToImage,
                             onTopWidget: Positioned(
                               bottom: 0,
                               right: 0,
@@ -544,7 +543,6 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                                 Obx(
                                   () => currentImagePath.value != ''
                                       ? ArtworkWidget(
-                                          track: tracks.first,
                                           thumnailSize: Get.width / 3,
                                           path: currentImagePath.value,
                                         )

@@ -21,10 +21,10 @@ import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/dialogs/add_to_playlist_dialog.dart';
-import 'package:namida/ui/widgets/dialogs/edit_tags_dialog.dart';
-import 'package:namida/ui/widgets/dialogs/track_clear_dialog.dart';
-import 'package:namida/ui/widgets/dialogs/track_info_dialog.dart';
+import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
+import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
+import 'package:namida/ui/dialogs/track_clear_dialog.dart';
+import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 
 Future<void> showGeneralPopupDialog(
@@ -86,7 +86,7 @@ Future<void> showGeneralPopupDialog(
                                 Hero(
                                   tag: '$comingFromQueue${index}_sussydialogs_${tracks.first.path}',
                                   child: ArtworkWidget(
-                                    track: tracks.first,
+                                    path: tracks.first.pathToImage,
                                     thumnailSize: 60,
                                     forceSquared: forceSquared,
                                     useTrackTileCacheHeight: useTrackTileCacheHeight,
