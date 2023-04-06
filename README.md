@@ -1,9 +1,10 @@
-# Namida
+# <div style="display: flex; align-items: center;"><img src="some stuff/namida.png" width="82" style="margin-right: 10px;">Namida</div>
 
-A Beautiful and Feature-rich Music Player Built in Flutter
+
+A Beautiful and Feature-rich Music Player with Video Support, Built in Flutter
 
 # 🎉 Features
-## Indexing
+## Library & Indexing
 - Powerful Indexer & Tag Editor, powered by @jaudiotagger.
 - Artists and Genres Separators.
 - Prevent Duplicated Tracks.
@@ -15,36 +16,88 @@ A Beautiful and Feature-rich Music Player Built in Flutter
 - Dynamic Theming, Player Colors are picked from the current album artwork.
 - Tracks, Albums, Artists, Genres, Playlists, Queues and Folders Pages.
 - Waveform seekbar.
+- Lots of customizations (check out customization section).
+
+## Others:
 - Define parameters to use for filtering tracks in search lists.
-- Customize anything and everything.
-## Customization
-- Enable/Disable Blur & Glow Effects.
-- Border Radius Multiplier.
-- Font Scale.
-- Track Tile & Album Tile Customization settings.
-- Control exactly what to show in the track tile, all information that was extracted can be put.
-- Lots of other options (check customization section).
+- global tracks selection
+no idea if this is a feature, but anyways it lets u select from multiple places in the same list
+- reliable history system & stats
+- Never miss your sessions!
+ • persistent and reliable queue system, your sessions are saved for later usage
+- reliable history system, lets u specifiy minimum seconds/percentage to count a listen
+- most played playlist, find out your top tracks (relies on your history)
+
+## Some additional cool features:
+- Smort Tracks Generation:
+    - uuh.. with dis advanced algorithm brought for you, u can now generate tracks related to one you currently listening to, typically the ones that you often listened to in the same period.
+- Animating Thumbnail:
+   - A thumbnail that animates with the current audio peak, looks cool.
+- Miniplayer Party Mode:
+   - Applies an edge breathing effect, color can be static or dynamic (all the colors extracted from the artwork)
+- Particles Effect (which speeds up with the audio peak too)<br>
+<br>
+- <p>CAN IMPORT YOUTUBE HISTORY <img src="some stuff/ong.png" width=16/></p>
+- <p>LASTFM TOO AND MAYBE MORE IN FUTURE <img src="some stuff/yoowhat.gif" width=16/></p>
+# Video Integration
+- Namida is capable of playing videos related to the audio, video can be found either locally or fetched from youtube
+<details>
+<summary>how locally?</summary>
+typically looks (inside the folders you specificed) for any matching title, matching goes as following:
+<br>
+-- Alan walker - Faded.m4a
+<br>
+-- video alAn WaLkER - faDed (480p).mp4
+<br>
+(the video title should contain the title of the music)
+<br>
+note: some cleanup is made to improve the matching, all symbols & whitespaces are ignored.
+</details>
+
+<details>
+<summary>how youtube?</summary>
+ • looks up in the track comment tag (as they are mostly done by @yt-dlp) or file name for any matching youtube link, if found then it starts downloading (and caches permanently) and plays once it's ready, streaming here isn't a good idea as the priority goes for the music file itself.
+</details>
+<br>
 
 
+# Screenshots
 # Installation
 -
 
-# Note Regarding Tag Editor
-- tag editor needs SAF (storage access framework) permission in order to edit metadata.
-- usually u will have to set it for each folder that contains the desired track so there is like 2 options
-    1. request saf permission everytime you are editing a track that isn't inside the folder having access (it will be always the last granted folder) 
-    2. copy track to a specific folder (i chose backup folder), ask for permission, edit metadata, move the track back to the original path
-- obviously i chose the second, this will cause the permission to reset if u changed default backup location. 
+>### Note Regarding Tag Editor
+>- tag editor needs SAF (storage access framework) permission in order to edit metadata.
+>- usually u will have to set it for each folder that contains the desired track so there is like 2 options
+>    1. request saf permission everytime you are editing a track that isn't inside the folder having access (it will be always the last granted folder) 
+>    2. copy track to a specific folder (i chose backup folder), ask for permission, edit metadata, move the track back to the original path
+>- obviously i chose the second, this will cause the permission to reset if u changed default backup location. 
 
-# Note Regarding waveform generation
-- Currently, generating waveform takes ~8 seconds for a 3 min track, I'm limited by the technology of my time, though that being said, once the waveform is generated, it is cached permanently, meaning you will not have to wait again.
-- Due to that, I've provided an option to generate all waveforms at once, maybe u can use it on a night sleep.
+>### Note Regarding waveform generation
+>- Currently, generating waveform takes ~8 seconds for a 3 min track, I'm limited by the technology of my time, though that being said, once the waveform is generated, it is cached permanently, meaning you will not have to wait again.
+>- Due to that, I've provided an option to generate all waveforms at once, maybe u can use it on a night sleep.
 
-# Support
+>## - Permission Note:
+>### the following actions require <font size="2">`all_files_access`</font> permission (requested when needed)
+>- respect .nomedia
+>- editing audio tags
+>- creating or restoring backups
 
+### Special Thanks:
+ >- @LucJosin for their jaudiotagger integration, which actually powers namida.
+ >- @55nknown for their awesome miniplayer physics.
+ >- @alexmercerind for helping me out a lot.
+ >- All the packages maintainers which made namida possible.
+ <br>
+ 
+> ### © Logo by @midjourney
+# Donate
+- 
 
-## Permission Note:
-### the following actions require `all_files_access` permission (requested when needed)
-- respect .nomedia
-- editing audio tags
-- creating or restoring backups
+# LICENSE
+uhhmm i dont understand much about general licenses so here is yours
+
+```
+© Copyright (C) 2023-present Namidaco <namida.coo@gmail.com>
+ANY  CODE  STEALING  IS ONLY ALLOWED IF YOU UNDERSTAND IT OR THE PURPOSE BEHIND IT
+and ofc redistributing the program as a whole under different name or license without permission is not allowed.
+```
