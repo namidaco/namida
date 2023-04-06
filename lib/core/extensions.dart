@@ -572,7 +572,7 @@ extension TRACKPLAYMODE on TrackPlayMode {
     }
     if (shouldBeIndex0) {
       queue.remove(track);
-      queue.insert(0, track);
+      queue.insertSafe(0, track);
     }
     return queue;
   }
@@ -672,4 +672,9 @@ extension YTLinkToID on String {
 
 extension FORMATNUMBER on int? {
   String formatDecimal([bool full = false]) => (full ? NumberFormat('#,###,###') : NumberFormat.compact()).format(this);
+}
+
+extension SafeListInsertion<T> on List<T> {
+  void insertSafe(int index, T object) => insert(index.clamp(0, length), object);
+  void insertAllSafe(int index, Iterable<T> objects) => insertAll(index.clamp(0, length), objects);
 }

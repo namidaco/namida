@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/core/extensions.dart';
 
 class SelectedTracksController extends GetxController {
   static SelectedTracksController inst = SelectedTracksController();
@@ -25,7 +26,7 @@ class SelectedTracksController extends GetxController {
     }
     final item = selectedTracks.removeAt(oldIndex);
 
-    selectedTracks.insert(newIndex, item);
+    selectedTracks.insertSafe(newIndex, item);
   }
 
   void removeTrack(int index) {

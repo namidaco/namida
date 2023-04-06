@@ -462,10 +462,10 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                       }
                       final lastItem1 = firstHalf.last;
                       firstHalf.remove(lastItem1);
-                      firstHalf.insert(0, lastItem1);
+                      firstHalf.insertSafe(0, lastItem1);
                       final lastItem2 = secondtHalf.last;
                       secondtHalf.remove(lastItem2);
-                      secondtHalf.insert(0, lastItem2);
+                      secondtHalf.insertSafe(0, lastItem2);
                     }
                   }
 

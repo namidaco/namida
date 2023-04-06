@@ -8,6 +8,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 
 class QueueController extends GetxController {
@@ -46,7 +47,7 @@ class QueueController extends GetxController {
   }
 
   void insertQueue(Queue queue, int index) async {
-    queueList.insert(index, queue);
+    queueList.insertSafe(index, queue);
     await _saveQueueToStorage(queue);
   }
 
@@ -59,7 +60,7 @@ class QueueController extends GetxController {
   void updateQueue(Queue oldQueue, Queue newQueue) async {
     final plIndex = queueList.indexOf(oldQueue);
     queueList.remove(oldQueue);
-    queueList.insert(plIndex, newQueue);
+    queueList.insertSafe(plIndex, newQueue);
 
     await _saveQueueToStorage(newQueue);
   }

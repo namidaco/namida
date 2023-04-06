@@ -733,7 +733,7 @@ class SettingsController extends GetxController {
       libraryTabs.insert(index, libraryTab1);
     }
     if (youtubeVideoQualities1 != null) {
-      youtubeVideoQualities.insert(index, youtubeVideoQualities1);
+      youtubeVideoQualities.insertSafe(index, youtubeVideoQualities1);
     }
     _writeToStorage();
   }

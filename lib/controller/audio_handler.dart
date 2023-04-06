@@ -251,7 +251,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     final ct = nowPlayingTrack.value;
     final diff = currentQueue.length - q.length;
     q.remove(nowPlayingTrack.value);
-    q.insert((currentIndex.value - diff).clamp(0, currentQueue.length - diff), ct);
+    q.insertSafe((currentIndex.value - diff).clamp(0, currentQueue.length - diff), ct);
     currentQueue.assignAll(q);
     final index = currentQueue.indexOf(ct);
     currentIndex.value = index;
@@ -273,7 +273,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   }
 
   void insertInQueue(List<Track> tracks, int index) {
-    currentQueue.insertAll(index, tracks);
+    currentQueue.insertAllSafe(index, tracks);
     afterQueueChange();
   }
 
@@ -409,7 +409,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
       MediaControl.stop,
     ];
     if (SettingsController.inst.displayFavouriteButtonInNotification.value) {
-      fmc.insert(0, Player.inst.nowPlayingTrack.value.isFavourite ? MediaControl.fastForward : MediaControl.rewind);
+      fmc.insertSafe(0, Player.inst.nowPlayingTrack.value.isFavourite ? MediaControl.fastForward : MediaControl.rewind);
       iconsIndexes.assignAll(const [1, 2, 3]);
     }
     return PlaybackState(

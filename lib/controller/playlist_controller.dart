@@ -134,7 +134,7 @@ class PlaylistController extends GetxController {
   }
 
   void insertPlaylist(Playlist playlist, int index) async {
-    playlistList.insert(index, playlist);
+    playlistList.insertSafe(index.clamp(0, playlistList.length - 1), playlist);
 
     await _savePlaylistToStorageAndRefresh(playlist);
   }
@@ -157,7 +157,7 @@ class PlaylistController extends GetxController {
   void updatePlaylist(Playlist oldPlaylist, Playlist newPlaylist) async {
     final plIndex = playlistList.indexOf(oldPlaylist);
     playlistList.remove(oldPlaylist);
-    playlistList.insert(plIndex, newPlaylist);
+    playlistList.insertSafe(plIndex, newPlaylist);
 
     await _savePlaylistToStorageAndRefresh(newPlaylist);
   }
@@ -180,7 +180,7 @@ class PlaylistController extends GetxController {
     final plIndex = playlistList.indexOf(oldPlaylist);
     final newpl = Playlist(name, tracks, date, comment, modes);
     playlistList.remove(oldPlaylist);
-    playlistList.insert(plIndex, newpl);
+    playlistList.insertSafe(plIndex, newpl);
 
     await _savePlaylistToStorageAndRefresh(newpl);
   }
@@ -197,7 +197,7 @@ class PlaylistController extends GetxController {
 
   void insertTracksInPlaylist(String name, List<TrackWithDate> tracks, int index) async {
     final pl = _getPlaylistByName(name);
-    pl.tracks.insertAll(index, tracks.map((e) => e).toList());
+    pl.tracks.insertAllSafe(index, tracks.map((e) => e).toList());
 
     await _savePlaylistToStorageAndRefresh(pl);
   }
