@@ -26,7 +26,7 @@ class WaveformController extends GetxController {
   ///
   /// <br>
   Future<void> generateWaveform(Track track) async {
-    final wavePath = "$kWaveformDirPath${track.path.getFilename}.wave";
+    final wavePath = "$k_DIR_WAVEFORMS${track.path.getFilename}.wave";
     final waveFile = File(wavePath);
     final waveFileStat = await waveFile.stat();
 
@@ -83,8 +83,8 @@ class WaveformController extends GetxController {
   }
 
   Future<void> generateAllWaveforms() async {
-    if (!await Directory(kWaveformDirPath).exists()) {
-      Directory(kWaveformDirPath).create();
+    if (!await Directory(k_DIR_WAVEFORMS).exists()) {
+      Directory(k_DIR_WAVEFORMS).create();
     }
     generatingAllWaveforms.value = true;
 

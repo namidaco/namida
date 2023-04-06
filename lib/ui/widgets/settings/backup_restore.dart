@@ -65,94 +65,94 @@ class BackupAndRestore extends StatelessWidget {
                           child: Column(
                             children: [
                               ListTileWithCheckMark(
-                                active: isActive(kTracksFilePath),
+                                active: isActive(k_FILE_PATH_TRACKS),
                                 title: Language.inst.DATABASE,
                                 icon: Broken.box_1,
-                                onTap: () => onItemTap(kTracksFilePath),
+                                onTap: () => onItemTap(k_FILE_PATH_TRACKS),
                               ),
                               const SizedBox(
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(kPlaylistsFolderPath),
+                                active: isActive(k_DIR_PLAYLISTS),
                                 title: Language.inst.PLAYLISTS,
                                 icon: Broken.music_library_2,
-                                onTap: () => onItemTap(kPlaylistsFolderPath),
+                                onTap: () => onItemTap(k_DIR_PLAYLISTS),
                               ),
                               const SizedBox(
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(kHistoryPlaylistFilePath),
+                                active: isActive(k_PLAYLIST_PATH_HISTORY),
                                 title: Language.inst.HISTORY,
                                 icon: Broken.refresh,
-                                onTap: () => onItemTap(kHistoryPlaylistFilePath),
+                                onTap: () => onItemTap(k_PLAYLIST_PATH_HISTORY),
                               ),
                               const SizedBox(
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(kSettingsFilePath),
+                                active: isActive(k_FILE_PATH_SETTINGS),
                                 title: Language.inst.SETTINGS,
                                 icon: Broken.setting,
-                                onTap: () => onItemTap(kSettingsFilePath),
+                                onTap: () => onItemTap(k_FILE_PATH_SETTINGS),
                               ),
                               const SizedBox(
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(kWaveformDirPath),
+                                active: isActive(k_DIR_WAVEFORMS),
                                 title: Language.inst.WAVEFORMS,
                                 icon: Broken.sound,
-                                onTap: () => onItemTap(kWaveformDirPath),
+                                onTap: () => onItemTap(k_DIR_WAVEFORMS),
                               ),
                               const SizedBox(
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(kLyricsDirPath),
+                                active: isActive(k_DIR_LYRICS),
                                 title: Language.inst.LYRICS,
                                 icon: Broken.document,
-                                onTap: () => onItemTap(kLyricsDirPath),
+                                onTap: () => onItemTap(k_DIR_LYRICS),
                               ),
                               const SizedBox(
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(kQueuesFolderPath) && isActive(kLatestQueueFilePath),
+                                active: isActive(k_DIR_QUEUES) && isActive(k_FILE_PATH_LATEST_QUEUE),
                                 title: Language.inst.QUEUES,
                                 icon: Broken.driver,
                                 onTap: () {
-                                  onItemTap(kQueuesFolderPath);
-                                  onItemTap(kLatestQueueFilePath);
+                                  onItemTap(k_DIR_QUEUES);
+                                  onItemTap(k_FILE_PATH_LATEST_QUEUE);
                                 },
                               ),
                               const SizedBox(
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(kPaletteDirPath),
+                                active: isActive(k_DIR_PALETTES),
                                 title: Language.inst.COLOR_PALETTES,
                                 icon: Broken.colorfilter,
-                                onTap: () => onItemTap(kPaletteDirPath),
+                                onTap: () => onItemTap(k_DIR_PALETTES),
                               ),
                               const SizedBox(
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(kVideosCachePath),
+                                active: isActive(k_DIR_VIDEOS_CACHE),
                                 title: Language.inst.VIDEO_CACHE,
                                 icon: Broken.video,
-                                onTap: () => onItemTap(kVideosCachePath),
+                                onTap: () => onItemTap(k_DIR_VIDEOS_CACHE),
                               ),
                               const SizedBox(
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(kArtworksDirPath),
+                                active: isActive(k_DIR_ARTWORKS),
                                 title: Language.inst.ARTWORKS,
                                 icon: Broken.image,
-                                onTap: () => onItemTap(kArtworksDirPath),
+                                onTap: () => onItemTap(k_DIR_ARTWORKS),
                               ),
                             ],
                           ),
@@ -263,7 +263,7 @@ class BackupAndRestore extends StatelessWidget {
                                   JsonToHistoryParser.inst.showParsingProgressDialog();
                                   await JsonToHistoryParser.inst.parseYTHistoryJson(File(jsonfile.files.first.path!));
                                   await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
-                                    File(kYoutubeStatsFilePath),
+                                    File(k_FILE_PATH_YOUTUBE_STATS),
                                     TrackSource.youtube,
                                     isMatchingTypeLink: isMatchingTypeLink.value,
                                     matchYT: matchYT.value,

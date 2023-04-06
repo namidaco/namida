@@ -48,7 +48,7 @@ class YoutubeController {
     if (id == '') {
       return null;
     }
-    final videometafile = File('$kMetadataDirPath$id.txt');
+    final videometafile = File('$k_DIR_YT_METADATA$id.txt');
     YTLVideo? vid;
     if (!forceReload && await videometafile.exists()) {
       String contents = await videometafile.readAsString();
@@ -75,7 +75,7 @@ class YoutubeController {
     if (!loadNext) {
       comments.value = null;
     }
-    final videocommentfile = File('$kMetadataCommentsDirPath${video.id}.txt');
+    final videocommentfile = File('$k_DIR_YT_METADATA_COMMENTS${video.id}.txt');
 
     NamidaCommentsList? newcomm;
     final finalcomm = _commentlistclient.value?.map((p0) => p0).toList() ?? <Comment>[];

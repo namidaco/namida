@@ -33,8 +33,8 @@ class PlaylisTracksPage extends StatelessWidget {
         final rxplaylist = PlaylistController.inst.defaultPlaylists.firstWhereOrNull((element) => element == playlist) ??
             PlaylistController.inst.playlistList.firstWhere((element) => element == playlist);
 
-        final isMostPlayedPlaylist = rxplaylist.name == kPlaylistMostPlayed;
-        final isHistoryPlaylist = rxplaylist.name == kPlaylistHistory;
+        final isMostPlayedPlaylist = rxplaylist.name == k_PLAYLIST_NAME_MOST_PLAYED;
+        final isHistoryPlaylist = rxplaylist.name == k_PLAYLIST_NAME_HISTORY;
         final _scrollController = scrollController ?? defController;
         return MainPageWrapper(
           actionsToAdd: [

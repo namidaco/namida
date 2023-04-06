@@ -50,7 +50,7 @@ Future<void> showGeneralPopupDialog(
 
   final List<String> availableAlbums = tracks.map((e) => e.album).toSet().toList();
   final List<String> availableArtists = tracks.map((e) => e.artistsList).expand((list) => list).toSet().toList();
-  final bool oneOfTheMainPlaylists = playlist?.name == kPlaylistFavourites || playlist?.name == kPlaylistHistory || playlist?.name == kPlaylistMostPlayed;
+  final bool oneOfTheMainPlaylists = playlist?.name == k_PLAYLIST_NAME_FAV || playlist?.name == k_PLAYLIST_NAME_HISTORY || playlist?.name == k_PLAYLIST_NAME_MOST_PLAYED;
 
   await Get.to(
     () => BackdropFilter(

@@ -32,10 +32,10 @@ class Indexer extends GetxController {
   final RxInt duplicatedTracksLength = 0.obs;
   final Set<String> filteredPathsToBeDeleted = {};
 
-  final RxInt artworksInStorage = Directory(kArtworksDirPath).listSync().length.obs;
-  final RxInt waveformsInStorage = Directory(kWaveformDirPath).listSync().length.obs;
-  final RxInt colorPalettesInStorage = Directory(kPaletteDirPath).listSync().length.obs;
-  final RxInt videosInStorage = Directory(kWaveformDirPath).listSync().length.obs;
+  final RxInt artworksInStorage = Directory(k_DIR_ARTWORKS).listSync().length.obs;
+  final RxInt waveformsInStorage = Directory(k_DIR_WAVEFORMS).listSync().length.obs;
+  final RxInt colorPalettesInStorage = Directory(k_DIR_PALETTES).listSync().length.obs;
+  final RxInt videosInStorage = Directory(k_DIR_VIDEOS_CACHE).listSync().length.obs;
 
   final RxInt artworksSizeInStorage = 0.obs;
   final RxInt waveformsSizeInStorage = 0.obs;
@@ -68,14 +68,14 @@ class Indexer extends GetxController {
 
   Future<void> prepareTracksFile() async {
     /// Only awaits if the track file exists, otherwise it will get into normally and start indexing.
-    if (await File(kTracksFilePath).exists() && await File(kTracksFilePath).stat().then((value) => value.size > 8)) {
+    if (await File(k_FILE_PATH_TRACKS).exists() && await File(k_FILE_PATH_TRACKS).stat().then((value) => value.size > 8)) {
       await readTrackData();
       afterIndexing();
     }
 
     /// doesnt exists
     else {
-      await File(kTracksFilePath).create();
+      await File(k_FILE_PATH_TRACKS).create();
       refreshLibraryAndCheckForDiff(forceReIndex: true);
     }
   }
@@ -153,7 +153,7 @@ class Indexer extends GetxController {
   /// path is needed bothways for making the file name.
   /// using path for extracting will call [onAudioEdit.readAudio] so it will be slower.
   Future<void> extractOneArtwork(String path, {Uint8List? bytes, bool forceReExtract = false}) async {
-    final fileOfFull = File("$kArtworksDirPath${path.getFilename}.png");
+    final fileOfFull = File("$k_DIR_ARTWORKS${path.getFilename}.png");
 
     if (forceReExtract) {
       await fileOfFull.delete();
@@ -292,7 +292,7 @@ class Indexer extends GetxController {
           /// TODO(MSOB7YY): Should i add a dummy track that has a real path?
           // final fileStat = await File(track).stat();
           // tracksInfoList.add(Track(p.basenameWithoutExtension(track), ['Unkown Artist'], 'Unkown Album', 'Unkown Album Artist', ['Unkown Genre'], 'Unknown Composer', 0, 0, 0, fileStat.size, fileStat.accessed.millisecondsSinceEpoch, fileStat.changed.millisecondsSinceEpoch, track,
-          //     "$kAppDirectoryPath/Artworks/${p.basename(track)}.png", p.dirname(track), p.basename(track), p.basenameWithoutExtension(track), p.extension(track).substring(1), '', 0, 0, '', '', 0, '', '', '', ''));
+          //     "$k_DIR_USER_DATA/Artworks/${p.basename(track)}.png", p.dirname(track), p.basename(track), p.basenameWithoutExtension(track), p.extension(track).substring(1), '', 0, 0, '', '', 0, '', '', '', ''));
 
           continue;
         }
@@ -331,18 +331,18 @@ class Indexer extends GetxController {
     printInfo(info: "FINAL: ${tracksInfoList.length}");
 
     tracksInfoList.map((track) => track.toJson()).toList();
-    await File(kTracksFilePath).writeAsString(json.encode(tracksInfoList));
+    await File(k_FILE_PATH_TRACKS).writeAsString(json.encode(tracksInfoList));
 
     /// Creating Default Artwork
-    if (!await File(kDefaultNamidaImagePath).exists()) {
+    if (!await File(k_FILE_PATH_NAMIDA_LOGO).exists()) {
       ByteData byteData = await rootBundle.load('assets/namida_icon.png');
-      File file = await File(kDefaultNamidaImagePath).create(recursive: true);
+      File file = await File(k_FILE_PATH_NAMIDA_LOGO).create(recursive: true);
       await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
     }
   }
 
   Future<void> readTrackData() async {
-    final jsonResponse = await JsonToHistoryParser.inst.readJSONFile(kTracksFilePath);
+    final jsonResponse = await JsonToHistoryParser.inst.readJSONFile(k_FILE_PATH_TRACKS);
 
     if (jsonResponse != null) {
       for (final p in jsonResponse) {
@@ -706,7 +706,7 @@ class Indexer extends GetxController {
     artworksInStorage.value = 0;
     artworksSizeInStorage.value = 0;
 
-    Directory(kArtworksDirPath).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
+    Directory(k_DIR_ARTWORKS).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
       if (entity is File) {
         artworksInStorage.value++;
         artworksSizeInStorage.value += entity.lengthSync();
@@ -719,7 +719,7 @@ class Indexer extends GetxController {
     waveformsInStorage.value = 0;
     waveformsSizeInStorage.value = 0;
 
-    Directory(kWaveformDirPath).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
+    Directory(k_DIR_WAVEFORMS).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
       if (entity is File) {
         waveformsInStorage.value++;
         waveformsSizeInStorage.value += entity.lengthSync();
@@ -731,7 +731,7 @@ class Indexer extends GetxController {
     // resets values
     colorPalettesInStorage.value = 0;
 
-    Directory(kPaletteDirPath).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
+    Directory(k_DIR_PALETTES).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
       if (entity is File) {
         colorPalettesInStorage.value++;
       }
@@ -743,7 +743,7 @@ class Indexer extends GetxController {
     videosInStorage.value = 0;
     videosSizeInStorage.value = 0;
 
-    Directory(kVideosCachePath).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
+    Directory(k_DIR_VIDEOS_CACHE).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
       if (entity is File) {
         videosInStorage.value++;
         videosSizeInStorage.value += entity.lengthSync();
@@ -752,14 +752,14 @@ class Indexer extends GetxController {
   }
 
   Future<void> clearImageCache() async {
-    await Directory(kArtworksDirPath).delete(recursive: true);
-    await Directory(kArtworksDirPath).create();
+    await Directory(k_DIR_ARTWORKS).delete(recursive: true);
+    await Directory(k_DIR_ARTWORKS).create();
     updateImageSizeInStorage();
   }
 
   Future<void> clearWaveformData() async {
-    await Directory(kWaveformDirPath).delete(recursive: true);
-    await Directory(kWaveformDirPath).create();
+    await Directory(k_DIR_WAVEFORMS).delete(recursive: true);
+    await Directory(k_DIR_WAVEFORMS).create();
     updateWaveformSizeInStorage();
   }
 
@@ -770,8 +770,8 @@ class Indexer extends GetxController {
         await v.delete();
       }
     } else {
-      await Directory(kVideosCachePath).delete(recursive: true);
-      await Directory(kVideosCachePath).create();
+      await Directory(k_DIR_VIDEOS_CACHE).delete(recursive: true);
+      await Directory(k_DIR_VIDEOS_CACHE).create();
     }
 
     updateVideosSizeInStorage();

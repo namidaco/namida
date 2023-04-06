@@ -462,7 +462,7 @@ extension TrackToAudioSourceMediaItem on Track {
         album: album,
         genre: genresList.take(3).join(', '),
         duration: Duration(milliseconds: duration),
-        artUri: Uri.file(File(pathToImage).existsSync() ? pathToImage : kDefaultNamidaImagePath),
+        artUri: Uri.file(File(pathToImage).existsSync() ? pathToImage : k_FILE_PATH_NAMIDA_LOGO),
       );
 }
 

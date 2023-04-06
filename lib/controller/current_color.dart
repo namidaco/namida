@@ -39,7 +39,7 @@ class CurrentColor extends GetxController {
   }
 
   Future<List<Color>> extractColors(String pathofimage) async {
-    final paletteFile = File("$kPaletteDirPath${pathofimage.getFilename}.palette");
+    final paletteFile = File("$k_DIR_PALETTES${pathofimage.getFilename}.palette");
     final paletteFileStat = await paletteFile.stat();
     List<Color> palette = [];
     if (FileSystemEntity.typeSync(pathofimage) == FileSystemEntityType.notFound) {
@@ -68,8 +68,8 @@ class CurrentColor extends GetxController {
   }
 
   Future<void> generateAllColorPalettes() async {
-    if (!await Directory(kPaletteDirPath).exists()) {
-      Directory(kPaletteDirPath).create();
+    if (!await Directory(k_DIR_PALETTES).exists()) {
+      Directory(k_DIR_PALETTES).create();
     }
     generatingAllColorPalettes.value = true;
 

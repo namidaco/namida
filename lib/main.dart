@@ -67,7 +67,7 @@ void main() async {
   //   ),
   // );
 
-  kAppDirectoryPath = await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
+  k_DIR_USER_DATA = await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
 
   Future<void> createDirectories(List<String> paths) async {
     for (final p in paths) {
@@ -76,23 +76,23 @@ void main() async {
   }
 
   await createDirectories([
-    kArtworksDirPath,
-    kPaletteDirPath,
-    kWaveformDirPath,
-    kVideosCachePath,
-    kVideosCacheTempPath,
-    kLyricsDirPath,
-    kMetadataDirPath,
-    kMetadataCommentsDirPath,
-    kPlaylistsFolderPath,
-    kQueuesFolderPath,
+    k_DIR_ARTWORKS,
+    k_DIR_PALETTES,
+    k_DIR_WAVEFORMS,
+    k_DIR_VIDEOS_CACHE,
+    k_DIR_VIDEOS_CACHE_TEMP,
+    k_DIR_LYRICS,
+    k_DIR_YT_METADATA,
+    k_DIR_YT_METADATA_COMMENTS,
+    k_DIR_PLAYLISTS,
+    k_DIR_QUEUES,
   ]);
 
   final paths = await ExternalPath.getExternalStorageDirectories();
   kStoragePaths.assignAll(paths);
   kDirectoriesPaths.assignAll(paths.map((path) => "$path/${ExternalPath.DIRECTORY_MUSIC}").toSet());
   kDirectoriesPaths.add('${paths[0]}/Download/');
-  kInternalAppDirectoryPath = "${paths[0]}/Namida";
+  k_DIR_APP_INTERNAL_STORAGE = "${paths[0]}/Namida";
 
   Get.put(() => ScrollSearchController());
   Get.put(() => VideoController());

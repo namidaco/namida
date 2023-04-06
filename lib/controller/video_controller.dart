@@ -79,7 +79,7 @@ class VideoController extends GetxController {
     /// Get the actual stream
     final stream = ytexp.videos.streamsClient.get(streamToBeUsed);
 
-    final file = File("$kVideosCacheTempPath${videoId}_${streamToBeUsed.videoQualityLabel}.mp4");
+    final file = File("$k_DIR_VIDEOS_CACHE_TEMP${videoId}_${streamToBeUsed.videoQualityLabel}.mp4");
 
     /// deletes file if it exists, fixes write issues/corrupted video
     if (await file.exists()) {
@@ -111,13 +111,13 @@ class VideoController extends GetxController {
     await fileStream.flush();
     await fileStream.close();
 
-    await file.copy("$kVideosCachePath${videoId}_${streamToBeUsed.videoQualityLabel}.mp4");
+    await file.copy("$k_DIR_VIDEOS_CACHE${videoId}_${streamToBeUsed.videoQualityLabel}.mp4");
     await file.delete();
     ytexp.close();
 
     videoCurrentSize.value = 0;
     Indexer.inst.updateVideosSizeInStorage();
-    return File("$kVideosCachePath${videoId}_${streamToBeUsed.qualityLabel}.mp4").path;
+    return File("$k_DIR_VIDEOS_CACHE${videoId}_${streamToBeUsed.qualityLabel}.mp4").path;
   }
 
   Future<void> updateLocalVidPath([Track? track]) async {
@@ -149,7 +149,7 @@ class VideoController extends GetxController {
 
     /// Video Found in Video Cache Directory
     if (SettingsController.inst.videoPlaybackSource.value != 2 /* not youtube */) {
-      final videoFiles = Directory(kVideosCachePath).listSync();
+      final videoFiles = Directory(k_DIR_VIDEOS_CACHE).listSync();
       for (final f in videoFiles) {
         if (f.path.getFilename.contains(youtubeVideoId.value)) {
           await playAndInitializeVideo(f.path, track);
@@ -216,7 +216,7 @@ class VideoController extends GetxController {
 
   /// function to get all videos inside [directoriesListToScan], value is assigned to [videoFilesPathList].
   Future<Set<String>> getVideoFiles() async {
-    final videoFile = File(kVideoPathsFilePath);
+    final videoFile = File(k_FILE_PATH_VIDEO_PATHS);
     final videoFileStats = await videoFile.stat();
     // List<double> waveform = kDefaultWaveFormData;
     if (await videoFile.exists() && videoFileStats.size != 0) {

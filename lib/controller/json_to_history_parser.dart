@@ -85,7 +85,7 @@ class JsonToHistoryParser {
           }
           parsedHistoryJson.value++;
         }
-        await File(kYoutubeStatsFilePath).writeAsString(jsonEncode(list));
+        await File(k_FILE_PATH_YOUTUBE_STATS).writeAsString(jsonEncode(list));
       }
     } catch (e) {
       printError(info: e.toString());

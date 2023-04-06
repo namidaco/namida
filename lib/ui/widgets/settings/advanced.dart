@@ -105,7 +105,7 @@ class AdvancedSettings extends StatelessWidget {
               title: Language.inst.CLEAR_VIDEO_CACHE,
               trailingText: Indexer.inst.videosSizeInStorage.value.fileSizeFormatted,
               onTap: () async {
-                final allvideo = Directory(kVideosCachePath).listSync();
+                final allvideo = Directory(k_DIR_VIDEOS_CACHE).listSync();
                 allvideo.sort((a, b) => b.statSync().size.compareTo(a.statSync().size));
                 allvideo.removeWhere((element) => element is Directory);
 

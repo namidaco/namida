@@ -66,20 +66,20 @@ class SettingsController extends GetxController {
   final RxList<String> directoriesToExclude = <String>[].obs;
   final RxBool preventDuplicatedTracks = false.obs;
   final RxBool respectNoMedia = false.obs;
-  final RxString defaultBackupLocation = kInternalAppDirectoryPath.obs;
+  final RxString defaultBackupLocation = k_DIR_APP_INTERNAL_STORAGE.obs;
   final RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
   final RxBool enableFoldersHierarchy = true.obs;
   final RxList<String> backupItemslist = [
-    kTracksFilePath,
-    kQueuesFolderPath,
-    kHistoryPlaylistFilePath,
-    kFavouritesPlaylistFilePath,
-    kLatestQueueFilePath,
-    kPaletteDirPath,
-    kLyricsDirPath,
-    kPlaylistsFolderPath,
-    kSettingsFilePath,
-    kWaveformDirPath,
+    k_FILE_PATH_TRACKS,
+    k_DIR_QUEUES,
+    k_PLAYLIST_PATH_HISTORY,
+    k_PLAYLIST_PATH_FAVOURITES,
+    k_FILE_PATH_LATEST_QUEUE,
+    k_DIR_PALETTES,
+    k_DIR_LYRICS,
+    k_DIR_PLAYLISTS,
+    k_FILE_PATH_SETTINGS,
+    k_DIR_WAVEFORMS,
   ].obs;
   final RxBool enableVideoPlayback = true.obs;
   final RxBool enableLyrics = false.obs;
@@ -129,7 +129,7 @@ class SettingsController extends GetxController {
   ).obs;
 
   Future<void> prepareSettingsFile({File? file}) async {
-    file ??= await File(kSettingsFilePath).create(recursive: true);
+    file ??= await File(k_FILE_PATH_SETTINGS).create(recursive: true);
     try {
       final String contents = await file.readAsString();
       if (contents.isEmpty) {
@@ -243,7 +243,7 @@ class SettingsController extends GetxController {
   }
 
   Future<void> _writeToStorage({File? file}) async {
-    file ??= File(kSettingsFilePath);
+    file ??= File(k_FILE_PATH_SETTINGS);
     final res = {
       'themeMode': themeMode.value.convertToString,
       'autoColor': autoColor.value,

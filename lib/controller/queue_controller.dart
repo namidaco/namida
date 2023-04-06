@@ -72,12 +72,12 @@ class QueueController extends GetxController {
       await _saveQueueToStorage(queueList.last);
     }
 
-    await File(kLatestQueueFilePath).writeAsString(json.encode(tracks.map((e) => e.toJson()).toList()));
+    await File(k_FILE_PATH_LATEST_QUEUE).writeAsString(json.encode(tracks.map((e) => e.toJson()).toList()));
   }
 
   ///
   Future<void> prepareAllQueuesFile() async {
-    await for (final p in Directory(kQueuesFolderPath).list()) {
+    await for (final p in Directory(k_DIR_QUEUES).list()) {
       // prevents freezing the ui. cheap alternative for Isolate/compute.
       await Future.delayed(Duration.zero);
       final string = await File(p.path).readAsString();
@@ -90,7 +90,7 @@ class QueueController extends GetxController {
 
   ///
   Future<void> prepareLatestQueueFile() async {
-    final file = await File(kLatestQueueFilePath).create();
+    final file = await File(k_FILE_PATH_LATEST_QUEUE).create();
     final String content = await file.readAsString();
     if (content.isNotEmpty) {
       final txt = List.from(json.decode(content));
@@ -116,10 +116,10 @@ class QueueController extends GetxController {
   }
 
   Future<void> _saveQueueToStorage(Queue queue) async {
-    await File('$kQueuesFolderPath${queue.date}.json').writeAsString(jsonEncode(queue.toJson()));
+    await File('$k_DIR_QUEUES${queue.date}.json').writeAsString(jsonEncode(queue.toJson()));
   }
 
   Future<void> _deleteQueueToStorage(Queue queue) async {
-    await File('$kQueuesFolderPath${queue.date}.json').writeAsString(jsonEncode(queue.toJson()));
+    await File('$k_DIR_QUEUES${queue.date}.json').writeAsString(jsonEncode(queue.toJson()));
   }
 }
