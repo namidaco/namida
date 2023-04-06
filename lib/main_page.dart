@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide ReorderableDragStartListener;
 import 'package:get/get.dart';
+import 'package:known_extents_list_view_builder/known_extents_sliver_reorderable_list.dart';
 
 import 'package:namida/controller/youtube_controller.dart';
 import 'package:namida/controller/current_color.dart';
@@ -33,9 +34,8 @@ class MainPageWrapper extends StatelessWidget {
 
   final GlobalKey<InnerDrawerState> _innerDrawerKey = GlobalKey<InnerDrawerState>();
   void toggleDrawer() {
-    if (child != null) {
-      Get.offAll(() => MainPageWrapper());
-    }
+    if (child != null) Get.offAll(() => MainPageWrapper());
+
     ScrollSearchController.inst.isGlobalSearchMenuShown.value = false;
     _innerDrawerKey.currentState?.toggle();
   }
@@ -235,7 +235,20 @@ class CustomReorderableDelayedDragStartListener extends ReorderableDragStartList
     required Widget child,
     required int index,
     bool enabled = true,
-  }) : super(key: key, child: child, index: index, enabled: enabled);
+
+    /// {@macro flutter.widgets.reorderable_list.onReorderStart}
+
+    final void Function(PointerDownEvent event)? onDragStart,
+
+    /// {@macro flutter.widgets.reorderable_list.onReorderEnd}
+    final void Function(PointerUpEvent event)? onDragEnd,
+  }) : super(
+          key: key,
+          child: child,
+          index: index,
+          onDragStart: onDragStart,
+          onDragEnd: onDragEnd,
+        );
 
   @override
   MultiDragGestureRecognizer createRecognizer() {

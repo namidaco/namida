@@ -14,7 +14,7 @@ class AppThemes extends GetxController {
     final cardTheme = CardTheme(
       elevation: 12.0,
       color: Color.alphaBlend(
-        color.withAlpha(40),
+        color.withAlpha(45),
         light ? const Color.fromARGB(255, 255, 255, 255) : const Color.fromARGB(255, 35, 35, 35),
       ),
       shape: RoundedRectangleBorder(
@@ -22,7 +22,7 @@ class AppThemes extends GetxController {
       ),
     );
     final cardColor = Color.alphaBlend(
-      color.withAlpha(30),
+      color.withAlpha(35),
       light ? const Color.fromARGB(255, 255, 255, 255) : const Color.fromARGB(255, 35, 35, 35),
     );
     return ThemeData(

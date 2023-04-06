@@ -28,7 +28,15 @@ apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 android {
     compileSdkVersion 33
     ndkVersion flutter.ndkVersion
+    splits {
 
+        abi {
+        enable true
+        reset()
+        include "armeabi", "armeabi-v7a", "arm64-v8a"
+        universalApk true
+        }
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8

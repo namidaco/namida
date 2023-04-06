@@ -142,14 +142,13 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
   late double sMaxOffset;
   late AnimationController sAnim;
 
-  bool queueScrollable = false;
   bool bounceUp = false;
   bool bounceDown = false;
   RxDouble seekValue = 0.0.obs;
   bool isPlayPauseButtonHighlighted = false;
   bool isReorderingQueue = false;
-  final scrollController = ScrollSearchController.inst.queueScrollController;
-  RxBool isArrowDown = true.obs;
+  ScrollController get scrollController => ScrollSearchController.inst.queueScrollController;
+  Rx<IconData> arrowDirection = Broken.cd.obs;
   @override
   void initState() {
     super.initState();
@@ -166,10 +165,19 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
       value: 0.0,
     );
     scrollController.addListener(() {
-      if (scrollController.position.pixels > (SettingsController.inst.trackListTileHeight.value * 1.15) * Player.inst.currentIndex.value - 120) {
-        isArrowDown.value = false;
-      } else {
-        isArrowDown.value = true;
+      // if (scrollController.hasClients) {
+      //   ScrollSearchController.inst.animateQueueToCurrentTrack();
+      // }
+      final pixels = scrollController.position.pixels;
+      final sizeInSettings = trackTileItemExtent * Player.inst.currentIndex.value - Get.height * 0.3;
+      if (pixels > sizeInSettings) {
+        arrowDirection.value = Broken.arrow_up_1;
+      }
+      if (pixels < sizeInSettings) {
+        arrowDirection.value = Broken.arrow_down;
+      }
+      if (pixels == sizeInSettings) {
+        arrowDirection.value = Broken.cd;
       }
     });
   }
@@ -181,7 +189,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
     super.dispose();
   }
 
-  void verticalSnapping() {
+  void verticalSnapping() async {
     final distance = prevOffset - offset;
     final speed = velocity.getVelocity().pixelsPerSecond.dy;
     const threshold = 500.0;
@@ -228,11 +236,11 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
     snap(haptic: haptic);
   }
 
-  void snapToQueue({bool haptic = true}) {
+  void snapToQueue({bool haptic = true}) async {
+    ScrollSearchController.inst.queueScrollController = ScrollController(initialScrollOffset: ScrollSearchController.inst.trackTileItemScrollOffsetInQueue);
     offset = maxOffset * 2;
     bounceUp = false;
     snap(haptic: haptic);
-    queueScrollable = true;
   }
 
   void snap({bool haptic = true}) {
@@ -302,7 +310,8 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
       },
       child: Listener(
         onPointerDown: (event) {
-          if (event.position.dy > screenSize.height - deadSpace) return;
+          if (isReorderingQueue) return;
+          if (event.position.dy >= screenSize.height - deadSpace) return;
 
           velocity.addPosition(event.timeStamp, event.position);
 
@@ -312,7 +321,8 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
           bounceDown = false;
         },
         onPointerMove: (event) {
-          if (event.position.dy > screenSize.height - deadSpace || isReorderingQueue) return;
+          if (isReorderingQueue) return;
+          if (event.position.dy >= screenSize.height - deadSpace) return;
 
           velocity.addPosition(event.timeStamp, event.position);
 
@@ -324,14 +334,15 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
 
           widget.animation.animateTo(offset / maxOffset, duration: Duration.zero);
 
-          setState(() => queueScrollable = offset >= maxOffset * 2);
+          // setState(() => queueScrollable = offset >= maxOffset);
         },
         onPointerUp: (event) {
+          if (isReorderingQueue) return;
           if (offset <= maxOffset || offset >= (maxOffset * 2)) return;
 
           if (scrollController.positions.isNotEmpty && scrollController.positions.first.pixels > 0.0 && offset >= maxOffset * 2) return;
           verticalSnapping();
-          setState(() => queueScrollable = true);
+          // setState(() => queueScrollable = true);
         },
         child: GestureDetector(
           /// Tap
@@ -428,8 +439,8 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                 panelHeight = vp(a: panelHeight, b: maxOffset / 1.6 - 100.0 - topInset, c: qcp);
               }
 
-              final double queueOpacity = ((p.clamp(1.0, 3.0) - 1).clamp(0.0, 1.0) * 4 - 3).clamp(0, 1);
-              final double queueOffset = qp;
+              // final double queueOpacity = ((p.clamp(1.0, 3.0) - 1).clamp(0.0, 1.0) * 4 - 3).clamp(0, 1);
+              final double queueOpacity = 1 - rcp;
 
               final List<Color> palette = CurrentColor.inst.palette.toList();
               RxList<Color> firstHalf = palette.getRange(0, palette.length ~/ 3).toList().obs;
@@ -479,8 +490,8 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                     borderRadius: borderRadius,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.2 + 0.1 * cp),
-                                        blurRadius: 32.0,
+                                        color: context.theme.shadowColor.withOpacity(0.2 + 0.1 * cp),
+                                        blurRadius: 20.0,
                                       )
                                     ],
                                   ),
@@ -498,7 +509,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                             end: Alignment.bottomCenter,
                                             colors: [
                                               Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(100), CurrentColor.inst.color.value)
-                                                  .withOpacity(vp(a: .3, b: .22, c: icp)),
+                                                  .withOpacity(vp(a: .38, b: .28, c: icp)),
                                               Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.color.value)
                                                   .withOpacity(vp(a: .1, b: .22, c: icp)),
                                             ],
@@ -1108,194 +1119,200 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                           ),
                         ),
 
-                      if (queueOpacity > 0.0)
+                      if (qp > 0.0)
                         Opacity(
-                          opacity: queueOpacity,
+                          opacity: qp.clamp(0, 1),
                           child: Transform.translate(
-                            offset: Offset(0, (1 - queueOffset) * maxOffset),
-                            child: IgnorePointer(
-                              ignoring: !queueScrollable,
-                              child: SafeArea(
-                                bottom: false,
-                                child: Padding(
-                                  padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 70),
-                                  child: ClipRRect(
-                                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(38.0), topRight: Radius.circular(38.0)),
-                                    child: Obx(
-                                      () => Stack(
-                                        alignment: Alignment.bottomRight,
+                            offset: Offset(0, (1 - qp) * maxOffset * 0.8),
+                            child: SafeArea(
+                              bottom: false,
+                              child: Padding(
+                                padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 70),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.only(topLeft: Radius.circular(32.0.multipliedRadius), topRight: Radius.circular(32.0.multipliedRadius)),
+                                  child: Stack(
+                                    alignment: Alignment.bottomRight,
+                                    children: [
+                                      Column(
                                         children: [
-                                          ReorderableListView.builder(
-                                            proxyDecorator: (child, index, animation) => child,
-                                            scrollController: scrollController,
-                                            padding: const EdgeInsets.only(bottom: 56.0),
-                                            onReorderStart: (index) {
-                                              isReorderingQueue = true;
-                                            },
-                                            onReorderEnd: (index) {
-                                              isReorderingQueue = false;
-                                            },
-                                            onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
-                                            physics: queueScrollable ? const AlwaysScrollableScrollPhysics() : const NeverScrollableScrollPhysics(),
-                                            itemCount: Player.inst.currentQueue.length,
-                                            itemBuilder: (context, i) {
-                                              final track = Player.inst.currentQueue[i];
-                                              return GestureDetector(
-                                                key: Key("$i"),
-                                                onHorizontalDragStart: (details) {
-                                                  isReorderingQueue = true;
-                                                },
-                                                onHorizontalDragEnd: (details) {
-                                                  isReorderingQueue = false;
-                                                },
-                                                child: AnimatedOpacity(
-                                                  duration: const Duration(milliseconds: 300),
-                                                  opacity: i < Player.inst.currentIndex.value ? 0.7 : 1.0,
-                                                  child: FadeDismissible(
-                                                    key: Key("Diss_$i${track.path}"),
-                                                    onDismissed: (direction) {
-                                                      Player.inst.removeFromQueue(i);
-                                                    },
-                                                    child: TrackTile(
-                                                      index: i,
-                                                      key: ValueKey(i.toString()),
-                                                      track: track,
-                                                      displayRightDragHandler: true,
-                                                      draggableThumbnail: true,
-                                                      queue: Player.inst.currentQueue.toList(),
-                                                      comingFromQueue: true,
-                                                      canHaveDuplicates: true,
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                          Container(
-                                            width: context.width,
-                                            decoration: BoxDecoration(
-                                              color: context.theme.scaffoldBackgroundColor,
-                                              borderRadius: BorderRadius.vertical(
-                                                top: Radius.circular(12.0.multipliedRadius),
-                                              ),
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(4.0).add(EdgeInsets.only(left: context.width * 0.3)),
-                                              child: FittedBox(
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.end,
-                                                  children: [
-                                                    const SizedBox(width: 6.0),
-                                                    Tooltip(
-                                                      message: Language.inst.NEW_TRACKS_ADD,
-                                                      child: ElevatedButton(
-                                                        onPressed: () {
-                                                          Get.dialog(
-                                                            CustomBlurryDialog(
-                                                              normalTitleStyle: true,
-                                                              title: Language.inst.NEW_TRACKS_ADD,
-                                                              child: Column(
-                                                                children: [
-                                                                  CustomListTile(
-                                                                    title: Language.inst.NEW_TRACKS_RANDOM,
-                                                                    subtitle: Language.inst.NEW_TRACKS_RANDOM_SUBTITLE,
-                                                                    icon: Broken.format_circle,
-                                                                    maxSubtitleLines: 22,
-                                                                    onTap: () {
-                                                                      Get.close(1);
-                                                                      final rt = getRandomTracks(8, 11);
-                                                                      if (rt.isEmpty) {
-                                                                        Get.snackbar(Language.inst.ERROR, Language.inst.NO_ENOUGH_TRACKS);
-                                                                        return;
-                                                                      }
-                                                                      Player.inst.addToQueue(rt);
-                                                                    },
-                                                                  ),
-                                                                  CustomListTile(
-                                                                    title: Language.inst.GENERATE_FROM_DATES,
-                                                                    subtitle: Language.inst.GENERATE_FROM_DATES_SUBTITLE,
-                                                                    icon: Broken.calendar,
-                                                                    maxSubtitleLines: 22,
-                                                                    onTap: () {
-                                                                      Get.close(1);
-                                                                      List<int> dates = [];
-                                                                      Get.dialog(
-                                                                        CustomBlurryDialog(
-                                                                          normalTitleStyle: true,
-                                                                          insetPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-                                                                          actions: [
-                                                                            TextButton(
-                                                                              onPressed: () {
-                                                                                final tracks = generateTracksFromDates(dates.first, dates.last);
-                                                                                if (tracks.isEmpty) {
-                                                                                  Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES);
-                                                                                  return;
-                                                                                }
-                                                                                Player.inst.addToQueue(tracks);
-                                                                                Get.close(1);
-                                                                              },
-                                                                              child: Text(Language.inst.GENERATE),
-                                                                            ),
-                                                                          ],
-                                                                          child: CalendarDatePicker2(
-                                                                            onValueChanged: (value) => dates.assignAll(value.map((e) => e?.millisecondsSinceEpoch ?? 0).toList()),
-                                                                            config: CalendarDatePicker2Config(
-                                                                              calendarType: CalendarDatePicker2Type.range,
-                                                                            ),
-                                                                            value: const [],
-                                                                          ),
-                                                                        ),
-                                                                      );
-                                                                    },
-                                                                  ),
-                                                                  Obx(
-                                                                    () => CustomListTile(
-                                                                      title: Language.inst.NEW_TRACKS_RECOMMENDED,
-                                                                      subtitle: Language.inst.NEW_TRACKS_RECOMMENDED_SUBTITLE.replaceFirst(
-                                                                        '_CURRENT_TRACK_',
-                                                                        '"${Player.inst.nowPlayingTrack.value.title}"',
-                                                                      ),
-                                                                      icon: Broken.bezier,
-                                                                      maxSubtitleLines: 22,
-                                                                      onTap: () {
-                                                                        Get.close(1);
-                                                                        final gentracks = generateRecommendedTrack(Player.inst.nowPlayingTrack.value);
-                                                                        if (gentracks.isEmpty) {
-                                                                          Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_IN_HISTORY);
-                                                                          return;
-                                                                        }
-                                                                        Player.inst.addToQueue(gentracks, insertNext: true);
-                                                                      },
-                                                                    ),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                          );
+                                          Expanded(
+                                            child: Obx(
+                                              () => NamidaListView(
+                                                itemExtents: Player.inst.currentQueue.map((element) => trackTileItemExtent).toList(),
+                                                scrollController: scrollController,
+                                                padding: const EdgeInsets.only(bottom: 56.0),
+                                                onReorderStart: (index) => isReorderingQueue = true,
+                                                onReorderEnd: (index) => isReorderingQueue = false,
+                                                onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
+                                                itemCount: Player.inst.currentQueue.length,
+                                                itemBuilder: (context, i) {
+                                                  final track = Player.inst.currentQueue[i];
+                                                  return GestureDetector(
+                                                    key: Key("$i"),
+                                                    onHorizontalDragStart: (details) => isReorderingQueue = true,
+                                                    onHorizontalDragEnd: (details) => isReorderingQueue = false,
+                                                    child: AnimatedOpacity(
+                                                      duration: const Duration(milliseconds: 300),
+                                                      opacity: i < Player.inst.currentIndex.value ? 0.7 : 1.0,
+                                                      child: FadeDismissible(
+                                                        key: Key("Diss_$i${track.path}"),
+                                                        onDismissed: (direction) {
+                                                          Player.inst.removeFromQueue(i);
                                                         },
-                                                        child: const Icon(Broken.add_circle),
+                                                        child: TrackTile(
+                                                          index: i,
+                                                          key: ValueKey(i.toString()),
+                                                          track: track,
+                                                          displayRightDragHandler: true,
+                                                          draggableThumbnail: true,
+                                                          queue: Player.inst.currentQueue.toList(),
+                                                          comingFromQueue: true,
+                                                          canHaveDuplicates: true,
+                                                          onDragStart: (event) => isReorderingQueue = true,
+                                                          onDragEnd: (event) => isReorderingQueue = false,
+                                                        ),
                                                       ),
                                                     ),
-                                                    const SizedBox(width: 6.0),
-                                                    ElevatedButton(
-                                                      onPressed: () => ScrollSearchController.inst.animateQueueToCurrentTrack(),
-                                                      child: Icon(isArrowDown.value ? Broken.arrow_down : Broken.arrow_up_1),
-                                                    ),
-                                                    const SizedBox(width: 6.0),
-                                                    ElevatedButton.icon(
-                                                      onPressed: () => Player.inst.shuffleNextTracks(),
-                                                      label: Text(Language.inst.SHUFFLE),
-                                                      icon: const Icon(Broken.shuffle),
-                                                    ),
-                                                    const SizedBox(width: 8.0),
-                                                  ],
-                                                ),
+                                                  );
+                                                },
                                               ),
                                             ),
                                           ),
                                         ],
                                       ),
-                                    ),
+                                      Container(
+                                        width: context.width,
+                                        decoration: BoxDecoration(
+                                          color: context.theme.scaffoldBackgroundColor,
+                                          borderRadius: BorderRadius.vertical(
+                                            top: Radius.circular(12.0.multipliedRadius),
+                                          ),
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(4.0).add(EdgeInsets.only(left: context.width * 0.22)),
+                                          child: FittedBox(
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.end,
+                                              children: [
+                                                const SizedBox(width: 6.0),
+                                                Tooltip(
+                                                  message: Language.inst.REMOVE_DUPLICATES,
+                                                  child: ElevatedButton(
+                                                    onPressed: () => Player.inst.removeDuplicatesFromQueue(),
+                                                    child: const Icon(Broken.trash),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6.0),
+                                                Tooltip(
+                                                  message: Language.inst.NEW_TRACKS_ADD,
+                                                  child: ElevatedButton(
+                                                    onPressed: () {
+                                                      Get.dialog(
+                                                        CustomBlurryDialog(
+                                                          normalTitleStyle: true,
+                                                          title: Language.inst.NEW_TRACKS_ADD,
+                                                          child: Column(
+                                                            children: [
+                                                              CustomListTile(
+                                                                title: Language.inst.NEW_TRACKS_RANDOM,
+                                                                subtitle: Language.inst.NEW_TRACKS_RANDOM_SUBTITLE,
+                                                                icon: Broken.format_circle,
+                                                                maxSubtitleLines: 22,
+                                                                onTap: () {
+                                                                  Get.close(1);
+                                                                  final rt = getRandomTracks(8, 11);
+                                                                  if (rt.isEmpty) {
+                                                                    Get.snackbar(Language.inst.ERROR, Language.inst.NO_ENOUGH_TRACKS);
+                                                                    return;
+                                                                  }
+                                                                  Player.inst.addToQueue(rt);
+                                                                },
+                                                              ),
+                                                              CustomListTile(
+                                                                title: Language.inst.GENERATE_FROM_DATES,
+                                                                subtitle: Language.inst.GENERATE_FROM_DATES_SUBTITLE,
+                                                                icon: Broken.calendar,
+                                                                maxSubtitleLines: 22,
+                                                                onTap: () {
+                                                                  Get.close(1);
+                                                                  List<int> dates = [];
+                                                                  Get.dialog(
+                                                                    CustomBlurryDialog(
+                                                                      normalTitleStyle: true,
+                                                                      insetPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+                                                                      actions: [
+                                                                        TextButton(
+                                                                          onPressed: () {
+                                                                            final tracks = generateTracksFromDates(dates.first, dates.last);
+                                                                            if (tracks.isEmpty) {
+                                                                              Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES);
+                                                                              return;
+                                                                            }
+                                                                            Player.inst.addToQueue(tracks);
+                                                                            Get.close(1);
+                                                                          },
+                                                                          child: Text(Language.inst.GENERATE),
+                                                                        ),
+                                                                      ],
+                                                                      child: CalendarDatePicker2(
+                                                                        onValueChanged: (value) => dates.assignAll(value.map((e) => e?.millisecondsSinceEpoch ?? 0).toList()),
+                                                                        config: CalendarDatePicker2Config(
+                                                                          calendarType: CalendarDatePicker2Type.range,
+                                                                        ),
+                                                                        value: const [],
+                                                                      ),
+                                                                    ),
+                                                                  );
+                                                                },
+                                                              ),
+                                                              Obx(
+                                                                () => CustomListTile(
+                                                                  title: Language.inst.NEW_TRACKS_RECOMMENDED,
+                                                                  subtitle: Language.inst.NEW_TRACKS_RECOMMENDED_SUBTITLE.replaceFirst(
+                                                                    '_CURRENT_TRACK_',
+                                                                    '"${Player.inst.nowPlayingTrack.value.title}"',
+                                                                  ),
+                                                                  icon: Broken.bezier,
+                                                                  maxSubtitleLines: 22,
+                                                                  onTap: () {
+                                                                    Get.close(1);
+                                                                    final gentracks = generateRecommendedTrack(Player.inst.nowPlayingTrack.value);
+                                                                    if (gentracks.isEmpty) {
+                                                                      Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_IN_HISTORY);
+                                                                      return;
+                                                                    }
+                                                                    Player.inst.addToQueue(gentracks, insertNext: true);
+                                                                  },
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                    child: const Icon(Broken.add_circle),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6.0),
+                                                Obx(
+                                                  () => ElevatedButton(
+                                                    onPressed: () => ScrollSearchController.inst.animateQueueToCurrentTrack(),
+                                                    child: Icon(arrowDirection.value),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6.0),
+                                                ElevatedButton.icon(
+                                                  onPressed: () => Player.inst.shuffleNextTracks(),
+                                                  label: Text(Language.inst.SHUFFLE),
+                                                  icon: const Icon(Broken.shuffle),
+                                                ),
+                                                const SizedBox(width: 8.0),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
@@ -1658,5 +1675,29 @@ class _WallpaperState extends State<Wallpaper> with TickerProviderStateMixin {
         );
       },
     );
+  }
+}
+
+class ScrollBoundaryLimitPhysics extends ScrollPhysics {
+  final double topLimit;
+
+  const ScrollBoundaryLimitPhysics({required ScrollPhysics parent, required this.topLimit}) : super(parent: parent);
+
+  @override
+  ScrollPhysics applyTo(ScrollPhysics? ancestor) {
+    return ScrollBoundaryLimitPhysics(parent: buildParent(ancestor)!, topLimit: topLimit);
+  }
+
+  @override
+  double applyBoundaryConditions(ScrollMetrics position, double value) {
+    final double pixels = value.clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    if (pixels <= topLimit) {
+      // when the scroll position reaches the top limit, prevent scrolling
+      return topLimit;
+    }
+    return super.applyBoundaryConditions(position, pixels);
   }
 }

@@ -27,10 +27,10 @@ class ArtistsPage extends StatelessWidget {
     return CupertinoScrollbar(
       controller: _scrollController,
       child: AnimationLimiter(
-        child: Obx(
-          () => Column(
-            children: [
-              ExpandableBox(
+        child: Column(
+          children: [
+            Obx(
+              () => ExpandableBox(
                 gridWidget: ChangeGridCountWidget(
                   currentCount: SettingsController.inst.artistGridCount.value,
                   onTap: () {
@@ -63,29 +63,32 @@ class ArtistsPage extends StatelessWidget {
                   onTextFieldValueChanged: (value) => Indexer.inst.searchArtists(value),
                 ),
               ),
-              if (gridCount == 1)
-                Expanded(
-                  child: Obx(
-                    () => ListView.builder(
-                      controller: _scrollController,
-                      itemCount: finalArtists.length,
-                      padding: const EdgeInsets.only(bottom: kBottomPadding),
-                      itemBuilder: (BuildContext context, int i) {
-                        final artist = finalArtists[i];
-                        return AnimatingTile(
-                          position: i,
-                          child: ArtistTile(
-                            tracks: artist.tracks.toList(),
-                            name: artist.name,
-                          ),
-                        );
-                      },
-                    ),
+            ),
+            if (gridCount == 1)
+              Expanded(
+                child: Obx(
+                  () => ListView.builder(
+                    controller: _scrollController,
+                    itemCount: finalArtists.length,
+                    padding: const EdgeInsets.only(bottom: kBottomPadding),
+                    itemExtent: 65.0 + 2.0 * 9,
+                    itemBuilder: (BuildContext context, int i) {
+                      final artist = finalArtists[i];
+                      return AnimatingTile(
+                        position: i,
+                        child: ArtistTile(
+                          tracks: artist.tracks.toList(),
+                          name: artist.name,
+                        ),
+                      );
+                    },
                   ),
                 ),
-              if (gridCount > 1)
-                Expanded(
-                  child: GridView.builder(
+              ),
+            if (gridCount > 1)
+              Expanded(
+                child: Obx(
+                  () => GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: gridCount,
                       childAspectRatio: 0.88,
@@ -108,8 +111,8 @@ class ArtistsPage extends StatelessWidget {
                     },
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );

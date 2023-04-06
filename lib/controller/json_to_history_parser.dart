@@ -106,7 +106,7 @@ class JsonToHistoryParser {
     _resetValues();
     isParsing.value = true;
 
-    await PlaylistController.inst.backupDefaultPlaylists();
+    await PlaylistController.inst.backupHistoryPlaylist();
 
     /// Removing previous source tracks.
     final isytsource = source == TrackSource.youtube || source == TrackSource.youtubeMusic;
@@ -152,7 +152,9 @@ class JsonToHistoryParser {
             ///     or
             ///    - [json channel] contains [track.album]
             ///    (useful for nightcore channels, album has to be the channel name)
-            : vh.title.contains(element.title) && (vh.title.contains(element.artistsList.first) || vh.channel.contains(element.album));
+            : vh.title.cleanUpForComparison.contains(element.title.cleanUpForComparison) &&
+                (vh.title.cleanUpForComparison.contains(element.artistsList.first.cleanUpForComparison) ||
+                    vh.channel.cleanUpForComparison.contains(element.album.cleanUpForComparison));
       });
       if (tr != null) {
         for (final d in vh.watches) {

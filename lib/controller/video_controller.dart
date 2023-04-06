@@ -191,10 +191,8 @@ class VideoController extends GetxController {
       vidcontroller = VideoPlayerController.file(file, videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true, allowBackgroundPlayback: true));
       await vidcontroller?.initialize();
       await vidcontroller?.setVolume(0.0);
-      localVidPath.value = path;
-
       await Player.inst.updateVideoPlayingState();
-      update();
+      localVidPath.value = path;
 
       /// video info
       // final info = await VideoCompress.getMediaInfo(path);

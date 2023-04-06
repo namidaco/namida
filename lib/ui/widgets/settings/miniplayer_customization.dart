@@ -8,55 +8,56 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class MiniplayerCustomization extends StatelessWidget {
-  MiniplayerCustomization({super.key});
+  const MiniplayerCustomization({super.key});
 
-  final SettingsController stg = SettingsController.inst;
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => ExpansionTile(
-        initiallyExpanded: SettingsController.inst.useSettingCollapsedTiles.value,
-        leading: const StackedIcon(
-          baseIcon: Broken.brush,
-          secondaryIcon: Broken.external_drive,
-        ),
-        title: Text(
-          Language.inst.MINIPLAYER_CUSTOMIZATION,
-          style: Get.textTheme.displayMedium,
-        ),
-        trailing: const Icon(
-          Broken.arrow_down_2,
-        ),
-        children: [
-          CustomSwitchListTile(
+    return ExpansionTile(
+      initiallyExpanded: SettingsController.inst.useSettingCollapsedTiles.value,
+      leading: const StackedIcon(
+        baseIcon: Broken.brush,
+        secondaryIcon: Broken.external_drive,
+      ),
+      title: Text(
+        Language.inst.MINIPLAYER_CUSTOMIZATION,
+        style: Get.textTheme.displayMedium,
+      ),
+      trailing: const Icon(
+        Broken.arrow_down_2,
+      ),
+      children: [
+        Obx(
+          () => CustomSwitchListTile(
             icon: Broken.slider_horizontal_1,
             title: Language.inst.ENABLE_PARTY_MODE,
             subtitle: Language.inst.ENABLE_PARTY_MODE_SUBTITLE,
             onChanged: (value) {
-              SettingsController.inst.save(
-                enablePartyModeInMiniplayer: !value,
-              );
+              SettingsController.inst.save(enablePartyModeInMiniplayer: !value);
             },
             value: SettingsController.inst.enablePartyModeInMiniplayer.value,
           ),
-          CustomSwitchListTile(
+        ),
+        Obx(
+          () => CustomSwitchListTile(
             enabled: SettingsController.inst.enablePartyModeInMiniplayer.value,
             icon: Broken.colors_square,
             title: Language.inst.EDGE_COLORS_SWITCHING,
             onChanged: (value) {
-              SettingsController.inst.save(
-                enablePartyModeColorSwap: !value,
-              );
+              SettingsController.inst.save(enablePartyModeColorSwap: !value);
             },
             value: SettingsController.inst.enablePartyModeColorSwap.value,
           ),
-          CustomSwitchListTile(
+        ),
+        Obx(
+          () => CustomSwitchListTile(
             icon: Broken.buy_crypto,
             title: Language.inst.ENABLE_MINIPLAYER_PARTICLES,
             onChanged: (value) => SettingsController.inst.save(enableMiniplayerParticles: !value),
             value: SettingsController.inst.enableMiniplayerParticles.value,
           ),
-          CustomListTile(
+        ),
+        Obx(
+          () => CustomListTile(
             icon: Broken.flash,
             title: Language.inst.ANIMATING_THUMBNAIL_INTENSITY,
             trailing: NamidaWheelSlider(
@@ -69,18 +70,20 @@ class MiniplayerCustomization extends StatelessWidget {
               text: "${(SettingsController.inst.animatingThumbnailIntensity.value * 4).toStringAsFixed(0)}%",
             ),
           ),
-          CustomSwitchListTile(
+        ),
+        Obx(
+          () => CustomSwitchListTile(
             icon: Broken.arrange_circle_2,
             title: Language.inst.ANIMATING_THUMBNAIL_INVERSED,
             subtitle: Language.inst.ANIMATING_THUMBNAIL_INVERSED_SUBTITLE,
             onChanged: (value) {
-              SettingsController.inst.save(
-                animatingThumbnailInversed: !value,
-              );
+              SettingsController.inst.save(animatingThumbnailInversed: !value);
             },
             value: SettingsController.inst.animatingThumbnailInversed.value,
           ),
-          CustomListTile(
+        ),
+        Obx(
+          () => CustomListTile(
             icon: Broken.sound,
             title: Language.inst.WAVEFORM_BARS_COUNT,
             trailing: SizedBox(
@@ -101,14 +104,16 @@ class MiniplayerCustomization extends StatelessWidget {
               ),
             ),
           ),
-          CustomSwitchListTile(
+        ),
+        Obx(
+          () => CustomSwitchListTile(
             icon: Broken.text_block,
             title: Language.inst.DISPLAY_AUDIO_INFO_IN_MINIPLAYER,
             onChanged: (value) => SettingsController.inst.save(displayAudioInfoMiniplayer: !value),
             value: SettingsController.inst.displayAudioInfoMiniplayer.value,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

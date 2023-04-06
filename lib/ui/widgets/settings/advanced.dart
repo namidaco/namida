@@ -218,8 +218,8 @@ class AdvancedSettings extends StatelessWidget {
                         width: 18.0,
                         child: CheckMark(
                           strokeWidth: 2,
-                          activeColor: Get.theme.listTileTheme.iconColor!,
-                          inactiveColor: Get.theme.listTileTheme.iconColor!,
+                          activeColor: context.theme.listTileTheme.iconColor!,
+                          inactiveColor: context.theme.listTileTheme.iconColor!,
                           duration: const Duration(milliseconds: 400),
                           active: videosToDelete.contains(file),
                         ),

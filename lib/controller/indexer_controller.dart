@@ -265,7 +265,7 @@ class Indexer extends GetxController {
             duration ?? 0,
             int.tryParse((trackInfo.year ?? '').cleanUpForComparison) ?? 0,
             fileStat.size,
-            //TODO: REMOVE CREATION DATE
+            //TODO(MSOB7YY): REMOVE CREATION DATE
             fileStat.accessed.millisecondsSinceEpoch,
             fileStat.changed.millisecondsSinceEpoch,
             trackPath,
@@ -289,7 +289,7 @@ class Indexer extends GetxController {
         } catch (e) {
           printError(info: e.toString());
 
-          /// TODO: Should i add a dummy track that has a real path?
+          /// TODO(MSOB7YY): Should i add a dummy track that has a real path?
           // final fileStat = await File(track).stat();
           // tracksInfoList.add(Track(p.basenameWithoutExtension(track), ['Unkown Artist'], 'Unkown Album', 'Unkown Album Artist', ['Unkown Genre'], 'Unknown Composer', 0, 0, 0, fileStat.size, fileStat.accessed.millisecondsSinceEpoch, fileStat.changed.millisecondsSinceEpoch, track,
           //     "$kAppDirectoryPath/Artworks/${p.basename(track)}.png", p.dirname(track), p.basename(track), p.basenameWithoutExtension(track), p.extension(track).substring(1), '', 0, 0, '', '', 0, '', '', '', ''));

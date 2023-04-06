@@ -84,11 +84,13 @@ void main() async {
     kLyricsDirPath,
     kMetadataDirPath,
     kMetadataCommentsDirPath,
+    kPlaylistsFolderPath,
+    kQueuesFolderPath,
   ]);
 
   final paths = await ExternalPath.getExternalStorageDirectories();
   kStoragePaths.assignAll(paths);
-  kDirectoriesPaths = paths.map((path) => "$path/${ExternalPath.DIRECTORY_MUSIC}").toSet();
+  kDirectoriesPaths.assignAll(paths.map((path) => "$path/${ExternalPath.DIRECTORY_MUSIC}").toSet());
   kDirectoriesPaths.add('${paths[0]}/Download/');
   kInternalAppDirectoryPath = "${paths[0]}/Namida";
 
@@ -110,8 +112,8 @@ void main() async {
   // playlists should be prepared first since it can used as reference in queues.
   await PlaylistController.inst.prepareDefaultPlaylistsFile();
 
-  PlaylistController.inst.preparePlaylistFile();
-  QueueController.inst.prepareQueuesFile();
+  PlaylistController.inst.prepareAllPlaylistsFile();
+  QueueController.inst.prepareAllQueuesFile();
 
   await QueueController.inst.prepareLatestQueueFile();
   await Player.inst.initializePlayer();

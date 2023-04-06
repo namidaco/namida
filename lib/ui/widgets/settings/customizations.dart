@@ -19,12 +19,12 @@ class CustomizationSettings extends StatelessWidget {
   final SettingsController stg = SettingsController.inst;
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => SettingsCard(
-        title: Language.inst.CUSTOMIZATIONS,
-        subtitle: Language.inst.CUSTOMIZATIONS_SUBTITLE,
-        icon: Broken.brush_1,
-        child: Column(
+    return SettingsCard(
+      title: Language.inst.CUSTOMIZATIONS,
+      subtitle: Language.inst.CUSTOMIZATIONS_SUBTITLE,
+      icon: Broken.brush_1,
+      child: Obx(
+        () => Column(
           children: [
             CustomSwitchListTile(
               icon: Broken.drop,
@@ -112,7 +112,7 @@ class CustomizationSettings extends StatelessWidget {
             ),
             AlbumTileCustomization(),
             TrackTileCustomization(),
-            MiniplayerCustomization(),
+            const MiniplayerCustomization(),
           ],
         ),
       ),

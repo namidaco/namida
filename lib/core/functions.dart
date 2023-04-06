@@ -1,13 +1,7 @@
-// ignore_for_file: depend_on_referenced_packages
-
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
-import 'package:collection/collection.dart';
-
-import 'dart:async';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/playlist.dart';
@@ -120,16 +114,25 @@ class NamidaOnTaps {
   }
 }
 
-bool checkIfQueuesSimilar(List<Track> q1, List<Track> q2) {
-  return const IterableEquality().equals(q1.map((e) => e.path).toList(), q2.map((element) => element.path).toList());
+// Returns a [0-1] scale representing how much similar both are.
+double checkIfQueuesSimilar(List<Track> q1, List<Track> q2) {
+  if (q1.isEmpty || q2.isEmpty) {
+    return 0.0;
+  }
+  final finallength = q1.length > q2.length ? q2.length : q1.length;
+  int trueconditions = 0;
+  for (int i = 0; i < finallength; i++) {
+    if (q1[i].path == q2[i].path) trueconditions++;
+  }
+  return trueconditions / finallength;
 }
 
 bool checkIfQueueSameAsCurrent(List<Track> queue) {
-  return checkIfQueuesSimilar(queue, Player.inst.currentQueue.toList());
+  return checkIfQueuesSimilar(queue, Player.inst.currentQueue.toList()) == 1.0;
 }
 
 bool checkIfQueueSameAsAllTracks(List<Track> queue) {
-  return checkIfQueuesSimilar(queue, Indexer.inst.tracksInfoList.toList());
+  return checkIfQueuesSimilar(queue, Indexer.inst.tracksInfoList.toList()) == 1.0;
 }
 
 String textCleanedForSearch(String textToClean) {

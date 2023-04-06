@@ -334,6 +334,7 @@ class IndexerSettings extends StatelessWidget {
     bool trackGenresSeparatorsBlacklist = false,
   }) async {
     TextEditingController separatorsController = TextEditingController();
+
     await Get.dialog(
       transitionDuration: const Duration(milliseconds: 200),
       CustomBlurryDialog(
@@ -357,7 +358,12 @@ class IndexerSettings extends StatelessWidget {
                   );
                 }
               },
-              child: Text(Language.inst.BLACKLIST),
+              child: Obx(() {
+                final blLength =
+                    trackArtistsSeparators ? SettingsController.inst.trackArtistsSeparatorsBlacklist.length : SettingsController.inst.trackGenresSeparatorsBlacklist.length;
+                final t = blLength == 0 ? '' : ' ($blLength)';
+                return Text('${Language.inst.BLACKLIST}$t');
+              }),
             ),
           const CancelButton(),
           ElevatedButton(

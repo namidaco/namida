@@ -24,7 +24,7 @@ class ArtistCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const double horizontalPadding = 4.0;
-    double thumnailSize = (Get.width / gridCount) - horizontalPadding * 2;
+    final double thumnailSize = (Get.width / gridCount) - horizontalPadding * 2;
     final fontSize = (18.0 - (gridCount * 1.7)).multipliedFontScale;
     return GridTile(
       child: Material(

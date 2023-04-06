@@ -17,8 +17,8 @@ class ArtistTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double artistthumnailSize = 65;
-    double artistTileHeight = 65;
+    const artistthumnailSize = 65.0;
+    const artistTileHeight = 65.0;
     final albums = name.artistAlbums;
 
     return Container(

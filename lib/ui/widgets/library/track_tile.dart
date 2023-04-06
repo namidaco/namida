@@ -34,6 +34,8 @@ class TrackTile extends StatelessWidget {
   final bool oiRespectPlayMode;
   final bool comingFromQueue;
   final bool canHaveDuplicates;
+  final void Function(PointerDownEvent event)? onDragStart;
+  final void Function(PointerUpEvent event)? onDragEnd;
   const TrackTile({
     super.key,
     required this.track,
@@ -51,6 +53,8 @@ class TrackTile extends StatelessWidget {
     this.oiRespectPlayMode = false,
     this.comingFromQueue = false,
     this.canHaveDuplicates = false,
+    this.onDragStart,
+    this.onDragEnd,
   });
 
   String getChoosenTrackTileItem(TrackTileItem trackItem) {
@@ -101,8 +105,6 @@ class TrackTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    context.theme;
-
     return Obx(
       () {
         final TrackItem tritem = SettingsController.inst.trackItem.value;
@@ -175,7 +177,6 @@ class TrackTile extends StatelessWidget {
                             child: Hero(
                               tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
                               child: ArtworkWidget(
-                                blur: 1.5,
                                 thumnailSize: thumnailSize,
                                 track: track,
                                 forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
@@ -204,6 +205,8 @@ class TrackTile extends StatelessWidget {
                           CustomReorderableDelayedDragStartListener(
                             index: index,
                             delay: const Duration(milliseconds: 80),
+                            onDragStart: onDragStart,
+                            onDragEnd: onDragEnd,
                             child: Container(
                               color: Colors.transparent,
                               height: trackTileHeight,
@@ -302,6 +305,8 @@ class TrackTile extends StatelessWidget {
                       ),
                       CustomReorderableDelayedDragStartListener(
                         index: index,
+                        onDragStart: onDragStart,
+                        onDragEnd: onDragEnd,
                         child: FittedBox(
                           child: Icon(
                             Broken.menu_1,

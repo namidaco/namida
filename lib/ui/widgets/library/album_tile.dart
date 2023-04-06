@@ -20,8 +20,9 @@ class AlbumTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double albumthumnailSize = SettingsController.inst.albumThumbnailSizeinList.value;
-    double albumTileHeight = SettingsController.inst.albumListTileHeight.value;
+    final albumthumnailSize = SettingsController.inst.albumThumbnailSizeinList.value;
+    final albumTileHeight = SettingsController.inst.albumListTileHeight.value;
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 8.0),
       clipBehavior: Clip.antiAlias,
@@ -91,34 +92,6 @@ class AlbumTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                // if (track.duration != null) ...[
-                //   const SizedBox(
-                //     width: 12.0,
-                //   ),
-                //   Text(
-                //     track.duration!.milliseconds.label,
-                //     style: Get.textTheme.displaySmall,
-                //     overflow: TextOverflow.ellipsis,
-                //   ),
-                // ],
-                // FutureBuilder<List<SongModel>?>(
-                //   future: OnAudioQuery().queryAudiosFrom(AudiosFromType.ALBUM_ID, album.id),
-                //   builder: (context, item) {
-                //     if (item.data == null) {
-                //       return Text("");
-                //     }
-                //     // return Text("${item.data?[0].title}");
-                //     return Text(
-                //       [
-                //         // getTotalTracksDurationFormatted(tracks: item.data!),
-                //       ].join(' - '),
-                //       style: Get.textTheme.displaySmall?.copyWith(
-                //         fontWeight: FontWeight.w500,
-                //       ),
-                //       overflow: TextOverflow.ellipsis,
-                //     );
-                //   },
-                // ),
                 Text(
                   [
                     album.totalDurationFormatted,

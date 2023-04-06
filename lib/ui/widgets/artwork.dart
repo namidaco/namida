@@ -14,7 +14,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/packages/drop_shadow.dart';
 
 /// Always displays compressed image, if not [compressed] then it will add the full res image on top of it.
-/// TODO: use path instead of track
+/// TODO(MSOB7YY): use path instead of track
 class ArtworkWidget extends StatelessWidget {
   final Track track;
   final Uint8List? bytes;

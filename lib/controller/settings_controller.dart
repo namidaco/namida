@@ -46,6 +46,8 @@ class SettingsController extends GetxController {
   final RxString dateTimeFormat = 'MMM yyyy'.obs;
   final RxList<String> trackArtistsSeparators = <String>['&', ',', ';', '//'].obs;
   final RxList<String> trackGenresSeparators = <String>['&', ',', ';', '//'].obs;
+  final RxList<String> trackArtistsSeparatorsBlacklist = <String>[].obs;
+  final RxList<String> trackGenresSeparatorsBlacklist = <String>[].obs;
   final Rx<SortType> tracksSort = SortType.title.obs;
   final RxBool tracksSortReversed = false.obs;
   final Rx<GroupSortType> albumSort = GroupSortType.album.obs;
@@ -67,8 +69,18 @@ class SettingsController extends GetxController {
   final RxString defaultBackupLocation = kInternalAppDirectoryPath.obs;
   final RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
   final RxBool enableFoldersHierarchy = true.obs;
-  final RxList<String> backupItemslist =
-      [kTracksFilePath, kQueuesDBPath, kDefaultPlaylistsFilePath, kLatestQueueFilePath, kPaletteDirPath, kLyricsDirPath, kPlaylistsDBPath, kSettingsFilePath, kWaveformDirPath].obs;
+  final RxList<String> backupItemslist = [
+    kTracksFilePath,
+    kQueuesFolderPath,
+    kHistoryPlaylistFilePath,
+    kFavouritesPlaylistFilePath,
+    kLatestQueueFilePath,
+    kPaletteDirPath,
+    kLyricsDirPath,
+    kPlaylistsFolderPath,
+    kSettingsFilePath,
+    kWaveformDirPath,
+  ].obs;
   final RxBool enableVideoPlayback = true.obs;
   final RxBool enableLyrics = false.obs;
   final RxInt videoPlaybackSource = 0.obs;
@@ -162,6 +174,8 @@ class SettingsController extends GetxController {
 
       trackArtistsSeparators.value = List<String>.from(json['trackArtistsSeparators'] ?? trackArtistsSeparators.toList());
       trackGenresSeparators.value = List<String>.from(json['trackGenresSeparators'] ?? trackGenresSeparators.toList());
+      trackArtistsSeparatorsBlacklist.value = List<String>.from(json['trackArtistsSeparatorsBlacklist'] ?? trackArtistsSeparatorsBlacklist.toList());
+      trackGenresSeparatorsBlacklist.value = List<String>.from(json['trackGenresSeparatorsBlacklist'] ?? trackGenresSeparatorsBlacklist.toList());
       tracksSort.value = SortType.values.getEnum(json['tracksSort']) ?? tracksSort.value;
       tracksSortReversed.value = json['tracksSortReversed'] ?? tracksSortReversed.value;
       albumSort.value = GroupSortType.values.getEnum(json['albumSort']) ?? albumSort.value;
@@ -264,6 +278,8 @@ class SettingsController extends GetxController {
       'dateTimeFormat': dateTimeFormat.value,
       'trackArtistsSeparators': trackArtistsSeparators.toList(),
       'trackGenresSeparators': trackGenresSeparators.toList(),
+      'trackArtistsSeparatorsBlacklist': trackArtistsSeparatorsBlacklist.toList(),
+      'trackGenresSeparatorsBlacklist': trackGenresSeparatorsBlacklist.toList(),
       'tracksSort': tracksSort.value.convertToString,
       'tracksSortReversed': tracksSortReversed.value,
       'albumSort': albumSort.value.convertToString,
@@ -356,6 +372,8 @@ class SettingsController extends GetxController {
     String? dateTimeFormat,
     List<String>? trackArtistsSeparators,
     List<String>? trackGenresSeparators,
+    List<String>? trackArtistsSeparatorsBlacklist,
+    List<String>? trackGenresSeparatorsBlacklist,
     SortType? tracksSort,
     bool? tracksSortReversed,
     GroupSortType? albumSort,
@@ -513,6 +531,12 @@ class SettingsController extends GetxController {
     }
     if (trackGenresSeparators != null && !this.trackGenresSeparators.contains(trackGenresSeparators[0])) {
       this.trackGenresSeparators.addAll(trackGenresSeparators);
+    }
+    if (trackArtistsSeparatorsBlacklist != null && !this.trackArtistsSeparatorsBlacklist.contains(trackArtistsSeparatorsBlacklist[0])) {
+      this.trackArtistsSeparatorsBlacklist.addAll(trackArtistsSeparatorsBlacklist);
+    }
+    if (trackGenresSeparatorsBlacklist != null && !this.trackGenresSeparatorsBlacklist.contains(trackGenresSeparatorsBlacklist[0])) {
+      this.trackGenresSeparatorsBlacklist.addAll(trackGenresSeparatorsBlacklist);
     }
     if (tracksSort != null) {
       this.tracksSort.value = tracksSort;
@@ -715,6 +739,8 @@ class SettingsController extends GetxController {
   void removeFromList({
     String? trackArtistsSeparator,
     String? trackGenresSeparator,
+    String? trackArtistsSeparatorsBlacklist1,
+    String? trackGenresSeparatorsBlacklist1,
     String? trackSearchFilter1,
     List<String>? trackSearchFilterAll,
     String? playlistSearchFilter1,
@@ -735,6 +761,12 @@ class SettingsController extends GetxController {
     }
     if (trackGenresSeparator != null) {
       trackGenresSeparators.remove(trackGenresSeparator);
+    }
+    if (trackArtistsSeparatorsBlacklist1 != null) {
+      trackArtistsSeparatorsBlacklist.remove(trackArtistsSeparatorsBlacklist1);
+    }
+    if (trackGenresSeparatorsBlacklist1 != null) {
+      trackGenresSeparatorsBlacklist.remove(trackGenresSeparatorsBlacklist1);
     }
     if (trackSearchFilter1 != null) {
       trackSearchFilter.remove(trackSearchFilter1);

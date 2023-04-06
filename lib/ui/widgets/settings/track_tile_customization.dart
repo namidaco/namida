@@ -24,22 +24,22 @@ class TrackTileCustomization extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => ExpansionTile(
-        initiallyExpanded: SettingsController.inst.useSettingCollapsedTiles.value,
-        leading: const StackedIcon(
-          baseIcon: Broken.brush,
-          secondaryIcon: Broken.music_circle,
-        ),
-        title: Text(
-          Language.inst.TRACK_TILE_CUSTOMIZATION,
-          style: Get.textTheme.displayMedium,
-        ),
-        trailing: const Icon(
-          Broken.arrow_down_2,
-        ),
-        children: [
-          CustomSwitchListTile(
+    return ExpansionTile(
+      initiallyExpanded: SettingsController.inst.useSettingCollapsedTiles.value,
+      leading: const StackedIcon(
+        baseIcon: Broken.brush,
+        secondaryIcon: Broken.music_circle,
+      ),
+      title: Text(
+        Language.inst.TRACK_TILE_CUSTOMIZATION,
+        style: Get.textTheme.displayMedium,
+      ),
+      trailing: const Icon(
+        Broken.arrow_down_2,
+      ),
+      children: [
+        Obx(
+          () => CustomSwitchListTile(
             icon: Broken.crop,
             title: Language.inst.FORCE_SQUARED_TRACK_THUMBNAIL,
             onChanged: (value) {
@@ -66,7 +66,9 @@ class TrackTileCustomization extends StatelessWidget {
             },
             value: stg.forceSquaredTrackThumbnail.value,
           ),
-          CustomListTile(
+        ),
+        Obx(
+          () => CustomListTile(
             icon: Broken.maximize_3,
             title: Language.inst.TRACK_THUMBNAIL_SIZE_IN_LIST,
             trailingText: "${stg.trackThumbnailSizeinList.toInt()}",
@@ -78,7 +80,9 @@ class TrackTileCustomization extends StatelessWidget {
               );
             },
           ),
-          CustomListTile(
+        ),
+        Obx(
+          () => CustomListTile(
             icon: Broken.pharagraphspacing,
             title: Language.inst.HEIGHT_OF_TRACK_TILE,
             trailingText: "${stg.trackListTileHeight.toInt()}",
@@ -90,7 +94,9 @@ class TrackTileCustomization extends StatelessWidget {
               );
             },
           ),
-          CustomSwitchListTile(
+        ),
+        Obx(
+          () => CustomSwitchListTile(
             icon: Broken.chart_1,
             rotateIcon: 1,
             title: Language.inst.DISPLAY_THIRD_ROW_IN_TRACK_TILE,
@@ -99,7 +105,9 @@ class TrackTileCustomization extends StatelessWidget {
             ),
             value: stg.displayThirdRow.value,
           ),
-          CustomSwitchListTile(
+        ),
+        Obx(
+          () => CustomSwitchListTile(
             icon: Broken.coin,
             rotateIcon: 3,
             title: Language.inst.DISPLAY_THIRD_ITEM_IN_ROW_IN_TRACK_TILE,
@@ -108,7 +116,9 @@ class TrackTileCustomization extends StatelessWidget {
             ),
             value: stg.displayThirdItemInEachRow.value,
           ),
-          CustomSwitchListTile(
+        ),
+        Obx(
+          () => CustomSwitchListTile(
             icon: Broken.heart,
             title: Language.inst.DISPLAY_FAVOURITE_ICON_IN_TRACK_TILE,
             onChanged: (_) => stg.save(
@@ -116,7 +126,9 @@ class TrackTileCustomization extends StatelessWidget {
             ),
             value: stg.displayFavouriteIconInListTile.value,
           ),
-          CustomListTile(
+        ),
+        Obx(
+          () => CustomListTile(
             icon: Broken.minus_square,
             title: Language.inst.TRACK_TILE_ITEMS_SEPARATOR,
             trailingText: stg.trackTileSeparator.value,
@@ -126,7 +138,9 @@ class TrackTileCustomization extends StatelessWidget {
               iconWidget: const Icon(Broken.minus_square),
             ),
           ),
-          Container(
+        ),
+        Obx(
+          () => Container(
             color: context.theme.cardTheme.color,
             width: context.width,
             height: stg.trackListTileHeight * 1.4,
@@ -282,9 +296,9 @@ class TrackTileCustomization extends StatelessWidget {
                 const SizedBox(width: 6.0),
               ],
             ),
-          )
-        ],
-      ),
+          ),
+        )
+      ],
     );
   }
 

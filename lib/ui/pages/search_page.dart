@@ -68,7 +68,7 @@ class SearchPage extends StatelessWidget {
                         if (Indexer.inst.albumSearchTemp.isNotEmpty) ...[
                           SliverToBoxAdapter(
                             child: SearchPageTitleRow(
-                              title: Language.inst.ALBUMS,
+                              title: '${Language.inst.ALBUMS} • ${Indexer.inst.albumSearchTemp.length}',
                               icon: Broken.music_dashboard,
                               buttonIcon: Broken.category,
                               buttonText: Language.inst.VIEW_ALL,
@@ -89,11 +89,12 @@ class SearchPage extends StatelessWidget {
                             child: SizedBox(
                               height: 170,
                               child: ListView(
+                                itemExtent: 132.0,
                                 scrollDirection: Axis.horizontal,
                                 children: Indexer.inst.albumSearchTemp
                                     .map(
                                       (e) => Container(
-                                        width: 130,
+                                        width: 130.0,
                                         margin: const EdgeInsets.only(left: 2.0),
                                         child: AlbumCard(
                                           gridCountOverride: 3,
@@ -115,7 +116,7 @@ class SearchPage extends StatelessWidget {
                         if (Indexer.inst.artistSearchTemp.isNotEmpty) ...[
                           SliverToBoxAdapter(
                             child: SearchPageTitleRow(
-                              title: Language.inst.ARTISTS,
+                              title: '${Language.inst.ARTISTS} • ${Indexer.inst.artistSearchTemp.length}',
                               icon: Broken.profile_2user,
                               buttonIcon: Broken.category,
                               buttonText: Language.inst.VIEW_ALL,
@@ -137,10 +138,11 @@ class SearchPage extends StatelessWidget {
                               height: 100,
                               child: ListView(
                                 scrollDirection: Axis.horizontal,
+                                itemExtent: 82.0,
                                 children: Indexer.inst.artistSearchTemp
                                     .map(
                                       (e) => Container(
-                                        width: 80,
+                                        width: 80.0,
                                         margin: const EdgeInsets.only(left: 2.0),
                                         child: ArtistCard(
                                           gridCount: 5,
@@ -161,16 +163,17 @@ class SearchPage extends StatelessWidget {
                         /// Tracks
                         if (Indexer.inst.trackSearchTemp.isNotEmpty) ...[
                           SliverToBoxAdapter(
-                              child: Tooltip(
-                            message: Language.inst.TRACK_PLAY_MODE,
-                            child: SearchPageTitleRow(
-                              title: Language.inst.TRACKS,
-                              icon: Broken.music_circle,
-                              buttonIcon: Broken.play,
-                              buttonText: SettingsController.inst.trackPlayMode.value.toText,
-                              onPressed: () => SettingsController.inst.trackPlayMode.value.toggleSetting(),
+                            child: Tooltip(
+                              message: Language.inst.TRACK_PLAY_MODE,
+                              child: SearchPageTitleRow(
+                                title: '${Language.inst.TRACKS} • ${Indexer.inst.trackSearchTemp.length}',
+                                icon: Broken.music_circle,
+                                buttonIcon: Broken.play,
+                                buttonText: SettingsController.inst.trackPlayMode.value.toText,
+                                onPressed: () => SettingsController.inst.trackPlayMode.value.toggleSetting(),
+                              ),
                             ),
-                          )),
+                          ),
                           const SliverPadding(
                             padding: EdgeInsets.only(bottom: 12.0),
                           ),

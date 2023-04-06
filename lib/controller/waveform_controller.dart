@@ -38,7 +38,7 @@ class WaveformController extends GetxController {
 
         // A Delay to prevent glitches caused by theme change
         Future.delayed(const Duration(milliseconds: 400), () async {
-          curentWaveform.assignAll(increaseListToMax(waveform)); //
+          curentWaveform.assignAll(_increaseListToMax(waveform)); //
           curentScaleList.assignAll(changeListSize(waveform, track.duration ~/ 50 - 1)); // each 50ms
         });
       } catch (e) {
@@ -53,8 +53,7 @@ class WaveformController extends GetxController {
         curentScaleList.assignAll(changeListSize(kDefaultScaleList, track.duration ~/ 50 - 1));
       });
 
-      // no await since extraction process will take time anyway, hope this doesnt make problems
-      waveFile.create();
+      await waveFile.create();
 
       List<double> waveformData = kDefaultWaveFormData;
       // creates a new instance to prevent extracting from the same file.
@@ -72,8 +71,8 @@ class WaveformController extends GetxController {
       }
 
       if (track == Player.inst.nowPlayingTrack.value) {
-        curentWaveform.assignAll(increaseListToMax(waveformData)); //
-        curentScaleList.assignAll(changeListSize(waveformData, track.duration ~/ 50)); // each 50ms
+        curentWaveform.assignAll(_increaseListToMax(waveformData)); //
+        curentScaleList.assignAll(changeListSize(waveformData, track.duration ~/ 50 - 1)); // each 50ms
       }
 
       await waveFile.writeAsString(waveformData.toString());
@@ -98,9 +97,8 @@ class WaveformController extends GetxController {
     generatingAllWaveforms.value = false;
   }
 
-  double getAnimatingScale(List<double> curentScaleList) {
-    final scaleList = WaveformController.inst.curentScaleList;
-    final bitScale = Player.inst.nowPlayingPosition.value ~/ 50;
+  double getAnimatingScale(List<double> scaleList) {
+    final bitScale = Player.inst.nowPlayingPosition.value ~/ 50 - 1;
     final dynamicScale = scaleList.asMap().containsKey(bitScale) ? scaleList[bitScale] : 0.01;
     final intensity = SettingsController.inst.animatingThumbnailIntensity.value;
     final finalScale = dynamicScale * (intensity / 100);
@@ -148,35 +146,9 @@ class WaveformController extends GetxController {
     }
   }
 
-  List<double> interpolateList(List<double> list, int m) {
-    final interpolatedList = <double>[];
-    for (int i = 0; i < list.length - 1; i++) {
-      final start = list[i];
-      final end = list[i + 1];
-      final step = (end - start) / (m + 1);
-      for (int j = 1; j <= m; j++) {
-        final value = start + j * step;
-        interpolatedList.add(value);
-      }
-    }
-    return interpolatedList;
-  }
-
-  List<double> increaseListToMax(List<double> list, [double max = 0.0]) {
+  List<double> _increaseListToMax(List<double> list, [double max = 0.0]) {
     final max = list.reduce((a, b) => a > b ? a : b);
     return list.map((value) => value / max / 2.0).toList();
-  }
-
-  List<double> upscaleList(List<double> originalList, int newLength) {
-    double scaleFactor = newLength / originalList.length + 1;
-    List<double> newList = [];
-    for (int i = 0; i < newLength; i++) {
-      int originalIndex = (i / scaleFactor).floor();
-      double fraction = (i / scaleFactor) - originalIndex;
-      double newValue = originalList[originalIndex] * (1 - fraction) + originalList[originalIndex + 1] * fraction;
-      newList.add(newValue);
-    }
-    return newList;
   }
 
   @override

@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/backup_controller.dart';
@@ -11,6 +10,7 @@ import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/main.dart';
@@ -74,13 +74,19 @@ class BackupAndRestore extends StatelessWidget {
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(kPlaylistsDBPath) && isActive(kDefaultPlaylistsFilePath),
+                                active: isActive(kPlaylistsFolderPath),
                                 title: Language.inst.PLAYLISTS,
                                 icon: Broken.music_library_2,
-                                onTap: () {
-                                  onItemTap(kPlaylistsDBPath);
-                                  onItemTap(kDefaultPlaylistsFilePath);
-                                },
+                                onTap: () => onItemTap(kPlaylistsFolderPath),
+                              ),
+                              const SizedBox(
+                                height: 12.0,
+                              ),
+                              ListTileWithCheckMark(
+                                active: isActive(kHistoryPlaylistFilePath),
+                                title: Language.inst.HISTORY,
+                                icon: Broken.refresh,
+                                onTap: () => onItemTap(kHistoryPlaylistFilePath),
                               ),
                               const SizedBox(
                                 height: 12.0,
@@ -113,11 +119,11 @@ class BackupAndRestore extends StatelessWidget {
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(kQueuesDBPath) && isActive(kLatestQueueFilePath),
+                                active: isActive(kQueuesFolderPath) && isActive(kLatestQueueFilePath),
                                 title: Language.inst.QUEUES,
                                 icon: Broken.driver,
                                 onTap: () {
-                                  onItemTap(kQueuesDBPath);
+                                  onItemTap(kQueuesFolderPath);
                                   onItemTap(kLatestQueueFilePath);
                                 },
                               ),
@@ -215,8 +221,16 @@ class BackupAndRestore extends StatelessWidget {
             title: Language.inst.IMPORT_YOUTUBE_HISTORY,
             leading: StackedIcon(
               baseIcon: Broken.import_2,
-              secondaryIcon: Broken.video_square,
-              secondaryIconColor: Colors.red.withAlpha(200),
+              // secondaryIcon: Broken.video_square,
+              // secondaryIconColor: Colors.red.withAlpha(200),
+              smallChild: ClipRRect(
+                borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                child: Image.asset(
+                  'assets/icons/youtube.png',
+                  width: 12,
+                  height: 12,
+                ),
+              ),
             ),
             trailing: const SizedBox(
               height: 32.0,
@@ -312,12 +326,12 @@ class BackupAndRestore extends StatelessWidget {
             title: Language.inst.IMPORT_LAST_FM_HISTORY,
             leading: StackedIcon(
               baseIcon: Broken.import_2,
-              smallChild: FittedBox(
-                child: SvgPicture.asset(
-                  'assets/icons/lastfm.svg',
+              smallChild: ClipRRect(
+                borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                child: Image.asset(
+                  'assets/icons/lastfm.png',
                   width: 12,
-                  // ignore: deprecated_member_use
-                  height: 12, color: Colors.red.withAlpha(200),
+                  height: 12,
                 ),
               ),
             ),

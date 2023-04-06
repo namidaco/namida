@@ -24,7 +24,6 @@ import 'package:namida/ui/widgets/settings/sort_by_button.dart';
 
 class PlaylistsPage extends StatelessWidget {
   final int? countPerRow;
-  // final void Function()? onTap;
   final List<Track>? tracksToAdd;
   final bool displayTopRow;
   final bool disableBottomPadding;
@@ -95,7 +94,7 @@ class PlaylistsPage extends StatelessWidget {
                                 ),
                                 Expanded(
                                   child: Text(
-                                    PlaylistController.inst.playlistSearchList.displayPlaylistKeyword,
+                                    PlaylistController.inst.playlistList.displayPlaylistKeyword,
                                     style: Theme.of(context).textTheme.displayLarge,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
@@ -132,7 +131,7 @@ class PlaylistsPage extends StatelessWidget {
                                     colorScheme: Colors.grey,
                                     icon: Broken.refresh,
                                     title: Language.inst.HISTORY,
-                                    playlistName: kPlaylistHistory,
+                                    playlist: namidaHistoryPlaylist,
                                     onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaHistoryPlaylist),
                                   ),
                                   DefaultPlaylistCard(
@@ -140,7 +139,7 @@ class PlaylistsPage extends StatelessWidget {
                                     colorScheme: Colors.red,
                                     icon: Broken.heart,
                                     title: Language.inst.FAVOURITES,
-                                    playlistName: kPlaylistFavourites,
+                                    playlist: namidaFavouritePlaylist,
                                     onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaFavouritePlaylist),
                                   ),
                                 ],
@@ -153,7 +152,7 @@ class PlaylistsPage extends StatelessWidget {
                                     colorScheme: Colors.green,
                                     icon: Broken.award,
                                     title: Language.inst.MOST_PLAYED,
-                                    playlistName: kPlaylistMostPlayed,
+                                    playlist: namidaMostPlayedPlaylist,
                                     onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaMostPlayedPlaylist),
                                   ),
                                   DefaultPlaylistCard(

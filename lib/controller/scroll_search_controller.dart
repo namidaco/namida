@@ -7,6 +7,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/main_page.dart';
 
@@ -32,7 +33,8 @@ class ScrollSearchController extends GetxController {
   final ScrollController genreScrollcontroller = ScrollController();
   final ScrollController playlistScrollcontroller = ScrollController();
 
-  final ScrollController queueScrollController = ScrollController();
+  ScrollController queueScrollController = ScrollController();
+  double get trackTileItemScrollOffsetInQueue => trackTileItemExtent * Player.inst.currentIndex.value - Get.height * 0.3;
 
   final RxBool isTrackBarVisible = true.obs;
   final RxBool isAlbumBarVisible = true.obs;
@@ -211,11 +213,10 @@ class ScrollSearchController extends GetxController {
     showPlaylistSearchBox.value = false;
   }
 
-  void animateQueueToCurrentTrack([int? index]) {
-    index ??= Player.inst.currentIndex.value;
+  void animateQueueToCurrentTrack() {
     if (queueScrollController.hasClients) {
       queueScrollController.animateTo(
-        (SettingsController.inst.trackListTileHeight.value * 1.15) * index - 120,
+        trackTileItemScrollOffsetInQueue,
         duration: const Duration(milliseconds: 600),
         curve: Curves.easeInOutQuint,
       );

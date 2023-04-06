@@ -33,6 +33,8 @@ class Language {
   String get CONFIGURE => 'Configure';
   String get TOTAL_LISTENS => 'Total Listens';
   String get BLACKLIST => 'Blacklist';
+  String get REMOVE_DUPLICATES => 'Remove Duplicates';
+  String get MAKE_YOUR_FIRST_LISTEN => 'Make your first listen!';
 
   String get IMPORT_YOUTUBE_HISTORY_GUIDE =>
       '1. Go to _TAKEOUT_LINK_\n\n2. Deselect All and select youtube only.\n\n3. Press "Multiple Formats" and beside "History" choose "JSON".\n\n4. Press "All Youtube data included", Deselect All and choose history only.\n\n5. Create Export, Download & Unzip.\n\n6. Choose "watch-history.json" from the next screen.';
@@ -66,7 +68,7 @@ class Language {
   String get GO_TO_ALBUM => 'Go to Album';
   String get GO_TO_ARTIST => 'Go to Artist';
   String get EDIT_ARTWORK => 'Edit Artwork';
-  String get MIN_VALUE_TO_COUNT_TRACK_LISTEN => 'Minimum value to count a listen';
+  String get MIN_VALUE_TO_COUNT_TRACK_LISTEN => 'Count a listen after: ';
   String get SECONDS => 'Seconds';
   String get PERCENTAGE => 'Percentage';
   String get AUTO_EXTRACT_TAGS_FROM_FILENAME => 'Auto extract from filename';
@@ -264,6 +266,7 @@ class Language {
   String get PLAY_ALL => 'Play All';
   String get PLAY_NEXT => 'Play Next';
   String get PLAY_LAST => 'Play Last';
+  String get PLAY_AFTER => 'Play After';
   String get SHUFFLE => 'Shuffle';
 
   /// 1. Track Tile Customization

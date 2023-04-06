@@ -27,10 +27,10 @@ class AlbumsPage extends StatelessWidget {
     return CupertinoScrollbar(
       controller: _scrollController,
       child: AnimationLimiter(
-        child: Obx(
-          () => Column(
-            children: [
-              ExpandableBox(
+        child: Column(
+          children: [
+            Obx(
+              () => ExpandableBox(
                 gridWidget: ChangeGridCountWidget(
                   currentCount: SettingsController.inst.albumGridCount.value,
                   forStaggered: SettingsController.inst.useAlbumStaggeredGridView.value,
@@ -64,70 +64,71 @@ class AlbumsPage extends StatelessWidget {
                   onTextFieldValueChanged: (value) => Indexer.inst.searchAlbums(value),
                 ),
               ),
-              Obx(
-                () {
-                  return SettingsController.inst.albumGridCount.value == 1
-                      ? Expanded(
-                          child: ListView.builder(
-                            controller: _scrollController,
-                            itemCount: finalAlbums.length,
-                            padding: const EdgeInsets.only(bottom: kBottomPadding),
-                            itemBuilder: (BuildContext context, int i) {
-                              return AnimatingTile(
-                                position: i,
-                                child: AlbumTile(
-                                  album: finalAlbums[i].tracks,
-                                ),
-                              );
-                            },
-                          ),
-                        )
-                      : SettingsController.inst.useAlbumStaggeredGridView.value
-                          ? Expanded(
-                              child: MasonryGridView.builder(
-                                controller: _scrollController,
-                                padding: const EdgeInsets.only(bottom: kBottomPadding),
-                                itemCount: finalAlbums.length,
-                                mainAxisSpacing: 8.0,
-                                gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(crossAxisCount: SettingsController.inst.albumGridCount.value),
-                                itemBuilder: (context, i) {
-                                  final album = finalAlbums[i].tracks;
-                                  return AnimatingGrid(
-                                    columnCount: finalAlbums.length,
-                                    position: i,
-                                    child: AlbumCard(
-                                      album: album,
-                                      staggered: true,
-                                    ),
-                                  );
-                                },
-                              ),
-                            )
-                          : Expanded(
-                              child: GridView.builder(
-                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: SettingsController.inst.albumGridCount.value, childAspectRatio: 0.75, mainAxisSpacing: 8.0),
-                                controller: _scrollController,
-                                itemCount: finalAlbums.length,
-                                padding: const EdgeInsets.only(bottom: kBottomPadding),
-                                itemBuilder: (BuildContext context, int i) {
-                                  final album = finalAlbums[i].tracks;
-                                  return AnimatingGrid(
-                                    columnCount: finalAlbums.length,
-                                    position: i,
-                                    child: AlbumCard(
-                                      album: album,
-                                      gridCountOverride: SettingsController.inst.albumGridCount.value,
-                                      staggered: false,
-                                    ),
-                                  );
-                                },
+            ),
+            Obx(
+              () {
+                return SettingsController.inst.albumGridCount.value == 1
+                    ? Expanded(
+                        child: ListView.builder(
+                          controller: _scrollController,
+                          itemCount: finalAlbums.length,
+                          itemExtent: SettingsController.inst.albumListTileHeight.value + 4.0 * 5,
+                          padding: const EdgeInsets.only(bottom: kBottomPadding),
+                          itemBuilder: (BuildContext context, int i) {
+                            return AnimatingTile(
+                              position: i,
+                              child: AlbumTile(
+                                album: finalAlbums[i].tracks,
                               ),
                             );
-                },
-              ),
-            ],
-          ),
+                          },
+                        ),
+                      )
+                    : SettingsController.inst.useAlbumStaggeredGridView.value
+                        ? Expanded(
+                            child: MasonryGridView.builder(
+                              controller: _scrollController,
+                              padding: const EdgeInsets.only(bottom: kBottomPadding),
+                              itemCount: finalAlbums.length,
+                              mainAxisSpacing: 8.0,
+                              gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(crossAxisCount: SettingsController.inst.albumGridCount.value),
+                              itemBuilder: (context, i) {
+                                final album = finalAlbums[i].tracks;
+                                return AnimatingGrid(
+                                  columnCount: finalAlbums.length,
+                                  position: i,
+                                  child: AlbumCard(
+                                    album: album,
+                                    staggered: true,
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                        : Expanded(
+                            child: GridView.builder(
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: SettingsController.inst.albumGridCount.value, childAspectRatio: 0.75, mainAxisSpacing: 8.0),
+                              controller: _scrollController,
+                              itemCount: finalAlbums.length,
+                              padding: const EdgeInsets.only(bottom: kBottomPadding),
+                              itemBuilder: (BuildContext context, int i) {
+                                final album = finalAlbums[i].tracks;
+                                return AnimatingGrid(
+                                  columnCount: finalAlbums.length,
+                                  position: i,
+                                  child: AlbumCard(
+                                    album: album,
+                                    gridCountOverride: SettingsController.inst.albumGridCount.value,
+                                    staggered: false,
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+              },
+            ),
+          ],
         ),
       ),
     );

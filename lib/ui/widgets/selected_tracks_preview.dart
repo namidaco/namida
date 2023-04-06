@@ -7,6 +7,7 @@ import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/widgets/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/dialogs/general_popup_dialog.dart';
@@ -83,11 +84,10 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                         child: Container(
                                           clipBehavior: Clip.antiAlias,
                                           decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-                                          child: ReorderableListView.builder(
+                                          child: NamidaTracksList(
+                                            queueLength: stc.selectedTracks.length,
                                             onReorder: (oldIndex, newIndex) => stc.reorderTracks(oldIndex, newIndex),
-                                            proxyDecorator: (child, index, animation) => child,
                                             padding: EdgeInsets.zero,
-                                            itemCount: stc.selectedTracks.length,
                                             itemBuilder: (context, i) {
                                               return Builder(
                                                 key: ValueKey(stc.selectedTracks[i]),

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:checkmark/checkmark.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
+import 'package:known_extents_list_view_builder/known_extents_reorderable_list_view_builder.dart';
 import 'package:like_button/like_button.dart';
 import 'package:selectable_autolink_text/selectable_autolink_text.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
@@ -13,16 +14,19 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:wheel_slider/wheel_slider.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/class/playlist.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/dialogs/setting_dialog_with_text_field.dart';
+import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class CustomSwitchListTile extends StatelessWidget {
   final bool value;
@@ -270,7 +274,7 @@ class CustomListTile extends StatelessWidget {
 
 class CustomBlurryDialog extends StatelessWidget {
   final Widget? child;
-  final Widget? trailing;
+  final List<Widget>? trailingWidgets;
   final String? title;
   final IconData? icon;
   final List<Widget>? actions;
@@ -283,7 +287,7 @@ class CustomBlurryDialog extends StatelessWidget {
   const CustomBlurryDialog({
     super.key,
     this.child,
-    this.trailing,
+    this.trailingWidgets,
     this.title,
     this.actions,
     this.icon,
@@ -328,11 +332,13 @@ class CustomBlurryDialog extends StatelessWidget {
                             style: Get.textTheme.displayLarge,
                           ),
                         ),
-                        if (trailing != null)
-                          SizedBox(
-                            width: 40,
-                            child: trailing!,
-                          ),
+                        if (trailingWidgets != null)
+                          ...trailingWidgets!
+                              .map((e) => SizedBox(
+                                    width: 40,
+                                    child: e,
+                                  ))
+                              .toList(),
                       ],
                     )
                   : Container(
@@ -446,6 +452,7 @@ class SmallListTile extends StatelessWidget {
   final void Function()? onTap;
   final EdgeInsetsGeometry? padding;
   final double? titleGap;
+  final double borderRadius;
   const SmallListTile({
     super.key,
     required this.title,
@@ -460,6 +467,7 @@ class SmallListTile extends StatelessWidget {
     this.color,
     this.padding,
     this.titleGap,
+    this.borderRadius = 0.0,
   });
 
   @override
@@ -467,6 +475,9 @@ class SmallListTile extends StatelessWidget {
     return ListTile(
       contentPadding: padding,
       horizontalTitleGap: titleGap,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
+      ),
       leading: SizedBox(
         height: double.infinity,
         child: icon != null
@@ -528,24 +539,27 @@ class ListTileWithCheckMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0.multipliedRadius)),
-      tileColor: tileColor ?? Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(10), context.theme.cardTheme.color!),
-      leading: Icon(icon ?? Broken.arrange_circle),
-      title: Text(title ?? Language.inst.REVERSE_ORDER),
-      trailing: SizedBox(
-        height: 18.0,
-        width: 18.0,
-        child: CheckMark(
-          strokeWidth: 2,
-          activeColor: context.theme.listTileTheme.iconColor!,
-          inactiveColor: context.theme.listTileTheme.iconColor!,
-          duration: const Duration(milliseconds: 400),
-          active: active,
+    return Material(
+      borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+      color: tileColor ?? Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(10), context.theme.cardTheme.color!),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0.multipliedRadius)),
+        leading: Icon(icon ?? Broken.arrange_circle),
+        title: Text(title ?? Language.inst.REVERSE_ORDER),
+        trailing: SizedBox(
+          height: 18.0,
+          width: 18.0,
+          child: CheckMark(
+            strokeWidth: 2,
+            activeColor: context.theme.listTileTheme.iconColor!,
+            inactiveColor: context.theme.listTileTheme.iconColor!,
+            duration: const Duration(milliseconds: 400),
+            active: active,
+          ),
         ),
+        visualDensity: VisualDensity.compact,
+        onTap: onTap,
       ),
-      visualDensity: VisualDensity.compact,
-      onTap: onTap,
     );
   }
 }
@@ -652,7 +666,7 @@ class StackedIcon extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(6),
               boxShadow: [
-                BoxShadow(color: Get.theme.scaffoldBackgroundColor, spreadRadius: 0, blurRadius: blurRadius),
+                BoxShadow(color: context.theme.scaffoldBackgroundColor, spreadRadius: 0, blurRadius: blurRadius),
               ],
             ),
             child: smallChild ??
@@ -784,11 +798,11 @@ class ContainerWithBorder extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(3.0),
       decoration: BoxDecoration(
-        color: borderColor ?? context.theme.cardColor,
+        color: borderColor ?? context.theme.cardColor.withAlpha(160),
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: context.theme.shadowColor,
+            color: context.theme.shadowColor.withAlpha(60),
             blurRadius: 4,
             offset: const Offset(0, 2.0),
           )
@@ -894,9 +908,7 @@ class NamidaLikeButton extends StatelessWidget {
       ),
       isLiked: track.isFavourite,
       onTap: (isLiked) async {
-        if (!isDummy) {
-          PlaylistController.inst.favouriteButtonOnPressed(track);
-        }
+        if (!isDummy) PlaylistController.inst.favouriteButtonOnPressed(track);
         return !isLiked;
       },
       likeBuilder: (value) => value
@@ -1274,7 +1286,7 @@ class SearchPageTitleRow extends StatelessWidget {
             const SizedBox(width: 8.0),
             Text(
               title,
-              style: context.textTheme.displayLarge,
+              style: context.textTheme.displayLarge?.copyWith(fontSize: 15.5.multipliedFontScale),
             ),
           ],
         ),
@@ -1441,11 +1453,11 @@ class DefaultPlaylistCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String text;
-  final String? playlistName;
+  final Playlist? playlist;
   final double? width;
   final void Function()? onTap;
 
-  const DefaultPlaylistCard({super.key, required this.colorScheme, required this.icon, required this.title, this.text = '', this.playlistName, this.width, this.onTap});
+  const DefaultPlaylistCard({super.key, required this.colorScheme, required this.icon, required this.title, this.text = '', this.playlist, this.width, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1480,7 +1492,7 @@ class DefaultPlaylistCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 6.0),
                 Text(
-                  PlaylistController.inst.defaultPlaylists.firstWhereOrNull((element) => element.name == playlistName)?.tracks.length.toString() ?? text,
+                  playlist?.tracks.length.toString() ?? text,
                   style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(30), context.textTheme.displayMedium!.color!)),
                 ),
                 const SizedBox(width: 2.0),
@@ -1532,6 +1544,147 @@ class NamidaCircularPercentage extends StatelessWidget {
             style: Get.textTheme.displaySmall?.copyWith(fontSize: size / 3.2),
           )
       ],
+    );
+  }
+}
+
+class NamidaListView extends StatelessWidget {
+  final Widget Function(BuildContext context, int i) itemBuilder;
+  final void Function(int oldIndex, int newIndex)? onReorder;
+  final void Function(int index)? onReorderStart;
+  final void Function(int index)? onReorderEnd;
+  final Widget? header;
+  final List<Widget>? widgetsInColumn;
+  final EdgeInsets? padding;
+  final List<double>? itemExtents;
+  final ScrollController? scrollController;
+  final int itemCount;
+  final List<Widget>? moreWidgets;
+  final bool? buildDefaultDragHandles;
+  final ScrollPhysics? physics;
+
+  NamidaListView({
+    super.key,
+    this.header,
+    this.widgetsInColumn,
+    this.padding,
+    this.onReorder,
+    required this.itemBuilder,
+    required this.itemCount,
+    required this.itemExtents,
+    this.moreWidgets,
+    this.scrollController,
+    this.buildDefaultDragHandles,
+    this.onReorderStart,
+    this.onReorderEnd,
+    this.physics,
+  });
+
+  final ScrollController _scrollController = ScrollController();
+  @override
+  Widget build(BuildContext context) {
+    return AnimationLimiter(
+      child: CupertinoScrollbar(
+        controller: scrollController ?? _scrollController,
+        child: Column(
+          children: [
+            if (widgetsInColumn != null) ...widgetsInColumn!,
+            Expanded(
+              child: itemExtents != null
+                  ? KnownExtentsReorderableListView.builder(
+                      itemExtents: itemExtents!,
+                      scrollController: scrollController ?? _scrollController,
+                      padding: padding ?? const EdgeInsets.only(bottom: kBottomPadding),
+                      itemBuilder: itemBuilder,
+                      itemCount: itemCount,
+                      onReorder: onReorder ?? (oldIndex, newIndex) {},
+                      proxyDecorator: (child, index, animation) => child,
+                      header: header,
+                      buildDefaultDragHandles: buildDefaultDragHandles ?? onReorder != null,
+                      physics: physics,
+                      onReorderStart: onReorderStart,
+                      onReorderEnd: onReorderEnd,
+                    )
+                  : ReorderableListView.builder(
+                      scrollController: scrollController ?? _scrollController,
+                      padding: padding ?? const EdgeInsets.only(bottom: kBottomPadding),
+                      itemBuilder: itemBuilder,
+                      itemCount: itemCount,
+                      onReorder: onReorder ?? (oldIndex, newIndex) {},
+                      proxyDecorator: (child, index, animation) => child,
+                      onReorderStart: onReorderStart,
+                      onReorderEnd: onReorderEnd,
+                      header: header,
+                      buildDefaultDragHandles: buildDefaultDragHandles ?? onReorder != null,
+                      physics: physics,
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class NamidaTracksList extends StatelessWidget {
+  final List<Track>? queue;
+  final int queueLength;
+  final Widget Function(BuildContext context, int i)? itemBuilder;
+  final void Function(int oldIndex, int newIndex)? onReorder;
+  final Widget? header;
+  final Widget? footer;
+  final List<Widget>? widgetsInColumn;
+  final EdgeInsetsGeometry? paddingAfterHeader;
+  final ScrollController? scrollController;
+  final EdgeInsets? padding;
+  final bool? buildDefaultDragHandles;
+  final ScrollPhysics? physics;
+  const NamidaTracksList({
+    super.key,
+    this.queue,
+    this.itemBuilder,
+    this.onReorder,
+    this.header,
+    this.footer,
+    this.widgetsInColumn,
+    this.paddingAfterHeader,
+    this.scrollController,
+    this.padding,
+    required this.queueLength,
+    this.buildDefaultDragHandles,
+    this.physics,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaListView(
+      onReorder: onReorder,
+      header: header,
+      widgetsInColumn: widgetsInColumn,
+      scrollController: scrollController,
+      itemCount: queueLength,
+      itemExtents: List<double>.generate(queueLength, (index) => trackTileItemExtent),
+      padding: padding,
+      buildDefaultDragHandles: buildDefaultDragHandles,
+      physics: physics,
+      itemBuilder: itemBuilder ??
+          (context, i) {
+            if (queue != null) {
+              final track = queue![i];
+              return AnimatingTile(
+                key: ValueKey(i),
+                position: i,
+                child: TrackTile(
+                  index: i,
+                  track: track,
+                  queue: queue!,
+                  canHaveDuplicates: onReorder != null,
+                  draggableThumbnail: onReorder != null,
+                ),
+              );
+            }
+            return const Text('PASS A QUEUE OR USE ITEM BUILDER');
+          },
     );
   }
 }

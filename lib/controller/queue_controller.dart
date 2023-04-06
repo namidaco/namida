@@ -2,8 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:get/get.dart';
-import 'package:sembast/sembast.dart';
-import 'package:sembast/sembast_io.dart';
 
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
@@ -18,9 +16,6 @@ class QueueController extends GetxController {
   final RxList<Queue> queueList = <Queue>[].obs;
 
   final RxList<Track> latestQueue = <Track>[].obs;
-
-  late final Database _db;
-  late final StoreRef<Object?, Object?> _dbstore;
 
   /// doesnt save queues with more than 2000 tracks.
   void addNewQueue({
@@ -42,24 +37,23 @@ class QueueController extends GetxController {
     date ??= DateTime.now().millisecondsSinceEpoch;
     final q = Queue(date, tracks);
     queueList.add(q);
-    await _dbstore.record(q.date).put(_db, q.toJson());
+    await _saveQueueToStorage(q);
   }
 
   void removeQueue(Queue queue) async {
     queueList.remove(queue);
-    await _dbstore.record(queue.date).delete(_db);
+    await _deleteQueueToStorage(queue);
   }
 
   void insertQueue(Queue queue, int index) async {
     queueList.insert(index, queue);
-    await _dbstore.record(queue.date).put(_db, queue.toJson());
+    await _saveQueueToStorage(queue);
   }
 
   // void removeQueues(List<Queue> queues) async {
-  //   for (final pl in queues) {
-  //     queueList.remove(pl);
+  //   for (final q in queues) {
+  //     removeQueue(q);
   //   }
-  //   await _dbstore.delete(_db);
   // }
 
   void updateQueue(Queue oldQueue, Queue newQueue) async {
@@ -67,29 +61,29 @@ class QueueController extends GetxController {
     queueList.remove(oldQueue);
     queueList.insert(plIndex, newQueue);
 
-    await _dbstore.record(oldQueue.date).update(_db, newQueue.toJson());
+    await _saveQueueToStorage(newQueue);
   }
 
   void updateLatestQueue(List<Track> tracks) async {
     latestQueue.assignAll(tracks);
     if (queueList.isNotEmpty) {
       queueList.last.tracks.assignAll(tracks);
-      await _dbstore.record(queueList.last.date).update(_db, queueList.last.toJson());
+
+      await _saveQueueToStorage(queueList.last);
     }
 
     await File(kLatestQueueFilePath).writeAsString(json.encode(tracks.map((e) => e.toJson()).toList()));
   }
 
   ///
-  Future<void> prepareQueuesFile() async {
-    _db = await databaseFactoryIo.openDatabase(kQueuesDBPath);
-    _dbstore = StoreRef.main();
-    final trwt = await _dbstore.find(_db);
-    if (trwt.isNotEmpty) {
-      for (final t in trwt) {
-        // prevents freezing the ui. cheap alternative for Isolate/compute.
-        await Future.delayed(Duration.zero);
-        QueueController.inst.queueList.add(Queue.fromJson(t.value as Map<String, dynamic>));
+  Future<void> prepareAllQueuesFile() async {
+    await for (final p in Directory(kQueuesFolderPath).list()) {
+      // prevents freezing the ui. cheap alternative for Isolate/compute.
+      await Future.delayed(Duration.zero);
+      final string = await File(p.path).readAsString();
+      if (string.isNotEmpty) {
+        final content = jsonDecode(string) as Map<String, dynamic>;
+        queueList.add(Queue.fromJson(content));
       }
     }
   }
@@ -119,5 +113,13 @@ class QueueController extends GetxController {
       startPlaying: false,
       dontAddQueue: true,
     );
+  }
+
+  Future<void> _saveQueueToStorage(Queue queue) async {
+    await File('$kQueuesFolderPath${queue.date}.json').writeAsString(jsonEncode(queue.toJson()));
+  }
+
+  Future<void> _deleteQueueToStorage(Queue queue) async {
+    await File('$kQueuesFolderPath${queue.date}.json').writeAsString(jsonEncode(queue.toJson()));
   }
 }

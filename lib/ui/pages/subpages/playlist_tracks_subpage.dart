@@ -1,7 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/playlist.dart';
@@ -19,149 +17,143 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class PlaylisTracksPage extends StatelessWidget {
   final Playlist playlist;
-  PlaylisTracksPage({super.key, required this.playlist});
+  final bool disableAnimation;
+  final ScrollController? scrollController;
+  final int? indexToHighlight;
+  PlaylisTracksPage({super.key, required this.playlist, this.disableAnimation = false, this.scrollController, this.indexToHighlight});
 
   final RxBool shouldReorder = false.obs;
 
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController defController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
-    final isMostPlayedPlaylist = playlist.name == kPlaylistMostPlayed;
-    final isHistoryPlaylist = playlist.name == kPlaylistHistory;
-    return MainPageWrapper(
-      actionsToAdd: [
-        if (!isMostPlayedPlaylist && !isHistoryPlaylist)
-          Obx(
-            () => Tooltip(
-              message: shouldReorder.value ? Language.inst.DISABLE_REORDERING : Language.inst.ENABLE_REORDERING,
-              child: NamidaIconButton(
-                icon: shouldReorder.value ? Broken.forward_item : Broken.lock_1,
-                padding: const EdgeInsets.only(right: 14, left: 4.0),
-                onPressed: () => shouldReorder.value = !shouldReorder.value,
-              ),
-            ),
-          ),
-        NamidaIconButton(
-          icon: Broken.more_2,
-          padding: const EdgeInsets.only(right: 14, left: 4.0),
-          onPressed: () => NamidaDialogs.inst.showPlaylistDialog(playlist),
-        ),
-      ],
-      child: AnimationLimiter(
-        child: Obx(
-          () {
-            final rxplaylist = PlaylistController.inst.defaultPlaylists.firstWhereOrNull((element) => element == playlist) ??
-                PlaylistController.inst.playlistList.firstWhere((element) => element == playlist);
-            final finalTracks = isMostPlayedPlaylist ? PlaylistController.inst.topTracksMap.keys.toList() : rxplaylist.tracks.map((e) => e.track).toList();
-            final topContainer = SubpagesTopContainer(
-              title: playlist.name.translatePlaylistName,
-              subtitle: [finalTracks.displayTrackKeyword, playlist.date.dateFormatted].join(' - '),
-              thirdLineText: playlist.modes.isNotEmpty ? playlist.modes.join(', ') : '',
-              imageWidget: MultiArtworkContainer(
-                heroTag: 'playlist_artwork_${playlist.name}',
-                size: Get.width * 0.35,
-                tracks: finalTracks,
-              ),
-              tracks: finalTracks,
-            );
+    return Obx(
+      () {
+        final rxplaylist = PlaylistController.inst.defaultPlaylists.firstWhereOrNull((element) => element == playlist) ??
+            PlaylistController.inst.playlistList.firstWhere((element) => element == playlist);
 
-            /// Top Music Playlist
-            return isMostPlayedPlaylist
-                ? CupertinoScrollbar(
-                    controller: _scrollController,
-                    child: ListView(
-                      controller: _scrollController,
-                      children: [
-                        topContainer,
-                        ...PlaylistController.inst.topTracksMap.entries.map(
-                          (track) {
-                            final index = PlaylistController.inst.topTracksMap.keys.toList().indexOf(track.key);
-                            return AnimatingTile(
-                              position: index,
-                              child: TrackTile(
-                                index: index,
-                                track: track.key,
-                                queue: PlaylistController.inst.topTracksMap.keys.toList(),
+        final isMostPlayedPlaylist = rxplaylist.name == kPlaylistMostPlayed;
+        final isHistoryPlaylist = rxplaylist.name == kPlaylistHistory;
+        final _scrollController = scrollController ?? defController;
+        return MainPageWrapper(
+          actionsToAdd: [
+            if (!isMostPlayedPlaylist && !isHistoryPlaylist)
+              Obx(
+                () => Tooltip(
+                  message: shouldReorder.value ? Language.inst.DISABLE_REORDERING : Language.inst.ENABLE_REORDERING,
+                  child: NamidaIconButton(
+                    icon: shouldReorder.value ? Broken.forward_item : Broken.lock_1,
+                    padding: const EdgeInsets.only(right: 14, left: 4.0),
+                    onPressed: () => shouldReorder.value = !shouldReorder.value,
+                  ),
+                ),
+              ),
+            NamidaIconButton(
+              icon: Broken.more_2,
+              padding: const EdgeInsets.only(right: 14, left: 4.0),
+              onPressed: () => NamidaDialogs.inst.showPlaylistDialog(rxplaylist),
+            ),
+          ],
+          child: Obx(
+            () {
+              final finalTracks = isMostPlayedPlaylist ? PlaylistController.inst.topTracksMap.keys.toList() : rxplaylist.tracks.map((e) => e.track).toList();
+              final topContainer = SubpagesTopContainer(
+                title: rxplaylist.name.translatePlaylistName,
+                subtitle: [finalTracks.displayTrackKeyword, rxplaylist.date.dateFormatted].join(' - '),
+                thirdLineText: rxplaylist.modes.isNotEmpty ? rxplaylist.modes.join(', ') : '',
+                imageWidget: MultiArtworkContainer(
+                  heroTag: 'playlist_artwork_${rxplaylist.name}',
+                  size: Get.width * 0.35,
+                  tracks: finalTracks,
+                ),
+                tracks: finalTracks,
+              );
+
+              /// Top Music Playlist
+              return isMostPlayedPlaylist
+                  ? NamidaTracksList(
+                      queueLength: PlaylistController.inst.topTracksMap.length,
+                      scrollController: _scrollController,
+                      header: topContainer,
+                      buildDefaultDragHandles: false,
+                      onReorder: (oldIndex, newIndex) {},
+                      padding: const EdgeInsets.only(bottom: kBottomPadding),
+                      itemBuilder: (context, i) {
+                        final track = PlaylistController.inst.topTracksMap.keys.elementAt(i);
+                        final count = PlaylistController.inst.topTracksMap.values.elementAt(i);
+                        final w = TrackTile(
+                          draggableThumbnail: false,
+                          index: i,
+                          track: track,
+                          queue: PlaylistController.inst.topTracksMap.keys.toList(),
+                          playlist: rxplaylist,
+                          canHaveDuplicates: true,
+                          bgColor: i == indexToHighlight ? context.theme.colorScheme.onBackground.withAlpha(40) : null,
+                          trailingWidget: Container(
+                            padding: const EdgeInsets.all(6.0),
+                            decoration: BoxDecoration(
+                              color: context.theme.scaffoldBackgroundColor,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              count.toString(),
+                              style: context.textTheme.displaySmall,
+                            ),
+                          ),
+                        );
+                        if (disableAnimation) return w;
+                        return AnimatingTile(key: ValueKey(i), position: i, child: w);
+                      },
+                    )
+                  :
+
+                  /// Normal Tracks
+                  NamidaTracksList(
+                      scrollController: _scrollController,
+                      header: topContainer,
+                      buildDefaultDragHandles: shouldReorder.value,
+                      padding: const EdgeInsets.only(bottom: kBottomPadding),
+                      onReorder: (oldIndex, newIndex) {
+                        if (newIndex > oldIndex) {
+                          newIndex -= 1;
+                        }
+                        final item = rxplaylist.tracks.elementAt(oldIndex);
+                        PlaylistController.inst.removeTrackFromPlaylist(rxplaylist.name, oldIndex);
+                        PlaylistController.inst.insertTracksInPlaylist(rxplaylist.name, [item], newIndex);
+                      },
+                      queueLength: rxplaylist.tracks.length,
+                      itemBuilder: (context, i) {
+                        final track = rxplaylist.tracks[i];
+                        final w = FadeDismissible(
+                          key: Key("Diss_$i${track.track.path}"),
+                          direction: shouldReorder.value ? DismissDirection.horizontal : DismissDirection.none,
+                          onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTrackFromPlaylist(i, rxplaylist),
+                          child: Stack(
+                            alignment: Alignment.centerLeft,
+                            children: [
+                              TrackTile(
+                                index: i,
+                                track: track.track,
+                                queue: rxplaylist.tracks.map((e) => e.track).toList(),
                                 playlist: rxplaylist,
                                 canHaveDuplicates: true,
-                                trailingWidget: Container(
-                                  padding: const EdgeInsets.all(6.0),
-                                  decoration: BoxDecoration(
-                                    color: context.theme.scaffoldBackgroundColor,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Text(
-                                    track.value.toString(),
-                                    style: context.textTheme.displaySmall,
-                                  ),
-                                ),
+                                draggableThumbnail: shouldReorder.value,
+                                bgColor: i == indexToHighlight ? context.theme.colorScheme.onBackground.withAlpha(40) : null,
+                                thirdLineText: isHistoryPlaylist ? track.dateAdded.dateAndClockFormattedOriginal : '',
                               ),
-                            );
-                          },
-                        ).toList(),
-                        kBottomPaddingWidget,
-                      ],
-                    ),
-                  )
-                :
-
-                /// Normal Tracks
-                Column(
-                    children: [
-                      Expanded(
-                        child: CupertinoScrollbar(
-                          controller: _scrollController,
-                          child: ReorderableListView.builder(
-                            scrollController: _scrollController,
-                            header: topContainer,
-                            buildDefaultDragHandles: shouldReorder.value,
-                            proxyDecorator: (child, index, animation) => child,
-                            padding: EdgeInsets.zero,
-                            onReorder: (oldIndex, newIndex) {
-                              if (newIndex > oldIndex) {
-                                newIndex -= 1;
-                              }
-                              final item = rxplaylist.tracks.elementAt(oldIndex);
-                              PlaylistController.inst.removeTrackFromPlaylist(rxplaylist.name, oldIndex);
-                              PlaylistController.inst.insertTracksInPlaylist(rxplaylist.name, [item], newIndex);
-                            },
-                            itemCount: playlist.tracks.length,
-                            itemBuilder: (context, i) {
-                              final track = playlist.tracks[i];
-                              return AnimatingTile(
-                                key: ValueKey(i),
-                                position: i,
-                                child: FadeDismissible(
-                                  key: UniqueKey(),
-                                  direction: shouldReorder.value ? DismissDirection.horizontal : DismissDirection.none,
-                                  onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTrackFromPlaylist(i, playlist),
-                                  child: Stack(
-                                    alignment: Alignment.centerLeft,
-                                    children: [
-                                      TrackTile(
-                                        index: i,
-                                        track: track.track,
-                                        queue: rxplaylist.tracks.map((e) => e.track).toList(),
-                                        playlist: rxplaylist,
-                                        canHaveDuplicates: true,
-                                        draggableThumbnail: shouldReorder.value,
-                                        thirdLineText: isHistoryPlaylist ? track.dateAdded.dateAndClockFormattedOriginal : '',
-                                      ),
-                                      Obx(() => ThreeLineSmallContainers(enabled: shouldReorder.value)),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
+                              Obx(() => ThreeLineSmallContainers(enabled: shouldReorder.value)),
+                            ],
                           ),
-                        ),
-                      ),
-                    ],
-                  );
-          },
-        ),
-      ),
+                        );
+                        if (disableAnimation) return w;
+                        return AnimatingTile(key: ValueKey(i), position: i, child: w);
+                      },
+                    );
+            },
+          ),
+        );
+      },
     );
   }
 }

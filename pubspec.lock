@@ -529,6 +529,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.4.7"
+  known_extents_list_view_builder:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "11340c557760bf3f5d861321fc5bf31a8110e3d0"
+      url: "https://github.com/MSOB7YY/known_extents_list_view_builder"
+    source: git
+    version: "1.1.0"
   lazy_load_scrollview:
     dependency: "direct main"
     description:
@@ -622,7 +631,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "79f4eef9b6ed5eb0c2acfc64984de821a2369eb4"
+      resolved-ref: "973ae389a34347dd3214c346c807f7109cb97019"
       url: "https://github.com/MSOB7YY/on_audio_edit"
     source: git
     version: "1.5.1"
@@ -867,14 +876,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.1"
-  sembast:
-    dependency: "direct main"
-    description:
-      name: sembast
-      sha256: "24829715d11c2c437e67b413f29ff91b5325daa9632f851d44deeea7a29bde9e"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.4.3+1"
   share_plus:
     dependency: "direct main"
     description:
