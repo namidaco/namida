@@ -21,6 +21,7 @@ class Player {
   final RxDouble currentVolume = SettingsController.inst.playerVolume.value.obs;
   final RxBool isPlaying = false.obs;
   final RxInt nowPlayingPosition = 0.obs;
+  int latestInsertedIndex = 0;
 
   Future<void> initializePlayer() async {
     _audioHandler = await AudioService.init(
@@ -59,8 +60,20 @@ class Player {
   //   _audioHandler?.shuffleAllQueue();
   // }
 
-  void addToQueue(List<Track> tracks, {bool insertNext = false}) {
-    _audioHandler?.addToQueue(tracks, insertNext: insertNext);
+  void removeDuplicatesFromQueue() {
+    _audioHandler?.removeDuplicatesFromQueue();
+  }
+
+  void addToQueue(
+    List<Track> tracks, {
+    bool insertNext = false,
+    bool insertAfterLatest = false,
+  }) {
+    _audioHandler?.addToQueue(
+      tracks,
+      insertNext: insertNext,
+      insertAfterLatest: insertAfterLatest,
+    );
   }
 
   void insertInQueue(List<Track> tracks, int index) {
@@ -114,13 +127,32 @@ class Player {
     bool startPlaying = true,
     bool dontAddQueue = false,
   }) async {
-    if (queue.isEmpty || (index == currentIndex.value && checkIfQueueSameAsCurrent(queue))) {
+    List<Track> finalQueue = <Track>[];
+
+    /// maximum 2000 track for performance.
+    if (queue.length > 2000) {
+      const trimCount = 1000;
+      final start = (index - trimCount).clamp(0, queue.length - 1);
+      final end = (index + trimCount).clamp(0, queue.length - 1);
+      finalQueue.assignAll(queue.sublist(start, end + 1));
+    } else {
+      finalQueue.assignAll(queue);
+    }
+
+    if (finalQueue.isEmpty) {
       _audioHandler?.togglePlayPause();
       return;
     }
 
-    List<Track> finalQueue = <Track>[];
-    finalQueue.assignAll(queue);
+    final isQueueSame = checkIfQueueSameAsCurrent(finalQueue);
+
+    if (index == currentIndex.value && isQueueSame) {
+      _audioHandler?.togglePlayPause();
+      return;
+    }
+    if (!isQueueSame) {
+      latestInsertedIndex = index;
+    }
 
     if (shuffle) {
       finalQueue.shuffle();

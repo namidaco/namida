@@ -122,6 +122,8 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     nowPlayingTrack.value = tr;
     currentIndex.value = index;
     CurrentColor.inst.updatePlayerColor(tr, index);
+    VideoController.inst.updateLocalVidPath(tr);
+    updateVideoPlayingState();
 
     updateCurrentMediaItem(tr);
 
@@ -141,10 +143,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     increaseListenTime(tr);
     SettingsController.inst.save(lastPlayedTrackPath: tr.path);
     Lyrics.inst.updateLyrics(tr);
-
-    /// for video
-    VideoController.inst.updateLocalVidPath(tr);
-    updateVideoPlayingState();
+    tryResettingLatestInsertedIndex();
   }
 
   /// if [force] is enabled, [track] will not be used.
@@ -200,6 +199,9 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   }
 
   void reorderTrack(int oldIndex, int newIndex) {
+    if (oldIndex == newIndex) {
+      return;
+    }
     if (newIndex > oldIndex) {
       newIndex -= 1;
     }
@@ -244,12 +246,28 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   //   currentQueue.shuffle();
   //   currentIndex.value == currentQueue.indexOf(nowPlayingTrack.value);
   // }
+  void removeDuplicatesFromQueue() {
+    final q = currentQueue.toSet().toList();
+    final ct = nowPlayingTrack.value;
+    final diff = currentQueue.length - q.length;
+    q.remove(nowPlayingTrack.value);
+    q.insert((currentIndex.value - diff).clamp(0, currentQueue.length - diff), ct);
+    currentQueue.assignAll(q);
+    final index = currentQueue.indexOf(ct);
+    currentIndex.value = index;
+    CurrentColor.inst.updatePlayerColor(ct, index);
+  }
 
-  void addToQueue(List<Track> tracks, {bool insertNext = false}) {
+  void addToQueue(List<Track> tracks, {bool insertNext = false, bool insertAfterLatest = false}) {
     if (insertNext) {
       insertInQueue(tracks, currentIndex.value + 1);
+      namidaPlayer.latestInsertedIndex = currentIndex.value + 1;
+    } else if (insertAfterLatest) {
+      insertInQueue(tracks, namidaPlayer.latestInsertedIndex + 1);
+      namidaPlayer.latestInsertedIndex += tracks.length;
     } else {
       currentQueue.addAll(tracks);
+      namidaPlayer.latestInsertedIndex = currentQueue.length - 1;
     }
     afterQueueChange();
   }
@@ -275,6 +293,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
       currentIndex.value = ci - 1;
       CurrentColor.inst.currentPlayingIndex.value = ci - 1;
     }
+
     afterQueueChange();
   }
 
@@ -284,8 +303,15 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   }
 
   void afterQueueChange() {
+    tryResettingLatestInsertedIndex();
     updateCurrentMediaItem();
     QueueController.inst.updateLatestQueue(currentQueue.toList());
+  }
+
+  void tryResettingLatestInsertedIndex() {
+    if (currentIndex.value >= namidaPlayer.latestInsertedIndex || currentQueue.length <= namidaPlayer.latestInsertedIndex) {
+      namidaPlayer.latestInsertedIndex = currentIndex.value;
+    }
   }
 
   Future<void> setVolume(double volume) async {
@@ -335,18 +361,18 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   @override
   Future<void> skipToNext([bool? andPlay]) async {
     if (isLastTrack) {
-      skipToQueueItem(0, andPlay);
+      await skipToQueueItem(0, andPlay);
     } else {
-      skipToQueueItem(currentIndex.value + 1);
+      await skipToQueueItem(currentIndex.value + 1);
     }
   }
 
   @override
   Future<void> skipToPrevious() async {
     if (currentIndex.value == 0) {
-      skipToQueueItem(currentQueue.length - 1);
+      await skipToQueueItem(currentQueue.length - 1);
     } else {
-      skipToQueueItem(currentIndex.value - 1);
+      await skipToQueueItem(currentIndex.value - 1);
     }
   }
 

@@ -62,7 +62,7 @@ Future<void> showGeneralPopupDialog(
           child: Theme(
             data: AppThemes.inst.getAppTheme(colorDelightened),
             child: Transform.scale(
-              scale: 0.95,
+              scale: 0.92,
               child: Dialog(
                 insetPadding: const EdgeInsets.symmetric(horizontal: 34.0, vertical: 24.0),
                 clipBehavior: Clip.antiAlias,
@@ -73,7 +73,7 @@ Future<void> showGeneralPopupDialog(
                     children: [
                       /// Top Widget
                       InkWell(
-                        highlightColor: const Color.fromARGB(60, 0, 0, 0),
+                        highlightColor: Color.fromARGB(Get.isDarkMode ? 60 : 20, 0, 0, 0),
                         splashColor: Colors.transparent,
                         onTap: () => showTrackInfoDialog(tracks.first, comingFromQueue: comingFromQueue, index: index),
                         child: Container(
@@ -515,7 +515,18 @@ Future<void> showGeneralPopupDialog(
                                 Get.close(1);
                               },
                             ),
-                          //
+                          if (Player.inst.latestInsertedIndex != Player.inst.currentIndex.value)
+                            SmallListTile(
+                              color: colorDelightened,
+                              compact: true,
+                              title: '${Language.inst.PLAY_AFTER} "${Player.inst.currentQueue.elementAt(Player.inst.latestInsertedIndex).title}"',
+                              icon: Broken.cd,
+                              onTap: () {
+                                Get.close(1);
+                                Player.inst.addToQueue(tracks, insertAfterLatest: true);
+                              },
+                            ),
+
                           Divider(
                             color: Get.theme.dividerColor,
                             thickness: 0.5,
@@ -523,42 +534,39 @@ Future<void> showGeneralPopupDialog(
                           ),
 
                           /// bottom 2 tiles
-                          IntrinsicHeight(
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: SmallListTile(
-                                    color: colorDelightened,
-                                    compact: false,
-                                    title: Language.inst.PLAY_NEXT,
-                                    icon: Broken.next,
-                                    onTap: () {
-                                      Get.close(1);
+                          Row(
+                            children: [
+                              Expanded(
+                                child: SmallListTile(
+                                  color: colorDelightened,
+                                  compact: false,
+                                  title: Language.inst.PLAY_NEXT,
+                                  icon: Broken.next,
+                                  onTap: () {
+                                    Get.close(1);
+                                    Player.inst.addToQueue(tracks, insertNext: true);
+                                  },
+                                ),
+                              ),
+                              Container(
+                                width: 0.5,
+                                height: 30,
+                                color: Get.theme.dividerColor,
+                              ),
+                              Expanded(
+                                child: SmallListTile(
+                                  color: colorDelightened,
+                                  compact: false,
+                                  title: Language.inst.PLAY_LAST,
+                                  icon: Broken.play_cricle,
+                                  onTap: () {
+                                    Get.close(1);
 
-                                      Player.inst.addToQueue(tracks, insertNext: true);
-                                    },
-                                  ),
+                                    Player.inst.addToQueue(tracks);
+                                  },
                                 ),
-                                VerticalDivider(
-                                  color: Get.theme.dividerColor,
-                                  thickness: 0.5,
-                                  width: 0,
-                                ),
-                                Expanded(
-                                  child: SmallListTile(
-                                    color: colorDelightened,
-                                    compact: false,
-                                    title: Language.inst.PLAY_LAST,
-                                    icon: Broken.play_cricle,
-                                    onTap: () {
-                                      Get.close(1);
-
-                                      Player.inst.addToQueue(tracks);
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
