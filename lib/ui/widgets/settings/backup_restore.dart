@@ -74,10 +74,13 @@ class BackupAndRestore extends StatelessWidget {
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(k_DIR_PLAYLISTS),
+                                active: isActive(k_DIR_PLAYLISTS) && isActive(k_PLAYLIST_PATH_FAVOURITES),
                                 title: Language.inst.PLAYLISTS,
                                 icon: Broken.music_library_2,
-                                onTap: () => onItemTap(k_DIR_PLAYLISTS),
+                                onTap: () {
+                                  onItemTap(k_DIR_PLAYLISTS);
+                                  onItemTap(k_PLAYLIST_PATH_FAVOURITES);
+                                },
                               ),
                               const SizedBox(
                                 height: 12.0,

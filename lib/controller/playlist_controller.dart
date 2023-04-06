@@ -387,11 +387,11 @@ class PlaylistController extends GetxController {
 
   Future<void> _savePlaylistToStorageAndRefresh(Playlist playlist) async {
     _refreshStuff();
-    await File('$k_DIR_PLAYLISTS${playlist.date}.json').writeAsString(jsonEncode(playlist.toJson()));
+    await File('$k_DIR_PLAYLISTS/${playlist.date}.json').writeAsString(jsonEncode(playlist.toJson()));
   }
 
   Future<void> _deletePlaylistFromStorageAndRefresh(Playlist playlist) async {
     _refreshStuff();
-    await File('$k_DIR_PLAYLISTS${playlist.date}.json').delete();
+    await File('$k_DIR_PLAYLISTS/${playlist.date}.json').delete();
   }
 }

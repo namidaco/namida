@@ -80,6 +80,8 @@ class SettingsController extends GetxController {
     k_DIR_PLAYLISTS,
     k_FILE_PATH_SETTINGS,
     k_DIR_WAVEFORMS,
+    k_PLAYLIST_PATH_HISTORY,
+    k_PLAYLIST_PATH_FAVOURITES,
   ].obs;
   final RxBool enableVideoPlayback = true.obs;
   final RxBool enableLyrics = false.obs;

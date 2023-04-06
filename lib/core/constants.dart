@@ -30,11 +30,11 @@ final String k_FILE_PATH_SETTINGS = '$k_DIR_USER_DATA/namidaSettings.json';
 final String k_FILE_PATH_TRACKS = '$k_DIR_USER_DATA/tracks.json';
 final String k_FILE_PATH_VIDEO_PATHS = '$k_DIR_USER_DATA/videoFilesPaths.txt';
 final String k_FILE_PATH_YOUTUBE_STATS = '$k_DIR_USER_DATA/ytstats.json';
-final String k_FILE_PATH_LATEST_QUEUE = '${k_DIR_QUEUES}latestqueue.json';
+final String k_FILE_PATH_LATEST_QUEUE = '$k_DIR_USER_DATA/latestqueue.json';
 
-final String k_PLAYLIST_PATH_HISTORY = '${k_DIR_PLAYLISTS}sussybaka.json';
-final String k_PLAYLIST_PATH_HISTORY_BACKUP = '${k_DIR_PLAYLISTS}sussybakabk.json';
-final String k_PLAYLIST_PATH_FAVOURITES = '${k_DIR_PLAYLISTS}favs.json';
+final String k_PLAYLIST_PATH_HISTORY = '$k_DIR_USER_DATA/sussybaka.json';
+final String k_PLAYLIST_PATH_HISTORY_BACKUP = '$k_DIR_USER_DATA/sussybakabk.json';
+final String k_PLAYLIST_PATH_FAVOURITES = '$k_DIR_USER_DATA/favs.json';
 
 final String k_DIR_PLAYLISTS = '$k_DIR_USER_DATA/Playlists/';
 final String k_DIR_QUEUES = '$k_DIR_USER_DATA/Queues/';
