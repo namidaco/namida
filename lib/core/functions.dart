@@ -191,6 +191,25 @@ List<Track> generateTracksFromDates(int oldestDate, int newestDate) {
   return historytracks.where((element) => element.dateAdded >= oldestDate && element.dateAdded <= (newestDate + 1.days.inMilliseconds)).map((e) => e.track).toSet().toList();
 }
 
+List<Track> generateTracksFromModes(List<String> modes) {
+  final finalTracks = <Track>[];
+// Generating from Playlists.
+  finalTracks.addAll(
+    PlaylistController.inst.playlistList
+        .where((pl) => pl.modes.any((e) => modes.contains(e)))
+        .expand(
+          (pl) => pl.tracks.map((e) => e.track),
+        )
+        .toList(),
+  );
+
+  // TODO(MSOB7YY): each track should has its own mode
+  return finalTracks
+    ..shuffle()
+    ..take(20)
+    ..toList();
+}
+
 Future<Track?> convertPathToTrack(String trackPath) async {
   final trako = allTracksInLibrary.firstWhereOrNull((element) => element.filename == trackPath.getFilename);
   if (trako != null) {

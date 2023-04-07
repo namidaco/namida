@@ -262,8 +262,8 @@ Future<void> showGeneralPopupDialog(
                                             child: InkWell(
                                                 onTap: () => NamidaOnTaps.inst.onArtistTap(e.value),
                                                 child: Text(
-                                                  "${e.value}, ",
-                                                  style: Get.textTheme.displaySmall?.copyWith(decoration: TextDecoration.underline),
+                                                  "${e.value}  ",
+                                                  style: Get.textTheme.displaySmall?.copyWith(decoration: TextDecoration.underline, color: Get.theme.colorScheme.secondary),
                                                 )),
                                           ),
                                         )
@@ -453,7 +453,7 @@ Future<void> showGeneralPopupDialog(
                                             }
                                             moodsFinal.add(m.trim());
                                           }
-                                          PlaylistController.inst.updatePropertyInPlaylist(playlist, modes: moodsFinal);
+                                          PlaylistController.inst.updatePropertyInPlaylist(playlist, modes: moodsFinal.toSet().toList());
 
                                           Get.close(1);
                                         },

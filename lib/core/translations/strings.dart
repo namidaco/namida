@@ -116,6 +116,8 @@ class Language {
   String get GENERATE_FROM_DATES => 'Time Range';
   String get GENERATE_FROM_DATES_SUBTITLE => 'Generate tracks you listened to in a time range';
   String get NO_TRACKS_FOUND_BETWEEN_DATES => 'this timerange doesn\'t have any tracks.';
+  String get NEW_TRACKS_MODES => 'Mode';
+  String get NEW_TRACKS_MODES_SUBTITLE => 'Generate tracks based on available modes';
 
   /// Main
   String get EXIT_APP => 'Exit';

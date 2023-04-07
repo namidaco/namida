@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:animated_background/animated_background.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:get/get.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:namida/class/track.dart';
@@ -1263,6 +1264,62 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                                           calendarType: CalendarDatePicker2Type.range,
                                                                         ),
                                                                         value: const [],
+                                                                      ),
+                                                                    ),
+                                                                  );
+                                                                },
+                                                              ),
+                                                              CustomListTile(
+                                                                title: Language.inst.NEW_TRACKS_MODES,
+                                                                subtitle: Language.inst.NEW_TRACKS_MODES_SUBTITLE,
+                                                                icon: Broken.happyemoji,
+                                                                maxSubtitleLines: 22,
+                                                                onTap: () {
+                                                                  Get.close(1);
+                                                                  final modes = PlaylistController.inst.playlistList.expand((element) => element.modes.toList()).toSet().toList();
+                                                                  final RxSet<String> selectedModes = <String>{}.obs;
+                                                                  Get.dialog(
+                                                                    CustomBlurryDialog(
+                                                                      normalTitleStyle: true,
+                                                                      insetPadding: const EdgeInsets.symmetric(horizontal: 48.0),
+                                                                      actions: [
+                                                                        TextButton(
+                                                                          onPressed: () {
+                                                                            Player.inst.addToQueue(generateTracksFromModes(selectedModes.toList()));
+                                                                            Get.close(1);
+                                                                          },
+                                                                          child: Text(Language.inst.GENERATE),
+                                                                        ),
+                                                                      ],
+                                                                      child: SizedBox(
+                                                                        height: context.height * 0.5,
+                                                                        width: context.width,
+                                                                        child: NamidaListView(
+                                                                          itemCount: modes.length,
+                                                                          itemExtents: null,
+                                                                          itemBuilder: (context, i) {
+                                                                            final e = modes[i];
+                                                                            return Column(
+                                                                              key: ValueKey(i),
+                                                                              children: [
+                                                                                const SizedBox(height: 12.0),
+                                                                                Obx(
+                                                                                  () => ListTileWithCheckMark(
+                                                                                    title: e,
+                                                                                    active: selectedModes.contains(e),
+                                                                                    onTap: () {
+                                                                                      if (selectedModes.contains(e)) {
+                                                                                        selectedModes.remove(e);
+                                                                                      } else {
+                                                                                        selectedModes.add(e);
+                                                                                      }
+                                                                                    },
+                                                                                  ),
+                                                                                ),
+                                                                              ],
+                                                                            );
+                                                                          },
+                                                                        ),
                                                                       ),
                                                                     ),
                                                                   );
