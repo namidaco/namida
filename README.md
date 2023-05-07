@@ -1,7 +1,7 @@
 # <div style="display: flex; align-items: center;"><img src="some stuff/namida.png" width="82" style="margin-right: 10px;">Namida</div>
 
 
-A Beautiful and Feature-rich Music Player with Video Support, Built in Flutter
+A Beautiful and Feature-rich Music & Video Player, Built in Flutter
 
 # 🎉 Features
 ## Library & Indexing
@@ -30,15 +30,15 @@ no idea if this is a feature, but anyways it lets u select from multiple places 
 
 ## Some additional cool features:
 - Smort Tracks Generation:
-    - uuh.. with dis advanced algorithm brought for you, u can now generate tracks related to one you currently listening to, typically the ones that you often listened to in the same period.
+    - uuh.. with dis advanced algorithm brought for you, u can generate tracks related to one you currently listening to, typically the ones that you often listened to in the same period.
 - Animating Thumbnail:
    - A thumbnail that animates with the current audio peak, looks cool.
 - Miniplayer Party Mode:
    - Applies an edge breathing effect, color can be static or dynamic (all the colors extracted from the artwork)
 - Particles Effect (which speeds up with the audio peak too)<br>
-<br>
-- <p>CAN IMPORT YOUTUBE HISTORY <img src="some stuff/ong.png" width=16/></p>
-- <p>LASTFM TOO AND MAYBE MORE IN FUTURE <img src="some stuff/yoowhat.gif" width=16/></p>
+- <p>CAN IMPORT YOUTUBE HISTORY <img src="some stuff/ong.png" width=16 height=16/></p>
+- <p>LASTFM TOO AND MAYBE MORE IN FUTURE <img src="some stuff/yoowhat.gif" width=16 height=16/></p>
+
 # Video Integration
 - Namida is capable of playing videos related to the audio, video can be found either locally or fetched from youtube
 <details>
@@ -65,19 +65,19 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 # Installation
 -
 
->### Note Regarding Tag Editor
+### Note Regarding Tag Editor
 >- tag editor needs SAF (storage access framework) permission in order to edit metadata.
 >- usually u will have to set it for each folder that contains the desired track so there is like 2 options
 >    1. request saf permission everytime you are editing a track that isn't inside the folder having access (it will be always the last granted folder) 
 >    2. copy track to a specific folder (i chose backup folder), ask for permission, edit metadata, move the track back to the original path
 >- obviously i chose the second, this will cause the permission to reset if u changed default backup location. 
 
->### Note Regarding waveform generation
+### Note Regarding waveform generation
 >- Currently, generating waveform takes ~8 seconds for a 3 min track, I'm limited by the technology of my time, though that being said, once the waveform is generated, it is cached permanently, meaning you will not have to wait again.
 >- Due to that, I've provided an option to generate all waveforms at once, maybe u can use it on a night sleep.
 
->## - Permission Note:
->### the following actions require <font size="2">`all_files_access`</font> permission (requested when needed)
+## - Permission Note:
+### the following actions require <font size="1">`all_files_access`</font> permission (requested when needed)
 >- respect .nomedia
 >- editing audio tags
 >- creating or restoring backups
@@ -86,6 +86,7 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
  >- @LucJosin for their jaudiotagger integration, which actually powers namida.
  >- @55nknown for their awesome miniplayer physics.
  >- @alexmercerind for helping me out a lot.
+ >- @lusaxweb for their awesome Iconsax icon pack.
  >- All the packages maintainers which made namida possible.
  <br>
  
