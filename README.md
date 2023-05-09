@@ -4,7 +4,7 @@
 A Beautiful and Feature-rich Music & Video Player, Built in Flutter
 
 # 🎉 Features
-Everything you might expect from a music player, in addition to the following.
+- Everything you might expect from a music player, in addition to the following:
 ## Library & Indexing
 - Powerful Indexer & Tag Editor, powered by @jaudiotagger.
 - Artists and Genres Separators.
@@ -33,6 +33,7 @@ Everything you might expect from a music player, in addition to the following.
 ## Some additional cool features:
 - Smort Tracks Generation:
     - uuh.. with dis advanced algorithm brought for you, u can generate tracks related to one you currently listening to, typically the ones that you often listened to in the same period.
+    - also u can generate tracks from specific range of time, or from available moods, or randomly.
 - Animating Thumbnail:
    - A thumbnail that animates with the current audio peak, looks cool.
 - Miniplayer Party Mode:
