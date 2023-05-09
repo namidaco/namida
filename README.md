@@ -4,6 +4,7 @@
 A Beautiful and Feature-rich Music & Video Player, Built in Flutter
 
 # 🎉 Features
+Everything you might expect from a music player, in addition to the following.
 ## Library & Indexing
 - Powerful Indexer & Tag Editor, powered by @jaudiotagger.
 - Artists and Genres Separators.
@@ -20,13 +21,14 @@ A Beautiful and Feature-rich Music & Video Player, Built in Flutter
 
 ## Others:
 - Define parameters to use for filtering tracks in search lists.
-- global tracks selection
-no idea if this is a feature, but anyways it lets u select from multiple places in the same list
-- reliable history system & stats
+- Global Tracks Selection
+   - allows u to select from multiple places into the same list.
 - Never miss your sessions!
- • persistent and reliable queue system, your sessions are saved for later usage
-- reliable history system, lets u specifiy minimum seconds/percentage to count a listen
-- most played playlist, find out your top tracks (relies on your history)
+   - persistent and reliable queue system, your sessions are saved for later usage.
+- Reliable History System
+   - lets u specifiy minimum seconds/percentage to count a listen
+- Most Played Playlist
+   - find out your top tracks (relies on your history)
 
 ## Some additional cool features:
 - Smort Tracks Generation:
@@ -37,6 +39,10 @@ no idea if this is a feature, but anyways it lets u select from multiple places 
    - Applies an edge breathing effect, color can be static or dynamic (all the colors extracted from the artwork)
 - Particles Effect
    - they speed up with the audio peak too
+- Insert after latest inserted
+   - Want to insert multiple tracks one after each other? this will get your back.
+- Repeat for N times
+   - in addition to normal repeat modes (all, none, one), this one lets you repeat the track for number of times before playing the next track.
 - <p>CAN IMPORT YOUTUBE HISTORY <img src="some stuff/ong.png" width=16 height=16/></p>
 - <p>LASTFM TOO AND MAYBE MORE IN FUTURE <img src="some stuff/yoowhat.gif" width=16 height=16/></p>
 - you gonna find decent amount of options/customizations in the settings and inside dialogs so make sure to check them out.
@@ -52,8 +58,10 @@ typically looks (inside the folders you specificed) for any matching title, matc
 -- video alAn WaLkER - faDed (480p).mp4
 <br>
 the video filename should contain at least one of the following:
-  1. the music filename.
-  2. title & first artist of the track.
+ <br>
+   1. the music filename as shown above.
+ <br>
+   2. title & first artist of the track.
 <br>
 note: some cleanup is made to improve the matching, all symbols & whitespaces are ignored.
 </details>
