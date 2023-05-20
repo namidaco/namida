@@ -4,6 +4,7 @@
 A Beautiful and Feature-rich Music & Video Player, Built in Flutter
 
 # 🎉 Features
+- Everything you might expect from a music player, in addition to the following:
 ## Library & Indexing
 - Powerful Indexer & Tag Editor, powered by @jaudiotagger.
 - Artists and Genres Separators.
@@ -20,27 +21,35 @@ A Beautiful and Feature-rich Music & Video Player, Built in Flutter
 
 ## Others:
 - Define parameters to use for filtering tracks in search lists.
-- global tracks selection
-no idea if this is a feature, but anyways it lets u select from multiple places in the same list
-- reliable history system & stats
+- Global Tracks Selection
+   - allows u to select from multiple places into the same list.
 - Never miss your sessions!
- • persistent and reliable queue system, your sessions are saved for later usage
-- reliable history system, lets u specifiy minimum seconds/percentage to count a listen
-- most played playlist, find out your top tracks (relies on your history)
+   - persistent and reliable queue system, your sessions are saved for later usage.
+- Reliable History System
+   - lets u specifiy minimum seconds/percentage to count a listen
+- Most Played Playlist
+   - find out your top tracks (relies on your history)
 
 ## Some additional cool features:
 - Smort Tracks Generation:
     - uuh.. with dis advanced algorithm brought for you, u can generate tracks related to one you currently listening to, typically the ones that you often listened to in the same period.
+    - also u can generate tracks from specific range of time, or from available moods, or randomly.
 - Animating Thumbnail:
    - A thumbnail that animates with the current audio peak, looks cool.
 - Miniplayer Party Mode:
    - Applies an edge breathing effect, color can be static or dynamic (all the colors extracted from the artwork)
-- Particles Effect (which speeds up with the audio peak too)<br>
+- Particles Effect
+   - they speed up with the audio peak too
+- Insert after latest inserted
+   - Want to insert multiple tracks one after each other? this will get your back.
+- Repeat for N times
+   - in addition to normal repeat modes (all, none, one), this one lets you repeat the track for number of times before playing the next track.
 - <p>CAN IMPORT YOUTUBE HISTORY <img src="some stuff/ong.png" width=16 height=16/></p>
 - <p>LASTFM TOO AND MAYBE MORE IN FUTURE <img src="some stuff/yoowhat.gif" width=16 height=16/></p>
+- you gonna find decent amount of options/customizations in the settings and inside dialogs so make sure to check them out.
 
 # Video Integration
-- Namida is capable of playing videos related to the audio, video can be found either locally or fetched from youtube
+- Namida is capable of playing videos related to the music, video can be found either locally or fetched from youtube
 <details>
 <summary>how locally?</summary>
 typically looks (inside the folders you specificed) for any matching title, matching goes as following:
@@ -49,14 +58,18 @@ typically looks (inside the folders you specificed) for any matching title, matc
 <br>
 -- video alAn WaLkER - faDed (480p).mp4
 <br>
-(the video title should contain the title of the music)
+the video filename should contain at least one of the following:
+ <br>
+   1. the music filename as shown above.
+ <br>
+   2. title & first artist of the track.
 <br>
 note: some cleanup is made to improve the matching, all symbols & whitespaces are ignored.
 </details>
 
 <details>
 <summary>how youtube?</summary>
- • looks up in the track comment tag (as they are mostly done by @yt-dlp) or file name for any matching youtube link, if found then it starts downloading (and caches permanently) and plays once it's ready, streaming here isn't a good idea as the priority goes for the music file itself.
+ • looks up in the track comment tag (as they are mostly done by @yt-dlp) or filename for any matching youtube link, if found then it starts downloading (and caches permanently) and plays once it's ready, streaming here isn't a good idea as the priority goes for the music file itself.
 </details>
 <br>
 
