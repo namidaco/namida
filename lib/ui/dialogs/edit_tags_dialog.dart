@@ -33,9 +33,9 @@ Future<void> showEditTrackTagsDialog(Track track) async {
 
   final info = await audioedit.readAudio(track.path);
 
-  RxBool trimWhiteSpaces = true.obs;
-  RxBool canEditTags = false.obs;
-  RxString currentImagePath = ''.obs;
+  final RxBool trimWhiteSpaces = true.obs;
+  final RxBool canEditTags = false.obs;
+  final RxString currentImagePath = ''.obs;
 
   final tagsControllers = <TagField, TextEditingController>{};
   final editedTags = <TagField, dynamic>{};
@@ -73,7 +73,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
           canEditTags.value = true;
         }
       },
-      isNumeric: tag == TagField.trackNumber || tag == TagField.trackTotal || tag == TagField.discNumber || tag == TagField.discTotal || tag == TagField.year,
+      isNumeric: tag.isNumeric,
       maxLines: tag == TagField.comment ? 4 : null,
     );
   }
@@ -459,22 +459,46 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
     ],
   );
 
-  final albumController = TextEditingController();
-  final artistController = TextEditingController();
-  final composerController = TextEditingController();
-  final genreController = TextEditingController();
-  final commentController = TextEditingController();
-  final yearController = TextEditingController();
+  final RxBool trimWhiteSpaces = true.obs;
+  final RxBool canEditTags = false.obs;
+  final RxString currentImagePath = ''.obs;
 
-  // albumController.text = info.album ?? '';
-  // artistController.text = info.artist ?? '';
-  // composerController.text = info.composer ?? '';
-  // genreController.text = info.genre ?? '';
-  // commentController.text = info.comment ?? '';
-  // yearController.text = info.year != null ? info.year.toString() : '';
+  final tagsControllers = <TagField, TextEditingController>{};
+  final editedTags = <TagField, dynamic>{};
 
-  RxBool trimWhiteSpaces = true.obs;
-  RxString currentImagePath = ''.obs;
+  final availableTagsToEdit = <TagField>[
+    TagField.album,
+    TagField.artist,
+    TagField.genre,
+    TagField.year,
+    TagField.comment,
+    TagField.albumArtist,
+    TagField.composer,
+    TagField.trackTotal,
+    TagField.discTotal,
+  ];
+
+  /// creating controllers
+  for (final at in availableTagsToEdit) {
+    tagsControllers[at] = TextEditingController();
+  }
+  Widget getTagTextField(TagField tag) {
+    return CustomTagTextField(
+      controller: tagsControllers[tag]!,
+      labelText: tag.toText(),
+      hintText: tagsControllers[tag]!.text,
+      icon: tag.toIcon(),
+      onChanged: (value) {
+        editedTags[tag] = value;
+        if (!canEditTags.value) {
+          canEditTags.value = true;
+        }
+      },
+      isNumeric: tag.isNumeric,
+      maxLines: tag == TagField.comment ? 4 : null,
+    );
+  }
+
   Get.dialog(
     Transform.scale(
       scale: 0.94,
@@ -537,60 +561,93 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                     ),
                     ElevatedButton(
                       onPressed: () async {
-                        String falbum = albumController.text;
-                        String fartist = artistController.text;
-                        String fcomposer = composerController.text;
-                        String fgenre = genreController.text;
-                        String fcomment = commentController.text;
-                        String _fyear = yearController.text;
-
                         if (trimWhiteSpaces.value) {
-                          falbum = falbum.trim();
-                          fartist = fartist.trim();
-                          fcomposer = fcomposer.trim();
-                          fgenre = fgenre.trim();
-                          fcomment = fcomment.trim();
-                          _fyear = _fyear.trim();
+                          editedTags.updateAll((key, value) => value.trim());
                         }
 
-                        bool didUpdate = false;
-                        for (final tr in tracks) {
-                          int? fyearInt;
-                          fyearInt = _fyear.isNotEmpty ? int.tryParse(_fyear) : null;
-                          if (_fyear.isEmpty && _fyear != tr.year.toString()) {
-                            fyearInt = 0;
+                        /// converting int-based empty fields to 0
+                        /// this prevents crash resulted from assigning empty string to int.
+                        /// TODO(MSOB7YY): fix, if the value is 0, it doesnt get updated
+                        void fixEmptyInts(List<TagField> fields) {
+                          for (final field in fields) {
+                            if (editedTags[field] != null && editedTags[field] == '') {
+                              editedTags[field] = 0;
+                            }
                           }
-                          didUpdate = await editTrackMetadata(
+                        }
+
+                        fixEmptyInts([
+                          TagField.trackTotal,
+                          TagField.discTotal,
+                        ]);
+
+                        final RxInt successfullEdits = 0.obs;
+                        final RxInt failedEdits = 0.obs;
+                        final RxBool finishedEditing = false.obs;
+                        final RxString updatingLibrary = '?'.obs;
+
+                        Get.dialog(
+                          Obx(
+                            () => CustomBlurryDialog(
+                              title: Language.inst.PROGRESS,
+                              tapToDismiss: finishedEditing.value,
+                              normalTitleStyle: true,
+                              actions: [
+                                Obx(
+                                  () => AnimatedOpacity(
+                                    duration: const Duration(milliseconds: 300),
+                                    opacity: finishedEditing.value ? 1.0 : 0.5,
+                                    child: IgnorePointer(
+                                      ignoring: !finishedEditing.value,
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          Get.close(2);
+                                        },
+                                        child: Text(Language.inst.DONE),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              ],
+                              bodyText:
+                                  '${Language.inst.SUCCEEDED}: ${successfullEdits.value}\n\n${Language.inst.FAILED}: ${failedEdits.value}\n\n${Language.inst.UPDATING} ${updatingLibrary.value}',
+                            ),
+                          ),
+                        );
+                        for (final tr in tracks) {
+                          final didUpdate = await editTrackMetadata(
                             tr,
                             tags: {
-                              if (falbum.isNotEmpty) TagType.ALBUM: falbum,
-                              if (fartist.isNotEmpty) TagType.ARTIST: fartist,
-                              if (fcomposer.isNotEmpty) TagType.COMPOSER: fcomposer,
-                              if (fgenre.isNotEmpty) TagType.GENRE: fgenre,
-                              if (fcomment.isNotEmpty) TagType.COMMENT: fcomment,
-                              if (fyearInt != null) TagType.YEAR: fyearInt,
+                              if (editedTags.containsKey(TagField.album)) TagType.ALBUM: editedTags[TagField.album],
+                              if (editedTags.containsKey(TagField.artist)) TagType.ARTIST: editedTags[TagField.artist],
+                              if (editedTags.containsKey(TagField.albumArtist)) TagType.ALBUM_ARTIST: editedTags[TagField.albumArtist],
+                              if (editedTags.containsKey(TagField.composer)) TagType.COMPOSER: editedTags[TagField.composer],
+                              if (editedTags.containsKey(TagField.genre)) TagType.GENRE: editedTags[TagField.genre],
+                              if (editedTags.containsKey(TagField.year)) TagType.YEAR: editedTags[TagField.year],
+                              if (editedTags.containsKey(TagField.comment)) TagType.COMMENT: editedTags[TagField.comment],
+                              if (editedTags.containsKey(TagField.trackTotal)) TagType.TRACK_TOTAL: editedTags[TagField.trackTotal],
+                              if (editedTags.containsKey(TagField.discTotal)) TagType.DISC_TOTAL: editedTags[TagField.discTotal],
                             },
-                            updateTracks: false,
                             artworkPath: currentImagePath.value,
+                            updateTracks: false,
                           );
+                          debugPrint(didUpdate.toString());
+                          if (didUpdate) {
+                            successfullEdits.value++;
+                          } else {
+                            failedEdits.value++;
+                          }
                         }
-
-                        if (!didUpdate) {
-                          Get.snackbar(Language.inst.METADATA_EDIT_FAILED, Language.inst.METADATA_EDIT_FAILED_SUBTITLE);
-                        } else {
-                          // if user actually picked a pic
-                          // if (currentImagePath.value != '') {
-                          //   final didUpdateImg = await audioedit.editArtwork(
-                          //     copiedFile.path,
-                          //     // imagePath: currentImagePath.value,
-                          //     searchInsideFolders: true,
-                          //     openFilePicker: true,
-                          //   );
-                          // }
+                        updatingLibrary.value = '...';
+                        if (failedEdits > 0) {
+                          Get.snackbar('${Language.inst.METADATA_EDIT_FAILED} ($failedEdits)', Language.inst.METADATA_EDIT_FAILED_SUBTITLE);
                         }
-                        Indexer.inst.updateTracks(tracks, updateArtwork: currentImagePath.value != '');
-
-                        Get.close(2);
+                        await Indexer.inst.updateTracks(tracks, updateArtwork: currentImagePath.value != '');
+                        for (final t in tracks) {
+                          await EditDeleteController.inst.updateTrackPathInEveryPartOfNamida(t, t.path);
+                        }
+                        updatingLibrary.value = '✓';
+                        finishedEditing.value = true;
                       },
                       child: Text(Language.inst.CONFIRM),
                     ),
@@ -732,45 +789,12 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                           const SizedBox(
                             height: 8.0,
                           ),
-                          // CustomTagTextField(
-                          //   controller: artistController,
-                          //   hintText: Language.inst.ARTIST,
-                          //   icon: Broken.microphone,
-                          // ),
-                          // const SizedBox(
-                          //   height: 12.0,
-                          // ),
-                          // CustomTagTextField(
-                          //   controller: albumController,
-                          //   hintText: Language.inst.ALBUM,
-                          //   icon: Broken.music_dashboard,
-                          // ),
-                          // const SizedBox(
-                          //   height: 12.0,
-                          // ),
-                          // CustomTagTextField(
-                          //   controller: genreController,
-                          //   hintText: Language.inst.GENRE,
-                          //   icon: Broken.smileys,
-                          // ),
-                          // const SizedBox(
-                          //   height: 12.0,
-                          // ),
-                          // CustomTagTextField(
-                          //   controller: yearController,
-                          //   hintText: Language.inst.YEAR,
-                          //   icon: Broken.calendar,
-                          //   maxLength: 8,
-                          // ),
-                          // const SizedBox(
-                          //   height: 12.0,
-                          // ),
-                          // CustomTagTextField(
-                          //   controller: commentController,
-                          //   hintText: Language.inst.COMMENT,
-                          //   icon: Broken.text_block,
-                          //   maxLines: 4,
-                          // ),
+                          ...availableTagsToEdit.toList().map(
+                                (e) => Padding(
+                                  padding: const EdgeInsets.only(top: 10.0),
+                                  child: getTagTextField(e),
+                                ),
+                              ),
                           const SizedBox(
                             height: 12.0,
                           ),

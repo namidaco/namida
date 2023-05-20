@@ -309,6 +309,7 @@ class CustomBlurryDialog extends StatelessWidget {
   final bool isWarning;
   final bool enableBlur;
   final bool scrollable;
+  final bool tapToDismiss;
   final EdgeInsets? insetPadding;
   final EdgeInsetsGeometry? contentPadding;
   const CustomBlurryDialog({
@@ -324,81 +325,87 @@ class CustomBlurryDialog extends StatelessWidget {
     this.enableBlur = true,
     this.insetPadding,
     this.scrollable = true,
+    this.tapToDismiss = true,
     this.contentPadding,
   });
 
   @override
   Widget build(BuildContext context) {
-    return NamidaBgBlur(
-      blur: 5.0,
-      enabled: enableBlur,
-      child: Theme(
-        data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
-        child: GestureDetector(
-          onTap: () => Get.close(1),
-          child: Container(
-            color: Colors.transparent,
-            child: AlertDialog(
-              scrollable: scrollable,
-              insetPadding: insetPadding ?? const EdgeInsets.symmetric(horizontal: 50, vertical: 32),
-              clipBehavior: Clip.antiAlias,
-              titlePadding: normalTitleStyle ? const EdgeInsets.only(top: 24.0, left: 24.0, right: 24.0) : EdgeInsets.zero,
-              contentPadding: contentPadding ?? const EdgeInsets.all(14.0),
-              title: normalTitleStyle
-                  ? Row(
-                      children: [
-                        if (icon != null || isWarning) ...[
-                          Icon(
-                            isWarning ? Broken.warning_2 : icon,
-                          ),
-                          const SizedBox(
-                            width: 10.0,
-                          ),
-                        ],
-                        Expanded(
-                          child: Text(
-                            isWarning ? Language.inst.WARNING : title ?? '',
-                            style: context.textTheme.displayLarge,
-                          ),
-                        ),
-                        if (trailingWidgets != null) ...trailingWidgets!
-                      ],
-                    )
-                  : Container(
-                      color: context.theme.cardColor,
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+    return WillPopScope(
+      onWillPop: () {
+        return Future.value(tapToDismiss);
+      },
+      child: NamidaBgBlur(
+        blur: 5.0,
+        enabled: enableBlur,
+        child: Theme(
+          data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
+          child: GestureDetector(
+            onTap: tapToDismiss ? () => Get.close(1) : null,
+            child: Container(
+              color: Colors.transparent,
+              child: AlertDialog(
+                scrollable: scrollable,
+                insetPadding: insetPadding ?? const EdgeInsets.symmetric(horizontal: 50, vertical: 32),
+                clipBehavior: Clip.antiAlias,
+                titlePadding: normalTitleStyle ? const EdgeInsets.only(top: 24.0, left: 24.0, right: 24.0) : EdgeInsets.zero,
+                contentPadding: contentPadding ?? const EdgeInsets.all(14.0),
+                title: normalTitleStyle
+                    ? Row(
                         children: [
-                          if (icon != null) ...[
+                          if (icon != null || isWarning) ...[
                             Icon(
-                              icon,
+                              isWarning ? Broken.warning_2 : icon,
                             ),
                             const SizedBox(
                               width: 10.0,
                             ),
                           ],
-                          Text(
-                            title ?? '',
-                            style: context.theme.textTheme.displayMedium,
-                            textAlign: TextAlign.center,
+                          Expanded(
+                            child: Text(
+                              isWarning ? Language.inst.WARNING : title ?? '',
+                              style: context.textTheme.displayLarge,
+                            ),
                           ),
+                          if (trailingWidgets != null) ...trailingWidgets!
                         ],
-                      ),
-                    ),
-              content: SizedBox(
-                width: Get.width,
-                child: bodyText != null
-                    ? Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Text(
-                          bodyText!,
-                          style: context.textTheme.displayMedium,
-                        ),
                       )
-                    : child,
+                    : Container(
+                        color: context.theme.cardColor,
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (icon != null) ...[
+                              Icon(
+                                icon,
+                              ),
+                              const SizedBox(
+                                width: 10.0,
+                              ),
+                            ],
+                            Text(
+                              title ?? '',
+                              style: context.theme.textTheme.displayMedium,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                content: SizedBox(
+                  width: Get.width,
+                  child: bodyText != null
+                      ? Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Text(
+                            bodyText!,
+                            style: context.textTheme.displayMedium,
+                          ),
+                        )
+                      : child,
+                ),
+                actions: actions,
               ),
-              actions: actions,
             ),
           ),
         ),

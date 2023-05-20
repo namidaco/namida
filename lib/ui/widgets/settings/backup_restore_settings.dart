@@ -68,12 +68,13 @@ class BackupAndRestore extends StatelessWidget {
                           child: Column(
                             children: [
                               ListTileWithCheckMark(
-                                active: isActive(k_FILE_PATH_TRACKS) && isActive(k_FILE_PATH_TRACKS_STATS),
+                                active: isActive(k_FILE_PATH_TRACKS) && isActive(k_FILE_PATH_TRACKS_STATS) && isActive(k_FILE_PATH_EXTRA_STATS),
                                 title: Language.inst.DATABASE,
                                 icon: Broken.box_1,
                                 onTap: () {
                                   onItemTap(k_FILE_PATH_TRACKS);
                                   onItemTap(k_FILE_PATH_TRACKS_STATS);
+                                  onItemTap(k_FILE_PATH_EXTRA_STATS);
                                 },
                               ),
                               const SizedBox(

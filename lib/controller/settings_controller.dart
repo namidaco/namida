@@ -151,7 +151,6 @@ class SettingsController {
 
   Future<void> prepareSettingsFile() async {
     final file = await File(k_FILE_PATH_SETTINGS).create(recursive: true);
-    final fileExtra = await File(k_FILE_PATH_EXTRA_STATS).create(recursive: true);
     try {
       final String contents = await file.readAsString();
       if (contents.isEmpty) {
