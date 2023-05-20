@@ -37,7 +37,7 @@ class QueueTile extends StatelessWidget {
           child: Container(
             alignment: Alignment.center,
             padding: const EdgeInsets.only(top: 3.0, bottom: 3.0, right: 8.0),
-            height: 68.0 + 14.0,
+            height: 68.0 + 12.0,
             child: Row(
               children: [
                 SizedBox(
@@ -55,13 +55,13 @@ class QueueTile extends StatelessWidget {
                     Text(
                       queue.date.dateAndClockFormattedOriginal,
                       style: context.textTheme.displayMedium?.copyWith(
-                        fontSize: 14.0,
+                        fontSize: 14.0.multipliedFontScale,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 1.0),
                     Text(
-                      queue.tracks.displayTrackKeyword,
+                      [queue.name, queue.tracks.displayTrackKeyword].join(' - '),
                       style: context.textTheme.displaySmall?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
@@ -74,7 +74,7 @@ class QueueTile extends StatelessWidget {
                   queue.tracks.totalDurationFormatted,
                   style: context.textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.w500,
-                    fontSize: 12.5,
+                    fontSize: 12.5.multipliedFontScale,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),

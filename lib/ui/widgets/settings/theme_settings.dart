@@ -196,21 +196,21 @@ class ToggleThemeModeContainer extends StatelessWidget {
                       onTap: () => onThemeChangeTap(ThemeMode.system, !context.isDarkMode),
                       child: Icon(
                         Broken.autobrightness,
-                        color: currentTheme == ThemeMode.system ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.background,
+                        color: currentTheme == ThemeMode.system ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.background.withAlpha(180),
                       ),
                     ),
                     InkWell(
                       onTap: () => onThemeChangeTap(ThemeMode.light, true),
                       child: Icon(
                         Broken.sun_1,
-                        color: currentTheme == ThemeMode.light ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.background,
+                        color: currentTheme == ThemeMode.light ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.background.withAlpha(180),
                       ),
                     ),
                     InkWell(
                       onTap: () => onThemeChangeTap(ThemeMode.dark, false),
                       child: Icon(
                         Broken.moon,
-                        color: currentTheme == ThemeMode.dark ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.background,
+                        color: currentTheme == ThemeMode.dark ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.background.withAlpha(180),
                       ),
                     ),
                   ],

@@ -30,8 +30,9 @@ class NamidaOnTaps {
   Future<void> onArtistTap(String name) async {
     ScrollSearchController.inst.isGlobalSearchMenuShown.value = false;
     final tracks = Indexer.inst.artistSearchList.firstWhere((element) => element.name == name).tracks;
+    SelectedTracksController.inst.updateCurrentTracks(tracks);
     final albums = name.artistAlbums;
-    final color = await CurrentColor.inst.generateDelightnedColor(tracks[0].pathToImage);
+    final color = await CurrentColor.inst.generateDelightnedColor(tracks.pathToImage);
 
     Get.to(
       () => ArtistTracksPage(
@@ -42,15 +43,15 @@ class NamidaOnTaps {
       ),
       preventDuplicates: false,
     );
-    SelectedTracksController.inst.currentAllTracks.assignAll(tracks);
   }
 
   Future<void> onAlbumTap(String name) async {
     ScrollSearchController.inst.isGlobalSearchMenuShown.value = false;
     final tracks = Indexer.inst.albumSearchList.firstWhere((element) => element.name == name).tracks;
-    final color = await CurrentColor.inst.generateDelightnedColor(tracks[0].pathToImage);
+    final color = await CurrentColor.inst.generateDelightnedColor(tracks.pathToImage);
+    SelectedTracksController.inst.updateCurrentTracks(tracks);
 
-    Get.to(
+    await Get.to(
       () => AlbumTracksPage(
         name: name,
         colorScheme: color,
@@ -58,38 +59,43 @@ class NamidaOnTaps {
       ),
       preventDuplicates: false,
     );
-    SelectedTracksController.inst.currentAllTracks.assignAll(tracks);
   }
 
   Future<void> onGenreTap(String name) async {
     final tracks = Indexer.inst.groupedGenresList.firstWhere((element) => element.name == name).tracks;
+    SelectedTracksController.inst.updateCurrentTracks(tracks);
 
-    Get.to(
+    await Get.to(
       () => GenreTracksPage(
         name: name,
         tracks: tracks,
       ),
       preventDuplicates: false,
     );
-    SelectedTracksController.inst.currentAllTracks.assignAll(tracks);
   }
 
-  Future<void> onPlaylistTap(Playlist playlist) async {
-    Get.to(() => PlaylisTracksPage(playlist: playlist));
-    SelectedTracksController.inst.currentAllTracks.assignAll(playlist.tracks.map((e) => e.track).toList());
+  Future<void> onPlaylistTap(
+    Playlist playlist, {
+    bool disableAnimation = false,
+    ScrollController? scrollController,
+    int? indexToHighlight,
+  }) async {
+    SelectedTracksController.inst.updateCurrentTracks(playlist.tracks.map((e) => e.track).toList());
+    await Get.to(() => PlaylisTracksPage(
+          playlist: playlist,
+          disableAnimation: disableAnimation,
+          indexToHighlight: indexToHighlight,
+          scrollController: scrollController,
+        ));
   }
 
-  Future<void> onFolderOpen(Folder folder) async {
-    Folders.inst.stepIn(folder);
-    SelectedTracksController.inst.currentAllTracks.assignAll(folder.tracks);
+  Future<void> onFolderOpen(Folder folder, bool isMainStoragePath) async {
+    Folders.inst.stepIn(folder, isMainStoragePath: isMainStoragePath);
   }
 
   Future<void> onQueueTap(Queue queue) async {
-    Get.to(
-      () => QueueTracksPage(queue: queue),
-      preventDuplicates: false,
-    );
-    SelectedTracksController.inst.currentAllTracks.assignAll(queue.tracks);
+    SelectedTracksController.inst.updateCurrentTracks(queue.tracks);
+    await Get.to(() => QueueTracksPage(queue: queue), preventDuplicates: false);
   }
 
   void onRemoveTrackFromPlaylist(int index, Playlist playlist) {
@@ -191,30 +197,44 @@ List<Track> generateTracksFromDates(int oldestDate, int newestDate) {
   return historytracks.where((element) => element.dateAdded >= oldestDate && element.dateAdded <= (newestDate + 1.days.inMilliseconds)).map((e) => e.track).toSet().toList();
 }
 
-List<Track> generateTracksFromModes(List<String> modes) {
+List<Track> generateTracksFrommoods(List<String> moods) {
   final finalTracks = <Track>[];
 // Generating from Playlists.
   finalTracks.addAll(
     PlaylistController.inst.playlistList
-        .where((pl) => pl.modes.any((e) => modes.contains(e)))
+        .where((pl) => pl.moods.any((e) => moods.contains(e)))
         .expand(
           (pl) => pl.tracks.map((e) => e.track),
         )
         .toList(),
   );
 
-  // TODO(MSOB7YY): each track should has its own mode
+  // TODO(MSOB7YY): each track should has its own mood
   return finalTracks
     ..shuffle()
     ..take(20)
     ..toList();
 }
 
-Future<Track?> convertPathToTrack(String trackPath) async {
-  final trako = allTracksInLibrary.firstWhereOrNull((element) => element.filename == trackPath.getFilename);
-  if (trako != null) {
-    return trako;
-  }
-  await Indexer.inst.fetchAllSongsAndWriteToFile(audioFiles: {trackPath}, deletedPaths: {}, forceReIndex: false);
-  return allTracksInLibrary.firstWhereOrNull((element) => element.path == trackPath);
+List<Track> generateTracksFromAlbum(String album) {
+  final trs = Indexer.inst.albumsList.firstWhere((element) => element.name == album).tracks;
+  return _addTheseTracksFromMedia(trs);
+}
+
+List<Track> generateTracksFromArtist(String artist) {
+  final trs = Indexer.inst.groupedArtistsList.firstWhere((element) => element.name == artist).tracks;
+  return _addTheseTracksFromMedia(trs);
+}
+
+List<Track> generateTracksFromFolder(String folderPath) {
+  final trs = Folders.inst.folderslist.firstWhere((element) => element.path == folderPath).tracks;
+  return _addTheseTracksFromMedia(trs);
+}
+
+List<Track> _addTheseTracksFromMedia(Iterable<Track> tracks) {
+  final trs = <Track>[];
+  trs.addAll(tracks);
+  trs.shuffle();
+  trs.remove(Player.inst.nowPlayingTrack.value);
+  return trs.take(10).toList();
 }

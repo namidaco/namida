@@ -84,7 +84,7 @@ class ArtworkWidget extends StatelessWidget {
     }
     // if path is sent but not valid.
     // or bytes are sent but not valid.
-    if ((path != null && path != '' && FileSystemEntity.typeSync(path!) == FileSystemEntityType.notFound) || (bytes != null && bytes!.isEmpty)) {
+    if ((path != null && path != '' && FileSystemEntity.typeSync(path!) == FileSystemEntityType.notFound) || (bytes != null && (bytes ?? []).isEmpty)) {
       return stockWidget;
     }
     final extImageChild = Stack(

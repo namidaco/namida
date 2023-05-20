@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -31,10 +32,10 @@ class AlbumCard extends StatelessWidget {
     final gridCount = gridCountOverride ?? SettingsController.inst.albumGridCount.value;
     final inverseGrid = 4 - gridCount;
     final fontSize = (16.0 - (gridCount * 1.8)).multipliedFontScale;
-    final finalYear = album.firstWhereOrNull((element) => element.year != 0)?.year.yearFormatted ?? '';
+    final finalYear = album.year.yearFormatted;
     final shouldDisplayTopRightDate = SettingsController.inst.albumCardTopRightDate.value && finalYear != '';
     final shouldDisplayNormalDate = !SettingsController.inst.albumCardTopRightDate.value && finalYear != '';
-    final shouldDisplayAlbumArtist = album[0].albumArtist != '';
+    final shouldDisplayAlbumArtist = album.albumArtist != '';
     const double horizontalPadding = 4.0;
     double thumnailSize = (Get.width / gridCount) - horizontalPadding * 2;
     return GridTile(
@@ -42,6 +43,7 @@ class AlbumCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: horizontalPadding),
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
+          color: context.theme.cardColor,
           borderRadius: BorderRadius.circular(12.0.multipliedRadius),
           boxShadow: [
             BoxShadow(
@@ -52,18 +54,18 @@ class AlbumCard extends StatelessWidget {
           ],
         ),
         child: Material(
-          color: context.theme.cardColor,
+          color: Colors.transparent,
           child: InkWell(
             highlightColor: const Color.fromARGB(60, 120, 120, 120),
-            onLongPress: () => NamidaDialogs.inst.showAlbumDialog(album),
-            onTap: () => NamidaOnTaps.inst.onAlbumTap(album[0].album),
+            onLongPress: () => NamidaDialogs.inst.showAlbumDialog(album, heroTag: 'parent_album_artwork_${album.album}'),
+            onTap: () => NamidaOnTaps.inst.onAlbumTap(album.album),
             child: Column(
               children: [
                 Hero(
-                  tag: 'parent_album_artwork_${album[0].album}',
+                  tag: 'parent_album_artwork_${album.album}',
                   child: ArtworkWidget(
                     thumnailSize: thumnailSize,
-                    path: album[0].pathToImage,
+                    path: album.pathToImage,
                     borderRadius: 10.0,
                     blur: 0,
                     iconSize: 32.0,
@@ -102,7 +104,7 @@ class AlbumCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(10.0.multipliedRadius),
                             child: InkWell(
                               borderRadius: BorderRadius.circular(10.0.multipliedRadius),
-                              onTap: () => Player.inst.playOrPause(0, album),
+                              onTap: () => Player.inst.playOrPause(0, album, QueueSource.album),
                               child: Padding(
                                 padding: EdgeInsets.all(2.5 + 2.0 * inverseGrid),
                                 child: Icon(Broken.play, size: 12.5 + 4.0 * inverseGrid),
@@ -127,18 +129,18 @@ class AlbumCard extends StatelessWidget {
                           children: [
                             if (staggered && !compact) SizedBox(height: fontSize * 0.7),
                             Text(
-                              album[0].album.overflow,
+                              album.album.overflow,
                               style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize * 1.16),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            if (!SettingsController.inst.albumCardTopRightDate.value || album[0].albumArtist != '') ...[
+                            if (!SettingsController.inst.albumCardTopRightDate.value || album.albumArtist != '') ...[
                               // if (!compact) const SizedBox(height: 2.0),
                               if (shouldDisplayNormalDate || shouldDisplayAlbumArtist)
                                 Text(
                                   [
                                     if (shouldDisplayNormalDate) finalYear,
-                                    if (shouldDisplayAlbumArtist) album[0].albumArtist.overflow,
+                                    if (shouldDisplayAlbumArtist) album.albumArtist.overflow,
                                   ].join(' - '),
                                   style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize * 1.08),
                                   maxLines: 1,

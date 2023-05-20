@@ -1,12 +1,14 @@
+// import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:namida/ui/widgets/stats.dart';
 import 'package:searchbar_animation/searchbar_animation.dart';
 
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -17,6 +19,7 @@ import 'package:namida/ui/pages/search_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
+import 'package:namida/ui/widgets/stats.dart';
 
 class HomePage extends StatelessWidget {
   final Widget? child;
@@ -86,7 +89,7 @@ class HomePage extends StatelessWidget {
                     },
                     hintText: Language.inst.SEARCH,
                     searchBoxWidth: context.width / 1.2,
-                    buttonColour: Colors.transparent,
+                    buttonColour: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? context.theme.cardColor : Colors.transparent,
                     enableBoxShadow: false,
                     buttonShadowColour: Colors.transparent,
                     hintTextColour: context.theme.colorScheme.onSurface,
@@ -130,16 +133,31 @@ class HomePage extends StatelessWidget {
                     //     padding: const EdgeInsets.only(right: 12.0, left: 10.0),
                     //     icon: Broken.ghost,
                     //     onPressed: () async {
-                    //       // GoogleSignIn _googleSignIn = GoogleSignIn(
-                    //       //   scopes: [
-                    //       //     'email',
-                    //       //     'https://www.googleapis.com/auth/youtube',
-                    //       //     'https://www.googleapis.com/auth/youtube.readonly',
-                    //       //     'https://www.googleapis.com/auth/youtube.force-ssl',
-                    //       //   ],
-                    //       // );
-                    //       // final acc = await _googleSignIn.signIn();
-                    //       // print('ACCCCCCCCCC ${acc?.displayName ?? 'NULLLLLLL'}');
+                    //       GoogleSignIn googleSignIn = GoogleSignIn(
+                    //         scopes: [
+                    //           'email',
+                    //           'https://www.googleapis.com/auth/youtube',
+                    //           'https://www.googleapis.com/auth/youtube.readonly',
+                    //           'https://www.googleapis.com/auth/youtube.force-ssl',
+                    //         ],
+                    //       );
+                    //       await googleSignIn.signOut();
+                    //       final acc = await googleSignIn.signIn();
+                    //       final accessToken = await acc?.authentication.then((value) => value.accessToken);
+                    //       final accHeaders = await acc?.authHeaders;
+                    //       print('ACCCCCCCCCC ${acc?.displayName ?? 'NULLLLLLL'}');
+                    //       print('ACCCCCCCCCC ${accessToken ?? 'NULLLLLLL'}');
+                    //       YoutubeController.inst.sussyBaka = accessToken ?? '';
+                    //       // final String url = 'https://www.googleapis.com/youtube/v3/channels?access_token=$accessToken&part=snippet&mine=true';
+                    //       final String url = 'https://youtube.com/watch?v=o3DHvFyPYRE&bpctr=9999999999&hl=en&access_token=$accessToken';
+                    //       http.Response response = await http.get(Uri.parse(url), headers: accHeaders);
+                    //       // print('ACCCCCCCCCC ${response.body.replaceAll('\n', ' ')}');
+                    //       print('ACCCCCCCCCC ${response.headers.toString()}');
+                    //       final cookie = Cookie.fromSetCookieValue(response.headers['set-cookie'].toString());
+                    //       print('ACCCCCCCCCC cookie: ${cookie.name}');
+                    //       print('ACCCCCCCCCC cookie: ${cookie.value}');
+                    //       print('ACCCCCCCCCC cookie: ${cookie.path}');
+                    //       YoutubeController.inst.sussyBakaHeader = response.headers;
                     //     },
                     //   ),
                     // ),
@@ -184,6 +202,8 @@ class HomePage extends StatelessWidget {
                             controller: ScrollSearchController.inst.homepageController,
                             onPageChanged: (page) {
                               SettingsController.inst.save(selectedLibraryTab: page.toEnum);
+                              SelectedTracksController.inst.updatePageTracks(page.toEnum);
+
                               printInfo(info: page.toString());
                             },
                             children: SettingsController.inst.libraryTabs
@@ -242,7 +262,10 @@ class HomePage extends StatelessWidget {
                       elevation: 22,
                       labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
                       height: 64.0,
-                      onDestinationSelected: (value) => ScrollSearchController.inst.animatePageController(value, shouldGoBack: child != null),
+                      onDestinationSelected: (value) {
+                        ScrollSearchController.inst.animatePageController(value, shouldGoBack: child != null);
+                        SelectedTracksController.inst.updatePageTracks(value.toEnum);
+                      },
                       selectedIndex: SettingsController.inst.selectedLibraryTab.value.toInt,
                       destinations: SettingsController.inst.libraryTabs
                           .asMap()

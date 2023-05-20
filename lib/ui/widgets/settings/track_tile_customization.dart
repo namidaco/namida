@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
@@ -302,8 +300,8 @@ class TrackTileCustomization extends StatelessWidget {
 
   _showTrackItemsDialog(TrackTilePosition p, TrackTileItem rowItemInSetting) async {
     await Get.dialog(
-      BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+      NamidaBgBlur(
+        blur: 5.0,
         child: Theme(
           data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !Get.isDarkMode),
           child: Dialog(

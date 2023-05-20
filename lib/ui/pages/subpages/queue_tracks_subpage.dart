@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/queue.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/main_page.dart';
@@ -25,9 +26,11 @@ class QueueTracksPage extends StatelessWidget {
         )
       ],
       child: NamidaTracksList(
+        queueSource: QueueSource.queuePage,
         queueLength: queue.tracks.length,
         queue: queue.tracks,
         header: SubpagesTopContainer(
+          source: QueueSource.queuePage,
           title: queue.date.dateFormattedOriginal,
           subtitle: queue.date.clockFormatted,
           thirdLineText: [

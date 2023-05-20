@@ -7,6 +7,7 @@ import 'package:namida/class/folder.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -30,6 +31,8 @@ class FoldersPage extends StatelessWidget {
           return Future.value(true);
         },
         child: SettingsController.inst.enableFoldersHierarchy.value
+
+            /// Folders in heirarchy
             ? Column(
                 children: [
                   ListTile(
@@ -59,17 +62,14 @@ class FoldersPage extends StatelessWidget {
                           if (Folders.inst.isHome.value) ...[
                             ...kStoragePaths
                                 .toList()
-                                .asMap()
-                                .entries
                                 .map(
                                   (e) => SliverToBoxAdapter(
                                     child: FolderTile(
                                       folder: Folder(
-                                        1,
-                                        e.value.split('/').last,
-                                        e.value,
-                                        Folders.inst.folderslist.where((element) => element.path.startsWith(e.value)).expand((entry) => entry.tracks).toList(),
+                                        e,
+                                        Folders.inst.folderslist.where((element) => element.path.startsWith(e)).expand((entry) => entry.tracks).toList(),
                                       ),
+                                      isMainStoragePath: true,
                                     ),
                                   ),
                                 )
@@ -81,13 +81,17 @@ class FoldersPage extends StatelessWidget {
                                 Folders.inst.currentfolderslist.map((e) => FolderTile(folder: e)).toList(),
                               ),
                             ),
-                            SliverAnimatedList(
-                              key: UniqueKey(),
-                              initialItemCount: Folders.inst.currentTracks.length,
-                              itemBuilder: (context, i, animation) => TrackTile(
-                                index: i,
-                                track: Folders.inst.currentTracks.elementAt(i),
-                                queue: Folders.inst.currentTracks.toList(),
+                            SliverFixedExtentList(
+                              itemExtent: trackTileItemExtent,
+                              delegate: SliverChildBuilderDelegate(
+                                (context, i) {
+                                  return TrackTile(
+                                    index: i,
+                                    track: Folders.inst.currentTracks[i],
+                                    queueSource: QueueSource.folder,
+                                  );
+                                },
+                                childCount: Folders.inst.currentTracks.length,
                               ),
                             ),
                           ],
@@ -118,32 +122,42 @@ class FoldersPage extends StatelessWidget {
                   Expanded(
                     child: CupertinoScrollbar(
                       controller: _scrollController,
-                      child: ListView(
+                      child: CustomScrollView(
                         controller: _scrollController,
-                        children: [
+                        slivers: [
                           if (!Folders.inst.isInside.value)
-                            ...Folders.inst.folderslist
-                                .map((e) => FolderTile(
-                                      folder: e,
-                                      onTap: () {
-                                        Folders.inst.stepIn(e);
-                                        Folders.inst.isInside.value = true;
-                                        Folders.inst.currentPath.value = e.folderName;
-                                      },
-                                    ))
-                                .toList(),
-                          ...Folders.inst.currentTracks
-                              .asMap()
-                              .entries
-                              .map(
-                                (e) => TrackTile(
-                                  index: e.key,
-                                  track: e.value,
-                                  queue: Folders.inst.currentTracks.toList(),
-                                ),
-                              )
-                              .toList(),
-                          kBottomPaddingWidget,
+                            SliverFixedExtentList(
+                              itemExtent: trackTileItemExtent,
+                              delegate: SliverChildBuilderDelegate(
+                                (context, i) {
+                                  final f = Folders.inst.folderslist[i];
+                                  return FolderTile(
+                                    folder: f,
+                                    onTap: () {
+                                      Folders.inst.stepIn(f);
+                                      Folders.inst.isInside.value = true;
+                                      Folders.inst.currentPath.value = f.folderName;
+                                    },
+                                  );
+                                },
+                                childCount: Folders.inst.folderslist.length,
+                              ),
+                            ),
+                          SliverFixedExtentList(
+                            itemExtent: trackTileItemExtent,
+                            delegate: SliverChildBuilderDelegate(
+                              (context, i) {
+                                final tr = Folders.inst.currentTracks[i];
+                                return TrackTile(
+                                  index: i,
+                                  track: tr,
+                                  queueSource: QueueSource.folder,
+                                );
+                              },
+                              childCount: Folders.inst.currentTracks.length,
+                            ),
+                          ),
+                          const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
                         ],
                       ),
                     ),

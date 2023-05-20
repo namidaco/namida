@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -84,6 +86,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                           clipBehavior: Clip.antiAlias,
                                           decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
                                           child: NamidaTracksList(
+                                            queueSource: QueueSource.selectedTracks,
                                             queueLength: stc.selectedTracks.length,
                                             onReorder: (oldIndex, newIndex) => stc.reorderTracks(oldIndex, newIndex),
                                             padding: EdgeInsets.zero,
@@ -95,8 +98,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                                   index: i,
                                                   track: stc.selectedTracks[i],
                                                   displayRightDragHandler: true,
-                                                  isInSelectedTracksPreview: true,
-                                                  queue: SelectedTracksController.inst.selectedTracks.toList(),
+                                                  queueSource: QueueSource.selectedTracks,
                                                 ),
                                               );
                                             },
@@ -152,6 +154,23 @@ class SelectedTracksRow extends StatelessWidget {
         const SizedBox(
           width: 32,
         ),
+        Obx(
+          () => AnimatedOpacity(
+            duration: const Duration(milliseconds: 400),
+            opacity: SelectedTracksController.inst.didInsertTracks.value ? 0.5 : 1.0,
+            child: IgnorePointer(
+              ignoring: SelectedTracksController.inst.didInsertTracks.value,
+              child: IconButton(
+                onPressed: () {
+                  SelectedTracksController.inst.didInsertTracks.value = true;
+                  Player.inst.addToQueue(SelectedTracksController.inst.selectedTracks.toList());
+                },
+                icon: const Icon(Broken.play_cricle),
+                tooltip: Language.inst.PLAY_LAST,
+              ),
+            ),
+          ),
+        ),
         IconButton(
           onPressed: () => editMultipleTracksTags(SelectedTracksController.inst.selectedTracks.toList()),
           tooltip: Language.inst.EDIT_TAGS,
@@ -173,6 +192,7 @@ class SelectedTracksRow extends StatelessWidget {
                 tracks.map((e) => e.size).reduce((a, b) => a + b).fileSizeFormatted,
                 tracks.totalDurationFormatted,
               ].join(' • '),
+              QueueSource.selectedTracks,
               thirdLineText: tracks.length == 1
                   ? tracks.first.title
                   : tracks.map((e) {
@@ -187,7 +207,7 @@ class SelectedTracksRow extends StatelessWidget {
         IconButton(
           onPressed: () => SelectedTracksController.inst.selectAllTracks(),
           icon: const Icon(Broken.category),
-          splashRadius: 20.0,
+          tooltip: Language.inst.SELECT_ALL,
         ),
         SelectedTracksController.inst.isMenuMinimized.value ? const Icon(Broken.arrow_up_3) : const Icon(Broken.arrow_down_2)
       ],

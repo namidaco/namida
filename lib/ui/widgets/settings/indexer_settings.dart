@@ -18,6 +18,36 @@ class IndexerSettings extends StatelessWidget {
   IndexerSettings({super.key});
 
   final SettingsController stg = SettingsController.inst;
+  Future<void> _showRefreshPromptDialog() async {
+    final currentFiles = await Indexer.inst.getAudioFiles();
+    final newPathsLength = Indexer.inst.getNewFoundPaths(currentFiles).length;
+    final deletedPathLength = Indexer.inst.getDeletedPaths(currentFiles).length;
+    if (newPathsLength == 0 && deletedPathLength == 0) {
+      Get.snackbar(Language.inst.NOTE, Language.inst.NO_CHANGES_FOUND);
+      return;
+    }
+    Get.dialog(
+      CustomBlurryDialog(
+        title: Language.inst.NOTE,
+        bodyText: Language.inst.PROMPT_INDEXING_REFRESH.replaceFirst('_NEW_FILES_', newPathsLength.toString()).replaceFirst(
+              '_DELETED_FILES_',
+              deletedPathLength.toString(),
+            ),
+        actions: [
+          const CancelButton(),
+          ElevatedButton(
+            onPressed: () async {
+              Get.close(1);
+              await Future.delayed(const Duration(milliseconds: 300));
+              await Indexer.inst.refreshLibraryAndCheckForDiff(currentFiles: currentFiles);
+            },
+            child: Text(Language.inst.REFRESH),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -28,75 +58,66 @@ class IndexerSettings extends StatelessWidget {
         height: 48.0,
         child: IndexingPercentage(),
       ),
-      child: Obx(
-        () => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 50,
-              child: FittedBox(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Obx(
-                      () => StatsContainer(
-                        icon: Broken.info_circle,
-                        title: '${Language.inst.TRACKS_INFO} :',
-                        value: allTracksInLibrary.length.toString(),
-                        total: Indexer.inst.allTracksPaths.value == 0 ? null : Indexer.inst.allTracksPaths.toString(),
-                      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: 50,
+            child: FittedBox(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Obx(
+                    () => StatsContainer(
+                      icon: Broken.info_circle,
+                      title: '${Language.inst.TRACKS_INFO} :',
+                      value: allTracksInLibrary.length.toString(),
+                      total: Indexer.inst.allTracksPaths.value == 0 ? null : Indexer.inst.allTracksPaths.toString(),
                     ),
-                    Obx(
-                      () => StatsContainer(
-                        icon: Broken.image,
-                        title: '${Language.inst.ARTWORKS} :',
-                        value: Indexer.inst.artworksInStorage.value.toString(),
-                        total: Indexer.inst.allTracksPaths.value == 0 ? null : Indexer.inst.allTracksPaths.toString(),
-                      ),
+                  ),
+                  Obx(
+                    () => StatsContainer(
+                      icon: Broken.image,
+                      title: '${Language.inst.ARTWORKS} :',
+                      value: Indexer.inst.artworksInStorage.value.toString(),
+                      total: Indexer.inst.allTracksPaths.value == 0 ? null : Indexer.inst.allTracksPaths.toString(),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Text(
-                Language.inst.INDEXER_NOTE,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Text(
+              Language.inst.INDEXER_NOTE,
+              style: context.textTheme.displaySmall,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Obx(
+              () => Text(
+                '${Language.inst.DUPLICATED_TRACKS}: ${Indexer.inst.duplicatedTracksLength.value}\n${Language.inst.TRACKS_EXCLUDED_BY_NOMEDIA}: ${Indexer.inst.tracksExcludedByNoMedia.value}\n${Language.inst.FILTERED_BY_SIZE_AND_DURATION}: ${Indexer.inst.filteredForSizeDurationTracks.value}',
                 style: context.textTheme.displaySmall,
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Obx(
-                () => Text(
-                  '${Language.inst.DUPLICATED_TRACKS}: ${Indexer.inst.duplicatedTracksLength.value}',
-                  style: context.textTheme.displaySmall,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Obx(
-                () => Text(
-                  '${Language.inst.FILTERED_BY_SIZE_AND_DURATION}: ${Indexer.inst.filteredForSizeDurationTracks.value}',
-                  style: context.textTheme.displaySmall,
-                ),
-              ),
-            ),
-            CustomSwitchListTile(
+          ),
+          Obx(
+            () => CustomSwitchListTile(
               icon: Broken.copy,
               title: Language.inst.PREVENT_DUPLICATED_TRACKS,
               subtitle: "${Language.inst.PREVENT_DUPLICATED_TRACKS_SUBTITLE}. ${Language.inst.INDEX_REFRESH_REQUIRED}",
-              onChanged: (p0) {
-                stg.save(preventDuplicatedTracks: !p0);
-              },
+              onChanged: (isTrue) => stg.save(preventDuplicatedTracks: !isTrue),
               value: stg.preventDuplicatedTracks.value,
             ),
-            CustomSwitchListTile(
+          ),
+          Obx(
+            () => CustomSwitchListTile(
               icon: Broken.cd,
               title: Language.inst.RESPECT_NO_MEDIA,
               subtitle: "${Language.inst.RESPECT_NO_MEDIA_SUBTITLE}. ${Language.inst.INDEX_REFRESH_REQUIRED}",
-              onChanged: (p0) async {
+              onChanged: (isTrue) async {
                 if (!stg.respectNoMedia.value) {
                   if (await requestManageStoragePermission()) {
                     stg.save(respectNoMedia: true);
@@ -107,221 +128,228 @@ class IndexerSettings extends StatelessWidget {
               },
               value: stg.respectNoMedia.value,
             ),
-            CustomListTile(
-              icon: Broken.profile_2user,
-              title: Language.inst.TRACK_ARTISTS_SEPARATOR,
-              subtitle: Language.inst.RE_INDEXING_REQUIRED,
-              trailingText: "${stg.trackArtistsSeparators.length}",
-              onTap: () async {
-                await _showSeparatorSymbolsDialog(
-                  Language.inst.TRACK_ARTISTS_SEPARATOR,
-                  stg.trackArtistsSeparators,
-                  trackArtistsSeparators: true,
-                );
-              },
+          ),
+          Obx(
+            () => CustomSwitchListTile(
+              icon: Broken.microphone,
+              title: Language.inst.EXTRACT_FEAT_ARTIST,
+              subtitle: "${Language.inst.EXTRACT_FEAT_ARTIST_SUBTITLE} ${Language.inst.RE_INDEXING_REQUIRED}",
+              onChanged: (isTrue) => stg.save(extractFeatArtistFromTitle: !isTrue),
+              value: stg.extractFeatArtistFromTitle.value,
             ),
-            CustomListTile(
-              icon: Broken.smileys,
-              title: Language.inst.TRACK_GENRES_SEPARATOR,
-              subtitle: Language.inst.RE_INDEXING_REQUIRED,
-              trailingText: "${stg.trackGenresSeparators.length}",
-              onTap: () async {
-                await _showSeparatorSymbolsDialog(
-                  Language.inst.TRACK_GENRES_SEPARATOR,
-                  stg.trackGenresSeparators,
-                  trackGenresSeparators: true,
-                );
-              },
-            ),
-            Obx(
-              () => CustomListTile(
-                icon: Broken.unlimited,
-                title: Language.inst.MIN_FILE_SIZE,
-                subtitle: Language.inst.INDEX_REFRESH_REQUIRED,
-                trailing: NamidaWheelSlider(
-                  width: 100.0,
-                  totalCount: 1024,
-                  squeeze: 0.2,
-                  initValue: SettingsController.inst.indexMinFileSizeInB.value.toInt() / 1024 ~/ 10,
-                  itemSize: 1,
-                  onValueChanged: (val) {
-                    final d = (val as int);
-                    SettingsController.inst.save(indexMinFileSizeInB: d * 1024 * 10);
-                  },
-                  text: SettingsController.inst.indexMinFileSizeInB.value.fileSizeFormatted,
-                ),
+          ),
+          CustomListTile(
+            icon: Broken.profile_2user,
+            title: Language.inst.TRACK_ARTISTS_SEPARATOR,
+            subtitle: Language.inst.RE_INDEXING_REQUIRED,
+            trailingText: "${stg.trackArtistsSeparators.length}",
+            onTap: () async {
+              await _showSeparatorSymbolsDialog(
+                Language.inst.TRACK_ARTISTS_SEPARATOR,
+                stg.trackArtistsSeparators,
+                trackArtistsSeparators: true,
+              );
+            },
+          ),
+          CustomListTile(
+            icon: Broken.smileys,
+            title: Language.inst.TRACK_GENRES_SEPARATOR,
+            subtitle: Language.inst.RE_INDEXING_REQUIRED,
+            trailingText: "${stg.trackGenresSeparators.length}",
+            onTap: () async {
+              await _showSeparatorSymbolsDialog(
+                Language.inst.TRACK_GENRES_SEPARATOR,
+                stg.trackGenresSeparators,
+                trackGenresSeparators: true,
+              );
+            },
+          ),
+          Obx(
+            () => CustomListTile(
+              icon: Broken.unlimited,
+              title: Language.inst.MIN_FILE_SIZE,
+              subtitle: Language.inst.INDEX_REFRESH_REQUIRED,
+              trailing: NamidaWheelSlider(
+                width: 100.0,
+                totalCount: 1024,
+                squeeze: 0.2,
+                initValue: SettingsController.inst.indexMinFileSizeInB.value.toInt() / 1024 ~/ 10,
+                itemSize: 1,
+                onValueChanged: (val) {
+                  final d = (val as int);
+                  SettingsController.inst.save(indexMinFileSizeInB: d * 1024 * 10);
+                },
+                text: SettingsController.inst.indexMinFileSizeInB.value.fileSizeFormatted,
               ),
             ),
-            Obx(
-              () => CustomListTile(
-                icon: Broken.timer_1,
-                title: Language.inst.MIN_FILE_DURATION,
-                subtitle: Language.inst.INDEX_REFRESH_REQUIRED,
-                trailing: NamidaWheelSlider(
-                  width: 100.0,
-                  totalCount: 180,
-                  initValue: SettingsController.inst.indexMinDurationInSec.value,
-                  itemSize: 5,
-                  onValueChanged: (val) {
-                    final d = (val as int);
-                    SettingsController.inst.save(indexMinDurationInSec: d);
-                  },
-                  text: "${SettingsController.inst.indexMinDurationInSec.value} s",
-                ),
+          ),
+          Obx(
+            () => CustomListTile(
+              icon: Broken.timer_1,
+              title: Language.inst.MIN_FILE_DURATION,
+              subtitle: Language.inst.INDEX_REFRESH_REQUIRED,
+              trailing: NamidaWheelSlider(
+                width: 100.0,
+                totalCount: 180,
+                initValue: SettingsController.inst.indexMinDurationInSec.value,
+                itemSize: 5,
+                onValueChanged: (val) {
+                  final d = (val as int);
+                  SettingsController.inst.save(indexMinDurationInSec: d);
+                },
+                text: "${SettingsController.inst.indexMinDurationInSec.value} s",
               ),
             ),
-            CustomListTile(
-              icon: Broken.refresh,
-              title: Language.inst.RE_INDEX,
-              subtitle: Language.inst.RE_INDEX_SUBTITLE,
-              onTap: () async {
-                await Get.dialog(
-                  CustomBlurryDialog(
-                    normalTitleStyle: true,
-                    isWarning: true,
-                    actions: [
-                      const CancelButton(),
-                      ElevatedButton(
-                          onPressed: () async {
-                            Get.close(1);
-                            Future.delayed(const Duration(milliseconds: 500), () {
-                              Indexer.inst.refreshLibraryAndCheckForDiff(forceReIndex: true);
-                            });
-                          },
-                          child: Text(Language.inst.RE_INDEX)),
-                    ],
-                    bodyText: Language.inst.RE_INDEX_WARNING,
+          ),
+          CustomListTile(
+            icon: Broken.refresh,
+            title: Language.inst.RE_INDEX,
+            subtitle: Language.inst.RE_INDEX_SUBTITLE,
+            onTap: () async {
+              await Get.dialog(
+                CustomBlurryDialog(
+                  normalTitleStyle: true,
+                  isWarning: true,
+                  actions: [
+                    const CancelButton(),
+                    ElevatedButton(
+                        onPressed: () async {
+                          Get.close(1);
+                          Future.delayed(const Duration(milliseconds: 500), () {
+                            Indexer.inst.refreshLibraryAndCheckForDiff(forceReIndex: true);
+                          });
+                        },
+                        child: Text(Language.inst.RE_INDEX)),
+                  ],
+                  bodyText: Language.inst.RE_INDEX_WARNING,
+                ),
+              );
+            },
+          ),
+          CustomListTile(
+            icon: Broken.refresh_2,
+            title: Language.inst.REFRESH_LIBRARY,
+            subtitle: Language.inst.REFRESH_LIBRARY_SUBTITLE,
+            onTap: () => _showRefreshPromptDialog(),
+          ),
+          Obx(
+            () => ExpansionTile(
+              leading: const Icon(Broken.folder),
+              title: Text(Language.inst.LIST_OF_FOLDERS),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AddFolderButton(
+                    onPressed: () async {
+                      final path = await FilePicker.platform.getDirectoryPath();
+                      if (path != null) {
+                        SettingsController.inst.save(directoriesToScan: [path]);
+                        _showRefreshPromptDialog();
+                      } else {
+                        Get.snackbar(Language.inst.NOTE, Language.inst.NO_FOLDER_CHOSEN);
+                      }
+                    },
                   ),
-                );
-              },
-            ),
-            CustomListTile(
-              icon: Broken.refresh_2,
-              title: Language.inst.REFRESH_LIBRARY,
-              subtitle: Language.inst.REFRESH_LIBRARY_SUBTITLE,
-              onTap: () {
-                Indexer.inst.refreshLibraryAndCheckForDiff();
-              },
-            ),
-            Obx(
-              () => ExpansionTile(
-                leading: const Icon(Broken.folder),
-                title: Text(Language.inst.LIST_OF_FOLDERS),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AddFolderButton(
-                      onPressed: () async {
-                        final path = await FilePicker.platform.getDirectoryPath();
-                        if (path != null) {
-                          SettingsController.inst.save(directoriesToScan: [path]);
-                          Indexer.inst.refreshLibraryAndCheckForDiff();
-                        } else {
-                          Get.snackbar(Language.inst.NOTE, Language.inst.NO_FOLDER_CHOSEN);
-                        }
-                      },
-                    ),
-                    const SizedBox(width: 8.0),
-                    const Icon(Broken.arrow_down_2),
-                  ],
-                ),
-                children: SettingsController.inst.directoriesToScan
-                    .asMap()
-                    .entries
-                    .map((e) => ListTile(
-                          title: Text(
-                            e.value,
-                            style: context.textTheme.displayMedium,
-                          ),
-                          trailing: TextButton(
-                            onPressed: () {
-                              if (SettingsController.inst.directoriesToScan.length == 1) {
-                                Get.snackbar(
-                                  Language.inst.MINIMUM_ONE_FOLDER,
-                                  Language.inst.MINIMUM_ONE_FOLDER_SUBTITLE,
-                                  duration: const Duration(seconds: 4),
-                                );
-                              } else {
-                                Get.dialog(
-                                  CustomBlurryDialog(
-                                    normalTitleStyle: true,
-                                    title: Language.inst.WARNING,
-                                    icon: Broken.warning_2,
-                                    actions: [
-                                      const CancelButton(),
-                                      ElevatedButton(
-                                          onPressed: () {
-                                            SettingsController.inst.removeFromList(directoriesToScan1: e.value);
-                                            Indexer.inst.refreshLibraryAndCheckForDiff();
-                                            Get.close(1);
-                                          },
-                                          child: Text(Language.inst.REMOVE)),
-                                    ],
-                                    child: Text(
-                                      "${Language.inst.REMOVE} \"${e.value}\"?",
-                                      style: context.textTheme.displayMedium,
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                            child: Text(Language.inst.REMOVE.toUpperCase()),
-                          ),
-                        ))
-                    .toList(),
+                  const SizedBox(width: 8.0),
+                  const Icon(Broken.arrow_down_2),
+                ],
               ),
-            ),
-            Obx(
-              () => ExpansionTile(
-                leading: const Icon(Broken.folder_minus),
-                title: Text(Language.inst.EXCLUDED_FODLERS),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AddFolderButton(
-                      onPressed: () async {
-                        final path = await FilePicker.platform.getDirectoryPath();
-                        if (path != null) {
-                          SettingsController.inst.save(directoriesToExclude: [path]);
-                          Indexer.inst.refreshLibraryAndCheckForDiff();
-                        } else {
-                          Get.snackbar(Language.inst.NOTE, Language.inst.NO_FOLDER_CHOSEN);
-                        }
-                      },
-                    ),
-                    const SizedBox(width: 8.0),
-                    const Icon(Broken.arrow_down_2),
-                  ],
-                ),
-                children: SettingsController.inst.directoriesToExclude.isEmpty
-                    ? [
-                        ListTile(
-                            title: Text(
-                          Language.inst.NO_EXCLUDED_FOLDERS,
+              children: SettingsController.inst.directoriesToScan
+                  .asMap()
+                  .entries
+                  .map((e) => ListTile(
+                        title: Text(
+                          e.value,
                           style: context.textTheme.displayMedium,
-                        ))
-                      ]
-                    : SettingsController.inst.directoriesToExclude
-                        .asMap()
-                        .entries
-                        .map((e) => ListTile(
-                              title: Text(
-                                e.value,
-                                style: context.textTheme.displayMedium,
-                              ),
-                              trailing: TextButton(
-                                onPressed: () {
-                                  SettingsController.inst.removeFromList(directoriesToExclude1: e.value);
-                                  Indexer.inst.refreshLibraryAndCheckForDiff();
-                                },
-                                child: Text(Language.inst.REMOVE.toUpperCase()),
-                              ),
-                            ))
-                        .toList(),
-              ),
+                        ),
+                        trailing: TextButton(
+                          onPressed: () {
+                            if (SettingsController.inst.directoriesToScan.length == 1) {
+                              Get.snackbar(
+                                Language.inst.MINIMUM_ONE_FOLDER,
+                                Language.inst.MINIMUM_ONE_FOLDER_SUBTITLE,
+                                duration: const Duration(seconds: 4),
+                              );
+                            } else {
+                              Get.dialog(
+                                CustomBlurryDialog(
+                                  normalTitleStyle: true,
+                                  title: Language.inst.WARNING,
+                                  icon: Broken.warning_2,
+                                  actions: [
+                                    const CancelButton(),
+                                    ElevatedButton(
+                                        onPressed: () {
+                                          SettingsController.inst.removeFromList(directoriesToScan1: e.value);
+                                          Get.close(1);
+                                          _showRefreshPromptDialog();
+                                        },
+                                        child: Text(Language.inst.REMOVE)),
+                                  ],
+                                  child: Text(
+                                    "${Language.inst.REMOVE} \"${e.value}\"?",
+                                    style: context.textTheme.displayMedium,
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                          child: Text(Language.inst.REMOVE.toUpperCase()),
+                        ),
+                      ))
+                  .toList(),
             ),
-          ],
-        ),
+          ),
+          Obx(
+            () => ExpansionTile(
+              leading: const Icon(Broken.folder_minus),
+              title: Text(Language.inst.EXCLUDED_FODLERS),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AddFolderButton(
+                    onPressed: () async {
+                      final path = await FilePicker.platform.getDirectoryPath();
+                      if (path != null) {
+                        SettingsController.inst.save(directoriesToExclude: [path]);
+                        _showRefreshPromptDialog();
+                      } else {
+                        Get.snackbar(Language.inst.NOTE, Language.inst.NO_FOLDER_CHOSEN);
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 8.0),
+                  const Icon(Broken.arrow_down_2),
+                ],
+              ),
+              children: SettingsController.inst.directoriesToExclude.isEmpty
+                  ? [
+                      ListTile(
+                          title: Text(
+                        Language.inst.NO_EXCLUDED_FOLDERS,
+                        style: context.textTheme.displayMedium,
+                      ))
+                    ]
+                  : SettingsController.inst.directoriesToExclude
+                      .asMap()
+                      .entries
+                      .map((e) => ListTile(
+                            title: Text(
+                              e.value,
+                              style: context.textTheme.displayMedium,
+                            ),
+                            trailing: TextButton(
+                              onPressed: () {
+                                SettingsController.inst.removeFromList(directoriesToExclude1: e.value);
+                                _showRefreshPromptDialog();
+                              },
+                              child: Text(Language.inst.REMOVE.toUpperCase()),
+                            ),
+                          ))
+                      .toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -335,13 +363,13 @@ class IndexerSettings extends StatelessWidget {
     bool trackGenresSeparatorsBlacklist = false,
   }) async {
     TextEditingController separatorsController = TextEditingController();
-
+    final isBlackListDialog = trackArtistsSeparatorsBlacklist || trackGenresSeparatorsBlacklist;
     await Get.dialog(
       transitionDuration: const Duration(milliseconds: 200),
       CustomBlurryDialog(
         title: title,
         actions: [
-          if (!(trackArtistsSeparatorsBlacklist || trackGenresSeparatorsBlacklist))
+          if (!isBlackListDialog)
             ElevatedButton(
               onPressed: () {
                 if (trackArtistsSeparators) {
@@ -366,7 +394,7 @@ class IndexerSettings extends StatelessWidget {
                 return Text('${Language.inst.BLACKLIST}$t');
               }),
             ),
-          const CancelButton(),
+          if (isBlackListDialog) const CancelButton(),
           ElevatedButton(
             onPressed: () {
               if (separatorsController.text.isNotEmpty) {
@@ -393,11 +421,10 @@ class IndexerSettings extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (!(trackArtistsSeparatorsBlacklist || trackGenresSeparatorsBlacklist))
-              Text(
-                Language.inst.SEPARATORS_MESSAGE,
-                style: Get.textTheme.displaySmall,
-              ),
+            Text(
+              isBlackListDialog ? Language.inst.SEPARATORS_BLACKLIST_SUBTITLE : Language.inst.SEPARATORS_MESSAGE,
+              style: Get.textTheme.displaySmall,
+            ),
             const SizedBox(
               height: 12.0,
             ),

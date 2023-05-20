@@ -19,21 +19,20 @@ class MultiArtworkCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const double horizontalPadding = 4.0;
-    double thumnailSize = (Get.width / gridCount) - horizontalPadding * 2;
+    final double thumnailSize = (Get.width / gridCount) - horizontalPadding * 2;
     final fontSize = (18.0 - (gridCount * 1.7)).multipliedFontScale;
 
     return GridTile(
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: horizontalPadding),
         clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12.0.multipliedRadius)),
-        child: Material(
+        decoration: BoxDecoration(
           color: context.theme.cardColor,
-          child: InkWell(
-            highlightColor: const Color.fromARGB(60, 120, 120, 120),
-            onLongPress: showMenuFunction,
-            onTap: onTap,
-            child: Column(
+          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+        ),
+        child: Stack(
+          children: [
+            Column(
               children: [
                 MultiArtworks(
                   borderRadius: 12.0.multipliedFontScale,
@@ -70,7 +69,15 @@ class MultiArtworkCard extends StatelessWidget {
                 ),
               ],
             ),
-          ),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                highlightColor: const Color.fromARGB(40, 120, 120, 120),
+                onLongPress: showMenuFunction,
+                onTap: onTap,
+              ),
+            ),
+          ],
         ),
       ),
     );

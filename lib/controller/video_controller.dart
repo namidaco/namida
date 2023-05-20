@@ -33,6 +33,11 @@ class VideoController {
   VideoPlayerController? vidcontroller;
   final connectivity = Connectivity();
 
+  YoutubeExplode? _ytexp;
+  final RxBool isUpdatingVideoFiles = false.obs;
+
+  bool get shouldShowVideo => vidcontroller != null && (localVidPath.value != '' || youtubeLink.value != '') && (vidcontroller?.value.isInitialized ?? false);
+
   VideoController() {
     /// Listen for connection changes, start downloading if the link != ''
     connectivity.onConnectivityChanged.listen((ConnectivityResult result) async {
@@ -57,13 +62,15 @@ class VideoController {
     // youtubeVideoId.value = '';
     // isVideoReady.value = false;
     videoCurrentSize.value = 0;
-    videoCurrentQuality.value = ' ? ';
+    videoCurrentQuality.value = '? ';
     videoTotalSize.value = 0;
   }
 
   Future<String> downloadYoutubeVideo(String videoId, Track track) async {
-    final ytexp = YoutubeExplode(YoutubeHttpClient(NamidaClient()));
-    final manifest = await ytexp.videos.streamsClient.getManifest(videoId);
+    _ytexp?.close();
+    _ytexp = YoutubeExplode(YoutubeHttpClient(NamidaClient()));
+    final manifest = await _ytexp?.videos.streamsClient.getManifest(videoId);
+    if (manifest == null) return '';
 
     /// Create a list of video qualities in descending order of preference
     final preferredQualities = SettingsController.inst.youtubeVideoQualities.map((element) => element.toVideoQuality);
@@ -77,7 +84,7 @@ class VideoController {
     );
 
     /// Get the actual stream
-    final stream = ytexp.videos.streamsClient.get(streamToBeUsed);
+    final stream = _ytexp?.videos.streamsClient.get(streamToBeUsed);
 
     final file = File("$k_DIR_VIDEOS_CACHE_TEMP${videoId}_${streamToBeUsed.videoQualityLabel}.mp4");
 
@@ -105,7 +112,7 @@ class VideoController {
     );
 
     /// Pipe all the content of the stream into the file.
-    await stream.pipe(fileStream);
+    await stream?.pipe(fileStream);
 
     /// Close the file.
     await fileStream.flush();
@@ -113,7 +120,7 @@ class VideoController {
 
     await file.copy("$k_DIR_VIDEOS_CACHE${videoId}_${streamToBeUsed.videoQualityLabel}.mp4");
     await file.delete();
-    ytexp.close();
+    _ytexp?.close();
 
     videoCurrentSize.value = 0;
     Indexer.inst.updateVideosSizeInStorage();
@@ -134,7 +141,10 @@ class VideoController {
 
     /// Video Found in Local Storage
     for (final vf in videoFilesPathList) {
-      if (checkFileNameAudioVideo(vf, track.filenameWOExt)) {
+      final videoName = vf.getFilenameWOExt;
+      final videoNameContainsMusicFileName = checkFileNameAudioVideo(videoName, track.filenameWOExt);
+      final videoNameContainsTitleAndArtist = videoName.contains(track.title.cleanUpForComparison) && videoName.contains(track.artistsList.first.cleanUpForComparison);
+      if (videoNameContainsMusicFileName || videoNameContainsTitleAndArtist) {
         await playAndInitializeVideo(vf, track);
         await vidcontroller?.setVolume(0.0);
         videoCurrentQuality.value = Language.inst.LOCAL;
@@ -168,6 +178,7 @@ class VideoController {
 
       /// return if no internet
       if (await connectivity.checkConnectivity() == ConnectivityResult.none) {
+        printInfo(info: 'NO INTERNET');
         return;
       }
       await playAndInitializeVideo(await downloadYoutubeVideo(youtubeVideoId.value, track), track);
@@ -215,61 +226,56 @@ class VideoController {
   }
 
   /// function to get all videos inside [directoriesListToScan], value is assigned to [videoFilesPathList].
-  Future<Set<String>> getVideoFiles() async {
+  Future<Set<String>> getVideoFiles({bool forceRescan = false}) async {
+    isUpdatingVideoFiles.value = true;
     final videoFile = File(k_FILE_PATH_VIDEO_PATHS);
     final videoFileStats = await videoFile.stat();
-    // List<double> waveform = kDefaultWaveFormData;
-    if (await videoFile.exists() && videoFileStats.size != 0) {
+    final shouldReadFile = !forceRescan && await videoFile.exists() && videoFileStats.size != 0;
+
+    if (shouldReadFile) {
       try {
-        String content = await videoFile.readAsString();
+        final content = await videoFile.readAsString();
         final txt = List<String>.from(json.decode(content));
         videoFilesPathList.assignAll(txt);
       } catch (e) {
         printInfo(info: e.toString());
       }
-      return videoFilesPathList.toSet();
     } else {
       await videoFile.create();
-      final allPaths = <String>{};
-      for (final path in SettingsController.inst.directoriesToScan.toList()) {
-        if (await Directory(path).exists()) {
-          final directory = Directory(path);
-          final filesPre = directory.listSync(recursive: true);
+      final allVideosPaths = <String>{};
+      final dirToScan = SettingsController.inst.directoriesToScan.toList();
+      final dirToExclude = SettingsController.inst.directoriesToExclude.toList();
 
-          for (final file in filesPre) {
+      for (final path in dirToScan) {
+        final dir = Directory(path);
+        if (await dir.exists()) {
+          await for (final file in dir.list(recursive: true)) {
+            /// skipping if dir should be excluded
+            if (file is! File || dirToExclude.any((exc) => file.path.startsWith(exc))) {
+              continue;
+            }
             try {
-              if (file is File) {
-                for (final extension in kVideoFilesExtensions) {
-                  if (file.path.endsWith(extension)) {
-                    // Checks if the file is not included in one of the excluded folders.
-                    if (!SettingsController.inst.directoriesToExclude.toList().any((exc) => file.path.startsWith(exc))) {
-                      allPaths.add(file.path);
-                    }
-
-                    break;
-                  }
+              /// matching as video extensions.
+              for (final extension in kVideoFilesExtensions) {
+                if (file.path.endsWith(extension)) {
+                  allVideosPaths.add(file.path);
+                  break;
                 }
               }
-              // if (file is Directory) {
-              //   if (!SettingsController.inst.directoriesToExclude.toList().any((exc) => file.path.startsWith(exc))) {
-              //     videoFilesSystemEntity.add(file);
-
-              //   }
-              // }
             } catch (e) {
               printError(info: e.toString());
               continue;
             }
           }
         }
-        videoFilesPathList.value = allPaths.toList();
-        printInfo(info: allPaths.toString());
+        videoFilesPathList.assignAll(allVideosPaths.toList());
+        printInfo(info: allVideosPaths.toString());
       }
       final listAsString = videoFilesPathList.map((path) => '"$path"').join(', ');
       await videoFile.writeAsString("[$listAsString]");
-
-      return allPaths;
     }
+    isUpdatingVideoFiles.value = false;
+    return videoFilesPathList.toSet();
   }
 
   Future<void> toggleVideoPlaybackInSetting() async {

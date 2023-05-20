@@ -52,39 +52,55 @@ class JsonToHistoryParser {
     return null;
   }
 
-  Future<void> parseYTHistoryJson(File file) async {
+  Future<void> _parseYTHistoryJsonAndAdd(File file, bool isMatchingTypeLink, bool matchYT, bool matchYTMusic) async {
     _resetValues();
     isParsing.value = true;
     isLoadingFile.value = true;
     await Future.delayed(const Duration(milliseconds: 300));
     try {
-      String contents = await file.readAsString();
+      final String contents = await file.readAsString();
       if (contents.isNotEmpty) {
-        final jsonResponse = jsonDecode(contents);
-        final list = <YoutubeVideoHistory>[];
+        final jsonResponse = jsonDecode(contents) as List;
+        totalJsonToParse.value = jsonResponse.length;
 
         for (final p in jsonResponse) {
           final link = utf8.decode((p['titleUrl']).toString().codeUnits);
           final id = link.length >= 11 ? link.substring(link.length - 11) : link;
           final z = List<Map<String, dynamic>>.from((p['subtitles'] ?? []));
 
-          final obj = list.firstWhereOrNull((element) => element.id == id);
-          if (obj == null) {
-            list.add(
-              YoutubeVideoHistory(
-                id,
-                (p['title'] as String).replaceFirst('Watched ', ''),
-                z.isNotEmpty ? z.first['name'] : '',
-                z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
-                [YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music")],
-              ),
-            );
-          } else {
-            obj.watches.add(YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music"));
-          }
+          /// matching in real time, each object.
+          await Future.delayed(Duration.zero);
+          final yth = YoutubeVideoHistory(
+            id,
+            (p['title'] as String).replaceFirst('Watched ', ''),
+            z.isNotEmpty ? z.first['name'] : '',
+            z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
+            [YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music")],
+          );
+          _matchYTVHToNamidaHistory(yth, isMatchingTypeLink, matchYT, matchYTMusic);
+
+          /// extracting and saving to [k_DIR_YOUTUBE_STATS] directory.
+          ///  [_addYoutubeSourceFromDirectory] should be called after this.
+
+          // final file = File('$k_DIR_YOUTUBE_STATS$id.txt');
+          // final string = await file.exists() ? await File('$k_DIR_YOUTUBE_STATS$id.txt').readAsString() : '';
+          // YoutubeVideoHistory? obj = string.isEmpty ? null : YoutubeVideoHistory.fromJson(jsonDecode(string));
+
+          // if (obj == null) {
+          //   obj = YoutubeVideoHistory(
+          //     id,
+          //     (p['title'] as String).replaceFirst('Watched ', ''),
+          //     z.isNotEmpty ? z.first['name'] : '',
+          //     z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
+          //     [YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music")],
+          //   );
+          // } else {
+          //   obj.watches.add(YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music"));
+          // }
+          // await File('$k_DIR_YOUTUBE_STATS$id.txt').writeAsString(jsonEncode(obj));
+
           parsedHistoryJson.value++;
         }
-        await File(k_FILE_PATH_YOUTUBE_STATS).writeAsString(jsonEncode(list));
       }
     } catch (e) {
       printError(info: e.toString());
@@ -119,7 +135,8 @@ class JsonToHistoryParser {
 
     if (isytsource) {
       currentParsingSource.value = TrackSource.youtube;
-      await _addYoutubeSource(file, isMatchingTypeLink, matchYT, matchYTMusic);
+      await _parseYTHistoryJsonAndAdd(file, isMatchingTypeLink, matchYT, matchYTMusic);
+      // await _addYoutubeSourceFromDirectory(isMatchingTypeLink, matchYT, matchYTMusic);
     }
     if (source == TrackSource.lastfm) {
       currentParsingSource.value = TrackSource.lastfm;
@@ -129,44 +146,47 @@ class JsonToHistoryParser {
     PlaylistController.inst.sortHistoryAndSave();
   }
 
-  Future<void> _addYoutubeSource(File file, bool isMatchingTypeLink, bool matchYT, bool matchYTMusic) async {
-    final jsonResponse = jsonDecode(await file.readAsString()) as List;
-    totalJsonToParse.value = jsonResponse.length;
+  Future<void> _addYoutubeSourceFromDirectory(bool isMatchingTypeLink, bool matchYT, bool matchYTMusic) async {
+    totalJsonToParse.value = Directory(k_DIR_YOUTUBE_STATS).listSync().length;
 
     /// Adding tracks that their link matches.
-    for (final p in jsonResponse) {
-      parsedHistoryJson.value++;
-      // forgive me
-      await Future.delayed(Duration.zero);
-
+    await for (final f in Directory(k_DIR_YOUTUBE_STATS).list()) {
+      final p = jsonDecode(await File(f.path).readAsString());
       final vh = YoutubeVideoHistory.fromJson(p);
+      _matchYTVHToNamidaHistory(vh, isMatchingTypeLink, matchYT, matchYTMusic);
+      parsedHistoryJson.value++;
+    }
+  }
 
-      final tr = allTracksInLibrary.firstWhereOrNull((element) {
-        return isMatchingTypeLink
-            ? element.youtubeID == vh.id
+  void _matchYTVHToNamidaHistory(YoutubeVideoHistory vh, bool isMatchingTypeLink, bool matchYT, bool matchYTMusic) {
+    final tr = allTracksInLibrary.firstWhereOrNull((element) {
+      return isMatchingTypeLink
+          ? element.youtubeID == vh.id
 
-            /// matching has to meet 2 conditons:
-            /// 1. [json title] contains [track.title]
-            /// 2. - [json title] contains [track.artistsList.first]
-            ///     or
-            ///    - [json channel] contains [track.album]
-            ///    (useful for nightcore channels, album has to be the channel name)
-            : vh.title.cleanUpForComparison.contains(element.title.cleanUpForComparison) &&
-                (vh.title.cleanUpForComparison.contains(element.artistsList.first.cleanUpForComparison) ||
-                    vh.channel.cleanUpForComparison.contains(element.album.cleanUpForComparison));
-      });
-      if (tr != null) {
-        for (final d in vh.watches) {
-          /// sussy checks
-          // if the type is youtube music, but the user dont want ytm.
-          if (d.isYTMusic && !matchYTMusic) continue;
+          /// matching has to meet 2 conditons:
+          /// 1. [json title] contains [track.title]
+          /// 2. - [json title] contains [track.artistsList.first]
+          ///     or
+          ///    - [json channel] contains [track.album]
+          ///    (useful for nightcore channels, album has to be the channel name)
+          ///     or
+          ///    - [json channel] contains [track.artistsList.first]
+          : vh.title.cleanUpForComparison.contains(element.title.cleanUpForComparison) &&
+              (vh.title.cleanUpForComparison.contains(element.artistsList.first.cleanUpForComparison) ||
+                  vh.channel.cleanUpForComparison.contains(element.album.cleanUpForComparison) ||
+                  vh.channel.cleanUpForComparison.contains(element.artistsList.first.cleanUpForComparison));
+    });
+    if (tr != null) {
+      for (final d in vh.watches) {
+        /// sussy checks
+        // if the type is youtube music, but the user dont want ytm.
+        if (d.isYTMusic && !matchYTMusic) continue;
 
-          // if the type is youtube, but the user dont want yt.
-          if (!d.isYTMusic && !matchYT) continue;
+        // if the type is youtube, but the user dont want yt.
+        if (!d.isYTMusic && !matchYT) continue;
 
-          PlaylistController.inst.addTrackToHistory([TrackWithDate(d.date, tr, d.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube)], sortAndSave: false);
-          addedHistoryJsonToPlaylist.value++;
-        }
+        PlaylistController.inst.addTrackToHistory([TrackWithDate(d.date, tr, d.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube)], sortAndSave: false);
+        addedHistoryJsonToPlaylist.value++;
       }
     }
   }
@@ -187,9 +207,11 @@ class JsonToHistoryParser {
 
       /// matching has to meet 2 conditons:
       /// [csv artist] contains [track.artistsList.first]
-      /// [csv title] contains [track.title]
+      /// [csv title] contains [track.title], anything after ( or [ is ignored.
       final tr = allTracksInLibrary.firstWhereOrNull(
-        (tr) => pieces.first.cleanUpForComparison.contains(tr.artistsList.first.cleanUpForComparison) && pieces[2].cleanUpForComparison.contains(tr.title.cleanUpForComparison),
+        (tr) =>
+            pieces.first.cleanUpForComparison.contains(tr.artistsList.first.cleanUpForComparison) &&
+            pieces[2].cleanUpForComparison.contains(tr.title.split('(').first.split('[').first.cleanUpForComparison),
       );
       if (tr != null) {
         PlaylistController.inst

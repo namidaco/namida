@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/folder.dart';
-import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -15,7 +15,8 @@ import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 class FolderTile extends StatelessWidget {
   final Folder folder;
   final void Function()? onTap;
-  const FolderTile({super.key, required this.folder, this.onTap});
+  final bool isMainStoragePath;
+  const FolderTile({super.key, required this.folder, this.onTap, this.isMainStoragePath = false});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +27,7 @@ class FolderTile extends StatelessWidget {
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 0, 0, 0),
           onLongPress: () {},
-          onTap: onTap ?? () => NamidaOnTaps.inst.onFolderOpen(folder),
+          onTap: onTap ?? () => NamidaOnTaps.inst.onFolderOpen(folder, isMainStoragePath),
           child: Container(
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -49,7 +50,7 @@ class FolderTile extends StatelessWidget {
                         children: [
                           Icon(
                             Broken.folder,
-                            size: SettingsController.inst.trackThumbnailSizeinList.value / 1.35,
+                            size: (SettingsController.inst.trackThumbnailSizeinList.value / 1.35).clamp(0, SettingsController.inst.trackListTileHeight.value),
                           ),
                           Positioned(
                             // top: 0,
@@ -59,8 +60,8 @@ class FolderTile extends StatelessWidget {
                               child: ArtworkWidget(
                                 blur: 0,
                                 borderRadius: 6,
-                                thumnailSize: SettingsController.inst.trackThumbnailSizeinList.value / 2.6,
-                                path: folder.tracks.isNotEmpty ? folder.tracks[0].pathToImage : null,
+                                thumnailSize: (SettingsController.inst.trackThumbnailSizeinList.value / 2.6).clamp(0, SettingsController.inst.trackListTileHeight.value * 0.5),
+                                path: folder.tracks.isNotEmpty ? folder.tracks.pathToImage : null,
                                 forceSquared: true,
                               ),
                             ),
@@ -88,7 +89,7 @@ class FolderTile extends StatelessWidget {
                         [
                           folder.tracks.displayTrackKeyword,
                           //TODO(MSOB7YY): fix
-                          folder.path.getDirectoriesInside.length.displayFolderKeyword,
+                          if (folder.path.getDirectoriesInside.isNotEmpty) folder.path.getDirectoriesInside.length.displayFolderKeyword,
                         ].join(' - '),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
@@ -110,6 +111,7 @@ class FolderTile extends StatelessWidget {
                         folder.tracks.displayTrackKeyword,
                         folder.tracks.totalDurationFormatted,
                       ].join(' • '),
+                      QueueSource.folder,
                       thirdLineText: folder.tracks.map((e) => e.size).reduce((a, b) => a + b).fileSizeFormatted,
                     );
                   },

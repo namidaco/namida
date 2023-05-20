@@ -29,6 +29,9 @@ class BackupAndRestore extends StatelessWidget {
       icon: Broken.refresh_circle,
       child: Column(
         children: [
+          /// TODO(feat): change specific file/folder new path.
+          /// also option inside namida to move track in android
+          ///
           Obx(
             () => CustomListTile(
               title: Language.inst.CREATE_BACKUP,
@@ -224,8 +227,6 @@ class BackupAndRestore extends StatelessWidget {
             title: Language.inst.IMPORT_YOUTUBE_HISTORY,
             leading: StackedIcon(
               baseIcon: Broken.import_2,
-              // secondaryIcon: Broken.video_square,
-              // secondaryIconColor: Colors.red.withAlpha(200),
               smallChild: ClipRRect(
                 borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                 child: Image.asset(
@@ -243,87 +244,92 @@ class BackupAndRestore extends StatelessWidget {
                 forceDisplay: false,
               ),
             ),
-            onTap: () => Get.dialog(
-              CustomBlurryDialog(
-                title: Language.inst.GUIDE,
-                actions: [
-                  ElevatedButton(
-                    onPressed: () async {
-                      Get.close(1);
-                      final jsonfile = await FilePicker.platform.pickFiles(allowedExtensions: ['json'], type: FileType.custom);
+            onTap: () {
+              if (JsonToHistoryParser.inst.isParsing.value) {
+                Get.snackbar(Language.inst.NOTE, Language.inst.ANOTHER_PROCESS_IS_RUNNING);
+                return;
+              }
+              Get.dialog(
+                CustomBlurryDialog(
+                  title: Language.inst.GUIDE,
+                  actions: [
+                    ElevatedButton(
+                      onPressed: () async {
+                        Get.close(1);
+                        final jsonfile = await FilePicker.platform.pickFiles(allowedExtensions: ['json'], type: FileType.custom);
 
-                      if (jsonfile != null) {
-                        final RxBool isMatchingTypeLink = true.obs;
-                        final RxBool matchYT = true.obs;
-                        final RxBool matchYTMusic = true.obs;
-                        Get.dialog(
-                          CustomBlurryDialog(
-                            title: Language.inst.CONFIGURE,
-                            actions: [
-                              ElevatedButton(
-                                onPressed: () async {
-                                  Get.close(1);
-                                  JsonToHistoryParser.inst.showParsingProgressDialog();
-                                  await JsonToHistoryParser.inst.parseYTHistoryJson(File(jsonfile.files.first.path!));
-                                  await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
-                                    File(k_FILE_PATH_YOUTUBE_STATS),
-                                    TrackSource.youtube,
-                                    isMatchingTypeLink: isMatchingTypeLink.value,
-                                    matchYT: matchYT.value,
-                                    matchYTMusic: matchYTMusic.value,
-                                  );
-                                },
-                                child: Text(Language.inst.CONFIRM),
-                              )
-                            ],
-                            child: Obx(
-                              () => Column(
-                                children: [
-                                  CustomListTile(
-                                    title: Language.inst.SOURCE,
-                                    largeTitle: true,
-                                  ),
-                                  ListTileWithCheckMark(
-                                    active: matchYT.value,
-                                    title: Language.inst.YOUTUBE,
-                                    onTap: () => matchYT.value = !matchYT.value,
-                                  ),
-                                  const SizedBox(height: 12.0),
-                                  ListTileWithCheckMark(
-                                    active: matchYTMusic.value,
-                                    title: Language.inst.YOUTUBE_MUSIC,
-                                    onTap: () => matchYTMusic.value = !matchYTMusic.value,
-                                  ),
-                                  CustomListTile(
-                                    title: Language.inst.MATCHING_TYPE,
-                                    largeTitle: true,
-                                  ),
-                                  ListTileWithCheckMark(
-                                    active: !isMatchingTypeLink.value,
-                                    title: [Language.inst.TITLE, Language.inst.ARTIST].join(' & '),
-                                    onTap: () => isMatchingTypeLink.value = !isMatchingTypeLink.value,
-                                  ),
-                                  const SizedBox(height: 12.0),
-                                  ListTileWithCheckMark(
-                                    active: isMatchingTypeLink.value,
-                                    title: Language.inst.LINK,
-                                    onTap: () => isMatchingTypeLink.value = !isMatchingTypeLink.value,
-                                  ),
-                                ],
+                        if (jsonfile != null) {
+                          final RxBool isMatchingTypeLink = true.obs;
+                          final RxBool matchYT = true.obs;
+                          final RxBool matchYTMusic = true.obs;
+                          Get.dialog(
+                            CustomBlurryDialog(
+                              title: Language.inst.CONFIGURE,
+                              actions: [
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    Get.close(1);
+                                    JsonToHistoryParser.inst.showParsingProgressDialog();
+                                    await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
+                                      File(jsonfile.files.first.path!),
+                                      TrackSource.youtube,
+                                      isMatchingTypeLink: isMatchingTypeLink.value,
+                                      matchYT: matchYT.value,
+                                      matchYTMusic: matchYTMusic.value,
+                                    );
+                                  },
+                                  child: Text(Language.inst.CONFIRM),
+                                )
+                              ],
+                              child: Obx(
+                                () => Column(
+                                  children: [
+                                    CustomListTile(
+                                      title: Language.inst.SOURCE,
+                                      largeTitle: true,
+                                    ),
+                                    ListTileWithCheckMark(
+                                      active: matchYT.value,
+                                      title: Language.inst.YOUTUBE,
+                                      onTap: () => matchYT.value = !matchYT.value,
+                                    ),
+                                    const SizedBox(height: 12.0),
+                                    ListTileWithCheckMark(
+                                      active: matchYTMusic.value,
+                                      title: Language.inst.YOUTUBE_MUSIC,
+                                      onTap: () => matchYTMusic.value = !matchYTMusic.value,
+                                    ),
+                                    CustomListTile(
+                                      title: Language.inst.MATCHING_TYPE,
+                                      largeTitle: true,
+                                    ),
+                                    ListTileWithCheckMark(
+                                      active: !isMatchingTypeLink.value,
+                                      title: [Language.inst.TITLE, Language.inst.ARTIST].join(' & '),
+                                      onTap: () => isMatchingTypeLink.value = !isMatchingTypeLink.value,
+                                    ),
+                                    const SizedBox(height: 12.0),
+                                    ListTileWithCheckMark(
+                                      active: isMatchingTypeLink.value,
+                                      title: Language.inst.LINK,
+                                      onTap: () => isMatchingTypeLink.value = !isMatchingTypeLink.value,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      }
-                    },
-                    child: Text(Language.inst.CONFIRM),
+                          );
+                        }
+                      },
+                      child: Text(Language.inst.CONFIRM),
+                    ),
+                  ],
+                  child: NamidaSelectableAutoLinkText(
+                    text: Language.inst.IMPORT_YOUTUBE_HISTORY_GUIDE.replaceFirst('_TAKEOUT_LINK_', 'https://takeout.google.com'),
                   ),
-                ],
-                child: NamidaSelectableAutoLinkText(
-                  text: Language.inst.IMPORT_YOUTUBE_HISTORY_GUIDE.replaceFirst('_TAKEOUT_LINK_', 'https://takeout.google.com'),
                 ),
-              ),
-            ),
+              );
+            },
           ),
           CustomListTile(
             title: Language.inst.IMPORT_LAST_FM_HISTORY,
@@ -346,30 +352,36 @@ class BackupAndRestore extends StatelessWidget {
                 forceDisplay: false,
               ),
             ),
-            onTap: () => Get.dialog(
-              CustomBlurryDialog(
-                title: Language.inst.GUIDE,
-                actions: [
-                  ElevatedButton(
-                    onPressed: () async {
-                      Get.close(1);
-                      final csvFiles = await FilePicker.platform.pickFiles(allowedExtensions: ['csv'], type: FileType.custom);
-                      final csvFilePath = csvFiles?.files.first.path;
-                      if (csvFiles != null && csvFilePath != null) {
-                        JsonToHistoryParser.inst.showParsingProgressDialog();
+            onTap: () {
+              if (JsonToHistoryParser.inst.isParsing.value) {
+                Get.snackbar(Language.inst.NOTE, Language.inst.ANOTHER_PROCESS_IS_RUNNING);
+                return;
+              }
+              Get.dialog(
+                CustomBlurryDialog(
+                  title: Language.inst.GUIDE,
+                  actions: [
+                    ElevatedButton(
+                      onPressed: () async {
+                        Get.close(1);
+                        final csvFiles = await FilePicker.platform.pickFiles(allowedExtensions: ['csv'], type: FileType.custom);
+                        final csvFilePath = csvFiles?.files.first.path;
+                        if (csvFiles != null && csvFilePath != null) {
+                          JsonToHistoryParser.inst.showParsingProgressDialog();
 
-                        await Future.delayed(const Duration(milliseconds: 300));
-                        JsonToHistoryParser.inst.addFileSourceToNamidaHistory(File(csvFilePath), TrackSource.lastfm);
-                      }
-                    },
-                    child: Text(Language.inst.CONFIRM),
+                          await Future.delayed(const Duration(milliseconds: 300));
+                          JsonToHistoryParser.inst.addFileSourceToNamidaHistory(File(csvFilePath), TrackSource.lastfm);
+                        }
+                      },
+                      child: Text(Language.inst.CONFIRM),
+                    ),
+                  ],
+                  child: NamidaSelectableAutoLinkText(
+                    text: Language.inst.IMPORT_LAST_FM_HISTORY_GUIDE.replaceFirst('_LASTFM_CSV_LINK_', 'https://benjaminbenben.com/lastfm-to-csv/'),
                   ),
-                ],
-                child: NamidaSelectableAutoLinkText(
-                  text: Language.inst.IMPORT_LAST_FM_HISTORY_GUIDE.replaceFirst('_LASTFM_CSV_LINK_', 'https://benjaminbenben.com/lastfm-to-csv/'),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ],
       ),

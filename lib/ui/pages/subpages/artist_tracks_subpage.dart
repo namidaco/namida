@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -31,6 +32,7 @@ class ArtistTracksPage extends StatelessWidget {
         )
       ],
       child: NamidaTracksList(
+        queueSource: QueueSource.artist,
         queueLength: tracks.length,
         queue: tracks,
         paddingAfterHeader: const EdgeInsets.only(bottom: 12.0),
@@ -39,15 +41,16 @@ class ArtistTracksPage extends StatelessWidget {
             SubpagesTopContainer(
               verticalPadding: 8.0,
               title: name,
-              subtitle: [tracks.displayTrackKeyword, tracks[0].year.yearFormatted].join(' - '),
+              source: QueueSource.artist,
+              subtitle: [tracks.displayTrackKeyword, tracks.year.yearFormatted].join(' - '),
               imageWidget: Hero(
-                tag: 'artist$name',
+                tag: 'artist_$name',
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 2),
                   child: ContainerWithBorder(
                     child: ArtworkWidget(
                       thumnailSize: Get.width * 0.35,
-                      path: tracks[0].pathToImage,
+                      path: tracks.pathToImage,
                       forceSquared: true,
                       blur: 0,
                       iconSize: 32.0,

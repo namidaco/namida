@@ -37,13 +37,13 @@ class ArtistCard extends StatelessWidget {
           child: Column(
             children: [
               Hero(
-                tag: 'artist$name',
+                tag: 'artist_$name',
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: horizontalPadding),
                   child: ContainerWithBorder(
                     child: ArtworkWidget(
                       thumnailSize: thumnailSize,
-                      path: artist[0].pathToImage,
+                      path: artist.pathToImage,
                       borderRadius: 10.0,
                       forceSquared: true,
                       blur: 0,

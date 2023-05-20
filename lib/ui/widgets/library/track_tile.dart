@@ -21,28 +21,22 @@ import 'package:namida/ui/dialogs/track_info_dialog.dart';
 class TrackTile extends StatelessWidget {
   final int index;
   final Track track;
-  final List<Track> queue;
   final bool displayRightDragHandler;
   final bool draggableThumbnail;
-  final bool isInSelectedTracksPreview;
   final Color? bgColor;
   final Widget? trailingWidget;
   final void Function()? onTap;
   final Playlist? playlist;
   final String thirdLineText;
   final bool displayIndex;
-  final bool oiRespectPlayMode;
-  final bool comingFromQueue;
-  final bool canHaveDuplicates;
+  final QueueSource queueSource;
   final void Function(PointerDownEvent event)? onDragStart;
   final void Function(PointerUpEvent event)? onDragEnd;
   const TrackTile({
     super.key,
     required this.track,
-    required this.queue,
     this.displayRightDragHandler = false,
     this.draggableThumbnail = true,
-    this.isInSelectedTracksPreview = false,
     this.bgColor,
     this.onTap,
     this.trailingWidget,
@@ -50,11 +44,9 @@ class TrackTile extends StatelessWidget {
     required this.index,
     this.thirdLineText = '',
     this.displayIndex = false,
-    this.oiRespectPlayMode = false,
-    this.comingFromQueue = false,
-    this.canHaveDuplicates = false,
     this.onDragStart,
     this.onDragEnd,
+    required this.queueSource,
   });
 
   String getChoosenTrackTileItem(TrackTileItem trackItem) {
@@ -63,7 +55,7 @@ class TrackTile extends StatelessWidget {
     String trackItemPlaceV = [
       if (trackItem == TrackTileItem.none) '',
       if (trackItem == TrackTileItem.title) track.title.overflow,
-      if (trackItem == TrackTileItem.artists) track.artistsList.take(4).join(', ').overflow,
+      if (trackItem == TrackTileItem.artists) track.originalArtist.overflow,
       if (trackItem == TrackTileItem.album) track.album.overflow,
       if (trackItem == TrackTileItem.albumArtist) track.albumArtist.overflow,
       if (trackItem == TrackTileItem.genres) track.genresList.take(4).join(', ').overflow,
@@ -105,242 +97,264 @@ class TrackTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () {
-        final TrackItem tritem = SettingsController.inst.trackItem.value;
-        final double thumnailSize = SettingsController.inst.trackThumbnailSizeinList.value;
-        final double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
-        final bool isTrackSelected = SelectedTracksController.inst.selectedTracks.contains(track);
-        final bool isTrackSamePath = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
-        final bool isRightIndex = canHaveDuplicates ? index == CurrentColor.inst.currentPlayingIndex.value : true;
-        final bool isTrackCurrentlyPlaying = isRightIndex && isTrackSamePath;
+    final comingFromQueue = queueSource == QueueSource.playerQueue;
+    final canHaveDuplicates = comingFromQueue ||
+        queueSource == QueueSource.playlist ||
+        queueSource == QueueSource.queuePage ||
+        queueSource == QueueSource.playerQueue ||
+        queueSource == QueueSource.history;
+    final isInSelectedTracksPreview = queueSource == QueueSource.selectedTracks;
 
-        final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 4.0),
-          child: Material(
-            color: bgColor ??
-                Color.alphaBlend(
-                  isTrackSelected & !isInSelectedTracksPreview ? context.theme.focusColor : Colors.transparent,
-                  isTrackCurrentlyPlaying ? CurrentColor.inst.color.value : context.theme.cardTheme.color!,
-                ),
-            child: InkWell(
-              highlightColor: const Color.fromARGB(60, 0, 0, 0),
-              key: ValueKey(track),
-              onLongPress: onTap != null
-                  ? null
-                  : () {
-                      if (!isInSelectedTracksPreview) {
-                        SelectedTracksController.inst.selectOrUnselect(track, queue);
-                      }
-                    },
-              onTap: onTap ??
-                  () async {
-                    if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
-                      SelectedTracksController.inst.selectOrUnselect(track, queue);
-                    } else {
-                      if (oiRespectPlayMode) {
-                        Get.focusScope?.unfocus();
-                        await Player.inst.playOrPause(
-                          SettingsController.inst.trackPlayMode.value.shouldBeIndex0 ? 0 : index,
-                          SettingsController.inst.trackPlayMode.value.getQueue(track),
-                        );
-                      } else {
-                        await Player.inst.playOrPause(index, queue);
-                      }
+    void triggerTrackDialog() => NamidaDialogs.inst.showTrackDialog(track, playlist: playlist, index: index, comingFromQueue: comingFromQueue);
+    void triggerTrackInfoDialog() => showTrackInfoDialog(track, true, comingFromQueue: comingFromQueue, index: index);
 
-                      debugPrint(track.path);
-                    }
-                  },
-              child: Container(
-                alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                height: trackTileHeight + 4.0 + 4.0,
-                child: Row(
-                  children: [
-                    const SizedBox(
-                      width: 12.0,
+    return Stack(
+      alignment: Alignment.centerRight,
+      children: [
+        Obx(
+          () {
+            final TrackItem tritem = SettingsController.inst.trackItem.value;
+            final double thumnailSize = SettingsController.inst.trackThumbnailSizeinList.value;
+            final double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
+            final bool isTrackSelected = SelectedTracksController.inst.selectedTracks.contains(track);
+            final bool isTrackSamePath = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
+            final bool isRightIndex = canHaveDuplicates ? index == CurrentColor.inst.currentPlayingIndex.value : true;
+            final bool isTrackCurrentlyPlaying = isRightIndex && isTrackSamePath;
+
+            final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 4.0),
+              child: Material(
+                color: bgColor ??
+                    Color.alphaBlend(
+                      isTrackSelected & !isInSelectedTracksPreview ? context.theme.focusColor : Colors.transparent,
+                      isTrackCurrentlyPlaying ? CurrentColor.inst.color.value : context.theme.cardTheme.color!,
                     ),
-                    Stack(
-                      alignment: Alignment.center,
+                child: InkWell(
+                  highlightColor: const Color.fromARGB(60, 0, 0, 0),
+                  key: ValueKey(track),
+                  onLongPress: onTap != null
+                      ? null
+                      : () {
+                          if (!isInSelectedTracksPreview) {
+                            SelectedTracksController.inst.selectOrUnselect(track, queueSource);
+                          }
+                        },
+                  onTap: onTap ??
+                      () async {
+                        if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
+                          SelectedTracksController.inst.selectOrUnselect(track, queueSource);
+                        } else {
+                          if (queueSource == QueueSource.search) {
+                            Get.focusScope?.unfocus();
+                            await Player.inst.playOrPause(
+                              SettingsController.inst.trackPlayMode.value.shouldBeIndex0 ? 0 : index,
+                              SettingsController.inst.trackPlayMode.value.getQueue(track),
+                              queueSource,
+                            );
+                          } else {
+                            await Player.inst.playOrPause(index, queueSource.toTracks(), queueSource);
+                          }
+                          debugPrint(track.path);
+                        }
+                      },
+                  child: Container(
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    height: trackTileHeight + 4.0 + 4.0,
+                    child: Row(
                       children: [
-                        AnimatedScale(
-                          duration: const Duration(milliseconds: 400),
-                          scale: isTrackCurrentlyPlaying ? 0.96 : 1.0,
-                          curve: Curves.easeInOut,
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 0.0,
-                            ),
-                            width: thumnailSize,
-                            height: thumnailSize,
-                            child: Hero(
-                              tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
-                              child: ArtworkWidget(
-                                thumnailSize: thumnailSize,
-                                path: track.pathToImage,
-                                forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
-                                useTrackTileCacheHeight: true,
-                                onTopWidget: displayIndex
-                                    ? Positioned(
-                                        bottom: 0,
-                                        right: 0,
-                                        child: BlurryContainer(
-                                          borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
-                                          container: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
-                                            child: Text(
-                                              index.toString(),
-                                              style: context.textTheme.displaySmall,
+                        const SizedBox(
+                          width: 12.0,
+                        ),
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            AnimatedScale(
+                              duration: const Duration(milliseconds: 400),
+                              scale: isTrackCurrentlyPlaying ? 0.96 : 1.0,
+                              curve: Curves.easeInOut,
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 0.0,
+                                ),
+                                width: thumnailSize,
+                                height: thumnailSize,
+                                child: Hero(
+                                  tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
+                                  child: ArtworkWidget(
+                                    thumnailSize: thumnailSize,
+                                    path: track.pathToImage,
+                                    forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+                                    useTrackTileCacheHeight: true,
+                                    onTopWidget: displayIndex
+                                        ? Positioned(
+                                            bottom: 0,
+                                            right: 0,
+                                            child: BlurryContainer(
+                                              borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
+                                              container: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
+                                                child: Text(
+                                                  index.toString(),
+                                                  style: context.textTheme.displaySmall,
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ),
-                                      )
-                                    : null,
+                                          )
+                                        : null,
+                                  ),
+                                ),
                               ),
                             ),
+                            if (draggableThumbnail)
+                              CustomReorderableDelayedDragStartListener(
+                                index: index,
+                                delay: const Duration(milliseconds: 80),
+                                onDragStart: onDragStart,
+                                onDragEnd: onDragEnd,
+                                child: Container(
+                                  color: Colors.transparent,
+                                  height: trackTileHeight,
+                                  width: thumnailSize,
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(
+                          width: 12.0,
+                        ),
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // check if first row isnt empty
+                              if (tritem.row1Item1 != TrackTileItem.none || tritem.row1Item2 != TrackTileItem.none || tritem.row1Item3 != TrackTileItem.none)
+                                Text(
+                                  joinTrackItems(tritem.row1Item1, tritem.row1Item2, tritem.row1Item3),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  style: context.textTheme.displayMedium!.copyWith(
+                                    color: textColor?.withAlpha(170),
+                                  ),
+                                ),
+
+                              // check if second row isnt empty
+                              if (tritem.row2Item1 != TrackTileItem.none || tritem.row2Item2 != TrackTileItem.none || tritem.row2Item3 != TrackTileItem.none)
+                                Text(
+                                  joinTrackItems(tritem.row2Item1, tritem.row2Item2, tritem.row2Item3),
+                                  style: context.textTheme.displaySmall?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    color: textColor?.withAlpha(140),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+
+                              // check if third row isnt empty
+                              if (thirdLineText == '' && SettingsController.inst.displayThirdRow.value)
+                                if (tritem.row3Item1 != TrackTileItem.none || tritem.row3Item2 != TrackTileItem.none || tritem.row3Item3 != TrackTileItem.none)
+                                  Text(
+                                    joinTrackItems(tritem.row3Item1, tritem.row3Item2, tritem.row3Item3),
+                                    style: context.textTheme.displaySmall?.copyWith(
+                                      color: textColor?.withAlpha(130),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+
+                              if (thirdLineText != '')
+                                Text(
+                                  thirdLineText,
+                                  style: context.textTheme.displaySmall?.copyWith(color: textColor?.withAlpha(130)),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
                           ),
                         ),
-                        if (draggableThumbnail)
+                        const SizedBox(width: 6.0),
+                        if (SettingsController.inst.displayFavouriteIconInListTile.value || tritem.rightItem1 != TrackTileItem.none || tritem.rightItem2 != TrackTileItem.none)
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (tritem.rightItem1 != TrackTileItem.none)
+                                Text(
+                                  getChoosenTrackTileItem(tritem.rightItem1),
+                                  style: context.textTheme.displaySmall?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    color: textColor?.withAlpha(170),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              if (tritem.rightItem2 != TrackTileItem.none)
+                                Text(
+                                  getChoosenTrackTileItem(tritem.rightItem2),
+                                  style: context.textTheme.displaySmall?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    color: textColor?.withAlpha(170),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              if (SettingsController.inst.displayFavouriteIconInListTile.value)
+                                NamidaLikeButton(
+                                  track: track,
+                                  size: 22.0,
+                                  color: textColor?.withAlpha(140) ?? context.textTheme.displayMedium?.color?.withAlpha(140),
+                                ),
+                            ],
+                          ),
+                        if (displayRightDragHandler) ...[
+                          const SizedBox(
+                            width: 8.0,
+                          ),
                           CustomReorderableDelayedDragStartListener(
                             index: index,
-                            delay: const Duration(milliseconds: 80),
                             onDragStart: onDragStart,
                             onDragEnd: onDragEnd,
-                            child: Container(
-                              color: Colors.transparent,
-                              height: trackTileHeight,
-                              width: thumnailSize,
+                            child: FittedBox(
+                              child: Icon(
+                                Broken.menu_1,
+                                color: textColor?.withAlpha(160),
+                              ),
                             ),
                           ),
+                        ],
+                        const SizedBox(
+                          width: 2.0,
+                        ),
+                        MoreIcon(
+                          padding: 6.0,
+                          iconColor: textColor?.withAlpha(160),
+                        ),
+                        if (trailingWidget == null)
+                          const SizedBox(
+                            width: 4.0,
+                          ),
+                        if (trailingWidget != null) ...[
+                          trailingWidget!,
+                          const SizedBox(
+                            width: 10.0,
+                          ),
+                        ],
                       ],
                     ),
-                    const SizedBox(
-                      width: 12.0,
-                    ),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // check if first row isnt empty
-                          if (tritem.row1Item1 != TrackTileItem.none || tritem.row1Item2 != TrackTileItem.none || tritem.row1Item3 != TrackTileItem.none)
-                            Text(
-                              joinTrackItems(tritem.row1Item1, tritem.row1Item2, tritem.row1Item3),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                              style: context.textTheme.displayMedium!.copyWith(
-                                color: textColor?.withAlpha(170),
-                              ),
-                            ),
-
-                          // check if second row isnt empty
-                          if (tritem.row2Item1 != TrackTileItem.none || tritem.row2Item2 != TrackTileItem.none || tritem.row2Item3 != TrackTileItem.none)
-                            Text(
-                              joinTrackItems(tritem.row2Item1, tritem.row2Item2, tritem.row2Item3),
-                              style: context.textTheme.displaySmall?.copyWith(
-                                fontWeight: FontWeight.w500,
-                                color: textColor?.withAlpha(140),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-
-                          // check if third row isnt empty
-                          if (thirdLineText == '' && SettingsController.inst.displayThirdRow.value)
-                            if (tritem.row3Item1 != TrackTileItem.none || tritem.row3Item2 != TrackTileItem.none || tritem.row3Item3 != TrackTileItem.none)
-                              Text(
-                                joinTrackItems(tritem.row3Item1, tritem.row3Item2, tritem.row3Item3),
-                                style: context.textTheme.displaySmall?.copyWith(
-                                  color: textColor?.withAlpha(130),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-
-                          if (thirdLineText != '')
-                            Text(
-                              thirdLineText,
-                              style: context.textTheme.displaySmall?.copyWith(color: textColor?.withAlpha(130)),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 6.0),
-                    if (SettingsController.inst.displayFavouriteIconInListTile.value || tritem.rightItem1 != TrackTileItem.none || tritem.rightItem2 != TrackTileItem.none)
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (tritem.rightItem1 != TrackTileItem.none)
-                            Text(
-                              getChoosenTrackTileItem(tritem.rightItem1),
-                              style: context.textTheme.displaySmall?.copyWith(
-                                fontWeight: FontWeight.w500,
-                                color: textColor?.withAlpha(170),
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          if (tritem.rightItem2 != TrackTileItem.none)
-                            Text(
-                              getChoosenTrackTileItem(tritem.rightItem2),
-                              style: context.textTheme.displaySmall?.copyWith(
-                                fontWeight: FontWeight.w500,
-                                color: textColor?.withAlpha(170),
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          if (SettingsController.inst.displayFavouriteIconInListTile.value)
-                            NamidaLikeButton(
-                              track: track,
-                              size: 22.0,
-                              color: textColor?.withAlpha(140) ?? context.textTheme.displayMedium?.color?.withAlpha(140),
-                            ),
-                        ],
-                      ),
-                    if (displayRightDragHandler) ...[
-                      const SizedBox(
-                        width: 8.0,
-                      ),
-                      CustomReorderableDelayedDragStartListener(
-                        index: index,
-                        onDragStart: onDragStart,
-                        onDragEnd: onDragEnd,
-                        child: FittedBox(
-                          child: Icon(
-                            Broken.menu_1,
-                            color: textColor?.withAlpha(160),
-                          ),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(
-                      width: 2.0,
-                    ),
-                    MoreIcon(
-                      padding: 6.0,
-                      iconColor: textColor?.withAlpha(160),
-                      onPressed: () => NamidaDialogs.inst.showTrackDialog(track, playlist: playlist, index: index, comingFromQueue: comingFromQueue),
-                      onLongPress: () => showTrackInfoDialog(track, comingFromQueue: comingFromQueue, index: index),
-                    ),
-                    if (trailingWidget == null)
-                      const SizedBox(
-                        width: 4.0,
-                      ),
-                    if (trailingWidget != null) ...[
-                      trailingWidget!,
-                      const SizedBox(
-                        width: 10.0,
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
               ),
-            ),
+            );
+          },
+        ),
+        GestureDetector(
+          onTap: triggerTrackDialog,
+          onLongPress: triggerTrackInfoDialog,
+          child: Container(
+            width: 36.0,
+            color: Colors.transparent,
           ),
-        );
-      },
+        )
+      ],
     );
   }
 }

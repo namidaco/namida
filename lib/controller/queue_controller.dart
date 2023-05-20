@@ -5,9 +5,11 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 
@@ -18,7 +20,8 @@ class QueueController {
   final RxList<Track> latestQueue = <Track>[].obs;
 
   /// doesnt save queues with more than 2000 tracks.
-  void addNewQueue({
+  void addNewQueue(
+    QueueSource source, {
     int? date,
     List<Track> tracks = const <Track>[],
   }) async {
@@ -35,7 +38,7 @@ class QueueController {
     }
     printInfo(info: "Added New Queue");
     date ??= DateTime.now().millisecondsSinceEpoch;
-    final q = Queue(date, tracks);
+    final q = Queue(source.toText(), date, false, tracks);
     queueList.add(q);
     await _saveQueueToStorage(q);
   }
@@ -68,11 +71,18 @@ class QueueController {
     latestQueue.assignAll(tracks);
     if (queueList.isNotEmpty) {
       queueList.last.tracks.assignAll(tracks);
-
-      await _saveQueueToStorage(queueList.last);
+      await _saveLatestQueueToStorage(queueList.last);
     }
+  }
 
-    await File(k_FILE_PATH_LATEST_QUEUE).writeAsString(json.encode(tracks.map((e) => e.toJson()).toList()));
+  void insertTracksQueue(Queue queue, List<Track> tracks, int index) async {
+    queue.tracks.insertAllSafe(index, tracks);
+    await _saveQueueToStorage(queue);
+  }
+
+  Future<void> removeTrackFromQueue(Queue queue, int index) async {
+    queue.tracks.removeAt(index);
+    await _saveQueueToStorage(queue);
   }
 
   ///
@@ -80,21 +90,29 @@ class QueueController {
     await for (final p in Directory(k_DIR_QUEUES).list()) {
       // prevents freezing the ui. cheap alternative for Isolate/compute.
       await Future.delayed(Duration.zero);
-      final string = await File(p.path).readAsString();
-      if (string.isNotEmpty) {
-        final content = jsonDecode(string) as Map<String, dynamic>;
-        queueList.add(Queue.fromJson(content));
+      try {
+        final string = await File(p.path).readAsString();
+        if (string.isNotEmpty) {
+          final content = jsonDecode(string) as Map<String, dynamic>;
+          queueList.add(Queue.fromJson(content));
+        }
+      } catch (e) {
+        printError(info: e.toString());
       }
     }
   }
 
   ///
   Future<void> prepareLatestQueueFile() async {
-    final file = await File(k_FILE_PATH_LATEST_QUEUE).create();
-    final String content = await file.readAsString();
-    if (content.isNotEmpty) {
-      final txt = List.from(json.decode(content));
-      latestQueue.assignAll(txt.map((e) => Track.fromJson(e)).toList());
+    try {
+      final file = await File(k_FILE_PATH_LATEST_QUEUE).create();
+      final String content = await file.readAsString();
+      if (content.isNotEmpty) {
+        final lq = Queue.fromJson(jsonDecode(content) as Map<String, dynamic>);
+        latestQueue.assignAll(lq.tracks);
+      }
+    } catch (e) {
+      printError(info: e.toString());
     }
   }
 
@@ -103,13 +121,14 @@ class QueueController {
     if (latestQueue.isEmpty) {
       return;
     }
-    final latestTrack = latestQueue.firstWhere(
-      (element) => element.path == SettingsController.inst.lastPlayedTrackPath.value,
-      orElse: () => latestQueue.first,
-    );
+    final latestTrack = Indexer.inst.allTracksMappedByPath[SettingsController.inst.lastPlayedTrackPath.value];
+    final ind = latestQueue.indexOf(latestTrack);
+    if (latestTrack == null) return;
+
     await Player.inst.playOrPause(
-      latestQueue.indexOf(latestTrack),
+      ind == -1 ? 0 : ind,
       latestQueue.toList(),
+      QueueSource.playerQueue,
       startPlaying: false,
       dontAddQueue: true,
     );
@@ -117,6 +136,10 @@ class QueueController {
 
   Future<void> _saveQueueToStorage(Queue queue) async {
     await File('$k_DIR_QUEUES${queue.date}.json').writeAsString(jsonEncode(queue.toJson()));
+  }
+
+  Future<void> _saveLatestQueueToStorage(Queue queue) async {
+    await File(k_FILE_PATH_LATEST_QUEUE).writeAsString(jsonEncode(queue.toJson()));
   }
 
   Future<void> _deleteQueueToStorage(Queue queue) async {

@@ -36,27 +36,20 @@ class AlbumsPage extends StatelessWidget {
                   forStaggered: SettingsController.inst.useAlbumStaggeredGridView.value,
                   onTap: () {
                     final n = SettingsController.inst.albumGridCount.value;
-                    if (n < 4) {
-                      SettingsController.inst.save(albumGridCount: n + 1);
-                    } else {
-                      SettingsController.inst.save(albumGridCount: 1);
-                    }
+                    final nToSave = n < 4 ? n + 1 : 1;
+                    SettingsController.inst.save(albumGridCount: nToSave);
                   },
                 ),
                 isBarVisible: ScrollSearchController.inst.isAlbumBarVisible.value,
                 showSearchBox: ScrollSearchController.inst.showAlbumSearchBox.value,
                 leftText: finalAlbums.length.displayAlbumKeyword,
                 onFilterIconTap: () => ScrollSearchController.inst.switchAlbumSearchBoxVisibilty(),
-                onCloseButtonPressed: () {
-                  ScrollSearchController.inst.clearAlbumSearchTextField();
-                },
+                onCloseButtonPressed: () => ScrollSearchController.inst.clearAlbumSearchTextField(),
                 sortByMenuWidget: SortByMenu(
                   title: SettingsController.inst.albumSort.value.toText,
                   popupMenuChild: const SortByMenuAlbums(),
                   isCurrentlyReversed: SettingsController.inst.albumSortReversed.value,
-                  onReverseIconTap: () {
-                    Indexer.inst.sortAlbums(reverse: !SettingsController.inst.albumSortReversed.value);
-                  },
+                  onReverseIconTap: () => Indexer.inst.sortAlbums(reverse: !SettingsController.inst.albumSortReversed.value),
                 ),
                 textField: CustomTextFiled(
                   textFieldController: Indexer.inst.albumsSearchController,

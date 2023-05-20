@@ -9,6 +9,7 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -17,6 +18,7 @@ import 'package:namida/main.dart';
 import 'package:namida/packages/youtube_miniplayer.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 
 class AdvancedSettings extends StatelessWidget {
   AdvancedSettings({super.key});
@@ -36,6 +38,20 @@ class AdvancedSettings extends StatelessWidget {
             title: Language.inst.RESET_SAF_PERMISSION,
             subtitle: Language.inst.RESET_SAF_PERMISSION_SUBTITLE,
             onTap: () async => await resetSAFPermision(),
+          ),
+          Obx(
+            () => CustomListTile(
+              leading: const StackedIcon(
+                baseIcon: Broken.video,
+                secondaryIcon: Broken.refresh,
+              ),
+              trailing: VideoController.inst.isUpdatingVideoFiles.value ? const LoadingIndicator() : null,
+              title: Language.inst.RESCAN_VIDEOS,
+              onTap: () async {
+                await VideoController.inst.getVideoFiles(forceRescan: true);
+                Get.snackbar(Language.inst.DONE, Language.inst.FINISHED_UPDATING_LIBRARY);
+              },
+            ),
           ),
           Obx(
             () => CustomListTile(

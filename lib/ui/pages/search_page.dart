@@ -10,6 +10,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -88,22 +89,22 @@ class SearchPage extends StatelessWidget {
                           SliverToBoxAdapter(
                             child: SizedBox(
                               height: 170,
-                              child: ListView(
-                                itemExtent: 132.0,
+                              child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
-                                children: Indexer.inst.albumSearchTemp
-                                    .map(
-                                      (e) => Container(
-                                        width: 130.0,
-                                        margin: const EdgeInsets.only(left: 2.0),
-                                        child: AlbumCard(
-                                          gridCountOverride: 3,
-                                          album: e.tracks,
-                                          staggered: false,
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
+                                itemExtent: 132.0,
+                                itemCount: Indexer.inst.albumSearchTemp.length,
+                                itemBuilder: (context, i) {
+                                  final e = Indexer.inst.albumSearchTemp[i];
+                                  return Container(
+                                    width: 130.0,
+                                    margin: const EdgeInsets.only(left: 2.0),
+                                    child: AlbumCard(
+                                      gridCountOverride: 3,
+                                      album: e.tracks,
+                                      staggered: false,
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           ),
@@ -136,22 +137,22 @@ class SearchPage extends StatelessWidget {
                           SliverToBoxAdapter(
                             child: SizedBox(
                               height: 100,
-                              child: ListView(
+                              child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 itemExtent: 82.0,
-                                children: Indexer.inst.artistSearchTemp
-                                    .map(
-                                      (e) => Container(
-                                        width: 80.0,
-                                        margin: const EdgeInsets.only(left: 2.0),
-                                        child: ArtistCard(
-                                          gridCount: 5,
-                                          name: e.name,
-                                          artist: e.tracks,
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
+                                itemCount: Indexer.inst.artistSearchTemp.length,
+                                itemBuilder: (context, i) {
+                                  final e = Indexer.inst.artistSearchTemp[i];
+                                  return Container(
+                                    width: 80.0,
+                                    margin: const EdgeInsets.only(left: 2.0),
+                                    child: ArtistCard(
+                                      gridCount: 5,
+                                      name: e.name,
+                                      artist: e.tracks,
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           ),
@@ -177,7 +178,8 @@ class SearchPage extends StatelessWidget {
                           const SliverPadding(
                             padding: EdgeInsets.only(bottom: 12.0),
                           ),
-                          SliverList(
+                          SliverFixedExtentList(
+                            itemExtent: trackTileItemExtent,
                             delegate: SliverChildBuilderDelegate(
                               (context, i) {
                                 final track = Indexer.inst.trackSearchTemp[i];
@@ -186,8 +188,7 @@ class SearchPage extends StatelessWidget {
                                   child: TrackTile(
                                     index: i,
                                     track: track,
-                                    queue: Indexer.inst.trackSearchTemp,
-                                    oiRespectPlayMode: true,
+                                    queueSource: QueueSource.search,
                                   ),
                                 );
                               },

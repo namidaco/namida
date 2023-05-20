@@ -6,6 +6,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -21,6 +22,7 @@ class TracksPage extends StatelessWidget {
       () => NamidaTracksList(
         queueLength: Indexer.inst.trackSearchList.length,
         queue: Indexer.inst.trackSearchList,
+        queueSource: QueueSource.allTracks,
         scrollController: ScrollSearchController.inst.trackScrollcontroller,
         widgetsInColumn: [
           ExpandableBox(
@@ -30,14 +32,14 @@ class TracksPage extends StatelessWidget {
             leftWidgets: [
               NamidaIconButton(
                 icon: Broken.shuffle,
-                onPressed: () => Player.inst.playOrPause(0, Indexer.inst.trackSearchList.toList(), shuffle: true),
+                onPressed: () => Player.inst.playOrPause(0, Indexer.inst.trackSearchList.toList(), QueueSource.allTracks, shuffle: true),
                 iconSize: 18.0,
                 horizontalPadding: 0,
               ),
               const SizedBox(width: 12.0),
               NamidaIconButton(
                 icon: Broken.play,
-                onPressed: () => Player.inst.playOrPause(0, Indexer.inst.trackSearchList.toList()),
+                onPressed: () => Player.inst.playOrPause(0, Indexer.inst.trackSearchList.toList(), QueueSource.allTracks),
                 iconSize: 18.0,
                 horizontalPadding: 0,
               ),

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
@@ -62,7 +63,8 @@ class ExtrasSettings extends StatelessWidget {
               value: SettingsController.inst.enableFoldersHierarchy.value,
               onChanged: (p0) {
                 SettingsController.inst.save(enableFoldersHierarchy: !p0);
-                // Folders.inst.stepIn(SettingsController.inst.defaultFolderStartupLocation.value);
+                Folders.inst.isHome.value = true;
+                Folders.inst.isInside.value = false;
               },
             ),
           ),
@@ -394,7 +396,7 @@ class ExtrasSettings extends StatelessWidget {
             trailing: Obx(
               () => Column(
                 children: [
-                  Text("${Indexer.inst.colorPalettesInStorage.value}/${allTracksInLibrary.length}"),
+                  Text("${Indexer.inst.colorPalettesInStorage.value}/${Indexer.inst.artworksInStorage.value.toString()}"),
                   if (CurrentColor.inst.generatingAllColorPalettes.value) const LoadingIndicator(),
                 ],
               ),

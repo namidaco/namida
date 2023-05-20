@@ -3,10 +3,11 @@ import 'package:flutter/material.dart' hide ReorderableDragStartListener;
 import 'package:get/get.dart';
 import 'package:known_extents_list_view_builder/known_extents_sliver_reorderable_list.dart';
 
-import 'package:namida/controller/youtube_controller.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/youtube_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -99,7 +100,7 @@ class MainPageWrapper extends StatelessWidget {
                             title: Language.inst.QUEUES,
                             icon: Broken.driver,
                             onTap: () {
-                              Get.to(() => QueuesPage());
+                              Get.to(() => const QueuesPage());
                               toggleDrawer();
                             },
                           ),
@@ -127,25 +128,128 @@ class MainPageWrapper extends StatelessWidget {
                   ),
                   const SizedBox(height: 8.0),
                   NamidaDrawerListTile(
+                    margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 12.0),
                     enabled: false,
-                    title: Language.inst.CUSTOMIZATIONS,
-                    icon: Broken.brush_1,
+                    title: Language.inst.SLEEP_TIMER,
+                    icon: Broken.timer_1,
                     onTap: () {
-                      Get.to(() => SettingsSubPage(
-                            title: Language.inst.CUSTOMIZATIONS,
-                            child: CustomizationSettings(),
-                          ));
                       toggleDrawer();
+                      final RxInt minutes = Player.inst.sleepAfterMin.value.obs;
+                      final RxInt tracks = Player.inst.sleepAfterTracks.value.obs;
+                      Get.dialog(
+                        CustomBlurryDialog(
+                          title: Language.inst.SLEEP_AFTER,
+                          icon: Broken.timer_1,
+                          normalTitleStyle: true,
+                          actions: [
+                            const CancelButton(),
+                            Obx(
+                              () => Player.inst.enableSleepAfterMins.value || Player.inst.enableSleepAfterTracks.value
+                                  ? ElevatedButton.icon(
+                                      onPressed: () {
+                                        Player.inst.resetSleepAfterTimer();
+                                        Get.close(1);
+                                      },
+                                      icon: const Icon(Broken.timer_pause),
+                                      label: Text(Language.inst.STOP),
+                                    )
+                                  : ElevatedButton.icon(
+                                      onPressed: () {
+                                        if (minutes.value > 0 || tracks.value > 0) {
+                                          Player.inst.enableSleepAfterMins.value = minutes.value > 0;
+                                          Player.inst.enableSleepAfterTracks.value = tracks.value > 0;
+                                          Player.inst.sleepAfterMin.value = minutes.value;
+                                          Player.inst.sleepAfterTracks.value = tracks.value;
+                                        }
+                                        Get.close(1);
+                                      },
+                                      icon: const Icon(Broken.timer_start),
+                                      label: Text(Language.inst.START),
+                                    ),
+                            ),
+                          ],
+                          child: Column(
+                            children: [
+                              const SizedBox(
+                                height: 32.0,
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  // minutes
+                                  Obx(
+                                    () => NamidaWheelSlider(
+                                      totalCount: 180,
+                                      initValue: minutes.value,
+                                      itemSize: 6,
+                                      onValueChanged: (val) => minutes.value = val,
+                                      text: "${minutes.value}m",
+                                      topText: Language.inst.MINUTES.capitalizeFirst,
+                                      textPadding: 8.0,
+                                    ),
+                                  ),
+                                  Text(
+                                    Language.inst.OR,
+                                    style: context.textTheme.displayMedium,
+                                  ),
+                                  // tracks
+                                  Obx(
+                                    () => NamidaWheelSlider(
+                                      totalCount: 40,
+                                      initValue: tracks.value,
+                                      itemSize: 6,
+                                      onValueChanged: (val) => tracks.value = val,
+                                      text: "${tracks.value} ${Language.inst.TRACK}",
+                                      topText: Language.inst.TRACKS,
+                                      textPadding: 8.0,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
                     },
                   ),
-                  NamidaDrawerListTile(
-                    enabled: false,
-                    title: Language.inst.SETTINGS,
-                    icon: Broken.setting,
-                    onTap: () {
-                      Get.to(() => const SettingsPage());
-                      toggleDrawer();
-                    },
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Expanded(
+                        child: NamidaDrawerListTile(
+                          margin: const EdgeInsets.symmetric(vertical: 5.0).add(const EdgeInsets.only(left: 12.0)),
+                          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 6.0),
+                          enabled: false,
+                          isCentered: true,
+                          iconSize: 24.0,
+                          title: '',
+                          icon: Broken.brush_1,
+                          onTap: () {
+                            Get.to(() => SettingsSubPage(
+                                  title: Language.inst.CUSTOMIZATIONS,
+                                  child: CustomizationSettings(),
+                                ));
+                            toggleDrawer();
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8.0),
+                      Expanded(
+                        child: NamidaDrawerListTile(
+                          margin: const EdgeInsets.symmetric(vertical: 5.0).add(const EdgeInsets.only(right: 12.0)),
+                          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 6.0),
+                          enabled: false,
+                          isCentered: true,
+                          iconSize: 24.0,
+                          title: '',
+                          icon: Broken.setting,
+                          onTap: () {
+                            Get.to(() => const SettingsPage());
+                            toggleDrawer();
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8.0),
                 ],

@@ -3,11 +3,26 @@ import 'package:get/get.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 
 class Folders {
   static final Folders inst = Folders();
+
+  // final RxString currentPath = SettingsController.inst.defaultFolderStartupLocation.value.obs;
+  // List<Track> getTracks(String folderPath) => Indexer.inst.groupedFoldersMap[folderPath] ?? [];
+
+  // List<String> get currentFoldersPaths => Indexer.inst.groupedFoldersMap.keys
+  //     .where(
+  //       (fld) => fld.startsWith(currentPath.value) && fld.split('/').length == currentPath.value.split('/').length + 1,
+  //     )
+  //     .toList();
+  // List<Track> get currentTracks => getTracks(currentPath.value);
+
+  // void stepIn(String toPath) {
+  //   currentPath.value = toPath;
+  // }
 
   final folderslist = Indexer.inst.groupedFoldersList;
 
@@ -21,36 +36,48 @@ class Folders {
   /// Used for non-hierarchy.
   final RxBool isInside = false.obs;
 
-  void stepIn(Folder folder) {
-    Folder? nextFolder;
-    for (int i = 1; i < 100; i++) {
-      nextFolder = folderslist.firstWhereOrNull((element) => element.path.startsWith(folder.path) && element.splits == folder.splits + i);
-      if (nextFolder != null) {
-        isHome.value = false;
-        isInside.value = true;
-        break;
-      }
-    }
+  void stepIn(Folder folder, {bool isMainStoragePath = false, bool comingFromStepOut = false}) {
+    isHome.value = false;
+    isInside.value = true;
+
+    final tracks = isMainStoragePath
+        ? folderslist
+            .where(
+              (element) => element.path == folder.path,
+            )
+            .expand((entry) => entry.tracks)
+            .toList()
+        : folder.tracks;
+
     Iterable<Folder> currentFolders = [];
-    currentFolders = folderslist.where((p0) {
-      final f = p0.path.split('/');
-      f.removeLast();
-      return f.join('/') == folder.path && p0.splits == (nextFolder?.splits ?? 0);
-    });
-    final tracks = Folders.inst.folderslist.where((element) => element.path == folder.path).expand((entry) => entry.tracks).toList();
+    // currentFolders = folderslist.where((p0) {
+    //   final f = p0.path.split('/');
+    //   f.removeLast();
+    //   return f.join('/') == folder.path;
+    // });
+    currentFolders = folderslist.toList().where((fld) => fld.path.startsWith(folder.path) && fld.path.split('/').length == folder.path.split('/').length + 1);
 
     /// in case nothing was found, probably due to multiple nesting.
     if (currentFolders.isEmpty && tracks.isEmpty) {
       currentFolders = folderslist.where((p0) {
-        return p0.path.startsWith(folder.path) && p0.splits == (nextFolder?.splits ?? 0);
+        return p0.path.startsWith(folder.path);
       });
+    }
+    // solving bug, should be solved from its roots but dk where the problem is
+    // basically checks if no more folders and the length of tracks is sus
+    if (currentFolders.isEmpty && tracks.length < folder.tracks.length) {
+      currentFolders = folderslist.toList().where((fld) => fld.path.startsWith(folder.path));
     }
 
     currentPath.value = folder.path;
     currentfolderslist.assignAll(currentFolders);
     currentTracks.assignAll(tracks);
-
     sortFolderTracks();
+    SelectedTracksController.inst.updateCurrentTracks(currentTracks.toList());
+
+    if (!comingFromStepOut && currentFolders.length == 1 && tracks.isEmpty) {
+      stepIn(currentFolders.first);
+    }
   }
 
   stepOut() {
@@ -74,8 +101,6 @@ class Folders {
       }
       if (path != null) {
         folder = Folder(
-          1,
-          path.split('/').last,
           path,
           Folders.inst.folderslist.where((element) => element.path == path).expand((entry) => entry.tracks).toList(),
         );
@@ -86,7 +111,7 @@ class Folders {
     if (folder == null) {
       isHome.value = true;
     } else {
-      stepIn(folder);
+      stepIn(folder, comingFromStepOut: true);
     }
   }
 

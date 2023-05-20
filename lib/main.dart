@@ -24,7 +24,7 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/functions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/core/translations/translations.dart';
@@ -86,6 +86,7 @@ void main() async {
     k_DIR_YT_METADATA_COMMENTS,
     k_DIR_PLAYLISTS,
     k_DIR_QUEUES,
+    k_DIR_YOUTUBE_STATS,
   ]);
 
   final paths = await ExternalPath.getExternalStorageDirectories();
@@ -103,6 +104,7 @@ void main() async {
   /// updates values on startup
   Indexer.inst.updateImageSizeInStorage();
   Indexer.inst.updateWaveformSizeInStorage();
+  Indexer.inst.updateColorPalettesSizeInStorage();
   Indexer.inst.updateVideosSizeInStorage();
 
   VideoController.inst.getVideoFiles();
@@ -130,7 +132,7 @@ void main() async {
   /// Recieving Initial Android Shared Intent.
   final intentfiles = await ReceiveSharingIntent.getInitialMedia();
   if (intentfiles.isNotEmpty) {
-    final playedsuccessfully = await playExternalFile(intentfiles.map((e) => e.path).toList());
+    final playedsuccessfully = await playExternalFiles(intentfiles.map((e) => e.path).toList());
     if (!playedsuccessfully) {
       Get.snackbar(Language.inst.ERROR, Language.inst.COULDNT_PLAY_FILE);
     }
@@ -139,24 +141,24 @@ void main() async {
   /// Listening to Android Shared Intents.
   /// Opening multiple files sometimes crashes the app.
   ReceiveSharingIntent.getMediaStream().listen((event) async {
-    await playExternalFile(event.map((e) => e.path).toList());
+    await playExternalFiles(event.map((e) => e.path).toList());
   }, onError: (err) {
     Get.snackbar(Language.inst.ERROR, Language.inst.COULDNT_PLAY_FILE);
   });
-  runApp(const MyApp());
+  runApp(const Namida());
 }
 
 /// returns [true] if played successfully.
-Future<bool> playExternalFile(List<String> paths) async {
+Future<bool> playExternalFiles(List<String> paths) async {
   final List<Track> trs = [];
   for (final p in paths) {
-    final tr = await convertPathToTrack(p);
+    final tr = await Indexer.inst.convertPathToTrack(p);
     if (tr != null) {
       trs.add(tr);
     }
   }
   if (trs.isNotEmpty) {
-    await Player.inst.playOrPause(0, trs);
+    await Player.inst.playOrPause(0, trs, QueueSource.externalFile);
     return true;
   }
   return false;
@@ -191,8 +193,8 @@ Future<void> resetSAFPermision() async {
   }
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class Namida extends StatelessWidget {
+  const Namida({super.key});
 
   @override
   Widget build(BuildContext context) {

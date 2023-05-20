@@ -33,27 +33,20 @@ class GenresPage extends StatelessWidget {
                   currentCount: SettingsController.inst.genreGridCount.value,
                   onTap: () {
                     final n = SettingsController.inst.genreGridCount.value;
-                    if (n < 4) {
-                      SettingsController.inst.save(genreGridCount: n + 1);
-                    } else {
-                      SettingsController.inst.save(genreGridCount: 2);
-                    }
+                    final nToSave = n < 4 ? n + 1 : 2;
+                    SettingsController.inst.save(genreGridCount: nToSave);
                   },
                 ),
                 isBarVisible: ScrollSearchController.inst.isGenreBarVisible.value,
                 showSearchBox: ScrollSearchController.inst.showGenreSearchBox.value,
                 leftText: Indexer.inst.genreSearchList.length.displayGenreKeyword,
                 onFilterIconTap: () => ScrollSearchController.inst.switchGenreSearchBoxVisibilty(),
-                onCloseButtonPressed: () {
-                  ScrollSearchController.inst.clearGenreSearchTextField();
-                },
+                onCloseButtonPressed: () => ScrollSearchController.inst.clearGenreSearchTextField(),
                 sortByMenuWidget: SortByMenu(
                   title: SettingsController.inst.genreSort.value.toText,
                   popupMenuChild: const SortByMenuGenres(),
                   isCurrentlyReversed: SettingsController.inst.genreSortReversed.value,
-                  onReverseIconTap: () {
-                    Indexer.inst.sortGenres(reverse: !SettingsController.inst.genreSortReversed.value);
-                  },
+                  onReverseIconTap: () => Indexer.inst.sortGenres(reverse: !SettingsController.inst.genreSortReversed.value),
                 ),
                 textField: CustomTextFiled(
                   textFieldController: Indexer.inst.genresSearchController,
@@ -77,7 +70,11 @@ class GenresPage extends StatelessWidget {
                         tracks: genre.tracks,
                         name: genre.name,
                         gridCount: countPerRow,
-                        showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(genre.name, genre.tracks),
+                        showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(
+                          genre.name,
+                          genre.tracks,
+                          heroTag: 'genre_artwork_${genre.name}',
+                        ),
                         onTap: () => NamidaOnTaps.inst.onGenreTap(genre.name),
                       ),
                     );

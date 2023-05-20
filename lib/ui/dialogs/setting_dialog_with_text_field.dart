@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -65,58 +68,39 @@ void showSettingDialogWithTextField({
               tooltip: Language.inst.RESTORE_DEFAULTS,
               onPressed: () {
                 if (trackThumbnailSizeinList != null) {
-                  stg.save(
-                    trackThumbnailSizeinList: 70.0,
-                  );
+                  stg.save(trackThumbnailSizeinList: 70.0);
                   showSnackBarWithTitle("${stg.trackThumbnailSizeinList.value}", title: title, iconWidget: iconWidget);
                 }
                 if (trackListTileHeight != null) {
-                  stg.save(
-                    trackListTileHeight: 70.0,
-                  );
+                  stg.save(trackListTileHeight: 70.0);
                   showSnackBarWithTitle("${stg.trackListTileHeight.value}", title: title, iconWidget: iconWidget);
                 }
                 if (albumThumbnailSizeinList != null) {
-                  stg.save(
-                    albumThumbnailSizeinList: 90.0,
-                  );
+                  stg.save(albumThumbnailSizeinList: 90.0);
                   showSnackBarWithTitle("${stg.albumThumbnailSizeinList.value}", title: title, iconWidget: iconWidget);
                 }
                 if (albumListTileHeight != null) {
-                  stg.save(
-                    albumListTileHeight: 90.0,
-                  );
+                  stg.save(albumListTileHeight: 90.0);
                   showSnackBarWithTitle("${stg.albumListTileHeight.value}", title: title, iconWidget: iconWidget);
                 }
-
                 if (nowPlayingImageContainerHeight != null) {
-                  stg.save(
-                    nowPlayingImageContainerHeight: 400.0,
-                  );
+                  stg.save(nowPlayingImageContainerHeight: 400.0);
                   showSnackBarWithTitle("${stg.nowPlayingImageContainerHeight.value}", title: title, iconWidget: iconWidget);
                 }
                 if (borderRadiusMultiplier != null) {
-                  stg.save(
-                    borderRadiusMultiplier: 1.0,
-                  );
+                  stg.save(borderRadiusMultiplier: 1.0);
                   showSnackBarWithTitle("${stg.borderRadiusMultiplier.value}", title: title, iconWidget: iconWidget);
                 }
                 if (fontScaleFactor != null) {
-                  stg.save(
-                    fontScaleFactor: 1.0,
-                  );
+                  stg.save(fontScaleFactor: 0.9);
                   showSnackBarWithTitle("${stg.fontScaleFactor.value.toInt() * 100}%", title: title, iconWidget: iconWidget);
                 }
                 if (dateTimeFormat != null) {
-                  stg.save(
-                    dateTimeFormat: 'MMM yyyy',
-                  );
+                  stg.save(dateTimeFormat: 'MMM yyyy');
                   showSnackBarWithTitle("${stg.dateTimeFormat}", title: title, iconWidget: iconWidget);
                 }
                 if (trackTileSeparator != null) {
-                  stg.save(
-                    trackTileSeparator: '•',
-                  );
+                  stg.save(trackTileSeparator: '•');
                   showSnackBarWithTitle("${stg.trackTileSeparator}", title: title, iconWidget: iconWidget);
                 }
                 Get.close(1);
@@ -237,7 +221,7 @@ void showSettingDialogWithTextField({
                     if (value!.isEmpty) {
                       return Language.inst.PLEASE_ENTER_A_NAME;
                     }
-                    if (PlaylistController.inst.playlistList.any((element) => element.name.translatePlaylistName == value)) {
+                    if (File('$k_DIR_PLAYLISTS/$value.json').existsSync()) {
                       return Language.inst.PLEASE_ENTER_A_DIFFERENT_NAME;
                     }
                   }

@@ -90,7 +90,7 @@ class ScrollSearchController {
     if (shouldGoBack) {
       Get.offAll(() => MainPageWrapper());
     } else {
-      if (SettingsController.inst.enableBottomNavBar.value && homepageController.hasClients) {
+      if (homepageController.hasClients && SettingsController.inst.enableBottomNavBar.value) {
         await homepageController.animateToPage(animateTo, duration: const Duration(milliseconds: 400), curve: Curves.easeInOutQuart);
       }
     }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -32,7 +34,89 @@ class MiniplayerCustomization extends StatelessWidget {
             title: Language.inst.ENABLE_PARTY_MODE,
             subtitle: Language.inst.ENABLE_PARTY_MODE_SUBTITLE,
             onChanged: (value) {
-              SettingsController.inst.save(enablePartyModeInMiniplayer: !value);
+              // disable
+              if (value) {
+                SettingsController.inst.save(enablePartyModeInMiniplayer: false);
+              }
+              // pls lemme enable
+              if (!value) {
+                if (SettingsController.inst.didSupportNamida) {
+                  SettingsController.inst.save(enablePartyModeInMiniplayer: true);
+                } else {
+                  Get.dialog(
+                    CustomBlurryDialog(
+                      normalTitleStyle: true,
+                      title: 'uwu',
+                      actions: [
+                        NamidaSupportButton(
+                          onPressed: () => Get.close(1),
+                        ),
+                      ],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          GestureDetector(
+                            onDoubleTap: () {
+                              SettingsController.inst.save(didSupportNamida: true);
+                            },
+                            child: const Text('a- ano...'),
+                          ),
+                          const Text(
+                            'this one is actually supposed to be for supporters, if you don\'t mind u can support namida and get the power to unleash this cool feature',
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Get.close(1);
+                              Get.dialog(
+                                CustomBlurryDialog(
+                                  normalTitleStyle: true,
+                                  title: '!!',
+                                  bodyText: "EH? YOU DON'T WANT TO SUPPORT?",
+                                  actions: [
+                                    NamidaSupportButton(
+                                      title: Language.inst.YES,
+                                      onPressed: () => Get.close(1),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Get.close(1);
+                                        Get.dialog(
+                                          CustomBlurryDialog(
+                                            title: 'kechi',
+                                            bodyText: 'hidoii ಥ_ಥ here use it as much as u can, dw im not upset or anything ^^, or am i?',
+                                            actions: [
+                                              ElevatedButton(
+                                                child: Text(Language.inst.UNLOCK.toUpperCase()),
+                                                onPressed: () {
+                                                  Get.close(1);
+                                                  SettingsController.inst.save(enablePartyModeInMiniplayer: true);
+                                                },
+                                              ),
+                                              ElevatedButton(
+                                                child: Text(Language.inst.SUPPORT.toUpperCase()),
+                                                onPressed: () {
+                                                  Get.close(1);
+                                                  launchUrlString(k_NAMIDA_SUPPORT_LINK);
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                      child: Text(Language.inst.NO),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            child: const Text('or you just wanna use it like that? mattaku'),
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+                }
+              }
             },
             value: SettingsController.inst.enablePartyModeInMiniplayer.value,
           ),

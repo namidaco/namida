@@ -33,22 +33,65 @@ class Language {
   String get CONFIGURE => 'Configure';
   String get TOTAL_LISTENS => 'Total Listens';
   String get BLACKLIST => 'Blacklist';
+  String get SEPARATORS_BLACKLIST_SUBTITLE => 'These words will not get split';
   String get REMOVE_DUPLICATES => 'Remove Duplicates';
   String get MAKE_YOUR_FIRST_LISTEN => 'Make your first listen!';
+  String get SUPPORT => 'Support';
+  String get YES => 'yes';
+  String get NO => 'no';
+  String get UNLOCK => 'Unlock';
+  String get ADD_MORE_FROM_THIS_ALBUM => 'Add more from this Album to queue';
+  String get ADD_MORE_FROM_THIS_ARTIST => 'Add more from this Artist to queue';
+  String get ADD_MORE_FROM_THIS_FOLDER => 'Add more from this Folder to queue';
+  String get ADD_MORE_FROM_TO_QUEUE => 'Add more from _MEDIA_ to queue';
+  String get SLEEP_TIMER => 'Sleep timer';
+  String get SLEEP_AFTER => 'Sleep After';
+  String get START => 'Start';
+  String get ANOTHER_PROCESS_IS_RUNNING => 'Another process is already running.';
+  String get SELECT_ALL => 'Select All';
+  String get SELECTED_TRACKS => 'Selected Tracks';
+  String get FINISHED_UPDATING_LIBRARY => 'Finished Updating Library';
+  String get SEEK_DURATION => 'Seek Duration';
+  String get SEEK_DURATION_INFO => 'You can tap on current duration to seek backwards & total duration to seek forwards';
+  String get STOP_AFTER_THIS_TRACK => 'Stop after this track';
+  String get RESCAN_VIDEOS => 'Re-scan videos';
+  String get SHOW_HIDE_UNKNOWN_FIELDS => 'Show/hide Unknown Fields';
+  String get CHANGED => 'Changed';
+  String get MOODS => 'Moods';
+  String get TAG_FIELDS => 'Tag Fields';
+  String get ACTIVE => 'Active';
+  String get NON_ACTIVE => 'Non-Active';
+  String get REORDERABLE => 'Reorderable';
+  String get MINIMUM_ONE_FIELD => 'Couldn\'t remove field';
+  String get MINIMUM_ONE_FIELD_SUBTITLE => 'At least 3 fields should remain';
+  String get EXTRACT_FEAT_ARTIST => 'Extract feat. artists from title';
+  String get EXTRACT_FEAT_ARTIST_SUBTITLE => 'Extracts (feat. X) and (ft. X) artists, only as a new artist entry.';
 
   String get IMPORT_YOUTUBE_HISTORY_GUIDE =>
       '1. Go to _TAKEOUT_LINK_\n\n2. Deselect All and select youtube only.\n\n3. Press "Multiple Formats" and beside "History" choose "JSON".\n\n4. Press "All Youtube data included", Deselect All and choose history only.\n\n5. Create Export, Download & Unzip.\n\n6. Choose "watch-history.json" from the next screen.';
 
   String get IMPORT_LAST_FM_HISTORY => 'Import LastFm History';
-  String get IMPORT_LAST_FM_HISTORY_GUIDE => '1. Go to _LASTFM_CSV_LINK_\n\n2. Type your username, fetch and download csv file\n\n3. Choose the file from the next screen.';
+  String get IMPORT_LAST_FM_HISTORY_GUIDE => '1. Go to _LASTFM_CSV_LINK_\n\n2. Type your username, fetch and download csv file.\n\n3. Choose the file from the next screen.';
 
   String get CORRUPTED_FILE => 'Couldn\'t parse file, it might be corrupted';
   String get ERROR => 'Error';
   String get COULDNT_PLAY_FILE => 'Couldn\'t play file';
+  String get ERROR_PLAYING_TRACK => 'Error playing track';
 
   String get SOURCE => 'Source';
   String get MATCHING_TYPE => 'Matching type';
   String get LINK => 'Link';
+  String get EXTERNAL_FILES => 'External Files';
+  String get KEEP_SCREEN_AWAKE_WHEN => 'Keep screen awake when';
+  String get KEEP_SCREEN_AWAKE_NONE => 'Don\'t keep screen awake';
+  String get KEEP_SCREEN_AWAKE_MINIPLAYER_EXPANDED => 'Miniplayer is Expanded';
+  String get KEEP_SCREEN_AWAKE_MINIPLAYER_EXPANDED_AND_VIDEO => 'Miniplayer is Expanded and a Video is Playing';
+  String get TRACK_NOT_FOUND => 'Track not found';
+  String get PROMPT_TO_CHANGE_TRACK_PATH => 'Usually this happens when u delete/move/rename the file outside namida, Would you like to update current path?';
+  String get TRACK_PATH_OLD_NEW => 'Old name: "_OLD_NAME_"\n\nNew name: "_NEW_NAME_"\n\nAre you sure?';
+  String get UPDATE => 'Update';
+  String get SKIP => 'Skip';
+  String get HIGH_MATCHES => 'High matches';
 
   ///
   String get REMOVE_WHITESPACES => 'Remove Whitespaces';
@@ -63,13 +106,16 @@ class Language {
   String get CLEAR_TRACK_ITEM => 'Clear Track\'s';
   String get CLEAR_TRACK_ITEM_MULTIPLE => 'Clear _NUMBER_ Tracks\'';
   String get MULTIPLE_TRACKS_TAGS_EDIT_NOTE => 'You are about to edit these tracks,\nEmpty fields remains untouched.';
+  String get DELETE => 'Delete';
   String get DELETE_PLAYLIST => 'Delete Playlist';
+  String get RENAME_PLAYLIST => 'Rename Playlist';
   String get REMOVE_FROM_PLAYLIST => 'Remove From Playlist';
   String get GO_TO_ALBUM => 'Go to Album';
   String get GO_TO_ARTIST => 'Go to Artist';
+  String get GO_TO_FOLDER => 'Go to Folder';
   String get EDIT_ARTWORK => 'Edit Artwork';
   String get MIN_VALUE_TO_COUNT_TRACK_LISTEN => 'Count a listen after: ';
-  String get SECONDS => 'Seconds';
+  String get SECONDS => 'seconds';
   String get PERCENTAGE => 'Percentage';
   String get AUTO_EXTRACT_TAGS_FROM_FILENAME => 'Auto extract from filename';
   String get PLEASE_ENTER_A_NAME => 'Please enter a name';
@@ -116,8 +162,9 @@ class Language {
   String get GENERATE_FROM_DATES => 'Time Range';
   String get GENERATE_FROM_DATES_SUBTITLE => 'Generate tracks you listened to in a time range';
   String get NO_TRACKS_FOUND_BETWEEN_DATES => 'this timerange doesn\'t have any tracks.';
-  String get NEW_TRACKS_MODES => 'Mode';
-  String get NEW_TRACKS_MODES_SUBTITLE => 'Generate tracks based on available modes';
+  String get NEW_TRACKS_MOODS => 'Mood';
+  String get NEW_TRACKS_MOODS_SUBTITLE => 'Generate tracks based on available moods';
+  String get NO_MOODS_AVAILABLE => 'No moods available';
 
   /// Main
   String get EXIT_APP => 'Exit';
@@ -141,7 +188,7 @@ class Language {
   String get VIDEO_CACHE_FILES => 'Cached Video Files';
   String get ENABLE_VIDEO_PLAYBACK => 'Enable Video Playback';
   String get VIDEO_PLAYBACK_SOURCE => 'Video Source';
-  String get VIDEO_PLAYBACK_SOURCE_AUTO_SUBTITLE => 'This will give priority to local videos, if not found then it falls back to youtube video';
+  String get VIDEO_PLAYBACK_SOURCE_AUTO_SUBTITLE => 'This will give priority to local videos, if not found then it will fetch from youtube';
   String get VIDEO_PLAYBACK_SOURCE_LOCAL => 'Local Videos';
   String get VIDEO_PLAYBACK_SOURCE_LOCAL_SUBTITLE => 'Checks if any video file (found inside the choosen folders list) has a filename that contains the filename of the track';
   String get VIDEO_PLAYBACK_SOURCE_LOCAL_EXAMPLE => 'Example';
@@ -184,19 +231,22 @@ class Language {
   String get INDEX_REFRESH_REQUIRED => 'Do a Refresh after changing this';
   String get RE_INDEX => 'Re-index';
   String get RE_INDEX_SUBTITLE => 'Rebuild your music library from scratch';
-  String get INDEXER_NOTE => 'Note: Incomplete Number of Artworks refers to the  duplicated & not found Artworks';
+  String get INDEXER_NOTE => 'Note: Incomplete Number of Artworks refers to the duplicated & not found Artworks';
   String get RE_INDEX_WARNING => 'This process might take a while, depending on your library size.\n\nArtworks will not get re-indexed as long as they still exist';
   String get REFRESH_LIBRARY => 'Refresh Library';
   String get REFRESH_LIBRARY_SUBTITLE => 'Check for newly added or deleted music';
+  String get PROMPT_INDEXING_REFRESH => '_NEW_FILES_ new files has been found & _DELETED_FILES_ was deleted or filtered, wanna do a refresh?';
+  String get NO_CHANGES_FOUND => 'No changes has been found.';
   String get TRACK_ARTISTS_SEPARATOR => 'Artists Separators';
   String get TRACK_GENRES_SEPARATOR => 'Genres Separators';
-  String get SEPARATORS_MESSAGE => 'No need to insert spaces, unless you wanna use a letter (like x)';
+  String get SEPARATORS_MESSAGE => 'No need to insert spaces, unless you wanna use a letter/symbol that can be found in a whole word (like x and ft.)';
   String get TRACK_INFO => 'Track Info';
   String get TRACKS_INFO => 'Tracks Info';
   String get ARTWORK => 'Artwork';
   String get ARTWORKS => 'Artworks';
   String get FILTERED_BY_SIZE_AND_DURATION => 'Tracks Filtered by size and duration';
   String get DUPLICATED_TRACKS => 'Duplicated Tracks';
+  String get TRACKS_EXCLUDED_BY_NOMEDIA => 'Tracks Excluded by .nomedia';
   String get MIN_FILE_SIZE => 'Minimum File Size';
   String get MIN_FILE_SIZE_SUBTITLE => 'Only index tracks with size more than this';
   String get MIN_FILE_DURATION => 'Minimum Track Duration';
@@ -269,6 +319,7 @@ class Language {
   String get PLAY_NEXT => 'Play Next';
   String get PLAY_LAST => 'Play Last';
   String get PLAY_AFTER => 'Play After';
+  String get REPEAT_FOR_N_TIMES => 'Repeat for _NUM_ more times';
   String get SHUFFLE => 'Shuffle';
 
   /// 1. Track Tile Customization
@@ -411,6 +462,7 @@ class Language {
   String get DATE_MODIFIED => 'Date Modified';
   String get BITRATE => 'Bitrate';
   String get DISC_NUMBER => 'Disc Number';
+  String get DISC_NUMBER_TOTAL => 'Disc Number Total';
   String get FILE_NAME => 'File Name';
   String get SAMPLE_RATE => 'Sample Rate';
   String get NUMBER_OF_TRACKS => 'Number of Tracks';
@@ -427,4 +479,10 @@ class Language {
   String get FORMAT => 'Format';
   String get PATH => 'File Full Path';
   String get TRACK_NUMBER => 'Track Number';
+  String get TRACK_NUMBER_TOTAL => 'Track Total';
+  String get REMIXER => 'Remixer';
+  String get LYRICIST => 'Lyricist';
+  String get LANGUAGE => 'Language';
+  String get RECORD_LABEL => 'Record Label';
+  String get COUNTRY => 'Country';
 }

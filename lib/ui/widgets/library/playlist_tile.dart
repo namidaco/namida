@@ -47,18 +47,18 @@ class PlaylistTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        playlist.name.translatePlaylistName,
+                        playlist.name.translatePlaylistName(),
                         style: context.textTheme.displayMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.date.dateFormatted].join(' • '),
-                        style: context.textTheme.displaySmall?.copyWith(fontSize: 13.7),
+                        style: context.textTheme.displaySmall?.copyWith(fontSize: 13.7.multipliedFontScale),
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (playlist.modes.isNotEmpty)
+                      if (playlist.moods.isNotEmpty)
                         Text(
-                          playlist.modes.join(', ').overflow,
+                          playlist.moods.join(', ').overflow,
                           style: context.textTheme.displaySmall,
                           overflow: TextOverflow.ellipsis,
                         ),

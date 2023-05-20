@@ -8,6 +8,7 @@ import 'package:namida/controller/audio_handler.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/functions.dart';
 
 class Player {
@@ -21,7 +22,13 @@ class Player {
   final RxDouble currentVolume = SettingsController.inst.playerVolume.value.obs;
   final RxBool isPlaying = false.obs;
   final RxInt nowPlayingPosition = 0.obs;
+  final RxInt numberOfRepeats = 1.obs;
   int latestInsertedIndex = 0;
+
+  final RxBool enableSleepAfterTracks = false.obs;
+  final RxBool enableSleepAfterMins = false.obs;
+  final RxInt sleepAfterMin = 0.obs;
+  final RxInt sleepAfterTracks = 0.obs;
 
   Future<void> initializePlayer() async {
     _audioHandler = await AudioService.init(
@@ -38,6 +45,13 @@ class Player {
 
   void updateMediaItemForce() {
     _audioHandler?.updateCurrentMediaItem(null, true);
+  }
+
+  void resetSleepAfterTimer() {
+    enableSleepAfterMins.value = false;
+    enableSleepAfterTracks.value = false;
+    sleepAfterMin.value = 0;
+    sleepAfterTracks.value = 0;
   }
 
   Future<void> updateVideoPlayingState() async {
@@ -80,8 +94,8 @@ class Player {
     _audioHandler?.insertInQueue(tracks, index);
   }
 
-  void removeFromQueue(int index) async {
-    _audioHandler?.removeFromQueue(index);
+  Future<void> removeFromQueue(int index) async {
+    await _audioHandler?.removeFromQueue(index);
   }
 
   void removeRangeFromQueue(int start, int end) {
@@ -112,17 +126,22 @@ class Player {
     await _audioHandler?.seek(position);
   }
 
-  Future<void> seekSecondsForward([int seconds = 5]) async {
+  /// Default value is set to user preference [seekDurationInSeconds]
+  Future<void> seekSecondsForward([int? seconds]) async {
+    seconds ??= SettingsController.inst.seekDurationInSeconds.value;
     await _audioHandler?.seek(Duration(milliseconds: nowPlayingPosition.value + seconds * 1000));
   }
 
-  Future<void> seekSecondsBackward([int seconds = 5]) async {
+  /// Default value is set to user preference [seekDurationInSeconds]
+  Future<void> seekSecondsBackward([int? seconds]) async {
+    seconds ??= SettingsController.inst.seekDurationInSeconds.value;
     await _audioHandler?.seek(Duration(milliseconds: nowPlayingPosition.value - seconds * 1000));
   }
 
   Future<void> playOrPause(
     int index,
-    List<Track> queue, {
+    List<Track> queue,
+    QueueSource source, {
     bool shuffle = false,
     bool startPlaying = true,
     bool dontAddQueue = false,
@@ -132,11 +151,11 @@ class Player {
     /// maximum 2000 track for performance.
     if (queue.length > 2000) {
       const trimCount = 1000;
-      final start = (index - trimCount).clamp(0, queue.length - 1);
       final end = (index + trimCount).clamp(0, queue.length - 1);
-      finalQueue.assignAll(queue.sublist(start, end + 1));
+      finalQueue.addAll(queue.sublist(index, end + 1));
+      index = 0;
     } else {
-      finalQueue.assignAll(queue);
+      finalQueue.addAll(queue);
     }
 
     if (finalQueue.isEmpty) {
@@ -160,9 +179,8 @@ class Player {
     }
 
     if (!dontAddQueue) {
-      QueueController.inst.addNewQueue(tracks: finalQueue.toList());
+      QueueController.inst.addNewQueue(source, tracks: finalQueue.toList());
     }
-
     currentQueue.assignAll(finalQueue);
 
     await _audioHandler?.setAudioSource(index, startPlaying: startPlaying);

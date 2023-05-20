@@ -20,17 +20,17 @@ final RegExp kYoutubeRegex = RegExp(
   r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)(?:\S+)?',
   caseSensitive: false,
 );
+const String k_NAMIDA_SUPPORT_LINK = '';
 
 /// Main Color
-Color kMainColor = const Color.fromARGB(160, 117, 128, 224);
-Color kMainColorLight = const Color.fromARGB(255, 116, 126, 219);
-Color kMainColorDark = const Color.fromARGB(255, 139, 149, 241);
+const Color kMainColor = Color.fromARGB(160, 117, 128, 224);
+const Color kMainColorLight = Color.fromARGB(255, 116, 126, 219);
+const Color kMainColorDark = Color.fromARGB(255, 139, 149, 241);
 
 /// Directories and files used by Namida
 final String k_FILE_PATH_SETTINGS = '$k_DIR_USER_DATA/namidaSettings.json';
 final String k_FILE_PATH_TRACKS = '$k_DIR_USER_DATA/tracks.json';
 final String k_FILE_PATH_VIDEO_PATHS = '$k_DIR_USER_DATA/videoFilesPaths.txt';
-final String k_FILE_PATH_YOUTUBE_STATS = '$k_DIR_USER_DATA/ytstats.json';
 final String k_FILE_PATH_LATEST_QUEUE = '$k_DIR_USER_DATA/latestqueue.json';
 
 final String k_PLAYLIST_PATH_HISTORY = '$k_DIR_USER_DATA/sussybaka.json';
@@ -47,6 +47,7 @@ final String k_DIR_VIDEOS_CACHE_TEMP = '$k_DIR_USER_DATA/Videos/Temp/';
 final String k_DIR_LYRICS = '$k_DIR_USER_DATA/Lyrics/';
 final String k_DIR_YT_METADATA = '$k_DIR_USER_DATA/Metadata/';
 final String k_DIR_YT_METADATA_COMMENTS = '$k_DIR_USER_DATA/Metadata/Comments/';
+final String k_DIR_YOUTUBE_STATS = '$k_DIR_USER_DATA/Youtube Stats/';
 
 final String k_FILE_PATH_NAMIDA_LOGO = '$k_DIR_ARTWORKS.NAMIDA_DEFAULT_ARTWORK.PNG';
 
@@ -66,6 +67,9 @@ late final Playlist namidaMostPlayedPlaylist;
 
 double get trackTileItemExtent => SettingsController.inst.trackListTileHeight.value + 4.0 * 3.0;
 List<Track> get allTracksInLibrary => Indexer.inst.tracksInfoList.toList();
+bool get shouldAlbumBeSquared =>
+    (SettingsController.inst.albumGridCount.value > 1 && !SettingsController.inst.useAlbumStaggeredGridView.value) ||
+    (SettingsController.inst.albumGridCount.value == 1 && SettingsController.inst.forceSquaredAlbumThumbnail.value);
 
 /// Stock Library Tabs List
 final List<String> kLibraryTabsStock = [
@@ -161,6 +165,7 @@ const List<String> kVideoFilesExtensions = [
 ];
 final kDummyTrack = Track(
   '',
+  '',
   [''],
   '',
   '',
@@ -181,5 +186,13 @@ final kDummyTrack = Track(
   0,
   '',
   '',
-  '',
+  [''],
 );
+
+// Unknown Fields
+const k_UNKNOWN_TRACK_TITLE = '';
+const k_UNKNOWN_TRACK_ALBUM = 'Unknown Album';
+const k_UNKNOWN_TRACK_ALBUMARTIST = '';
+const k_UNKNOWN_TRACK_ARTIST = 'Unknown Artist';
+const k_UNKNOWN_TRACK_GENRE = 'Unknown Genre';
+const k_UNKNOWN_TRACK_COMPOSER = 'Unknown Composer';

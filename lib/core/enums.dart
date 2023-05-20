@@ -103,6 +103,7 @@ enum TrackPlayMode {
 enum RepeatMode {
   none,
   one,
+  forNtimes,
   all,
 }
 
@@ -111,4 +112,48 @@ enum TrackSource {
   youtube,
   youtubeMusic,
   lastfm,
+}
+
+enum QueueSource {
+  allTracks,
+  album,
+  artist,
+  genre,
+  playlist,
+  folder,
+  search,
+  queuePage,
+  playerQueue,
+  mostPlayed,
+  history,
+  favourites,
+  selectedTracks,
+  externalFile,
+}
+
+enum TagField {
+  title,
+  artist,
+  album,
+  albumArtist,
+  composer,
+  genre,
+  year,
+  trackNumber,
+  discNumber,
+  comment,
+  lyrics,
+  remixer,
+  trackTotal,
+  discTotal,
+  lyricist,
+  language,
+  recordLabel,
+  country,
+}
+
+enum WakelockMode {
+  none,
+  expanded,
+  expandedAndVideo,
 }

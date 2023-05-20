@@ -39,11 +39,11 @@ class ArtistTile extends StatelessWidget {
               children: [
                 const SizedBox(width: 8.0),
                 Hero(
-                  tag: 'artist$name',
+                  tag: 'artist_$name',
                   child: ContainerWithBorder(
                     child: ArtworkWidget(
                       thumnailSize: artistthumnailSize,
-                      path: tracks[0].pathToImage,
+                      path: tracks.pathToImage,
                       borderRadius: 64.0,
                       forceSquared: true,
                       blur: 0,
@@ -61,16 +61,6 @@ class ArtistTile extends StatelessWidget {
                         style: context.textTheme.displayMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      // Text(
-                      //   [
-                      //     tracks.displayTrackKeyword,
-                      //     tracks[0].year.yearFormatted,
-                      //   ].join(' • '),
-                      //   style: context.textTheme.displayMedium?.copyWith(
-                      //     fontWeight: FontWeight.w500,
-                      //   ),
-                      //   overflow: TextOverflow.ellipsis,
-                      // ),
                       Text(
                         [
                           tracks.displayTrackKeyword,

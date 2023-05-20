@@ -22,7 +22,7 @@ class SettingsController {
   final RxList<String> libraryTabs = kLibraryTabsStock.obs;
   final RxInt searchResultsPlayMode = 1.obs;
   final RxDouble borderRadiusMultiplier = 1.0.obs;
-  final RxDouble fontScaleFactor = 1.0.obs;
+  final RxDouble fontScaleFactor = 0.9.obs;
   final RxDouble trackThumbnailSizeinList = 70.0.obs;
   final RxDouble trackListTileHeight = 70.0.obs;
   final RxDouble albumThumbnailSizeinList = 90.0.obs;
@@ -44,8 +44,8 @@ class SettingsController {
   final RxBool enableGlowEffect = true.obs;
   final RxBool hourFormat12 = true.obs;
   final RxString dateTimeFormat = 'MMM yyyy'.obs;
-  final RxList<String> trackArtistsSeparators = <String>['&', ',', ';', '//'].obs;
-  final RxList<String> trackGenresSeparators = <String>['&', ',', ';', '//'].obs;
+  final RxList<String> trackArtistsSeparators = <String>['&', ',', ';', '//', ' ft. ', ' x '].obs;
+  final RxList<String> trackGenresSeparators = <String>['&', ',', ';', '//', ' x '].obs;
   final RxList<String> trackArtistsSeparatorsBlacklist = <String>[].obs;
   final RxList<String> trackGenresSeparatorsBlacklist = <String>[].obs;
   final Rx<SortType> tracksSort = SortType.title.obs;
@@ -61,7 +61,7 @@ class SettingsController {
   final RxInt indexMinDurationInSec = 5.obs;
   final RxInt indexMinFileSizeInB = (100 * 1024).obs;
   final RxList<String> trackSearchFilter = ['title', 'artist', 'album'].obs;
-  final RxList<String> playlistSearchFilter = ['name', 'date', 'modes', 'comment'].obs;
+  final RxList<String> playlistSearchFilter = ['name', 'date', 'moods', 'comment'].obs;
   final RxList<String> directoriesToScan = kDirectoriesPaths.toList().obs;
   final RxList<String> directoriesToExclude = <String>[].obs;
   final RxBool preventDuplicatedTracks = false.obs;
@@ -70,18 +70,16 @@ class SettingsController {
   final RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
   final RxBool enableFoldersHierarchy = true.obs;
   final RxList<String> backupItemslist = [
+    k_FILE_PATH_SETTINGS,
     k_FILE_PATH_TRACKS,
-    k_DIR_QUEUES,
-    k_PLAYLIST_PATH_HISTORY,
-    k_PLAYLIST_PATH_FAVOURITES,
-    k_FILE_PATH_LATEST_QUEUE,
     k_DIR_PALETTES,
     k_DIR_LYRICS,
-    k_DIR_PLAYLISTS,
-    k_FILE_PATH_SETTINGS,
     k_DIR_WAVEFORMS,
+    k_DIR_PLAYLISTS,
     k_PLAYLIST_PATH_HISTORY,
     k_PLAYLIST_PATH_FAVOURITES,
+    k_DIR_QUEUES,
+    k_FILE_PATH_LATEST_QUEUE,
   ].obs;
   final RxBool enableVideoPlayback = true.obs;
   final RxBool enableLyrics = false.obs;
@@ -96,6 +94,7 @@ class SettingsController {
   final RxInt isTrackPlayedPercentageCount = 40.obs;
   final RxInt waveformTotalBars = 140.obs;
   final RxDouble playerVolume = 1.0.obs;
+  final RxInt seekDurationInSeconds = 5.obs;
   final RxInt playerPlayFadeDurInMilli = 300.obs;
   final RxInt playerPauseFadeDurInMilli = 300.obs;
   final RxInt totalListenedTimeInSec = 0.obs;
@@ -107,6 +106,22 @@ class SettingsController {
   final RxBool useYoutubeMiniplayer = false.obs;
   final RxBool playerPlayOnNextPrev = true.obs;
   final RxBool displayAudioInfoMiniplayer = false.obs;
+  final RxBool showUnknownFieldsInTrackInfoDialog = true.obs;
+  final RxBool extractFeatArtistFromTitle = true.obs;
+  final RxList<TagField> tagFieldsToEdit = <TagField>[
+    TagField.trackNumber,
+    TagField.year,
+    TagField.title,
+    TagField.artist,
+    TagField.album,
+    TagField.genre,
+    TagField.albumArtist,
+    TagField.composer,
+    TagField.comment,
+    TagField.lyrics,
+  ].obs;
+
+  final Rx<WakelockMode> wakelockMode = WakelockMode.expandedAndVideo.obs;
 
   final Rx<RepeatMode> playerRepeatMode = RepeatMode.none.obs;
   final Rx<TrackPlayMode> trackPlayMode = TrackPlayMode.searchResults.obs;
@@ -130,8 +145,10 @@ class SettingsController {
     TrackTileItem.none,
   ).obs;
 
-  Future<void> prepareSettingsFile({File? file}) async {
-    file ??= await File(k_FILE_PATH_SETTINGS).create(recursive: true);
+  bool didSupportNamida = false;
+
+  Future<void> prepareSettingsFile() async {
+    final file = await File(k_FILE_PATH_SETTINGS).create(recursive: true);
     try {
       final String contents = await file.readAsString();
       if (contents.isEmpty) {
@@ -215,6 +232,7 @@ class SettingsController {
       isTrackPlayedPercentageCount.value = json['isTrackPlayedPercentageCount'] ?? isTrackPlayedPercentageCount.value;
       waveformTotalBars.value = json['waveformTotalBars'] ?? waveformTotalBars.value;
       playerVolume.value = json['playerVolume'] ?? playerVolume.value;
+      seekDurationInSeconds.value = json['seekDurationInSeconds'] ?? seekDurationInSeconds.value;
       playerPlayFadeDurInMilli.value = json['playerPlayFadeDurInMilli'] ?? playerPlayFadeDurInMilli.value;
       playerPauseFadeDurInMilli.value = json['playerPauseFadeDurInMilli'] as int? ?? playerPauseFadeDurInMilli.value;
       totalListenedTimeInSec.value = json['totalListenedTimeInSec'] ?? totalListenedTimeInSec.value;
@@ -226,6 +244,13 @@ class SettingsController {
       useYoutubeMiniplayer.value = json['useYoutubeMiniplayer'] ?? useYoutubeMiniplayer.value;
       playerPlayOnNextPrev.value = json['playerPlayOnNextPrev'] ?? playerPlayOnNextPrev.value;
       displayAudioInfoMiniplayer.value = json['displayAudioInfoMiniplayer'] ?? displayAudioInfoMiniplayer.value;
+      showUnknownFieldsInTrackInfoDialog.value = json['showUnknownFieldsInTrackInfoDialog'] ?? showUnknownFieldsInTrackInfoDialog.value;
+      extractFeatArtistFromTitle.value = json['extractFeatArtistFromTitle'] ?? extractFeatArtistFromTitle.value;
+
+      final listFromStorage = List<String>.from(json['tagFieldsToEdit'] ?? []);
+      tagFieldsToEdit.value = listFromStorage.isNotEmpty ? List<TagField>.from(listFromStorage.map((e) => TagField.values.getEnum(e)).toList()) : tagFieldsToEdit.toList();
+
+      wakelockMode.value = WakelockMode.values.getEnum(json['wakelockMode']) ?? wakelockMode.value;
 
       playerRepeatMode.value = RepeatMode.values.getEnum(json['playerRepeatMode']) ?? playerRepeatMode.value;
       trackPlayMode.value = TrackPlayMode.values.getEnum(json['trackPlayMode']) ?? trackPlayMode.value;
@@ -244,8 +269,8 @@ class SettingsController {
     }
   }
 
-  Future<void> _writeToStorage({File? file}) async {
-    file ??= File(k_FILE_PATH_SETTINGS);
+  Future<void> _writeToStorage() async {
+    final file = File(k_FILE_PATH_SETTINGS);
     final res = {
       'themeMode': themeMode.value.convertToString,
       'autoColor': autoColor.value,
@@ -317,6 +342,7 @@ class SettingsController {
       'isTrackPlayedPercentageCount': isTrackPlayedPercentageCount.value,
       'waveformTotalBars': waveformTotalBars.value,
       'playerVolume': playerVolume.value,
+      'seekDurationInSeconds': seekDurationInSeconds.value,
       'playerPlayFadeDurInMilli': playerPlayFadeDurInMilli.value,
       'playerPauseFadeDurInMilli': playerPauseFadeDurInMilli.value,
       'totalListenedTimeInSec': totalListenedTimeInSec.value,
@@ -328,16 +354,21 @@ class SettingsController {
       'useYoutubeMiniplayer': useYoutubeMiniplayer.value,
       'playerPlayOnNextPrev': playerPlayOnNextPrev.value,
       'displayAudioInfoMiniplayer': displayAudioInfoMiniplayer.value,
+      'showUnknownFieldsInTrackInfoDialog': showUnknownFieldsInTrackInfoDialog.value,
+      'extractFeatArtistFromTitle': extractFeatArtistFromTitle.value,
+      'tagFieldsToEdit': tagFieldsToEdit.map((element) => element.convertToString).toList(),
+      'wakelockMode': wakelockMode.value.convertToString,
       'playerRepeatMode': playerRepeatMode.value.convertToString,
       'trackPlayMode': trackPlayMode.value.convertToString,
 
       /// Track Items
       'displayThirdRow': displayThirdRow.value,
       'displayThirdItemInEachRow': displayThirdItemInEachRow.value,
-      'trackTileSeparator': trackTileSeparator.value, 'displayFavouriteIconInListTile': displayFavouriteIconInListTile.value,
+      'trackTileSeparator': trackTileSeparator.value,
+      'displayFavouriteIconInListTile': displayFavouriteIconInListTile.value,
       'trackItem': trackItem.value.toJson(),
     };
-    file.writeAsStringSync(json.encode(res));
+    await file.writeAsString(json.encode(res));
   }
 
   /// Saves a value to the key, if [List] or [Set], then it will add to it.
@@ -415,6 +446,7 @@ class SettingsController {
     bool? displayFavouriteIconInListTile,
     int? waveformTotalBars,
     double? playerVolume,
+    int? seekDurationInSeconds,
     int? playerPlayFadeDurInMilli,
     int? playerPauseFadeDurInMilli,
     int? totalListenedTimeInSec,
@@ -426,8 +458,13 @@ class SettingsController {
     bool? useYoutubeMiniplayer,
     bool? playerPlayOnNextPrev,
     bool? displayAudioInfoMiniplayer,
+    bool? showUnknownFieldsInTrackInfoDialog,
+    bool? extractFeatArtistFromTitle,
+    List<TagField>? tagFieldsToEdit,
+    WakelockMode? wakelockMode,
     RepeatMode? playerRepeatMode,
     TrackPlayMode? trackPlayMode,
+    bool? didSupportNamida,
   }) {
     if (themeMode != null) {
       this.themeMode.value = themeMode;
@@ -681,6 +718,9 @@ class SettingsController {
     if (playerVolume != null) {
       this.playerVolume.value = playerVolume;
     }
+    if (seekDurationInSeconds != null) {
+      this.seekDurationInSeconds.value = seekDurationInSeconds;
+    }
     if (playerPlayFadeDurInMilli != null) {
       this.playerPlayFadeDurInMilli.value = playerPlayFadeDurInMilli;
     }
@@ -714,11 +754,30 @@ class SettingsController {
     if (displayAudioInfoMiniplayer != null) {
       this.displayAudioInfoMiniplayer.value = displayAudioInfoMiniplayer;
     }
+    if (showUnknownFieldsInTrackInfoDialog != null) {
+      this.showUnknownFieldsInTrackInfoDialog.value = showUnknownFieldsInTrackInfoDialog;
+    }
+    if (extractFeatArtistFromTitle != null) {
+      this.extractFeatArtistFromTitle.value = extractFeatArtistFromTitle;
+    }
+    if (tagFieldsToEdit != null) {
+      for (final d in tagFieldsToEdit) {
+        if (!this.tagFieldsToEdit.contains(d)) {
+          this.tagFieldsToEdit.add(d);
+        }
+      }
+    }
+    if (wakelockMode != null) {
+      this.wakelockMode.value = wakelockMode;
+    }
     if (playerRepeatMode != null) {
       this.playerRepeatMode.value = playerRepeatMode;
     }
     if (trackPlayMode != null) {
       this.trackPlayMode.value = trackPlayMode;
+    }
+    if (didSupportNamida != null) {
+      this.didSupportNamida = didSupportNamida;
     }
     _writeToStorage();
   }
@@ -727,12 +786,16 @@ class SettingsController {
     index, {
     String? libraryTab1,
     String? youtubeVideoQualities1,
+    TagField? tagFieldsToEdit1,
   }) {
     if (libraryTab1 != null) {
       libraryTabs.insert(index, libraryTab1);
     }
     if (youtubeVideoQualities1 != null) {
       youtubeVideoQualities.insertSafe(index, youtubeVideoQualities1);
+    }
+    if (tagFieldsToEdit1 != null) {
+      tagFieldsToEdit.insertSafe(index, tagFieldsToEdit1);
     }
     _writeToStorage();
   }
@@ -756,6 +819,8 @@ class SettingsController {
     List<String>? backupItemslistAll,
     String? youtubeVideoQualities1,
     List<String>? youtubeVideoQualitiesAll,
+    TagField? tagFieldsToEdit1,
+    List<TagField>? tagFieldsToEditAll,
   }) {
     if (trackArtistsSeparator != null) {
       trackArtistsSeparators.remove(trackArtistsSeparator);
@@ -836,6 +901,16 @@ class SettingsController {
       for (final t in youtubeVideoQualitiesAll) {
         if (youtubeVideoQualities.contains(t)) {
           youtubeVideoQualities.remove(t);
+        }
+      }
+    }
+    if (tagFieldsToEdit1 != null) {
+      tagFieldsToEdit.remove(tagFieldsToEdit1);
+    }
+    if (tagFieldsToEditAll != null) {
+      for (final t in tagFieldsToEditAll) {
+        if (tagFieldsToEdit.contains(t)) {
+          tagFieldsToEdit.remove(t);
         }
       }
     }

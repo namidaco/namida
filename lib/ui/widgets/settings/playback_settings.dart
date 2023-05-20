@@ -233,6 +233,14 @@ class PlaybackSettings extends StatelessWidget {
             ),
           ),
           Obx(
+            () => CustomListTile(
+              title: '${Language.inst.KEEP_SCREEN_AWAKE_WHEN}:',
+              subtitle: SettingsController.inst.wakelockMode.value.toText(),
+              icon: Broken.external_drive,
+              onTap: () => SettingsController.inst.wakelockMode.value.toggleSetting(),
+            ),
+          ),
+          Obx(
             () => CustomSwitchListTile(
               title: Language.inst.DISPLAY_FAV_BUTTON_IN_NOTIFICATION,
               icon: Broken.heart_tick,
@@ -248,11 +256,9 @@ class PlaybackSettings extends StatelessWidget {
           ),
           Obx(
             () => CustomSwitchListTile(
-              leading: StackedIcon(
+              leading: const StackedIcon(
                 baseIcon: Broken.play,
                 secondaryIcon: Broken.record,
-                baseIconColor: context.theme.listTileTheme.iconColor,
-                secondaryIconColor: context.theme.listTileTheme.iconColor,
               ),
               title: Language.inst.PLAY_AFTER_NEXT_PREV,
               onChanged: (value) => SettingsController.inst.save(playerPlayOnNextPrev: !value),
@@ -261,11 +267,9 @@ class PlaybackSettings extends StatelessWidget {
           ),
           Obx(
             () => CustomSwitchListTile(
-              leading: StackedIcon(
+              leading: const StackedIcon(
                 baseIcon: Broken.play,
                 secondaryIcon: Broken.pause,
-                baseIconColor: context.theme.listTileTheme.iconColor,
-                secondaryIconColor: context.theme.listTileTheme.iconColor,
               ),
               title: Language.inst.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE,
               onChanged: (value) {
@@ -313,6 +317,24 @@ class PlaybackSettings extends StatelessWidget {
           ),
           Obx(
             () => CustomListTile(
+              icon: Broken.forward_5_seconds,
+              title: Language.inst.SEEK_DURATION,
+              subtitle: Language.inst.SEEK_DURATION_INFO,
+              trailing: NamidaWheelSlider(
+                totalCount: 60,
+                initValue: SettingsController.inst.seekDurationInSeconds.value,
+                itemSize: 2,
+                squeeze: 0.4,
+                onValueChanged: (val) {
+                  final v = (val) as int;
+                  SettingsController.inst.save(seekDurationInSeconds: v);
+                },
+                text: "${SettingsController.inst.seekDurationInSeconds.value}s",
+              ),
+            ),
+          ),
+          Obx(
+            () => CustomListTile(
               icon: Broken.timer,
               title: Language.inst.MIN_VALUE_TO_COUNT_TRACK_LISTEN,
               onTap: () => Get.dialog(
@@ -340,7 +362,7 @@ class PlaybackSettings extends StatelessWidget {
                                 SettingsController.inst.save(isTrackPlayedSecondsCount: v);
                               },
                               text: "${SettingsController.inst.isTrackPlayedSecondsCount.value}s",
-                              topText: Language.inst.SECONDS,
+                              topText: Language.inst.SECONDS.capitalizeFirst,
                               textPadding: 8.0,
                             ),
                             Text(

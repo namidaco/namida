@@ -2,17 +2,17 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
 class TrackItem {
-  late final TrackTileItem row1Item1;
-  late final TrackTileItem row1Item2;
-  late final TrackTileItem row1Item3;
-  late final TrackTileItem row2Item1;
-  late final TrackTileItem row2Item2;
-  late final TrackTileItem row2Item3;
-  late final TrackTileItem row3Item1;
-  late final TrackTileItem row3Item2;
-  late final TrackTileItem row3Item3;
-  late final TrackTileItem rightItem1;
-  late final TrackTileItem rightItem2;
+  late TrackTileItem row1Item1;
+  late TrackTileItem row1Item2;
+  late TrackTileItem row1Item3;
+  late TrackTileItem row2Item1;
+  late TrackTileItem row2Item2;
+  late TrackTileItem row2Item3;
+  late TrackTileItem row3Item1;
+  late TrackTileItem row3Item2;
+  late TrackTileItem row3Item3;
+  late TrackTileItem rightItem1;
+  late TrackTileItem rightItem2;
 
   TrackItem(
     this.row1Item1,
@@ -42,19 +42,18 @@ class TrackItem {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['row1Item1'] = row1Item1.convertToString;
-    data['row1Item2'] = row1Item2.convertToString;
-    data['row1Item3'] = row1Item3.convertToString;
-    data['row2Item1'] = row2Item1.convertToString;
-    data['row2Item2'] = row2Item2.convertToString;
-    data['row2Item3'] = row2Item3.convertToString;
-    data['row3Item1'] = row3Item1.convertToString;
-    data['row3Item2'] = row3Item2.convertToString;
-    data['row3Item3'] = row3Item3.convertToString;
-    data['rightItem1'] = rightItem1.convertToString;
-    data['rightItem2'] = rightItem2.convertToString;
-
-    return data;
+    return {
+      'row1Item1': row1Item1.convertToString,
+      'row1Item2': row1Item2.convertToString,
+      'row1Item3': row1Item3.convertToString,
+      'row2Item1': row2Item1.convertToString,
+      'row2Item2': row2Item2.convertToString,
+      'row2Item3': row2Item3.convertToString,
+      'row3Item1': row3Item1.convertToString,
+      'row3Item2': row3Item2.convertToString,
+      'row3Item3': row3Item3.convertToString,
+      'rightItem1': rightItem1.convertToString,
+      'rightItem2': rightItem2.convertToString,
+    };
   }
 }

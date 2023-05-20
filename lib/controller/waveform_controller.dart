@@ -88,7 +88,7 @@ class WaveformController {
     }
     generatingAllWaveforms.value = true;
 
-    for (final tr in Indexer.inst.tracksInfoList) {
+    for (final tr in allTracksInLibrary) {
       if (!generatingAllWaveforms.value) {
         break;
       }

@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
@@ -15,8 +13,9 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 
 void showAddToPlaylistDialog(List<Track> tracks) {
   Get.dialog(
-    BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
+    NamidaBgBlur(
+      blur: 7,
+      enabled: true,
       child: Theme(
         data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !Get.isDarkMode),
         child: Dialog(
@@ -45,17 +44,6 @@ void showAddToPlaylistDialog(List<Track> tracks) {
                   ],
                 ),
               ),
-              // Expanded(
-              //   child: ListView.builder(
-              //     physics: BouncingScrollPhysics(),
-              //     padding: EdgeInsets.zero,
-              //     shrinkWrap: true,
-              //     itemCount: PlaylistController.inst.playlistList.length,
-              //     itemBuilder: (context, i) {
-              //       return PlaylistsPage();
-              //     },
-              //   ),
-              // ),
               Flexible(
                 child: PlaylistsPage(
                   tracksToAdd: tracks,

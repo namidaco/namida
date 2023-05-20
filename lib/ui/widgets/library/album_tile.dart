@@ -22,6 +22,7 @@ class AlbumTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final albumthumnailSize = SettingsController.inst.albumThumbnailSizeinList.value;
     final albumTileHeight = SettingsController.inst.albumListTileHeight.value;
+    final finalYear = album.year.yearFormatted;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 8.0),
@@ -40,8 +41,8 @@ class AlbumTile extends StatelessWidget {
         color: context.theme.cardColor,
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 120, 120, 120),
-          onLongPress: () => NamidaDialogs.inst.showAlbumDialog(album),
-          onTap: () => NamidaOnTaps.inst.onAlbumTap(album[0].album),
+          onLongPress: () => NamidaDialogs.inst.showAlbumDialog(album, heroTag: 'parent_album_artwork_${album.album}'),
+          onTap: () => NamidaOnTaps.inst.onAlbumTap(album.album),
           child: Container(
             alignment: Alignment.center,
             padding: const EdgeInsets.only(top: 3.0, bottom: 3.0, right: 8.0),
@@ -49,7 +50,7 @@ class AlbumTile extends StatelessWidget {
             child: Row(
               children: [
                 Hero(
-                  tag: 'parent_album_artwork_${album[0].album}',
+                  tag: 'parent_album_artwork_${album.album}',
                   child: Container(
                     margin: const EdgeInsets.symmetric(
                       horizontal: 12.0,
@@ -58,7 +59,7 @@ class AlbumTile extends StatelessWidget {
                     height: albumthumnailSize,
                     child: ArtworkWidget(
                       thumnailSize: albumthumnailSize,
-                      path: album[0].pathToImage,
+                      path: album.pathToImage,
                       forceSquared: SettingsController.inst.forceSquaredAlbumThumbnail.value,
                     ),
                   ),
@@ -69,20 +70,20 @@ class AlbumTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        album[0].album,
+                        album.album,
                         style: context.textTheme.displayMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (album[0].albumArtist != '')
+                      if (album.albumArtist != '')
                         Text(
-                          album[0].albumArtist,
+                          album.albumArtist,
                           style: context.textTheme.displaySmall,
                           overflow: TextOverflow.ellipsis,
                         ),
                       Text(
                         [
                           album.displayTrackKeyword,
-                          album[0].year.yearFormatted,
+                          if (finalYear != '') finalYear,
                         ].join(' • '),
                         style: context.textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.w500,

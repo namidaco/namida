@@ -35,27 +35,20 @@ class ArtistsPage extends StatelessWidget {
                   currentCount: SettingsController.inst.artistGridCount.value,
                   onTap: () {
                     final n = SettingsController.inst.artistGridCount.value;
-                    if (n < 4) {
-                      SettingsController.inst.save(artistGridCount: n + 1);
-                    } else {
-                      SettingsController.inst.save(artistGridCount: 1);
-                    }
+                    final nToSave = n < 4 ? n + 1 : 1;
+                    SettingsController.inst.save(artistGridCount: nToSave);
                   },
                 ),
                 isBarVisible: ScrollSearchController.inst.isArtistBarVisible.value,
                 showSearchBox: ScrollSearchController.inst.showArtistSearchBox.value,
                 leftText: finalArtists.length.displayArtistKeyword,
                 onFilterIconTap: () => ScrollSearchController.inst.switchArtistSearchBoxVisibilty(),
-                onCloseButtonPressed: () {
-                  ScrollSearchController.inst.clearArtistSearchTextField();
-                },
+                onCloseButtonPressed: () => ScrollSearchController.inst.clearArtistSearchTextField(),
                 sortByMenuWidget: SortByMenu(
                   title: SettingsController.inst.artistSort.value.toText,
                   popupMenuChild: const SortByMenuArtists(),
                   isCurrentlyReversed: SettingsController.inst.artistSortReversed.value,
-                  onReverseIconTap: () {
-                    Indexer.inst.sortArtists(reverse: !SettingsController.inst.artistSortReversed.value);
-                  },
+                  onReverseIconTap: () => Indexer.inst.sortArtists(reverse: !SettingsController.inst.artistSortReversed.value),
                 ),
                 textField: CustomTextFiled(
                   textFieldController: Indexer.inst.artistsSearchController,

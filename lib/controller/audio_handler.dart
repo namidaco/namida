@@ -17,6 +17,7 @@ import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 
 class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHandler {
   final _player = AudioPlayer();
@@ -29,6 +30,12 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   RxInt get currentIndex => namidaPlayer.currentIndex;
   RxDouble get currentVolume => namidaPlayer.currentVolume;
   RxBool get isPlaying => namidaPlayer.isPlaying;
+  RxInt get numberOfRepeats => namidaPlayer.numberOfRepeats;
+  RxBool get enableSleepAfterTracks => namidaPlayer.enableSleepAfterTracks;
+  RxBool get enableSleepAfterMins => namidaPlayer.enableSleepAfterMins;
+  RxInt get sleepAfterTracks => namidaPlayer.sleepAfterTracks;
+  RxInt get sleepAfterMin => namidaPlayer.sleepAfterMin;
+
   bool get isLastTrack => currentIndex.value == currentQueue.length - 1;
 
   NamidaAudioVideoHandler(this.namidaPlayer) {
@@ -42,15 +49,34 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
 
     _player.processingStateStream.listen((state) async {
       if (state == ProcessingState.completed) {
+        /// Sleep timer after n tracks
+        if (enableSleepAfterTracks.value) {
+          sleepAfterTracks.value = (sleepAfterTracks.value - 1).clamp(0, 40);
+          if (sleepAfterTracks.value == 0) {
+            Player.inst.resetSleepAfterTimer();
+            await pause();
+            return;
+          }
+        }
+
+        /// repeat moods
         final repeat = SettingsController.inst.playerRepeatMode.value;
         if (repeat == RepeatMode.none) {
-          skipToNext(!isLastTrack);
+          await skipToNext(!isLastTrack);
         }
         if (repeat == RepeatMode.one) {
-          skipToQueueItem(currentIndex.value);
+          await skipToQueueItem(currentIndex.value);
+        }
+        if (repeat == RepeatMode.forNtimes) {
+          if (numberOfRepeats.value == 1) {
+            SettingsController.inst.save(playerRepeatMode: RepeatMode.none);
+          } else {
+            numberOfRepeats.value--;
+          }
+          await skipToQueueItem(currentIndex.value);
         }
         if (repeat == RepeatMode.all) {
-          skipToNext();
+          await skipToNext();
         }
       }
     });
@@ -121,29 +147,65 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     final tr = currentQueue.elementAt(index);
     nowPlayingTrack.value = tr;
     currentIndex.value = index;
+
     CurrentColor.inst.updatePlayerColor(tr, index);
     VideoController.inst.updateLocalVidPath(tr);
     updateVideoPlayingState();
-
     updateCurrentMediaItem(tr);
 
     /// Te whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture] don't get detected.
-    if (startPlaying && !isPlaying.value) {
-      _player.play();
-    }
-    await _player.setFilePath(tr.path, preload: preload);
-    _player.pause();
-    if (startPlaying) {
-      _player.play();
-      setVolume(SettingsController.inst.playerVolume.value);
-    }
+    try {
+      if (startPlaying && !isPlaying.value) {
+        _player.play();
+      }
+      await _player.setAudioSource(tr.toAudioSource(), preload: preload);
+      _player.pause();
+      if (startPlaying) {
+        _player.play();
+        setVolume(SettingsController.inst.playerVolume.value);
+      }
+      // await stop();
+      // await _player.setAudioSource(tr.toAudioSource(), preload: preload);
+      // if (startPlaying) {
+      //   _player.play();
+      //   setVolume(SettingsController.inst.playerVolume.value);
+      // }
+      startSleepAfterMinCount(tr);
+      WaveformController.inst.generateWaveform(tr);
+      PlaylistController.inst.addToHistory(nowPlayingTrack.value);
+      increaseListenTime(tr);
+      SettingsController.inst.save(lastPlayedTrackPath: tr.path);
+      Lyrics.inst.updateLyrics(tr);
+      tryResettingLatestInsertedIndex();
+    } catch (e) {
+      print("dsadasd ${e.toString()}");
 
-    WaveformController.inst.generateWaveform(tr);
-    PlaylistController.inst.addToHistory(nowPlayingTrack.value);
-    increaseListenTime(tr);
-    SettingsController.inst.save(lastPlayedTrackPath: tr.path);
-    Lyrics.inst.updateLyrics(tr);
-    tryResettingLatestInsertedIndex();
+      /// if track doesnt exist
+      NamidaDialogs.inst.showTrackDialog(tr, isFromPlayerQueue: true, errorPlayingTrack: true);
+      return;
+    }
+  }
+
+  void startSleepAfterMinCount(Track track) async {
+    Timer.periodic(const Duration(minutes: 1), (timer) async {
+      if (enableSleepAfterMins.value) {
+        if (isPlaying.value) {
+          sleepAfterMin.value = (sleepAfterMin.value - 1).clamp(0, 180);
+          if (sleepAfterMin.value == 0) {
+            Player.inst.resetSleepAfterTimer();
+            await pause();
+            timer.cancel();
+            return;
+          }
+        }
+      }
+      nowPlayingTrack.listen((p0) {
+        if (track != p0) {
+          timer.cancel();
+          return;
+        }
+      });
+    });
   }
 
   /// if [force] is enabled, [track] will not be used.
@@ -153,7 +215,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
       return;
     }
     track ??= nowPlayingTrack.value;
-    mediaItem.add(track.toMediaItem);
+    mediaItem.add(track.toMediaItem());
   }
 
   Future<void> togglePlayPause() async {
@@ -251,7 +313,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     final ct = nowPlayingTrack.value;
     final diff = currentQueue.length - q.length;
     q.remove(nowPlayingTrack.value);
-    q.insertSafe((currentIndex.value - diff).clamp(0, currentQueue.length - diff), ct);
+    q.insert((currentIndex.value - diff).clamp(0, currentQueue.length - diff), ct);
     currentQueue.assignAll(q);
     final index = currentQueue.indexOf(ct);
     currentIndex.value = index;
@@ -445,20 +507,20 @@ extension MediaItemsListToAudioSources on List<MediaItem> {
 }
 
 extension TrackToAudioSourceMediaItem on Track {
-  UriAudioSource get toAudioSource {
+  UriAudioSource toAudioSource() {
     return AudioSource.uri(
       Uri.parse(path),
       tag: toMediaItem,
     );
   }
 
-  MediaItem get toMediaItem => MediaItem(
+  MediaItem toMediaItem() => MediaItem(
         id: path,
         title: title,
         displayTitle: title,
-        displaySubtitle: "${artistsList.take(3).join(', ')} - $album",
+        displaySubtitle: hasUnknownAlbum ? originalArtist : "$originalArtist - $album",
         displayDescription: "${Player.inst.currentIndex.value + 1}/${Player.inst.currentQueue.length}",
-        artist: artistsList.take(3).join(', '),
+        artist: originalArtist,
         album: album,
         genre: genresList.take(3).join(', '),
         duration: Duration(milliseconds: duration),
@@ -467,11 +529,11 @@ extension TrackToAudioSourceMediaItem on Track {
 }
 
 extension TracksListToAudioSourcesMediaItems on List<Track> {
-  List<AudioSource> get toAudioSources => map((e) => e.toAudioSource).toList();
-  List<MediaItem> get toMediaItems => map((e) => e.toMediaItem).toList();
+  List<AudioSource> toAudioSources() => map((e) => e.toAudioSource()).toList();
+  List<MediaItem> toMediaItems() => map((e) => e.toMediaItem()).toList();
   ConcatenatingAudioSource get toConcatenatingAudioSource => ConcatenatingAudioSource(
         useLazyPreparation: true,
         shuffleOrder: DefaultShuffleOrder(),
-        children: map((e) => e.toAudioSource).toList(),
+        children: map((e) => e.toAudioSource()).toList(),
       );
 }

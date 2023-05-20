@@ -50,10 +50,9 @@ class PlaylistController {
           return;
         }
       });
-      // TODO(MSOB7YY): bug possibilty, the percentage may be higher or lower by 1
-      if ((currentListenedSeconds.value == sec || per.toInt() == perSett)) {
-        addTrackToHistory([TrackWithDate(DateTime.now().millisecondsSinceEpoch, track, TrackSource.local)]);
+      if (!per.isNaN && (currentListenedSeconds.value >= sec || per.toInt() >= perSett)) {
         timer.cancel();
+        addTrackToHistory([TrackWithDate(DateTime.now().millisecondsSinceEpoch, track, TrackSource.local)]);
         return;
       }
     });
@@ -70,7 +69,7 @@ class PlaylistController {
     final sTitle = psf.contains('name');
     final sDate = psf.contains('date');
     final sComment = psf.contains('comment');
-    final sModes = psf.contains('modes');
+    final sMoods = psf.contains('moods');
     final formatDate = DateFormat('yyyyMMdd');
 
     playlistSearchList.clear();
@@ -78,10 +77,10 @@ class PlaylistController {
       final lctext = textCleanedForSearch(text);
       final dateFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.date));
 
-      if ((sTitle && textCleanedForSearch(item.name.translatePlaylistName).contains(lctext)) ||
+      if ((sTitle && textCleanedForSearch(item.name.translatePlaylistName()).contains(lctext)) ||
           (sDate && textCleanedForSearch(dateFormatted.toString()).contains(lctext)) ||
           (sComment && textCleanedForSearch(item.comment).contains(lctext)) ||
-          (sModes && item.modes.any((element) => textCleanedForSearch(element).contains(lctext)))) {
+          (sMoods && item.moods.any((element) => textCleanedForSearch(element).contains(lctext)))) {
         playlistSearchList.add(item);
       }
     }
@@ -93,7 +92,7 @@ class PlaylistController {
     reverse ??= SettingsController.inst.playlistSortReversed.value;
     switch (sortBy) {
       case GroupSortType.title:
-        playlistList.sort((a, b) => a.name.translatePlaylistName.compareTo(b.name.translatePlaylistName));
+        playlistList.sort((a, b) => a.name.translatePlaylistName().compareTo(b.name.translatePlaylistName()));
         break;
       case GroupSortType.year:
         playlistList.sort((a, b) => a.date.compareTo(b.date));
@@ -124,17 +123,17 @@ class PlaylistController {
     List<Track> tracksToAdd = const <Track>[],
     int? date,
     String comment = '',
-    List<String> modes = const [],
+    List<String> moods = const [],
   }) async {
     date ??= DateTime.now().millisecondsSinceEpoch;
-    final pl = Playlist(name, tracks.map((e) => TrackWithDate(DateTime.now().millisecondsSinceEpoch, e, TrackSource.local)).toList(), date, comment, modes);
+    final pl = Playlist(name, tracks.map((e) => TrackWithDate(DateTime.now().millisecondsSinceEpoch, e, TrackSource.local)).toList(), date, comment, moods, false);
     playlistList.add(pl);
 
     await _savePlaylistToStorageAndRefresh(pl);
   }
 
   void insertPlaylist(Playlist playlist, int index) async {
-    playlistList.insertSafe(index.clamp(0, playlistList.length - 1), playlist);
+    playlistList.insertSafe(index, playlist);
 
     await _savePlaylistToStorageAndRefresh(playlist);
   }
@@ -169,16 +168,18 @@ class PlaylistController {
     List<Track>? tracksToAdd,
     int? date,
     String? comment,
-    List<String>? modes,
+    bool? isFav,
+    List<String>? moods,
   }) async {
     name ??= oldPlaylist.name;
     tracks ??= oldPlaylist.tracks;
     date ??= oldPlaylist.date;
     comment ??= oldPlaylist.comment;
-    modes ??= oldPlaylist.modes;
+    moods ??= oldPlaylist.moods;
+    isFav ??= oldPlaylist.isFav;
 
     final plIndex = playlistList.indexOf(oldPlaylist);
-    final newpl = Playlist(name, tracks, date, comment, modes);
+    final newpl = Playlist(name, tracks, date, comment, moods, isFav);
     playlistList.remove(oldPlaylist);
     playlistList.insertSafe(plIndex, newpl);
 
@@ -209,6 +210,15 @@ class PlaylistController {
     await _savePlaylistToStorageAndRefresh(pl);
   }
 
+  void reorderTrack(Playlist playlist, int oldIndex, int newIndex) async {
+    if (newIndex > oldIndex) {
+      newIndex -= 1;
+    }
+    final item = playlist.tracks.elementAt(oldIndex);
+    removeTrackFromPlaylist(playlist.name, oldIndex);
+    insertTracksInPlaylist(playlist.name, [item], newIndex);
+  }
+
   void generateRandomPlaylist() {
     final rt = getRandomTracks();
     if (rt.isEmpty) {
@@ -226,26 +236,36 @@ class PlaylistController {
     if (sortAndSave) sortHistoryAndSave();
   }
 
-  void sortHistoryAndSave() {
+  Future<void> removeFromHistory(int index) async {
+    namidaHistoryPlaylist.tracks.removeAt(index);
+    await sortHistoryAndSave();
+  }
+
+  Future<void> sortHistoryAndSave() async {
     namidaHistoryPlaylist.tracks.sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
-    _saveHistoryToStorage();
+    await _saveHistoryToStorage();
   }
 
-  void removeSourceTracksFromHistory(TrackSource source) async {
+  Future<void> removeSourceTracksFromHistory(TrackSource source) async {
     namidaHistoryPlaylist.tracks.removeWhere((element) => element.source == source);
-    _saveHistoryToStorage();
+    await _saveHistoryToStorage();
   }
 
-  void favouriteButtonOnPressed(Track track) async {
+  Future<void> favouriteButtonOnPressed(Track track, {Track? updatedTrack}) async {
     final fvPlaylist = namidaFavouritePlaylist;
 
     final trfv = fvPlaylist.tracks.firstWhereOrNull((element) => element.track == track);
-    if (trfv != null) {
-      fvPlaylist.tracks.remove(trfv);
-    } else {
+    if (trfv == null) {
       fvPlaylist.tracks.add(TrackWithDate(DateTime.now().millisecondsSinceEpoch, track, TrackSource.local));
+    } else {
+      final index = fvPlaylist.tracks.indexOf(trfv);
+      fvPlaylist.tracks.removeAt(index);
+      if (updatedTrack != null) {
+        fvPlaylist.tracks.insert(index, TrackWithDate(trfv.dateAdded, updatedTrack, trfv.source));
+      }
     }
-    _saveFavouritesToStorage();
+
+    await _saveFavouritesToStorage();
   }
 
   /// Most Played Playlist, relies totally on History Playlist.
@@ -272,10 +292,8 @@ class PlaylistController {
     namidaMostPlayedPlaylist.tracks.addAll(topTracksMap.keys.map((e) => TrackWithDate(0, e, TrackSource.local)));
   }
 
-  Playlist _getPlaylistByName(String name) => playlistList.firstWhere((p0) => p0.name == name);
+  Playlist _getPlaylistByName(String name) => defaultPlaylists.firstWhereOrNull((element) => element.name == name) ?? playlistList.firstWhere((p0) => p0.name == name);
 
-  /// saves only [k_PLAYLIST_NAME_FAV] and [k_PLAYLIST_NAME_HISTORY].
-  /// most played is generated from history bothways.
   void _refreshStuff() async {
     updateMostPlayedPlaylist();
     searchPlaylists('');
@@ -304,13 +322,13 @@ class PlaylistController {
 
     /// Creates default playlists
     if (!defaultPlaylists.any((pl) => pl.name == k_PLAYLIST_NAME_FAV)) {
-      defaultPlaylists.add(Playlist(k_PLAYLIST_NAME_FAV, [], DateTime.now().millisecondsSinceEpoch, '', []));
+      defaultPlaylists.add(Playlist(k_PLAYLIST_NAME_FAV, [], DateTime.now().millisecondsSinceEpoch, '', [], false));
     }
     if (!defaultPlaylists.any((pl) => pl.name == k_PLAYLIST_NAME_HISTORY)) {
-      defaultPlaylists.add(Playlist(k_PLAYLIST_NAME_HISTORY, [], DateTime.now().millisecondsSinceEpoch, '', []));
+      defaultPlaylists.add(Playlist(k_PLAYLIST_NAME_HISTORY, [], DateTime.now().millisecondsSinceEpoch, '', [], false));
     }
     if (!defaultPlaylists.any((pl) => pl.name == k_PLAYLIST_NAME_MOST_PLAYED)) {
-      defaultPlaylists.add(Playlist(k_PLAYLIST_NAME_MOST_PLAYED, [], DateTime.now().millisecondsSinceEpoch, '', []));
+      defaultPlaylists.add(Playlist(k_PLAYLIST_NAME_MOST_PLAYED, [], DateTime.now().millisecondsSinceEpoch, '', [], false));
     }
 
     namidaHistoryPlaylist = defaultPlaylists.firstWhere((element) => element.name == k_PLAYLIST_NAME_HISTORY);
@@ -335,7 +353,11 @@ class PlaylistController {
     }
 
     if (content.isNotEmpty) {
-      defaultPlaylists.add(Playlist.fromJson(jsonDecode(content)));
+      try {
+        defaultPlaylists.add(Playlist.fromJson(jsonDecode(content)));
+      } catch (e) {
+        debugPrint(e.toString());
+      }
     }
   }
 
@@ -380,11 +402,11 @@ class PlaylistController {
 
   Future<void> _savePlaylistToStorageAndRefresh(Playlist playlist) async {
     _refreshStuff();
-    await File('$k_DIR_PLAYLISTS/${playlist.date}.json').writeAsString(jsonEncode(playlist.toJson()));
+    await File('$k_DIR_PLAYLISTS/${playlist.name}.json').writeAsString(jsonEncode(playlist.toJson()));
   }
 
   Future<void> _deletePlaylistFromStorageAndRefresh(Playlist playlist) async {
     _refreshStuff();
-    await File('$k_DIR_PLAYLISTS/${playlist.date}.json').delete();
+    await File('$k_DIR_PLAYLISTS/${playlist.name}.json').delete();
   }
 }

@@ -5,14 +5,16 @@ class Playlist {
   late final List<TrackWithDate> tracks;
   late final int date;
   late final String comment;
-  late final List<String> modes;
+  late final List<String> moods;
+  late final bool isFav;
 
   Playlist(
     this.name,
     this.tracks,
     this.date,
     this.comment,
-    this.modes,
+    this.moods,
+    this.isFav,
   );
 
   Playlist.fromJson(Map<String, dynamic> json) {
@@ -20,17 +22,18 @@ class Playlist {
     tracks = List<TrackWithDate>.from((json['tracks'] ?? []).map((track) => TrackWithDate.fromJson(track)).toList());
     date = json['date'] ?? DateTime.now().millisecondsSinceEpoch;
     comment = json['comment'] ?? '';
-    modes = List<String>.from(json['modes'] ?? []);
+    moods = List<String>.from(json['moods'] ?? []);
+    isFav = json['isFav'] ?? false;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['name'] = name;
-    data['tracks'] = tracks.map((track) => track.toJson()).toList();
-    data['date'] = date;
-    data['comment'] = comment;
-    data['modes'] = modes;
-
-    return data;
+    return {
+      'name': name,
+      'tracks': tracks.map((track) => track.toJson()).toList(),
+      'date': date,
+      'comment': comment,
+      'moods': moods,
+      'isFav': isFav,
+    };
   }
 }

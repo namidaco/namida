@@ -52,15 +52,16 @@ class PlaylisTracksPage extends StatelessWidget {
       ],
       child: Obx(
         () {
-          final rxplaylist = PlaylistController.inst.defaultPlaylists.firstWhereOrNull((element) => element == playlist) ??
-              PlaylistController.inst.playlistList.firstWhere((element) => element == playlist);
-          final finalTracks = isMostPlayedPlaylist ? PlaylistController.inst.topTracksMap.keys.toList() : rxplaylist.tracks.map((e) => e.track).toList();
+          PlaylistController.inst.playlistList.toList();
+          PlaylistController.inst.defaultPlaylists.toList();
+          final finalTracks = isMostPlayedPlaylist ? PlaylistController.inst.topTracksMap.keys.toList() : playlist.tracks.map((e) => e.track).toList();
           final topContainer = SubpagesTopContainer(
-            title: rxplaylist.name.translatePlaylistName,
-            subtitle: [finalTracks.displayTrackKeyword, rxplaylist.date.dateFormatted].join(' - '),
-            thirdLineText: rxplaylist.modes.isNotEmpty ? rxplaylist.modes.join(', ') : '',
+            source: playlist.toQueueSource(),
+            title: playlist.name.translatePlaylistName(),
+            subtitle: [finalTracks.displayTrackKeyword, playlist.date.dateFormatted].join(' - '),
+            thirdLineText: playlist.moods.isNotEmpty ? playlist.moods.join(', ') : '',
             imageWidget: MultiArtworkContainer(
-              heroTag: 'playlist_artwork_${rxplaylist.name}',
+              heroTag: 'playlist_artwork_${playlist.name}',
               size: Get.width * 0.35,
               tracks: finalTracks,
             ),
@@ -70,6 +71,7 @@ class PlaylisTracksPage extends StatelessWidget {
           /// Top Music Playlist
           return isMostPlayedPlaylist
               ? NamidaTracksList(
+                  queueSource: playlist.toQueueSource(),
                   queueLength: PlaylistController.inst.topTracksMap.length,
                   scrollController: finalScrollController,
                   header: topContainer,
@@ -83,9 +85,8 @@ class PlaylisTracksPage extends StatelessWidget {
                       draggableThumbnail: false,
                       index: i,
                       track: track,
-                      queue: PlaylistController.inst.topTracksMap.keys.toList(),
-                      playlist: rxplaylist,
-                      canHaveDuplicates: true,
+                      queueSource: playlist.toQueueSource(),
+                      playlist: playlist,
                       bgColor: i == indexToHighlight ? context.theme.colorScheme.onBackground.withAlpha(40) : null,
                       trailingWidget: Container(
                         padding: const EdgeInsets.all(6.0),
@@ -107,34 +108,27 @@ class PlaylisTracksPage extends StatelessWidget {
 
               /// Normal Tracks
               NamidaTracksList(
+                  queueSource: playlist.toQueueSource(),
                   scrollController: finalScrollController,
                   header: topContainer,
                   buildDefaultDragHandles: shouldReorder.value,
                   padding: const EdgeInsets.only(bottom: kBottomPadding),
-                  onReorder: (oldIndex, newIndex) {
-                    if (newIndex > oldIndex) {
-                      newIndex -= 1;
-                    }
-                    final item = rxplaylist.tracks.elementAt(oldIndex);
-                    PlaylistController.inst.removeTrackFromPlaylist(rxplaylist.name, oldIndex);
-                    PlaylistController.inst.insertTracksInPlaylist(rxplaylist.name, [item], newIndex);
-                  },
-                  queueLength: rxplaylist.tracks.length,
+                  onReorder: (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
+                  queueLength: playlist.tracks.length,
                   itemBuilder: (context, i) {
-                    final track = rxplaylist.tracks[i];
+                    final track = playlist.tracks[i];
                     final w = FadeDismissible(
                       key: Key("Diss_$i${track.track.path}"),
                       direction: shouldReorder.value ? DismissDirection.horizontal : DismissDirection.none,
-                      onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTrackFromPlaylist(i, rxplaylist),
+                      onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTrackFromPlaylist(i, playlist),
                       child: Stack(
                         alignment: Alignment.centerLeft,
                         children: [
                           TrackTile(
                             index: i,
                             track: track.track,
-                            queue: rxplaylist.tracks.map((e) => e.track).toList(),
-                            playlist: rxplaylist,
-                            canHaveDuplicates: true,
+                            playlist: playlist,
+                            queueSource: playlist.toQueueSource(),
                             draggableThumbnail: shouldReorder.value,
                             bgColor: i == indexToHighlight ? context.theme.colorScheme.onBackground.withAlpha(40) : null,
                             thirdLineText: isHistoryPlaylist ? track.dateAdded.dateAndClockFormattedOriginal : '',

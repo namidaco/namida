@@ -50,27 +50,20 @@ class PlaylistsPage extends StatelessWidget {
                     currentCount: SettingsController.inst.playlistGridCount.value,
                     onTap: () {
                       final n = SettingsController.inst.playlistGridCount.value;
-                      if (n < 4) {
-                        SettingsController.inst.save(playlistGridCount: n + 1);
-                      } else {
-                        SettingsController.inst.save(playlistGridCount: 1);
-                      }
+                      final nToSave = n < 4 ? n + 1 : 1;
+                      SettingsController.inst.save(playlistGridCount: nToSave);
                     },
                   ),
                   isBarVisible: ScrollSearchController.inst.isPlaylistBarVisible.value,
                   showSearchBox: ScrollSearchController.inst.showPlaylistSearchBox.value,
                   leftText: PlaylistController.inst.playlistSearchList.length.displayPlaylistKeyword,
                   onFilterIconTap: () => ScrollSearchController.inst.switchPlaylistSearchBoxVisibilty(),
-                  onCloseButtonPressed: () {
-                    ScrollSearchController.inst.clearPlaylistSearchTextField();
-                  },
+                  onCloseButtonPressed: () => ScrollSearchController.inst.clearPlaylistSearchTextField(),
                   sortByMenuWidget: SortByMenu(
                     title: SettingsController.inst.playlistSort.value.toText,
                     popupMenuChild: const SortByMenuPlaylist(),
                     isCurrentlyReversed: SettingsController.inst.playlistSortReversed.value,
-                    onReverseIconTap: () {
-                      PlaylistController.inst.sortPlaylists(reverse: !SettingsController.inst.playlistSortReversed.value);
-                    },
+                    onReverseIconTap: () => PlaylistController.inst.sortPlaylists(reverse: !SettingsController.inst.playlistSortReversed.value),
                   ),
                   textField: CustomTextFiled(
                     textFieldController: PlaylistController.inst.playlistSearchController,
@@ -94,7 +87,7 @@ class PlaylistsPage extends StatelessWidget {
                                 ),
                                 Expanded(
                                   child: Text(
-                                    PlaylistController.inst.playlistList.displayPlaylistKeyword,
+                                    PlaylistController.inst.playlistList.length.displayPlaylistKeyword,
                                     style: Theme.of(context).textTheme.displayLarge,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
@@ -161,7 +154,7 @@ class PlaylistsPage extends StatelessWidget {
                                     icon: Broken.driver,
                                     title: Language.inst.QUEUES,
                                     text: QueueController.inst.queueList.length.toString(),
-                                    onTap: () => Get.to(() => QueuesPage()),
+                                    onTap: () => Get.to(() => const QueuesPage()),
                                   ),
                                 ],
                               ),
@@ -203,7 +196,7 @@ class PlaylistsPage extends StatelessWidget {
                                 child: MultiArtworkCard(
                                   heroTag: 'parent_playlist_artwork_${playlist.name}',
                                   tracks: playlist.tracks.map((e) => e.track).toList(),
-                                  name: playlist.name.translatePlaylistName,
+                                  name: playlist.name.translatePlaylistName(),
                                   gridCount: playlistGridCount,
                                   showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(playlist),
                                   onTap: () => NamidaOnTaps.inst.onPlaylistTap(playlist),

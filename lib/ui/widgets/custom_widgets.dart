@@ -19,7 +19,9 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
@@ -30,7 +32,7 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class CustomSwitchListTile extends StatelessWidget {
   final bool value;
-  final void Function(bool) onChanged;
+  final void Function(bool isTrue) onChanged;
   final String title;
   final String? subtitle;
   final Widget? leading;
@@ -45,7 +47,7 @@ class CustomSwitchListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Theme(
-      data: ThemeData(
+      data: context.theme.copyWith(
         splashColor: Colors.transparent,
         highlightColor: context.isDarkMode ? Colors.white.withAlpha(12) : Colors.black.withAlpha(40),
       ),
@@ -272,6 +274,30 @@ class CustomListTile extends StatelessWidget {
   }
 }
 
+class NamidaBgBlur extends StatelessWidget {
+  final double blur;
+  final bool enabled;
+  final BlendMode blendMode;
+  final Widget child;
+  const NamidaBgBlur({
+    super.key,
+    required this.blur,
+    this.enabled = true,
+    this.blendMode = BlendMode.srcOver,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) return child;
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+      blendMode: blendMode,
+      child: child,
+    );
+  }
+}
+
 class CustomBlurryDialog extends StatelessWidget {
   final Widget? child;
   final List<Widget>? trailingWidgets;
@@ -281,6 +307,7 @@ class CustomBlurryDialog extends StatelessWidget {
   final bool normalTitleStyle;
   final String? bodyText;
   final bool isWarning;
+  final bool enableBlur;
   final bool scrollable;
   final EdgeInsets? insetPadding;
   final EdgeInsetsGeometry? contentPadding;
@@ -294,6 +321,7 @@ class CustomBlurryDialog extends StatelessWidget {
     this.normalTitleStyle = false,
     this.bodyText,
     this.isWarning = false,
+    this.enableBlur = true,
     this.insetPadding,
     this.scrollable = true,
     this.contentPadding,
@@ -301,8 +329,9 @@ class CustomBlurryDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+    return NamidaBgBlur(
+      blur: 5.0,
+      enabled: enableBlur,
       child: Theme(
         data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
         child: GestureDetector(
@@ -332,13 +361,7 @@ class CustomBlurryDialog extends StatelessWidget {
                             style: context.textTheme.displayLarge,
                           ),
                         ),
-                        if (trailingWidgets != null)
-                          ...trailingWidgets!
-                              .map((e) => SizedBox(
-                                    width: 40,
-                                    child: e,
-                                  ))
-                              .toList(),
+                        if (trailingWidgets != null) ...trailingWidgets!
                       ],
                     )
                   : Container(
@@ -490,23 +513,29 @@ class SmallListTile extends StatelessWidget {
                   ),
       ),
       visualDensity: compact ? VisualDensity.compact : null,
-      title: Text(title,
-          style: context.textTheme.displayMedium?.copyWith(
-              color: color != null
-                  ? Color.alphaBlend(
-                      color!.withAlpha(40),
-                      context.textTheme.displayMedium!.color!,
-                    )
-                  : null)),
+      title: Text(
+        title,
+        style: context.textTheme.displayMedium?.copyWith(
+          color: color != null
+              ? Color.alphaBlend(
+                  color!.withAlpha(40),
+                  context.textTheme.displayMedium!.color!,
+                )
+              : null,
+        ),
+      ),
       subtitle: subtitle != null
-          ? Text(subtitle!,
+          ? Text(
+              subtitle!,
               style: context.textTheme.displaySmall?.copyWith(
-                  color: color != null
-                      ? Color.alphaBlend(
-                          color!.withAlpha(40),
-                          context.textTheme.displayMedium!.color!,
-                        )
-                      : null))
+                color: color != null
+                    ? Color.alphaBlend(
+                        color!.withAlpha(40),
+                        context.textTheme.displayMedium!.color!,
+                      )
+                    : null,
+              ),
+            )
           : null,
       trailing: displayAnimatedCheck
           ? SizedBox(
@@ -706,13 +735,14 @@ class BlurryContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Widget? finalChild = container ?? child;
     return ClipRRect(
       borderRadius: borderRadius,
-      child: disableBlur
-          ? container ?? child
-          : BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-              child: container ?? child,
+      child: disableBlur || finalChild == null
+          ? finalChild
+          : NamidaBgBlur(
+              blur: 5.0,
+              child: finalChild,
             ),
     );
   }
@@ -962,91 +992,112 @@ class NamidaIconButton extends StatelessWidget {
 
 class NamidaPartyContainer extends StatelessWidget {
   final double spreadRadiusMultiplier;
-  final double finalScale;
   final double? width;
   final double? height;
   final double opacity;
-  final RxList<Color> firstHalf;
-  final RxList<Color> secondHalf;
   const NamidaPartyContainer({
     super.key,
     this.spreadRadiusMultiplier = 1.0,
-    required this.finalScale,
     this.width,
     this.height,
     required this.opacity,
-    required this.firstHalf,
-    required this.secondHalf,
   });
 
   @override
   Widget build(BuildContext context) {
     if (!SettingsController.inst.enablePartyModeColorSwap.value) {
-      return Opacity(
-        opacity: opacity,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 400),
-          height: height,
-          width: width,
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: CurrentColor.inst.color.value.withAlpha(150),
-                spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
-                blurRadius: 10 + (200 * finalScale),
+      return Obx(
+        () {
+          final finalScale = WaveformController.inst.getAnimatingScale(WaveformController.inst.curentScaleList.toList());
+          return Opacity(
+            opacity: opacity,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 400),
+              height: height,
+              width: width,
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: CurrentColor.inst.color.value.withAlpha(150),
+                    spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
+                    blurRadius: 10 + (200 * finalScale),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       );
     } else {
       return Opacity(
         opacity: opacity,
-        child: height != null
-            ? Row(
-                children: firstHalf
-                    .asMap()
-                    .entries
-                    .map(
-                      (e) => AnimatedContainer(
-                        duration: const Duration(milliseconds: 400),
-                        height: height,
-                        width: width ?? context.width / firstHalf.length,
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              color: e.value.withAlpha(150),
-                              spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
-                              blurRadius: 10 + (200 * finalScale),
+        child: Obx(
+          () {
+            final List<Color> palette = CurrentColor.inst.palette.toList();
+            RxList<Color> firstHalf = palette.getRange(0, palette.length ~/ 3).toList().obs;
+            RxList<Color> secondHalf = palette.getRange(palette.length ~/ 3, palette.length).toList().obs;
+            final finalScale = WaveformController.inst.getAnimatingScale(WaveformController.inst.curentScaleList.toList());
+            if (SettingsController.inst.enablePartyModeColorSwap.value) {
+              final sc = (100 * finalScale ~/ 1.5).clamp(1, 4);
+              for (int h = 1; h <= sc; h++) {
+                if (firstHalf.isEmpty || secondHalf.isEmpty) {
+                  break;
+                }
+                final lastItem1 = firstHalf.last;
+                firstHalf.remove(lastItem1);
+                firstHalf.insertSafe(0, lastItem1);
+                final lastItem2 = secondHalf.last;
+                secondHalf.remove(lastItem2);
+                secondHalf.insertSafe(0, lastItem2);
+              }
+            }
+            return height != null
+                ? Row(
+                    children: firstHalf
+                        .asMap()
+                        .entries
+                        .map(
+                          (e) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 400),
+                            height: height,
+                            width: width ?? context.width / firstHalf.length,
+                            decoration: BoxDecoration(
+                              boxShadow: [
+                                BoxShadow(
+                                  color: e.value.withAlpha(150),
+                                  spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
+                                  blurRadius: 10 + (200 * finalScale),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    )
-                    .toList(),
-              )
-            : Column(
-                children: secondHalf
-                    .asMap()
-                    .entries
-                    .map(
-                      (e) => AnimatedContainer(
-                        duration: const Duration(milliseconds: 400),
-                        height: height ?? context.height / secondHalf.length,
-                        width: width,
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              color: e.value.withAlpha(150),
-                              spreadRadius: 140 * finalScale * spreadRadiusMultiplier,
-                              blurRadius: 10 + (200 * finalScale),
+                          ),
+                        )
+                        .toList(),
+                  )
+                : Column(
+                    children: secondHalf
+                        .asMap()
+                        .entries
+                        .map(
+                          (e) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 400),
+                            height: height ?? context.height / secondHalf.length,
+                            width: width,
+                            decoration: BoxDecoration(
+                              boxShadow: [
+                                BoxShadow(
+                                  color: e.value.withAlpha(150),
+                                  spreadRadius: 140 * finalScale * spreadRadiusMultiplier,
+                                  blurRadius: 10 + (200 * finalScale),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
+                          ),
+                        )
+                        .toList(),
+                  );
+          },
+        ),
       );
     }
   }
@@ -1060,6 +1111,7 @@ class SubpagesTopContainer extends StatelessWidget {
   final double verticalPadding;
   final Widget imageWidget;
   final List<Track> tracks;
+  final QueueSource source;
   const SubpagesTopContainer({
     super.key,
     required this.title,
@@ -1069,6 +1121,7 @@ class SubpagesTopContainer extends StatelessWidget {
     required this.imageWidget,
     required this.tracks,
     this.verticalPadding = 16.0,
+    required this.source,
   });
 
   @override
@@ -1135,6 +1188,7 @@ class SubpagesTopContainer extends StatelessWidget {
                       onPressed: () => Player.inst.playOrPause(
                         0,
                         tracks,
+                        source,
                         shuffle: true,
                       ),
                       child: const Icon(Broken.shuffle),
@@ -1203,13 +1257,29 @@ class NamidaDrawerListTile extends StatelessWidget {
   final void Function()? onTap;
   final bool enabled;
   final String title;
-  final IconData icon;
-  const NamidaDrawerListTile({super.key, this.onTap, required this.enabled, required this.title, required this.icon});
+  final IconData? icon;
+  final double width;
+  final EdgeInsetsGeometry margin;
+  final EdgeInsetsGeometry padding;
+  final bool isCentered;
+  final double iconSize;
+  const NamidaDrawerListTile({
+    super.key,
+    this.onTap,
+    required this.enabled,
+    required this.title,
+    required this.icon,
+    this.width = double.infinity,
+    this.margin = const EdgeInsets.symmetric(horizontal: 12.0, vertical: 5.0),
+    this.padding = const EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
+    this.isCentered = false,
+    this.iconSize = 20.0,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.5),
+      padding: margin,
       child: Material(
         color: enabled ? CurrentColor.inst.color.value : context.theme.cardColor,
         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
@@ -1220,8 +1290,8 @@ class NamidaDrawerListTile extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             alignment: Alignment.center,
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
+            width: width,
+            padding: padding,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8.0.multipliedRadius),
               boxShadow: enabled
@@ -1236,19 +1306,23 @@ class NamidaDrawerListTile extends StatelessWidget {
                   : null,
             ),
             child: Row(
+              mainAxisAlignment: isCentered ? MainAxisAlignment.center : MainAxisAlignment.start,
               children: [
                 Icon(
                   icon,
                   color: enabled ? Colors.white.withAlpha(200) : null,
+                  size: iconSize,
                 ),
-                const SizedBox(width: 12.0),
-                Text(
-                  title,
-                  style: context.textTheme.displayMedium?.copyWith(
-                    color: enabled ? Colors.white.withAlpha(200) : null,
-                    fontSize: context.width / 28,
+                if (title != '') ...[
+                  const SizedBox(width: 12.0),
+                  Text(
+                    title,
+                    style: context.textTheme.displayMedium?.copyWith(
+                      color: enabled ? Colors.white.withAlpha(200) : null,
+                      fontSize: context.width / 29,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -1421,28 +1495,22 @@ class NamidaSelectableAutoLinkText extends StatelessWidget {
   Widget build(BuildContext context) {
     return SelectableAutoLinkText(
       text,
-      style: context.textTheme.displayMedium?.copyWith(fontSize: 13.5),
+      style: context.textTheme.displayMedium?.copyWith(fontSize: 13.5.multipliedFontScale),
       linkStyle: context.textTheme.displayMedium?.copyWith(
         color: context.theme.colorScheme.primary.withAlpha(210),
-        fontSize: 13.5,
+        fontSize: 13.5.multipliedFontScale,
       ),
       highlightedLinkStyle: TextStyle(
         color: context.theme.colorScheme.primary.withAlpha(220),
         backgroundColor: context.theme.colorScheme.onBackground.withAlpha(40),
-        fontSize: 13.5,
+        fontSize: 13.5.multipliedFontScale,
       ),
-      // onTransformDisplayLink: AutoLinkUtils.shrinkUrl,
       onTap: (url) async {
-        if (await canLaunchUrlString(url)) {
-          launchUrlString(
-            url,
-            mode: LaunchMode.externalNonBrowserApplication,
-          );
+        try {
+          await launchUrlString(url, mode: LaunchMode.externalNonBrowserApplication);
+        } catch (e) {
+          await launchUrlString(url);
         }
-      },
-      onLongPress: (url) {
-        // print('🍔LongPress: $url');
-        // Share.share(url);
       },
     );
   }
@@ -1548,6 +1616,84 @@ class NamidaCircularPercentage extends StatelessWidget {
   }
 }
 
+// class NamidaListView extends StatelessWidget {
+//   final Widget Function(BuildContext context, int i) itemBuilder;
+//   final void Function(int oldIndex, int newIndex)? onReorder;
+//   final void Function(int index)? onReorderStart;
+//   final void Function(int index)? onReorderEnd;
+//   final Widget? header;
+//   final List<Widget>? widgetsInColumn;
+//   final EdgeInsets? padding;
+//   final List<double>? itemExtents;
+//   final ScrollController? scrollController;
+//   final int itemCount;
+//   final List<Widget>? moreWidgets;
+//   final bool buildDefaultDragHandles;
+//   final ScrollPhysics? physics;
+
+//   NamidaListView({
+//     super.key,
+//     this.header,
+//     this.widgetsInColumn,
+//     this.padding,
+//     this.onReorder,
+//     required this.itemBuilder,
+//     required this.itemCount,
+//     required this.itemExtents,
+//     this.moreWidgets,
+//     this.scrollController,
+//     this.buildDefaultDragHandles = true,
+//     this.onReorderStart,
+//     this.onReorderEnd,
+//     this.physics,
+//   });
+
+//   final ScrollController _scrollController = ScrollController();
+//   @override
+//   Widget build(BuildContext context) {
+//     final double? itemExtent = (itemExtents != null && itemExtents!.isNotEmpty) ? itemExtents?.first : null;
+//     final sc = scrollController ?? _scrollController;
+//     return AnimationLimiter(
+//       child: CupertinoScrollbar(
+//         controller: sc,
+//         child: CustomScrollView(
+//           controller: sc,
+//           slivers: [
+//             SliverToBoxAdapter(child: header),
+//             if (widgetsInColumn != null) ...widgetsInColumn!.map((e) => SliverToBoxAdapter(child: e)),
+//             if (padding != null) SliverPadding(padding: EdgeInsets.only(top: padding!.top)),
+//             onReorder == null
+//                 ? itemExtent == null
+//                     ? SliverList(
+//                         delegate: SliverChildBuilderDelegate(
+//                           itemBuilder,
+//                           childCount: itemCount,
+//                         ),
+//                       )
+//                     : SliverFixedExtentList(
+//                         itemExtent: itemExtent,
+//                         delegate: SliverChildBuilderDelegate(
+//                           itemBuilder,
+//                           childCount: itemCount,
+//                         ),
+//                       )
+//                 : SliverReorderableList(
+//                     itemBuilder: itemBuilder,
+//                     itemCount: itemCount,
+//                     onReorder: onReorder!,
+//                     itemExtent: itemExtent,
+//                     onReorderStart: onReorderStart,
+//                     onReorderEnd: onReorderEnd,
+//                     proxyDecorator: (child, index, animation) => child,
+//                   ),
+//             if (padding != null) SliverPadding(padding: EdgeInsets.only(bottom: padding!.bottom))
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
 class NamidaListView extends StatelessWidget {
   final Widget Function(BuildContext context, int i) itemBuilder;
   final void Function(int oldIndex, int newIndex)? onReorder;
@@ -1560,7 +1706,7 @@ class NamidaListView extends StatelessWidget {
   final ScrollController? scrollController;
   final int itemCount;
   final List<Widget>? moreWidgets;
-  final bool? buildDefaultDragHandles;
+  final bool buildDefaultDragHandles;
   final ScrollPhysics? physics;
 
   NamidaListView({
@@ -1574,7 +1720,7 @@ class NamidaListView extends StatelessWidget {
     required this.itemExtents,
     this.moreWidgets,
     this.scrollController,
-    this.buildDefaultDragHandles,
+    this.buildDefaultDragHandles = true,
     this.onReorderStart,
     this.onReorderEnd,
     this.physics,
@@ -1583,30 +1729,33 @@ class NamidaListView extends StatelessWidget {
   final ScrollController _scrollController = ScrollController();
   @override
   Widget build(BuildContext context) {
+    final double? itemExtent = (itemExtents != null && itemExtents!.isNotEmpty) ? itemExtents?.first : null;
+    final sc = scrollController ?? _scrollController;
     return AnimationLimiter(
       child: CupertinoScrollbar(
-        controller: scrollController ?? _scrollController,
+        controller: sc,
         child: Column(
           children: [
             if (widgetsInColumn != null) ...widgetsInColumn!,
             Expanded(
-              child: itemExtents != null
+              child: itemExtents != null && onReorder != null
                   ? KnownExtentsReorderableListView.builder(
                       itemExtents: itemExtents!,
-                      scrollController: scrollController ?? _scrollController,
+                      scrollController: sc,
                       padding: padding ?? const EdgeInsets.only(bottom: kBottomPadding),
                       itemBuilder: itemBuilder,
                       itemCount: itemCount,
                       onReorder: onReorder ?? (oldIndex, newIndex) {},
                       proxyDecorator: (child, index, animation) => child,
                       header: header,
-                      buildDefaultDragHandles: buildDefaultDragHandles ?? onReorder != null,
+                      buildDefaultDragHandles: buildDefaultDragHandles,
                       physics: physics,
                       onReorderStart: onReorderStart,
                       onReorderEnd: onReorderEnd,
                     )
                   : ReorderableListView.builder(
-                      scrollController: scrollController ?? _scrollController,
+                      itemExtent: itemExtent,
+                      scrollController: sc,
                       padding: padding ?? const EdgeInsets.only(bottom: kBottomPadding),
                       itemBuilder: itemBuilder,
                       itemCount: itemCount,
@@ -1615,7 +1764,7 @@ class NamidaListView extends StatelessWidget {
                       onReorderStart: onReorderStart,
                       onReorderEnd: onReorderEnd,
                       header: header,
-                      buildDefaultDragHandles: buildDefaultDragHandles ?? onReorder != null,
+                      buildDefaultDragHandles: onReorder != null,
                       physics: physics,
                     ),
             ),
@@ -1639,6 +1788,7 @@ class NamidaTracksList extends StatelessWidget {
   final EdgeInsets? padding;
   final bool? buildDefaultDragHandles;
   final ScrollPhysics? physics;
+  final QueueSource queueSource;
   const NamidaTracksList({
     super.key,
     this.queue,
@@ -1649,10 +1799,11 @@ class NamidaTracksList extends StatelessWidget {
     this.widgetsInColumn,
     this.paddingAfterHeader,
     this.scrollController,
-    this.padding,
+    this.padding = const EdgeInsets.only(bottom: kBottomPadding),
     required this.queueLength,
     this.buildDefaultDragHandles,
     this.physics,
+    required this.queueSource,
   });
 
   @override
@@ -1663,9 +1814,10 @@ class NamidaTracksList extends StatelessWidget {
       widgetsInColumn: widgetsInColumn,
       scrollController: scrollController,
       itemCount: queueLength,
+      // itemExtent: trackTileItemExtent,
       itemExtents: List<double>.generate(queueLength, (index) => trackTileItemExtent),
       padding: padding,
-      buildDefaultDragHandles: buildDefaultDragHandles,
+      buildDefaultDragHandles: buildDefaultDragHandles ?? onReorder != null,
       physics: physics,
       itemBuilder: itemBuilder ??
           (context, i) {
@@ -1677,14 +1829,32 @@ class NamidaTracksList extends StatelessWidget {
                 child: TrackTile(
                   index: i,
                   track: track,
-                  queue: queue!,
-                  canHaveDuplicates: onReorder != null,
                   draggableThumbnail: onReorder != null,
+                  queueSource: queueSource,
                 ),
               );
             }
             return const Text('PASS A QUEUE OR USE ITEM BUILDER');
           },
+    );
+  }
+}
+
+class NamidaSupportButton extends StatelessWidget {
+  final String? title;
+  final VoidCallback? onPressed;
+  const NamidaSupportButton({super.key, this.title, this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: () {
+        if (onPressed != null) onPressed!();
+
+        launchUrlString(k_NAMIDA_SUPPORT_LINK);
+      },
+      icon: const Icon(Broken.heart),
+      label: Text(title ?? Language.inst.SUPPORT),
     );
   }
 }

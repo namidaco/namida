@@ -15,22 +15,22 @@ class TrackWithDate {
 
   TrackWithDate.fromJson(Map<String, dynamic> json) {
     dateAdded = json['dateAdded'] ?? DateTime.now().millisecondsSinceEpoch;
-    track = (json['track'] as String).toTrack;
+    track = (json['track'] as String).toTrack();
     source = TrackSource.values.getEnum(json['source']) ?? TrackSource.local;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['dateAdded'] = dateAdded;
-    data['track'] = track.path;
-    data['source'] = source.convertToString;
-
-    return data;
+    return {
+      'dateAdded': dateAdded,
+      'track': track.path,
+      'source': source.convertToString,
+    };
   }
 }
 
 class Track {
   late final String title;
+  late final String originalArtist;
   late final List<String> artistsList;
   late final String album;
   late final String albumArtist;
@@ -51,10 +51,11 @@ class Track {
   late final int discNo;
   late final String language;
   late final String lyrics;
-  late final String mood;
+  late final List<String> moods;
 
   Track(
     this.title,
+    this.originalArtist,
     this.artistsList,
     this.album,
     this.albumArtist,
@@ -75,11 +76,12 @@ class Track {
     this.discNo,
     this.language,
     this.lyrics,
-    this.mood,
+    this.moods,
   );
 
   Track.fromJson(Map<String, dynamic> json) {
     title = json['title'] ?? '';
+    originalArtist = json['originalArtist'] ?? '';
     artistsList = List<String>.from(json['artistsList'] ?? []);
     album = json['album'] ?? '';
     albumArtist = json['albumArtist'] ?? '';
@@ -100,36 +102,35 @@ class Track {
     discNo = json['discNo'] ?? 0;
     language = json['language'] ?? '';
     lyrics = json['lyrics'] ?? '';
-    mood = json['mood'] ?? '';
+    moods = List<String>.from(json['moods'] ?? []);
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-
-    data['title'] = title;
-    data['artistsList'] = artistsList;
-    data['album'] = album;
-    data['albumArtist'] = albumArtist;
-    data['genresList'] = genresList;
-    data['composer'] = composer;
-    data['track'] = track;
-    data['duration'] = duration;
-    data['year'] = year;
-    data['size'] = size;
-    data['dateAdded'] = dateAdded;
-    data['dateModified'] = dateModified;
-    data['path'] = path;
-    data['comment'] = comment;
-    data['bitrate'] = bitrate;
-    data['sampleRate'] = sampleRate;
-    data['format'] = format;
-    data['channels'] = channels;
-    data['discNo'] = discNo;
-    data['language'] = language;
-    data['lyrics'] = lyrics;
-    data['mood'] = mood;
-
-    return data;
+    return {
+      'title': title,
+      'originalArtist': originalArtist,
+      'artistsList': artistsList,
+      'album': album,
+      'albumArtist': albumArtist,
+      'genresList': genresList,
+      'composer': composer,
+      'track': track,
+      'duration': duration,
+      'year': year,
+      'size': size,
+      'dateAdded': dateAdded,
+      'dateModified': dateModified,
+      'path': path,
+      'comment': comment,
+      'bitrate': bitrate,
+      'sampleRate': sampleRate,
+      'format': format,
+      'channels': channels,
+      'discNo': discNo,
+      'language': language,
+      'lyrics': lyrics,
+      'moods': moods,
+    };
   }
 
   @override
@@ -170,4 +171,11 @@ extension TrackUtils on Track {
         "$bitrate kps",
         "${sampleRate / 1000} khz",
       ].join(' • ');
+
+  bool get hasUnknownTitle => title == k_UNKNOWN_TRACK_TITLE;
+  bool get hasUnknownAlbum => album == k_UNKNOWN_TRACK_ALBUM;
+  bool get hasUnknownAlbumArtist => albumArtist == k_UNKNOWN_TRACK_ALBUMARTIST;
+  bool get hasUnknownArtist => artistsList.first == k_UNKNOWN_TRACK_ARTIST;
+  bool get hasUnknownGenre => genresList.first == k_UNKNOWN_TRACK_GENRE;
+  bool get hasUnknownComposer => composer == k_UNKNOWN_TRACK_COMPOSER;
 }
