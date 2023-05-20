@@ -44,6 +44,8 @@ A Beautiful and Feature-rich Music & Video Player, Built in Flutter
    - Want to insert multiple tracks one after each other? this will get your back.
 - Repeat for N times
    - in addition to normal repeat modes (all, none, one), this one lets you repeat the track for number of times before playing the next track.
+- Extract feat. & ft. artist
+   - u won't miss the featured artists in the title, they'll have their own entry inside artists tab.
 - <p>CAN IMPORT YOUTUBE HISTORY <img src="some stuff/ong.png" width=16 height=16/></p>
 - <p>LASTFM TOO AND MAYBE MORE IN FUTURE <img src="some stuff/yoowhat.gif" width=16 height=16/></p>
 - you gonna find decent amount of options/customizations in the settings and inside dialogs so make sure to check them out.
