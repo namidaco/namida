@@ -197,9 +197,10 @@ List<Track> generateTracksFromDates(int oldestDate, int newestDate) {
   return historytracks.where((element) => element.dateAdded >= oldestDate && element.dateAdded <= (newestDate + 1.days.inMilliseconds)).map((e) => e.track).toSet().toList();
 }
 
-List<Track> generateTracksFrommoods(List<String> moods) {
+List<Track> generateTracksFromMoods(List<String> moods) {
   final finalTracks = <Track>[];
-// Generating from Playlists.
+
+  /// Generating from Playlists.
   finalTracks.addAll(
     PlaylistController.inst.playlistList
         .where((pl) => pl.moods.any((e) => moods.contains(e)))
@@ -209,11 +210,41 @@ List<Track> generateTracksFrommoods(List<String> moods) {
         .toList(),
   );
 
-  // TODO(MSOB7YY): each track should has its own mood
+  /// Generating from all Tracks.
+  Indexer.inst.trackStatsMap.forEach((key, value) {
+    if (value.moods.toSet().intersection(moods.toSet()).isNotEmpty) {
+      final trackInsideMainList = Indexer.inst.allTracksMappedByPath[key];
+      if (trackInsideMainList != null) {
+        finalTracks.add(trackInsideMainList);
+      }
+    }
+  });
   return finalTracks
     ..shuffle()
     ..take(20)
     ..toList();
+}
+
+List<Track> generateTracksFromRatings(
+  int min,
+  int max,
+
+  /// use 0 for unlimited.
+  int maxNumberOfTracks,
+) {
+  final finalTracks = <Track>[];
+  Indexer.inst.trackStatsMap.forEach((key, value) {
+    if (value.rating > min && value.rating < max) {
+      final trackInsideMainList = Indexer.inst.allTracksMappedByPath[key];
+      if (trackInsideMainList != null) {
+        finalTracks.add(trackInsideMainList);
+      }
+    }
+  });
+  finalTracks.shuffle();
+  final l = (maxNumberOfTracks == 0 ? finalTracks : finalTracks.take(maxNumberOfTracks));
+
+  return l.toList();
 }
 
 List<Track> generateTracksFromAlbum(String album) {

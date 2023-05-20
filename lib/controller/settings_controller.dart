@@ -72,6 +72,8 @@ class SettingsController {
   final RxList<String> backupItemslist = [
     k_FILE_PATH_SETTINGS,
     k_FILE_PATH_TRACKS,
+    k_FILE_PATH_TRACKS_STATS,
+    k_FILE_PATH_EXTRA_STATS,
     k_DIR_PALETTES,
     k_DIR_LYRICS,
     k_DIR_WAVEFORMS,
@@ -149,6 +151,7 @@ class SettingsController {
 
   Future<void> prepareSettingsFile() async {
     final file = await File(k_FILE_PATH_SETTINGS).create(recursive: true);
+    final fileExtra = await File(k_FILE_PATH_EXTRA_STATS).create(recursive: true);
     try {
       final String contents = await file.readAsString();
       if (contents.isEmpty) {

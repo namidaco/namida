@@ -28,6 +28,42 @@ class TrackWithDate {
   }
 }
 
+class TrackStats {
+  /// Path of the track.
+  String? path;
+
+  /// Rating of the track out of 100.
+  int rating = 0;
+
+  /// List of tags for the track.
+  List<String> tags = [];
+
+  /// List of moods for the track.
+  List<String> moods = [];
+
+  TrackStats(
+    this.path,
+    this.rating,
+    this.tags,
+    this.moods,
+  );
+  TrackStats.fromJson(Map<String, dynamic> json) {
+    path = json['path'] ?? '';
+    rating = json['rating'] ?? 0;
+    tags = List<String>.from(json['tags'] ?? []);
+    moods = List<String>.from(json['moods'] ?? []);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'path': path,
+      'rating': rating,
+      'tags': tags,
+      'moods': moods,
+    };
+  }
+}
+
 class Track {
   late final String title;
   late final String originalArtist;
@@ -51,7 +87,7 @@ class Track {
   late final int discNo;
   late final String language;
   late final String lyrics;
-  late final List<String> moods;
+  TrackStats stats = TrackStats('', 0, [], []);
 
   Track(
     this.title,
@@ -76,7 +112,7 @@ class Track {
     this.discNo,
     this.language,
     this.lyrics,
-    this.moods,
+    this.stats,
   );
 
   Track.fromJson(Map<String, dynamic> json) {
@@ -102,7 +138,6 @@ class Track {
     discNo = json['discNo'] ?? 0;
     language = json['language'] ?? '';
     lyrics = json['lyrics'] ?? '';
-    moods = List<String>.from(json['moods'] ?? []);
   }
 
   Map<String, dynamic> toJson() {
@@ -129,7 +164,6 @@ class Track {
       'discNo': discNo,
       'language': language,
       'lyrics': lyrics,
-      'moods': moods,
     };
   }
 

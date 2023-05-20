@@ -30,6 +30,8 @@ const Color kMainColorDark = Color.fromARGB(255, 139, 149, 241);
 /// Directories and files used by Namida
 final String k_FILE_PATH_SETTINGS = '$k_DIR_USER_DATA/namidaSettings.json';
 final String k_FILE_PATH_TRACKS = '$k_DIR_USER_DATA/tracks.json';
+final String k_FILE_PATH_TRACKS_STATS = '$k_DIR_USER_DATA/tracksStats.json';
+final String k_FILE_PATH_EXTRA_STATS = '$k_DIR_USER_DATA/extraStats.json';
 final String k_FILE_PATH_VIDEO_PATHS = '$k_DIR_USER_DATA/videoFilesPaths.txt';
 final String k_FILE_PATH_LATEST_QUEUE = '$k_DIR_USER_DATA/latestqueue.json';
 
@@ -186,7 +188,7 @@ final kDummyTrack = Track(
   0,
   '',
   '',
-  [''],
+  TrackStats('', 0, [], []),
 );
 
 // Unknown Fields

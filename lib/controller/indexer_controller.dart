@@ -67,7 +67,8 @@ class Indexer {
   final RxList<Group> artistSearchTemp = <Group>[].obs;
 
   /// tracks map used for lookup
-  Map<String, Track> allTracksMappedByPath = {};
+  final Map<String, Track> allTracksMappedByPath = {};
+  final Map<String, TrackStats> trackStatsMap = {};
 
   final OnAudioQuery _query = OnAudioQuery();
   final onAudioEdit = audioedit.OnAudioEdit();
@@ -121,7 +122,7 @@ class Indexer {
       if (album == null) {
         albumsList.add(Group(tr.album, [tr]));
       } else {
-        album.tracks.add(tr);
+        album.tracks.addIf(!album.tracks.contains(tr), tr);
       }
       album?.tracks.sort((a, b) => a.title.compareTo(b.title));
 
@@ -131,7 +132,7 @@ class Indexer {
         if (art == null) {
           groupedArtistsList.add(Group(artist, [tr]));
         } else {
-          art.tracks.add(tr);
+          art.tracks.addIf(!art.tracks.contains(tr), tr);
         }
         art?.tracks.sort((a, b) => a.title.compareTo(b.title));
       }
@@ -142,7 +143,7 @@ class Indexer {
         if (gen == null) {
           groupedGenresList.add(Group(genre, [tr]));
         } else {
-          gen.tracks.add(tr);
+          gen.tracks.addIf(!gen.tracks.contains(tr), tr);
         }
         gen?.tracks.sort((a, b) => a.title.compareTo(b.title));
       }
@@ -152,7 +153,7 @@ class Indexer {
       if (folder == null) {
         groupedFoldersList.add(Folder(tr.folderPath, [tr]));
       } else {
-        folder.tracks.add(tr);
+        folder.tracks.addIf(!folder.tracks.contains(tr), tr);
       }
       // final folder = groupedFoldersMap[tr.folderPath];
       // if (folder == null) {
@@ -162,6 +163,7 @@ class Indexer {
       // }
       Folders.inst.sortFolderTracks();
     }
+    _sortAll();
   }
 
   /// extracts artwork from [bytes] or [path] and save to file.
@@ -198,7 +200,8 @@ class Indexer {
         await extractOneArtwork(track.path, forceReExtract: true);
       }
     }
-    _addTheseTracksToAlbumGenreArtistEtc(tracks);
+    final newtracks = paths.map((e) => allTracksMappedByPath[e]);
+    _addTheseTracksToAlbumGenreArtistEtc(newtracks.whereType<Track>().toList());
   }
 
   Map<String?, Set<Track>> getAlbumsForArtist(String artist) {
@@ -335,7 +338,7 @@ class Indexer {
             getIntFromString(trackInfo.discNo) ?? 0,
             trackInfo.language ?? '',
             trackInfo.lyrics ?? '',
-            [trackInfo.mood ?? ''],
+            TrackStats('', 0, [], []),
           );
 
           tracksInfoList.add(tr);
@@ -379,7 +382,7 @@ class Indexer {
             0,
             '',
             '',
-            [''],
+            TrackStats('', 0, [], []),
           );
           tracksInfoList.add(tr);
           allTracksMappedByPath[tr.path] = tr;
@@ -433,15 +436,39 @@ class Indexer {
     }
   }
 
-  Future<void> _saveTrackFileToStorage() async => await File(k_FILE_PATH_TRACKS).writeAsString(json.encode(tracksInfoList));
+  Future<void> _saveTrackFileToStorage() async {
+    await File(k_FILE_PATH_TRACKS).writeAsString(json.encode(tracksInfoList));
+  }
+
+  Future<void> saveTrackStatsFileToStorage() async {
+    await File(k_FILE_PATH_TRACKS_STATS).writeAsString(json.encode(trackStatsMap.values.toList()));
+  }
 
   Future<void> readTrackData() async {
+    /// reading stats file containing track rating etc.
+    try {
+      final jsonResponse = await JsonToHistoryParser.inst.readJSONFile(k_FILE_PATH_TRACKS_STATS);
+
+      if (jsonResponse != null) {
+        for (final p in jsonResponse) {
+          final trst = TrackStats.fromJson(p);
+          if (trst.path != null) {
+            trackStatsMap[trst.path!] = trst;
+          }
+        }
+      }
+    } catch (e) {
+      printError(info: e.toString());
+    }
+
+    /// reading actual track file.
     try {
       final jsonResponse = await JsonToHistoryParser.inst.readJSONFile(k_FILE_PATH_TRACKS);
 
       if (jsonResponse != null) {
         for (final p in jsonResponse) {
           final tr = Track.fromJson(p);
+          tr.stats = trackStatsMap[tr.path] ?? TrackStats('', 0, [], []);
           tracksInfoList.add(tr);
           allTracksMappedByPath[tr.path] = tr;
         }

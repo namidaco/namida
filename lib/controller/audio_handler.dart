@@ -178,8 +178,6 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
       Lyrics.inst.updateLyrics(tr);
       tryResettingLatestInsertedIndex();
     } catch (e) {
-      print("dsadasd ${e.toString()}");
-
       /// if track doesnt exist
       NamidaDialogs.inst.showTrackDialog(tr, isFromPlayerQueue: true, errorPlayingTrack: true);
       return;

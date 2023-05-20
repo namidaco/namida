@@ -803,7 +803,7 @@ extension ConvertPathToTrack on String {
           0,
           '',
           '',
-          [''],
+          TrackStats('', 0, [], []),
         );
   }
 }
@@ -833,6 +833,8 @@ extension SafeListInsertion<T> on List<T> {
 }
 
 extension TagFieldsUtils on TagField {
+  bool get isNumeric => this == TagField.trackNumber || this == TagField.trackTotal || this == TagField.discNumber || this == TagField.discTotal || this == TagField.year;
+
   String toText() {
     if (this == TagField.title) {
       return Language.inst.TITLE;

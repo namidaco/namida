@@ -75,32 +75,47 @@ Future<void> showGeneralPopupDialog(
   final bool oneOfTheMainPlaylists = playlist?.name == k_PLAYLIST_NAME_FAV || playlist?.name == k_PLAYLIST_NAME_HISTORY || playlist?.name == k_PLAYLIST_NAME_MOST_PLAYED;
   RxInt numberOfRepeats = 1.obs;
 
-  Widget bigIcon(IconData icon, String tooltipMessage, void Function()? onTap) {
+  Widget bigIcon(IconData icon, String tooltipMessage, void Function()? onTap, {String subtitle = ''}) {
     return InkWell(
       highlightColor: Get.theme.highlightColor,
       onTap: onTap,
       borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-      child: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Tooltip(
-          message: tooltipMessage,
-          child: Icon(
-            icon,
-            color: Color.alphaBlend(colorDelightened.withAlpha(120), Get.textTheme.displayMedium!.color!),
+      child: Tooltip(
+        message: tooltipMessage,
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                color: Color.alphaBlend(colorDelightened.withAlpha(120), Get.textTheme.displayMedium!.color!),
+              ),
+              if (subtitle != '') ...[
+                const SizedBox(height: 2.0),
+                Text(
+                  subtitle,
+                  style: Get.textTheme.displaySmall?.copyWith(fontSize: 12.0.multipliedFontScale),
+                  maxLines: 1,
+                )
+              ]
+            ],
           ),
         ),
       ),
     );
   }
 
-  void setPlaylistMoods() {
+  void setMoodsOrTags(List<String> initialMoods, void Function(List<String> moodsFinal) saveFunction, {bool isTags = false}) {
     Get.close(1);
     TextEditingController controller = TextEditingController();
-    final currentMoods = playlist!.moods.join(', ');
+    final currentMoods = initialMoods.join(', ');
     controller.text = currentMoods;
+
+    final title = isTags ? Language.inst.SET_TAGS : Language.inst.SET_MOODS;
+    final subtitle = Language.inst.SET_MOODS_SUBTITLE;
     Get.dialog(
       CustomBlurryDialog(
-        title: Language.inst.SET_MOODS,
+        title: title,
         actions: [
           const CancelButton(),
           ElevatedButton(
@@ -113,7 +128,7 @@ Future<void> showGeneralPopupDialog(
                 }
                 moodsFinal.add(m.trim());
               }
-              PlaylistController.inst.updatePropertyInPlaylist(playlist, moods: moodsFinal.toSet().toList());
+              saveFunction(moodsFinal.toSet().toList());
 
               Get.close(1);
             },
@@ -124,7 +139,7 @@ Future<void> showGeneralPopupDialog(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              Language.inst.SET_MOODS_SUBTITLE,
+              subtitle,
               style: Get.textTheme.displaySmall,
             ),
             const SizedBox(
@@ -133,9 +148,71 @@ Future<void> showGeneralPopupDialog(
             CustomTagTextField(
               controller: controller,
               hintText: currentMoods.overflow,
-              labelText: Language.inst.MOODS,
+              labelText: title,
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void setPlaylistMoods() {
+    if (playlist == null) return;
+    setMoodsOrTags(
+      playlist.moods,
+      (moodsFinal) => PlaylistController.inst.updatePropertyInPlaylist(playlist, moods: moodsFinal.toSet().toList()),
+    );
+  }
+
+  Rx<TrackStats> stats = tracks.first.stats.obs;
+  Future<void> saveStatsToFile() async {
+    stats.refresh();
+    Indexer.inst.trackStatsMap[tracks.first.path] = TrackStats(tracks.first.path, stats.value.rating, stats.value.tags, stats.value.moods);
+    await Indexer.inst.saveTrackStatsFileToStorage();
+  }
+
+  void setTrackMoods() {
+    setMoodsOrTags(
+      stats.value.moods,
+      (moodsFinal) async {
+        stats.value.moods.addAll(moodsFinal);
+        await saveStatsToFile();
+      },
+    );
+  }
+
+  void setTrackTags() {
+    setMoodsOrTags(
+      stats.value.tags,
+      (moodsFinal) async {
+        stats.value.tags.addAll(moodsFinal);
+        await saveStatsToFile();
+      },
+      isTags: true,
+    );
+  }
+
+  void setTrackRating() {
+    final c = TextEditingController();
+    Get.dialog(
+      CustomBlurryDialog(
+        actions: [
+          const CancelButton(),
+          ElevatedButton(
+            onPressed: () async {
+              Get.close(1);
+              final val = int.tryParse(c.text) ?? 0;
+              stats.value.rating = val.clamp(0, 100);
+              await saveStatsToFile();
+            },
+            child: Text(Language.inst.SAVE),
+          ),
+        ],
+        child: CustomTagTextField(
+          controller: c,
+          hintText: stats.value.rating.toString(),
+          labelText: Language.inst.SET_RATING,
+          keyboardType: TextInputType.number,
         ),
       ),
     );
@@ -224,6 +301,61 @@ Future<void> showGeneralPopupDialog(
           )
         ],
       ),
+    );
+  }
+
+  void setYoutubeLink() {
+    Get.close(1);
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+    TextEditingController controller = TextEditingController();
+    final ytlink = tracks.first.youtubeLink;
+    controller.text = ytlink;
+    Get.dialog(
+      Form(
+        key: formKey,
+        child: CustomBlurryDialog(
+          title: Language.inst.SET_YOUTUBE_LINK,
+          actions: [
+            const CancelButton(),
+            ElevatedButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  editTrackMetadata(tracks.first, insertComment: controller.text);
+                  Get.close(1);
+                }
+              },
+              child: Text(Language.inst.SAVE),
+            ),
+          ],
+          child: CustomTagTextField(
+            controller: controller,
+            hintText: ytlink.overflow,
+            labelText: Language.inst.LINK,
+            keyboardType: TextInputType.url,
+            validator: (value) {
+              if (value!.isEmpty) {
+                return Language.inst.PLEASE_ENTER_A_NAME;
+              }
+              if ((kYoutubeRegex.firstMatch(value) ?? '') == '') {
+                return Language.inst.PLEASE_ENTER_A_LINK_SUBTITLE;
+              }
+              return null;
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void openYoutubeLink() {
+    final link = tracks.first.youtubeLink;
+    if (link == '') {
+      Get.snackbar(Language.inst.COULDNT_OPEN, Language.inst.COULDNT_OPEN_YT_LINK);
+      return;
+    }
+    launchUrlString(
+      link,
+      mode: LaunchMode.externalNonBrowserApplication,
     );
   }
 
@@ -722,71 +854,7 @@ Future<void> showGeneralPopupDialog(
                                   },
                                 ),
                                 if (clearStuffListTile != null) clearStuffListTile,
-                                if (isSingle)
-                                  SmallListTile(
-                                    color: colorDelightened,
-                                    compact: false,
-                                    title: Language.inst.SET_YOUTUBE_LINK,
-                                    icon: Broken.edit_2,
-                                    trailing: NamidaIconButton(
-                                      icon: Broken.login_1,
-                                      iconColor: Color.alphaBlend(colorDelightened.withAlpha(120), Get.textTheme.displayMedium!.color!),
-                                      onPressed: () {
-                                        final link = tracks.first.youtubeLink;
-                                        if (link == '') {
-                                          Get.snackbar(Language.inst.COULDNT_OPEN, Language.inst.COULDNT_OPEN_YT_LINK);
-                                          return;
-                                        }
-                                        launchUrlString(
-                                          link,
-                                          mode: LaunchMode.externalNonBrowserApplication,
-                                        );
-                                      },
-                                    ),
-                                    onTap: () async {
-                                      Get.close(1);
 
-                                      final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-                                      TextEditingController controller = TextEditingController();
-                                      final ytlink = tracks.first.youtubeLink;
-                                      controller.text = ytlink;
-                                      Get.dialog(
-                                        Form(
-                                          key: formKey,
-                                          child: CustomBlurryDialog(
-                                            title: Language.inst.SET_YOUTUBE_LINK,
-                                            actions: [
-                                              const CancelButton(),
-                                              ElevatedButton(
-                                                onPressed: () async {
-                                                  if (formKey.currentState!.validate()) {
-                                                    editTrackMetadata(tracks.first, insertComment: controller.text);
-                                                    Get.close(1);
-                                                  }
-                                                },
-                                                child: Text(Language.inst.SAVE),
-                                              ),
-                                            ],
-                                            child: CustomTagTextField(
-                                              controller: controller,
-                                              hintText: ytlink.overflow,
-                                              labelText: Language.inst.LINK,
-                                              keyboardType: TextInputType.url,
-                                              validator: (value) {
-                                                if (value!.isEmpty) {
-                                                  return Language.inst.PLEASE_ENTER_A_NAME;
-                                                }
-                                                if ((kYoutubeRegex.firstMatch(value) ?? '') == '') {
-                                                  return Language.inst.PLEASE_ENTER_A_LINK_SUBTITLE;
-                                                }
-                                                return null;
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
                                 if (queue != null)
                                   SmallListTile(
                                     color: colorDelightened,
@@ -857,6 +925,35 @@ Future<void> showGeneralPopupDialog(
                                       ),
                                     ),
                                   ),
+
+                                /// Track Utils
+                                Row(
+                                  children: [
+                                    const SizedBox(width: 24.0),
+                                    Expanded(child: bigIcon(Broken.smileys, Language.inst.SET_MOODS, setTrackMoods)),
+                                    const SizedBox(width: 8.0),
+                                    Expanded(child: bigIcon(Broken.ticket_discount, Language.inst.SET_TAGS, setTrackTags)),
+                                    const SizedBox(width: 8.0),
+                                    Expanded(
+                                      child: Obx(
+                                        () => bigIcon(
+                                          Broken.grammerly,
+                                          Language.inst.SET_RATING,
+                                          setTrackRating,
+                                          subtitle: stats.value.rating == 0 ? '' : ' ${stats.value.rating}%',
+                                        ),
+                                      ),
+                                    ),
+                                    if (isSingle) ...[
+                                      const SizedBox(width: 8.0),
+                                      Expanded(child: bigIcon(Broken.edit_2, Language.inst.SET_YOUTUBE_LINK, setYoutubeLink)),
+                                      const SizedBox(width: 8.0),
+                                      Expanded(child: bigIcon(Broken.login_1, Language.inst.OPEN_YOUTUBE_LINK, openYoutubeLink)),
+                                    ],
+                                    const SizedBox(width: 24.0),
+                                  ],
+                                ),
+                                const SizedBox(height: 4.0),
 
                                 Divider(
                                   color: Get.theme.dividerColor,

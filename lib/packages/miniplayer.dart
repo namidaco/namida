@@ -15,6 +15,7 @@ import 'package:video_player/video_player.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -1285,11 +1286,14 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                           CustomListTile(
                                                             title: Language.inst.NEW_TRACKS_MOODS,
                                                             subtitle: Language.inst.NEW_TRACKS_MOODS_SUBTITLE,
-                                                            icon: Broken.happyemoji,
+                                                            icon: Broken.emoji_happy,
                                                             maxSubtitleLines: 22,
                                                             onTap: () {
                                                               Get.close(1);
-                                                              final moods = PlaylistController.inst.playlistList.expand((element) => element.moods.toList()).toSet().toList();
+
+                                                              final moods = [];
+                                                              moods.addAll(PlaylistController.inst.playlistList.expand((element) => element.moods.toList()).toSet().toList());
+                                                              Indexer.inst.trackStatsMap.forEach((key, value) => moods.addAll(value.moods));
                                                               if (moods.isEmpty) {
                                                                 Get.snackbar(Language.inst.ERROR, Language.inst.NO_MOODS_AVAILABLE);
                                                                 return;
@@ -1299,17 +1303,19 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                                 CustomBlurryDialog(
                                                                   normalTitleStyle: true,
                                                                   insetPadding: const EdgeInsets.symmetric(horizontal: 48.0),
+                                                                  title: Language.inst.MOODS,
                                                                   actions: [
-                                                                    TextButton(
+                                                                    const CancelButton(),
+                                                                    ElevatedButton(
                                                                       onPressed: () {
-                                                                        Player.inst.addToQueue(generateTracksFrommoods(selectedmoods.toList()));
+                                                                        Player.inst.addToQueue(generateTracksFromMoods(selectedmoods.toList()));
                                                                         Get.close(1);
                                                                       },
                                                                       child: Text(Language.inst.GENERATE),
                                                                     ),
                                                                   ],
                                                                   child: SizedBox(
-                                                                    height: context.height * 0.5,
+                                                                    height: context.height * 0.4,
                                                                     width: context.width,
                                                                     child: NamidaListView(
                                                                       itemCount: moods.length,
@@ -1337,6 +1343,112 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                                         );
                                                                       },
                                                                     ),
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            },
+                                                          ),
+                                                          CustomListTile(
+                                                            title: Language.inst.NEW_TRACKS_RATINGS,
+                                                            subtitle: Language.inst.NEW_TRACKS_RATINGS_SUBTITLE,
+                                                            icon: Broken.happyemoji,
+                                                            maxSubtitleLines: 22,
+                                                            onTap: () {
+                                                              Get.close(1);
+
+                                                              final RxInt minRating = 80.obs;
+                                                              final RxInt maxRating = 100.obs;
+                                                              final RxInt maxNumberOfTracks = 40.obs;
+                                                              Get.dialog(
+                                                                CustomBlurryDialog(
+                                                                  normalTitleStyle: true,
+                                                                  title: Language.inst.NEW_TRACKS_RATINGS,
+                                                                  actions: [
+                                                                    const CancelButton(),
+                                                                    ElevatedButton(
+                                                                      onPressed: () {
+                                                                        if (minRating.value > maxRating.value) {
+                                                                          Get.snackbar(Language.inst.ERROR, Language.inst.MIN_VALUE_CANT_BE_MORE_THAN_MAX);
+                                                                          return;
+                                                                        }
+                                                                        final tracks = generateTracksFromRatings(minRating.value, maxRating.value, maxNumberOfTracks.value);
+                                                                        Player.inst.addToQueue(tracks);
+                                                                        Get.snackbar(Language.inst.NOTE, '${Language.inst.ADDED} ${tracks.length} ${Language.inst.TRACKS}');
+                                                                        Get.close(1);
+                                                                      },
+                                                                      child: Text(Language.inst.GENERATE),
+                                                                    ),
+                                                                  ],
+                                                                  child: Column(
+                                                                    children: [
+                                                                      Row(
+                                                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                                        children: [
+                                                                          Column(
+                                                                            children: [
+                                                                              Text(Language.inst.MINIMUM),
+                                                                              const SizedBox(height: 24.0),
+                                                                              NamidaWheelSlider(
+                                                                                totalCount: 100,
+                                                                                initValue: minRating.value,
+                                                                                itemSize: 1,
+                                                                                squeeze: 0.3,
+                                                                                onValueChanged: (val) {
+                                                                                  minRating.value = val;
+                                                                                },
+                                                                              ),
+                                                                              const SizedBox(height: 2.0),
+                                                                              Obx(
+                                                                                () => Text(
+                                                                                  '${minRating.value}%',
+                                                                                  style: context.textTheme.displaySmall,
+                                                                                ),
+                                                                              )
+                                                                            ],
+                                                                          ),
+                                                                          Column(
+                                                                            children: [
+                                                                              Text(Language.inst.MAXIMUM),
+                                                                              const SizedBox(height: 24.0),
+                                                                              NamidaWheelSlider(
+                                                                                totalCount: 100,
+                                                                                initValue: maxRating.value,
+                                                                                itemSize: 1,
+                                                                                squeeze: 0.3,
+                                                                                onValueChanged: (val) {
+                                                                                  maxRating.value = val;
+                                                                                },
+                                                                              ),
+                                                                              const SizedBox(height: 2.0),
+                                                                              Obx(
+                                                                                () => Text(
+                                                                                  '${maxRating.value}%',
+                                                                                  style: context.textTheme.displaySmall,
+                                                                                ),
+                                                                              ),
+                                                                            ],
+                                                                          )
+                                                                        ],
+                                                                      ),
+                                                                      const SizedBox(height: 24.0),
+                                                                      Text(Language.inst.NUMBER_OF_TRACKS),
+                                                                      NamidaWheelSlider(
+                                                                        totalCount: 100,
+                                                                        initValue: maxNumberOfTracks.value,
+                                                                        itemSize: 1,
+                                                                        squeeze: 0.3,
+                                                                        onValueChanged: (val) {
+                                                                          maxNumberOfTracks.value = val;
+                                                                        },
+                                                                      ),
+                                                                      const SizedBox(height: 2.0),
+                                                                      Obx(
+                                                                        () => Text(
+                                                                          maxNumberOfTracks.value == 0 ? Language.inst.UNLIMITED : '${maxNumberOfTracks.value}',
+                                                                          style: context.textTheme.displaySmall,
+                                                                        ),
+                                                                      ),
+                                                                    ],
                                                                   ),
                                                                 ),
                                                               );

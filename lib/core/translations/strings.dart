@@ -90,6 +90,7 @@ class Language {
   String get PROMPT_TO_CHANGE_TRACK_PATH => 'Usually this happens when u delete/move/rename the file outside namida, Would you like to update current path?';
   String get TRACK_PATH_OLD_NEW => 'Old name: "_OLD_NAME_"\n\nNew name: "_NEW_NAME_"\n\nAre you sure?';
   String get UPDATE => 'Update';
+  String get UPDATING => 'Updating';
   String get SKIP => 'Skip';
   String get HIGH_MATCHES => 'High matches';
 
@@ -99,6 +100,7 @@ class Language {
   String get MINIMUM_ONE_QUALITY_SUBTITLE => 'At least 1 quality should remain';
   String get CHOOSE_WHAT_TO_CLEAR => 'Choose what to clear';
   String get SET_YOUTUBE_LINK => 'Set Youtube Link';
+  String get OPEN_YOUTUBE_LINK => 'Open Youtube Link';
   String get COULDNT_OPEN => 'Couldn\'t open :(';
   String get COULDNT_OPEN_YT_LINK => 'No Youtube Link Available for this track.';
   String get WAVEFORM_DATA => 'Waveform data';
@@ -164,7 +166,16 @@ class Language {
   String get NO_TRACKS_FOUND_BETWEEN_DATES => 'this timerange doesn\'t have any tracks.';
   String get NEW_TRACKS_MOODS => 'Mood';
   String get NEW_TRACKS_MOODS_SUBTITLE => 'Generate tracks based on available moods';
+  String get NEW_TRACKS_RATINGS => 'Ratings';
+  String get NEW_TRACKS_RATINGS_SUBTITLE => 'Generate tracks that has specific rating';
   String get NO_MOODS_AVAILABLE => 'No moods available';
+  String get MINIMUM => 'Minimum';
+  String get MAXIMUM => 'Maximum';
+  String get MIN_VALUE_CANT_BE_MORE_THAN_MAX => 'Minimum value can\'t be more than the maximum';
+  String get UNLIMITED => 'Unlimited';
+  String get SUCCEEDED => 'Succeeded';
+  String get FAILED => 'Failed';
+  String get PROGRESS => 'Progress';
 
   /// Main
   String get EXIT_APP => 'Exit';
@@ -416,6 +427,8 @@ class Language {
   String get CREATE_NEW_PLAYLIST => 'Create new Playlist';
   String get ADD_TO_PLAYLIST => 'Add to Playlist';
   String get SET_MOODS => 'Set moods';
+  String get SET_TAGS => 'Set tags';
+  String get SET_RATING => 'Set Rating';
   String get SET_MOODS_SUBTITLE => 'Use commas (,) to separate between them';
 
   /// Other Settings
@@ -462,7 +475,7 @@ class Language {
   String get DATE_MODIFIED => 'Date Modified';
   String get BITRATE => 'Bitrate';
   String get DISC_NUMBER => 'Disc Number';
-  String get DISC_NUMBER_TOTAL => 'Disc Number Total';
+  String get DISC_NUMBER_TOTAL => 'Disc Total';
   String get FILE_NAME => 'File Name';
   String get SAMPLE_RATE => 'Sample Rate';
   String get NUMBER_OF_TRACKS => 'Number of Tracks';
