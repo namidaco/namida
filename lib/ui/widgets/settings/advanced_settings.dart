@@ -3,22 +3,24 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
 import 'package:checkmark/checkmark.dart';
+import 'package:get/get.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/main.dart';
 import 'package:namida/packages/youtube_miniplayer.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/ui/widgets/settings_card.dart';
 
 class AdvancedSettings extends StatelessWidget {
   AdvancedSettings({super.key});
@@ -52,6 +54,59 @@ class AdvancedSettings extends StatelessWidget {
                 Get.snackbar(Language.inst.DONE, Language.inst.FINISHED_UPDATING_LIBRARY);
               },
             ),
+          ),
+          CustomListTile(
+            leading: const StackedIcon(
+              baseIcon: Broken.trash,
+              secondaryIcon: Broken.refresh,
+            ),
+            title: Language.inst.REMOVE_SOURCE_FROM_HISTORY,
+            onTap: () async {
+              final RxList<TrackSource> sourcesToDelete = <TrackSource>[].obs;
+              bool isActive(TrackSource e) => sourcesToDelete.contains(e);
+
+              Get.dialog(
+                CustomBlurryDialog(
+                  title: Language.inst.CHOOSE,
+                  actions: [
+                    const CancelButton(),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final lengthBefore = namidaHistoryPlaylist.tracks.length;
+                        for (final s in sourcesToDelete) {
+                          await PlaylistController.inst.removeSourceTracksFromHistory(s);
+                        }
+                        final lengthAfter = namidaHistoryPlaylist.tracks.length;
+                        final removedNum = lengthBefore - lengthAfter;
+                        Get.snackbar(Language.inst.NOTE, "${Language.inst.REMOVED} ${removedNum.displayTrackKeyword}");
+                        Get.close(1);
+                      },
+                      child: Text(Language.inst.REMOVE),
+                    )
+                  ],
+                  child: Column(
+                    children: TrackSource.values.map((e) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 10.0),
+                        child: Obx(
+                          () => ListTileWithCheckMark(
+                            active: isActive(e),
+                            title: e.convertToString,
+                            onTap: () {
+                              if (isActive(e)) {
+                                sourcesToDelete.remove(e);
+                              } else {
+                                sourcesToDelete.add(e);
+                              }
+                            },
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              );
+            },
           ),
           Obx(
             () => CustomListTile(
