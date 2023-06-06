@@ -44,11 +44,15 @@ class JsonToHistoryParser {
   }
 
   Future<dynamic> readJSONFile(String path) async {
-    final contents = await File(path).readAsString();
-    if (contents.isNotEmpty) {
-      final jsonResponse = jsonDecode(contents);
-      return jsonResponse;
+    final file = File(path);
+    if (await file.exists()) {
+      final contents = await file.readAsString();
+      if (contents.isNotEmpty) {
+        final jsonResponse = jsonDecode(contents);
+        return jsonResponse;
+      }
     }
+
     return null;
   }
 
@@ -144,6 +148,7 @@ class JsonToHistoryParser {
     }
     isParsing.value = false;
     PlaylistController.inst.sortHistoryAndSave();
+    PlaylistController.inst.updateMostPlayedPlaylist();
   }
 
   Future<void> _addYoutubeSourceFromDirectory(bool isMatchingTypeLink, bool matchYT, bool matchYTMusic) async {
@@ -196,6 +201,8 @@ class JsonToHistoryParser {
     final stream = file.openRead();
     final lines = stream.transform(utf8.decoder).transform(const LineSplitter());
 
+    // used for cases where date couldnt be parsed, so it uses this one as a reference
+    int? lastDate;
     await for (final line in lines) {
       parsedHistoryJson.value++;
 
@@ -203,20 +210,36 @@ class JsonToHistoryParser {
       await Future.delayed(Duration.zero);
 
       /// artist, album, title, (dd MMM yyyy HH:mm);
-      final pieces = line.split(',');
+      try {
+        final pieces = line.split(',');
 
-      /// matching has to meet 2 conditons:
-      /// [csv artist] contains [track.artistsList.first]
-      /// [csv title] contains [track.title], anything after ( or [ is ignored.
-      final tr = allTracksInLibrary.firstWhereOrNull(
-        (tr) =>
-            pieces.first.cleanUpForComparison.contains(tr.artistsList.first.cleanUpForComparison) &&
-            pieces[2].cleanUpForComparison.contains(tr.title.split('(').first.split('[').first.cleanUpForComparison),
-      );
-      if (tr != null) {
-        PlaylistController.inst
-            .addTrackToHistory([TrackWithDate(DateFormat('dd MMM yyyy HH:mm').parse(pieces.last).millisecondsSinceEpoch, tr, TrackSource.lastfm)], sortAndSave: false);
-        addedHistoryJsonToPlaylist.value++;
+        /// matching has to meet 2 conditons:
+        /// [csv artist] contains [track.artistsList.first]
+        /// [csv title] contains [track.title], anything after ( or [ is ignored.
+        final tr = allTracksInLibrary.firstWhereOrNull(
+          (tr) =>
+              pieces.first.cleanUpForComparison.contains(tr.artistsList.first.cleanUpForComparison) &&
+              pieces[2].cleanUpForComparison.contains(tr.title.split('(').first.split('[').first.cleanUpForComparison),
+        );
+        if (tr != null) {
+          // success means: date == trueDate && lastDate is updated.
+          // failure means: date == lastDate - 30 seconds || date == 0
+          int date = 0;
+          try {
+            date = DateFormat('dd MMM yyyy HH:mm').parseLoose(pieces.last).millisecondsSinceEpoch;
+            lastDate = date;
+          } catch (e) {
+            if (lastDate != null) {
+              date = lastDate - 30000;
+            }
+          }
+
+          PlaylistController.inst.addTrackToHistory([TrackWithDate(date, tr, TrackSource.lastfm)], sortAndSave: false);
+          addedHistoryJsonToPlaylist.value++;
+        }
+      } catch (e) {
+        debugPrint(e.toString());
+        continue;
       }
     }
   }

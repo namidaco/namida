@@ -68,13 +68,13 @@ class BackupAndRestore extends StatelessWidget {
                           child: Column(
                             children: [
                               ListTileWithCheckMark(
-                                active: isActive(k_FILE_PATH_TRACKS) && isActive(k_FILE_PATH_TRACKS_STATS) && isActive(k_FILE_PATH_EXTRA_STATS),
+                                active: isActive(k_FILE_PATH_TRACKS) && isActive(k_FILE_PATH_TRACKS_STATS) && isActive(k_FILE_PATH_TOTAL_LISTEN_TIME),
                                 title: Language.inst.DATABASE,
                                 icon: Broken.box_1,
                                 onTap: () {
                                   onItemTap(k_FILE_PATH_TRACKS);
                                   onItemTap(k_FILE_PATH_TRACKS_STATS);
-                                  onItemTap(k_FILE_PATH_EXTRA_STATS);
+                                  onItemTap(k_FILE_PATH_TOTAL_LISTEN_TIME);
                                 },
                               ),
                               const SizedBox(
@@ -242,6 +242,7 @@ class BackupAndRestore extends StatelessWidget {
             ),
             trailing: const SizedBox(
               height: 32.0,
+              width: 32.0,
               child: ParsingJsonPercentage(
                 size: 32.0,
                 source: TrackSource.youtube,
@@ -350,6 +351,7 @@ class BackupAndRestore extends StatelessWidget {
             ),
             trailing: const SizedBox(
               height: 32.0,
+              width: 32.0,
               child: ParsingJsonPercentage(
                 size: 32.0,
                 source: TrackSource.lastfm,
