@@ -32,6 +32,7 @@ class TrackTile extends StatelessWidget {
   final QueueSource queueSource;
   final void Function(PointerDownEvent event)? onDragStart;
   final void Function(PointerUpEvent event)? onDragEnd;
+  final void Function()? onRightAreaTap;
   const TrackTile({
     super.key,
     required this.track,
@@ -47,53 +48,8 @@ class TrackTile extends StatelessWidget {
     this.onDragStart,
     this.onDragEnd,
     required this.queueSource,
+    this.onRightAreaTap,
   });
-
-  String getChoosenTrackTileItem(TrackTileItem trackItem) {
-    final finalDate = track.dateModified.dateFormatted;
-    final finalClock = track.dateModified.clockFormatted;
-    String trackItemPlaceV = [
-      if (trackItem == TrackTileItem.none) '',
-      if (trackItem == TrackTileItem.title) track.title.overflow,
-      if (trackItem == TrackTileItem.artists) track.originalArtist.overflow,
-      if (trackItem == TrackTileItem.album) track.album.overflow,
-      if (trackItem == TrackTileItem.albumArtist) track.albumArtist.overflow,
-      if (trackItem == TrackTileItem.genres) track.genresList.take(4).join(', ').overflow,
-      if (trackItem == TrackTileItem.duration) track.duration.milliseconds.label,
-      if (trackItem == TrackTileItem.year) track.year.yearFormatted,
-      if (trackItem == TrackTileItem.trackNumber) track.track,
-      if (trackItem == TrackTileItem.discNumber) track.discNo,
-      if (trackItem == TrackTileItem.fileNameWOExt) track.filenameWOExt.overflow,
-      if (trackItem == TrackTileItem.extension) track.extension,
-      if (trackItem == TrackTileItem.fileName) track.filename.overflow,
-      if (trackItem == TrackTileItem.folder) track.folderName.overflow,
-      if (trackItem == TrackTileItem.path) track.path.formatPath,
-      if (trackItem == TrackTileItem.channels) track.channels.channelToLabel,
-      if (trackItem == TrackTileItem.comment) track.comment.overflow,
-      if (trackItem == TrackTileItem.composer) track.composer.overflow,
-      if (trackItem == TrackTileItem.dateAdded) track.dateAdded.dateFormatted,
-      if (trackItem == TrackTileItem.format) track.format,
-      if (trackItem == TrackTileItem.sampleRate) '${track.sampleRate}Hz',
-      if (trackItem == TrackTileItem.size) track.size.fileSizeFormatted,
-      if (trackItem == TrackTileItem.bitrate) "${(track.bitrate)} kps",
-      if (trackItem == TrackTileItem.dateModified) '$finalDate, $finalClock',
-      if (trackItem == TrackTileItem.dateModifiedClock) finalClock,
-      if (trackItem == TrackTileItem.dateModifiedDate) finalDate,
-    ].join('');
-
-    return trackItemPlaceV;
-  }
-
-  String joinTrackItems(TrackTileItem? trackItem1, TrackTileItem? trackItem2, TrackTileItem? trackItem3) {
-    final i1 = getChoosenTrackTileItem(trackItem1 ?? TrackTileItem.none);
-    final i2 = getChoosenTrackTileItem(trackItem2 ?? TrackTileItem.none);
-    final i3 = getChoosenTrackTileItem(trackItem3 ?? TrackTileItem.none);
-    return [
-      if (i1 != '') i1,
-      if (i2 != '') i2,
-      if (i3 != '' && SettingsController.inst.displayThirdItemInEachRow.value) i3,
-    ].join(' ${SettingsController.inst.trackTileSeparator} ');
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -107,6 +63,8 @@ class TrackTile extends StatelessWidget {
 
     void triggerTrackDialog() => NamidaDialogs.inst.showTrackDialog(track, playlist: playlist, index: index, comingFromQueue: comingFromQueue);
     void triggerTrackInfoDialog() => showTrackInfoDialog(track, true, comingFromQueue: comingFromQueue, index: index);
+
+    final willSleepAfterThis = queueSource == QueueSource.playerQueue && Player.inst.isSleepingTrack(index);
 
     return Stack(
       alignment: Alignment.centerRight,
@@ -191,18 +149,32 @@ class TrackTile extends StatelessWidget {
                                         ? Positioned(
                                             bottom: 0,
                                             right: 0,
-                                            child: BlurryContainer(
+                                            child: NamidaBlurryContainer(
+                                              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
                                               borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
-                                              container: Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
-                                                child: Text(
-                                                  index.toString(),
-                                                  style: context.textTheme.displaySmall,
-                                                ),
+                                              child: Text(
+                                                (index + 1).toString(),
+                                                style: context.textTheme.displaySmall,
                                               ),
                                             ),
                                           )
-                                        : null,
+                                        : willSleepAfterThis
+                                            ? Positioned(
+                                                bottom: 0,
+                                                right: 0,
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(2.0),
+                                                  decoration: BoxDecoration(
+                                                    color: context.theme.colorScheme.background.withAlpha(160),
+                                                    borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                                                  ),
+                                                  child: const Icon(
+                                                    Broken.timer_1,
+                                                    size: 16.0,
+                                                  ),
+                                                ),
+                                              )
+                                            : null,
                                   ),
                                 ),
                               ),
@@ -232,7 +204,7 @@ class TrackTile extends StatelessWidget {
                               // check if first row isnt empty
                               if (tritem.row1Item1 != TrackTileItem.none || tritem.row1Item2 != TrackTileItem.none || tritem.row1Item3 != TrackTileItem.none)
                                 Text(
-                                  joinTrackItems(tritem.row1Item1, tritem.row1Item2, tritem.row1Item3),
+                                  _joinTrackItems(tritem.row1Item1, tritem.row1Item2, tritem.row1Item3, track),
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
                                   style: context.textTheme.displayMedium!.copyWith(
@@ -243,7 +215,7 @@ class TrackTile extends StatelessWidget {
                               // check if second row isnt empty
                               if (tritem.row2Item1 != TrackTileItem.none || tritem.row2Item2 != TrackTileItem.none || tritem.row2Item3 != TrackTileItem.none)
                                 Text(
-                                  joinTrackItems(tritem.row2Item1, tritem.row2Item2, tritem.row2Item3),
+                                  _joinTrackItems(tritem.row2Item1, tritem.row2Item2, tritem.row2Item3, track),
                                   style: context.textTheme.displaySmall?.copyWith(
                                     fontWeight: FontWeight.w500,
                                     color: textColor?.withAlpha(140),
@@ -256,7 +228,7 @@ class TrackTile extends StatelessWidget {
                               if (thirdLineText == '' && SettingsController.inst.displayThirdRow.value)
                                 if (tritem.row3Item1 != TrackTileItem.none || tritem.row3Item2 != TrackTileItem.none || tritem.row3Item3 != TrackTileItem.none)
                                   Text(
-                                    joinTrackItems(tritem.row3Item1, tritem.row3Item2, tritem.row3Item3),
+                                    _joinTrackItems(tritem.row3Item1, tritem.row3Item2, tritem.row3Item3, track),
                                     style: context.textTheme.displaySmall?.copyWith(
                                       color: textColor?.withAlpha(130),
                                     ),
@@ -281,7 +253,7 @@ class TrackTile extends StatelessWidget {
                             children: [
                               if (tritem.rightItem1 != TrackTileItem.none)
                                 Text(
-                                  getChoosenTrackTileItem(tritem.rightItem1),
+                                  _getChoosenTrackTileItem(tritem.rightItem1, track),
                                   style: context.textTheme.displaySmall?.copyWith(
                                     fontWeight: FontWeight.w500,
                                     color: textColor?.withAlpha(170),
@@ -290,7 +262,7 @@ class TrackTile extends StatelessWidget {
                                 ),
                               if (tritem.rightItem2 != TrackTileItem.none)
                                 Text(
-                                  getChoosenTrackTileItem(tritem.rightItem2),
+                                  _getChoosenTrackTileItem(tritem.rightItem2, track),
                                   style: context.textTheme.displaySmall?.copyWith(
                                     fontWeight: FontWeight.w500,
                                     color: textColor?.withAlpha(170),
@@ -327,6 +299,8 @@ class TrackTile extends StatelessWidget {
                         MoreIcon(
                           padding: 6.0,
                           iconColor: textColor?.withAlpha(160),
+                          onPressed: triggerTrackDialog,
+                          onLongPress: triggerTrackInfoDialog,
                         ),
                         if (trailingWidget == null)
                           const SizedBox(
@@ -347,7 +321,7 @@ class TrackTile extends StatelessWidget {
           },
         ),
         GestureDetector(
-          onTap: triggerTrackDialog,
+          onTap: onRightAreaTap ?? triggerTrackDialog,
           onLongPress: triggerTrackInfoDialog,
           child: Container(
             width: 36.0,
@@ -357,4 +331,55 @@ class TrackTile extends StatelessWidget {
       ],
     );
   }
+}
+
+String _getChoosenTrackTileItem(TrackTileItem trackItem, Track track) {
+  final finalDate = track.dateModified.dateFormatted;
+  final finalClock = track.dateModified.clockFormatted;
+  final trackItemPlaceV = [
+    if (trackItem == TrackTileItem.none) '',
+    if (trackItem == TrackTileItem.title) track.title.overflow,
+    if (trackItem == TrackTileItem.artists) track.originalArtist.overflow,
+    if (trackItem == TrackTileItem.album) track.album.overflow,
+    if (trackItem == TrackTileItem.albumArtist) track.albumArtist.overflow,
+    if (trackItem == TrackTileItem.genres) track.genresList.take(4).join(', ').overflow,
+    if (trackItem == TrackTileItem.duration) track.duration.milliseconds.label,
+    if (trackItem == TrackTileItem.year) track.year.yearFormatted,
+    if (trackItem == TrackTileItem.trackNumber) track.track,
+    if (trackItem == TrackTileItem.discNumber) track.discNo,
+    if (trackItem == TrackTileItem.fileNameWOExt) track.filenameWOExt.overflow,
+    if (trackItem == TrackTileItem.extension) track.extension,
+    if (trackItem == TrackTileItem.fileName) track.filename.overflow,
+    if (trackItem == TrackTileItem.folder) track.folderName.overflow,
+    if (trackItem == TrackTileItem.path) track.path.formatPath,
+    if (trackItem == TrackTileItem.channels) track.channels.channelToLabel,
+    if (trackItem == TrackTileItem.comment) track.comment.overflow,
+    if (trackItem == TrackTileItem.composer) track.composer.overflow,
+    if (trackItem == TrackTileItem.dateAdded) track.dateAdded.dateFormatted,
+    if (trackItem == TrackTileItem.format) track.format,
+    if (trackItem == TrackTileItem.sampleRate) '${track.sampleRate}Hz',
+    if (trackItem == TrackTileItem.size) track.size.fileSizeFormatted,
+    if (trackItem == TrackTileItem.bitrate) "${(track.bitrate)} kps",
+    if (trackItem == TrackTileItem.dateModified) '$finalDate, $finalClock',
+    if (trackItem == TrackTileItem.dateModifiedClock) finalClock,
+    if (trackItem == TrackTileItem.dateModifiedDate) finalDate,
+
+    /// stats
+    if (trackItem == TrackTileItem.rating) "${track.stats.rating}%",
+    if (trackItem == TrackTileItem.moods) track.stats.moods.join(', '),
+    if (trackItem == TrackTileItem.tags) track.stats.tags.join(', '),
+  ].join('');
+
+  return trackItemPlaceV;
+}
+
+String _joinTrackItems(TrackTileItem? trackItem1, TrackTileItem? trackItem2, TrackTileItem? trackItem3, Track track) {
+  final i1 = _getChoosenTrackTileItem(trackItem1 ?? TrackTileItem.none, track);
+  final i2 = _getChoosenTrackTileItem(trackItem2 ?? TrackTileItem.none, track);
+  final i3 = _getChoosenTrackTileItem(trackItem3 ?? TrackTileItem.none, track);
+  return [
+    if (i1 != '') i1,
+    if (i2 != '') i2,
+    if (i3 != '' && SettingsController.inst.displayThirdItemInEachRow.value) i3,
+  ].join(' ${SettingsController.inst.trackTileSeparator} ');
 }
