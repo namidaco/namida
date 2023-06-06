@@ -27,24 +27,18 @@ extension DurationLabel on Duration {
   }
 }
 
-extension StringOverflow on String {
+extension StringUtils on String {
   String get overflow => this != '' ? characters.replaceAll(Characters(''), Characters('\u{200B}')).toString() : '';
-}
 
-extension PathFormat on String {
   String get formatPath => replaceFirst('/0', '').replaceFirst('/storage/', '').replaceFirst('emulated/', '');
-}
 
-extension AllDirInDir on String {
   List<String> get getDirectoriesInside {
     final allFolders = Indexer.inst.groupedFoldersList;
     final allInside = allFolders.map((element) => element.path).where((key) => key.startsWith(this)).toList();
     allInside.remove(this);
     return allInside;
   }
-}
 
-extension UtilExtensions on String {
   List<String> multiSplit(Iterable<String> delimiters, Iterable<String> blacklist) {
     if (blacklist.any((s) => contains(s))) {
       return [this];
@@ -55,6 +49,13 @@ extension UtilExtensions on String {
               RegExp(delimiters.map(RegExp.escape).join('|'), caseSensitive: false),
             );
     }
+  }
+
+  String get cleanUpForComparison => toLowerCase()
+      .replaceAll(RegExp(r'''[\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\>\=\?\@\[\]\{\}\\\\\^\_\`\~\s\|\@\#\$\%\^\&\*\(\)\-\+\=\[\]\{\}\:\;\"\'\<\>\.\,\?\/\`\~\!\_\s]+'''), '');
+
+  Map<String?, Set<Track>> get artistAlbums {
+    return Indexer.inst.getAlbumsForArtist(this);
   }
 }
 
@@ -154,13 +155,6 @@ extension DisplayKeywords on int {
   String get displayGenreKeyword => displayKeyword(Language.inst.GENRE, Language.inst.GENRES);
   String get displayFolderKeyword => displayKeyword(Language.inst.FOLDER, Language.inst.FOLDERS);
   String get displayPlaylistKeyword => displayKeyword(Language.inst.PLAYLIST, Language.inst.PLAYLISTS);
-}
-
-///
-extension ArtistAlbums on String {
-  Map<String?, Set<Track>> get artistAlbums {
-    return Indexer.inst.getAlbumsForArtist(this);
-  }
 }
 
 extension YearDateFormatted on int {
@@ -357,11 +351,6 @@ extension ConvertPathToTrack on String {
   }
 }
 
-extension CleanUp on String {
-  String get cleanUpForComparison => toLowerCase()
-      .replaceAll(RegExp(r'''[\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\>\=\?\@\[\]\{\}\\\\\^\_\`\~\s\|\@\#\$\%\^\&\*\(\)\-\+\=\[\]\{\}\:\;\"\'\<\>\.\,\?\/\`\~\!\_\s]+'''), '');
-}
-
 extension YTLinkToID on String {
   String get getYoutubeID {
     String videoId = '';
@@ -432,4 +421,21 @@ extension ListieExt<E> on List<E> {
 
   E? get firstOrNull => isEmpty ? null : this[0];
   E? get lastOrNull => isEmpty ? null : this[length - 1];
+}
+
+extension WidgetsSeparator on Iterable<Widget> {
+  Iterable<Widget> addSeparators({required Widget separator, int skipFirst = 0}) sync* {
+    final iterator = this.iterator;
+    int count = 0;
+
+    while (iterator.moveNext()) {
+      if (count < skipFirst) {
+        yield iterator.current;
+      } else {
+        yield separator;
+        yield iterator.current;
+      }
+      count++;
+    }
+  }
 }

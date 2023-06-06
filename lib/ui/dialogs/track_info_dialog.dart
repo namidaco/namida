@@ -195,17 +195,14 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                             ),
                           ),
                           const SizedBox(height: 12.0),
-                          if (shouldShowTheField(track.hasUnknownTitle)) ...[
-                            NamidaContainerDivider(color: color),
+                          if (shouldShowTheField(track.hasUnknownTitle))
                             TrackInfoListTile(
                               title: Language.inst.TITLE,
                               value: track.title,
                               icon: Broken.text,
                             ),
-                          ],
 
-                          if (shouldShowTheField(track.hasUnknownArtist)) ...[
-                            NamidaContainerDivider(color: color),
+                          if (shouldShowTheField(track.hasUnknownArtist))
                             TrackInfoListTile(
                               title: Indexer.inst.splitArtist(track.title, track.originalArtist, addArtistsFromTitle: false).length == 1
                                   ? Language.inst.ARTIST
@@ -213,143 +210,115 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                               value: track.originalArtist,
                               icon: Broken.microphone,
                             ),
-                          ],
 
-                          if (shouldShowTheField(track.hasUnknownAlbum)) ...[
-                            NamidaContainerDivider(color: color),
+                          if (shouldShowTheField(track.hasUnknownAlbum))
                             TrackInfoListTile(
                               title: Language.inst.ALBUM,
                               value: track.album,
                               icon: Broken.music_dashboard,
                             ),
-                          ],
 
-                          if (shouldShowTheField(track.hasUnknownAlbumArtist)) ...[
-                            NamidaContainerDivider(color: color),
+                          if (shouldShowTheField(track.hasUnknownAlbumArtist))
                             TrackInfoListTile(
                               title: Language.inst.ALBUM_ARTIST,
                               value: track.albumArtist,
                               icon: Broken.user,
                             ),
-                          ],
 
-                          if (shouldShowTheField(track.hasUnknownGenre)) ...[
-                            NamidaContainerDivider(color: color),
+                          if (shouldShowTheField(track.hasUnknownGenre))
                             TrackInfoListTile(
                               title: track.genresList.length == 1 ? Language.inst.GENRE : Language.inst.GENRES,
                               value: track.genresList.join(', '),
                               icon: track.genresList.length == 1 ? Broken.emoji_happy : Broken.smileys,
                             ),
-                          ],
 
-                          if (shouldShowTheField(track.hasUnknownComposer)) ...[
-                            NamidaContainerDivider(color: color),
+                          if (shouldShowTheField(track.hasUnknownComposer))
                             TrackInfoListTile(
                               title: Language.inst.COMPOSER,
                               value: track.composer,
                               icon: Broken.profile_2user,
                             ),
-                          ],
 
-                          if (shouldShowTheField(track.duration == 0)) ...[
-                            NamidaContainerDivider(color: color),
+                          if (shouldShowTheField(track.duration == 0))
                             TrackInfoListTile(
                               title: Language.inst.DURATION,
                               value: track.duration.milliseconds.label,
                               icon: Broken.clock,
                             ),
-                          ],
 
-                          if (shouldShowTheField(track.year == 0)) ...[
-                            NamidaContainerDivider(color: color),
+                          if (shouldShowTheField(track.year == 0))
                             TrackInfoListTile(
                               title: Language.inst.YEAR,
                               value: track.year == 0 ? '?' : '${track.year} (${track.year.yearFormatted})',
                               icon: Broken.calendar,
                             ),
-                          ],
 
-                          if (shouldShowTheField(track.dateModified == 0)) ...[
-                            NamidaContainerDivider(color: color),
+                          if (shouldShowTheField(track.dateModified == 0))
                             TrackInfoListTile(
                               title: Language.inst.DATE_MODIFIED,
                               value: track.dateModified.dateAndClockFormattedOriginal,
                               icon: Broken.calendar_1,
                             ),
-                          ],
 
                           ///
-                          if (shouldShowTheField(track.discNo == 0)) ...[
-                            NamidaContainerDivider(color: color),
+                          if (shouldShowTheField(track.discNo == 0))
                             TrackInfoListTile(
                               title: Language.inst.DISC_NUMBER,
                               value: track.discNo.toString(),
                               icon: Broken.hashtag,
                             ),
-                          ],
 
-                          if (shouldShowTheField(track.track == 0)) ...[
-                            NamidaContainerDivider(color: color),
+                          if (shouldShowTheField(track.track == 0))
                             TrackInfoListTile(
                               title: Language.inst.TRACK_NUMBER,
                               value: track.track.toString(),
                               icon: Broken.hashtag,
                             ),
-                          ],
 
                           /// bruh moment
-                          if (shouldShowTheField(track.filenameWOExt == '')) ...[
-                            NamidaContainerDivider(color: color),
+                          if (shouldShowTheField(track.filenameWOExt == ''))
                             TrackInfoListTile(
                               title: Language.inst.FILE_NAME,
                               value: track.filenameWOExt,
                               icon: Broken.quote_up_circle,
                             ),
-                          ],
-                          if (shouldShowTheField(track.folderName == '')) ...[
-                            NamidaContainerDivider(color: color),
+
+                          if (shouldShowTheField(track.folderName == ''))
                             TrackInfoListTile(
                               title: Language.inst.FOLDER,
                               value: track.folderName,
                               icon: Broken.folder,
                             ),
-                          ],
-                          if (shouldShowTheField(track.path == '')) ...[
-                            NamidaContainerDivider(color: color),
+
+                          if (shouldShowTheField(track.path == ''))
                             TrackInfoListTile(
                               title: Language.inst.PATH,
                               value: track.path,
                               icon: Broken.location,
                             ),
-                          ],
 
-                          NamidaContainerDivider(color: color),
                           TrackInfoListTile(
                             title: Language.inst.FORMAT,
                             value: '${track.audioInfoFormattedCompact}\n${track.extension} - ${track.size.fileSizeFormatted}',
                             icon: Broken.voice_cricle,
                           ),
 
-                          if (shouldShowTheField(track.lyrics == '')) ...[
-                            NamidaContainerDivider(color: color),
+                          if (shouldShowTheField(track.lyrics == ''))
                             TrackInfoListTile(
                               title: Language.inst.LYRICS,
                               value: track.lyrics,
                               icon: track.lyrics.isEmpty ? Broken.note_remove : Broken.message_text,
                             ),
-                          ],
 
-                          if (shouldShowTheField(track.comment == '')) ...[
-                            NamidaContainerDivider(color: color),
+                          if (shouldShowTheField(track.comment == ''))
                             TrackInfoListTile(
                               title: Language.inst.COMMENT,
                               value: track.comment,
                               icon: Broken.message_text_1,
                               isComment: true,
                             ),
-                          ],
-                          NamidaContainerDivider(color: color),
-                        ],
+                          const SizedBox(height: 12.0),
+                        ].addSeparators(separator: NamidaContainerDivider(color: color), skipFirst: 3).toList(),
                       ),
                     ),
                   ],
