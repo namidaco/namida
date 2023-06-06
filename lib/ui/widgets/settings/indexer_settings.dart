@@ -12,6 +12,7 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
 class IndexerSettings extends StatelessWidget {
@@ -72,7 +73,7 @@ class IndexerSettings extends StatelessWidget {
                       icon: Broken.info_circle,
                       title: '${Language.inst.TRACKS_INFO} :',
                       value: allTracksInLibrary.length.toString(),
-                      total: Indexer.inst.allTracksPaths.value == 0 ? null : Indexer.inst.allTracksPaths.toString(),
+                      total: Indexer.inst.allAudioFiles.isEmpty ? null : Indexer.inst.allAudioFiles.length.toString(),
                     ),
                   ),
                   Obx(
@@ -80,7 +81,7 @@ class IndexerSettings extends StatelessWidget {
                       icon: Broken.image,
                       title: '${Language.inst.ARTWORKS} :',
                       value: Indexer.inst.artworksInStorage.value.toString(),
-                      total: Indexer.inst.allTracksPaths.value == 0 ? null : Indexer.inst.allTracksPaths.toString(),
+                      total: Indexer.inst.allAudioFiles.isEmpty ? null : Indexer.inst.allAudioFiles.length.toString(),
                     ),
                   ),
                 ],
@@ -133,15 +134,18 @@ class IndexerSettings extends StatelessWidget {
             () => CustomSwitchListTile(
               icon: Broken.microphone,
               title: Language.inst.EXTRACT_FEAT_ARTIST,
-              subtitle: "${Language.inst.EXTRACT_FEAT_ARTIST_SUBTITLE} ${Language.inst.RE_INDEXING_REQUIRED}",
-              onChanged: (isTrue) => stg.save(extractFeatArtistFromTitle: !isTrue),
+              subtitle: "${Language.inst.EXTRACT_FEAT_ARTIST_SUBTITLE} ${Language.inst.INSTANTLY_APPLIES}.",
+              onChanged: (isTrue) async {
+                stg.save(extractFeatArtistFromTitle: !isTrue);
+                await Indexer.inst.prepareTracksFile();
+              },
               value: stg.extractFeatArtistFromTitle.value,
             ),
           ),
           CustomListTile(
             icon: Broken.profile_2user,
             title: Language.inst.TRACK_ARTISTS_SEPARATOR,
-            subtitle: Language.inst.RE_INDEXING_REQUIRED,
+            subtitle: Language.inst.INSTANTLY_APPLIES,
             trailingText: "${stg.trackArtistsSeparators.length}",
             onTap: () async {
               await _showSeparatorSymbolsDialog(
@@ -154,7 +158,7 @@ class IndexerSettings extends StatelessWidget {
           CustomListTile(
             icon: Broken.smileys,
             title: Language.inst.TRACK_GENRES_SEPARATOR,
-            subtitle: Language.inst.RE_INDEXING_REQUIRED,
+            subtitle: Language.inst.INSTANTLY_APPLIES,
             trailingText: "${stg.trackGenresSeparators.length}",
             onTap: () async {
               await _showSeparatorSymbolsDialog(
@@ -255,11 +259,9 @@ class IndexerSettings extends StatelessWidget {
                 ],
               ),
               children: SettingsController.inst.directoriesToScan
-                  .asMap()
-                  .entries
                   .map((e) => ListTile(
                         title: Text(
-                          e.value,
+                          e,
                           style: context.textTheme.displayMedium,
                         ),
                         trailing: TextButton(
@@ -280,14 +282,14 @@ class IndexerSettings extends StatelessWidget {
                                     const CancelButton(),
                                     ElevatedButton(
                                         onPressed: () {
-                                          SettingsController.inst.removeFromList(directoriesToScan1: e.value);
+                                          SettingsController.inst.removeFromList(directoriesToScan1: e);
                                           Get.close(1);
                                           _showRefreshPromptDialog();
                                         },
                                         child: Text(Language.inst.REMOVE)),
                                   ],
                                   child: Text(
-                                    "${Language.inst.REMOVE} \"${e.value}\"?",
+                                    "${Language.inst.REMOVE} \"$e\"?",
                                     style: context.textTheme.displayMedium,
                                   ),
                                 ),
@@ -331,16 +333,14 @@ class IndexerSettings extends StatelessWidget {
                       ))
                     ]
                   : SettingsController.inst.directoriesToExclude
-                      .asMap()
-                      .entries
                       .map((e) => ListTile(
                             title: Text(
-                              e.value,
+                              e,
                               style: context.textTheme.displayMedium,
                             ),
                             trailing: TextButton(
                               onPressed: () {
-                                SettingsController.inst.removeFromList(directoriesToExclude1: e.value);
+                                SettingsController.inst.removeFromList(directoriesToExclude1: e);
                                 _showRefreshPromptDialog();
                               },
                               child: Text(Language.inst.REMOVE.toUpperCase()),
@@ -354,6 +354,8 @@ class IndexerSettings extends StatelessWidget {
     );
   }
 
+  /// Automatically refreshes library after changing.
+  /// no re-index required.
   Future<void> _showSeparatorSymbolsDialog(
     String title,
     RxList<String> itemsList, {
@@ -364,10 +366,19 @@ class IndexerSettings extends StatelessWidget {
   }) async {
     TextEditingController separatorsController = TextEditingController();
     final isBlackListDialog = trackArtistsSeparatorsBlacklist || trackGenresSeparatorsBlacklist;
+
+    final RxBool updatingLibrary = false.obs;
+
     await Get.dialog(
       transitionDuration: const Duration(milliseconds: 200),
       CustomBlurryDialog(
         title: title,
+        onDismissing: isBlackListDialog
+            ? null
+            : () async {
+                updatingLibrary.value = true;
+                await Indexer.inst.prepareTracksFile();
+              },
         actions: [
           if (!isBlackListDialog)
             ElevatedButton(
@@ -395,27 +406,31 @@ class IndexerSettings extends StatelessWidget {
               }),
             ),
           if (isBlackListDialog) const CancelButton(),
-          ElevatedButton(
-            onPressed: () {
-              if (separatorsController.text.isNotEmpty) {
-                if (trackArtistsSeparators) {
-                  stg.save(trackArtistsSeparators: [separatorsController.text]);
-                }
-                if (trackGenresSeparators) {
-                  stg.save(trackGenresSeparators: [separatorsController.text]);
-                }
-                if (trackArtistsSeparatorsBlacklist) {
-                  stg.save(trackArtistsSeparatorsBlacklist: [separatorsController.text]);
-                }
-                if (trackGenresSeparatorsBlacklist) {
-                  stg.save(trackGenresSeparatorsBlacklist: [separatorsController.text]);
-                }
-                separatorsController.clear();
-              } else {
-                Get.snackbar(Language.inst.EMPTY_VALUE, Language.inst.ENTER_SYMBOL, forwardAnimationCurve: Curves.fastLinearToSlowEaseIn);
-              }
-            },
-            child: Text(Language.inst.ADD),
+          Obx(
+            () => updatingLibrary.value
+                ? const LoadingIndicator()
+                : ElevatedButton(
+                    onPressed: () {
+                      if (separatorsController.text.isNotEmpty) {
+                        if (trackArtistsSeparators) {
+                          stg.save(trackArtistsSeparators: [separatorsController.text]);
+                        }
+                        if (trackGenresSeparators) {
+                          stg.save(trackGenresSeparators: [separatorsController.text]);
+                        }
+                        if (trackArtistsSeparatorsBlacklist) {
+                          stg.save(trackArtistsSeparatorsBlacklist: [separatorsController.text]);
+                        }
+                        if (trackGenresSeparatorsBlacklist) {
+                          stg.save(trackGenresSeparatorsBlacklist: [separatorsController.text]);
+                        }
+                        separatorsController.clear();
+                      } else {
+                        Get.snackbar(Language.inst.EMPTY_VALUE, Language.inst.ENTER_SYMBOL, forwardAnimationCurve: Curves.fastLinearToSlowEaseIn);
+                      }
+                    },
+                    child: Text(Language.inst.ADD),
+                  ),
           ),
         ],
         child: Column(
@@ -431,8 +446,6 @@ class IndexerSettings extends StatelessWidget {
             Obx(
               () => Wrap(
                 children: itemsList
-                    .asMap()
-                    .entries
                     .map(
                       (e) => Container(
                         margin: const EdgeInsets.all(4.0),
@@ -444,22 +457,22 @@ class IndexerSettings extends StatelessWidget {
                         child: InkWell(
                           onTap: () {
                             if (trackArtistsSeparators) {
-                              stg.removeFromList(trackArtistsSeparator: e.value);
+                              stg.removeFromList(trackArtistsSeparator: e);
                             }
                             if (trackGenresSeparators) {
-                              stg.removeFromList(trackGenresSeparator: e.value);
+                              stg.removeFromList(trackGenresSeparator: e);
                             }
                             if (trackArtistsSeparatorsBlacklist) {
-                              stg.removeFromList(trackArtistsSeparatorsBlacklist1: e.value);
+                              stg.removeFromList(trackArtistsSeparatorsBlacklist1: e);
                             }
                             if (trackGenresSeparatorsBlacklist) {
-                              stg.removeFromList(trackGenresSeparatorsBlacklist1: e.value);
+                              stg.removeFromList(trackGenresSeparatorsBlacklist1: e);
                             }
                           },
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(e.value),
+                              Text(e),
                               const SizedBox(
                                 width: 6.0,
                               ),

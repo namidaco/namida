@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -41,17 +44,22 @@ class TrackStats {
   /// List of moods for the track.
   List<String> moods = [];
 
+  /// Last Played Position of the track in Milliseconds.
+  int lastPositionInMs = 0;
+
   TrackStats(
     this.path,
     this.rating,
     this.tags,
     this.moods,
+    this.lastPositionInMs,
   );
   TrackStats.fromJson(Map<String, dynamic> json) {
     path = json['path'] ?? '';
     rating = json['rating'] ?? 0;
     tags = List<String>.from(json['tags'] ?? []);
     moods = List<String>.from(json['moods'] ?? []);
+    lastPositionInMs = json['lastPositionInMs'] ?? 0;
   }
 
   Map<String, dynamic> toJson() {
@@ -60,6 +68,7 @@ class TrackStats {
       'rating': rating,
       'tags': tags,
       'moods': moods,
+      'lastPositionInMs': lastPositionInMs,
     };
   }
 }
@@ -70,6 +79,7 @@ class Track {
   late final List<String> artistsList;
   late final String album;
   late final String albumArtist;
+  late final String originalGenre;
   late final List<String> genresList;
   late final String composer;
   late final int track;
@@ -87,7 +97,7 @@ class Track {
   late final int discNo;
   late final String language;
   late final String lyrics;
-  TrackStats stats = TrackStats('', 0, [], []);
+  TrackStats stats = TrackStats('', 0, [], [], 0);
 
   Track(
     this.title,
@@ -95,6 +105,7 @@ class Track {
     this.artistsList,
     this.album,
     this.albumArtist,
+    this.originalGenre,
     this.genresList,
     this.composer,
     this.track,
@@ -118,10 +129,11 @@ class Track {
   Track.fromJson(Map<String, dynamic> json) {
     title = json['title'] ?? '';
     originalArtist = json['originalArtist'] ?? '';
-    artistsList = List<String>.from(json['artistsList'] ?? []);
+    artistsList = Indexer.inst.splitArtist(json['title'], json['originalArtist']);
     album = json['album'] ?? '';
     albumArtist = json['albumArtist'] ?? '';
-    genresList = List<String>.from(json['genresList'] ?? []);
+    originalGenre = json['originalGenre'] ?? '';
+    genresList = Indexer.inst.splitGenre(json['originalGenre']);
     composer = json['composer'] ?? '';
     track = json['track'] ?? 0;
     duration = json['duration'] ?? 0;
@@ -144,10 +156,9 @@ class Track {
     return {
       'title': title,
       'originalArtist': originalArtist,
-      'artistsList': artistsList,
       'album': album,
       'albumArtist': albumArtist,
-      'genresList': genresList,
+      'originalGenre': originalGenre,
       'composer': composer,
       'track': track,
       'duration': duration,
@@ -184,7 +195,7 @@ extension TrackUtils on Track {
   String get filenameWOExt => path.getFilenameWOExt;
   String get extension => path.getExtension;
   String get folderPath => path.getDirectoryName;
-  String get folderName => folderPath.split('/').last;
+  String get folderName => folderPath.split(Platform.pathSeparator).last;
   String get pathToImage => "$k_DIR_ARTWORKS$filename.png";
   String get youtubeLink {
     final match = comment.isEmpty ? null : kYoutubeRegex.firstMatch(comment)?[0];
