@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -55,7 +55,7 @@ class StatsSection extends StatelessWidget {
                 () => StatsContainer(
                   icon: Broken.timer_1,
                   title: '${Language.inst.TOTAL_LISTEN_TIME} :',
-                  value: SettingsController.inst.totalListenedTimeInSec.value.getTimeFormatted,
+                  value: Player.inst.totalListenedTimeInSec.value.getTimeFormatted,
                 ),
               ),
             ],

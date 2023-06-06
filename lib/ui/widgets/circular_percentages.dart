@@ -19,7 +19,7 @@ class IndexingPercentage extends StatelessWidget {
           ? Hero(
               tag: 'indexingper',
               child: NamidaCircularPercentage(
-                percentage: allTracksInLibrary.length / Indexer.inst.allTracksPaths.value,
+                percentage: allTracksInLibrary.length / Indexer.inst.allAudioFiles.length,
                 size: size,
               ),
             )

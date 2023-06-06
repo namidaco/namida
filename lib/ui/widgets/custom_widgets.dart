@@ -30,90 +30,6 @@ import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
-class CustomSwitchListTile extends StatelessWidget {
-  final bool value;
-  final void Function(bool isTrue) onChanged;
-  final String title;
-  final String? subtitle;
-  final Widget? leading;
-  final IconData? icon;
-  final Color? passedColor;
-  final int? rotateIcon;
-  final bool enabled;
-  const CustomSwitchListTile(
-      {Key? key, required this.value, required this.onChanged, required this.title, this.subtitle, this.leading, this.icon, this.passedColor, this.rotateIcon, this.enabled = true})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Theme(
-      data: context.theme.copyWith(
-        splashColor: Colors.transparent,
-        highlightColor: context.isDarkMode ? Colors.white.withAlpha(12) : Colors.black.withAlpha(40),
-      ),
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 400),
-        opacity: enabled ? 1.0 : 0.5,
-        child: ListTile(
-          enabled: enabled,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          onTap: () {
-            onChanged(value);
-          },
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
-          horizontalTitleGap: 0.0,
-          minVerticalPadding: 8.0,
-          leading: icon != null
-              ? SizedBox(
-                  height: double.infinity,
-                  child: rotateIcon != null
-                      ? RotatedBox(
-                          quarterTurns: rotateIcon!,
-                          child: Icon(
-                            icon,
-                            color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(100), context.theme.colorScheme.onBackground),
-                          ),
-                        )
-                      : Icon(
-                          icon,
-                          color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(100), context.theme.colorScheme.onBackground),
-                        ),
-                )
-              : leading,
-          title: Text(
-            title,
-            style: context.theme.textTheme.displayMedium,
-            maxLines: subtitle != null ? 1 : 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          subtitle: subtitle != null
-              ? Text(
-                  subtitle!,
-                  style: context.theme.textTheme.displaySmall,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                )
-              : null,
-          trailing: IgnorePointer(
-            child: FittedBox(
-              child: Row(
-                children: [
-                  const SizedBox(
-                    width: 12.0,
-                  ),
-                  CustomSwitch(active: value),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class CustomSwitch extends StatelessWidget {
   final bool active;
   final double height;
@@ -175,6 +91,63 @@ class CustomSwitch extends StatelessWidget {
   }
 }
 
+class CustomSwitchListTile extends StatelessWidget {
+  final bool value;
+  final void Function(bool isTrue) onChanged;
+  final String title;
+  final String? subtitle;
+  final Widget? leading;
+  final IconData? icon;
+  final Color? passedColor;
+  final int? rotateIcon;
+  final bool enabled;
+  final bool largeTitle;
+  final int maxSubtitleLines;
+
+  const CustomSwitchListTile({
+    Key? key,
+    required this.value,
+    required this.onChanged,
+    required this.title,
+    this.subtitle,
+    this.leading,
+    this.icon,
+    this.passedColor,
+    this.rotateIcon,
+    this.enabled = true,
+    this.largeTitle = false,
+    this.maxSubtitleLines = 4,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomListTile(
+      title: title,
+      subtitle: subtitle,
+      enabled: enabled,
+      icon: icon,
+      leading: leading,
+      largeTitle: largeTitle,
+      maxSubtitleLines: maxSubtitleLines,
+      passedColor: passedColor,
+      rotateIcon: rotateIcon,
+      onTap: () => onChanged(value),
+      trailing: IgnorePointer(
+        child: FittedBox(
+          child: Row(
+            children: [
+              const SizedBox(
+                width: 12.0,
+              ),
+              CustomSwitch(active: value),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class CustomListTile extends StatelessWidget {
   final void Function()? onTap;
   final String title;
@@ -201,7 +174,7 @@ class CustomListTile extends StatelessWidget {
     this.trailingText,
     this.enabled = true,
     this.largeTitle = false,
-    this.maxSubtitleLines = 2,
+    this.maxSubtitleLines = 4,
   }) : super(key: key);
 
   @override
@@ -243,7 +216,7 @@ class CustomListTile extends StatelessWidget {
           title: Text(
             title,
             style: largeTitle ? context.theme.textTheme.displayLarge : context.theme.textTheme.displayMedium,
-            maxLines: subtitle != null ? 1 : 2,
+            maxLines: subtitle != null ? 1 : 3,
             overflow: TextOverflow.ellipsis,
           ),
           subtitle: subtitle != null
@@ -259,15 +232,11 @@ class CustomListTile extends StatelessWidget {
                   trailingText!,
                   style: context.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
                 )
-              : (trailing != null
+              : trailing != null
                   ? FittedBox(
-                      child: AnimatedContainer(
-                        margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                        duration: const Duration(milliseconds: 400),
-                        child: trailing,
-                      ),
+                      child: trailing!,
                     )
-                  : null),
+                  : null,
         ),
       ),
     );
@@ -312,6 +281,7 @@ class CustomBlurryDialog extends StatelessWidget {
   final bool tapToDismiss;
   final EdgeInsets? insetPadding;
   final EdgeInsetsGeometry? contentPadding;
+  final void Function()? onDismissing;
   const CustomBlurryDialog({
     super.key,
     this.child,
@@ -327,6 +297,7 @@ class CustomBlurryDialog extends StatelessWidget {
     this.scrollable = true,
     this.tapToDismiss = true,
     this.contentPadding,
+    this.onDismissing,
   });
 
   @override
@@ -341,7 +312,12 @@ class CustomBlurryDialog extends StatelessWidget {
         child: Theme(
           data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
           child: GestureDetector(
-            onTap: tapToDismiss ? () => Get.close(1) : null,
+            onTap: tapToDismiss
+                ? () {
+                    Get.close(1);
+                    if (onDismissing != null) onDismissing!();
+                  }
+                : null,
             child: Container(
               color: Colors.transparent,
               child: AlertDialog(
@@ -350,59 +326,65 @@ class CustomBlurryDialog extends StatelessWidget {
                 clipBehavior: Clip.antiAlias,
                 titlePadding: normalTitleStyle ? const EdgeInsets.only(top: 24.0, left: 24.0, right: 24.0) : EdgeInsets.zero,
                 contentPadding: contentPadding ?? const EdgeInsets.all(14.0),
-                title: normalTitleStyle
-                    ? Row(
-                        children: [
-                          if (icon != null || isWarning) ...[
-                            Icon(
-                              isWarning ? Broken.warning_2 : icon,
-                            ),
-                            const SizedBox(
-                              width: 10.0,
-                            ),
-                          ],
-                          Expanded(
-                            child: Text(
-                              isWarning ? Language.inst.WARNING : title ?? '',
-                              style: context.textTheme.displayLarge,
-                            ),
-                          ),
-                          if (trailingWidgets != null) ...trailingWidgets!
-                        ],
-                      )
-                    : Container(
-                        color: context.theme.cardColor,
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                title: GestureDetector(
+                  onTap: () {},
+                  child: normalTitleStyle
+                      ? Row(
                           children: [
-                            if (icon != null) ...[
+                            if (icon != null || isWarning) ...[
                               Icon(
-                                icon,
+                                isWarning ? Broken.warning_2 : icon,
                               ),
                               const SizedBox(
                                 width: 10.0,
                               ),
                             ],
-                            Text(
-                              title ?? '',
-                              style: context.theme.textTheme.displayMedium,
-                              textAlign: TextAlign.center,
+                            Expanded(
+                              child: Text(
+                                isWarning ? Language.inst.WARNING : title ?? '',
+                                style: context.textTheme.displayLarge,
+                              ),
                             ),
+                            if (trailingWidgets != null) ...trailingWidgets!
                           ],
-                        ),
-                      ),
-                content: SizedBox(
-                  width: Get.width,
-                  child: bodyText != null
-                      ? Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Text(
-                            bodyText!,
-                            style: context.textTheme.displayMedium,
-                          ),
                         )
-                      : child,
+                      : Container(
+                          color: context.theme.cardColor,
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (icon != null) ...[
+                                Icon(
+                                  icon,
+                                ),
+                                const SizedBox(
+                                  width: 10.0,
+                                ),
+                              ],
+                              Text(
+                                title ?? '',
+                                style: context.theme.textTheme.displayMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                ),
+                content: GestureDetector(
+                  onTap: () {},
+                  child: SizedBox(
+                    width: Get.width,
+                    child: bodyText != null
+                        ? Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Text(
+                              bodyText!,
+                              style: context.textTheme.displayMedium,
+                            ),
+                          )
+                        : child,
+                  ),
                 ),
                 actions: actions,
               ),
@@ -483,6 +465,7 @@ class SmallListTile extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final double? titleGap;
   final double borderRadius;
+  final Widget? leading;
   const SmallListTile({
     super.key,
     required this.title,
@@ -498,6 +481,7 @@ class SmallListTile extends StatelessWidget {
     this.padding,
     this.titleGap,
     this.borderRadius = 0.0,
+    this.leading,
   });
 
   @override
@@ -508,17 +492,18 @@ class SmallListTile extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
       ),
-      leading: SizedBox(
-        height: double.infinity,
-        child: icon != null
-            ? Icon(icon, color: color != null ? Color.alphaBlend(color!.withAlpha(120), context.textTheme.displayMedium!.color!) : null)
-            : active
-                ? const Icon(Broken.arrow_circle_right)
-                : const Icon(
-                    Broken.arrow_right_3,
-                    size: 18.0,
-                  ),
-      ),
+      leading: leading ??
+          SizedBox(
+            height: double.infinity,
+            child: icon != null
+                ? Icon(icon, color: color != null ? Color.alphaBlend(color!.withAlpha(120), context.textTheme.displayMedium!.color!) : null)
+                : active
+                    ? const Icon(Broken.arrow_circle_right)
+                    : const Icon(
+                        Broken.arrow_right_3,
+                        size: 18.0,
+                      ),
+          ),
       visualDensity: compact ? VisualDensity.compact : null,
       title: Text(
         title,
@@ -793,10 +778,12 @@ class NamidaBlurryContainer extends StatelessWidget {
   final BorderRadius? borderRadius;
   final double? width;
   final double? height;
-  const NamidaBlurryContainer({super.key, required this.child, this.onTap, this.borderRadius, this.width, this.height});
+  final EdgeInsetsGeometry? padding;
+  const NamidaBlurryContainer({super.key, required this.child, this.onTap, this.borderRadius, this.width, this.height, this.padding});
 
   @override
   Widget build(BuildContext context) {
+    final blurredAlphaLight = context.isDarkMode ? 60 : 140;
     final con = BlurryContainer(
       disableBlur: !SettingsController.inst.enableBlurEffect.value,
       borderRadius: borderRadius ??
@@ -806,9 +793,9 @@ class NamidaBlurryContainer extends StatelessWidget {
       container: Container(
           width: width,
           height: height,
-          padding: EdgeInsets.symmetric(horizontal: 6.0.multipliedRadius, vertical: 2.0),
+          padding: padding ?? EdgeInsets.symmetric(horizontal: 6.0.multipliedRadius, vertical: 2.0),
           decoration: BoxDecoration(
-            color: context.theme.cardColor.withAlpha(SettingsController.inst.enableBlurEffect.value ? 60 : 220),
+            color: context.theme.cardColor.withAlpha(SettingsController.inst.enableBlurEffect.value ? blurredAlphaLight : 220),
             borderRadius: borderRadius ??
                 BorderRadius.only(
                   bottomLeft: Radius.circular(8.0.multipliedRadius),
@@ -963,7 +950,7 @@ class NamidaLikeButton extends StatelessWidget {
   }
 }
 
-class NamidaIconButton extends StatelessWidget {
+class NamidaIconButton extends StatefulWidget {
   final EdgeInsetsGeometry? padding;
   final double horizontalPadding;
   final double verticalPadding;
@@ -971,6 +958,7 @@ class NamidaIconButton extends StatelessWidget {
   final IconData icon;
   final Color? iconColor;
   final void Function()? onPressed;
+  final String? tooltip;
   const NamidaIconButton({
     super.key,
     this.padding,
@@ -980,18 +968,37 @@ class NamidaIconButton extends StatelessWidget {
     required this.onPressed,
     this.iconSize,
     this.iconColor,
+    this.tooltip,
   });
 
   @override
+  State<NamidaIconButton> createState() => _NamidaIconButtonState();
+}
+
+class _NamidaIconButtonState extends State<NamidaIconButton> {
+  bool isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    return CupertinoButton(
-      minSize: double.minPositive,
-      padding: padding ?? EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
-      onPressed: onPressed,
-      child: Icon(
-        icon,
-        size: iconSize,
-        color: iconColor ?? context.theme.colorScheme.secondary,
+    return Tooltip(
+      message: widget.tooltip ?? '',
+      child: GestureDetector(
+        onTapDown: (value) => setState(() => isPressed = true),
+        onTapUp: (value) => setState(() => isPressed = false),
+        onTapCancel: () => setState(() => isPressed = false),
+        onTap: widget.onPressed,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 300),
+          opacity: isPressed ? 0.5 : 1.0,
+          child: Padding(
+            padding: widget.padding ?? EdgeInsets.symmetric(horizontal: widget.horizontalPadding, vertical: widget.verticalPadding),
+            child: Icon(
+              widget.icon,
+              size: widget.iconSize,
+              color: widget.iconColor ?? context.theme.colorScheme.secondary,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -1015,7 +1022,7 @@ class NamidaPartyContainer extends StatelessWidget {
     if (!SettingsController.inst.enablePartyModeColorSwap.value) {
       return Obx(
         () {
-          final finalScale = WaveformController.inst.getAnimatingScale(WaveformController.inst.curentScaleList.toList());
+          final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value);
           return Opacity(
             opacity: opacity,
             child: AnimatedContainer(
@@ -1043,7 +1050,7 @@ class NamidaPartyContainer extends StatelessWidget {
             final List<Color> palette = CurrentColor.inst.palette.toList();
             RxList<Color> firstHalf = palette.getRange(0, palette.length ~/ 3).toList().obs;
             RxList<Color> secondHalf = palette.getRange(palette.length ~/ 3, palette.length).toList().obs;
-            final finalScale = WaveformController.inst.getAnimatingScale(WaveformController.inst.curentScaleList.toList());
+            final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value);
             if (SettingsController.inst.enablePartyModeColorSwap.value) {
               final sc = (100 * finalScale ~/ 1.5).clamp(1, 4);
               for (int h = 1; h <= sc; h++) {
@@ -1061,8 +1068,6 @@ class NamidaPartyContainer extends StatelessWidget {
             return height != null
                 ? Row(
                     children: firstHalf
-                        .asMap()
-                        .entries
                         .map(
                           (e) => AnimatedContainer(
                             duration: const Duration(milliseconds: 400),
@@ -1071,7 +1076,7 @@ class NamidaPartyContainer extends StatelessWidget {
                             decoration: BoxDecoration(
                               boxShadow: [
                                 BoxShadow(
-                                  color: e.value.withAlpha(150),
+                                  color: e.withAlpha(150),
                                   spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
                                   blurRadius: 10 + (200 * finalScale),
                                 ),
@@ -1083,8 +1088,6 @@ class NamidaPartyContainer extends StatelessWidget {
                   )
                 : Column(
                     children: secondHalf
-                        .asMap()
-                        .entries
                         .map(
                           (e) => AnimatedContainer(
                             duration: const Duration(milliseconds: 400),
@@ -1093,7 +1096,7 @@ class NamidaPartyContainer extends StatelessWidget {
                             decoration: BoxDecoration(
                               boxShadow: [
                                 BoxShadow(
-                                  color: e.value.withAlpha(150),
+                                  color: e.withAlpha(150),
                                   spreadRadius: 140 * finalScale * spreadRadiusMultiplier,
                                   blurRadius: 10 + (200 * finalScale),
                                 ),
@@ -1138,78 +1141,90 @@ class SubpagesTopContainer extends StatelessWidget {
       padding: const EdgeInsets.all(12.0),
       margin: EdgeInsets.symmetric(vertical: verticalPadding),
       height: height,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
         children: [
-          imageWidget,
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(
-                  height: 18.0,
-                ),
-                Container(
-                  padding: const EdgeInsets.only(left: 14.0),
-                  child: Text(
-                    title,
-                    style: context.textTheme.displayLarge,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(
-                  height: 2.0,
-                ),
-                Container(
-                  padding: const EdgeInsets.only(left: 14.0),
-                  child: Text(
-                    subtitle,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
-                  ),
-                ),
-                if (thirdLineText != '') ...[
-                  const SizedBox(
-                    height: 2.0,
-                  ),
-                  Container(
-                    padding: const EdgeInsets.only(left: 14.0),
-                    child: Text(
-                      thirdLineText,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
-                    ),
-                  ),
-                ],
-                const SizedBox(
-                  height: 18.0,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              imageWidget,
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ElevatedButton(
-                      onPressed: () => Player.inst.playOrPause(
-                        0,
-                        tracks,
-                        source,
-                        shuffle: true,
+                    const SizedBox(
+                      height: 18.0,
+                    ),
+                    Container(
+                      padding: const EdgeInsets.only(left: 14.0),
+                      child: Text(
+                        title,
+                        style: context.textTheme.displayLarge,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      child: const Icon(Broken.shuffle),
                     ),
-                    ElevatedButton.icon(
-                      onPressed: () => Player.inst.addToQueue(tracks),
-                      icon: const StackedIcon(baseIcon: Broken.play, secondaryIcon: Broken.add_circle),
-                      label: Text(Language.inst.PLAY_LAST),
+                    const SizedBox(
+                      height: 2.0,
                     ),
+                    Container(
+                      padding: const EdgeInsets.only(left: 14.0),
+                      child: Text(
+                        subtitle,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
+                      ),
+                    ),
+                    if (thirdLineText != '') ...[
+                      const SizedBox(
+                        height: 2.0,
+                      ),
+                      Container(
+                        padding: const EdgeInsets.only(left: 14.0),
+                        child: Text(
+                          thirdLineText,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(
+                      height: 18.0,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () => Player.inst.playOrPause(
+                            0,
+                            tracks,
+                            source,
+                            shuffle: true,
+                          ),
+                          child: const Icon(Broken.shuffle),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () => Player.inst.addToQueue(tracks),
+                          icon: const StackedIcon(baseIcon: Broken.play, secondaryIcon: Broken.add_circle),
+                          label: Text(Language.inst.PLAY_LAST),
+                        ),
+                      ],
+                    )
                   ],
-                )
-              ],
+                ),
+              )
+            ],
+          ),
+          if (false)
+            Container(
+              padding: const EdgeInsets.all(6.0),
+              color: context.theme.cardColor,
+              child: Row(
+                children: const [Text('bottomText')],
+              ),
             ),
-          )
         ],
       ),
     );
@@ -1223,17 +1238,22 @@ class AnimatingTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimationConfiguration.staggeredList(
-      position: position,
-      duration: const Duration(milliseconds: 400),
-      child: SlideAnimation(
-        verticalOffset: 25.0,
-        child: FadeInAnimation(
-          duration: const Duration(milliseconds: 400),
-          child: child,
+    // since it doesnt work well with PageStorageKey(), which is needed for keeping scroll offset.
+    // the effect is only applied for the first 40 items.
+    if (position < 40) {
+      return AnimationConfiguration.staggeredList(
+        position: position,
+        duration: const Duration(milliseconds: 400),
+        child: SlideAnimation(
+          verticalOffset: 25.0,
+          child: FadeInAnimation(
+            duration: const Duration(milliseconds: 400),
+            child: child,
+          ),
         ),
-      ),
-    );
+      );
+    }
+    return child;
   }
 }
 
@@ -1245,18 +1265,23 @@ class AnimatingGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimationConfiguration.staggeredGrid(
-      columnCount: columnCount,
-      position: position,
-      duration: const Duration(milliseconds: 400),
-      child: SlideAnimation(
-        verticalOffset: 25.0,
-        child: FadeInAnimation(
-          duration: const Duration(milliseconds: 400),
-          child: child,
+    // since it doesnt work well with PageStorageKey(), which is needed for keeping scroll offset.
+    // the effect is only applied for the first 40 items.
+    if (position < 40) {
+      return AnimationConfiguration.staggeredGrid(
+        columnCount: columnCount,
+        position: position,
+        duration: const Duration(milliseconds: 400),
+        child: SlideAnimation(
+          verticalOffset: 25.0,
+          child: FadeInAnimation(
+            duration: const Duration(milliseconds: 400),
+            child: child,
+          ),
         ),
-      ),
-    );
+      );
+    }
+    return child;
   }
 }
 
@@ -1615,7 +1640,7 @@ class NamidaCircularPercentage extends StatelessWidget {
         ),
         if (percentage.isFinite)
           Text(
-            "${(percentage * 100).toStringAsFixed(0)}%",
+            "${((percentage).clamp(0.01, 1) * 100).toStringAsFixed(0)}%",
             style: context.textTheme.displaySmall?.copyWith(fontSize: size / 3.2),
           )
       ],
@@ -1701,6 +1726,77 @@ class NamidaCircularPercentage extends StatelessWidget {
 //   }
 // }
 
+// class NamidaListView extends StatelessWidget {
+//   final Widget Function(BuildContext context, int i) itemBuilder;
+//   final void Function(int oldIndex, int newIndex)? onReorder;
+//   final void Function(int index)? onReorderStart;
+//   final void Function(int index)? onReorderEnd;
+//   final Widget? header;
+//   final List<Widget>? widgetsInColumn;
+//   final EdgeInsets? padding;
+//   final List<double>? itemExtents;
+//   final ScrollController? scrollController;
+//   final int itemCount;
+//   final List<Widget>? moreWidgets;
+//   final bool buildDefaultDragHandles;
+//   final ScrollPhysics? physics;
+//   final Key? pageKey;
+
+//   NamidaListView({
+//     super.key,
+//     this.header,
+//     this.widgetsInColumn,
+//     this.padding,
+//     this.onReorder,
+//     required this.itemBuilder,
+//     required this.itemCount,
+//     required this.itemExtents,
+//     this.moreWidgets,
+//     this.scrollController,
+//     this.buildDefaultDragHandles = true,
+//     this.onReorderStart,
+//     this.onReorderEnd,
+//     this.physics,
+//     this.pageKey,
+//   });
+
+//   final ScrollController _scrollController = ScrollController();
+//   @override
+//   Widget build(BuildContext context) {
+//     final double? itemExtent = (itemExtents != null && itemExtents!.isNotEmpty) ? itemExtents?.first : null;
+//     final sc = scrollController ?? _scrollController;
+//     sc.offset;
+//     // final h = sc.hasClients ? sc.position.maxScrollExtent : 1.0;
+//     return AnimationLimiter(
+//       child: DraggableScrollbar.arrows(
+//         heightScrollThumb: (context.height / sc.position.maxScrollExtent).clamp(1, context.height) * 30,
+//         controller: sc,
+//         child: CustomScrollView(
+//           physics: physics,
+//           controller: sc,
+//           slivers: [
+//             SliverKnownExtentsReorderableList(
+//               key: pageKey,
+//               itemExtents: itemExtents!,
+//               // scrollController: sc,
+//               // padding: padding ?? const EdgeInsets.only(bottom: kBottomPadding),
+//               itemBuilder: itemBuilder,
+//               itemCount: itemCount,
+//               onReorder: onReorder ?? (oldIndex, newIndex) {},
+//               proxyDecorator: (child, index, animation) => child,
+//               // header: header,
+//               // buildDefaultDragHandles: buildDefaultDragHandles,
+
+//               onReorderStart: onReorderStart,
+//               onReorderEnd: onReorderEnd,
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
 class NamidaListView extends StatelessWidget {
   final Widget Function(BuildContext context, int i) itemBuilder;
   final void Function(int oldIndex, int newIndex)? onReorder;
@@ -1715,6 +1811,7 @@ class NamidaListView extends StatelessWidget {
   final List<Widget>? moreWidgets;
   final bool buildDefaultDragHandles;
   final ScrollPhysics? physics;
+  final Key? pageKey;
 
   NamidaListView({
     super.key,
@@ -1731,6 +1828,7 @@ class NamidaListView extends StatelessWidget {
     this.onReorderStart,
     this.onReorderEnd,
     this.physics,
+    this.pageKey,
   });
 
   final ScrollController _scrollController = ScrollController();
@@ -1747,6 +1845,7 @@ class NamidaListView extends StatelessWidget {
             Expanded(
               child: itemExtents != null && onReorder != null
                   ? KnownExtentsReorderableListView.builder(
+                      key: pageKey,
                       itemExtents: itemExtents!,
                       scrollController: sc,
                       padding: padding ?? const EdgeInsets.only(bottom: kBottomPadding),
@@ -1761,6 +1860,7 @@ class NamidaListView extends StatelessWidget {
                       onReorderEnd: onReorderEnd,
                     )
                   : ReorderableListView.builder(
+                      key: pageKey,
                       itemExtent: itemExtent,
                       scrollController: sc,
                       padding: padding ?? const EdgeInsets.only(bottom: kBottomPadding),
@@ -1796,6 +1896,8 @@ class NamidaTracksList extends StatelessWidget {
   final bool? buildDefaultDragHandles;
   final ScrollPhysics? physics;
   final QueueSource queueSource;
+  final bool displayIndex;
+  final Key? pageKey;
   const NamidaTracksList({
     super.key,
     this.queue,
@@ -1811,17 +1913,19 @@ class NamidaTracksList extends StatelessWidget {
     this.buildDefaultDragHandles,
     this.physics,
     required this.queueSource,
+    this.displayIndex = false,
+    this.pageKey,
   });
 
   @override
   Widget build(BuildContext context) {
     return NamidaListView(
+      pageKey: pageKey,
       onReorder: onReorder,
       header: header,
       widgetsInColumn: widgetsInColumn,
       scrollController: scrollController,
       itemCount: queueLength,
-      // itemExtent: trackTileItemExtent,
       itemExtents: List<double>.generate(queueLength, (index) => trackTileItemExtent),
       padding: padding,
       buildDefaultDragHandles: buildDefaultDragHandles ?? onReorder != null,
@@ -1838,6 +1942,7 @@ class NamidaTracksList extends StatelessWidget {
                   track: track,
                   draggableThumbnail: onReorder != null,
                   queueSource: queueSource,
+                  displayIndex: displayIndex,
                 ),
               );
             }

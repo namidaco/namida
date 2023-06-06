@@ -40,16 +40,6 @@ class ExtrasSettings extends StatelessWidget {
           ),
           Obx(
             () => CustomSwitchListTile(
-              enabled: SettingsController.inst.enableBottomNavBar.value,
-              icon: Broken.slider_horizontal,
-              title: Language.inst.ENABLE_SCROLLING_NAVIGATION,
-              subtitle: Language.inst.ENABLE_SCROLLING_NAVIGATION_SUBTITLE,
-              value: SettingsController.inst.enableScrollingNavigation.value,
-              onChanged: (p0) => SettingsController.inst.save(enableScrollingNavigation: !p0),
-            ),
-          ),
-          Obx(
-            () => CustomSwitchListTile(
               icon: Broken.video_square,
               title: Language.inst.USE_YOUTUBE_MINIPLAYER,
               value: SettingsController.inst.useYoutubeMiniplayer.value,
@@ -109,9 +99,11 @@ class ExtrasSettings extends StatelessWidget {
                                     title: "${e.key + 1}. ${e.value.toEnum.toText}",
                                     icon: e.value.toEnum.toIcon,
                                     onTap: () {
-                                      SettingsController.inst.save(selectedLibraryTab: e.value.toEnum);
-                                      SettingsController.inst.save(staticLibraryTab: e.value.toEnum);
-                                      SettingsController.inst.save(autoLibraryTab: false);
+                                      SettingsController.inst.save(
+                                        selectedLibraryTab: e.value.toEnum,
+                                        staticLibraryTab: e.value.toEnum,
+                                        autoLibraryTab: false,
+                                      );
                                     },
                                     active: SettingsController.inst.selectedLibraryTab.value == e.value.toEnum,
                                   ),
@@ -488,49 +480,47 @@ class ExtrasSettings extends StatelessWidget {
   }
 }
 
-class LoadingIndicator extends StatefulWidget {
+class LoadingIndicator extends StatelessWidget {
   final Color? circleColor;
   final double? width;
   final double? height;
   final double? maxWidth;
   final double? maxHeight;
   final int? durationInMillisecond;
-  const LoadingIndicator({super.key, this.circleColor, this.width, this.height, this.durationInMillisecond, this.maxWidth, this.maxHeight});
+
+  const LoadingIndicator({
+    super.key,
+    this.circleColor,
+    this.width,
+    this.height,
+    this.durationInMillisecond,
+    this.maxWidth,
+    this.maxHeight,
+  });
 
   @override
-  State<LoadingIndicator> createState() => _LoadingIndicatorState();
-}
-
-class _LoadingIndicatorState extends State<LoadingIndicator> {
-  late Timer timer;
-  Rx<Alignment> alignment = Alignment.centerLeft.obs;
-  @override
-  void initState() {
-    timer = Timer.periodic(Duration(milliseconds: widget.durationInMillisecond ?? 350), (Timer timer) {
+  Widget build(BuildContext context) {
+    final Rx<Alignment> alignment = Alignment.centerLeft.obs;
+    Timer.periodic(Duration(milliseconds: durationInMillisecond ?? 350), (Timer timer) {
       if (alignment.value == Alignment.centerLeft) {
         alignment.value = Alignment.centerRight;
       } else {
         alignment.value = Alignment.centerLeft;
       }
     });
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return SizedBox(
-      width: widget.maxWidth ?? 20.0,
-      height: widget.maxHeight ?? 5.0,
+      width: maxWidth ?? 20.0,
+      height: maxHeight ?? 5.0,
       child: Obx(
         () => AnimatedAlign(
-          duration: Duration(milliseconds: widget.durationInMillisecond ?? 400),
+          duration: Duration(milliseconds: durationInMillisecond ?? 400),
           curve: Curves.easeOutSine,
           alignment: alignment.value,
           child: Container(
-            width: widget.width ?? 5.0,
-            height: widget.height ?? 5.0,
+            width: width ?? 5.0,
+            height: height ?? 5.0,
             decoration: BoxDecoration(
-              color: widget.circleColor ?? Get.textTheme.displayMedium?.color,
+              color: circleColor ?? context.textTheme.displayMedium?.color,
               borderRadius: BorderRadius.circular(30.0.multipliedRadius),
               // boxShadow: [
               //   BoxShadow(color: Colors.black.withAlpha(100), spreadRadius: 1, blurRadius: 4, offset: Offset(0, 2)),

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
@@ -18,6 +17,7 @@ class CustomizationSettings extends StatelessWidget {
   CustomizationSettings({super.key});
 
   final SettingsController stg = SettingsController.inst;
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -82,32 +82,57 @@ class CustomizationSettings extends StatelessWidget {
               title: Language.inst.DATE_TIME_FORMAT,
               trailingText: "${stg.dateTimeFormat}",
               onTap: () {
+                final ScrollController scrollController = ScrollController();
+
                 showSettingDialogWithTextField(
                     title: Language.inst.DATE_TIME_FORMAT,
                     iconWidget: const Icon(Broken.calendar_edit),
                     dateTimeFormat: true,
-                    topWidget: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: kDefaultDateTimeStrings.entries
-                          .map(
-                            (e) => RadioListTile<String>(
-                              activeColor: context.theme.colorScheme.secondary,
-                              groupValue: stg.dateTimeFormat.string,
-                              value: e.key,
-                              onChanged: (e) async {
-                                if (e != null) {
-                                  stg.dateTimeFormat.value = e;
-                                  stg.save(dateTimeFormat: e);
-
-                                  Get.close(1);
-                                }
-                              },
-                              title: Text(
-                                e.value,
+                    topWidget: SizedBox(
+                      height: Get.height * 0.4,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 58.0),
+                        child: Stack(
+                          children: [
+                            SingleChildScrollView(
+                              controller: scrollController,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: kDefaultDateTimeStrings.entries
+                                    .map(
+                                      (e) => SmallListTile(
+                                        title: e.value,
+                                        active: stg.dateTimeFormat.value == e.key,
+                                        onTap: () {
+                                          stg.save(dateTimeFormat: e.key);
+                                          Get.close(1);
+                                        },
+                                      ),
+                                    )
+                                    .toList(),
                               ),
                             ),
-                          )
-                          .toList(),
+                            Positioned(
+                              bottom: 20,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(8.0),
+                                decoration: BoxDecoration(color: Get.theme.cardTheme.color, shape: BoxShape.circle),
+                                child: NamidaIconButton(
+                                  icon: Broken.arrow_circle_down,
+                                  onPressed: () {
+                                    scrollController.animateTo(
+                                      scrollController.position.maxScrollExtent,
+                                      duration: const Duration(milliseconds: 300),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  },
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
                     ));
               },
             ),

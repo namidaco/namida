@@ -46,13 +46,10 @@ class WaveformComponent extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           mainAxisSize: MainAxisSize.max,
           children: downscaledList
-              .asMap()
-              .entries
               .map(
                 (e) => AnimatedContainer(
                   duration: Duration(milliseconds: durationInMilliseconds),
-                  // height: (e.value < (4 / 100) ? (3.0 + 2 * e.value) : e.value * 100) * heightMultiplier,
-                  height: (e.value * 100).clamp(3.0, 200.0),
+                  height: (e * 100).clamp(3.0, 200.0),
                   width: Get.width / downscaledList.length * 0.45,
                   curve: curve,
                   decoration: BoxDecoration(

@@ -67,13 +67,21 @@ class ArtworkWidget extends StatelessWidget {
       width: width ?? thumnailSize,
       height: height ?? thumnailSize,
       key: const ValueKey("empty"),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
         borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
       ),
-      child: Icon(
-        Broken.musicnote,
-        size: iconSize ?? thumnailSize / 2,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Icon(
+            Broken.musicnote,
+            size: iconSize ?? thumnailSize / 2,
+          ),
+          if (onTopWidget != null) onTopWidget!,
+          if (onTopWidgets != null) ...onTopWidgets!,
+        ],
       ),
     );
     if (forceDummyArtwork) {
@@ -87,6 +95,8 @@ class ArtworkWidget extends StatelessWidget {
     if ((path != null && path != '' && FileSystemEntity.typeSync(path!) == FileSystemEntityType.notFound) || (bytes != null && (bytes ?? []).isEmpty)) {
       return stockWidget;
     }
+    final realWidthAndHeight = forceSquared ? context.width : null;
+
     final extImageChild = Stack(
       alignment: Alignment.center,
       children: [
@@ -97,8 +107,8 @@ class ArtworkWidget extends StatelessWidget {
                 fit: BoxFit.cover,
                 clearMemoryCacheWhenDispose: true,
                 filterQuality: FilterQuality.high,
-                width: forceSquared ? context.width : null,
-                height: forceSquared ? context.width : null,
+                width: realWidthAndHeight,
+                height: realWidthAndHeight,
               )
             : Image.file(
                 File(path!),
@@ -110,8 +120,8 @@ class ArtworkWidget extends StatelessWidget {
                         : 60 * (Get.mediaQuery.devicePixelRatio).round()
                     : (cacheHeight ?? 100) * (Get.mediaQuery.devicePixelRatio).round(),
                 filterQuality: FilterQuality.medium,
-                width: forceSquared ? context.width : null,
-                height: forceSquared ? context.width : null,
+                width: realWidthAndHeight,
+                height: realWidthAndHeight,
                 frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
                   if (wasSynchronouslyLoaded) return child;
                   return AnimatedSwitcher(
@@ -130,8 +140,8 @@ class ArtworkWidget extends StatelessWidget {
             fit: BoxFit.cover,
             clearMemoryCacheWhenDispose: true,
             filterQuality: FilterQuality.high,
-            width: forceSquared ? context.width : null,
-            height: forceSquared ? context.width : null,
+            width: realWidthAndHeight,
+            height: realWidthAndHeight,
           ),
         if (onTopWidget != null) onTopWidget!,
         if (onTopWidgets != null) ...onTopWidgets!,
