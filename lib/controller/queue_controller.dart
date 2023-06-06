@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -45,7 +44,7 @@ class QueueController {
 
   void removeQueue(Queue queue) async {
     queueList.remove(queue);
-    await _deleteQueueToStorage(queue);
+    await _deleteQueueFromStorage(queue);
   }
 
   void insertQueue(Queue queue, int index) async {
@@ -99,6 +98,9 @@ class QueueController {
       } catch (e) {
         printError(info: e.toString());
       }
+
+      /// Sorting accensingly by date since [await for] doesnt maintain order
+      queueList.sort((a, b) => a.date.compareTo(b.date));
     }
   }
 
@@ -121,7 +123,7 @@ class QueueController {
     if (latestQueue.isEmpty) {
       return;
     }
-    final latestTrack = Indexer.inst.allTracksMappedByPath[SettingsController.inst.lastPlayedTrackPath.value];
+    final latestTrack = SettingsController.inst.lastPlayedTrackPath.value.toTrackOrNull();
     final ind = latestQueue.indexOf(latestTrack);
     if (latestTrack == null) return;
 
@@ -142,7 +144,7 @@ class QueueController {
     await File(k_FILE_PATH_LATEST_QUEUE).writeAsString(jsonEncode(queue.toJson()));
   }
 
-  Future<void> _deleteQueueToStorage(Queue queue) async {
-    await File('$k_DIR_QUEUES${queue.date}.json').writeAsString(jsonEncode(queue.toJson()));
+  Future<void> _deleteQueueFromStorage(Queue queue) async {
+    await File('$k_DIR_QUEUES${queue.date}.json').delete();
   }
 }
