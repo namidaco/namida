@@ -52,7 +52,7 @@ class PlaylistTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.date.dateFormatted].join(' • '),
+                        [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
                         style: context.textTheme.displaySmall?.copyWith(fontSize: 13.7.multipliedFontScale),
                         overflow: TextOverflow.ellipsis,
                       ),

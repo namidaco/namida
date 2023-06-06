@@ -17,7 +17,7 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 class FoldersPage extends StatelessWidget {
   FoldersPage({super.key});
 
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = Folders.inst.scrollController;
 
   @override
   Widget build(BuildContext context) {

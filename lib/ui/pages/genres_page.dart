@@ -7,6 +7,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -56,6 +57,7 @@ class GenresPage extends StatelessWidget {
               ),
               Expanded(
                 child: GridView.builder(
+                  key: const PageStorageKey(LibraryTab.genres),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.8, mainAxisSpacing: 8.0),
                   controller: _scrollController,
                   itemCount: Indexer.inst.genreSearchList.length,

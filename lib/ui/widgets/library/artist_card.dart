@@ -33,7 +33,7 @@ class ArtistCard extends StatelessWidget {
           highlightColor: const Color.fromARGB(60, 120, 120, 120),
           borderRadius: BorderRadius.circular(12.0.multipliedRadius),
           onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, artist),
-          onTap: () => NamidaOnTaps.inst.onArtistTap(name),
+          onTap: () => NamidaOnTaps.inst.onArtistTap(name, artist),
           child: Column(
             children: [
               Hero(

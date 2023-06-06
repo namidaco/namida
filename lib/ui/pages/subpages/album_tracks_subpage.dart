@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -35,6 +36,7 @@ class AlbumTracksPage extends StatelessWidget {
           queueSource: QueueSource.album,
           queueLength: tracks.length,
           queue: tracks,
+          displayIndex: SettingsController.inst.displayTrackNumberinAlbumPage.value,
           header: SubpagesTopContainer(
             title: name,
             source: QueueSource.album,

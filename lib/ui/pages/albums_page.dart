@@ -9,6 +9,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -21,6 +22,7 @@ class AlbumsPage extends StatelessWidget {
   final List<Group>? albums;
   AlbumsPage({super.key, this.albums});
   final ScrollController _scrollController = ScrollSearchController.inst.albumScrollcontroller;
+
   @override
   Widget build(BuildContext context) {
     final finalAlbums = albums ?? Indexer.inst.albumSearchList;
@@ -63,6 +65,7 @@ class AlbumsPage extends StatelessWidget {
                 return SettingsController.inst.albumGridCount.value == 1
                     ? Expanded(
                         child: ListView.builder(
+                          key: const PageStorageKey(LibraryTab.albums),
                           controller: _scrollController,
                           itemCount: finalAlbums.length,
                           itemExtent: SettingsController.inst.albumListTileHeight.value + 4.0 * 5,
@@ -80,6 +83,7 @@ class AlbumsPage extends StatelessWidget {
                     : SettingsController.inst.useAlbumStaggeredGridView.value
                         ? Expanded(
                             child: MasonryGridView.builder(
+                              key: const PageStorageKey(LibraryTab.albums),
                               controller: _scrollController,
                               padding: const EdgeInsets.only(bottom: kBottomPadding),
                               itemCount: finalAlbums.length,
@@ -100,6 +104,7 @@ class AlbumsPage extends StatelessWidget {
                           )
                         : Expanded(
                             child: GridView.builder(
+                              key: const PageStorageKey(LibraryTab.albums),
                               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: SettingsController.inst.albumGridCount.value, childAspectRatio: 0.75, mainAxisSpacing: 8.0),
                               controller: _scrollController,

@@ -119,42 +119,56 @@ class PlaylistsPage extends StatelessWidget {
                             children: [
                               Column(
                                 children: [
-                                  DefaultPlaylistCard(
-                                    width: context.width / 2.4,
-                                    colorScheme: Colors.grey,
-                                    icon: Broken.refresh,
-                                    title: Language.inst.HISTORY,
-                                    playlist: namidaHistoryPlaylist,
-                                    onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaHistoryPlaylist),
+                                  Obx(
+                                    () {
+                                      PlaylistController.inst.defaultPlaylists.toList();
+                                      return DefaultPlaylistCard(
+                                        width: context.width / 2.4,
+                                        colorScheme: Colors.grey,
+                                        icon: Broken.refresh,
+                                        title: Language.inst.HISTORY,
+                                        playlist: namidaHistoryPlaylist,
+                                        onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaHistoryPlaylist),
+                                      );
+                                    },
                                   ),
-                                  DefaultPlaylistCard(
-                                    width: context.width / 2.4,
-                                    colorScheme: Colors.red,
-                                    icon: Broken.heart,
-                                    title: Language.inst.FAVOURITES,
-                                    playlist: namidaFavouritePlaylist,
-                                    onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaFavouritePlaylist),
+                                  Obx(
+                                    () {
+                                      PlaylistController.inst.defaultPlaylists.toList();
+                                      return DefaultPlaylistCard(
+                                        width: context.width / 2.4,
+                                        colorScheme: Colors.red,
+                                        icon: Broken.heart,
+                                        title: Language.inst.FAVOURITES,
+                                        playlist: namidaFavouritePlaylist,
+                                        onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaFavouritePlaylist),
+                                      );
+                                    },
                                   ),
                                 ],
                               ),
                               const SizedBox(width: 12.0),
                               Column(
                                 children: [
-                                  DefaultPlaylistCard(
-                                    width: context.width / 2.4,
-                                    colorScheme: Colors.green,
-                                    icon: Broken.award,
-                                    title: Language.inst.MOST_PLAYED,
-                                    playlist: namidaMostPlayedPlaylist,
-                                    onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaMostPlayedPlaylist),
+                                  Obx(
+                                    () => DefaultPlaylistCard(
+                                      width: context.width / 2.4,
+                                      colorScheme: Colors.green,
+                                      icon: Broken.award,
+                                      title: Language.inst.MOST_PLAYED,
+                                      text: PlaylistController.inst.topTracksMapListens.length.toString(),
+                                      onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaMostPlayedPlaylist),
+                                    ),
                                   ),
-                                  DefaultPlaylistCard(
-                                    width: context.width / 2.4,
-                                    colorScheme: Colors.blue,
-                                    icon: Broken.driver,
-                                    title: Language.inst.QUEUES,
-                                    text: QueueController.inst.queueList.length.toString(),
-                                    onTap: () => Get.to(() => const QueuesPage()),
+                                  Obx(
+                                    () => DefaultPlaylistCard(
+                                      width: context.width / 2.4,
+                                      colorScheme: Colors.blue,
+                                      icon: Broken.driver,
+                                      title: Language.inst.QUEUES,
+                                      text: QueueController.inst.queueList.length.toString(),
+                                      onTap: () => Get.to(() => const QueuesPage()),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -172,7 +186,7 @@ class PlaylistsPage extends StatelessWidget {
                                 child: PlaylistTile(
                                   playlist: playlist,
                                   onTap: tracksToAdd != null
-                                      ? () => PlaylistController.inst.addTracksToPlaylist(playlist.name, tracksToAdd!)
+                                      ? () => PlaylistController.inst.addTracksToPlaylist(playlist, tracksToAdd!)
                                       : () => NamidaOnTaps.inst.onPlaylistTap(playlist),
                                 ),
                               );

@@ -89,7 +89,7 @@ class HomePage extends StatelessWidget {
                     },
                     hintText: Language.inst.SEARCH,
                     searchBoxWidth: context.width / 1.2,
-                    buttonColour: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? context.theme.cardColor : Colors.transparent,
+                    buttonColour: Colors.transparent,
                     enableBoxShadow: false,
                     buttonShadowColour: Colors.transparent,
                     hintTextColour: context.theme.colorScheme.onSurface,
@@ -196,27 +196,7 @@ class HomePage extends StatelessWidget {
             children: [
               Transform.scale(
                 scale: 1 - (ScrollSearchController.inst.miniplayerHeightPercentage.value * 0.05),
-                child: child ??
-                    (SettingsController.inst.enableBottomNavBar.value && SettingsController.inst.enableScrollingNavigation.value
-                        ? PageView(
-                            controller: ScrollSearchController.inst.homepageController,
-                            onPageChanged: (page) {
-                              SettingsController.inst.save(selectedLibraryTab: page.toEnum);
-                              SelectedTracksController.inst.updatePageTracks(page.toEnum);
-
-                              printInfo(info: page.toString());
-                            },
-                            children: SettingsController.inst.libraryTabs
-                                .asMap()
-                                .entries
-                                .map(
-                                  (e) => KeepAliveWrapper(
-                                    child: e.value.toEnum.toWidget,
-                                  ),
-                                )
-                                .toList(),
-                          )
-                        : SettingsController.inst.selectedLibraryTab.value.toWidget),
+                child: child ?? SettingsController.inst.selectedLibraryTab.value.toWidget,
               ),
 
               /// Search Box
@@ -268,12 +248,10 @@ class HomePage extends StatelessWidget {
                       },
                       selectedIndex: SettingsController.inst.selectedLibraryTab.value.toInt,
                       destinations: SettingsController.inst.libraryTabs
-                          .asMap()
-                          .entries
                           .map(
                             (e) => NavigationDestination(
-                              icon: Icon(e.value.toEnum.toIcon),
-                              label: e.value.toEnum.toText,
+                              icon: Icon(e.toEnum.toIcon),
+                              label: e.toEnum.toText,
                             ),
                           )
                           .toList(),

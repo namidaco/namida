@@ -16,10 +16,12 @@ import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class TracksPage extends StatelessWidget {
   const TracksPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Obx(
       () => NamidaTracksList(
+        pageKey: const PageStorageKey(LibraryTab.tracks),
         queueLength: Indexer.inst.trackSearchList.length,
         queue: Indexer.inst.trackSearchList,
         queueSource: QueueSource.allTracks,

@@ -8,6 +8,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -61,6 +62,7 @@ class ArtistsPage extends StatelessWidget {
               Expanded(
                 child: Obx(
                   () => ListView.builder(
+                    key: const PageStorageKey(LibraryTab.artists),
                     controller: _scrollController,
                     itemCount: finalArtists.length,
                     padding: const EdgeInsets.only(bottom: kBottomPadding),
@@ -82,6 +84,7 @@ class ArtistsPage extends StatelessWidget {
               Expanded(
                 child: Obx(
                   () => GridView.builder(
+                    key: const PageStorageKey(LibraryTab.artists),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: gridCount,
                       childAspectRatio: 0.88,

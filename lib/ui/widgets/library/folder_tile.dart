@@ -61,7 +61,7 @@ class FolderTile extends StatelessWidget {
                                 blur: 0,
                                 borderRadius: 6,
                                 thumnailSize: (SettingsController.inst.trackThumbnailSizeinList.value / 2.6).clamp(0, SettingsController.inst.trackListTileHeight.value * 0.5),
-                                path: folder.tracks.isNotEmpty ? folder.tracks.pathToImage : null,
+                                path: folder.tracks.pathToImage,
                                 forceSquared: true,
                               ),
                             ),

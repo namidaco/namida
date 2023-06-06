@@ -10,6 +10,7 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/main_page.dart';
+import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
@@ -54,11 +55,11 @@ class PlaylisTracksPage extends StatelessWidget {
         () {
           PlaylistController.inst.playlistList.toList();
           PlaylistController.inst.defaultPlaylists.toList();
-          final finalTracks = isMostPlayedPlaylist ? PlaylistController.inst.topTracksMap.keys.toList() : playlist.tracks.map((e) => e.track).toList();
+          final finalTracks = isMostPlayedPlaylist ? PlaylistController.inst.topTracksMapListens.keys.toList() : playlist.tracks.map((e) => e.track).toList();
           final topContainer = SubpagesTopContainer(
             source: playlist.toQueueSource(),
             title: playlist.name.translatePlaylistName(),
-            subtitle: [finalTracks.displayTrackKeyword, playlist.date.dateFormatted].join(' - '),
+            subtitle: [finalTracks.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' - '),
             thirdLineText: playlist.moods.isNotEmpty ? playlist.moods.join(', ') : '',
             imageWidget: MultiArtworkContainer(
               heroTag: 'playlist_artwork_${playlist.name}',
@@ -72,22 +73,22 @@ class PlaylisTracksPage extends StatelessWidget {
           return isMostPlayedPlaylist
               ? NamidaTracksList(
                   queueSource: playlist.toQueueSource(),
-                  queueLength: PlaylistController.inst.topTracksMap.length,
+                  queueLength: PlaylistController.inst.topTracksMapListens.length,
                   scrollController: finalScrollController,
                   header: topContainer,
                   buildDefaultDragHandles: false,
-                  onReorder: (oldIndex, newIndex) {},
                   padding: const EdgeInsets.only(bottom: kBottomPadding),
                   itemBuilder: (context, i) {
-                    final track = PlaylistController.inst.topTracksMap.keys.elementAt(i);
-                    final count = PlaylistController.inst.topTracksMap.values.elementAt(i);
+                    final track = namidaMostPlayedPlaylist.tracks[i];
+                    final count = PlaylistController.inst.topTracksMapListens[track.track]?.length;
                     final w = TrackTile(
                       draggableThumbnail: false,
                       index: i,
-                      track: track,
+                      track: track.track,
                       queueSource: playlist.toQueueSource(),
                       playlist: playlist,
                       bgColor: i == indexToHighlight ? context.theme.colorScheme.onBackground.withAlpha(40) : null,
+                      onRightAreaTap: () => showTrackListensDialog(track.track, enableBlur: true),
                       trailingWidget: Container(
                         padding: const EdgeInsets.all(6.0),
                         decoration: BoxDecoration(

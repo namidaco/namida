@@ -30,7 +30,7 @@ class ArtistTile extends StatelessWidget {
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 120, 120, 120),
           onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, tracks),
-          onTap: () => NamidaOnTaps.inst.onArtistTap(name),
+          onTap: () => NamidaOnTaps.inst.onArtistTap(name, tracks),
           child: Container(
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(vertical: 8.0),

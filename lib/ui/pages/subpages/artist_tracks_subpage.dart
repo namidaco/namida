@@ -42,7 +42,10 @@ class ArtistTracksPage extends StatelessWidget {
               verticalPadding: 8.0,
               title: name,
               source: QueueSource.artist,
-              subtitle: [tracks.displayTrackKeyword, tracks.year.yearFormatted].join(' - '),
+              subtitle: [
+                tracks.displayTrackKeyword,
+                if (tracks.year != 0) tracks.year.yearFormatted,
+              ].join(' - '),
               imageWidget: Hero(
                 tag: 'artist_$name',
                 child: Padding(
@@ -71,21 +74,23 @@ class ArtistTracksPage extends StatelessWidget {
               children: [
                 SizedBox(
                   height: 130,
-                  child: ListView(
+                  child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    children: albums.entries
-                        .map(
-                          (e) => SizedBox(
-                            width: 100,
-                            child: AlbumCard(
-                              gridCountOverride: 4,
-                              album: e.value.toList(),
-                              staggered: false,
-                              compact: true,
-                            ),
-                          ),
-                        )
-                        .toList(),
+                    itemExtent: 100.0,
+                    itemCount: albums.length,
+                    itemBuilder: (context, i) {
+                      final e = albums.entries.toList()[i];
+                      return Container(
+                        width: 100.0,
+                        margin: const EdgeInsets.only(left: 2.0),
+                        child: AlbumCard(
+                          gridCountOverride: 4,
+                          album: e.value.toList(),
+                          staggered: false,
+                          compact: true,
+                        ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 12.0),

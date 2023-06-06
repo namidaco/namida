@@ -13,7 +13,7 @@ class QueuesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MainPageWrapper(
-      title: Text("${Language.inst.QUEUES} • ${QueueController.inst.queueList.length}"),
+      title: Obx(() => Text("${Language.inst.QUEUES} • ${QueueController.inst.queueList.length}")),
       child: Obx(
         () => NamidaListView(
           itemBuilder: (context, i) {
