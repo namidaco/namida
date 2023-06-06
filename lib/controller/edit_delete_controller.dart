@@ -6,9 +6,11 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/main.dart';
 
 class EditDeleteController {
   static final EditDeleteController inst = EditDeleteController();
@@ -50,6 +52,14 @@ class EditDeleteController {
     for (final track in tracks) {
       await File("$k_DIR_PALETTES${track.filename}.palette").delete();
     }
+  }
+
+  Future<void> saveArtworkToStorage(Track track) async {
+    if (!await requestManageStoragePermission()) {
+      return;
+    }
+    final newPath = "${SettingsController.inst.defaultBackupLocation.value}${Platform.pathSeparator}${track.filenameWOExt}.png";
+    await File(track.pathToImage).copy(newPath);
   }
 
   Future<void> updateTrackPathInEveryPartOfNamida(Track oldTrack, String newPath) async {
@@ -94,8 +104,8 @@ class EditDeleteController {
       for (final tr in pl.tracks) {
         if (tr.track.path == oldTrack.path) {
           final index = pl.tracks.indexOf(tr);
-          PlaylistController.inst.removeTrackFromPlaylist(pl.name, index);
-          PlaylistController.inst.insertTracksInPlaylist(pl.name, [TrackWithDate(tr.dateAdded, newtr, tr.source)], index);
+          PlaylistController.inst.removeTrackFromPlaylist(pl, index);
+          PlaylistController.inst.insertTracksInPlaylist(pl, [TrackWithDate(tr.dateAdded, newtr, tr.source)], index);
         }
       }
     }
