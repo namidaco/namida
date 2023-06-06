@@ -13,6 +13,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
@@ -62,7 +63,7 @@ class ExtrasSettings extends StatelessWidget {
             () => CustomListTile(
               icon: Broken.receipt_1,
               title: Language.inst.DEFAULT_LIBRARY_TAB,
-              trailingText: SettingsController.inst.autoLibraryTab.value ? Language.inst.AUTO : SettingsController.inst.selectedLibraryTab.value.toText,
+              trailingText: SettingsController.inst.autoLibraryTab.value ? Language.inst.AUTO : SettingsController.inst.selectedLibraryTab.value.toText(),
               onTap: () => Get.dialog(
                 CustomBlurryDialog(
                   title: Language.inst.DEFAULT_LIBRARY_TAB,
@@ -96,12 +97,12 @@ class ExtrasSettings extends StatelessWidget {
                                 () => Container(
                                   margin: const EdgeInsets.all(4.0),
                                   child: ListTileWithCheckMark(
-                                    title: "${e.key + 1}. ${e.value.toEnum.toText}",
-                                    icon: e.value.toEnum.toIcon,
+                                    title: "${e.key + 1}. ${e.value.toEnum().toText()}",
+                                    icon: e.value.toEnum().toIcon(),
                                     onTap: () {
                                       SettingsController.inst.save(
-                                        selectedLibraryTab: e.value.toEnum,
-                                        staticLibraryTab: e.value.toEnum,
+                                        selectedLibraryTab: e.value.toEnum(),
+                                        staticLibraryTab: e.value.toEnum(),
                                         autoLibraryTab: false,
                                       );
                                     },
@@ -165,12 +166,12 @@ class ExtrasSettings extends StatelessWidget {
                                       Container(
                                         margin: const EdgeInsets.all(4.0),
                                         child: ListTileWithCheckMark(
-                                          title: "${i + 1}. ${tab.toEnum.toText}",
-                                          icon: tab.toEnum.toIcon,
+                                          title: "${i + 1}. ${tab.toEnum().toText()}",
+                                          icon: tab.toEnum().toIcon(),
                                           onTap: () {
                                             if (SettingsController.inst.libraryTabs.length > 3) {
                                               SettingsController.inst.removeFromList(libraryTab1: tab);
-                                              SettingsController.inst.save(selectedLibraryTab: SettingsController.inst.libraryTabs[0].toEnum);
+                                              SettingsController.inst.save(selectedLibraryTab: SettingsController.inst.libraryTabs[0].toEnum());
                                             } else {
                                               Get.snackbar(Language.inst.AT_LEAST_THREE_TABS, Language.inst.AT_LEAST_THREE_TABS_SUBTITLE);
                                             }
@@ -203,8 +204,8 @@ class ExtrasSettings extends StatelessWidget {
                                     key: UniqueKey(),
                                     children: [
                                       ListTileWithCheckMark(
-                                        title: "${e.key + 1}. ${e.value.toEnum.toText}",
-                                        icon: e.value.toEnum.toIcon,
+                                        title: "${e.key + 1}. ${e.value.toEnum().toText()}",
+                                        icon: e.value.toEnum().toIcon(),
                                         onTap: () => SettingsController.inst.save(libraryTabs: [e.value]),
                                         active: SettingsController.inst.libraryTabs.contains(e.value),
                                       ),

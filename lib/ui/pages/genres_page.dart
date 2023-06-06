@@ -10,6 +10,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
@@ -44,7 +45,7 @@ class GenresPage extends StatelessWidget {
                 onFilterIconTap: () => ScrollSearchController.inst.switchGenreSearchBoxVisibilty(),
                 onCloseButtonPressed: () => ScrollSearchController.inst.clearGenreSearchTextField(),
                 sortByMenuWidget: SortByMenu(
-                  title: SettingsController.inst.genreSort.value.toText,
+                  title: SettingsController.inst.genreSort.value.toText(),
                   popupMenuChild: const SortByMenuGenres(),
                   isCurrentlyReversed: SettingsController.inst.genreSortReversed.value,
                   onReverseIconTap: () => Indexer.inst.sortGenres(reverse: !SettingsController.inst.genreSortReversed.value),

@@ -14,6 +14,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/youtube_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
 
 class VideoController {
@@ -71,7 +72,7 @@ class VideoController {
     if (manifest == null) return '';
 
     /// Create a list of video qualities in descending order of preference
-    final preferredQualities = SettingsController.inst.youtubeVideoQualities.map((element) => element.toVideoQuality);
+    final preferredQualities = SettingsController.inst.youtubeVideoQualities.map((element) => element.toVideoQuality());
 
     final streamInfo = manifest.videoOnly.sortByVideoQuality();
 

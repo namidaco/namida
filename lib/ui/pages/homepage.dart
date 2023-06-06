@@ -11,8 +11,8 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/main_page.dart';
 import 'package:namida/ui/pages/search_page.dart';
@@ -196,7 +196,7 @@ class HomePage extends StatelessWidget {
             children: [
               Transform.scale(
                 scale: 1 - (ScrollSearchController.inst.miniplayerHeightPercentage.value * 0.05),
-                child: child ?? SettingsController.inst.selectedLibraryTab.value.toWidget,
+                child: child ?? SettingsController.inst.selectedLibraryTab.value.toWidget(),
               ),
 
               /// Search Box
@@ -244,14 +244,14 @@ class HomePage extends StatelessWidget {
                       height: 64.0,
                       onDestinationSelected: (value) {
                         ScrollSearchController.inst.animatePageController(value, shouldGoBack: child != null);
-                        SelectedTracksController.inst.updatePageTracks(value.toEnum);
+                        SelectedTracksController.inst.updatePageTracks(value.toEnum());
                       },
-                      selectedIndex: SettingsController.inst.selectedLibraryTab.value.toInt,
+                      selectedIndex: SettingsController.inst.selectedLibraryTab.value.toInt(),
                       destinations: SettingsController.inst.libraryTabs
                           .map(
                             (e) => NavigationDestination(
-                              icon: Icon(e.toEnum.toIcon),
-                              label: e.toEnum.toText,
+                              icon: Icon(e.toEnum().toIcon()),
+                              label: e.toEnum().toText(),
                             ),
                           )
                           .toList(),

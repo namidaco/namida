@@ -8,7 +8,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/main_page.dart';
 
 class ScrollSearchController {
@@ -85,12 +85,12 @@ class ScrollSearchController {
     });
   }
   Future<void> animatePageController(int animateTo, {bool shouldGoBack = false}) async {
-    SettingsController.inst.save(selectedLibraryTab: animateTo.toEnum);
+    SettingsController.inst.save(selectedLibraryTab: animateTo.toEnum());
     if (shouldGoBack) {
       Get.offAll(() => MainPageWrapper());
     }
     clearGlobalSearchAndCloseThingys();
-    printInfo(info: animateTo.toEnum.toText);
+    printInfo(info: animateTo.toEnum().toText());
   }
 
   clearGlobalSearchAndCloseThingys() {

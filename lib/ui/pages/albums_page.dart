@@ -11,6 +11,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
@@ -48,7 +49,7 @@ class AlbumsPage extends StatelessWidget {
                 onFilterIconTap: () => ScrollSearchController.inst.switchAlbumSearchBoxVisibilty(),
                 onCloseButtonPressed: () => ScrollSearchController.inst.clearAlbumSearchTextField(),
                 sortByMenuWidget: SortByMenu(
-                  title: SettingsController.inst.albumSort.value.toText,
+                  title: SettingsController.inst.albumSort.value.toText(),
                   popupMenuChild: const SortByMenuAlbums(),
                   isCurrentlyReversed: SettingsController.inst.albumSortReversed.value,
                   onReverseIconTap: () => Indexer.inst.sortAlbums(reverse: !SettingsController.inst.albumSortReversed.value),

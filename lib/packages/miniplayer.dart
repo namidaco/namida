@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:animated_background/animated_background.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:get/get.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:namida/class/track.dart';
@@ -934,14 +935,14 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                       child: Obx(
                                         () => IconButton(
                                           visualDensity: VisualDensity.compact,
-                                          tooltip: SettingsController.inst.playerRepeatMode.value.toText.replaceFirst('_NUM_', Player.inst.numberOfRepeats.value.toString()),
+                                          tooltip: SettingsController.inst.playerRepeatMode.value.toText().replaceFirst('_NUM_', Player.inst.numberOfRepeats.value.toString()),
                                           onPressed: () => SettingsController.inst.playerRepeatMode.value.toggleSetting(),
                                           padding: const EdgeInsets.all(2.0),
                                           icon: Stack(
                                             alignment: Alignment.center,
                                             children: [
                                               Icon(
-                                                SettingsController.inst.playerRepeatMode.value.toIcon,
+                                                SettingsController.inst.playerRepeatMode.value.toIcon(),
                                                 size: 20.0,
                                                 color: context.theme.colorScheme.onSecondaryContainer,
                                               ),

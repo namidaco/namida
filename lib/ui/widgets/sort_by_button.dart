@@ -6,7 +6,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
-import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class SortByMenuTracks extends StatelessWidget {
@@ -41,7 +41,7 @@ class SortByMenuTracks extends StatelessWidget {
               SortType.rating,
             ].map(
               (e) => SmallListTile(
-                title: e.toText,
+                title: e.toText(),
                 active: tracksSort == e,
                 onTap: () => Indexer.inst.sortTracks(sortBy: e),
               ),
@@ -78,7 +78,7 @@ class SortByMenuAlbums extends StatelessWidget {
               GroupSortType.composer,
             ].map(
               (e) => SmallListTile(
-                title: e.toText,
+                title: e.toText(),
                 active: albumsort == e,
                 onTap: () => Indexer.inst.sortAlbums(sortBy: e),
               ),
@@ -117,7 +117,7 @@ class SortByMenuArtists extends StatelessWidget {
               GroupSortType.dateModified,
             ].map(
               (e) => SmallListTile(
-                title: e.toText,
+                title: e.toText(),
                 active: artistSort == e,
                 onTap: () => Indexer.inst.sortArtists(sortBy: e),
               ),
@@ -155,7 +155,7 @@ class SortByMenuGenres extends StatelessWidget {
               GroupSortType.composer,
             ].map(
               (e) => SmallListTile(
-                title: e.toText,
+                title: e.toText(),
                 active: genreSort == e,
                 onTap: () => Indexer.inst.sortGenres(sortBy: e),
               ),
@@ -189,7 +189,7 @@ class SortByMenuPlaylist extends StatelessWidget {
               GroupSortType.numberOfTracks,
             ].map(
               (e) => SmallListTile(
-                title: e.toText,
+                title: e.toText(),
                 active: playlistSort == e,
                 onTap: () => PlaylistController.inst.sortPlaylists(sortBy: e),
               ),

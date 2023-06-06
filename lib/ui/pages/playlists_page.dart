@@ -13,6 +13,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -60,7 +61,7 @@ class PlaylistsPage extends StatelessWidget {
                   onFilterIconTap: () => ScrollSearchController.inst.switchPlaylistSearchBoxVisibilty(),
                   onCloseButtonPressed: () => ScrollSearchController.inst.clearPlaylistSearchTextField(),
                   sortByMenuWidget: SortByMenu(
-                    title: SettingsController.inst.playlistSort.value.toText,
+                    title: SettingsController.inst.playlistSort.value.toText(),
                     popupMenuChild: const SortByMenuPlaylist(),
                     isCurrentlyReversed: SettingsController.inst.playlistSortReversed.value,
                     onReverseIconTap: () => PlaylistController.inst.sortPlaylists(reverse: !SettingsController.inst.playlistSortReversed.value),

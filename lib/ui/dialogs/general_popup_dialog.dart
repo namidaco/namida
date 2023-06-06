@@ -24,6 +24,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -876,7 +877,7 @@ Future<void> showGeneralPopupDialog(
                                     onTap: () {
                                       Get.close(1);
                                       Get.offAll(MainPageWrapper());
-                                      ScrollSearchController.inst.animatePageController(LibraryTab.folders.toInt);
+                                      ScrollSearchController.inst.animatePageController(LibraryTab.folders.toInt());
                                       NamidaOnTaps.inst.onFolderOpen(Folders.inst.folderslist.firstWhere((element) => element.path == availableFolders.first), false);
                                     },
                                     trailing: IconButton(

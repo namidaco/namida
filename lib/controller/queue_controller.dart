@@ -11,6 +11,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 
 class QueueController {
   static final QueueController inst = QueueController();
@@ -53,9 +54,7 @@ class QueueController {
   }
 
   // void removeQueues(List<Queue> queues) async {
-  //   for (final q in queues) {
-  //     removeQueue(q);
-  //   }
+  //   queues.loop((q) => removeQueue(q));
   // }
 
   void updateQueue(Queue oldQueue, Queue newQueue) async {

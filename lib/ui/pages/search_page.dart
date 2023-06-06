@@ -13,6 +13,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/main_page.dart';
 import 'package:namida/ui/pages/albums_page.dart';
@@ -170,7 +171,7 @@ class SearchPage extends StatelessWidget {
                                 title: '${Language.inst.TRACKS} • ${Indexer.inst.trackSearchTemp.length}',
                                 icon: Broken.music_circle,
                                 buttonIcon: Broken.play,
-                                buttonText: SettingsController.inst.trackPlayMode.value.toText,
+                                buttonText: SettingsController.inst.trackPlayMode.value.toText(),
                                 onPressed: () => SettingsController.inst.trackPlayMode.value.toggleSetting(),
                               ),
                             ),
