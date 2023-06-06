@@ -290,6 +290,7 @@ class PlaybackSettings extends StatelessWidget {
                 itemSize: 2,
                 squeeze: 0.4,
                 onValueChanged: (val) {
+                  // TODO: prevent lots of rebuilds
                   final v = (val * 50 + 100) as int;
                   SettingsController.inst.save(playerPlayFadeDurInMilli: v);
                 },
@@ -332,6 +333,26 @@ class PlaybackSettings extends StatelessWidget {
                 text: "${SettingsController.inst.seekDurationInSeconds.value}s",
               ),
             ),
+          ),
+          Obx(
+            () {
+              final valInSet = SettingsController.inst.minTrackDurationToRestoreLastPosInMinutes.value;
+              return CustomListTile(
+                icon: Broken.refresh_left_square,
+                title: Language.inst.MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION,
+                trailing: NamidaWheelSlider(
+                  totalCount: 120,
+                  initValue: valInSet,
+                  itemSize: 2,
+                  squeeze: 0.4,
+                  onValueChanged: (val) {
+                    final v = (val) as int;
+                    SettingsController.inst.save(minTrackDurationToRestoreLastPosInMinutes: v);
+                  },
+                  text: valInSet == 0 ? Language.inst.DONT_RESTORE_POSITION : "${valInSet}m",
+                ),
+              );
+            },
           ),
           Obx(
             () => CustomListTile(

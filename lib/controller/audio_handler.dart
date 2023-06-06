@@ -184,6 +184,27 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     }
   }
 
+  Future<void> updateTrackLastPosition(Track track, int lastPosition) async {
+    /// Saves a starting position in case the remaining was less than 30 seconds.
+    final remaining = track.duration - lastPosition;
+    final positionToSave = remaining <= 30000 ? 0 : lastPosition;
+
+    Indexer.inst.trackStatsMap[track.path] = TrackStats(track.path, track.stats.rating, track.stats.tags, track.stats.moods, positionToSave);
+    track.stats.lastPositionInMs = positionToSave;
+    await Indexer.inst.saveTrackStatsFileToStorage();
+  }
+
+  Future<void> tryRestoringLastPosition(Track track) async {
+    final minValueInSet = Duration(minutes: SettingsController.inst.minTrackDurationToRestoreLastPosInMinutes.value).inMilliseconds;
+
+    if (minValueInSet > 0) {
+      final lastPos = track.stats.lastPositionInMs;
+      if (lastPos != 0 && track.duration >= minValueInSet) {
+        await seek(lastPos.milliseconds);
+      }
+    }
+  }
+
   void startSleepAfterMinCount(Track track) async {
     Timer.periodic(const Duration(minutes: 1), (timer) async {
       if (enableSleepAfterMins.value) {
