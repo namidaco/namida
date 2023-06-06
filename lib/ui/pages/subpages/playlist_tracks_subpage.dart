@@ -36,13 +36,11 @@ class PlaylisTracksPage extends StatelessWidget {
       actionsToAdd: [
         if (!isMostPlayedPlaylist && !isHistoryPlaylist)
           Obx(
-            () => Tooltip(
-              message: shouldReorder.value ? Language.inst.DISABLE_REORDERING : Language.inst.ENABLE_REORDERING,
-              child: NamidaIconButton(
-                icon: shouldReorder.value ? Broken.forward_item : Broken.lock_1,
-                padding: const EdgeInsets.only(right: 14, left: 4.0),
-                onPressed: () => shouldReorder.value = !shouldReorder.value,
-              ),
+            () => NamidaIconButton(
+              tooltip: shouldReorder.value ? Language.inst.DISABLE_REORDERING : Language.inst.ENABLE_REORDERING,
+              icon: shouldReorder.value ? Broken.forward_item : Broken.lock_1,
+              padding: const EdgeInsets.only(right: 14, left: 4.0),
+              onPressed: () => shouldReorder.value = !shouldReorder.value,
             ),
           ),
         NamidaIconButton(

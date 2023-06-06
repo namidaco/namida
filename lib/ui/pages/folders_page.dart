@@ -44,13 +44,10 @@ class FoldersPage extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     onTap: () => Folders.inst.stepOut(),
-                    trailing: Tooltip(
-                      message: Language.inst.SET_AS_DEFAULT,
-                      child: NamidaIconButton(
-                        icon: SettingsController.inst.defaultFolderStartupLocation.value == Folders.inst.currentPath.value ? Broken.archive_tick : Broken.save_2,
-                        onPressed: () =>
-                            SettingsController.inst.save(defaultFolderStartupLocation: Folders.inst.isHome.value ? kStoragePaths.first : Folders.inst.currentPath.value),
-                      ),
+                    trailing: NamidaIconButton(
+                      tooltip: Language.inst.SET_AS_DEFAULT,
+                      icon: SettingsController.inst.defaultFolderStartupLocation.value == Folders.inst.currentPath.value ? Broken.archive_tick : Broken.save_2,
+                      onPressed: () => SettingsController.inst.save(defaultFolderStartupLocation: Folders.inst.isHome.value ? kStoragePaths.first : Folders.inst.currentPath.value),
                     ),
                   ),
                   Expanded(
