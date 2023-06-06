@@ -2,8 +2,8 @@
 // Credits goes for the original author @55nknown
 
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -279,6 +279,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
   }
 
   void snap({bool haptic = true}) {
+    _cacheImages();
     widget.animation
         .animateTo(
       offset / maxOffset,
@@ -287,7 +288,6 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
     )
         .then((_) {
       bounceUp = false;
-      // ScrollSearchController.inst.animateQueueToCurrentTrack();
     });
     if (haptic && (prevOffset - offset).abs() > actuationOffset) HapticFeedback.lightImpact();
   }
@@ -309,6 +309,16 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
     if ((sPrevOffset - sOffset).abs() > actuationOffset) HapticFeedback.lightImpact();
   }
 
+  /// prolly doesnt work
+  void _cacheImages() {
+    int refine(int index) => index.clamp(0, Player.inst.currentQueue.length - 1);
+
+    final indplus = refine(Player.inst.currentIndex.value + 1);
+    final indminus = refine(Player.inst.currentIndex.value - 1);
+    precacheImage(FileImage(File(Player.inst.currentQueue[indplus].pathToImage)), context);
+    precacheImage(FileImage(File(Player.inst.currentQueue[indminus].pathToImage)), context);
+  }
+
   void snapToNext() async {
     sOffset = sMaxOffset;
 
@@ -317,6 +327,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
       sAnim.animateTo(0.0, duration: Duration.zero);
     });
     await Player.inst.next();
+
     if ((sPrevOffset - sOffset).abs() > actuationOffset) HapticFeedback.lightImpact();
   }
 
@@ -1213,7 +1224,13 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                             Tooltip(
                                               message: Language.inst.REMOVE_DUPLICATES,
                                               child: ElevatedButton(
-                                                onPressed: () => Player.inst.removeDuplicatesFromQueue(),
+                                                onPressed: () {
+                                                  final qlBefore = Player.inst.currentQueue.length;
+                                                  Player.inst.removeDuplicatesFromQueue();
+                                                  final qlAfter = Player.inst.currentQueue.length;
+                                                  final difference = qlBefore - qlAfter;
+                                                  Get.snackbar(Language.inst.NOTE, "${Language.inst.REMOVED} ${difference.displayTrackKeyword}");
+                                                },
                                                 child: const Icon(Broken.trash),
                                               ),
                                             ),
@@ -1251,6 +1268,10 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                             onTap: () {
                                                               Get.close(1);
                                                               List<int> dates = [];
+                                                              final dts = [namidaHistoryPlaylist.tracks.last.dateAdded, namidaHistoryPlaylist.tracks.first.dateAdded];
+                                                              dts.sort((a, b) => a.compareTo(b));
+                                                              final firstDateInHistory = dts.first;
+                                                              final lastDateInHistory = dts.last;
                                                               Get.dialog(
                                                                 Transform.scale(
                                                                   scale: 0.9,
@@ -1258,7 +1279,8 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                                     normalTitleStyle: true,
                                                                     insetPadding: const EdgeInsets.symmetric(horizontal: 12.0),
                                                                     actions: [
-                                                                      TextButton(
+                                                                      const CancelButton(),
+                                                                      ElevatedButton(
                                                                         onPressed: () {
                                                                           final tracks = generateTracksFromDates(dates.first, dates.last);
                                                                           if (tracks.isEmpty) {
@@ -1275,6 +1297,13 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                                       onValueChanged: (value) => dates.assignAll(value.map((e) => e?.millisecondsSinceEpoch ?? 0).toList()),
                                                                       config: CalendarDatePicker2Config(
                                                                         calendarType: CalendarDatePicker2Type.range,
+                                                                        yearBuilder: ({decoration, isCurrentYear, isDisabled, isSelected, textStyle, int? year}) {
+                                                                          return SizedBox(
+                                                                            child: Text(year.toString()),
+                                                                          );
+                                                                        },
+                                                                        firstDate: DateTime.fromMillisecondsSinceEpoch(firstDateInHistory),
+                                                                        lastDate: DateTime.fromMillisecondsSinceEpoch(lastDateInHistory),
                                                                       ),
                                                                       value: const [],
                                                                     ),
@@ -1373,7 +1402,6 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                                         }
                                                                         final tracks = generateTracksFromRatings(minRating.value, maxRating.value, maxNumberOfTracks.value);
                                                                         Player.inst.addToQueue(tracks);
-                                                                        Get.snackbar(Language.inst.NOTE, '${Language.inst.ADDED} ${tracks.length} ${Language.inst.TRACKS}');
                                                                         Get.close(1);
                                                                       },
                                                                       child: Text(Language.inst.GENERATE),
@@ -1657,7 +1685,7 @@ class TrackImage extends StatelessWidget {
               padding: EdgeInsets.all(12.0 * (1 - cp)),
               child: Obx(
                 () {
-                  final finalScale = WaveformController.inst.getAnimatingScale(WaveformController.inst.curentScaleList);
+                  final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value);
                   final isInversed = SettingsController.inst.animatingThumbnailInversed.value;
                   return AnimatedScale(
                     duration: const Duration(milliseconds: 100),
@@ -1803,7 +1831,7 @@ class _WallpaperState extends State<Wallpaper> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Obx(
       () {
-        final bpm = 2000 * WaveformController.inst.getAnimatingScale(WaveformController.inst.curentScaleList);
+        final bpm = 2000 * WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value);
         final background = AnimatedBackground(
           vsync: this,
           behaviour: RandomParticleBehaviour(
@@ -1811,7 +1839,7 @@ class _WallpaperState extends State<Wallpaper> with TickerProviderStateMixin {
               baseColor: context.theme.colorScheme.tertiary,
               spawnMaxRadius: 4,
               spawnMinRadius: 2,
-              spawnMaxSpeed: 40 + bpm,
+              spawnMaxSpeed: 60 + bpm,
               spawnMinSpeed: bpm,
               maxOpacity: widget.particleOpacity,
               minOpacity: 0,
