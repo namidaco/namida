@@ -80,15 +80,13 @@ class MainPageWrapper extends StatelessWidget {
                           const NamidaLogoContainer(),
                           const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
                           ...kLibraryTabsStock
-                              .asMap()
-                              .entries
                               .map(
                                 (e) => NamidaDrawerListTile(
-                                  enabled: SettingsController.inst.selectedLibraryTab.value == e.value.toEnum,
-                                  title: e.value.toEnum.toText,
-                                  icon: e.value.toEnum.toIcon,
+                                  enabled: SettingsController.inst.selectedLibraryTab.value == e.toEnum,
+                                  title: e.toEnum.toText,
+                                  icon: e.toEnum.toIcon,
                                   onTap: () async {
-                                    ScrollSearchController.inst.animatePageController(e.value.toEnum.toInt);
+                                    ScrollSearchController.inst.animatePageController(e.toEnum.toInt);
                                     await Future.delayed(const Duration(milliseconds: 100));
                                     toggleDrawer();
                                   },
@@ -307,27 +305,6 @@ class ScrollBehaviorModified extends ScrollBehavior {
         return const ClampingScrollPhysics();
     }
   }
-}
-
-class KeepAliveWrapper extends StatefulWidget {
-  final Widget child;
-
-  const KeepAliveWrapper({Key? key, required this.child}) : super(key: key);
-
-  @override
-  // ignore: library_private_types_in_public_api
-  _KeepAliveWrapperState createState() => _KeepAliveWrapperState();
-}
-
-class _KeepAliveWrapperState extends State<KeepAliveWrapper> with AutomaticKeepAliveClientMixin {
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return widget.child;
-  }
-
-  @override
-  bool get wantKeepAlive => true;
 }
 
 class CustomReorderableDelayedDragStartListener extends ReorderableDragStartListener {

@@ -15,10 +15,13 @@ class WaveformController {
   static final WaveformController inst = WaveformController();
 
   final RxList<double> curentWaveform = kDefaultWaveFormData.obs;
-  final RxList<double> curentScaleList = kDefaultScaleList.obs;
   final RxBool generatingAllWaveforms = false.obs;
 
+  final RxMap<int, double> _currentScaleMap = <int, double>{}.obs;
+
   int retryNumber = 0;
+
+  int _getlistSize(int durationInMs) => durationInMs ~/ 50 - 1; // each 50ms
 
   /// Extracts waveform data from a given track, or immediately read from .wave file if exists, then assigns wavedata to [curentWaveform].
   ///
@@ -29,17 +32,19 @@ class WaveformController {
     final wavePath = "$k_DIR_WAVEFORMS${track.path.getFilename}.wave";
     final waveFile = File(wavePath);
     final waveFileStat = await waveFile.stat();
+    final numberOfScales = _getlistSize(track.duration);
 
     // If Waveform file exists in storage
     if (await waveFile.exists() && waveFileStat.size > 10) {
       try {
-        String content = await waveFile.readAsString();
+        final content = await waveFile.readAsString();
         final waveform = List<double>.from(json.decode(content));
 
         // A Delay to prevent glitches caused by theme change
         Future.delayed(const Duration(milliseconds: 400), () async {
-          curentWaveform.assignAll(_increaseListToMax(waveform)); //
-          curentScaleList.assignAll(changeListSize(waveform, track.duration ~/ 50 - 1)); // each 50ms
+          curentWaveform.assignAll(_increaseListToMax(waveform));
+          final dList = changeListSize(waveform, numberOfScales);
+          _updateScaleMap(dList);
         });
       } catch (e) {
         printInfo(info: e.toString());
@@ -50,7 +55,8 @@ class WaveformController {
       /// A Delay to prevent glitches caused by theme change
       Future.delayed(const Duration(milliseconds: 400), () async {
         curentWaveform.assignAll(kDefaultWaveFormData);
-        curentScaleList.assignAll(changeListSize(kDefaultScaleList, track.duration ~/ 50 - 1));
+        final dList = changeListSize(kDefaultScaleList, numberOfScales);
+        _updateScaleMap(dList);
       });
 
       await waveFile.create();
@@ -71,8 +77,9 @@ class WaveformController {
       }
 
       if (track == Player.inst.nowPlayingTrack.value) {
-        curentWaveform.assignAll(_increaseListToMax(waveformData)); //
-        curentScaleList.assignAll(changeListSize(waveformData, track.duration ~/ 50 - 1)); // each 50ms
+        curentWaveform.assignAll(_increaseListToMax(waveformData));
+        final dList = changeListSize(waveformData, numberOfScales);
+        _updateScaleMap(dList);
       }
 
       await waveFile.writeAsString(waveformData.toString());
@@ -80,6 +87,12 @@ class WaveformController {
     }
 
     Indexer.inst.waveformsInStorage.refresh();
+  }
+
+  void _updateScaleMap(List<double> doubleList) {
+    for (int index = 0; index < doubleList.length; index++) {
+      _currentScaleMap[index] = doubleList[index];
+    }
   }
 
   Future<void> generateAllWaveforms() async {
@@ -97,9 +110,9 @@ class WaveformController {
     generatingAllWaveforms.value = false;
   }
 
-  double getAnimatingScale(List<double> scaleList) {
-    final bitScale = Player.inst.nowPlayingPosition.value ~/ 50 - 1;
-    final dynamicScale = scaleList.asMap().containsKey(bitScale) ? scaleList[bitScale] : 0.01;
+  double getCurrentAnimatingScale(int positionInMs) {
+    final bitScale = positionInMs ~/ 50 - 1;
+    final dynamicScale = _currentScaleMap[bitScale] ?? 0.01;
     final intensity = SettingsController.inst.animatingThumbnailIntensity.value;
     final finalScale = dynamicScale * (intensity / 100);
 

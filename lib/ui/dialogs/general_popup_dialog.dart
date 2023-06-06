@@ -33,6 +33,7 @@ import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/dialogs/track_clear_dialog.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 
 import 'package:namida/main_page.dart';
 
@@ -56,40 +57,48 @@ Future<void> showGeneralPopupDialog(
   bool isFromPlayerQueue = false,
   bool errorPlayingTrack = false,
   String? artistToAddFrom,
+  String? albumToAddFrom,
   Object? heroTag,
 }) async {
   final tracksExisting = <Track>[];
   for (final t in tracks) {
-    final existingTrack = Indexer.inst.allTracksMappedByPath[t.path];
+    final existingTrack = t.path.toTrackOrNull();
     if (existingTrack != null) tracksExisting.add(existingTrack);
   }
 
   forceSingleArtwork ??= tracks.length == 1;
   final isSingle = tracks.length == 1;
   final doesTracksExist = !errorPlayingTrack && tracksExisting.isNotEmpty;
-  final colorDelightened = extractColor ? await CurrentColor.inst.generateDelightnedColor(tracks.first.pathToImage) : CurrentColor.inst.color.value;
+
+  final trackToExtractColorFrom = forceSingleArtwork ? tracks[tracks.indexOfImage] : tracks.first;
+  final colorDelightened = extractColor ? await CurrentColor.inst.getTrackDelightnedColor(trackToExtractColorFrom) : CurrentColor.inst.color.value;
 
   final List<String> availableAlbums = tracks.map((e) => e.album).toSet().toList();
   final List<String> availableArtists = tracks.map((e) => e.artistsList).expand((list) => list).toSet().toList();
   final List<String> availableFolders = tracks.map((e) => e.path.getDirectoryPath).toSet().toList();
-  final bool oneOfTheMainPlaylists = playlist?.name == k_PLAYLIST_NAME_FAV || playlist?.name == k_PLAYLIST_NAME_HISTORY || playlist?.name == k_PLAYLIST_NAME_MOST_PLAYED;
-  RxInt numberOfRepeats = 1.obs;
 
-  Widget bigIcon(IconData icon, String tooltipMessage, void Function()? onTap, {String subtitle = ''}) {
+  RxInt numberOfRepeats = 1.obs;
+  RxBool isLoadingFilesToShare = false.obs;
+
+  final iconColor = Color.alphaBlend(colorDelightened.withAlpha(120), Get.textTheme.displayMedium!.color!);
+
+  Widget bigIcon(IconData icon, String tooltipMessage, void Function()? onTap, {String subtitle = '', Widget? iconWidget}) {
     return InkWell(
       highlightColor: Get.theme.highlightColor,
       onTap: onTap,
       borderRadius: BorderRadius.circular(8.0.multipliedRadius),
       child: Tooltip(
         message: tooltipMessage,
+        preferBelow: false,
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Column(
             children: [
-              Icon(
-                icon,
-                color: Color.alphaBlend(colorDelightened.withAlpha(120), Get.textTheme.displayMedium!.color!),
-              ),
+              iconWidget ??
+                  Icon(
+                    icon,
+                    color: iconColor,
+                  ),
               if (subtitle != '') ...[
                 const SizedBox(height: 2.0),
                 Text(
@@ -106,7 +115,6 @@ Future<void> showGeneralPopupDialog(
   }
 
   void setMoodsOrTags(List<String> initialMoods, void Function(List<String> moodsFinal) saveFunction, {bool isTags = false}) {
-    Get.close(1);
     TextEditingController controller = TextEditingController();
     final currentMoods = initialMoods.join(', ');
     controller.text = currentMoods;
@@ -167,7 +175,8 @@ Future<void> showGeneralPopupDialog(
   Rx<TrackStats> stats = tracks.first.stats.obs;
   Future<void> saveStatsToFile() async {
     stats.refresh();
-    Indexer.inst.trackStatsMap[tracks.first.path] = TrackStats(tracks.first.path, stats.value.rating, stats.value.tags, stats.value.moods);
+    Indexer.inst.trackStatsMap[tracks.first.path] = TrackStats(tracks.first.path, stats.value.rating, stats.value.tags, stats.value.moods, stats.value.lastPositionInMs);
+    tracks.first.stats = stats.value;
     await Indexer.inst.saveTrackStatsFileToStorage();
   }
 
@@ -196,6 +205,7 @@ Future<void> showGeneralPopupDialog(
     final c = TextEditingController();
     Get.dialog(
       CustomBlurryDialog(
+        title: Language.inst.SET_RATING,
         actions: [
           const CancelButton(),
           ElevatedButton(
@@ -219,7 +229,6 @@ Future<void> showGeneralPopupDialog(
   }
 
   void renamePlaylist() {
-    Get.close(1);
     TextEditingController controller = TextEditingController(text: playlist!.name);
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
     Get.dialog(
@@ -230,9 +239,9 @@ Future<void> showGeneralPopupDialog(
           actions: [
             const CancelButton(),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (formKey.currentState!.validate()) {
-                  PlaylistController.inst.updatePropertyInPlaylist(playlist, name: controller.text);
+                  await PlaylistController.inst.renamePlaylist(playlist, controller.text);
                   Get.close(1);
                 }
               },
@@ -249,15 +258,7 @@ Future<void> showGeneralPopupDialog(
                 controller: controller,
                 hintText: playlist.name,
                 labelText: Language.inst.NAME,
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return Language.inst.PLEASE_ENTER_A_NAME;
-                  }
-                  if (File('$k_DIR_PLAYLISTS/$value.json').existsSync()) {
-                    return Language.inst.PLEASE_ENTER_A_DIFFERENT_NAME;
-                  }
-                  return null;
-                },
+                validator: (value) => PlaylistController.inst.validatePlaylistName(value),
               ),
             ],
           ),
@@ -300,6 +301,126 @@ Future<void> showGeneralPopupDialog(
             child: Text(Language.inst.CONFIRM),
           )
         ],
+      ),
+    );
+  }
+
+  Widget highMatchesWidget(Set<String> highMatchesFiles, {bool showFullPath = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          Language.inst.HIGH_MATCHES,
+          style: Get.textTheme.displayMedium,
+        ),
+        const SizedBox(height: 8.0),
+        ...highMatchesFiles
+            .map(
+              (e) => SmallListTile(
+                borderRadius: 12.0,
+                title: showFullPath ? e : e.getFilename,
+                subtitle: File(e).statSync().size.fileSizeFormatted,
+                onTap: () => updatePathDialog(e),
+                color: colorDelightened,
+                icon: Broken.medal_star,
+              ),
+            )
+            .toList(),
+        const SizedBox(height: 8.0),
+        const NamidaContainerDivider(),
+        const SizedBox(height: 8.0),
+      ],
+    );
+  }
+
+  Future<void> pickDirectoryToUpdateTrack() async {
+    final dirPath = await FilePicker.platform.getDirectoryPath();
+    if (dirPath == null) return;
+
+    final files = Directory(dirPath).listSync();
+    files.removeWhere((element) => element is! File);
+    if (files.isEmpty) {
+      Get.snackbar(Language.inst.ERROR, Language.inst.NO_TRACKS_FOUND_IN_DIRECTORY);
+      return;
+    }
+
+    final paths = files.map((e) => e.path).toList();
+    paths.sort((a, b) => a.compareTo(b));
+
+    final highMatchesFiles = getHighMatcheFilesFromFilename(paths, tracks.first.path.getFilename);
+
+    /// Searching
+    final txtc = TextEditingController();
+    final RxList<String> filteredPaths = <String>[].obs;
+    filteredPaths.addAll(paths);
+    final RxBool shouldCleanUp = true.obs;
+
+    Get.dialog(
+      CustomBlurryDialog(
+        title: Language.inst.CHOOSE,
+        actions: [
+          const CancelButton(),
+          ElevatedButton(
+            onPressed: () {
+              Get.close(1);
+              pickDirectoryToUpdateTrack();
+            },
+            child: Text(Language.inst.PICK_FROM_STORAGE),
+          ),
+        ],
+        child: SizedBox(
+          width: Get.width,
+          height: Get.height * 0.5,
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTagTextField(
+                      controller: txtc,
+                      hintText: Language.inst.SEARCH,
+                      labelText: '',
+                      onChanged: (value) {
+                        final matches = value == ''
+                            ? paths
+                            : paths.where((element) => shouldCleanUp.value ? element.cleanUpForComparison.contains(value.cleanUpForComparison) : element.contains(value));
+                        filteredPaths
+                          ..clear()
+                          ..addAll(matches);
+                      },
+                    ),
+                  ),
+                  Obx(
+                    () => NamidaIconButton(
+                      tooltip: shouldCleanUp.value ? Language.inst.DISABLE_SEARCH_CLEANUP : Language.inst.ENABLE_SEARCH_CLEANUP,
+                      icon: shouldCleanUp.value ? Broken.shield_cross : Broken.shield_search,
+                      onPressed: () => shouldCleanUp.value = !shouldCleanUp.value,
+                    ),
+                  )
+                ],
+              ),
+              const SizedBox(height: 8.0),
+              Expanded(
+                child: Obx(
+                  () => NamidaListView(
+                    header: highMatchesFiles.isNotEmpty ? highMatchesWidget(highMatchesFiles) : null,
+                    itemBuilder: (context, i) {
+                      final p = filteredPaths[i];
+                      return SmallListTile(
+                        key: ValueKey(i),
+                        borderRadius: 12.0,
+                        title: p.getFilename,
+                        onTap: () => updatePathDialog(p),
+                      );
+                    },
+                    itemCount: filteredPaths.length,
+                    itemExtents: null,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -382,7 +503,7 @@ Future<void> showGeneralPopupDialog(
           },
         )
       : null;
-  final Widget? playlistUtilsRow = (playlist != null && !isTrackInPlaylist && !oneOfTheMainPlaylists)
+  final Widget? playlistUtilsRow = (playlist != null && !isTrackInPlaylist && !playlist.isOneOfTheMainPlaylists)
       ? SizedBox(
           height: 48.0,
           child: Row(
@@ -432,7 +553,7 @@ Future<void> showGeneralPopupDialog(
                                 Hero(
                                   tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${tracks.first.path}',
                                   child: ArtworkWidget(
-                                    path: tracks.first.pathToImage,
+                                    path: tracks.pathToImage,
                                     thumnailSize: 60,
                                     forceSquared: forceSquared,
                                     borderRadius: isCircle ? 200 : 8.0,
@@ -532,63 +653,32 @@ Future<void> showGeneralPopupDialog(
                                     icon: Broken.document_upload,
                                     onTap: () async {
                                       Get.close(1);
-                                      final dirPath = await FilePicker.platform.getDirectoryPath();
-                                      if (dirPath == null) return;
+                                      if (Indexer.inst.allAudioFiles.isEmpty) {
+                                        await Indexer.inst.getAudioFiles();
+                                      }
 
-                                      final files = Directory(dirPath).listSync();
-                                      files.removeWhere((element) => element is! File);
-                                      final highMatchesFiles = files
-                                          .where(
-                                            (element) => element.path.getFilename.cleanUpForComparison.contains(tracks.first.path.getFilename.cleanUpForComparison),
-                                          )
-                                          .toList();
-                                      Get.dialog(
-                                        CustomBlurryDialog(
-                                          title: Language.inst.CHOOSE,
-                                          child: SizedBox(
-                                            width: Get.width,
-                                            height: Get.height * 0.5,
-                                            child: NamidaListView(
-                                              header: highMatchesFiles.isNotEmpty
-                                                  ? Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Text(
-                                                          Language.inst.HIGH_MATCHES,
-                                                          style: Get.textTheme.displayMedium,
-                                                        ),
-                                                        const SizedBox(height: 8.0),
-                                                        ...highMatchesFiles
-                                                            .map(
-                                                              (e) => SmallListTile(
-                                                                borderRadius: 12.0,
-                                                                title: e.path.getFilename,
-                                                                onTap: () => updatePathDialog(e.path),
-                                                                color: colorDelightened,
-                                                                icon: Broken.medal_star,
-                                                              ),
-                                                            )
-                                                            .toList(),
-                                                        const SizedBox(height: 8.0),
-                                                        const NamidaContainerDivider(),
-                                                      ],
-                                                    )
-                                                  : null,
-                                              itemBuilder: (context, i) {
-                                                final f = files[i];
-                                                return SmallListTile(
-                                                  key: ValueKey(i),
-                                                  borderRadius: 12.0,
-                                                  title: f.path.getFilename,
-                                                  onTap: () => updatePathDialog(f.path),
-                                                );
-                                              },
-                                              itemCount: files.length,
-                                              itemExtents: null,
-                                            ),
+                                      /// firstly checks if a file exists in current library
+                                      final firstHighMatchesFiles = getHighMatcheFilesFromFilename(Indexer.inst.allAudioFiles, tracks.first.path.getFilename);
+                                      if (firstHighMatchesFiles.isNotEmpty) {
+                                        Get.dialog(
+                                          CustomBlurryDialog(
+                                            title: Language.inst.CHOOSE,
+                                            actions: [
+                                              const CancelButton(),
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  Get.close(1);
+                                                  pickDirectoryToUpdateTrack();
+                                                },
+                                                child: Text(Language.inst.PICK_FROM_STORAGE),
+                                              ),
+                                            ],
+                                            child: highMatchesWidget(firstHighMatchesFiles, showFullPath: true),
                                           ),
-                                        ),
-                                      );
+                                        );
+                                        return;
+                                      }
+                                      await pickDirectoryToUpdateTrack();
                                     },
                                   ),
                                   if (errorPlayingTrack)
@@ -615,7 +705,7 @@ Future<void> showGeneralPopupDialog(
                           Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                if (availableAlbums.length == 1)
+                                if (availableAlbums.length == 1 && albumToAddFrom == null)
                                   SmallListTile(
                                     color: colorDelightened,
                                     compact: true,
@@ -635,17 +725,36 @@ Future<void> showGeneralPopupDialog(
                                       icon: const Icon(Broken.add),
                                     ),
                                   ),
+                                if (availableAlbums.length == 1 && albumToAddFrom != null)
+                                  SmallListTile(
+                                    color: colorDelightened,
+                                    compact: true,
+                                    title: Language.inst.ADD_MORE_FROM_TO_QUEUE.replaceFirst('_MEDIA_', '"$albumToAddFrom"'),
+                                    icon: Broken.music_dashboard,
+                                    onTap: () {
+                                      Get.close(1);
+                                      NamidaOnTaps.inst.onAlbumTap(availableAlbums.first);
+                                    },
+                                    trailing: IgnorePointer(
+                                      child: IconButton(
+                                        onPressed: () {},
+                                        icon: const Icon(Broken.add),
+                                      ),
+                                    ),
+                                  ),
 
                                 if (availableAlbums.length > 1)
                                   ExpansionTile(
                                     expandedAlignment: Alignment.centerLeft,
                                     leading: Icon(
                                       Broken.music_dashboard,
-                                      color: Color.alphaBlend(colorDelightened.withAlpha(120), Get.textTheme.displayMedium!.color!),
+                                      color: iconColor,
                                     ),
-                                    trailing: IconButton(
-                                      onPressed: () {},
-                                      icon: const Icon(Broken.arrow_down_2, size: 20.0),
+                                    trailing: IgnorePointer(
+                                      child: IconButton(
+                                        onPressed: () {},
+                                        icon: const Icon(Broken.arrow_down_2, size: 20.0),
+                                      ),
                                     ),
                                     title: Text(
                                       Language.inst.GO_TO_ALBUM,
@@ -685,13 +794,11 @@ Future<void> showGeneralPopupDialog(
                                       Get.close(1);
                                       Player.inst.addToQueue(generateTracksFromArtist(artistToAddFrom), insertNext: true);
                                     },
-                                    trailing: IconButton(
-                                      tooltip: Language.inst.ADD_MORE_FROM_THIS_ARTIST,
-                                      onPressed: () {
-                                        Get.close(1);
-                                        Player.inst.addToQueue(generateTracksFromArtist(artistToAddFrom), insertNext: true);
-                                      },
-                                      icon: const Icon(Broken.add),
+                                    trailing: IgnorePointer(
+                                      child: IconButton(
+                                        onPressed: () {},
+                                        icon: const Icon(Broken.add),
+                                      ),
                                     ),
                                   ),
                                 if (artistToAddFrom == null && availableArtists.length == 1)
@@ -717,11 +824,13 @@ Future<void> showGeneralPopupDialog(
                                     expandedAlignment: Alignment.centerLeft,
                                     leading: Icon(
                                       Broken.profile_2user,
-                                      color: Color.alphaBlend(colorDelightened.withAlpha(120), Get.textTheme.displayMedium!.color!),
+                                      color: iconColor,
                                     ),
-                                    trailing: IconButton(
-                                      onPressed: () {},
-                                      icon: const Icon(Broken.arrow_down_2, size: 20.0),
+                                    trailing: IgnorePointer(
+                                      child: IconButton(
+                                        onPressed: () {},
+                                        icon: const Icon(Broken.arrow_down_2, size: 20.0),
+                                      ),
                                     ),
                                     title: Text(
                                       Language.inst.GO_TO_ARTIST,
@@ -762,7 +871,7 @@ Future<void> showGeneralPopupDialog(
                                     color: colorDelightened,
                                     compact: true,
                                     title: Language.inst.GO_TO_FOLDER,
-                                    subtitle: availableFolders.first.split('/').last,
+                                    subtitle: availableFolders.first.split(Platform.pathSeparator).last,
                                     icon: Broken.folder,
                                     onTap: () {
                                       Get.close(1);
@@ -782,9 +891,12 @@ Future<void> showGeneralPopupDialog(
                                   compact: false,
                                   title: Language.inst.SHARE,
                                   icon: Broken.share,
-                                  onTap: () {
+                                  trailing: Obx(() => isLoadingFilesToShare.value ? const LoadingIndicator() : const SizedBox()),
+                                  onTap: () async {
+                                    isLoadingFilesToShare.value = true;
+                                    await Share.shareXFiles(tracksExisting.map((e) => XFile(e.path)).toList());
+                                    isLoadingFilesToShare.value = false;
                                     Get.close(1);
-                                    Share.shareXFiles(tracksExisting.map((e) => XFile(e.path)).toList());
                                   },
                                 ),
 
@@ -888,10 +1000,11 @@ Future<void> showGeneralPopupDialog(
                                     color: colorDelightened,
                                     compact: true,
                                     title: '${Language.inst.PLAY_AFTER} "${Player.inst.currentQueue.elementAt(Player.inst.latestInsertedIndex).title}"',
+                                    subtitle: Player.inst.latestInsertedIndex.displayTrackKeyword,
                                     icon: Broken.hierarchy_square,
                                     onTap: () {
                                       Get.close(1);
-                                      Player.inst.addToQueue(tracks, insertAfterLatest: true);
+                                      Player.inst.addToQueue(tracks, insertAfterLatest: true, showSnackBar: !isSingle);
                                     },
                                   ),
                                 if (isSingle && tracks.first == Player.inst.nowPlayingTrack.value)
@@ -913,13 +1026,13 @@ Future<void> showGeneralPopupDialog(
                                             icon: Broken.minus_cirlce,
                                             onPressed: () => numberOfRepeats.value = (numberOfRepeats.value - 1).clamp(1, 20),
                                             iconSize: 20.0,
-                                            iconColor: Color.alphaBlend(colorDelightened.withAlpha(120), Get.textTheme.displayMedium!.color!),
+                                            iconColor: iconColor,
                                           ),
                                           NamidaIconButton(
                                             icon: Broken.add_circle,
                                             onPressed: () => numberOfRepeats.value = (numberOfRepeats.value + 1).clamp(1, 20),
                                             iconSize: 20.0,
-                                            iconColor: Color.alphaBlend(colorDelightened.withAlpha(120), Get.textTheme.displayMedium!.color!),
+                                            iconColor: iconColor,
                                           ),
                                         ],
                                       ),
@@ -927,32 +1040,51 @@ Future<void> showGeneralPopupDialog(
                                   ),
 
                                 /// Track Utils
-                                Row(
-                                  children: [
-                                    const SizedBox(width: 24.0),
-                                    Expanded(child: bigIcon(Broken.smileys, Language.inst.SET_MOODS, setTrackMoods)),
-                                    const SizedBox(width: 8.0),
-                                    Expanded(child: bigIcon(Broken.ticket_discount, Language.inst.SET_TAGS, setTrackTags)),
-                                    const SizedBox(width: 8.0),
-                                    Expanded(
-                                      child: Obx(
-                                        () => bigIcon(
-                                          Broken.grammerly,
-                                          Language.inst.SET_RATING,
-                                          setTrackRating,
-                                          subtitle: stats.value.rating == 0 ? '' : ' ${stats.value.rating}%',
+                                if (playlist == null || isTrackInPlaylist)
+                                  Row(
+                                    children: [
+                                      const SizedBox(width: 24.0),
+                                      Expanded(child: bigIcon(Broken.smileys, Language.inst.SET_MOODS, setTrackMoods)),
+                                      const SizedBox(width: 8.0),
+                                      Expanded(child: bigIcon(Broken.ticket_discount, Language.inst.SET_TAGS, setTrackTags)),
+                                      const SizedBox(width: 8.0),
+                                      Expanded(
+                                        child: Obx(
+                                          () => bigIcon(
+                                            Broken.grammerly,
+                                            Language.inst.SET_RATING,
+                                            setTrackRating,
+                                            subtitle: stats.value.rating == 0 ? '' : ' ${stats.value.rating}%',
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    if (isSingle) ...[
-                                      const SizedBox(width: 8.0),
-                                      Expanded(child: bigIcon(Broken.edit_2, Language.inst.SET_YOUTUBE_LINK, setYoutubeLink)),
-                                      const SizedBox(width: 8.0),
-                                      Expanded(child: bigIcon(Broken.login_1, Language.inst.OPEN_YOUTUBE_LINK, openYoutubeLink)),
+                                      if (isSingle) ...[
+                                        const SizedBox(width: 8.0),
+                                        Expanded(
+                                          child: bigIcon(
+                                            Broken.edit_2,
+                                            Language.inst.SET_YOUTUBE_LINK,
+                                            setYoutubeLink,
+                                            iconWidget: StackedIcon(
+                                              baseIcon: Broken.edit_2,
+                                              secondaryIcon: Broken.video_square,
+                                              baseIconColor: iconColor,
+                                              secondaryIconColor: iconColor,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8.0),
+                                        Expanded(
+                                          child: bigIcon(
+                                            Broken.login_1,
+                                            Language.inst.OPEN_YOUTUBE_LINK,
+                                            openYoutubeLink,
+                                          ),
+                                        ),
+                                      ],
+                                      const SizedBox(width: 24.0),
                                     ],
-                                    const SizedBox(width: 24.0),
-                                  ],
-                                ),
+                                  ),
                                 const SizedBox(height: 4.0),
 
                                 Divider(
@@ -972,7 +1104,7 @@ Future<void> showGeneralPopupDialog(
                                         icon: Broken.next,
                                         onTap: () {
                                           Get.close(1);
-                                          Player.inst.addToQueue(tracks, insertNext: true);
+                                          Player.inst.addToQueue(tracks, insertNext: true, showSnackBar: !isSingle);
                                         },
                                       ),
                                     ),
@@ -989,7 +1121,7 @@ Future<void> showGeneralPopupDialog(
                                         icon: Broken.play_cricle,
                                         onTap: () {
                                           Get.close(1);
-                                          Player.inst.addToQueue(tracks);
+                                          Player.inst.addToQueue(tracks, showSnackBar: !isSingle);
                                         },
                                       ),
                                     ),

@@ -35,13 +35,14 @@ Future<void> showEditTrackTagsDialog(Track track) async {
 
   final RxBool trimWhiteSpaces = true.obs;
   final RxBool canEditTags = false.obs;
+  final RxBool didAutoExtractFromFilename = false.obs;
   final RxString currentImagePath = ''.obs;
 
   final tagsControllers = <TagField, TextEditingController>{};
   final editedTags = <TagField, dynamic>{};
 
-  /// filling fields
-  /// TODO: fix [discNumber][trackTotal] (convert them to String)
+  // filling fields
+  // TODO: fix [discNumber][trackTotal] (convert them to String)
   tagsControllers[TagField.title] = TextEditingController(text: info.title ?? '');
   tagsControllers[TagField.album] = TextEditingController(text: info.album ?? '');
   tagsControllers[TagField.artist] = TextEditingController(text: info.artist ?? '');
@@ -62,11 +63,14 @@ Future<void> showEditTrackTagsDialog(Track track) async {
   tagsControllers[TagField.country] = TextEditingController(text: info.country ?? '');
 
   Widget getTagTextField(TagField tag) {
+    final changed1 = tag == TagField.title && editedTags[TagField.title] != info.title;
+    final changed2 = tag == TagField.artist && editedTags[TagField.artist] != info.artist;
     return CustomTagTextField(
       controller: tagsControllers[tag]!,
       labelText: tag.toText(),
       hintText: tagsControllers[tag]!.text,
       icon: tag.toIcon(),
+      didEditField: (didAutoExtractFromFilename.value && (changed1 || changed2)).obs,
       onChanged: (value) {
         editedTags[tag] = value;
         if (!canEditTags.value) {
@@ -229,8 +233,6 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                 duration: const Duration(milliseconds: 300),
                 child: ElevatedButton.icon(
                   onPressed: () async {
-                    // final copiedFile = kSdkVersion < 30 ? File(track.path) : await File(track.path).copy("${SettingsController.inst.defaultBackupLocation.value}/${track.displayName}");
-
                     if (trimWhiteSpaces.value) {
                       editedTags.updateAll((key, value) => value.trim());
                     }
@@ -384,8 +386,16 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                     final title = titleAndArtist.first;
                     final artist = titleAndArtist.last;
 
-                    tagsControllers[TagField.title]!.text = title;
-                    tagsControllers[TagField.artist]!.text = artist;
+                    if (tagsControllers[TagField.title]!.text != title || tagsControllers[TagField.artist]!.text != artist) {
+                      tagsControllers[TagField.title]!.text = title;
+                      tagsControllers[TagField.artist]!.text = artist;
+
+                      editedTags[TagField.title] = title;
+                      editedTags[TagField.artist] = artist;
+
+                      canEditTags.value = true;
+                    }
+                    didAutoExtractFromFilename.value = true;
                   },
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -393,7 +403,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                       const Icon(Broken.magicpen, size: 14.0),
                       const SizedBox(width: 4.0),
                       Text(
-                        Language.inst.AUTO_EXTRACT_TAGS_FROM_FILENAME,
+                        "${Language.inst.AUTO_EXTRACT_TAGS_FROM_FILENAME} ${didAutoExtractFromFilename.value ? '✓' : ''}",
                         style: Get.textTheme.displaySmall?.copyWith(
                           decoration: TextDecoration.underline,
                           decorationStyle: TextDecorationStyle.dashed,
@@ -834,6 +844,7 @@ class CustomTagTextField extends StatelessWidget {
   final void Function(String value)? onChanged;
   final bool isNumeric;
   final TextInputType? keyboardType;
+  final RxBool? didEditField;
   CustomTagTextField({
     super.key,
     required this.controller,
@@ -847,6 +858,7 @@ class CustomTagTextField extends StatelessWidget {
     required this.labelText,
     this.isNumeric = false,
     this.keyboardType,
+    this.didEditField,
   });
   final RxBool didChange = false.obs;
   @override
@@ -868,7 +880,12 @@ class CustomTagTextField extends StatelessWidget {
           }
         },
         decoration: InputDecoration(
-          label: Obx(() => Text('$labelText ${didChange.value ? '(${Language.inst.CHANGED})' : ''}')),
+          label: labelText != ''
+              ? Obx(() {
+                  final reallyChanged = (didChange.value || (didEditField?.value ?? false));
+                  return Text('$labelText ${reallyChanged ? '(${Language.inst.CHANGED})' : ''}');
+                })
+              : null,
           floatingLabelBehavior: FloatingLabelBehavior.always,
           hintMaxLines: hintMaxLines,
           contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),

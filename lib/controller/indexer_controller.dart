@@ -28,7 +28,7 @@ class Indexer {
 
   final RxBool isIndexing = false.obs;
 
-  final RxInt allTracksPaths = 0.obs;
+  final RxSet<String> allAudioFiles = <String>{}.obs;
   final RxInt filteredForSizeDurationTracks = 0.obs;
   final RxInt duplicatedTracksLength = 0.obs;
   final RxInt tracksExcludedByNoMedia = 0.obs;
@@ -75,7 +75,7 @@ class Indexer {
 
   Future<void> prepareTracksFile() async {
     /// Only awaits if the track file exists, otherwise it will get into normally and start indexing.
-    if (await File(k_FILE_PATH_TRACKS).exists() && await File(k_FILE_PATH_TRACKS).stat().then((value) => value.size > 8)) {
+    if (await File(k_FILE_PATH_TRACKS).exists() && await File(k_FILE_PATH_TRACKS).stat().then((value) => value.size >= 2)) {
       await readTrackData();
       _afterIndexing();
     }
@@ -115,14 +115,15 @@ class Indexer {
     sortGenres();
   }
 
-  void _addTheseTracksToAlbumGenreArtistEtc(List<Track> tracks) {
+  void _addTheseTracksToAlbumGenreArtistEtc(List<Track> tracks, {bool preventDuplicates = false}) {
+    //TODO(MSOB7YY): make the check optional, its only really needed when updating tracks (like after editing metadata)
     for (final tr in tracks) {
       /// Assigning Albums
       final album = albumsList.firstWhereOrNull((element) => element.name.toLowerCase() == tr.album.toLowerCase());
       if (album == null) {
         albumsList.add(Group(tr.album, [tr]));
       } else {
-        album.tracks.addIf(!album.tracks.contains(tr), tr);
+        album.tracks.addNoDuplicates(tr, preventDuplicates: preventDuplicates);
       }
       album?.tracks.sort((a, b) => a.title.compareTo(b.title));
 
@@ -132,7 +133,7 @@ class Indexer {
         if (art == null) {
           groupedArtistsList.add(Group(artist, [tr]));
         } else {
-          art.tracks.addIf(!art.tracks.contains(tr), tr);
+          art.tracks.addNoDuplicates(tr, preventDuplicates: preventDuplicates);
         }
         art?.tracks.sort((a, b) => a.title.compareTo(b.title));
       }
@@ -143,7 +144,7 @@ class Indexer {
         if (gen == null) {
           groupedGenresList.add(Group(genre, [tr]));
         } else {
-          gen.tracks.addIf(!gen.tracks.contains(tr), tr);
+          gen.tracks.addNoDuplicates(tr, preventDuplicates: preventDuplicates);
         }
         gen?.tracks.sort((a, b) => a.title.compareTo(b.title));
       }
@@ -153,7 +154,7 @@ class Indexer {
       if (folder == null) {
         groupedFoldersList.add(Folder(tr.folderPath, [tr]));
       } else {
-        folder.tracks.addIf(!folder.tracks.contains(tr), tr);
+        folder.tracks.addNoDuplicates(tr, preventDuplicates: preventDuplicates);
       }
       // final folder = groupedFoldersMap[tr.folderPath];
       // if (folder == null) {
@@ -200,34 +201,36 @@ class Indexer {
         await extractOneArtwork(track.path, forceReExtract: true);
       }
     }
-    final newtracks = paths.map((e) => allTracksMappedByPath[e]);
-    _addTheseTracksToAlbumGenreArtistEtc(newtracks.whereType<Track>().toList());
+    final newtracks = paths.map((e) => e.toTrackOrNull());
+    _addTheseTracksToAlbumGenreArtistEtc(newtracks.whereType<Track>().toList(), preventDuplicates: true);
   }
 
   Map<String?, Set<Track>> getAlbumsForArtist(String artist) {
     Map<String?, Set<Track>> trackAlbumsMap = {};
-    for (Track track in tracksInfoList) {
+    for (final track in tracksInfoList) {
       if (track.artistsList.contains(artist)) {
-        trackAlbumsMap.putIfAbsent(track.album, () => {}).addIf(() {
-          /// a check to not add tracks with the same filename to the album
-          return !(trackAlbumsMap[track.album] ?? {}).map((e) => e.filename).contains(track.filename);
-        }, track);
+        final k = track.album;
+        if (trackAlbumsMap.containsKey(k)) {
+          trackAlbumsMap[k]!.add(track);
+        } else {
+          trackAlbumsMap[k] = {track};
+        }
       }
     }
     return trackAlbumsMap;
   }
 
   Future<Track?> convertPathToTrack(String trackPath) async {
-    final trako = Indexer.inst.allTracksMappedByPath[trackPath];
+    final trako = trackPath.toTrackOrNull();
     if (trako != null) return trako;
 
     await fetchAllSongsAndWriteToFile(audioFiles: {trackPath}, deletedPaths: {}, forceReIndex: false, bypassAllChecks: true);
 
-    final t = allTracksMappedByPath[trackPath];
+    final t = trackPath.toTrackOrNull();
     if (t != null) {
-      _addTheseTracksToAlbumGenreArtistEtc([t]);
+      _addTheseTracksToAlbumGenreArtistEtc([t], preventDuplicates: true);
       _sortAll();
-      return allTracksMappedByPath[trackPath];
+      return trackPath.toTrackOrNull();
     }
 
     return null;
@@ -275,9 +278,13 @@ class Indexer {
           /// its faster but sometimes not found (mostly when the folder has .nomedia), in this case, AudioPlayer() is used to retrieve duration.
           int? duration;
           duration = tracksInMediaStorage[trackPath]?.duration;
-          if (duration == null) {
-            await ap.setFilePath(trackPath);
-            duration = ap.duration?.inMilliseconds;
+          if (duration == null || duration == 0) {
+            try {
+              await ap.setFilePath(trackPath);
+              duration = ap.duration?.inMilliseconds;
+            } catch (e) {
+              debugPrint(e.toString());
+            }
           }
 
           final fileStat = await File(trackPath).stat();
@@ -290,38 +297,35 @@ class Indexer {
           }
 
           /// Split Artists
-          final artists = splitBySeparators(
-              trackInfo.artist, SettingsController.inst.trackArtistsSeparators.toList(), k_UNKNOWN_TRACK_ARTIST, SettingsController.inst.trackArtistsSeparatorsBlacklist.toList());
+          final artists = splitArtist(trackInfo.title, trackInfo.artist);
 
           /// Split Genres
-          final genres = splitBySeparators(
-              trackInfo.genre, SettingsController.inst.trackGenresSeparators.toList(), k_UNKNOWN_TRACK_GENRE, SettingsController.inst.trackGenresSeparatorsBlacklist.toList());
+          final genres = splitGenre(trackInfo.genre);
 
           int? getIntFromString(String? text) => int.tryParse((text ?? '').cleanUpForComparison);
 
-          if (SettingsController.inst.extractFeatArtistFromTitle.value) {
-            final List<String>? moreArtists = trackInfo.title?.split(RegExp(r'\(ft\. |\[ft\. |\(feat\. |\[feat\. \]', caseSensitive: false));
-            if (moreArtists != null && moreArtists.length > 1) {
-              final extractedFeatArtists = moreArtists[1].split(RegExp(r'\)|\]')).first;
-              artists.addAll(
-                splitBySeparators(
-                  extractedFeatArtists,
-                  SettingsController.inst.trackArtistsSeparators.toList(),
-                  '',
-                  SettingsController.inst.trackArtistsSeparatorsBlacklist.toList(),
-                ),
-              );
-            }
-          }
+          final finalTitle = trackInfo.title;
+          final finalArtist = trackInfo.artist;
+          final finalAlbum = trackInfo.album;
+          final finalAlbumArtist = trackInfo.albumArtist;
+          final finalComposer = trackInfo.composer;
+          final finalGenre = trackInfo.genre;
+
+          finalTitle?.trim();
+          finalArtist?.trim();
+          finalAlbum?.trim();
+          finalAlbumArtist?.trim();
+          finalComposer?.trim();
 
           final tr = Track(
-            trackInfo.title ?? k_UNKNOWN_TRACK_TITLE,
-            trackInfo.artist ?? k_UNKNOWN_TRACK_ARTIST,
+            finalTitle ?? k_UNKNOWN_TRACK_TITLE,
+            finalArtist ?? k_UNKNOWN_TRACK_ARTIST,
             artists,
-            trackInfo.album ?? k_UNKNOWN_TRACK_ALBUM,
-            trackInfo.albumArtist ?? k_UNKNOWN_TRACK_ALBUMARTIST,
+            finalAlbum ?? k_UNKNOWN_TRACK_ALBUM,
+            finalAlbumArtist ?? k_UNKNOWN_TRACK_ALBUMARTIST,
+            finalGenre ?? k_UNKNOWN_TRACK_GENRE,
             genres,
-            trackInfo.composer ?? k_UNKNOWN_TRACK_COMPOSER,
+            finalComposer ?? k_UNKNOWN_TRACK_COMPOSER,
             getIntFromString(trackInfo.track) ?? 0,
             duration ?? 0,
             getIntFromString(trackInfo.year) ?? 0,
@@ -338,7 +342,7 @@ class Indexer {
             getIntFromString(trackInfo.discNo) ?? 0,
             trackInfo.language ?? '',
             trackInfo.lyrics ?? '',
-            TrackStats('', 0, [], []),
+            TrackStats('', 0, [], [], 0),
           );
 
           tracksInfoList.add(tr);
@@ -364,6 +368,7 @@ class Indexer {
             [artist],
             k_UNKNOWN_TRACK_ALBUM,
             k_UNKNOWN_TRACK_ALBUMARTIST,
+            k_UNKNOWN_TRACK_GENRE,
             [k_UNKNOWN_TRACK_GENRE],
             k_UNKNOWN_TRACK_COMPOSER,
             0,
@@ -382,7 +387,7 @@ class Indexer {
             0,
             '',
             '',
-            TrackStats('', 0, [], []),
+            TrackStats('', 0, [], [], 0),
           );
           tracksInfoList.add(tr);
           allTracksMappedByPath[tr.path] = tr;
@@ -461,6 +466,9 @@ class Indexer {
       printError(info: e.toString());
     }
 
+    // clearing for cases which refreshing library is required (like after changing separators)
+    tracksInfoList.clear();
+
     /// reading actual track file.
     try {
       final jsonResponse = await JsonToHistoryParser.inst.readJSONFile(k_FILE_PATH_TRACKS);
@@ -468,7 +476,7 @@ class Indexer {
       if (jsonResponse != null) {
         for (final p in jsonResponse) {
           final tr = Track.fromJson(p);
-          tr.stats = trackStatsMap[tr.path] ?? TrackStats('', 0, [], []);
+          tr.stats = trackStatsMap[tr.path] ?? TrackStats('', 0, [], [], 0);
           tracksInfoList.add(tr);
           allTracksMappedByPath[tr.path] = tr;
         }
@@ -486,6 +494,46 @@ class Indexer {
       finalStrings.addIf(element != '', element.trim());
     }
     return finalStrings;
+  }
+
+  /// [addArtistsFromTitle] extracts feat artists.
+  /// Defaults to [SettingsController.inst.extractFeatArtistFromTitle]
+  List<String> splitArtist(String? title, String? originalArtist, {bool? addArtistsFromTitle}) {
+    final allArtists = <String>[];
+    addArtistsFromTitle ??= SettingsController.inst.extractFeatArtistFromTitle.value;
+
+    final artistsOrg = splitBySeparators(
+      originalArtist,
+      SettingsController.inst.trackArtistsSeparators.toList(),
+      k_UNKNOWN_TRACK_ARTIST,
+      SettingsController.inst.trackArtistsSeparatorsBlacklist.toList(),
+    );
+    allArtists.addAll(artistsOrg);
+
+    if (addArtistsFromTitle) {
+      final List<String>? moreArtists = title?.split(RegExp(r'\(ft\. |\[ft\. |\(feat\. |\[feat\. \]', caseSensitive: false));
+      if (moreArtists != null && moreArtists.length > 1) {
+        final extractedFeatArtists = moreArtists[1].split(RegExp(r'\)|\]')).first;
+        allArtists.addAll(
+          splitBySeparators(
+            extractedFeatArtists,
+            SettingsController.inst.trackArtistsSeparators.toList(),
+            '',
+            SettingsController.inst.trackArtistsSeparatorsBlacklist.toList(),
+          ),
+        );
+      }
+    }
+    return allArtists;
+  }
+
+  List<String> splitGenre(String? originalGenre) {
+    return splitBySeparators(
+      originalGenre,
+      SettingsController.inst.trackGenresSeparators.toList(),
+      k_UNKNOWN_TRACK_GENRE,
+      SettingsController.inst.trackGenresSeparatorsBlacklist.toList(),
+    );
   }
 
   /// list.first = title
@@ -506,8 +554,9 @@ class Indexer {
     final title = titleAndArtist.length >= 2 ? titleAndArtist[1].trim() : filenameWOEx;
     final artist = titleAndArtist.length >= 2 ? titleAndArtist[0].trim() : k_UNKNOWN_TRACK_ARTIST;
 
-    final cleanedUpTitle = title.split('[').first.split('(').first.trim();
-    final cleanedUpArtist = artist.split(']').last.split(')').last.trim();
+    // TODO: split by ( and ) too, but retain Remixes and feat.
+    final cleanedUpTitle = title.split('[').first.trim();
+    final cleanedUpArtist = artist.split(']').last.trim();
 
     return [cleanedUpTitle, cleanedUpArtist];
   }
@@ -515,45 +564,75 @@ class Indexer {
   Set<String> getNewFoundPaths(Set<String> currentFiles) => currentFiles.difference(Set.of(tracksInfoList.map((t) => t.path)));
   Set<String> getDeletedPaths(Set<String> currentFiles) => Set.of(tracksInfoList.map((t) => t.path)).difference(currentFiles);
 
-  Future<Set<String>> getAudioFiles() async {
+  /// [strictNoMedia] forces all subdirectories to follow the same result of the parent
+  /// ex: if (.nomedia) was found in [/storage/0/Music/],
+  /// then subdirectories [/storage/0/Music/folder1],[/storage/0/Music/folder2] will be excluded too.
+  Future<Set<String>> getAudioFiles({bool strictNoMedia = true}) async {
     tracksExcludedByNoMedia.value = 0;
     final allPaths = <String>{};
+    final allAvailableDirectories = <Directory, bool>{};
+
     for (final dirPath in SettingsController.inst.directoriesToScan.toList()) {
       final directory = Directory(dirPath);
 
       if (await directory.exists()) {
+        allAvailableDirectories[directory] = false;
+
         await for (final file in directory.list(recursive: true, followLinks: true)) {
-          try {
-            if (file is File) {
-              if (!kFileExtensions.any((ext) => file.path.endsWith(ext))) {
-                continue;
-              }
-
-              /// Respects .nomedia
-              /// Typically Skips a directory if a .nomedia file was detected
-              /// currently it checks with every file but no alternative available, since [recursive] returns Files & Folders together.
-              if (SettingsController.inst.respectNoMedia.value) {
-                if (await File("${file.parent.path}/.nomedia").exists()) {
-                  printInfo(info: '.nomedia skipped');
-                  tracksExcludedByNoMedia.value++;
-                  continue;
-                }
-              }
-
-              // Checks if the file is not included in one of the excluded folders.
-              if (!SettingsController.inst.directoriesToExclude.toList().any((exc) => file.path.startsWith(exc))) {
-                allPaths.add(file.path);
-              }
-            }
-          } catch (e) {
-            printError(info: e.toString());
-            continue;
+          if (file is Directory) {
+            allAvailableDirectories[file] = false;
           }
         }
       }
-      allTracksPaths.value = allPaths.length;
-      debugPrint(allPaths.length.toString());
     }
+
+    /// Assigning directories and sub-subdirectories that has .nomedia.
+    if (SettingsController.inst.respectNoMedia.value) {
+      for (final d in allAvailableDirectories.keys) {
+        final hasNoMedia = await File("${d.path}/.nomedia").exists();
+        if (hasNoMedia) {
+          // TODO: expose [strictNoMedia] in settings?
+          if (strictNoMedia) {
+            // strictly applies bool to all subdirectories.
+            allAvailableDirectories.forEach((key, value) {
+              if (key.path.startsWith(d.path)) {
+                allAvailableDirectories[key] = true;
+              }
+            });
+          } else {
+            allAvailableDirectories[d] = true;
+          }
+        }
+      }
+    }
+
+    for (final d in allAvailableDirectories.keys) {
+      final hasNoMedia = allAvailableDirectories[d] ?? false;
+
+      await for (final file in d.list()) {
+        if (file is File) {
+          if (!kFileExtensions.any((ext) => file.path.endsWith(ext))) {
+            continue;
+          }
+          if (hasNoMedia) {
+            tracksExcludedByNoMedia.value++;
+            continue;
+          }
+
+          // Skips if the file is included in one of the excluded folders.
+          if (SettingsController.inst.directoriesToExclude.toList().any((exc) => file.path.startsWith(exc))) {
+            continue;
+          }
+
+          allPaths.add(file.path);
+        }
+      }
+    }
+    allAudioFiles
+      ..clear()
+      ..addAll(allPaths);
+
+    debugPrint(allPaths.length.toString());
     return allPaths;
   }
 
@@ -685,7 +764,7 @@ class Indexer {
         tracksInfoList.sort((a, b) => (a.discNo).compareTo(b.discNo));
         break;
       case SortType.filename:
-        tracksInfoList.sort((a, b) => (a.filename).compareTo(b.filename));
+        tracksInfoList.sort((a, b) => (a.filename.toLowerCase()).compareTo(b.filename.toLowerCase()));
         break;
       case SortType.duration:
         tracksInfoList.sort((a, b) => (a.duration).compareTo(b.duration));
@@ -695,6 +774,9 @@ class Indexer {
         break;
       case SortType.size:
         tracksInfoList.sort((a, b) => (a.size).compareTo(b.size));
+        break;
+      case SortType.rating:
+        tracksInfoList.sort((a, b) => (a.stats.rating).compareTo(b.stats.rating));
         break;
 
       default:
@@ -767,7 +849,6 @@ class Indexer {
         groupedArtistsList.sort((a, b) => a.tracks.elementAt(0).year.compareTo(b.tracks.elementAt(0).year));
         break;
       case GroupSortType.artistsList:
-        // mapEntries.sort((a, b) => a.tracks.elementAt(0).artistsList.toString().compareTo(b.tracks.elementAt(0).artistsList.toString()));
         groupedArtistsList.sort(((a, b) => a.name.compareTo(b.name)));
         break;
       case GroupSortType.genresList:
@@ -784,6 +865,9 @@ class Indexer {
         break;
       case GroupSortType.numberOfTracks:
         groupedArtistsList.sort((a, b) => a.tracks.length.compareTo(b.tracks.length));
+        break;
+      case GroupSortType.albumsCount:
+        groupedArtistsList.sort((a, b) => a.tracks.map((e) => e.album).toSet().length.compareTo(b.tracks.map((e) => e.album).toSet().length));
         break;
       default:
         null;

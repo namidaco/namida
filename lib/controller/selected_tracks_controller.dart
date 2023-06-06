@@ -52,10 +52,10 @@ class SelectedTracksController {
 
   void selectAllTracks() {
     selectedTracks.clear();
-    selectedTracks.addAll(currentAllTracks.toList());
+    selectedTracks.addAll(currentAllTracks.toSet());
   }
 
-  void updateCurrentTracks(List<Track> tracks) {
+  void updateCurrentTracks(Iterable<Track> tracks) {
     currentAllTracks.clear();
     currentAllTracks.addAll(tracks);
   }

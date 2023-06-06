@@ -27,12 +27,12 @@ import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 class NamidaOnTaps {
   static final NamidaOnTaps inst = NamidaOnTaps();
 
-  Future<void> onArtistTap(String name) async {
+  Future<void> onArtistTap(String name, [List<Track>? tracksPre]) async {
     ScrollSearchController.inst.isGlobalSearchMenuShown.value = false;
-    final tracks = Indexer.inst.artistSearchList.firstWhere((element) => element.name == name).tracks;
+    final tracks = tracksPre ?? Indexer.inst.artistSearchList.firstWhere((element) => element.name == name).tracks;
     SelectedTracksController.inst.updateCurrentTracks(tracks);
     final albums = name.artistAlbums;
-    final color = await CurrentColor.inst.generateDelightnedColor(tracks.pathToImage);
+    final color = await CurrentColor.inst.getTrackDelightnedColor(tracks[tracks.indexOfImage]);
 
     Get.to(
       () => ArtistTracksPage(
@@ -48,7 +48,7 @@ class NamidaOnTaps {
   Future<void> onAlbumTap(String name) async {
     ScrollSearchController.inst.isGlobalSearchMenuShown.value = false;
     final tracks = Indexer.inst.albumSearchList.firstWhere((element) => element.name == name).tracks;
-    final color = await CurrentColor.inst.generateDelightnedColor(tracks.pathToImage);
+    final color = await CurrentColor.inst.getTrackDelightnedColor(tracks[tracks.indexOfImage]);
     SelectedTracksController.inst.updateCurrentTracks(tracks);
 
     await Get.to(
@@ -80,13 +80,17 @@ class NamidaOnTaps {
     ScrollController? scrollController,
     int? indexToHighlight,
   }) async {
-    SelectedTracksController.inst.updateCurrentTracks(playlist.tracks.map((e) => e.track).toList());
-    await Get.to(() => PlaylisTracksPage(
-          playlist: playlist,
-          disableAnimation: disableAnimation,
-          indexToHighlight: indexToHighlight,
-          scrollController: scrollController,
-        ));
+    final tracks = playlist.tracks.map((e) => e.track);
+    SelectedTracksController.inst.updateCurrentTracks(tracks);
+    await Get.to(
+      () => PlaylisTracksPage(
+        playlist: playlist,
+        disableAnimation: disableAnimation,
+        indexToHighlight: indexToHighlight,
+        scrollController: scrollController,
+      ),
+      preventDuplicates: false,
+    );
   }
 
   Future<void> onFolderOpen(Folder folder, bool isMainStoragePath) async {
@@ -100,14 +104,14 @@ class NamidaOnTaps {
 
   void onRemoveTrackFromPlaylist(int index, Playlist playlist) {
     final track = playlist.tracks.elementAt(index);
-    PlaylistController.inst.removeTrackFromPlaylist(playlist.name, index);
+    PlaylistController.inst.removeTrackFromPlaylist(playlist, index);
     Get.snackbar(
       Language.inst.UNDO_CHANGES,
       Language.inst.UNDO_CHANGES_DELETED_TRACK,
       mainButton: TextButton(
         onPressed: () {
           PlaylistController.inst.insertTracksInPlaylist(
-            playlist.name,
+            playlist,
             [track],
             index,
           );
@@ -138,11 +142,26 @@ bool checkIfQueueSameAsCurrent(List<Track> queue) {
 }
 
 bool checkIfQueueSameAsAllTracks(List<Track> queue) {
-  return checkIfQueuesSimilar(queue, allTracksInLibrary.toList()) == 1.0;
+  return checkIfQueuesSimilar(queue, allTracksInLibrary) == 1.0;
 }
 
 String textCleanedForSearch(String textToClean) {
   return SettingsController.inst.enableSearchCleanup.value ? textToClean.cleanUpForComparison : textToClean.toLowerCase();
+}
+
+Set<String> getHighMatcheFilesFromFilename(Iterable<String> files, String filename) {
+  return files.where(
+    (element) {
+      final trackFilename = filename;
+      final fileSystemFilenameCleaned = element.getFilename.cleanUpForComparison;
+      final l = Indexer.inst.getTitleAndArtistFromFilename(trackFilename);
+      final trackTitle = l.first;
+      final trackArtist = l.last;
+      final matching1 = fileSystemFilenameCleaned.contains(trackFilename.cleanUpForComparison);
+      final matching2 = fileSystemFilenameCleaned.contains(trackTitle.split('(').first) && fileSystemFilenameCleaned.contains(trackArtist);
+      return matching1 || matching2;
+    },
+  ).toSet();
 }
 
 List<Track> getRandomTracks([int? min, int? max]) {
@@ -192,12 +211,23 @@ List<Track> generateRecommendedTrack(Track track) {
   return sortedByValueMap.keys.take(20).toList();
 }
 
-List<Track> generateTracksFromDates(int oldestDate, int newestDate) {
+/// if [maxCount == null], it will generate all available tracks
+List<Track> generateTracksFromDates(int oldestDate, int newestDate, [int? maxCount]) {
   final historytracks = namidaHistoryPlaylist.tracks;
-  return historytracks.where((element) => element.dateAdded >= oldestDate && element.dateAdded <= (newestDate + 1.days.inMilliseconds)).map((e) => e.track).toSet().toList();
+  final tracksAvailable =
+      historytracks.where((element) => element.dateAdded >= oldestDate && element.dateAdded <= (newestDate + 1.days.inMilliseconds)).map((e) => e.track).toSet().toList();
+
+  if (maxCount == null) {
+    return tracksAvailable;
+  } else {
+    return tracksAvailable
+      ..shuffle()
+      ..take(maxCount)
+      ..toList();
+  }
 }
 
-List<Track> generateTracksFromMoods(List<String> moods) {
+List<Track> generateTracksFromMoods(List<String> moods, [int maxCount = 20]) {
   final finalTracks = <Track>[];
 
   /// Generating from Playlists.
@@ -213,7 +243,7 @@ List<Track> generateTracksFromMoods(List<String> moods) {
   /// Generating from all Tracks.
   Indexer.inst.trackStatsMap.forEach((key, value) {
     if (value.moods.toSet().intersection(moods.toSet()).isNotEmpty) {
-      final trackInsideMainList = Indexer.inst.allTracksMappedByPath[key];
+      final trackInsideMainList = key.toTrackOrNull();
       if (trackInsideMainList != null) {
         finalTracks.add(trackInsideMainList);
       }
@@ -221,7 +251,7 @@ List<Track> generateTracksFromMoods(List<String> moods) {
   });
   return finalTracks
     ..shuffle()
-    ..take(20)
+    ..take(maxCount)
     ..toList();
 }
 
@@ -234,8 +264,8 @@ List<Track> generateTracksFromRatings(
 ) {
   final finalTracks = <Track>[];
   Indexer.inst.trackStatsMap.forEach((key, value) {
-    if (value.rating > min && value.rating < max) {
-      final trackInsideMainList = Indexer.inst.allTracksMappedByPath[key];
+    if (value.rating >= min && value.rating <= max) {
+      final trackInsideMainList = key.toTrackOrNull();
       if (trackInsideMainList != null) {
         finalTracks.add(trackInsideMainList);
       }
@@ -262,10 +292,10 @@ List<Track> generateTracksFromFolder(String folderPath) {
   return _addTheseTracksFromMedia(trs);
 }
 
-List<Track> _addTheseTracksFromMedia(Iterable<Track> tracks) {
+List<Track> _addTheseTracksFromMedia(Iterable<Track> tracks, [int maxCount = 10]) {
   final trs = <Track>[];
   trs.addAll(tracks);
   trs.shuffle();
   trs.remove(Player.inst.nowPlayingTrack.value);
-  return trs.take(10).toList();
+  return trs.take(maxCount).toList();
 }

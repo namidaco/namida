@@ -1,5 +1,6 @@
 // ignore_for_file: depend_on_referenced_packages
 
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -108,8 +110,10 @@ extension TracksUtils on List<Track> {
   /// should be upgraded to check if image file exist, but performance...
   String get pathToImage {
     if (isEmpty) return '';
-    return this[length - 1].pathToImage;
+    return this[indexOfImage].pathToImage;
   }
+
+  int get indexOfImage => length - 1;
 
   Track get firstTrackWithImage {
     if (isEmpty) return kDummyTrack;
@@ -155,6 +159,7 @@ extension DisplayKeywords on int {
     return '$this ${this > 1 ? plural : singular}';
   }
 
+  String get displayTrackKeyword => displayKeyword(Language.inst.TRACK, Language.inst.TRACKS);
   String get displayAlbumKeyword => displayKeyword(Language.inst.ALBUM, Language.inst.ALBUMS);
   String get displayArtistKeyword => displayKeyword(Language.inst.ARTIST, Language.inst.ARTISTS);
   String get displayGenreKeyword => displayKeyword(Language.inst.GENRE, Language.inst.GENRES);
@@ -174,19 +179,32 @@ extension YearDateFormatted on int {
     if (this == 0) {
       return '';
     }
-    final formatDate = DateFormat('${SettingsController.inst.dateTimeFormat}');
+    final formatDate = DateFormat(SettingsController.inst.dateTimeFormat.value);
     final yearFormatted = toString().length == 8 ? formatDate.format(DateTime.parse(toString())) : toString();
 
     return yearFormatted;
   }
 
-  String get dateFormatted => DateFormat(SettingsController.inst.dateTimeFormat.value).format(DateTime.fromMillisecondsSinceEpoch(this));
+  String formatTimeFromMSSE(String format) => DateFormat(format).format(DateTime.fromMillisecondsSinceEpoch(this));
 
-  String get dateFormattedOriginal => DateFormat('dd MMM yyyy').format(DateTime.fromMillisecondsSinceEpoch(this));
+  String get dateFormatted => formatTimeFromMSSE(SettingsController.inst.dateTimeFormat.value);
 
-  String get clockFormatted => (SettingsController.inst.hourFormat12.value ? DateFormat('hh:mm aa') : DateFormat('HH:mm')).format(DateTime.fromMillisecondsSinceEpoch(this));
+  String get dateFormattedOriginal => formatTimeFromMSSE('dd MMM yyyy');
 
-  String get dateAndClockFormattedOriginal => DateFormat('dd MMM yyyy - hh:mm aa').format(DateTime.fromMillisecondsSinceEpoch(this));
+  String get clockFormatted => formatTimeFromMSSE(SettingsController.inst.hourFormat12.value ? 'hh:mm aa' : 'HH:mm');
+
+  /// this one gurantee that the format will return with the day included, even if the format in setting doesnt have day.
+  /// if (valInSet.contains('d')) return userformat;
+  /// else return dateFormattedOriginal ('dd MMM yyyy');
+  String get dateAndClockFormattedOriginal {
+    final valInSet = SettingsController.inst.dateTimeFormat.value;
+    if (valInSet.contains('d')) {
+      return dateAndClockFormatted;
+    }
+    return [dateFormattedOriginal, clockFormatted].join(' - ');
+  }
+
+  String get dateAndClockFormatted => [dateFormatted, clockFormatted].join(' - ');
 }
 
 extension BorderRadiusSetting on double {
@@ -203,6 +221,107 @@ extension FontScaleSetting on double {
 
 extension TrackItemSubstring on TrackTileItem {
   String get label => convertToString;
+
+  String toText() {
+    String t = '';
+    if (this == TrackTileItem.none) {
+      t = Language.inst.NONE;
+    }
+    if (this == TrackTileItem.title) {
+      t = Language.inst.TITLE;
+    }
+    if (this == TrackTileItem.artists) {
+      t = Language.inst.ARTISTS;
+    }
+    if (this == TrackTileItem.album) {
+      t = Language.inst.ALBUM;
+    }
+
+    if (this == TrackTileItem.albumArtist) {
+      t = Language.inst.ALBUM_ARTIST;
+    }
+    if (this == TrackTileItem.genres) {
+      t = Language.inst.GENRES;
+    }
+
+    if (this == TrackTileItem.composer) {
+      t = Language.inst.COMPOSER;
+    }
+    if (this == TrackTileItem.year) {
+      t = Language.inst.YEAR;
+    }
+
+    if (this == TrackTileItem.bitrate) {
+      t = Language.inst.BITRATE;
+    }
+    if (this == TrackTileItem.channels) {
+      t = Language.inst.CHANNELS;
+    }
+
+    if (this == TrackTileItem.comment) {
+      t = Language.inst.COMMENT;
+    }
+    if (this == TrackTileItem.dateAdded) {
+      t = Language.inst.DATE_ADDED;
+    }
+
+    if (this == TrackTileItem.dateModified) {
+      t = Language.inst.DATE_MODIFIED;
+    }
+    if (this == TrackTileItem.dateModifiedClock) {
+      t = "${Language.inst.DATE_MODIFIED} (${Language.inst.CLOCK})";
+    }
+    if (this == TrackTileItem.dateModifiedDate) {
+      t = "${Language.inst.DATE_MODIFIED} (${Language.inst.DATE})";
+    }
+    if (this == TrackTileItem.discNumber) {
+      t = Language.inst.DISC_NUMBER;
+    }
+    if (this == TrackTileItem.trackNumber) {
+      t = Language.inst.TRACK_NUMBER;
+    }
+    if (this == TrackTileItem.duration) {
+      t = Language.inst.DURATION;
+    }
+    if (this == TrackTileItem.fileName) {
+      t = Language.inst.FILE_NAME;
+    }
+    if (this == TrackTileItem.fileNameWOExt) {
+      t = Language.inst.FILE_NAME_WO_EXT;
+    }
+    if (this == TrackTileItem.extension) {
+      t = Language.inst.EXTENSION;
+    }
+    if (this == TrackTileItem.folder) {
+      t = Language.inst.FOLDER_NAME;
+    }
+
+    if (this == TrackTileItem.format) {
+      t = Language.inst.FORMAT;
+    }
+    if (this == TrackTileItem.path) {
+      t = Language.inst.PATH;
+    }
+
+    if (this == TrackTileItem.sampleRate) {
+      t = Language.inst.SAMPLE_RATE;
+    }
+    if (this == TrackTileItem.size) {
+      t = Language.inst.SIZE;
+    }
+
+    if (this == TrackTileItem.rating) {
+      t = Language.inst.RATING;
+    }
+    if (this == TrackTileItem.moods) {
+      t = Language.inst.MOODS;
+    }
+    if (this == TrackTileItem.tags) {
+      t = Language.inst.TAGS;
+    }
+
+    return t;
+  }
 }
 
 extension EmptyString on String {
@@ -436,6 +555,9 @@ extension SortToText on SortType {
     if (this == SortType.year) {
       return Language.inst.YEAR;
     }
+    if (this == SortType.rating) {
+      return Language.inst.RATING;
+    }
 
     return '';
   }
@@ -453,7 +575,7 @@ extension GroupSortToText on GroupSortType {
       return Language.inst.ALBUM_ARTIST;
     }
     if (this == GroupSortType.artistsList) {
-      return Language.inst.ARTISTS;
+      return Language.inst.ARTIST;
     }
     if (this == GroupSortType.genresList) {
       return Language.inst.GENRES;
@@ -471,8 +593,17 @@ extension GroupSortToText on GroupSortType {
     if (this == GroupSortType.numberOfTracks) {
       return Language.inst.NUMBER_OF_TRACKS;
     }
+    if (this == GroupSortType.albumsCount) {
+      return Language.inst.ALBUMS_COUNT;
+    }
     if (this == GroupSortType.year) {
       return Language.inst.YEAR;
+    }
+    if (this == GroupSortType.creationDate) {
+      return Language.inst.DATE_CREATED;
+    }
+    if (this == GroupSortType.modifiedDate) {
+      return Language.inst.DATE_MODIFIED;
     }
 
     return '';
@@ -534,9 +665,9 @@ extension FileNameUtils on String {
   String get getExtension => p.extension(this).substring(1);
   String get getDirectoryName => p.dirname(this);
   String get getDirectoryPath {
-    final pieces = split('/');
+    final pieces = split(Platform.pathSeparator);
     pieces.removeLast();
-    return pieces.join('/');
+    return pieces.join(Platform.pathSeparator);
   }
 }
 
@@ -669,6 +800,8 @@ extension PlaylistToQueueSource on Playlist {
     }
     return QueueSource.playlist;
   }
+
+  bool get isOneOfTheMainPlaylists => name == k_PLAYLIST_NAME_FAV || name == k_PLAYLIST_NAME_HISTORY || name == k_PLAYLIST_NAME_MOST_PLAYED;
 }
 
 extension QUEUESOURCEtoTRACKS on QueueSource {
@@ -746,7 +879,7 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
       trs.addAll(Indexer.inst.trackSearchTemp.toList());
     }
     if (this == QueueSource.mostPlayed) {
-      trs.addAll(namidaMostPlayedPlaylist.tracks.map((e) => e.track).toList());
+      trs.addAll(PlaylistController.inst.topTracksMapListens.keys);
     }
     if (this == QueueSource.history) {
       trs.addAll(namidaHistoryPlaylist.tracks.map((e) => e.track).toList());
@@ -768,22 +901,16 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
   }
 }
 
-extension ConvertPathsToTracks on List<String> {
-  List<Track> toTracks() {
-    // final matchingSet = HashSet<String>.from(this);
-    // final finalTracks = allTracksInLibrary.where((item) => matchingSet.contains(item.path));
-    final finalTracks = map((e) => e.toTrack()).toList();
-    return finalTracks.sorted((a, b) => indexOf(a.path).compareTo(indexOf(b.path)));
-  }
-}
-
 extension ConvertPathToTrack on String {
+  Track? toTrackOrNull() => Indexer.inst.allTracksMappedByPath[this];
+
   Track toTrack() {
-    return Indexer.inst.allTracksMappedByPath[this] ??
+    return toTrackOrNull() ??
         Track(
           getFilenameWOExt,
           '',
           [],
+          '',
           '',
           '',
           [],
@@ -803,7 +930,7 @@ extension ConvertPathToTrack on String {
           0,
           '',
           '',
-          TrackStats('', 0, [], []),
+          TrackStats('', 0, [], [], 0),
         );
   }
 }
@@ -974,4 +1101,42 @@ extension WAKELOCKMODETEXT on WakelockMode {
       SettingsController.inst.save(wakelockMode: WakelockMode.values[index + 1]);
     }
   }
+}
+
+extension ListieExt<E> on List<E> {
+  void addNoDuplicates(E item, {bool preventDuplicates = true}) {
+    if (preventDuplicates && contains(item)) {
+      return;
+    }
+    add(item);
+  }
+
+  /// Efficient version of lastWhere()
+  E? lastWhereEff(bool Function(E e) test, {E? fallback}) {
+    for (int i = length - 1; i >= 0; i--) {
+      final element = this[i];
+      if (test(element)) {
+        return element;
+      }
+    }
+    return fallback;
+  }
+
+  // TODO: use instead of [for .. in]
+  void loop(void Function(E e) function) {
+    for (int i = 0; i <= length - 1; i++) {
+      final item = this[i];
+      function(item);
+    }
+  }
+
+  void reverseLoop(void Function(E e) function) {
+    for (int i = length; i >= 0; i--) {
+      final item = this[i];
+      function(item);
+    }
+  }
+
+  E? get firstOrNull => isEmpty ? null : this[0];
+  E? get lastOrNull => isEmpty ? null : this[length - 1];
 }

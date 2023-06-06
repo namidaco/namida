@@ -46,6 +46,7 @@ class NamidaDialogs {
       forceSquared: shouldAlbumBeSquared,
       forceSingleArtwork: true,
       heroTag: heroTag,
+      albumToAddFrom: tracks.album,
     );
   }
 
@@ -99,7 +100,7 @@ class NamidaDialogs {
     await showGeneralPopupDialog(
       playlist.tracks.map((e) => e.track).toList(),
       playlist.name.translatePlaylistName(),
-      [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.date.dateFormatted].join(' • '),
+      [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
       playlist.toQueueSource(),
       thirdLineText: playlist.moods.join(', ').overflow,
       playlist: playlist,

@@ -20,9 +20,14 @@ class CurrentColor {
 
   final Rx<Color> color = playerStaticColor.obs;
   final RxList<Color> palette = <Color>[].obs;
+
+  /// Same fields exists in [Player] class, they can be used but these ones ensure updating the color instantly.
   final RxString currentPlayingTrackPath = ''.obs;
   final RxInt currentPlayingIndex = 0.obs;
+
   final RxBool generatingAllColorPalettes = false.obs;
+
+  Map<String, List<Color>> colorsMap = {};
 
   Future<void> updatePlayerColor(Track track, int index) async {
     if (SettingsController.inst.autoColor.value) {
@@ -34,22 +39,26 @@ class CurrentColor {
   }
 
   Future<void> setPlayerColor(Track track) async {
-    palette.value = await extractColors(track.pathToImage);
-    color.value = (await generateDelightnedColor(track.pathToImage, palette.toList())).withAlpha(Get.isDarkMode ? 200 : 120);
+    palette.value = await getTrackColors(track);
+    color.value = (generateDelightnedColorFromPalette(palette.toList())).withAlpha(Get.isDarkMode ? 200 : 120);
   }
 
-  Future<List<Color>> extractColors(String pathofimage) async {
-    final paletteFile = File("$k_DIR_PALETTES${pathofimage.getFilename}.palette");
+  Future<List<Color>> getTrackColors(Track track) async {
+    return colorsMap[track.path.getFilename] ?? await extractColorsFromImage(track.pathToImage);
+  }
+
+  Future<List<Color>> extractColorsFromImage(String pathofimage) async {
+    final paletteFile = File("$k_DIR_PALETTES${pathofimage.getFilenameWOExt}.palette");
     final paletteFileStat = await paletteFile.stat();
     List<Color> palette = [];
-    if (FileSystemEntity.typeSync(pathofimage) == FileSystemEntityType.notFound) {
+    if (!await File(pathofimage).exists()) {
       return palette;
     }
 
     if (await paletteFile.exists() && paletteFileStat.size > 2) {
-      String content = await paletteFile.readAsString();
+      final content = await paletteFile.readAsString();
       final pl = List<int>.from(json.decode(content));
-      palette.assignAll(pl.map((e) => Color(e)));
+      palette.addAll(pl.map((e) => Color(e)));
       debugPrint("COLORRRR READ FROM FILE");
     } else {
       // trying to extract from the image that is being used will freeze the extraction
@@ -63,7 +72,7 @@ class CurrentColor {
       Indexer.inst.updateColorPalettesSizeInStorage();
       debugPrint("COLORRRRR EXTRACTED");
     }
-
+    _updateInColorMap(pathofimage.getFilenameWOExt, palette);
     return palette;
   }
 
@@ -73,28 +82,39 @@ class CurrentColor {
     }
     generatingAllColorPalettes.value = true;
 
-    for (final tr in allTracksInLibrary.toList()) {
+    for (final tr in allTracksInLibrary) {
       if (!generatingAllColorPalettes.value) {
         break;
       }
 
-      await extractColors(tr.pathToImage);
+      await getTrackColors(tr);
     }
 
     generatingAllColorPalettes.value = false;
   }
 
-  /// Returns [playerStaticColor] if [pathToImage] was null.
-  Future<Color> generateDelightnedColor([String? pathToImage, List<Color>? palette]) async {
-    if (pathToImage == null || !await File(pathToImage).exists()) {
+  /// Equivalent to calling [getTrackColors] and [generateDelightnedColorFromPalette].
+  Future<Color> getTrackDelightnedColor(Track track) async {
+    final colors = await getTrackColors(track);
+    return generateDelightnedColorFromPalette(colors).withAlpha(Get.isDarkMode ? 200 : 120);
+  }
+
+  Color generateDelightnedColorFromPalette(List<Color> palette) {
+    if (palette.isEmpty) {
+      return playerStaticColor;
+    }
+    return mixIntColors(palette.map((e) => e.value).toList());
+  }
+
+  /// Returns [playerStaticColor] if [pathToImage] doesnt exist.
+  Future<Color> generateDelightnedColorFromImage(String pathToImage) async {
+    if (!await File(pathToImage).exists()) {
       return playerStaticColor;
     }
 
-    final finalpalette = palette ?? await extractColors(pathToImage);
-    final colorDelightened = mixIntColors(finalpalette.map((e) => e.value).toList());
-    // colorDelightened = getAlbumColorModifiedModern(finalpalette);
-
-    return colorDelightened;
+    final finalpalette = await extractColorsFromImage(pathToImage);
+    final intpalette = finalpalette.map((e) => e.value).toList();
+    return mixIntColors(intpalette);
   }
 
   Color getAlbumColorModifiedModern(List<Color> value) {
@@ -156,36 +176,21 @@ class CurrentColor {
   void updateThemeAndRefresh() {
     Get.changeTheme(AppThemes.inst.getAppTheme(color.value));
   }
+
+  Future<void> prepareColors() async {
+    await for (final d in Directory(k_DIR_PALETTES).list()) {
+      try {
+        final f = d as File;
+        final content = await f.readAsString();
+        final pl = List<int>.from(json.decode(content));
+        _updateInColorMap(f.path.getFilenameWOExt, pl.map((e) => Color(e)).toList());
+      } catch (e) {
+        continue;
+      }
+    }
+  }
+
+  void _updateInColorMap(String filenameWoExt, List<Color> pl) {
+    colorsMap[filenameWoExt] = pl;
+  }
 }
-
-
-
-// Color getAlbumColorModifiedModern(List<Color>? value) {
-//   final Color color;
-//   if ((value?.length ?? 0) > 9) {
-//     color = Color.alphaBlend(value?.first.withAlpha(140) ?? Colors.transparent, Color.alphaBlend(value?.elementAt(7).withAlpha(155) ?? Colors.transparent, value?.elementAt(9) ?? Colors.transparent));
-//   } else {
-//     color = Color.alphaBlend(value?.last.withAlpha(50) ?? Colors.transparent, value?.first ?? Colors.transparent);
-//   }
-//   HSLColor hslColor = HSLColor.fromColor(color);
-//   Color colorDelightened;
-// //   if (hslColor.lightness > 0.65) {
-// //   hslColor = hslColor.withLightness(0.45);
-// //   colorDelightened = hslColor.toColor();
-// // } else if (hslColor.lightness < 0.35) {
-// //   hslColor = hslColor.withLightness(0.55);
-// //   colorDelightened = hslColor.toColor();
-// // } else {
-// //   colorDelightened = color;
-// // }
-
-//   if (hslColor.lightness > 0.65) {
-//     hslColor = hslColor.withLightness(0.45);
-//     colorDelightened = hslColor.toColor();
-//   } else {
-//     colorDelightened = color;
-//   }
-//   // colorDelightened = Color.alphaBlend(Colors.black.withAlpha(10), colorDelightened);
-//   return colorDelightened;
-// }
-

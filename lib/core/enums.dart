@@ -14,6 +14,7 @@ enum SortType {
   duration,
   sampleRate,
   size,
+  rating,
 }
 
 enum GroupSortType {
@@ -27,6 +28,9 @@ enum GroupSortType {
   composer,
   duration,
   numberOfTracks,
+  albumsCount,
+  creationDate,
+  modifiedDate,
 }
 
 enum TrackTilePosition {
@@ -71,6 +75,9 @@ enum TrackTileItem {
   sampleRate,
   format,
   channels,
+  rating,
+  tags,
+  moods,
 }
 
 enum TrackSearchFilter {

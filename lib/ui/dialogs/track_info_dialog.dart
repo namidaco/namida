@@ -5,33 +5,35 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQueue = false, int? index}) async {
-  if (Indexer.inst.allTracksMappedByPath[track.path] == null) {
-    // [showTrackDialog] calls [showGeneralPopupDialog] which has a built-check for tracks that are not available.
+  // [showTrackDialog] calls [showGeneralPopupDialog] which has a built-check for tracks that are not available.
+  if (track.path.toTrackOrNull() == null) {
     NamidaDialogs.inst.showTrackDialog(track);
     return;
   }
-  final firstListenTrack = namidaHistoryPlaylist.tracks.lastWhere(
-    (element) => element.track == track,
-    orElse: () => TrackWithDate(0, track, TrackSource.local),
-  );
-  final totalListens = namidaHistoryPlaylist.tracks.where((element) => element.track.path == track.path).toList();
-  final color = await CurrentColor.inst.generateDelightnedColor(track.pathToImage);
+
+  final totalListens = PlaylistController.inst.topTracksMapListens[track] ?? [];
+  totalListens.sort((a, b) => b.compareTo(a));
+  final firstListenTrack = totalListens.lastOrNull;
+
+  final color = await CurrentColor.inst.getTrackDelightnedColor(track);
   final theme = AppThemes.inst.getAppTheme(color, !Get.isDarkMode);
+
   bool shouldShowTheField(bool isUnknown) => !isUnknown || (SettingsController.inst.showUnknownFieldsInTrackInfoDialog.value && isUnknown);
 
   await Get.to(
@@ -44,13 +46,11 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
         title: Language.inst.TRACK_INFO,
         trailingWidgets: [
           Obx(
-            () => Tooltip(
-              message: Language.inst.SHOW_HIDE_UNKNOWN_FIELDS,
-              child: NamidaIconButton(
-                icon: SettingsController.inst.showUnknownFieldsInTrackInfoDialog.value ? Broken.eye : Broken.eye_slash,
-                iconColor: theme.colorScheme.primary,
-                onPressed: () => SettingsController.inst.save(showUnknownFieldsInTrackInfoDialog: !SettingsController.inst.showUnknownFieldsInTrackInfoDialog.value),
-              ),
+            () => NamidaIconButton(
+              tooltip: Language.inst.SHOW_HIDE_UNKNOWN_FIELDS,
+              icon: SettingsController.inst.showUnknownFieldsInTrackInfoDialog.value ? Broken.eye : Broken.eye_slash,
+              iconColor: theme.colorScheme.primary,
+              onPressed: () => SettingsController.inst.save(showUnknownFieldsInTrackInfoDialog: !SettingsController.inst.showUnknownFieldsInTrackInfoDialog.value),
             ),
           ),
           NamidaLikeButton(
@@ -80,88 +80,72 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                       delegate: SliverChildListDelegate(
                         [
                           const SizedBox(height: 12.0),
-                          Row(
-                            children: [
-                              InkWell(
-                                onTap: () => Get.to(
-                                  () => Container(
-                                    color: Colors.black,
-                                    child: InteractiveViewer(
-                                      maxScale: 5,
-                                      child: Hero(
-                                        tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
-                                        child: ArtworkWidget(
-                                          path: track.pathToImage,
-                                          thumnailSize: Get.width,
-                                          compressed: false,
-                                          borderRadius: 0,
-                                          blur: 0,
-                                          useTrackTileCacheHeight: true,
+                          InkWell(
+                            onTap: () => showTrackListensDialog(track, datesOfListen: totalListens, theme: theme),
+                            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                            child: Row(
+                              children: [
+                                const SizedBox(width: 2.0),
+                                GestureDetector(
+                                  onTap: () => Get.to(
+                                    () => Container(
+                                      color: Colors.black,
+                                      child: InteractiveViewer(
+                                        maxScale: 5,
+                                        child: Hero(
+                                          tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
+                                          child: GestureDetector(
+                                            onLongPress: () async {
+                                              await EditDeleteController.inst.saveArtworkToStorage(track);
+                                              Get.snackbar(
+                                                'Copied Artwork',
+                                                'Saved in ${SettingsController.inst.defaultBackupLocation.value}',
+                                                snackPosition: SnackPosition.BOTTOM,
+                                                snackStyle: SnackStyle.FLOATING,
+                                                animationDuration: const Duration(milliseconds: 300),
+                                                duration: const Duration(seconds: 2),
+                                                leftBarIndicatorColor: CurrentColor.inst.color.value,
+                                                margin: const EdgeInsets.all(0.0),
+                                                titleText: Text(
+                                                  'Copied Artwork',
+                                                  style: Get.textTheme.displayMedium,
+                                                ),
+                                                messageText: Text(
+                                                  'Saved in ${SettingsController.inst.defaultBackupLocation.value}',
+                                                  style: Get.textTheme.displaySmall,
+                                                ),
+                                                borderRadius: 0,
+                                              );
+                                            },
+                                            child: ArtworkWidget(
+                                              path: track.pathToImage,
+                                              thumnailSize: Get.width,
+                                              compressed: false,
+                                              borderRadius: 0,
+                                              blur: 0,
+                                              useTrackTileCacheHeight: true,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
+                                    opaque: false,
+                                    transition: Transition.fade,
+                                    fullscreenDialog: true,
                                   ),
-                                  opaque: false,
-                                  transition: Transition.fade,
-                                  fullscreenDialog: true,
-                                ),
-                                child: Hero(
-                                  tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
-                                  child: ArtworkWidget(
-                                    path: track.pathToImage,
-                                    thumnailSize: 120,
-                                    forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
-                                    useTrackTileCacheHeight: true,
+                                  child: Hero(
+                                    tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
+                                    child: ArtworkWidget(
+                                      path: track.pathToImage,
+                                      thumnailSize: 120,
+                                      forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+                                      useTrackTileCacheHeight: true,
+                                      compressed: false,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 12.0),
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () {
-                                    if (totalListens.isEmpty) {
-                                      return;
-                                    }
-                                    Get.dialog(
-                                      CustomBlurryDialog(
-                                        normalTitleStyle: true,
-                                        title: Language.inst.TOTAL_LISTENS,
-                                        enableBlur: false,
-                                        trailingWidgets: [
-                                          Text(
-                                            '${totalListens.length}',
-                                            style: Get.textTheme.displaySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
-                                          ),
-                                        ],
-                                        child: SizedBox(
-                                          height: Get.height * 0.7,
-                                          width: Get.width,
-                                          child: NamidaListView(
-                                            padding: EdgeInsets.zero,
-                                            itemBuilder: (context, i) {
-                                              final t = totalListens[i];
-                                              return SmallListTile(
-                                                key: ValueKey(i),
-                                                borderRadius: 14.0,
-                                                title: t.dateAdded.dateAndClockFormattedOriginal,
-                                                onTap: () async {
-                                                  final i = namidaHistoryPlaylist.tracks.indexWhere((element) => element.dateAdded == t.dateAdded);
-                                                  NamidaOnTaps.inst.onPlaylistTap(
-                                                    namidaHistoryPlaylist,
-                                                    disableAnimation: true,
-                                                    indexToHighlight: i,
-                                                    scrollController: ScrollController(initialScrollOffset: trackTileItemExtent * i),
-                                                  );
-                                                },
-                                              );
-                                            },
-                                            itemCount: totalListens.length,
-                                            itemExtents: null,
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
+                                const SizedBox(width: 10.0),
+                                Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
@@ -197,7 +181,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                           const SizedBox(width: 4.0),
                                           Expanded(
                                             child: Text(
-                                              firstListenTrack.dateAdded == 0 ? Language.inst.MAKE_YOUR_FIRST_LISTEN : firstListenTrack.dateAdded.dateAndClockFormattedOriginal,
+                                              firstListenTrack?.dateAndClockFormattedOriginal ?? Language.inst.MAKE_YOUR_FIRST_LISTEN,
                                               style: Get.textTheme.displaySmall,
                                             ),
                                           ),
@@ -206,9 +190,9 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                     ],
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 12.0),
-                            ],
+                                const SizedBox(width: 12.0),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 12.0),
                           if (shouldShowTheField(track.hasUnknownTitle)) ...[
@@ -223,7 +207,9 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                           if (shouldShowTheField(track.hasUnknownArtist)) ...[
                             NamidaContainerDivider(color: color),
                             TrackInfoListTile(
-                              title: track.artistsList.length == 1 ? Language.inst.ARTIST : Language.inst.ARTISTS,
+                              title: Indexer.inst.splitArtist(track.title, track.originalArtist, addArtistsFromTitle: false).length == 1
+                                  ? Language.inst.ARTIST
+                                  : Language.inst.ARTISTS,
                               value: track.originalArtist,
                               icon: Broken.microphone,
                             ),

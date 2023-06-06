@@ -25,6 +25,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/core/translations/translations.dart';
@@ -70,9 +71,9 @@ void main() async {
   k_DIR_USER_DATA = await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
 
   Future<void> createDirectories(List<String> paths) async {
-    for (final p in paths) {
+    paths.loop((p) async {
       await Directory(p).create(recursive: true);
-    }
+    });
   }
 
   await createDirectories([
@@ -120,6 +121,8 @@ void main() async {
   await QueueController.inst.prepareLatestQueueFile();
   await Player.inst.initializePlayer();
   await QueueController.inst.putLatestQueue();
+  await Player.inst.prepareTotalListenTime();
+  await CurrentColor.inst.prepareColors();
 
   /// Clearing files cached by intents
   final cacheDirFiles = await getTemporaryDirectory().then((value) => value.listSync());
@@ -145,6 +148,10 @@ void main() async {
   }, onError: (err) {
     Get.snackbar(Language.inst.ERROR, Language.inst.COULDNT_PLAY_FILE);
   });
+
+  /// should be removed soon when fullscreen video is available.
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
+
   runApp(const Namida());
 }
 

@@ -31,9 +31,10 @@ const Color kMainColorDark = Color.fromARGB(255, 139, 149, 241);
 final String k_FILE_PATH_SETTINGS = '$k_DIR_USER_DATA/namidaSettings.json';
 final String k_FILE_PATH_TRACKS = '$k_DIR_USER_DATA/tracks.json';
 final String k_FILE_PATH_TRACKS_STATS = '$k_DIR_USER_DATA/tracksStats.json';
-final String k_FILE_PATH_EXTRA_STATS = '$k_DIR_USER_DATA/extraStats.json';
 final String k_FILE_PATH_VIDEO_PATHS = '$k_DIR_USER_DATA/videoFilesPaths.txt';
 final String k_FILE_PATH_LATEST_QUEUE = '$k_DIR_USER_DATA/latestqueue.json';
+
+final String k_FILE_PATH_TOTAL_LISTEN_TIME = '$k_DIR_USER_DATA/total_listen.txt';
 
 final String k_PLAYLIST_PATH_HISTORY = '$k_DIR_USER_DATA/sussybaka.json';
 final String k_PLAYLIST_PATH_HISTORY_BACKUP = '$k_DIR_USER_DATA/sussybakabk.json';
@@ -171,6 +172,7 @@ final kDummyTrack = Track(
   [''],
   '',
   '',
+  '',
   [''],
   '',
   0,
@@ -188,7 +190,7 @@ final kDummyTrack = Track(
   0,
   '',
   '',
-  TrackStats('', 0, [], []),
+  TrackStats('', 0, [], [], 0),
 );
 
 // Unknown Fields

@@ -19,7 +19,6 @@ class ScrollSearchController {
 
   final RxBool isGlobalSearchMenuShown = false.obs;
   final TextEditingController searchTextEditingController = Indexer.inst.globalSearchController;
-  final PageController homepageController = PageController(initialPage: SettingsController.inst.selectedLibraryTab.value.toInt);
 
   final RxBool showTrackSearchBox = false.obs;
   final RxBool showAlbumSearchBox = false.obs;
@@ -89,10 +88,6 @@ class ScrollSearchController {
     SettingsController.inst.save(selectedLibraryTab: animateTo.toEnum);
     if (shouldGoBack) {
       Get.offAll(() => MainPageWrapper());
-    } else {
-      if (homepageController.hasClients && SettingsController.inst.enableBottomNavBar.value) {
-        await homepageController.animateToPage(animateTo, duration: const Duration(milliseconds: 400), curve: Curves.easeInOutQuart);
-      }
     }
     clearGlobalSearchAndCloseThingys();
     printInfo(info: animateTo.toEnum.toText);

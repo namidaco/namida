@@ -27,6 +27,8 @@ class Language {
   String get LOADING_FILE => 'Loading File';
   String get PARSED => 'parsed';
   String get ADDED => 'added';
+  String get INSERTED => 'inserted';
+  String get REMOVED => 'Removed';
   String get GUIDE => 'Guide';
   String get IMPORT_YOUTUBE_HISTORY => 'Import Youtube History';
   String get REMOVE_QUEUE => 'Remove Queue';
@@ -58,6 +60,8 @@ class Language {
   String get SHOW_HIDE_UNKNOWN_FIELDS => 'Show/hide Unknown Fields';
   String get CHANGED => 'Changed';
   String get MOODS => 'Moods';
+  String get TAGS => 'Tags';
+  String get RATING => 'Rating';
   String get TAG_FIELDS => 'Tag Fields';
   String get ACTIVE => 'Active';
   String get NON_ACTIVE => 'Non-Active';
@@ -66,6 +70,7 @@ class Language {
   String get MINIMUM_ONE_FIELD_SUBTITLE => 'At least 3 fields should remain';
   String get EXTRACT_FEAT_ARTIST => 'Extract feat. artists from title';
   String get EXTRACT_FEAT_ARTIST_SUBTITLE => 'Extracts (feat. X) and (ft. X) artists, only as a new artist entry.';
+  String get PICK_FROM_STORAGE => 'Pick from storage';
 
   String get IMPORT_YOUTUBE_HISTORY_GUIDE =>
       '1. Go to _TAKEOUT_LINK_\n\n2. Deselect All and select youtube only.\n\n3. Press "Multiple Formats" and beside "History" choose "JSON".\n\n4. Press "All Youtube data included", Deselect All and choose history only.\n\n5. Create Export, Download & Unzip.\n\n6. Choose "watch-history.json" from the next screen.';
@@ -121,6 +126,7 @@ class Language {
   String get PERCENTAGE => 'Percentage';
   String get AUTO_EXTRACT_TAGS_FROM_FILENAME => 'Auto extract from filename';
   String get PLEASE_ENTER_A_NAME => 'Please enter a name';
+  String get NAME_CONTAINS_BAD_CHARACTER => 'Name contains bad character';
   String get PLEASE_ENTER_A_DIFFERENT_NAME => 'This name already exists :(\nplease try another fancy name';
   String get PLEASE_ENTER_A_LINK => 'Please enter a link';
   String get PLEASE_ENTER_A_LINK_SUBTITLE => 'umm.. is this a youtube link?';
@@ -151,6 +157,7 @@ class Language {
   String get REPEAT_MODE_NONE => 'Stop on Last Track';
   String get REPEAT_MODE_ONE => 'Repeat Current Track';
   String get ENABLE_SEARCH_CLEANUP => 'Enable Search Cleanup';
+  String get DISABLE_SEARCH_CLEANUP => 'Disable Search Cleanup';
   String get ENABLE_SEARCH_CLEANUP_SUBTITLE => 'All Symbols and Spaces will be ignored';
   String get ENABLE_BOTTOM_NAV_BAR => 'Enable Bottom Navigation Bar';
   String get ENABLE_BOTTOM_NAV_BAR_SUBTITLE => 'Items are inside the drawer bothways';
@@ -164,6 +171,7 @@ class Language {
   String get GENERATE_FROM_DATES => 'Time Range';
   String get GENERATE_FROM_DATES_SUBTITLE => 'Generate tracks you listened to in a time range';
   String get NO_TRACKS_FOUND_BETWEEN_DATES => 'this timerange doesn\'t have any tracks.';
+  String get NO_TRACKS_FOUND_IN_DIRECTORY => 'No tracks found in this directory';
   String get NEW_TRACKS_MOODS => 'Mood';
   String get NEW_TRACKS_MOODS_SUBTITLE => 'Generate tracks based on available moods';
   String get NEW_TRACKS_RATINGS => 'Ratings';
@@ -176,6 +184,8 @@ class Language {
   String get SUCCEEDED => 'Succeeded';
   String get FAILED => 'Failed';
   String get PROGRESS => 'Progress';
+  String get MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION => 'Minimum track duration to restore last played position';
+  String get DONT_RESTORE_POSITION => 'Don\'t restore';
 
   /// Main
   String get EXIT_APP => 'Exit';
@@ -238,7 +248,8 @@ class Language {
   /// Indexer Settings
   String get INDEXER => 'Indexer';
   String get INDEXER_SUBTITLE => 'Manage your music Library';
-  String get RE_INDEXING_REQUIRED => 'Requires Re-indexing';
+  // String get RE_INDEXING_REQUIRED => 'Requires Re-indexing';
+  String get INSTANTLY_APPLIES => 'Instantly Applies';
   String get INDEX_REFRESH_REQUIRED => 'Do a Refresh after changing this';
   String get RE_INDEX => 'Re-index';
   String get RE_INDEX_SUBTITLE => 'Rebuild your music library from scratch';
@@ -297,8 +308,8 @@ class Language {
   String get DEFAULT_LIBRARY_TAB => 'Default Library Tab';
   String get USE_COLLAPSED_SETTING_TILES => 'Use Collapsed Setting Tiles';
   String get ENABLE_FOLDERS_HIERARCHY => 'Enable Folders Hierarchy';
-  String get ENABLE_SCROLLING_NAVIGATION => 'Enable Scrolling Navigation';
-  String get ENABLE_SCROLLING_NAVIGATION_SUBTITLE => 'Swipe horizontally to navigate between pages';
+  // String get ENABLE_SCROLLING_NAVIGATION => 'Enable Scrolling Navigation';
+  // String get ENABLE_SCROLLING_NAVIGATION_SUBTITLE => 'Swipe horizontally to navigate between pages';
 
   /// Backup & Restore
 
@@ -384,6 +395,7 @@ class Language {
   String get CLEAR_VIDEO_CACHE => 'Clear Video Cache';
   String get CLEAR_VIDEO_CACHE_SUBTITLE => 'Delete _CURRENT_VIDEOS_COUNT_ Videos Representing _TOTAL_SIZE_?';
   String get CLEAR_VIDEO_CACHE_NOTE => 'You can choose what to delete.';
+  String get REMOVE_SOURCE_FROM_HISTORY => 'Remove source from history';
 
   /// Defaults
   String get ADD => 'Add';
@@ -472,6 +484,7 @@ class Language {
   String get YEAR => 'Year';
   String get COMPOSER => 'Composer';
   String get DURATION => 'Duration';
+  String get DATE_CREATED => 'Date Created';
   String get DATE_MODIFIED => 'Date Modified';
   String get BITRATE => 'Bitrate';
   String get DISC_NUMBER => 'Disc Number';
@@ -479,6 +492,7 @@ class Language {
   String get FILE_NAME => 'File Name';
   String get SAMPLE_RATE => 'Sample Rate';
   String get NUMBER_OF_TRACKS => 'Number of Tracks';
+  String get ALBUMS_COUNT => 'Albums Count';
   String get SIZE => 'Size';
   String get NONE => 'None';
   String get CHANNELS => 'Channels';

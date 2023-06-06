@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/folder.dart';
@@ -15,7 +18,7 @@ class Folders {
 
   // List<String> get currentFoldersPaths => Indexer.inst.groupedFoldersMap.keys
   //     .where(
-  //       (fld) => fld.startsWith(currentPath.value) && fld.split('/').length == currentPath.value.split('/').length + 1,
+  //       (fld) => fld.startsWith(currentPath.value) && fld.split(Platform.pathSeparator).length == currentPath.value.split(Platform.pathSeparator).length + 1,
   //     )
   //     .toList();
   // List<Track> get currentTracks => getTracks(currentPath.value);
@@ -29,6 +32,8 @@ class Folders {
   final RxString currentPath = SettingsController.inst.defaultFolderStartupLocation.value.obs;
   final RxList<Folder> currentfolderslist = <Folder>[].obs;
   final RxList<Track> currentTracks = <Track>[].obs;
+
+  final ScrollController scrollController = ScrollController();
 
   /// Even with this logic, root paths are invincible.
   final RxBool isHome = true.obs;
@@ -50,12 +55,12 @@ class Folders {
         : folder.tracks;
 
     Iterable<Folder> currentFolders = [];
-    // currentFolders = folderslist.where((p0) {
-    //   final f = p0.path.split('/');
-    //   f.removeLast();
-    //   return f.join('/') == folder.path;
-    // });
-    currentFolders = folderslist.toList().where((fld) => fld.path.startsWith(folder.path) && fld.path.split('/').length == folder.path.split('/').length + 1);
+    currentFolders = folderslist.where((p0) {
+      final f = p0.path.split(Platform.pathSeparator);
+      f.removeLast();
+      return f.join(Platform.pathSeparator) == folder.path;
+    });
+    // currentFolders = folderslist.toList().where((fld) => fld.path.startsWith(folder.path) && fld.path.split(Platform.pathSeparator).length == folder.path.split(Platform.pathSeparator).length + 1);
 
     /// in case nothing was found, probably due to multiple nesting.
     if (currentFolders.isEmpty && tracks.isEmpty) {
@@ -78,6 +83,7 @@ class Folders {
     if (!comingFromStepOut && currentFolders.length == 1 && tracks.isEmpty) {
       stepIn(currentFolders.first);
     }
+    scrollController.jumpTo(0);
   }
 
   stepOut() {
@@ -85,10 +91,10 @@ class Folders {
     if (!SettingsController.inst.enableFoldersHierarchy.value) {
       Folders.inst.currentTracks.clear();
     }
-    final parts = currentPath.value.split('/');
+    final parts = currentPath.value.split(Platform.pathSeparator);
     parts.removeLast();
     Folder? folder;
-    folder = folderslist.firstWhereOrNull((element) => element.path == parts.join('/'));
+    folder = folderslist.firstWhereOrNull((element) => element.path == parts.join(Platform.pathSeparator));
 
     /// if inside one of the main paths.
     if (folder == null && (currentPath.value != kStoragePaths.first && currentPath.value != kStoragePaths.last)) {
@@ -116,9 +122,9 @@ class Folders {
   }
 
   sortFolderTracks() {
-    currentTracks.sort((a, b) => a.filename.compareTo(b.filename));
+    currentTracks.sort((a, b) => a.filename.toLowerCase().compareTo(b.filename.toLowerCase()));
 
-    currentfolderslist.sort((a, b) => a.folderName.compareTo(b.folderName));
-    folderslist.sort((a, b) => a.folderName.compareTo(b.folderName));
+    currentfolderslist.sort((a, b) => a.folderName.toLowerCase().compareTo(b.folderName.toLowerCase()));
+    folderslist.sort((a, b) => a.folderName.toLowerCase().compareTo(b.folderName.toLowerCase()));
   }
 }

@@ -9,7 +9,9 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
+import 'package:namida/core/translations/strings.dart';
 
 class Player {
   static final Player inst = Player();
@@ -30,6 +32,10 @@ class Player {
   final RxInt sleepAfterMin = 0.obs;
   final RxInt sleepAfterTracks = 0.obs;
 
+  final RxInt totalListenedTimeInSec = 0.obs;
+
+  bool isSleepingTrack(int queueIndex) => enableSleepAfterTracks.value && sleepAfterTracks.value + currentIndex.value - 1 == queueIndex;
+
   Future<void> initializePlayer() async {
     _audioHandler = await AudioService.init(
       builder: () => NamidaAudioVideoHandler(this),
@@ -42,6 +48,20 @@ class Player {
       ),
     );
   }
+
+  // Future<void> closePlayerNotification() async {
+  //   _audioHandler = await AudioService.init(
+  //     builder: () => NamidaAudioVideoHandler(this),
+  //     config: const AudioServiceConfig(
+  //       androidNotificationChannelId: 'com.msob7y.namida',
+  //       androidNotificationChannelName: 'Namida',
+  //       androidNotificationChannelDescription: 'Namida Media Notification',
+  //       androidNotificationIcon: 'drawable/ic_stat_musicnote',
+  //       androidStopForegroundOnPause: true,
+  //       androidNotificationOngoing: false,
+  //     ),
+  //   );
+  // }
 
   void updateMediaItemForce() {
     _audioHandler?.updateCurrentMediaItem(null, true);
@@ -82,12 +102,17 @@ class Player {
     List<Track> tracks, {
     bool insertNext = false,
     bool insertAfterLatest = false,
+    bool showSnackBar = true,
   }) {
     _audioHandler?.addToQueue(
       tracks,
       insertNext: insertNext,
       insertAfterLatest: insertAfterLatest,
     );
+    if (showSnackBar) {
+      final addins = insertNext ? Language.inst.INSERTED : Language.inst.ADDED;
+      Get.snackbar(Language.inst.NOTE, '${addins.capitalizeFirst} ${tracks.displayTrackKeyword}');
+    }
   }
 
   void insertInQueue(List<Track> tracks, int index) {
@@ -148,12 +173,21 @@ class Player {
   }) async {
     List<Track> finalQueue = <Track>[];
 
-    /// maximum 2000 track for performance.
-    if (queue.length > 2000) {
-      const trimCount = 1000;
+    /// maximum 1000 track for performance.
+    if (queue.length > 1000) {
+      const trimCount = 500;
+
+      // adding tracks after current index.
       final end = (index + trimCount).clamp(0, queue.length - 1);
       finalQueue.addAll(queue.sublist(index, end + 1));
-      index = 0;
+
+      // inserting tracks before current index.
+      final firstIndex = (index - trimCount).clamp(0, index);
+      final initialTracks = queue.sublist(firstIndex, index);
+      finalQueue.insertAll(0, initialTracks);
+
+      // fixing index
+      index = index - firstIndex;
     } else {
       finalQueue.addAll(queue);
     }
@@ -184,5 +218,9 @@ class Player {
     currentQueue.assignAll(finalQueue);
 
     await _audioHandler?.setAudioSource(index, startPlaying: startPlaying);
+  }
+
+  Future<void> prepareTotalListenTime() async {
+    await _audioHandler?.prepareTotalListenTime();
   }
 }

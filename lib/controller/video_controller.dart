@@ -35,13 +35,14 @@ class VideoController {
 
   YoutubeExplode? _ytexp;
   final RxBool isUpdatingVideoFiles = false.obs;
+  Timer? _downloadTimer;
 
   bool get shouldShowVideo => vidcontroller != null && (localVidPath.value != '' || youtubeLink.value != '') && (vidcontroller?.value.isInitialized ?? false);
 
   VideoController() {
-    /// Listen for connection changes, start downloading if the link != ''
+    /// Listen for connection changes, if a connection was restored, fetch video.
     connectivity.onConnectivityChanged.listen((ConnectivityResult result) async {
-      if (result != ConnectivityResult.none && youtubeLink.value != '' && youtubeVideoId.value != '') {
+      if (result != ConnectivityResult.none && !shouldShowVideo) {
         await updateLocalVidPath(Player.inst.nowPlayingTrack.value);
       }
     });
@@ -49,8 +50,6 @@ class VideoController {
 
   /// Always assigns to [VideoController.inst.youtubeLink] and [VideoController.inst.youtubeVideoId]
   void updateYTLink(Track track) {
-    localVidPath.value = '';
-    youtubeLink.value = '';
     resetEverything();
     final link = track.youtubeLink;
     youtubeLink.value = link;
@@ -58,9 +57,8 @@ class VideoController {
   }
 
   void resetEverything() {
-    // youtubeLink.value = '';
-    // youtubeVideoId.value = '';
-    // isVideoReady.value = false;
+    localVidPath.value = '';
+    youtubeLink.value = '';
     videoCurrentSize.value = 0;
     videoCurrentQuality.value = '? ';
     videoTotalSize.value = 0;
@@ -100,7 +98,9 @@ class VideoController {
     videoTotalSize.value = streamToBeUsed.size.totalBytes;
     videoCurrentQuality.value = streamToBeUsed.videoQualityLabel;
 
-    Timer.periodic(
+    _downloadTimer?.cancel();
+    _downloadTimer = null;
+    _downloadTimer = Timer.periodic(
       const Duration(milliseconds: 1000),
       (timer) async {
         final s = await file.stat();
@@ -132,7 +132,7 @@ class VideoController {
       return;
     }
     track ??= Player.inst.nowPlayingTrack.value;
-    resetEverything();
+
     updateYTLink(track);
 
     if (SettingsController.inst.useYoutubeMiniplayer.value) {
@@ -143,8 +143,12 @@ class VideoController {
     for (final vf in videoFilesPathList) {
       final videoName = vf.getFilenameWOExt;
       final videoNameContainsMusicFileName = checkFileNameAudioVideo(videoName, track.filenameWOExt);
-      final videoNameContainsTitleAndArtist = videoName.contains(track.title.cleanUpForComparison) && videoName.contains(track.artistsList.first.cleanUpForComparison);
-      if (videoNameContainsMusicFileName || videoNameContainsTitleAndArtist) {
+      final videoContainsTitle = videoName.contains(track.title.cleanUpForComparison);
+      final videoNameContainsTitleAndArtist = videoContainsTitle && videoName.contains(track.artistsList.first.cleanUpForComparison);
+      // useful for [Nightcore - title]
+      // track must contain Nightcore as the first Genre
+      final videoNameContainsTitleAndGenre = videoContainsTitle && videoName.contains(track.genresList.first.cleanUpForComparison);
+      if (videoNameContainsMusicFileName || videoNameContainsTitleAndArtist || videoNameContainsTitleAndGenre) {
         await playAndInitializeVideo(vf, track);
         await vidcontroller?.setVolume(0.0);
         videoCurrentQuality.value = Language.inst.LOCAL;
