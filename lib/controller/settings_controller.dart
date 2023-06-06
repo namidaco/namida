@@ -56,12 +56,12 @@ class SettingsController {
   final RxBool artistSortReversed = false.obs;
   final Rx<GroupSortType> genreSort = GroupSortType.genresList.obs;
   final RxBool genreSortReversed = false.obs;
-  final Rx<GroupSortType> playlistSort = GroupSortType.year.obs;
+  final Rx<GroupSortType> playlistSort = GroupSortType.dateModified.obs;
   final RxBool playlistSortReversed = false.obs;
   final RxInt indexMinDurationInSec = 5.obs;
   final RxInt indexMinFileSizeInB = (100 * 1024).obs;
   final RxList<String> trackSearchFilter = ['title', 'artist', 'album'].obs;
-  final RxList<String> playlistSearchFilter = ['name', 'date', 'moods', 'comment'].obs;
+  final RxList<String> playlistSearchFilter = ['name', 'creationDate', 'modifiedDate', 'moods', 'comment'].obs;
   final RxList<String> directoriesToScan = kDirectoriesPaths.toList().obs;
   final RxList<String> directoriesToExclude = <String>[].obs;
   final RxBool preventDuplicatedTracks = false.obs;
@@ -99,12 +99,11 @@ class SettingsController {
   final RxInt seekDurationInSeconds = 5.obs;
   final RxInt playerPlayFadeDurInMilli = 300.obs;
   final RxInt playerPauseFadeDurInMilli = 300.obs;
-  final RxInt totalListenedTimeInSec = 0.obs;
+  final RxInt minTrackDurationToRestoreLastPosInMinutes = 5.obs;
   final RxString lastPlayedTrackPath = ''.obs;
   final RxBool displayFavouriteButtonInNotification = false.obs;
   final RxBool enableSearchCleanup = false.obs;
   final RxBool enableBottomNavBar = true.obs;
-  final RxBool enableScrollingNavigation = true.obs;
   final RxBool useYoutubeMiniplayer = false.obs;
   final RxBool playerPlayOnNextPrev = true.obs;
   final RxBool displayAudioInfoMiniplayer = false.obs;
@@ -237,12 +236,11 @@ class SettingsController {
       seekDurationInSeconds.value = json['seekDurationInSeconds'] ?? seekDurationInSeconds.value;
       playerPlayFadeDurInMilli.value = json['playerPlayFadeDurInMilli'] ?? playerPlayFadeDurInMilli.value;
       playerPauseFadeDurInMilli.value = json['playerPauseFadeDurInMilli'] as int? ?? playerPauseFadeDurInMilli.value;
-      totalListenedTimeInSec.value = json['totalListenedTimeInSec'] ?? totalListenedTimeInSec.value;
+      minTrackDurationToRestoreLastPosInMinutes.value = json['minTrackDurationToRestoreLastPosInMinutes'] ?? minTrackDurationToRestoreLastPosInMinutes.value;
       lastPlayedTrackPath.value = json['lastPlayedTrackPath'] ?? lastPlayedTrackPath.value;
       displayFavouriteButtonInNotification.value = json['displayFavouriteButtonInNotification'] ?? displayFavouriteButtonInNotification.value;
       enableSearchCleanup.value = json['enableSearchCleanup'] ?? enableSearchCleanup.value;
       enableBottomNavBar.value = json['enableBottomNavBar'] ?? enableBottomNavBar.value;
-      enableScrollingNavigation.value = json['enableScrollingNavigation'] ?? enableScrollingNavigation.value;
       useYoutubeMiniplayer.value = json['useYoutubeMiniplayer'] ?? useYoutubeMiniplayer.value;
       playerPlayOnNextPrev.value = json['playerPlayOnNextPrev'] ?? playerPlayOnNextPrev.value;
       displayAudioInfoMiniplayer.value = json['displayAudioInfoMiniplayer'] ?? displayAudioInfoMiniplayer.value;
@@ -271,7 +269,16 @@ class SettingsController {
     }
   }
 
-  Future<void> _writeToStorage() async {
+  bool _canWriteSettings = true;
+
+  /// Writes the values of this  class to a json file, with a minimum interval of [2 seconds]
+  /// to prevent rediculous numbers of successive writes, especially for widgets like [NamidaWheelSlider]
+  Future<void> _writeToStorage({bool justSaveWithoutWaiting = false}) async {
+    if (!_canWriteSettings) {
+      return;
+    }
+    _canWriteSettings = false;
+
     final file = File(k_FILE_PATH_SETTINGS);
     final res = {
       'themeMode': themeMode.value.convertToString,
@@ -347,12 +354,11 @@ class SettingsController {
       'seekDurationInSeconds': seekDurationInSeconds.value,
       'playerPlayFadeDurInMilli': playerPlayFadeDurInMilli.value,
       'playerPauseFadeDurInMilli': playerPauseFadeDurInMilli.value,
-      'totalListenedTimeInSec': totalListenedTimeInSec.value,
+      'minTrackDurationToRestoreLastPosInMinutes': minTrackDurationToRestoreLastPosInMinutes.value,
       'lastPlayedTrackPath': lastPlayedTrackPath.value,
       'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
       'enableSearchCleanup': enableSearchCleanup.value,
       'enableBottomNavBar': enableBottomNavBar.value,
-      'enableScrollingNavigation': enableScrollingNavigation.value,
       'useYoutubeMiniplayer': useYoutubeMiniplayer.value,
       'playerPlayOnNextPrev': playerPlayOnNextPrev.value,
       'displayAudioInfoMiniplayer': displayAudioInfoMiniplayer.value,
@@ -371,6 +377,16 @@ class SettingsController {
       'trackItem': trackItem.value.toJson(),
     };
     await file.writeAsString(json.encode(res));
+
+    debugPrint("Setting File Write");
+
+    if (justSaveWithoutWaiting) {
+      _canWriteSettings = true;
+    } else {
+      await Future.delayed(const Duration(seconds: 2));
+      _canWriteSettings = true;
+      _writeToStorage(justSaveWithoutWaiting: true);
+    }
   }
 
   /// Saves a value to the key, if [List] or [Set], then it will add to it.
@@ -452,11 +468,11 @@ class SettingsController {
     int? playerPlayFadeDurInMilli,
     int? playerPauseFadeDurInMilli,
     int? totalListenedTimeInSec,
+    int? minTrackDurationToRestoreLastPosInMinutes,
     String? lastPlayedTrackPath,
     bool? displayFavouriteButtonInNotification,
     bool? enableSearchCleanup,
     bool? enableBottomNavBar,
-    bool? enableScrollingNavigation,
     bool? useYoutubeMiniplayer,
     bool? playerPlayOnNextPrev,
     bool? displayAudioInfoMiniplayer,
@@ -729,8 +745,8 @@ class SettingsController {
     if (playerPauseFadeDurInMilli != null) {
       this.playerPauseFadeDurInMilli.value = playerPauseFadeDurInMilli;
     }
-    if (totalListenedTimeInSec != null) {
-      this.totalListenedTimeInSec.value = totalListenedTimeInSec;
+    if (minTrackDurationToRestoreLastPosInMinutes != null) {
+      this.minTrackDurationToRestoreLastPosInMinutes.value = minTrackDurationToRestoreLastPosInMinutes;
     }
     if (lastPlayedTrackPath != null) {
       this.lastPlayedTrackPath.value = lastPlayedTrackPath;
@@ -743,9 +759,6 @@ class SettingsController {
     }
     if (enableBottomNavBar != null) {
       this.enableBottomNavBar.value = enableBottomNavBar;
-    }
-    if (enableScrollingNavigation != null) {
-      this.enableScrollingNavigation.value = enableScrollingNavigation;
     }
     if (useYoutubeMiniplayer != null) {
       this.useYoutubeMiniplayer.value = useYoutubeMiniplayer;
