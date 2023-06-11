@@ -320,19 +320,32 @@ class PlaybackSettings extends StatelessWidget {
           Obx(
             () => CustomListTile(
               icon: Broken.forward_5_seconds,
-              title: Language.inst.SEEK_DURATION,
+              title: "${Language.inst.SEEK_DURATION} (${SettingsController.inst.isSeekDurationPercentage.value ? Language.inst.PERCENTAGE : Language.inst.SECONDS})",
               subtitle: Language.inst.SEEK_DURATION_INFO,
-              trailing: NamidaWheelSlider(
-                totalCount: 60,
-                initValue: SettingsController.inst.seekDurationInSeconds.value,
-                itemSize: 2,
-                squeeze: 0.4,
-                onValueChanged: (val) {
-                  final v = (val) as int;
-                  SettingsController.inst.save(seekDurationInSeconds: v);
-                },
-                text: "${SettingsController.inst.seekDurationInSeconds.value}s",
-              ),
+              onTap: () => SettingsController.inst.save(isSeekDurationPercentage: !SettingsController.inst.isSeekDurationPercentage.value),
+              trailing: SettingsController.inst.isSeekDurationPercentage.value
+                  ? NamidaWheelSlider(
+                      totalCount: 50,
+                      initValue: SettingsController.inst.seekDurationInPercentage.value,
+                      itemSize: 2,
+                      squeeze: 0.4,
+                      onValueChanged: (val) {
+                        final v = (val) as int;
+                        SettingsController.inst.save(seekDurationInPercentage: v);
+                      },
+                      text: "${SettingsController.inst.seekDurationInPercentage.value}%",
+                    )
+                  : NamidaWheelSlider(
+                      totalCount: 120,
+                      initValue: SettingsController.inst.seekDurationInSeconds.value,
+                      itemSize: 2,
+                      squeeze: 0.4,
+                      onValueChanged: (val) {
+                        final v = (val) as int;
+                        SettingsController.inst.save(seekDurationInSeconds: v);
+                      },
+                      text: "${SettingsController.inst.seekDurationInSeconds.value}s",
+                    ),
             ),
           ),
           Obx(

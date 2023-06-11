@@ -153,14 +153,27 @@ class Player {
 
   /// Default value is set to user preference [seekDurationInSeconds]
   Future<void> seekSecondsForward([int? seconds]) async {
-    seconds ??= SettingsController.inst.seekDurationInSeconds.value;
-    await _audioHandler?.seek(Duration(milliseconds: nowPlayingPosition.value + seconds * 1000));
+    final newSeconds = _secondsToSeek(seconds);
+    await _audioHandler?.seek(Duration(milliseconds: nowPlayingPosition.value + newSeconds * 1000));
   }
 
   /// Default value is set to user preference [seekDurationInSeconds]
   Future<void> seekSecondsBackward([int? seconds]) async {
-    seconds ??= SettingsController.inst.seekDurationInSeconds.value;
-    await _audioHandler?.seek(Duration(milliseconds: nowPlayingPosition.value - seconds * 1000));
+    final newSeconds = _secondsToSeek(seconds);
+    await _audioHandler?.seek(Duration(milliseconds: nowPlayingPosition.value - newSeconds * 1000));
+  }
+
+  int _secondsToSeek([int? seconds]) {
+    int? newSeconds = seconds;
+    if (newSeconds == null) {
+      if (SettingsController.inst.isSeekDurationPercentage.value) {
+        final sFromP = nowPlayingTrack.value.duration / 1000 * (SettingsController.inst.seekDurationInPercentage.value / 100);
+        newSeconds = sFromP.toInt();
+      } else {
+        newSeconds = SettingsController.inst.seekDurationInSeconds.value;
+      }
+    }
+    return newSeconds;
   }
 
   Future<void> playOrPause(

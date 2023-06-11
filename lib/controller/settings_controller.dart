@@ -97,6 +97,8 @@ class SettingsController {
   final RxInt waveformTotalBars = 140.obs;
   final RxDouble playerVolume = 1.0.obs;
   final RxInt seekDurationInSeconds = 5.obs;
+  final RxInt seekDurationInPercentage = 2.obs;
+  final RxBool isSeekDurationPercentage = false.obs;
   final RxInt playerPlayFadeDurInMilli = 300.obs;
   final RxInt playerPauseFadeDurInMilli = 300.obs;
   final RxInt minTrackDurationToRestoreLastPosInMinutes = 5.obs;
@@ -234,6 +236,8 @@ class SettingsController {
       waveformTotalBars.value = json['waveformTotalBars'] ?? waveformTotalBars.value;
       playerVolume.value = json['playerVolume'] ?? playerVolume.value;
       seekDurationInSeconds.value = json['seekDurationInSeconds'] ?? seekDurationInSeconds.value;
+      seekDurationInPercentage.value = json['seekDurationInPercentage'] ?? seekDurationInPercentage.value;
+      isSeekDurationPercentage.value = json['isSeekDurationPercentage'] ?? isSeekDurationPercentage.value;
       playerPlayFadeDurInMilli.value = json['playerPlayFadeDurInMilli'] ?? playerPlayFadeDurInMilli.value;
       playerPauseFadeDurInMilli.value = json['playerPauseFadeDurInMilli'] as int? ?? playerPauseFadeDurInMilli.value;
       minTrackDurationToRestoreLastPosInMinutes.value = json['minTrackDurationToRestoreLastPosInMinutes'] ?? minTrackDurationToRestoreLastPosInMinutes.value;
@@ -352,6 +356,8 @@ class SettingsController {
       'waveformTotalBars': waveformTotalBars.value,
       'playerVolume': playerVolume.value,
       'seekDurationInSeconds': seekDurationInSeconds.value,
+      'seekDurationInPercentage': seekDurationInPercentage.value,
+      'isSeekDurationPercentage': isSeekDurationPercentage.value,
       'playerPlayFadeDurInMilli': playerPlayFadeDurInMilli.value,
       'playerPauseFadeDurInMilli': playerPauseFadeDurInMilli.value,
       'minTrackDurationToRestoreLastPosInMinutes': minTrackDurationToRestoreLastPosInMinutes.value,
@@ -465,6 +471,8 @@ class SettingsController {
     int? waveformTotalBars,
     double? playerVolume,
     int? seekDurationInSeconds,
+    int? seekDurationInPercentage,
+    bool? isSeekDurationPercentage,
     int? playerPlayFadeDurInMilli,
     int? playerPauseFadeDurInMilli,
     int? totalListenedTimeInSec,
@@ -738,6 +746,12 @@ class SettingsController {
     }
     if (seekDurationInSeconds != null) {
       this.seekDurationInSeconds.value = seekDurationInSeconds;
+    }
+    if (seekDurationInPercentage != null) {
+      this.seekDurationInPercentage.value = seekDurationInPercentage;
+    }
+    if (isSeekDurationPercentage != null) {
+      this.isSeekDurationPercentage.value = isSeekDurationPercentage;
     }
     if (playerPlayFadeDurInMilli != null) {
       this.playerPlayFadeDurInMilli.value = playerPlayFadeDurInMilli;
