@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -6,74 +6,121 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:palette_generator/palette_generator.dart';
 
+import 'package:namida/class/color_m.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/themes.dart';
 
 Color get playerStaticColor => Color(SettingsController.inst.staticColor.value);
 
 class CurrentColor {
   static final CurrentColor inst = CurrentColor();
 
-  final Rx<Color> color = playerStaticColor.obs;
-  final RxList<Color> palette = <Color>[].obs;
+  Rx<Color> get color => namidaColor.value.color.obs;
+  RxList<Color> get palette => namidaColor.value.palette.obs;
 
-  /// Same fields exists in [Player] class, they can be used but these ones ensure updating the color instantly.
+  Rx<NamidaColor> namidaColor = NamidaColor(playerStaticColor, playerStaticColor, [playerStaticColor]).obs;
+
+  Rx<Color> get currentColorScheme => (_colorSchemeOfSubPages.value ?? color.value).obs;
+  final Rxn<Color> _colorSchemeOfSubPages = Rxn<Color>();
+
+  RxList<Color> paletteFirstHalf = <Color>[].obs;
+  RxList<Color> paletteSecondHalf = <Color>[].obs;
+
+  /// Same fields exists in [Player] class, they can be used but these ones ensure updating the color only after extracting.
   final RxString currentPlayingTrackPath = ''.obs;
   final RxInt currentPlayingIndex = 0.obs;
 
   final RxBool generatingAllColorPalettes = false.obs;
 
-  Map<String, List<Color>> colorsMap = {};
+  Map<String, NamidaColor> colorsMap = {};
 
-  Future<void> updatePlayerColor(Track track, int index) async {
+  Timer? _colorsSwitchTimer;
+
+  int get colorAlpha => Get.isDarkMode ? 200 : 120;
+
+  void switchColorPalettes(bool isPlaying) {
+    _colorsSwitchTimer?.cancel();
+    _colorsSwitchTimer = null;
+    final durms = isPlaying ? 500 : 2000;
+    _colorsSwitchTimer = Timer.periodic(Duration(milliseconds: durms), (timer) {
+      if (SettingsController.inst.enablePartyModeColorSwap.value) {
+        if (paletteFirstHalf.isEmpty) return;
+
+        final lastItem1 = paletteFirstHalf.last;
+        paletteFirstHalf.remove(lastItem1);
+        paletteFirstHalf.insertSafe(0, lastItem1);
+
+        if (paletteSecondHalf.isEmpty) return;
+        final lastItem2 = paletteSecondHalf.last;
+        paletteSecondHalf.remove(lastItem2);
+        paletteSecondHalf.insertSafe(0, lastItem2);
+      }
+    });
+  }
+
+  void updateCurrentColorSchemeOfSubPages([Color? color, bool customAlpha = true]) async {
+    final colorWithAlpha = customAlpha ? color?.withAlpha(colorAlpha) : color;
+    _colorSchemeOfSubPages.value = colorWithAlpha;
+    updateThemeAndRefresh();
+  }
+
+  Future<void> updatePlayerColorFromTrack(Track track, int index) async {
     if (SettingsController.inst.autoColor.value) {
       await setPlayerColor(track);
+      updateThemeAndRefresh();
     }
     currentPlayingTrackPath.value = track.path;
     currentPlayingIndex.value = index;
+  }
+
+  void updatePlayerColorFromColor(Color color, [bool customAlpha = true]) async {
+    final colorWithAlpha = customAlpha ? color.withAlpha(colorAlpha) : color;
+    namidaColor.value = NamidaColor(colorWithAlpha, colorWithAlpha, [colorWithAlpha]);
     updateThemeAndRefresh();
   }
 
   Future<void> setPlayerColor(Track track) async {
-    palette.value = await getTrackColors(track);
-    color.value = (generateDelightnedColorFromPalette(palette.toList())).withAlpha(Get.isDarkMode ? 200 : 120);
+    namidaColor.value = await getTrackColors(track);
   }
 
-  Future<List<Color>> getTrackColors(Track track) async {
-    return colorsMap[track.path.getFilename] ?? await extractColorsFromImage(track.pathToImage);
+  Future<NamidaColor> getTrackColors(Track track) async {
+    final nc = colorsMap[track.path.getFilename] ?? await extractColorsFromImage(track.pathToImage);
+    return NamidaColor(nc.color.withAlpha(colorAlpha), nc.mix, nc.palette);
   }
 
-  Future<List<Color>> extractColorsFromImage(String pathofimage) async {
+  Future<NamidaColor> extractColorsFromImage(String pathofimage) async {
     final paletteFile = File("$k_DIR_PALETTES${pathofimage.getFilenameWOExt}.palette");
-    final paletteFileStat = await paletteFile.stat();
-    List<Color> palette = [];
+
     if (!await File(pathofimage).exists()) {
-      return palette;
+      return NamidaColor(playerStaticColor, playerStaticColor, [playerStaticColor]);
     }
 
-    if (await paletteFile.exists() && paletteFileStat.size > 2) {
-      final content = await paletteFile.readAsString();
-      final pl = List<int>.from(json.decode(content));
-      palette.addAll(pl.map((e) => Color(e)));
+    NamidaColor? nc;
+
+    try {
+      nc = NamidaColor.fromJson(await paletteFile.readAsJson());
+      _updateInColorMap(pathofimage.getFilenameWOExt, nc);
       debugPrint("COLORRRR READ FROM FILE");
-    } else {
-      // trying to extract from the image that is being used will freeze the extraction
-      // if (Player.inst.nowPlayingTrack.value.path == path) {
-      //   return palette;
-      // }
-      final result = await PaletteGenerator.fromImageProvider(FileImage(File(pathofimage)));
-      palette.assignAll(result.colors.toList());
-      await paletteFile.create();
-      await paletteFile.writeAsString(palette.map((e) => e.value).toList().toString());
-      Indexer.inst.updateColorPalettesSizeInStorage();
-      debugPrint("COLORRRRR EXTRACTED");
+      return nc;
+    } catch (e) {
+      await paletteFile.deleteIfExists();
+      debugPrint(e.toString());
     }
-    _updateInColorMap(pathofimage.getFilenameWOExt, palette);
-    return palette;
+
+    final result = await PaletteGenerator.fromImageProvider(FileImage(File(pathofimage)));
+    final pcolors = result.colors.toList();
+    nc = NamidaColor(null, generateDelightnedColorFromPalette(pcolors).withAlpha(colorAlpha), pcolors);
+
+    await paletteFile.writeAsJson(nc.toJson());
+    Indexer.inst.updateColorPalettesSizeInStorage(paletteFile);
+    debugPrint("COLORRRRR EXTRACTED");
+
+    _updateInColorMap(pathofimage.getFilenameWOExt, nc);
+    return nc;
   }
 
   Future<void> generateAllColorPalettes() async {
@@ -95,8 +142,8 @@ class CurrentColor {
 
   /// Equivalent to calling [getTrackColors] and [generateDelightnedColorFromPalette].
   Future<Color> getTrackDelightnedColor(Track track) async {
-    final colors = await getTrackColors(track);
-    return generateDelightnedColorFromPalette(colors).withAlpha(Get.isDarkMode ? 200 : 120);
+    final nc = await getTrackColors(track);
+    return generateDelightnedColorFromPalette(nc.palette).withAlpha(Get.isDarkMode ? 200 : 120);
   }
 
   Color generateDelightnedColorFromPalette(List<Color> palette) {
@@ -113,29 +160,8 @@ class CurrentColor {
     }
 
     final finalpalette = await extractColorsFromImage(pathToImage);
-    final intpalette = finalpalette.map((e) => e.value).toList();
+    final intpalette = finalpalette.palette.map((e) => e.value).toList();
     return mixIntColors(intpalette);
-  }
-
-  Color getAlbumColorModifiedModern(List<Color> value) {
-    final Color color;
-    // return Color.alphaBlend(value.first.withAlpha(220), value.last);
-
-    if ((value.length) > 9) {
-      color = Color.alphaBlend(value.first.withAlpha(140), Color.alphaBlend(value.elementAt(7).withAlpha(155), value.elementAt(9)));
-    } else {
-      color = Color.alphaBlend(value.last.withAlpha(50), value.first);
-    }
-    HSLColor hslColor = HSLColor.fromColor(color);
-    Color colorDelightened;
-    if (hslColor.lightness > 0.65) {
-      hslColor = hslColor.withLightness(0.55);
-      colorDelightened = hslColor.toColor();
-    } else {
-      colorDelightened = color;
-    }
-    colorDelightened = Color.alphaBlend(Colors.white.withAlpha(20), colorDelightened);
-    return colorDelightened;
   }
 
   Color mixIntColors(List<int> colors) {
@@ -173,24 +199,34 @@ class CurrentColor {
     return colorDelightened;
   }
 
-  void updateThemeAndRefresh() {
-    Get.changeTheme(AppThemes.inst.getAppTheme(color.value));
-  }
+  void updateThemeAndRefresh() {}
 
   Future<void> prepareColors() async {
-    await for (final d in Directory(k_DIR_PALETTES).list()) {
-      try {
-        final f = d as File;
-        final content = await f.readAsString();
-        final pl = List<int>.from(json.decode(content));
-        _updateInColorMap(f.path.getFilenameWOExt, pl.map((e) => Color(e)).toList());
-      } catch (e) {
-        continue;
-      }
+    await for (final f in Directory(k_DIR_PALETTES).list()) {
+      f as File;
+      final didExecute = await f.readAsJsonAnd(
+        (respone) {
+          final nc = NamidaColor.fromJson(respone);
+          _updateInColorMap(f.path.getFilenameWOExt, nc);
+        },
+        onError: () async => await f.deleteIfExists(),
+      );
+      if (!didExecute) continue;
     }
   }
 
-  void _updateInColorMap(String filenameWoExt, List<Color> pl) {
-    colorsMap[filenameWoExt] = pl;
+  void _updateInColorMap(String filenameWoExt, NamidaColor nc) {
+    colorsMap[filenameWoExt] = nc;
+    final halfIndex = (nc.palette.length - 1) / 3;
+    paletteFirstHalf.clear();
+    paletteSecondHalf.clear();
+
+    nc.palette.loop((c, i) {
+      if (i <= halfIndex) {
+        paletteFirstHalf.add(c);
+      } else {
+        paletteSecondHalf.add(c);
+      }
+    });
   }
 }

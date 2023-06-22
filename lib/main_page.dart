@@ -208,7 +208,7 @@ class MainPageWrapper extends StatelessWidget {
                           NamidaNavigator.inst.navigateTo(
                             SettingsSubPage(
                               title: Language.inst.CUSTOMIZATIONS,
-                              child: CustomizationSettings(),
+                              child: const CustomizationSettings(),
                             ),
                           );
 
