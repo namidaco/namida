@@ -866,8 +866,9 @@ Future<void> showGeneralPopupDialog(
                                     subtitle: availableFolders.first.folderName,
                                     icon: Broken.folder,
                                     onTap: () {
+                                      NamidaNavigator.inst.closeDialog();
                                       ScrollSearchController.inst.animatePageController(LibraryTab.folders.toInt());
-                                      NamidaOnTaps.inst.onFolderTap(availableFolders.first, false);
+                                      NamidaOnTaps.inst.onFolderTap(availableFolders.first, false, trackToScrollTo: tracks.first);
                                     },
                                     trailing: IconButton(
                                       tooltip: Language.inst.ADD_MORE_FROM_THIS_FOLDER,

@@ -23,7 +23,9 @@ class Folders {
   /// Used for non-hierarchy.
   final RxBool isInside = false.obs;
 
-  void stepIn(Folder? folder, {bool isMainStoragePath = false}) {
+  final RxnInt indexToScrollTo = RxnInt();
+
+  void stepIn(Folder? folder, {bool isMainStoragePath = false, Track? trackToScrollTo}) {
     if (folder == null || folder.path == '') {
       isHome.value = true;
       isInside.value = false;
@@ -45,6 +47,9 @@ class Folders {
       ..addAll(dirInside);
 
     currentFolder.value = folder;
+    if (trackToScrollTo != null) {
+      indexToScrollTo.value = folder.tracks.indexOf(trackToScrollTo);
+    }
   }
 
   void stepOut() {
@@ -52,6 +57,7 @@ class Folders {
     if (SettingsController.inst.enableFoldersHierarchy.value) {
       folder = currentFolder.value?.getParentFolder(fullyFunctional: true);
     }
+    indexToScrollTo.value = null;
     stepIn(folder);
   }
 

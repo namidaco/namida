@@ -85,8 +85,8 @@ class NamidaOnTaps {
     );
   }
 
-  Future<void> onFolderTap(Folder folder, bool isMainStoragePath) async {
-    Folders.inst.stepIn(folder, isMainStoragePath: isMainStoragePath);
+  Future<void> onFolderTap(Folder folder, bool isMainStoragePath, {Track? trackToScrollTo}) async {
+    Folders.inst.stepIn(folder, isMainStoragePath: isMainStoragePath, trackToScrollTo: trackToScrollTo);
   }
 
   Future<void> onQueueTap(Queue queue) async {
