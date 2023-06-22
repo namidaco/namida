@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/youtube_controller.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/packages/youtube_miniplayer.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -28,7 +30,7 @@ class YoutubePage extends StatelessWidget {
           appBar: AppBar(
             leading: NamidaIconButton(
               icon: Broken.arrow_left_2,
-              onPressed: () => Get.back(),
+              onPressed: () => NamidaNavigator.inst.popPage(),
             ),
             title: Text(Language.inst.YOUTUBE),
           ),
@@ -160,6 +162,7 @@ class YoutubeVideoCard extends StatelessWidget {
                                   width: 22.0,
                                   isCircle: true,
                                   errorWidget: (context, url, error) => ArtworkWidget(
+                                    track: null,
                                     thumnailSize: 22.0,
                                     forceDummyArtwork: true,
                                     borderRadius: 124.0.multipliedRadius,

@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -16,16 +17,18 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/main.dart';
 import 'package:namida/packages/youtube_miniplayer.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
-class AdvancedSettings extends StatelessWidget {
-  AdvancedSettings({super.key});
+import 'package:namida/main.dart';
 
-  final SettingsController stg = SettingsController.inst;
+class AdvancedSettings extends StatelessWidget {
+  const AdvancedSettings({super.key});
+
+  SettingsController get stg => SettingsController.inst;
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -65,7 +68,7 @@ class AdvancedSettings extends StatelessWidget {
               final RxList<TrackSource> sourcesToDelete = <TrackSource>[].obs;
               bool isActive(TrackSource e) => sourcesToDelete.contains(e);
 
-              Get.dialog(
+              NamidaNavigator.inst.navigateDialog(
                 CustomBlurryDialog(
                   title: Language.inst.CHOOSE,
                   actions: [
@@ -79,7 +82,7 @@ class AdvancedSettings extends StatelessWidget {
                         final lengthAfter = namidaHistoryPlaylist.tracks.length;
                         final removedNum = lengthBefore - lengthAfter;
                         Get.snackbar(Language.inst.NOTE, "${Language.inst.REMOVED} ${removedNum.displayTrackKeyword}");
-                        Get.close(1);
+                        NamidaNavigator.inst.closeDialog();
                       },
                       child: Text(Language.inst.REMOVE),
                     )
@@ -117,7 +120,7 @@ class AdvancedSettings extends StatelessWidget {
               title: Language.inst.CLEAR_IMAGE_CACHE,
               trailingText: Indexer.inst.artworksSizeInStorage.value.fileSizeFormatted,
               onTap: () {
-                Get.dialog(
+                NamidaNavigator.inst.navigateDialog(
                   CustomBlurryDialog(
                     isWarning: true,
                     normalTitleStyle: true,
@@ -126,7 +129,7 @@ class AdvancedSettings extends StatelessWidget {
                       const CancelButton(),
                       ElevatedButton(
                         onPressed: () async {
-                          Get.close(1);
+                          NamidaNavigator.inst.closeDialog();
                           await Indexer.inst.clearImageCache();
                         },
                         child: Text(Language.inst.CLEAR.toUpperCase()),
@@ -146,7 +149,7 @@ class AdvancedSettings extends StatelessWidget {
               title: Language.inst.CLEAR_WAVEFORM_DATA,
               trailingText: Indexer.inst.waveformsSizeInStorage.value.fileSizeFormatted,
               onTap: () {
-                Get.dialog(
+                NamidaNavigator.inst.navigateDialog(
                   CustomBlurryDialog(
                     isWarning: true,
                     normalTitleStyle: true,
@@ -156,7 +159,7 @@ class AdvancedSettings extends StatelessWidget {
                       const CancelButton(),
                       ElevatedButton(
                         onPressed: () {
-                          Get.close(1);
+                          NamidaNavigator.inst.closeDialog();
                           Indexer.inst.clearWaveformData();
                         },
                         child: Text(Language.inst.CLEAR.toUpperCase()),
@@ -181,7 +184,7 @@ class AdvancedSettings extends StatelessWidget {
                 allvideo.removeWhere((element) => element is Directory);
 
                 /// First Dialog
-                Get.dialog(
+                NamidaNavigator.inst.navigateDialog(
                   CustomBlurryDialog(
                     isWarning: true,
                     normalTitleStyle: true,
@@ -190,7 +193,7 @@ class AdvancedSettings extends StatelessWidget {
                       /// Pressing Choose
                       ElevatedButton(
                         onPressed: () {
-                          Get.close(1);
+                          NamidaNavigator.inst.closeDialog();
                           _showChooseVideosToDeleteDialog(allvideo);
                         },
                         child: Text(Language.inst.CHOOSE),
@@ -198,7 +201,7 @@ class AdvancedSettings extends StatelessWidget {
                       const CancelButton(),
                       ElevatedButton(
                         onPressed: () async {
-                          Get.close(1);
+                          NamidaNavigator.inst.closeDialog();
                           await Indexer.inst.clearVideoCache();
                         },
                         child: Text(Language.inst.CLEAR.toUpperCase()),
@@ -222,7 +225,7 @@ class AdvancedSettings extends StatelessWidget {
 
   _showChooseVideosToDeleteDialog(List<FileSystemEntity> videoFiles) {
     RxList<FileSystemEntity> videosToDelete = <FileSystemEntity>[].obs;
-    Get.dialog(
+    NamidaNavigator.inst.navigateDialog(
       CustomBlurryDialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
         contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
@@ -238,7 +241,7 @@ class AdvancedSettings extends StatelessWidget {
               if (videosToDelete.isEmpty) {
                 return;
               }
-              Get.dialog(
+              NamidaNavigator.inst.navigateDialog(
                 CustomBlurryDialog(
                   isWarning: true,
                   normalTitleStyle: true,
@@ -248,7 +251,7 @@ class AdvancedSettings extends StatelessWidget {
                     /// final clear confirm
                     ElevatedButton(
                       onPressed: () async {
-                        Get.close(2);
+                        NamidaNavigator.inst.closeDialog(2);
                         await Indexer.inst.clearVideoCache(videosToDelete);
                       },
                       child: Text(Language.inst.CLEAR.toUpperCase()),

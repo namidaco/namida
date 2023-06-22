@@ -7,6 +7,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -15,9 +16,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/main_page.dart';
-import 'package:namida/ui/pages/albums_page.dart';
-import 'package:namida/ui/pages/artists_page.dart';
+import 'package:namida/ui/pages/homepage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/album_card.dart';
 import 'package:namida/ui/widgets/library/artist_card.dart';
@@ -34,7 +33,7 @@ class SearchPage extends StatelessWidget {
       child: Obx(
         () => AnimatedSwitcher(
           duration: const Duration(milliseconds: 400),
-          child: Indexer.inst.trackSearchTemp.isEmpty && Indexer.inst.albumSearchTemp.isEmpty && Indexer.inst.artistSearchTemp.isEmpty
+          child: !Indexer.inst.isSearching.value
               ? Container(
                   key: const ValueKey('emptysearch'),
                   padding: const EdgeInsets.all(64.0).add(const EdgeInsets.only(bottom: 64.0)),
@@ -74,14 +73,7 @@ class SearchPage extends StatelessWidget {
                               icon: Broken.music_dashboard,
                               buttonIcon: Broken.category,
                               buttonText: Language.inst.VIEW_ALL,
-                              onPressed: () {
-                                Get.offAll(() => MainPageWrapper(
-                                      getOffAll: true,
-                                      title: Text(Language.inst.ALBUMS),
-                                      child: AlbumsPage(albums: Indexer.inst.albumSearchTemp),
-                                    ));
-                                ScrollSearchController.inst.isGlobalSearchMenuShown.value = false;
-                              },
+                              onPressed: () => NamidaNavigator.inst.navigateTo(const AlbumSearchResultsPage()),
                             ),
                           ),
                           const SliverPadding(
@@ -95,13 +87,14 @@ class SearchPage extends StatelessWidget {
                                 itemExtent: 132.0,
                                 itemCount: Indexer.inst.albumSearchTemp.length,
                                 itemBuilder: (context, i) {
-                                  final e = Indexer.inst.albumSearchTemp[i];
+                                  final albumName = Indexer.inst.albumSearchTemp[i];
                                   return Container(
                                     width: 130.0,
                                     margin: const EdgeInsets.only(left: 2.0),
                                     child: AlbumCard(
+                                      name: albumName,
                                       gridCountOverride: 3,
-                                      album: e.tracks,
+                                      album: albumName.getAlbumTracks(),
                                       staggered: false,
                                     ),
                                   );
@@ -122,14 +115,7 @@ class SearchPage extends StatelessWidget {
                               icon: Broken.profile_2user,
                               buttonIcon: Broken.category,
                               buttonText: Language.inst.VIEW_ALL,
-                              onPressed: () {
-                                Get.offAll(() => MainPageWrapper(
-                                      getOffAll: true,
-                                      title: Text(Language.inst.ARTISTS),
-                                      child: ArtistsPage(artists: Indexer.inst.artistSearchTemp),
-                                    ));
-                                ScrollSearchController.inst.isGlobalSearchMenuShown.value = false;
-                              },
+                              onPressed: () => NamidaNavigator.inst.navigateTo(const ArtistSearchResultsPage()),
                             ),
                           ),
                           const SliverPadding(
@@ -143,14 +129,14 @@ class SearchPage extends StatelessWidget {
                                 itemExtent: 82.0,
                                 itemCount: Indexer.inst.artistSearchTemp.length,
                                 itemBuilder: (context, i) {
-                                  final e = Indexer.inst.artistSearchTemp[i];
+                                  final artistName = Indexer.inst.artistSearchTemp[i];
                                   return Container(
                                     width: 80.0,
                                     margin: const EdgeInsets.only(left: 2.0),
                                     child: ArtistCard(
                                       gridCount: 5,
-                                      name: e.name,
-                                      artist: e.tracks,
+                                      name: artistName,
+                                      artist: artistName.getArtistTracks(),
                                     ),
                                   );
                                 },

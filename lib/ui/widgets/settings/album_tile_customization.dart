@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -60,7 +61,7 @@ class AlbumTileCustomization extends StatelessWidget {
             onChanged: (p0) {
               stg.save(forceSquaredAlbumThumbnail: !p0);
               if (!p0 && stg.albumThumbnailSizeinList.toInt() != stg.albumListTileHeight.toInt()) {
-                Get.dialog(
+                NamidaNavigator.inst.navigateDialog(
                   CustomBlurryDialog(
                     normalTitleStyle: true,
                     isWarning: true,
@@ -70,7 +71,7 @@ class AlbumTileCustomization extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () {
                           stg.save(albumThumbnailSizeinList: stg.albumListTileHeight.value);
-                          Get.close(1);
+                          NamidaNavigator.inst.closeDialog();
                         },
                         child: Text(Language.inst.CONFIRM),
                       ),

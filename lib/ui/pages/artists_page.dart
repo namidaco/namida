@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 
-import 'package:namida/class/group.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -19,20 +18,21 @@ import 'package:namida/ui/widgets/library/artist_tile.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class ArtistsPage extends StatelessWidget {
-  final List<Group>? artists;
+  final List<String>? artists;
   ArtistsPage({super.key, this.artists});
+
   final ScrollController _scrollController = ScrollSearchController.inst.artistScrollcontroller;
-  final gridCount = SettingsController.inst.artistGridCount.value;
+  int get gridCount => SettingsController.inst.artistGridCount.value;
   @override
   Widget build(BuildContext context) {
     final finalArtists = artists ?? Indexer.inst.artistSearchList;
     return CupertinoScrollbar(
       controller: _scrollController,
       child: AnimationLimiter(
-        child: Column(
-          children: [
-            Obx(
-              () => ExpandableBox(
+        child: Obx(
+          () => Column(
+            children: [
+              ExpandableBox(
                 gridWidget: ChangeGridCountWidget(
                   currentCount: SettingsController.inst.artistGridCount.value,
                   onTap: () {
@@ -58,11 +58,9 @@ class ArtistsPage extends StatelessWidget {
                   onTextFieldValueChanged: (value) => Indexer.inst.searchArtists(value),
                 ),
               ),
-            ),
-            if (gridCount == 1)
-              Expanded(
-                child: Obx(
-                  () => ListView.builder(
+              if (gridCount == 1)
+                Expanded(
+                  child: ListView.builder(
                     key: const PageStorageKey(LibraryTab.artists),
                     controller: _scrollController,
                     itemCount: finalArtists.length,
@@ -73,18 +71,17 @@ class ArtistsPage extends StatelessWidget {
                       return AnimatingTile(
                         position: i,
                         child: ArtistTile(
-                          tracks: artist.tracks.toList(),
-                          name: artist.name,
+                          tracks: artist.getArtistTracks(),
+                          name: artist,
+                          albums: artist.getArtistAlbums(),
                         ),
                       );
                     },
                   ),
                 ),
-              ),
-            if (gridCount > 1)
-              Expanded(
-                child: Obx(
-                  () => GridView.builder(
+              if (gridCount > 1)
+                Expanded(
+                  child: GridView.builder(
                     key: const PageStorageKey(LibraryTab.artists),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: gridCount,
@@ -100,16 +97,16 @@ class ArtistsPage extends StatelessWidget {
                         columnCount: finalArtists.length,
                         position: i,
                         child: ArtistCard(
-                          name: artist.name,
-                          artist: artist.tracks,
+                          name: artist,
+                          artist: artist.getArtistTracks(),
                           gridCount: gridCount,
                         ),
                       );
                     },
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

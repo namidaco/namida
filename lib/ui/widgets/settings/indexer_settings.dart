@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -16,9 +17,10 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
 class IndexerSettings extends StatelessWidget {
-  IndexerSettings({super.key});
+  const IndexerSettings({super.key});
 
-  final SettingsController stg = SettingsController.inst;
+  SettingsController get stg => SettingsController.inst;
+
   Future<void> _showRefreshPromptDialog() async {
     final currentFiles = await Indexer.inst.getAudioFiles();
     final newPathsLength = Indexer.inst.getNewFoundPaths(currentFiles).length;
@@ -27,7 +29,7 @@ class IndexerSettings extends StatelessWidget {
       Get.snackbar(Language.inst.NOTE, Language.inst.NO_CHANGES_FOUND);
       return;
     }
-    Get.dialog(
+    NamidaNavigator.inst.navigateDialog(
       CustomBlurryDialog(
         title: Language.inst.NOTE,
         bodyText: Language.inst.PROMPT_INDEXING_REFRESH.replaceFirst('_NEW_FILES_', newPathsLength.toString()).replaceFirst(
@@ -38,7 +40,7 @@ class IndexerSettings extends StatelessWidget {
           const CancelButton(),
           ElevatedButton(
             onPressed: () async {
-              Get.close(1);
+              NamidaNavigator.inst.closeDialog();
               await Future.delayed(const Duration(milliseconds: 300));
               await Indexer.inst.refreshLibraryAndCheckForDiff(currentFiles: currentFiles);
             },
@@ -210,7 +212,7 @@ class IndexerSettings extends StatelessWidget {
             title: Language.inst.RE_INDEX,
             subtitle: Language.inst.RE_INDEX_SUBTITLE,
             onTap: () async {
-              await Get.dialog(
+              NamidaNavigator.inst.navigateDialog(
                 CustomBlurryDialog(
                   normalTitleStyle: true,
                   isWarning: true,
@@ -218,7 +220,7 @@ class IndexerSettings extends StatelessWidget {
                     const CancelButton(),
                     ElevatedButton(
                         onPressed: () async {
-                          Get.close(1);
+                          NamidaNavigator.inst.closeDialog();
                           Future.delayed(const Duration(milliseconds: 500), () {
                             Indexer.inst.refreshLibraryAndCheckForDiff(forceReIndex: true);
                           });
@@ -273,7 +275,7 @@ class IndexerSettings extends StatelessWidget {
                                 duration: const Duration(seconds: 4),
                               );
                             } else {
-                              Get.dialog(
+                              NamidaNavigator.inst.navigateDialog(
                                 CustomBlurryDialog(
                                   normalTitleStyle: true,
                                   title: Language.inst.WARNING,
@@ -283,7 +285,7 @@ class IndexerSettings extends StatelessWidget {
                                     ElevatedButton(
                                         onPressed: () {
                                           SettingsController.inst.removeFromList(directoriesToScan1: e);
-                                          Get.close(1);
+                                          NamidaNavigator.inst.closeDialog();
                                           _showRefreshPromptDialog();
                                         },
                                         child: Text(Language.inst.REMOVE)),
@@ -369,8 +371,8 @@ class IndexerSettings extends StatelessWidget {
 
     final RxBool updatingLibrary = false.obs;
 
-    await Get.dialog(
-      transitionDuration: const Duration(milliseconds: 200),
+    NamidaNavigator.inst.navigateDialog(
+      durationInMs: 200,
       CustomBlurryDialog(
         title: title,
         onDismissing: isBlackListDialog

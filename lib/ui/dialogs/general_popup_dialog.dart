@@ -1,42 +1,41 @@
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-import 'package:namida/class/queue.dart';
+import 'package:namida/class/folder.dart';
 import 'package:namida/class/playlist.dart';
+import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/folders_controller.dart';
-import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
-import 'package:namida/controller/edit_delete_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/ui/widgets/artwork.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/dialogs/track_clear_dialog.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
+import 'package:namida/ui/widgets/artwork.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
-
-import 'package:namida/main_page.dart';
 
 Future<void> showGeneralPopupDialog(
   List<Track> tracks,
@@ -76,7 +75,7 @@ Future<void> showGeneralPopupDialog(
 
   final List<String> availableAlbums = tracks.map((e) => e.album).toSet().toList();
   final List<String> availableArtists = tracks.map((e) => e.artistsList).expand((list) => list).toSet().toList();
-  final List<String> availableFolders = tracks.map((e) => e.path.getDirectoryPath).toSet().toList();
+  final List<Folder> availableFolders = tracks.map((e) => e.folder).toSet().toList();
 
   RxInt numberOfRepeats = 1.obs;
   RxBool isLoadingFilesToShare = false.obs;
@@ -122,7 +121,7 @@ Future<void> showGeneralPopupDialog(
 
     final title = isTags ? Language.inst.SET_TAGS : Language.inst.SET_MOODS;
     final subtitle = Language.inst.SET_MOODS_SUBTITLE;
-    Get.dialog(
+    NamidaNavigator.inst.navigateDialog(
       CustomBlurryDialog(
         title: title,
         actions: [
@@ -139,7 +138,7 @@ Future<void> showGeneralPopupDialog(
               }
               saveFunction(moodsFinal.toSet().toList());
 
-              Get.close(1);
+              NamidaNavigator.inst.closeDialog();
             },
             child: Text(Language.inst.SAVE),
           ),
@@ -204,14 +203,14 @@ Future<void> showGeneralPopupDialog(
 
   void setTrackRating() {
     final c = TextEditingController();
-    Get.dialog(
+    NamidaNavigator.inst.navigateDialog(
       CustomBlurryDialog(
         title: Language.inst.SET_RATING,
         actions: [
           const CancelButton(),
           ElevatedButton(
             onPressed: () async {
-              Get.close(1);
+              NamidaNavigator.inst.closeDialog();
               final val = int.tryParse(c.text) ?? 0;
               stats.value.rating = val.clamp(0, 100);
               await saveStatsToFile();
@@ -232,7 +231,7 @@ Future<void> showGeneralPopupDialog(
   void renamePlaylist() {
     TextEditingController controller = TextEditingController(text: playlist!.name);
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-    Get.dialog(
+    NamidaNavigator.inst.navigateDialog(
       Form(
         key: formKey,
         child: CustomBlurryDialog(
@@ -243,7 +242,7 @@ Future<void> showGeneralPopupDialog(
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   await PlaylistController.inst.renamePlaylist(playlist, controller.text);
-                  Get.close(1);
+                  NamidaNavigator.inst.closeDialog();
                 }
               },
               child: Text(Language.inst.SAVE),
@@ -269,7 +268,7 @@ Future<void> showGeneralPopupDialog(
   }
 
   void deletePlaylist() {
-    Get.close(1);
+    NamidaNavigator.inst.closeDialog();
     final pl = playlist;
     final plindex = PlaylistController.inst.playlistList.indexOf(pl);
     PlaylistController.inst.removePlaylist(playlist!);
@@ -287,7 +286,7 @@ Future<void> showGeneralPopupDialog(
   }
 
   void updatePathDialog(String newPath) {
-    Get.dialog(
+    NamidaNavigator.inst.navigateDialog(
       CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
@@ -296,7 +295,7 @@ Future<void> showGeneralPopupDialog(
           const CancelButton(),
           ElevatedButton(
             onPressed: () {
-              Get.close(2);
+              NamidaNavigator.inst.closeDialog(2);
               EditDeleteController.inst.updateTrackPathInEveryPartOfNamida(tracks.first, newPath);
             },
             child: Text(Language.inst.CONFIRM),
@@ -356,14 +355,14 @@ Future<void> showGeneralPopupDialog(
     filteredPaths.addAll(paths);
     final RxBool shouldCleanUp = true.obs;
 
-    Get.dialog(
+    NamidaNavigator.inst.navigateDialog(
       CustomBlurryDialog(
         title: Language.inst.CHOOSE,
         actions: [
           const CancelButton(),
           ElevatedButton(
             onPressed: () {
-              Get.close(1);
+              NamidaNavigator.inst.closeDialog();
               pickDirectoryToUpdateTrack();
             },
             child: Text(Language.inst.PICK_FROM_STORAGE),
@@ -427,12 +426,12 @@ Future<void> showGeneralPopupDialog(
   }
 
   void setYoutubeLink() {
-    Get.close(1);
+    NamidaNavigator.inst.closeDialog();
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
     TextEditingController controller = TextEditingController();
     final ytlink = tracks.first.youtubeLink;
     controller.text = ytlink;
-    Get.dialog(
+    NamidaNavigator.inst.navigateDialog(
       Form(
         key: formKey,
         child: CustomBlurryDialog(
@@ -443,7 +442,7 @@ Future<void> showGeneralPopupDialog(
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   editTrackMetadata(tracks.first, insertComment: controller.text);
-                  Get.close(1);
+                  NamidaNavigator.inst.closeDialog();
                 }
               },
               child: Text(Language.inst.SAVE),
@@ -500,7 +499,7 @@ Future<void> showGeneralPopupDialog(
           icon: Broken.box_remove,
           onTap: () {
             NamidaOnTaps.inst.onRemoveTrackFromPlaylist(index, playlist);
-            Get.close(1);
+            NamidaNavigator.inst.closeDialog();
           },
         )
       : null;
@@ -520,11 +519,11 @@ Future<void> showGeneralPopupDialog(
           ),
         )
       : null;
-  await Get.to(
-    () => NamidaBgBlur(
+  NamidaNavigator.inst.navigateDialog(
+    NamidaBgBlur(
       blur: 5.0,
       child: GestureDetector(
-        onTap: () => Get.close(1),
+        onTap: () => NamidaNavigator.inst.closeDialog(),
         child: Container(
           color: Colors.black.withAlpha(60),
           child: Theme(
@@ -550,10 +549,11 @@ Future<void> showGeneralPopupDialog(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               const SizedBox(width: 16.0),
-                              if (forceSingleArtwork!)
+                              if (forceSingleArtwork)
                                 Hero(
                                   tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${tracks.first.path}',
                                   child: ArtworkWidget(
+                                    track: tracks.trackOfImage,
                                     path: tracks.pathToImage,
                                     thumnailSize: 60,
                                     forceSquared: forceSquared,
@@ -653,7 +653,7 @@ Future<void> showGeneralPopupDialog(
                                     compact: true,
                                     icon: Broken.document_upload,
                                     onTap: () async {
-                                      Get.close(1);
+                                      NamidaNavigator.inst.closeDialog();
                                       if (Indexer.inst.allAudioFiles.isEmpty) {
                                         await Indexer.inst.getAudioFiles();
                                       }
@@ -661,14 +661,14 @@ Future<void> showGeneralPopupDialog(
                                       /// firstly checks if a file exists in current library
                                       final firstHighMatchesFiles = getHighMatcheFilesFromFilename(Indexer.inst.allAudioFiles, tracks.first.path.getFilename);
                                       if (firstHighMatchesFiles.isNotEmpty) {
-                                        Get.dialog(
+                                        NamidaNavigator.inst.navigateDialog(
                                           CustomBlurryDialog(
                                             title: Language.inst.CHOOSE,
                                             actions: [
                                               const CancelButton(),
                                               ElevatedButton(
                                                 onPressed: () {
-                                                  Get.close(1);
+                                                  NamidaNavigator.inst.closeDialog();
                                                   pickDirectoryToUpdateTrack();
                                                 },
                                                 child: Text(Language.inst.PICK_FROM_STORAGE),
@@ -689,7 +689,7 @@ Future<void> showGeneralPopupDialog(
                                       compact: true,
                                       icon: Broken.next,
                                       onTap: () async {
-                                        Get.close(1);
+                                        NamidaNavigator.inst.closeDialog();
                                         Player.inst.next();
                                       },
                                     ),
@@ -713,14 +713,11 @@ Future<void> showGeneralPopupDialog(
                                     title: Language.inst.GO_TO_ALBUM,
                                     subtitle: availableAlbums.first,
                                     icon: Broken.music_dashboard,
-                                    onTap: () {
-                                      Get.close(1);
-                                      NamidaOnTaps.inst.onAlbumTap(availableAlbums.first);
-                                    },
+                                    onTap: () => NamidaOnTaps.inst.onAlbumTap(availableAlbums.first),
                                     trailing: IconButton(
                                       tooltip: Language.inst.ADD_MORE_FROM_THIS_ALBUM,
                                       onPressed: () {
-                                        Get.close(1);
+                                        NamidaNavigator.inst.closeDialog();
                                         Player.inst.addToQueue(generateTracksFromAlbum(availableAlbums.first), insertNext: true);
                                       },
                                       icon: const Icon(Broken.add),
@@ -732,10 +729,7 @@ Future<void> showGeneralPopupDialog(
                                     compact: true,
                                     title: Language.inst.ADD_MORE_FROM_TO_QUEUE.replaceFirst('_MEDIA_', '"$albumToAddFrom"'),
                                     icon: Broken.music_dashboard,
-                                    onTap: () {
-                                      Get.close(1);
-                                      NamidaOnTaps.inst.onAlbumTap(availableAlbums.first);
-                                    },
+                                    onTap: () => NamidaOnTaps.inst.onAlbumTap(availableAlbums.first),
                                     trailing: IgnorePointer(
                                       child: IconButton(
                                         onPressed: () {},
@@ -792,7 +786,7 @@ Future<void> showGeneralPopupDialog(
                                     title: Language.inst.ADD_MORE_FROM_TO_QUEUE.replaceFirst('_MEDIA_', '"$artistToAddFrom"'),
                                     icon: Broken.microphone,
                                     onTap: () {
-                                      Get.close(1);
+                                      NamidaNavigator.inst.closeDialog();
                                       Player.inst.addToQueue(generateTracksFromArtist(artistToAddFrom), insertNext: true);
                                     },
                                     trailing: IgnorePointer(
@@ -809,10 +803,7 @@ Future<void> showGeneralPopupDialog(
                                     title: Language.inst.GO_TO_ARTIST,
                                     subtitle: availableArtists.first,
                                     icon: Broken.microphone,
-                                    onTap: () {
-                                      Get.close(1);
-                                      NamidaOnTaps.inst.onArtistTap(availableArtists.first);
-                                    },
+                                    onTap: () => NamidaOnTaps.inst.onArtistTap(availableArtists.first),
                                     trailing: IconButton(
                                       tooltip: Language.inst.ADD_MORE_FROM_THIS_ARTIST,
                                       onPressed: () => Player.inst.addToQueue(generateTracksFromArtist(availableArtists.first), insertNext: true),
@@ -872,13 +863,11 @@ Future<void> showGeneralPopupDialog(
                                     color: colorDelightened,
                                     compact: true,
                                     title: Language.inst.GO_TO_FOLDER,
-                                    subtitle: availableFolders.first.split(Platform.pathSeparator).last,
+                                    subtitle: availableFolders.first.folderName,
                                     icon: Broken.folder,
                                     onTap: () {
-                                      Get.close(1);
-                                      Get.offAll(MainPageWrapper());
                                       ScrollSearchController.inst.animatePageController(LibraryTab.folders.toInt());
-                                      NamidaOnTaps.inst.onFolderOpen(Folders.inst.folderslist.firstWhere((element) => element.path == availableFolders.first), false);
+                                      NamidaOnTaps.inst.onFolderTap(availableFolders.first, false);
                                     },
                                     trailing: IconButton(
                                       tooltip: Language.inst.ADD_MORE_FROM_THIS_FOLDER,
@@ -897,7 +886,7 @@ Future<void> showGeneralPopupDialog(
                                     isLoadingFilesToShare.value = true;
                                     await Share.shareXFiles(tracksExisting.map((e) => XFile(e.path)).toList());
                                     isLoadingFilesToShare.value = false;
-                                    Get.close(1);
+                                    NamidaNavigator.inst.closeDialog();
                                   },
                                 ),
 
@@ -912,7 +901,7 @@ Future<void> showGeneralPopupDialog(
                                             title: Language.inst.STOP_AFTER_THIS_TRACK,
                                             icon: Broken.pause,
                                             onTap: () {
-                                              Get.close(1);
+                                              NamidaNavigator.inst.closeDialog();
                                               Player.inst.enableSleepAfterTracks.value = true;
                                               Player.inst.sleepAfterTracks.value = 1;
                                             },
@@ -925,7 +914,7 @@ Future<void> showGeneralPopupDialog(
                                         title: isSingle ? Language.inst.PLAY : Language.inst.PLAY_ALL,
                                         icon: Broken.play,
                                         onTap: () {
-                                          Get.close(1);
+                                          NamidaNavigator.inst.closeDialog();
                                           Player.inst.playOrPause(0, tracks, source);
                                         },
                                       ),
@@ -937,7 +926,7 @@ Future<void> showGeneralPopupDialog(
                                     title: Language.inst.SHUFFLE,
                                     icon: Broken.shuffle,
                                     onTap: () {
-                                      Get.close(1);
+                                      NamidaNavigator.inst.closeDialog();
                                       Player.inst.playOrPause(0, tracks, source, shuffle: true);
                                     },
                                   ),
@@ -948,7 +937,7 @@ Future<void> showGeneralPopupDialog(
                                   title: Language.inst.ADD_TO_PLAYLIST,
                                   icon: Broken.music_library_2,
                                   onTap: () {
-                                    Get.close(1);
+                                    NamidaNavigator.inst.closeDialog();
                                     showAddToPlaylistDialog(tracks);
                                   },
                                 ),
@@ -958,7 +947,7 @@ Future<void> showGeneralPopupDialog(
                                   title: Language.inst.EDIT_TAGS,
                                   icon: Broken.edit,
                                   onTap: () {
-                                    Get.close(1);
+                                    NamidaNavigator.inst.closeDialog();
                                     if (isSingle) {
                                       showEditTrackTagsDialog(tracks.first);
                                     } else {
@@ -989,22 +978,19 @@ Future<void> showGeneralPopupDialog(
                                           child: Text(Language.inst.UNDO),
                                         ),
                                       );
-                                      Get.close(1);
+                                      NamidaNavigator.inst.closeDialog();
                                     },
                                   ),
-                                if (playlistUtilsRow != null) playlistUtilsRow,
-
-                                if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,
 
                                 if (Player.inst.latestInsertedIndex != Player.inst.currentIndex.value)
                                   SmallListTile(
                                     color: colorDelightened,
                                     compact: true,
                                     title: '${Language.inst.PLAY_AFTER} "${Player.inst.currentQueue.elementAt(Player.inst.latestInsertedIndex).title}"',
-                                    subtitle: Player.inst.latestInsertedIndex.displayTrackKeyword,
+                                    subtitle: (Player.inst.latestInsertedIndex - Player.inst.currentIndex.value).displayTrackKeyword,
                                     icon: Broken.hierarchy_square,
                                     onTap: () {
-                                      Get.close(1);
+                                      NamidaNavigator.inst.closeDialog();
                                       Player.inst.addToQueue(tracks, insertAfterLatest: true, showSnackBar: !isSingle);
                                     },
                                   ),
@@ -1016,7 +1002,7 @@ Future<void> showGeneralPopupDialog(
                                       title: Language.inst.REPEAT_FOR_N_TIMES.replaceFirst('_NUM_', numberOfRepeats.value.toString()),
                                       icon: Broken.cd,
                                       onTap: () {
-                                        Get.close(1);
+                                        NamidaNavigator.inst.closeDialog();
                                         SettingsController.inst.save(playerRepeatMode: RepeatMode.forNtimes);
                                         Player.inst.numberOfRepeats.value = numberOfRepeats.value;
                                       },
@@ -1039,6 +1025,10 @@ Future<void> showGeneralPopupDialog(
                                       ),
                                     ),
                                   ),
+
+                                if (playlistUtilsRow != null) playlistUtilsRow,
+
+                                if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,
 
                                 /// Track Utils
                                 if (playlist == null || isTrackInPlaylist)
@@ -1104,7 +1094,7 @@ Future<void> showGeneralPopupDialog(
                                         title: Language.inst.PLAY_NEXT,
                                         icon: Broken.next,
                                         onTap: () {
-                                          Get.close(1);
+                                          NamidaNavigator.inst.closeDialog();
                                           Player.inst.addToQueue(tracks, insertNext: true, showSnackBar: !isSingle);
                                         },
                                       ),
@@ -1121,7 +1111,7 @@ Future<void> showGeneralPopupDialog(
                                         title: Language.inst.PLAY_LAST,
                                         icon: Broken.play_cricle,
                                         onTap: () {
-                                          Get.close(1);
+                                          NamidaNavigator.inst.closeDialog();
                                           Player.inst.addToQueue(tracks, showSnackBar: !isSingle);
                                         },
                                       ),
@@ -1139,8 +1129,5 @@ Future<void> showGeneralPopupDialog(
         ),
       ),
     ),
-    opaque: false,
-    transition: Transition.fade,
-    fullscreenDialog: true,
   );
 }

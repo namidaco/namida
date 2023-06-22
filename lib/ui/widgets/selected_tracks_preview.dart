@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class SelectedTracksPreviewContainer extends StatelessWidget {
@@ -60,11 +61,11 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                     : 430,
                             width: stc.isExpanded.value ? 375 : 380,
                             decoration: BoxDecoration(
-                              color: context.theme.colorScheme.background,
+                              color: Color.alphaBlend(context.theme.colorScheme.background.withAlpha(160), context.theme.scaffoldBackgroundColor),
                               borderRadius: const BorderRadius.all(Radius.circular(20)),
                               boxShadow: [
                                 BoxShadow(
-                                  color: context.theme.shadowColor,
+                                  color: context.theme.shadowColor.withAlpha(30),
                                   blurRadius: 10,
                                   offset: const Offset(0, 5),
                                 ),
@@ -122,6 +123,9 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
 
 class SelectedTracksRow extends StatelessWidget {
   const SelectedTracksRow({super.key});
+
+  List<Track> get selectedTracks => SelectedTracksController.inst.selectedTracks.toList();
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -163,7 +167,7 @@ class SelectedTracksRow extends StatelessWidget {
               child: IconButton(
                 onPressed: () {
                   SelectedTracksController.inst.didInsertTracks.value = true;
-                  Player.inst.addToQueue(SelectedTracksController.inst.selectedTracks.toList());
+                  Player.inst.addToQueue(selectedTracks);
                 },
                 icon: const Icon(Broken.play_cricle),
                 tooltip: Language.inst.PLAY_LAST,
@@ -172,19 +176,19 @@ class SelectedTracksRow extends StatelessWidget {
           ),
         ),
         IconButton(
-          onPressed: () => editMultipleTracksTags(SelectedTracksController.inst.selectedTracks.toList()),
+          onPressed: () => editMultipleTracksTags(selectedTracks),
           tooltip: Language.inst.EDIT_TAGS,
           icon: const Icon(Broken.edit),
         ),
         IconButton(
-          onPressed: () => showAddToPlaylistDialog(SelectedTracksController.inst.selectedTracks.toList()),
+          onPressed: () => showAddToPlaylistDialog(selectedTracks),
           tooltip: Language.inst.ADD_TO_PLAYLIST,
           icon: const Icon(Broken.music_playlist),
         ),
         IconButton(
           visualDensity: VisualDensity.compact,
           onPressed: () {
-            final tracks = SelectedTracksController.inst.selectedTracks.toList();
+            final tracks = selectedTracks;
             showGeneralPopupDialog(
               tracks,
               tracks.displayTrackKeyword,

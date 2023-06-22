@@ -1,15 +1,16 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import 'package:get/get.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
-import 'package:namida/main_page.dart';
 
 class ScrollSearchController {
   static final ScrollSearchController inst = ScrollSearchController();
@@ -84,19 +85,37 @@ class ScrollSearchController {
       }
     });
   }
-  Future<void> animatePageController(int animateTo, {bool shouldGoBack = false}) async {
-    SettingsController.inst.save(selectedLibraryTab: animateTo.toEnum());
-    if (shouldGoBack) {
-      Get.offAll(() => MainPageWrapper());
+
+  Future<void> animatePageController(int animateTo) async {
+    final w = animateTo.toEnum().toWidget();
+    if (w.runtimeType == NamidaNavigator.inst.currentWidgetStack.lastOrNull.runtimeType) {
+      return;
     }
-    clearGlobalSearchAndCloseThingys();
+    final libList = SettingsController.inst.libraryTabs;
+    final isPageToTheRight = libList.indexOf(animateTo.toEnum().convertToString) > libList.indexOf(SettingsController.inst.selectedLibraryTab.value.convertToString);
+    final transition = isPageToTheRight ? Transition.rightToLeft : Transition.leftToRight;
+
+    SettingsController.inst.save(selectedLibraryTab: animateTo.toEnum());
+    NamidaNavigator.inst.navigateOffAll(w, transition: transition);
+
     printInfo(info: animateTo.toEnum().toText());
   }
 
-  clearGlobalSearchAndCloseThingys() {
+  void hideSearchMenu() {
+    unfocusKeyboard();
     isGlobalSearchMenuShown.value = false;
+  }
+
+  void showSearchMenu() {
+    isGlobalSearchMenuShown.value = true;
+  }
+
+  void resetSearch() {
+    searchTextEditingController.clear();
     Indexer.inst.searchAll('');
   }
+
+  void unfocusKeyboard() => Get.focusScope?.unfocus();
 
   /// Tracks
   void switchTrackSearchBoxVisibilty({bool forceHide = false, bool forceShow = false}) {
@@ -110,6 +129,7 @@ class ScrollSearchController {
     }
     if (Indexer.inst.tracksSearchController.value.text == '') {
       showTrackSearchBox.value = !showTrackSearchBox.value;
+      unfocusKeyboard();
     } else {
       showTrackSearchBox.value = true;
     }
@@ -132,6 +152,7 @@ class ScrollSearchController {
     }
     if (Indexer.inst.albumsSearchController.value.text == '') {
       showAlbumSearchBox.value = !showAlbumSearchBox.value;
+      unfocusKeyboard();
     } else {
       showAlbumSearchBox.value = true;
     }
@@ -154,6 +175,7 @@ class ScrollSearchController {
     }
     if (Indexer.inst.artistsSearchController.value.text == '') {
       showArtistSearchBox.value = !showArtistSearchBox.value;
+      unfocusKeyboard();
     } else {
       showArtistSearchBox.value = true;
     }
@@ -176,6 +198,7 @@ class ScrollSearchController {
     }
     if (Indexer.inst.genresSearchController.value.text == '') {
       showGenreSearchBox.value = !showGenreSearchBox.value;
+      unfocusKeyboard();
     } else {
       showGenreSearchBox.value = true;
     }
@@ -198,6 +221,7 @@ class ScrollSearchController {
     }
     if (PlaylistController.inst.playlistSearchController.value.text == '') {
       showPlaylistSearchBox.value = !showPlaylistSearchBox.value;
+      unfocusKeyboard();
     } else {
       showPlaylistSearchBox.value = true;
     }

@@ -4,7 +4,6 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
 
-import 'package:namida/class/group.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -20,9 +19,10 @@ import 'package:namida/ui/widgets/library/album_tile.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class AlbumsPage extends StatelessWidget {
-  final List<Group>? albums;
+  final List<String>? albums;
   AlbumsPage({super.key, this.albums});
   final ScrollController _scrollController = ScrollSearchController.inst.albumScrollcontroller;
+  int get countPerRow => SettingsController.inst.albumGridCount.value;
 
   @override
   Widget build(BuildContext context) {
@@ -35,10 +35,10 @@ class AlbumsPage extends StatelessWidget {
             Obx(
               () => ExpandableBox(
                 gridWidget: ChangeGridCountWidget(
-                  currentCount: SettingsController.inst.albumGridCount.value,
+                  currentCount: countPerRow,
                   forStaggered: SettingsController.inst.useAlbumStaggeredGridView.value,
-                  onTap: () {
-                    final n = SettingsController.inst.albumGridCount.value;
+                  onTap: () async {
+                    final n = countPerRow;
                     final nToSave = n < 4 ? n + 1 : 1;
                     SettingsController.inst.save(albumGridCount: nToSave);
                   },
@@ -63,7 +63,7 @@ class AlbumsPage extends StatelessWidget {
             ),
             Obx(
               () {
-                return SettingsController.inst.albumGridCount.value == 1
+                return countPerRow == 1
                     ? Expanded(
                         child: ListView.builder(
                           key: const PageStorageKey(LibraryTab.albums),
@@ -72,10 +72,12 @@ class AlbumsPage extends StatelessWidget {
                           itemExtent: SettingsController.inst.albumListTileHeight.value + 4.0 * 5,
                           padding: const EdgeInsets.only(bottom: kBottomPadding),
                           itemBuilder: (BuildContext context, int i) {
+                            final albumName = finalAlbums[i];
                             return AnimatingTile(
                               position: i,
                               child: AlbumTile(
-                                album: finalAlbums[i].tracks,
+                                name: albumName,
+                                album: albumName.getAlbumTracks(),
                               ),
                             );
                           },
@@ -89,14 +91,15 @@ class AlbumsPage extends StatelessWidget {
                               padding: const EdgeInsets.only(bottom: kBottomPadding),
                               itemCount: finalAlbums.length,
                               mainAxisSpacing: 8.0,
-                              gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(crossAxisCount: SettingsController.inst.albumGridCount.value),
+                              gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow),
                               itemBuilder: (context, i) {
-                                final album = finalAlbums[i].tracks;
+                                final albumName = finalAlbums[i];
                                 return AnimatingGrid(
                                   columnCount: finalAlbums.length,
                                   position: i,
                                   child: AlbumCard(
-                                    album: album,
+                                    name: albumName,
+                                    album: albumName.getAlbumTracks(),
                                     staggered: true,
                                   ),
                                 );
@@ -106,19 +109,19 @@ class AlbumsPage extends StatelessWidget {
                         : Expanded(
                             child: GridView.builder(
                               key: const PageStorageKey(LibraryTab.albums),
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: SettingsController.inst.albumGridCount.value, childAspectRatio: 0.75, mainAxisSpacing: 8.0),
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.75, mainAxisSpacing: 8.0),
                               controller: _scrollController,
                               itemCount: finalAlbums.length,
                               padding: const EdgeInsets.only(bottom: kBottomPadding),
                               itemBuilder: (BuildContext context, int i) {
-                                final album = finalAlbums[i].tracks;
+                                final albumName = finalAlbums[i];
                                 return AnimatingGrid(
                                   columnCount: finalAlbums.length,
                                   position: i,
                                   child: AlbumCard(
-                                    album: album,
-                                    gridCountOverride: SettingsController.inst.albumGridCount.value,
+                                    name: albumName,
+                                    album: albumName.getAlbumTracks(),
+                                    gridCountOverride: countPerRow,
                                     staggered: false,
                                   ),
                                 );

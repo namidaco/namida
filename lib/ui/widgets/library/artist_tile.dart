@@ -12,14 +12,14 @@ import 'package:namida/ui/dialogs/common_dialogs.dart';
 class ArtistTile extends StatelessWidget {
   final String name;
   final List<Track> tracks;
+  final Set<String> albums;
 
-  const ArtistTile({super.key, required this.name, required this.tracks});
+  const ArtistTile({super.key, required this.name, required this.tracks, required this.albums});
 
   @override
   Widget build(BuildContext context) {
     const artistthumnailSize = 65.0;
     const artistTileHeight = 65.0;
-    final albums = name.artistAlbums;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
@@ -43,6 +43,7 @@ class ArtistTile extends StatelessWidget {
                   child: ContainerWithBorder(
                     child: ArtworkWidget(
                       thumnailSize: artistthumnailSize,
+                      track: tracks.trackOfImage,
                       path: tracks.pathToImage,
                       borderRadius: 64.0,
                       forceSquared: true,

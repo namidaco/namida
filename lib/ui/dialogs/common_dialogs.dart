@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -36,7 +36,8 @@ class NamidaDialogs {
     );
   }
 
-  Future<void> showAlbumDialog(List<Track> tracks, {Object? heroTag}) async {
+  Future<void> showAlbumDialog(String albumName) async {
+    final tracks = albumName.getAlbumTracks();
     final artists = tracks.map((e) => e.artistsList).expand((list) => list).toSet();
     await showGeneralPopupDialog(
       tracks,
@@ -46,12 +47,12 @@ class NamidaDialogs {
       thirdLineText: artists.join(', ').overflow,
       forceSquared: shouldAlbumBeSquared,
       forceSingleArtwork: true,
-      heroTag: heroTag,
+      heroTag: 'album_$albumName',
       albumToAddFrom: tracks.album,
     );
   }
 
-  Future<void> showArtistDialog(String name, List<Track> tracks, {Object? heroTag}) async {
+  Future<void> showArtistDialog(String name, List<Track> tracks) async {
     final albums = tracks.map((e) => e.album).toList();
     await showGeneralPopupDialog(
       tracks,
@@ -80,7 +81,7 @@ class NamidaDialogs {
 
   Future<void> showPlaylistDialog(Playlist playlist, {Object? heroTag}) async {
     if (playlist.tracks.isEmpty) {
-      Get.dialog(
+      NamidaNavigator.inst.navigateDialog(
         CustomBlurryDialog(
           title: Language.inst.WARNING,
           bodyText: '${Language.inst.DELETE_PLAYLIST}: "${playlist.name}"?',
@@ -89,7 +90,7 @@ class NamidaDialogs {
             ElevatedButton(
               onPressed: () {
                 PlaylistController.inst.removePlaylist(playlist);
-                Get.close(1);
+                NamidaNavigator.inst.closeDialog();
               },
               child: Text(Language.inst.DELETE.toUpperCase()),
             )

@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -21,6 +22,7 @@ import 'package:namida/ui/widgets/settings_card.dart';
 
 class BackupAndRestore extends StatelessWidget {
   const BackupAndRestore({super.key});
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -30,8 +32,8 @@ class BackupAndRestore extends StatelessWidget {
       child: Column(
         children: [
           /// TODO(feat): change specific file/folder new path.
-          /// also option inside namida to move track in android
-          ///
+          /// TODO(feat): option inside namida to move track in android.
+
           Obx(
             () => CustomListTile(
               title: Language.inst.CREATE_BACKUP,
@@ -48,7 +50,7 @@ class BackupAndRestore extends StatelessWidget {
 
                 bool isActive(String item) => SettingsController.inst.backupItemslist.contains(item);
 
-                Get.dialog(
+                NamidaNavigator.inst.navigateDialog(
                   Obx(
                     () => CustomBlurryDialog(
                       title: Language.inst.CREATE_BACKUP,
@@ -56,7 +58,7 @@ class BackupAndRestore extends StatelessWidget {
                         const CancelButton(),
                         ElevatedButton(
                           onPressed: () {
-                            Get.close(1);
+                            NamidaNavigator.inst.closeDialog();
                             BackupController.inst.createBackupFile();
                           },
                           child: Text(Language.inst.CREATE_BACKUP),
@@ -180,7 +182,7 @@ class BackupAndRestore extends StatelessWidget {
               icon: Broken.back_square,
               trailing: BackupController.inst.isRestoringBackup.value ? const LoadingIndicator() : null,
               onTap: () async {
-                await Get.dialog(
+                NamidaNavigator.inst.navigateDialog(
                   CustomBlurryDialog(
                     normalTitleStyle: true,
                     title: Language.inst.RESTORE_BACKUP,
@@ -254,26 +256,26 @@ class BackupAndRestore extends StatelessWidget {
                 Get.snackbar(Language.inst.NOTE, Language.inst.ANOTHER_PROCESS_IS_RUNNING);
                 return;
               }
-              Get.dialog(
+              NamidaNavigator.inst.navigateDialog(
                 CustomBlurryDialog(
                   title: Language.inst.GUIDE,
                   actions: [
                     ElevatedButton(
                       onPressed: () async {
-                        Get.close(1);
+                        NamidaNavigator.inst.closeDialog();
                         final jsonfile = await FilePicker.platform.pickFiles(allowedExtensions: ['json'], type: FileType.custom);
 
                         if (jsonfile != null) {
                           final RxBool isMatchingTypeLink = true.obs;
                           final RxBool matchYT = true.obs;
                           final RxBool matchYTMusic = true.obs;
-                          Get.dialog(
+                          NamidaNavigator.inst.navigateDialog(
                             CustomBlurryDialog(
                               title: Language.inst.CONFIGURE,
                               actions: [
                                 ElevatedButton(
                                   onPressed: () async {
-                                    Get.close(1);
+                                    NamidaNavigator.inst.closeDialog();
                                     JsonToHistoryParser.inst.showParsingProgressDialog();
                                     await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
                                       File(jsonfile.files.first.path!),
@@ -363,13 +365,13 @@ class BackupAndRestore extends StatelessWidget {
                 Get.snackbar(Language.inst.NOTE, Language.inst.ANOTHER_PROCESS_IS_RUNNING);
                 return;
               }
-              Get.dialog(
+              NamidaNavigator.inst.navigateDialog(
                 CustomBlurryDialog(
                   title: Language.inst.GUIDE,
                   actions: [
                     ElevatedButton(
                       onPressed: () async {
-                        Get.close(1);
+                        NamidaNavigator.inst.closeDialog();
                         final csvFiles = await FilePicker.platform.pickFiles(allowedExtensions: ['csv'], type: FileType.custom);
                         final csvFilePath = csvFiles?.files.first.path;
                         if (csvFiles != null && csvFilePath != null) {

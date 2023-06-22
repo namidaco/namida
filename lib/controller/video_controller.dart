@@ -119,13 +119,16 @@ class VideoController {
     await fileStream.flush();
     await fileStream.close();
 
-    await file.copy("$k_DIR_VIDEOS_CACHE${videoId}_${streamToBeUsed.videoQualityLabel}.mp4");
+    final newPath = "$k_DIR_VIDEOS_CACHE${videoId}_${streamToBeUsed.videoQualityLabel}.mp4";
+    final newFile = File(newPath);
+
+    await file.copy(newPath);
     await file.delete();
     _ytexp?.close();
 
     videoCurrentSize.value = 0;
-    Indexer.inst.updateVideosSizeInStorage();
-    return File("$k_DIR_VIDEOS_CACHE${videoId}_${streamToBeUsed.qualityLabel}.mp4").path;
+    Indexer.inst.updateVideosSizeInStorage(newFile);
+    return newPath;
   }
 
   Future<void> updateLocalVidPath([Track? track]) async {
@@ -288,6 +291,7 @@ class VideoController {
     if (!SettingsController.inst.enableVideoPlayback.value) {
       localVidPath.value = '';
       youtubeLink.value = '';
+      _ytexp?.close();
     } else {
       await VideoController.inst.updateLocalVidPath();
       await Player.inst.updateVideoPlayingState();

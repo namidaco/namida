@@ -5,9 +5,11 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/controller/folders_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -15,85 +17,110 @@ import 'package:namida/ui/widgets/library/folder_tile.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class FoldersPage extends StatelessWidget {
-  FoldersPage({super.key});
+  final int? indexToScrollTo;
+  FoldersPage({super.key, this.indexToScrollTo});
 
   final ScrollController _scrollController = Folders.inst.scrollController;
+  Widget get iconWidget => Obx(
+        () => SizedBox(
+          height: double.infinity,
+          child: Icon(
+            Folders.inst.isHome.value ? Broken.home_2 : Broken.folder_2,
+            size: 22.0,
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => WillPopScope(
-        onWillPop: () {
-          if (!Folders.inst.isHome.value) {
-            Folders.inst.stepOut();
-            return Future.value(false);
-          }
-          return Future.value(true);
-        },
-        child: SettingsController.inst.enableFoldersHierarchy.value
+    return WillPopScope(
+      onWillPop: () async {
+        if (!Folders.inst.isHome.value) {
+          Folders.inst.stepOut();
+          return false;
+        }
+        return true;
+      },
+      child: Obx(
+        () => SettingsController.inst.enableFoldersHierarchy.value
 
             /// Folders in heirarchy
             ? Column(
                 children: [
                   ListTile(
-                    leading: const Icon(Broken.folder_2),
-                    title: Text(
-                      Folders.inst.isHome.value ? Language.inst.HOME : Folders.inst.currentPath.value,
-                      style: context.textTheme.displaySmall,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    leading: iconWidget,
+                    title: Obx(
+                      () => Text(
+                        //todo .formatPath()
+                        Folders.inst.currentFolder.value?.path ?? Language.inst.HOME,
+                        style: context.textTheme.displaySmall,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     onTap: () => Folders.inst.stepOut(),
-                    trailing: NamidaIconButton(
-                      tooltip: Language.inst.SET_AS_DEFAULT,
-                      icon: SettingsController.inst.defaultFolderStartupLocation.value == Folders.inst.currentPath.value ? Broken.archive_tick : Broken.save_2,
-                      onPressed: () => SettingsController.inst.save(defaultFolderStartupLocation: Folders.inst.isHome.value ? kStoragePaths.first : Folders.inst.currentPath.value),
+                    trailing: Obx(
+                      () {
+                        final pathOfDefault = Folders.inst.isHome.value ? '' : Folders.inst.currentFolder.value?.path;
+                        return NamidaIconButton(
+                          tooltip: Language.inst.SET_AS_DEFAULT,
+                          icon: SettingsController.inst.defaultFolderStartupLocation.value == pathOfDefault ? Broken.archive_tick : Broken.save_2,
+                          iconSize: 22.0,
+                          onPressed: () => SettingsController.inst.save(
+                            defaultFolderStartupLocation: Folders.inst.currentFolder.value?.path ?? '',
+                          ),
+                        );
+                      },
                     ),
                   ),
                   Expanded(
                     child: CupertinoScrollbar(
                       controller: _scrollController,
-                      child: CustomScrollView(
-                        controller: _scrollController,
-                        slivers: [
-                          if (Folders.inst.isHome.value) ...[
-                            ...kStoragePaths
-                                .toList()
-                                .map(
-                                  (e) => SliverToBoxAdapter(
-                                    child: FolderTile(
-                                      folder: Folder(
-                                        e,
-                                        Folders.inst.folderslist.where((element) => element.path.startsWith(e)).expand((entry) => entry.tracks).toList(),
-                                      ),
+                      child: Obx(
+                        () => CustomScrollView(
+                          controller: _scrollController,
+                          slivers: [
+                            if (Folders.inst.isHome.value)
+                              SliverList(
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, i) {
+                                    final p = kStoragePaths.elementAt(i);
+                                    return FolderTile(
+                                      folder: Folder(p),
                                       isMainStoragePath: true,
-                                    ),
+                                      dummyTracks:
+                                          Indexer.inst.mainMapFolders.entries.where((element) => element.key.path.startsWith(p)).expand((element) => element.value).toList(),
+                                    );
+                                  },
+                                  childCount: kStoragePaths.length,
+                                ),
+                              ),
+                            if (!Folders.inst.isHome.value) ...[
+                              SliverList(
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, i) => FolderTile(
+                                    folder: Folders.inst.currentFolderslist[i],
                                   ),
-                                )
-                                .toList()
-                          ],
-                          if (!Folders.inst.isHome.value) ...[
-                            SliverList(
-                              delegate: SliverChildListDelegate(
-                                Folders.inst.currentfolderslist.map((e) => FolderTile(folder: e)).toList(),
+                                  childCount: Folders.inst.currentFolderslist.length,
+                                ),
                               ),
-                            ),
-                            SliverFixedExtentList(
-                              itemExtent: trackTileItemExtent,
-                              delegate: SliverChildBuilderDelegate(
-                                (context, i) {
-                                  return TrackTile(
-                                    index: i,
-                                    track: Folders.inst.currentTracks[i],
-                                    queueSource: QueueSource.folder,
-                                  );
-                                },
-                                childCount: Folders.inst.currentTracks.length,
+                              SliverFixedExtentList(
+                                itemExtent: trackTileItemExtent,
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, i) {
+                                    return TrackTile(
+                                      index: i,
+                                      track: Folders.inst.currentTracks[i],
+                                      queueSource: QueueSource.folder,
+                                    );
+                                  },
+                                  childCount: Folders.inst.currentTracks.length,
+                                ),
                               ),
-                            ),
+                            ],
+                            const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
                           ],
-                          const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -104,58 +131,55 @@ class FoldersPage extends StatelessWidget {
             : Column(
                 children: [
                   ListTile(
-                    leading: const Icon(Broken.folder_2),
-                    title: Text(
-                      Folders.inst.currentPath.value == '' ? Language.inst.HOME : Folders.inst.currentPath.value,
-                      style: context.textTheme.displaySmall,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    leading: iconWidget,
+                    title: Obx(
+                      () => Text(
+                        Folders.inst.currentFolder.value?.path.formatPath() ?? Language.inst.HOME,
+                        style: context.textTheme.displaySmall,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    onTap: () {
-                      Folders.inst.stepOut();
-                      Folders.inst.currentPath.value = '';
-                    },
+                    onTap: () => Folders.inst.stepOut(),
                   ),
                   Expanded(
                     child: CupertinoScrollbar(
                       controller: _scrollController,
-                      child: CustomScrollView(
-                        controller: _scrollController,
-                        slivers: [
-                          if (!Folders.inst.isInside.value)
+                      child: Obx(
+                        () => CustomScrollView(
+                          controller: _scrollController,
+                          slivers: [
+                            if (!Folders.inst.isInside.value)
+                              SliverFixedExtentList(
+                                itemExtent: trackTileItemExtent,
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, i) {
+                                    final folder = Indexer.inst.mainMapFolders.keys.elementAt(i);
+                                    return FolderTile(
+                                      folder: folder,
+                                      subtitle: folder.hasSimilarFolderNames ? folder.parentPath.formatPath() : null,
+                                    );
+                                  },
+                                  childCount: Indexer.inst.mainMapFolders.length,
+                                ),
+                              ),
                             SliverFixedExtentList(
                               itemExtent: trackTileItemExtent,
                               delegate: SliverChildBuilderDelegate(
                                 (context, i) {
-                                  final f = Folders.inst.folderslist[i];
-                                  return FolderTile(
-                                    folder: f,
-                                    onTap: () {
-                                      Folders.inst.stepIn(f);
-                                      Folders.inst.isInside.value = true;
-                                      Folders.inst.currentPath.value = f.folderName;
-                                    },
+                                  final tr = Folders.inst.currentTracks[i];
+                                  return TrackTile(
+                                    index: i,
+                                    track: tr,
+                                    queueSource: QueueSource.folder,
                                   );
                                 },
-                                childCount: Folders.inst.folderslist.length,
+                                childCount: Folders.inst.currentTracks.length,
                               ),
                             ),
-                          SliverFixedExtentList(
-                            itemExtent: trackTileItemExtent,
-                            delegate: SliverChildBuilderDelegate(
-                              (context, i) {
-                                final tr = Folders.inst.currentTracks[i];
-                                return TrackTile(
-                                  index: i,
-                                  track: tr,
-                                  queueSource: QueueSource.folder,
-                                );
-                              },
-                              childCount: Folders.inst.currentTracks.length,
-                            ),
-                          ),
-                          const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
-                        ],
+                            const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -165,3 +189,15 @@ class FoldersPage extends StatelessWidget {
     );
   }
 }
+// TODO: implement [indexToScrollTo]
+  // if (indexToScrollTo != null)
+  //             Positioned(
+  //               bottom: kBottomPadding,
+  //               right: 12.0,
+  //               child: IconButton(
+  //                 onPressed: () {
+  //                   _scrollController.animateTo(trackTileItemExtent * indexToScrollTo!, duration: const Duration(milliseconds: 400), curve: Curves.bounceInOut);
+  //                 },
+  //                 icon: const Icon(Broken.arrow_circle_down),
+  //               ),
+  //             )

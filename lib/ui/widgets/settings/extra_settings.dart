@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -64,12 +65,12 @@ class ExtrasSettings extends StatelessWidget {
               icon: Broken.receipt_1,
               title: Language.inst.DEFAULT_LIBRARY_TAB,
               trailingText: SettingsController.inst.autoLibraryTab.value ? Language.inst.AUTO : SettingsController.inst.selectedLibraryTab.value.toText(),
-              onTap: () => Get.dialog(
+              onTap: () => NamidaNavigator.inst.navigateDialog(
                 CustomBlurryDialog(
                   title: Language.inst.DEFAULT_LIBRARY_TAB,
                   actions: [
                     ElevatedButton(
-                      onPressed: () => Get.close(1),
+                      onPressed: () => NamidaNavigator.inst.closeDialog(),
                       child: Text(Language.inst.DONE),
                     ),
                   ],
@@ -106,7 +107,7 @@ class ExtrasSettings extends StatelessWidget {
                                         autoLibraryTab: false,
                                       );
                                     },
-                                    active: SettingsController.inst.selectedLibraryTab.value == e.value.toEnum,
+                                    active: SettingsController.inst.selectedLibraryTab.value == e.value.toEnum(),
                                   ),
                                 ),
                               ),
@@ -125,27 +126,27 @@ class ExtrasSettings extends StatelessWidget {
                 icon: Broken.color_swatch,
                 title: Language.inst.LIBRARY_TABS,
                 trailingText: "${SettingsController.inst.libraryTabs.length}",
-                onTap: () => Get.dialog(
+                onTap: () => NamidaNavigator.inst.navigateDialog(
                   CustomBlurryDialog(
                     title: Language.inst.LIBRARY_TABS,
                     actions: [
                       ElevatedButton(
-                        onPressed: () => Get.close(1),
+                        onPressed: () => NamidaNavigator.inst.closeDialog(),
                         child: Text(Language.inst.DONE),
                       ),
                     ],
                     child: Obx(
                       () {
                         final subList = <String>[].obs;
-                        kLibraryTabsStock.toList().forEach((element) {
-                          if (!SettingsController.inst.libraryTabs.contains(element)) {
-                            subList.add(element);
+
+                        kLibraryTabsStock.loop((e, index) {
+                          if (!SettingsController.inst.libraryTabs.contains(e)) {
+                            subList.add(e);
                           }
                         });
 
-                        return SizedBox(
-                          width: Get.width,
-                          child: Column(children: [
+                        return Column(
+                          children: [
                             Text(
                               Language.inst.LIBRARY_TABS_REORDER,
                               style: context.textTheme.displayMedium,
@@ -153,33 +154,29 @@ class ExtrasSettings extends StatelessWidget {
                             const SizedBox(height: 12.0),
                             SizedBox(
                               width: Get.width,
-                              height: Get.height / 2.5,
+                              height: Get.height * 0.4,
                               child: NamidaListView(
                                 padding: EdgeInsets.zero,
                                 itemExtents: null,
                                 itemCount: SettingsController.inst.libraryTabs.length,
                                 itemBuilder: (context, i) {
                                   final tab = SettingsController.inst.libraryTabs[i];
-                                  return Column(
+                                  return Container(
                                     key: ValueKey(i),
-                                    children: [
-                                      Container(
-                                        margin: const EdgeInsets.all(4.0),
-                                        child: ListTileWithCheckMark(
-                                          title: "${i + 1}. ${tab.toEnum().toText()}",
-                                          icon: tab.toEnum().toIcon(),
-                                          onTap: () {
-                                            if (SettingsController.inst.libraryTabs.length > 3) {
-                                              SettingsController.inst.removeFromList(libraryTab1: tab);
-                                              SettingsController.inst.save(selectedLibraryTab: SettingsController.inst.libraryTabs[0].toEnum());
-                                            } else {
-                                              Get.snackbar(Language.inst.AT_LEAST_THREE_TABS, Language.inst.AT_LEAST_THREE_TABS_SUBTITLE);
-                                            }
-                                          },
-                                          active: SettingsController.inst.libraryTabs.contains(tab),
-                                        ),
-                                      ),
-                                    ],
+                                    margin: const EdgeInsets.all(4.0),
+                                    child: ListTileWithCheckMark(
+                                      title: "${i + 1}. ${tab.toEnum().toText()}",
+                                      icon: tab.toEnum().toIcon(),
+                                      onTap: () {
+                                        if (SettingsController.inst.libraryTabs.length > 3) {
+                                          SettingsController.inst.removeFromList(libraryTab1: tab);
+                                          SettingsController.inst.save(selectedLibraryTab: SettingsController.inst.libraryTabs[0].toEnum());
+                                        } else {
+                                          Get.snackbar(Language.inst.AT_LEAST_THREE_TABS, Language.inst.AT_LEAST_THREE_TABS_SUBTITLE);
+                                        }
+                                      },
+                                      active: SettingsController.inst.libraryTabs.contains(tab),
+                                    ),
                                   );
                                 },
                                 onReorder: (oldIndex, newIndex) {
@@ -214,7 +211,7 @@ class ExtrasSettings extends StatelessWidget {
                                   ),
                                 )
                                 .toList(),
-                          ]),
+                          ],
                         );
                       },
                     ),
@@ -228,7 +225,7 @@ class ExtrasSettings extends StatelessWidget {
               icon: Broken.filter_search,
               title: Language.inst.FILTER_TRACKS_BY,
               trailingText: "${SettingsController.inst.trackSearchFilter.length}",
-              onTap: () => Get.dialog(
+              onTap: () => NamidaNavigator.inst.navigateDialog(
                 Obx(
                   () {
                     return CustomBlurryDialog(
@@ -252,7 +249,7 @@ class ExtrasSettings extends StatelessWidget {
                           },
                         ),
                         ElevatedButton(
-                          onPressed: () => Get.close(1),
+                          onPressed: () => NamidaNavigator.inst.closeDialog(),
                           child: Text(Language.inst.SAVE),
                         ),
                       ],
@@ -345,7 +342,7 @@ class ExtrasSettings extends StatelessWidget {
             ),
             onTap: () async {
               if (WaveformController.inst.generatingAllWaveforms.value) {
-                await Get.dialog(
+                NamidaNavigator.inst.navigateDialog(
                   CustomBlurryDialog(
                     title: Language.inst.NOTE,
                     bodyText: Language.inst.FORCE_STOP_WAVEFORM_GENERATION,
@@ -354,7 +351,7 @@ class ExtrasSettings extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () {
                           WaveformController.inst.generatingAllWaveforms.value = false;
-                          Get.close(1);
+                          NamidaNavigator.inst.closeDialog();
                         },
                         child: Text(Language.inst.STOP),
                       ),
@@ -362,7 +359,7 @@ class ExtrasSettings extends StatelessWidget {
                   ),
                 );
               } else {
-                await Get.dialog(
+                NamidaNavigator.inst.navigateDialog(
                   CustomBlurryDialog(
                     title: Language.inst.NOTE,
                     bodyText: Language.inst.GENERATE_ALL_WAVEFORM_DATA_SUBTITLE
@@ -373,7 +370,7 @@ class ExtrasSettings extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () {
                           WaveformController.inst.generateAllWaveforms();
-                          Get.close(1);
+                          NamidaNavigator.inst.closeDialog();
                         },
                         child: Text(Language.inst.GENERATE),
                       ),
@@ -396,7 +393,7 @@ class ExtrasSettings extends StatelessWidget {
             ),
             onTap: () async {
               if (CurrentColor.inst.generatingAllColorPalettes.value) {
-                await Get.dialog(
+                NamidaNavigator.inst.navigateDialog(
                   CustomBlurryDialog(
                     title: Language.inst.NOTE,
                     bodyText: Language.inst.FORCE_STOP_COLOR_PALETTE_GENERATION,
@@ -405,7 +402,7 @@ class ExtrasSettings extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () {
                           CurrentColor.inst.generatingAllColorPalettes.value = false;
-                          Get.close(1);
+                          NamidaNavigator.inst.closeDialog();
                         },
                         child: Text(Language.inst.STOP),
                       ),
@@ -413,7 +410,7 @@ class ExtrasSettings extends StatelessWidget {
                   ),
                 );
               } else {
-                await Get.dialog(
+                NamidaNavigator.inst.navigateDialog(
                   CustomBlurryDialog(
                     title: Language.inst.NOTE,
                     bodyText: Language.inst.EXTRACT_ALL_COLOR_PALETTES_SUBTITLE
@@ -423,7 +420,7 @@ class ExtrasSettings extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () {
                           CurrentColor.inst.generateAllColorPalettes();
-                          Get.close(1);
+                          NamidaNavigator.inst.closeDialog();
                         },
                         child: Text(Language.inst.EXTRACT),
                       ),

@@ -189,7 +189,7 @@ class Language {
 
   /// Main
   String get EXIT_APP => 'Exit';
-  String get EXIT_APP_SUBTITLE => 'Do you really want to exit?';
+  String get EXIT_APP_SUBTITLE => 'Tap again to exit';
   String get PERMISSION_UPDATE => 'Permission Update';
   String get STORAGE_PERMISSION_DENIED => 'Permission Denied';
   String get STORAGE_PERMISSION_DENIED_SUBTITLE => 'Please allow access to be able to perform this action';

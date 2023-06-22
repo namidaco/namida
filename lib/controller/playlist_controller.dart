@@ -207,7 +207,7 @@ class PlaylistController {
     if (value.isEmpty) {
       return Language.inst.PLEASE_ENTER_A_NAME;
     }
-    const illegalChar = "/";
+    final illegalChar = Platform.pathSeparator;
     if (value.contains(illegalChar)) {
       return "${Language.inst.NAME_CONTAINS_BAD_CHARACTER} $illegalChar";
     }
@@ -310,7 +310,7 @@ class PlaylistController {
     }
 
     if (track != null && dateAdded != null) {
-      if (topTracksMapListens.containsKey(track)) {
+      if (topTracksMapListens.keyExists(track)) {
         topTracksMapListens[track]!.add(dateAdded);
       } else {
         topTracksMapListens[track] = [dateAdded];
@@ -322,7 +322,7 @@ class PlaylistController {
     final HashMap<Track, List<int>> tempMap = HashMap<Track, List<int>>(equals: (p0, p1) => p0.path == p1.path);
 
     for (final t in namidaHistoryPlaylist.tracks) {
-      if (tempMap.containsKey(t.track)) {
+      if (tempMap.keyExists(t.track)) {
         tempMap[t.track]!.add(t.dateAdded);
       } else {
         tempMap[t.track] = [t.dateAdded];

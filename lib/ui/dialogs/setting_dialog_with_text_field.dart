@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
@@ -57,7 +58,7 @@ void showSettingDialogWithTextField({
     );
   }
 
-  await Get.dialog(
+  NamidaNavigator.inst.navigateDialog(
     Form(
       key: formKey,
       child: CustomBlurryDialog(
@@ -103,7 +104,7 @@ void showSettingDialogWithTextField({
                   stg.save(trackTileSeparator: '•');
                   showSnackBarWithTitle("${stg.trackTileSeparator}", title: title, iconWidget: iconWidget);
                 }
-                Get.close(1);
+                NamidaNavigator.inst.closeDialog();
               },
               icon: const Icon(Broken.refresh),
             ),
@@ -161,7 +162,7 @@ void showSettingDialogWithTextField({
                     PlaylistController.inst.addNewPlaylist(controller.text);
                   }
 
-                  Get.close(1);
+                  NamidaNavigator.inst.closeDialog();
                 }
               },
               child: Text(Language.inst.SAVE))
@@ -209,6 +210,5 @@ void showSettingDialogWithTextField({
         ),
       ),
     ),
-    barrierColor: Colors.black.withAlpha(80),
   );
 }

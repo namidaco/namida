@@ -10,11 +10,12 @@ import 'package:get/get.dart';
 import 'package:on_audio_edit/on_audio_edit.dart';
 
 import 'package:namida/class/track.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -84,7 +85,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
     );
   }
 
-  Get.dialog(
+  NamidaNavigator.inst.navigateDialog(
     Transform.scale(
       scale: 0.94,
       child: CustomBlurryDialog(
@@ -103,7 +104,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                   subList.add(element);
                 }
               }
-              Get.dialog(
+              NamidaNavigator.inst.navigateDialog(
                 Transform.scale(
                   scale: 0.94,
                   child: CustomBlurryDialog(
@@ -260,24 +261,24 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                     final didUpdate = await editTrackMetadata(
                       track,
                       tags: {
-                        if (editedTags.containsKey(TagField.title)) TagType.TITLE: editedTags[TagField.title],
-                        if (editedTags.containsKey(TagField.album)) TagType.ALBUM: editedTags[TagField.album],
-                        if (editedTags.containsKey(TagField.artist)) TagType.ARTIST: editedTags[TagField.artist],
-                        if (editedTags.containsKey(TagField.albumArtist)) TagType.ALBUM_ARTIST: editedTags[TagField.albumArtist],
-                        if (editedTags.containsKey(TagField.composer)) TagType.COMPOSER: editedTags[TagField.composer],
-                        if (editedTags.containsKey(TagField.genre)) TagType.GENRE: editedTags[TagField.genre],
-                        if (editedTags.containsKey(TagField.trackNumber)) TagType.TRACK: editedTags[TagField.trackNumber],
-                        if (editedTags.containsKey(TagField.discNumber)) TagType.DISC_NO: editedTags[TagField.discNumber],
-                        if (editedTags.containsKey(TagField.year)) TagType.YEAR: editedTags[TagField.year],
-                        if (editedTags.containsKey(TagField.comment)) TagType.COMMENT: editedTags[TagField.comment],
-                        if (editedTags.containsKey(TagField.lyrics)) TagType.LYRICS: editedTags[TagField.lyrics],
-                        if (editedTags.containsKey(TagField.remixer)) TagType.REMIXER: editedTags[TagField.remixer],
-                        if (editedTags.containsKey(TagField.trackTotal)) TagType.TRACK_TOTAL: editedTags[TagField.trackTotal],
-                        if (editedTags.containsKey(TagField.discTotal)) TagType.DISC_TOTAL: editedTags[TagField.discTotal],
-                        if (editedTags.containsKey(TagField.lyricist)) TagType.LYRICIST: editedTags[TagField.lyricist],
-                        if (editedTags.containsKey(TagField.language)) TagType.LANGUAGE: editedTags[TagField.language],
-                        if (editedTags.containsKey(TagField.recordLabel)) TagType.RECORD_LABEL: editedTags[TagField.recordLabel],
-                        if (editedTags.containsKey(TagField.country)) TagType.COUNTRY: editedTags[TagField.country],
+                        if (editedTags.keyExists(TagField.title)) TagType.TITLE: editedTags[TagField.title],
+                        if (editedTags.keyExists(TagField.album)) TagType.ALBUM: editedTags[TagField.album],
+                        if (editedTags.keyExists(TagField.artist)) TagType.ARTIST: editedTags[TagField.artist],
+                        if (editedTags.keyExists(TagField.albumArtist)) TagType.ALBUM_ARTIST: editedTags[TagField.albumArtist],
+                        if (editedTags.keyExists(TagField.composer)) TagType.COMPOSER: editedTags[TagField.composer],
+                        if (editedTags.keyExists(TagField.genre)) TagType.GENRE: editedTags[TagField.genre],
+                        if (editedTags.keyExists(TagField.trackNumber)) TagType.TRACK: editedTags[TagField.trackNumber],
+                        if (editedTags.keyExists(TagField.discNumber)) TagType.DISC_NO: editedTags[TagField.discNumber],
+                        if (editedTags.keyExists(TagField.year)) TagType.YEAR: editedTags[TagField.year],
+                        if (editedTags.keyExists(TagField.comment)) TagType.COMMENT: editedTags[TagField.comment],
+                        if (editedTags.keyExists(TagField.lyrics)) TagType.LYRICS: editedTags[TagField.lyrics],
+                        if (editedTags.keyExists(TagField.remixer)) TagType.REMIXER: editedTags[TagField.remixer],
+                        if (editedTags.keyExists(TagField.trackTotal)) TagType.TRACK_TOTAL: editedTags[TagField.trackTotal],
+                        if (editedTags.keyExists(TagField.discTotal)) TagType.DISC_TOTAL: editedTags[TagField.discTotal],
+                        if (editedTags.keyExists(TagField.lyricist)) TagType.LYRICIST: editedTags[TagField.lyricist],
+                        if (editedTags.keyExists(TagField.language)) TagType.LANGUAGE: editedTags[TagField.language],
+                        if (editedTags.keyExists(TagField.recordLabel)) TagType.RECORD_LABEL: editedTags[TagField.recordLabel],
+                        if (editedTags.keyExists(TagField.country)) TagType.COUNTRY: editedTags[TagField.country],
                       },
                       artworkPath: currentImagePath.value,
                     );
@@ -287,7 +288,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                       Get.snackbar(Language.inst.METADATA_EDIT_FAILED, Language.inst.METADATA_EDIT_FAILED_SUBTITLE);
                     }
 
-                    Get.close(1);
+                    NamidaNavigator.inst.closeDialog();
                   },
                   icon: const Icon(Broken.pen_add),
                   label: Text(Language.inst.SAVE),
@@ -313,6 +314,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                             children: [
                               Obx(
                                 () => ArtworkWidget(
+                                  track: track,
                                   thumnailSize: Get.width / 3,
                                   bytes: currentImagePath.value != '' ? null : info.firstArtwork,
                                   path: currentImagePath.value != '' ? currentImagePath.value : track.pathToImage,
@@ -511,7 +513,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
     );
   }
 
-  Get.dialog(
+  NamidaNavigator.inst.navigateDialog(
     Transform.scale(
       scale: 0.94,
       child: CustomBlurryDialog(
@@ -559,8 +561,8 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
             ),
           ),
           ElevatedButton.icon(
-            onPressed: () async {
-              await Get.dialog(
+            onPressed: () {
+              NamidaNavigator.inst.navigateDialog(
                 CustomBlurryDialog(
                   insetPadding: const EdgeInsets.all(42.0),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
@@ -568,7 +570,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                   normalTitleStyle: true,
                   actions: [
                     ElevatedButton(
-                      onPressed: () => Get.close(2),
+                      onPressed: () => NamidaNavigator.inst.closeDialog(2),
                       child: Text(Language.inst.CANCEL),
                     ),
                     ElevatedButton(
@@ -598,7 +600,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                         final RxBool finishedEditing = false.obs;
                         final RxString updatingLibrary = '?'.obs;
 
-                        Get.dialog(
+                        NamidaNavigator.inst.navigateDialog(
                           Obx(
                             () => CustomBlurryDialog(
                               title: Language.inst.PROGRESS,
@@ -612,9 +614,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                                     child: IgnorePointer(
                                       ignoring: !finishedEditing.value,
                                       child: ElevatedButton(
-                                        onPressed: () {
-                                          Get.close(2);
-                                        },
+                                        onPressed: () => NamidaNavigator.inst.closeDialog(2),
                                         child: Text(Language.inst.DONE),
                                       ),
                                     ),
@@ -630,15 +630,15 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                           final didUpdate = await editTrackMetadata(
                             tr,
                             tags: {
-                              if (editedTags.containsKey(TagField.album)) TagType.ALBUM: editedTags[TagField.album],
-                              if (editedTags.containsKey(TagField.artist)) TagType.ARTIST: editedTags[TagField.artist],
-                              if (editedTags.containsKey(TagField.albumArtist)) TagType.ALBUM_ARTIST: editedTags[TagField.albumArtist],
-                              if (editedTags.containsKey(TagField.composer)) TagType.COMPOSER: editedTags[TagField.composer],
-                              if (editedTags.containsKey(TagField.genre)) TagType.GENRE: editedTags[TagField.genre],
-                              if (editedTags.containsKey(TagField.year)) TagType.YEAR: editedTags[TagField.year],
-                              if (editedTags.containsKey(TagField.comment)) TagType.COMMENT: editedTags[TagField.comment],
-                              if (editedTags.containsKey(TagField.trackTotal)) TagType.TRACK_TOTAL: editedTags[TagField.trackTotal],
-                              if (editedTags.containsKey(TagField.discTotal)) TagType.DISC_TOTAL: editedTags[TagField.discTotal],
+                              if (editedTags.keyExists(TagField.album)) TagType.ALBUM: editedTags[TagField.album],
+                              if (editedTags.keyExists(TagField.artist)) TagType.ARTIST: editedTags[TagField.artist],
+                              if (editedTags.keyExists(TagField.albumArtist)) TagType.ALBUM_ARTIST: editedTags[TagField.albumArtist],
+                              if (editedTags.keyExists(TagField.composer)) TagType.COMPOSER: editedTags[TagField.composer],
+                              if (editedTags.keyExists(TagField.genre)) TagType.GENRE: editedTags[TagField.genre],
+                              if (editedTags.keyExists(TagField.year)) TagType.YEAR: editedTags[TagField.year],
+                              if (editedTags.keyExists(TagField.comment)) TagType.COMMENT: editedTags[TagField.comment],
+                              if (editedTags.keyExists(TagField.trackTotal)) TagType.TRACK_TOTAL: editedTags[TagField.trackTotal],
+                              if (editedTags.keyExists(TagField.discTotal)) TagType.DISC_TOTAL: editedTags[TagField.discTotal],
                             },
                             artworkPath: currentImagePath.value,
                             updateTracks: false,
@@ -678,7 +678,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                   width: Get.width * 0.6,
                   child: ElevatedButton(
                     onPressed: () {
-                      Get.dialog(
+                      NamidaNavigator.inst.navigateDialog(
                         CustomBlurryDialog(
                           insetPadding: const EdgeInsets.all(42.0),
                           contentPadding: EdgeInsets.zero,
@@ -709,6 +709,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                                   Obx(
                                     () => currentImagePath.value != ''
                                         ? ArtworkWidget(
+                                            track: null,
                                             thumnailSize: Get.width / 3,
                                             path: currentImagePath.value,
                                           )
@@ -751,7 +752,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                                       width: Get.width,
                                       child: ElevatedButton(
                                         onPressed: () {
-                                          Get.dialog(
+                                          NamidaNavigator.inst.navigateDialog(
                                             CustomBlurryDialog(
                                               insetPadding: const EdgeInsets.all(42.0),
                                               contentPadding: EdgeInsets.zero,
@@ -982,7 +983,7 @@ Future<void> requestSAFpermission() async {
     return;
   }
 
-  await Get.dialog(
+  NamidaNavigator.inst.navigateDialog(
     CustomBlurryDialog(
       title: Language.inst.NOTE,
       child: Column(

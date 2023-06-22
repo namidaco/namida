@@ -16,6 +16,7 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -51,7 +52,7 @@ void main() async {
     }
   }
 
-  // await Get.dialog(
+  // await NamidaNavigator.inst.navigateDialog(
   //   CustomBlurryDialog(
   //     title: Language.inst.STORAGE_PERMISSION,
   //     bodyText: Language.inst.STORAGE_PERMISSION_SUBTITLE,
@@ -60,7 +61,7 @@ void main() async {
   //       ElevatedButton(
   //         onPressed: () async {
   //           await Permission.storage.request();
-  //           Get.close(1);
+  //           NamidaNavigator.inst.closeDialog();
   //         },
   //         child: Text(Language.inst.GRANT_ACCESS),
   //       ),
@@ -71,7 +72,7 @@ void main() async {
   k_DIR_USER_DATA = await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
 
   Future<void> createDirectories(List<String> paths) async {
-    paths.loop((p) async {
+    paths.loop((p, i) async {
       await Directory(p).create(recursive: true);
     });
   }
@@ -153,6 +154,7 @@ void main() async {
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
   runApp(const Namida());
+  Folders.inst.onFirstLoad();
 }
 
 /// returns [true] if played successfully.
@@ -208,14 +210,14 @@ class Namida extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Namida',
-      theme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, true),
-      darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, false),
+      theme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme.value, true),
+      darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme.value, false),
       themeMode: SettingsController.inst.themeMode.value,
       translations: MyTranslation(),
       builder: (context, widget) {
         return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
       },
-      home: MainPageWrapper(),
+      home: const MainPageWrapper(),
     );
   }
 }

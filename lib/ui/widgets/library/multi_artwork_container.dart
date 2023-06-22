@@ -18,7 +18,7 @@ class MultiArtworkContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Hero(
-      tag: 'parent_$heroTag',
+      tag: '$heroTag',
       child: Container(
         margin: margin ?? const EdgeInsets.symmetric(horizontal: 12.0),
         padding: const EdgeInsets.all(3.0),

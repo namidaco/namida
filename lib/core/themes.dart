@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/core/extensions.dart';
 
-class AppThemes extends GetxController {
+class AppThemes {
   static final AppThemes inst = AppThemes();
 
   ThemeData getAppTheme([Color? color, bool? light]) {
@@ -36,12 +36,8 @@ class AppThemes extends GetxController {
       highlightColor: light ? Colors.black.withAlpha(20) : Colors.white.withAlpha(10),
       disabledColor: light ? const Color.fromARGB(0, 160, 160, 160) : const Color.fromARGB(200, 60, 60, 60),
       appBarTheme: AppBarTheme(
-        backgroundColor: light
-            ? Color.alphaBlend(
-                color.withAlpha(80),
-                Colors.white,
-              )
-            : null,
+        surfaceTintColor: Colors.transparent,
+        backgroundColor: light ? Color.alphaBlend(color.withAlpha(25), Colors.white) : null,
         actionsIconTheme: IconThemeData(
           color: light ? const Color.fromARGB(200, 40, 40, 40) : const Color.fromARGB(200, 233, 233, 233),
         ),

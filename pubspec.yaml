@@ -94,7 +94,6 @@ dependencies:
       url: https://github.com/MSOB7YY/known_extents_list_view_builder
 
   # UI Widgets
-  searchbar_animation: ^0.0.4
   wheel_slider: ^1.0.1
   sleek_circular_slider: ^2.0.1
   checkmark: ^0.0.2+1

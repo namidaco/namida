@@ -7,9 +7,11 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -36,8 +38,8 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
 
   bool shouldShowTheField(bool isUnknown) => !isUnknown || (SettingsController.inst.showUnknownFieldsInTrackInfoDialog.value && isUnknown);
 
-  await Get.to(
-    () => Theme(
+  NamidaNavigator.inst.navigateDialog(
+    Theme(
       data: theme,
       child: CustomBlurryDialog(
         enableBlur: enableBlur,
@@ -87,8 +89,8 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                               children: [
                                 const SizedBox(width: 2.0),
                                 GestureDetector(
-                                  onTap: () => Get.to(
-                                    () => Container(
+                                  onTap: () => NamidaNavigator.inst.navigateDialog(
+                                    Container(
                                       color: Colors.black,
                                       child: InteractiveViewer(
                                         maxScale: 5,
@@ -96,28 +98,38 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                           tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
                                           child: GestureDetector(
                                             onLongPress: () async {
-                                              await EditDeleteController.inst.saveArtworkToStorage(track);
+                                              final didSave = await EditDeleteController.inst.saveArtworkToStorage(track);
+                                              String title = Language.inst.COPIED_ARTWORK;
+                                              String subtitle = '${Language.inst.SAVED_IN} ${SettingsController.inst.defaultBackupLocation.value}';
+                                              Color snackColor = CurrentColor.inst.color.value;
+
+                                              if (!didSave) {
+                                                title = Language.inst.ERROR;
+                                                subtitle = Language.inst.COULDNT_SAVE_IMAGE;
+                                                snackColor = Colors.red;
+                                              }
                                               Get.snackbar(
-                                                'Copied Artwork',
-                                                'Saved in ${SettingsController.inst.defaultBackupLocation.value}',
+                                                title,
+                                                subtitle,
                                                 snackPosition: SnackPosition.BOTTOM,
                                                 snackStyle: SnackStyle.FLOATING,
                                                 animationDuration: const Duration(milliseconds: 300),
                                                 duration: const Duration(seconds: 2),
-                                                leftBarIndicatorColor: CurrentColor.inst.color.value,
+                                                leftBarIndicatorColor: snackColor,
                                                 margin: const EdgeInsets.all(0.0),
                                                 titleText: Text(
-                                                  'Copied Artwork',
+                                                  title,
                                                   style: Get.textTheme.displayMedium,
                                                 ),
                                                 messageText: Text(
-                                                  'Saved in ${SettingsController.inst.defaultBackupLocation.value}',
+                                                  subtitle,
                                                   style: Get.textTheme.displaySmall,
                                                 ),
                                                 borderRadius: 0,
                                               );
                                             },
                                             child: ArtworkWidget(
+                                              track: track,
                                               path: track.pathToImage,
                                               thumnailSize: Get.width,
                                               compressed: false,
@@ -129,13 +141,11 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                         ),
                                       ),
                                     ),
-                                    opaque: false,
-                                    transition: Transition.fade,
-                                    fullscreenDialog: true,
                                   ),
                                   child: Hero(
                                     tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
                                     child: ArtworkWidget(
+                                      track: track,
                                       path: track.pathToImage,
                                       thumnailSize: 120,
                                       forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
@@ -207,35 +217,35 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                               title: Indexer.inst.splitArtist(track.title, track.originalArtist, addArtistsFromTitle: false).length == 1
                                   ? Language.inst.ARTIST
                                   : Language.inst.ARTISTS,
-                              value: track.originalArtist,
+                              value: track.hasUnknownArtist ? k_UNKNOWN_TRACK_ARTIST : track.originalArtist,
                               icon: Broken.microphone,
                             ),
 
                           if (shouldShowTheField(track.hasUnknownAlbum))
                             TrackInfoListTile(
                               title: Language.inst.ALBUM,
-                              value: track.album,
+                              value: track.hasUnknownAlbum ? k_UNKNOWN_TRACK_ALBUM : track.album,
                               icon: Broken.music_dashboard,
                             ),
 
                           if (shouldShowTheField(track.hasUnknownAlbumArtist))
                             TrackInfoListTile(
                               title: Language.inst.ALBUM_ARTIST,
-                              value: track.albumArtist,
+                              value: track.hasUnknownAlbumArtist ? k_UNKNOWN_TRACK_ALBUMARTIST : track.albumArtist,
                               icon: Broken.user,
                             ),
 
                           if (shouldShowTheField(track.hasUnknownGenre))
                             TrackInfoListTile(
                               title: track.genresList.length == 1 ? Language.inst.GENRE : Language.inst.GENRES,
-                              value: track.genresList.join(', '),
+                              value: track.hasUnknownGenre ? k_UNKNOWN_TRACK_GENRE : track.genresList.join(', '),
                               icon: track.genresList.length == 1 ? Broken.emoji_happy : Broken.smileys,
                             ),
 
                           if (shouldShowTheField(track.hasUnknownComposer))
                             TrackInfoListTile(
                               title: Language.inst.COMPOSER,
-                              value: track.composer,
+                              value: track.hasUnknownComposer ? k_UNKNOWN_TRACK_COMPOSER : track.composer,
                               icon: Broken.profile_2user,
                             ),
 
@@ -329,9 +339,6 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
         ),
       ),
     ),
-    opaque: false,
-    transition: Transition.fade,
-    fullscreenDialog: true,
   );
 }
 

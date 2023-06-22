@@ -278,6 +278,7 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
   }
 
   bool _previouslyOpened = false;
+  bool get isOpened => _previouslyOpened;
 
   void _move(DragUpdateDetails details) {
     double delta = details.primaryDelta! / _width;

@@ -1,24 +1,39 @@
 import 'package:flutter/material.dart';
 
+import 'package:get/get.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' hide Playlist;
-
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/pages/folders_page.dart';
 import 'package:namida/ui/pages/genres_page.dart';
+import 'package:namida/ui/pages/homepage.dart';
 import 'package:namida/ui/pages/playlists_page.dart';
+import 'package:namida/ui/pages/queues_page.dart';
+import 'package:namida/ui/pages/settings_page.dart';
+import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
+import 'package:namida/ui/pages/subpages/artist_tracks_subpage.dart';
+import 'package:namida/ui/pages/subpages/genre_tracks_subpage.dart';
+import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
+import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 import 'package:namida/ui/pages/tracks_page.dart';
+import 'package:namida/ui/widgets/circular_percentages.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 
 extension LibraryTabToInt on LibraryTab {
   int toInt() {
@@ -474,19 +489,19 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
     }
     // onMediaTap should have handled it already.
     if (this == QueueSource.album) {
-      trs.addAll(SelectedTracksController.inst.currentAllTracks.toList());
+      trs.addAll(SelectedTracksController.inst.currentAllTracks);
     }
     if (this == QueueSource.artist) {
-      trs.addAll(SelectedTracksController.inst.currentAllTracks.toList());
+      trs.addAll(SelectedTracksController.inst.currentAllTracks);
     }
     if (this == QueueSource.genre) {
-      trs.addAll(SelectedTracksController.inst.currentAllTracks.toList());
+      trs.addAll(SelectedTracksController.inst.currentAllTracks);
     }
     if (this == QueueSource.playlist) {
-      trs.addAll(SelectedTracksController.inst.currentAllTracks.toList());
+      trs.addAll(SelectedTracksController.inst.currentAllTracks);
     }
     if (this == QueueSource.folder) {
-      trs.addAll(SelectedTracksController.inst.currentAllTracks.toList());
+      trs.addAll(SelectedTracksController.inst.currentAllTracks);
     }
     if (this == QueueSource.search) {
       trs.addAll(Indexer.inst.trackSearchTemp.toList());
@@ -504,7 +519,7 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
       trs.addAll(Player.inst.currentQueue.toList());
     }
     if (this == QueueSource.queuePage) {
-      trs.addAll(SelectedTracksController.inst.currentAllTracks.toList());
+      trs.addAll(SelectedTracksController.inst.currentAllTracks);
     }
     if (this == QueueSource.selectedTracks) {
       trs.addAll(SelectedTracksController.inst.selectedTracks.toList());
@@ -716,5 +731,195 @@ extension PlayerRepeatModeUtils on RepeatMode {
     }
 
     return Broken.repeat;
+  }
+}
+
+extension ThemeUtils on ThemeMode {
+  IconData toIcon() {
+    if (this == ThemeMode.light) {
+      return Broken.sun_1;
+    }
+    if (this == ThemeMode.dark) {
+      return Broken.moon;
+    }
+    return Broken.autobrightness;
+  }
+}
+
+extension WidgetsPages on Widget {
+  Future<void> updateColorScheme() async {
+    // TODO: Option to disable.
+    Color? color;
+    if (this is AlbumTracksPage || this is ArtistTracksPage) {
+      final Track? tr = tracksInside.trackOfImage;
+      if (tr != null) {
+        color = await CurrentColor.inst.getTrackDelightnedColor(tr);
+      }
+    }
+    CurrentColor.inst.updateCurrentColorSchemeOfSubPages(color);
+  }
+
+  List<Track> get tracksInside {
+    final tr = <Track>[];
+    if (this is TracksPage) {
+      tr.addAll(Indexer.inst.trackSearchList);
+    }
+    if (this is AlbumTracksPage) {
+      final album = this as AlbumTracksPage;
+      tr.addAll(album.tracks);
+    }
+    if (this is ArtistTracksPage) {
+      final artist = this as ArtistTracksPage;
+      tr.addAll(artist.tracks);
+    }
+    if (this is GenreTracksPage) {
+      final g = this as GenreTracksPage;
+      tr.addAll(g.tracks);
+    }
+    if (this is QueueTracksPage) {
+      final q = this as QueueTracksPage;
+      tr.addAll(q.queue.tracks);
+    }
+    if (this is PlaylisTracksPage) {
+      final pl = this as PlaylisTracksPage;
+      tr.addAll(pl.playlist.tracks.map((e) => e.track));
+    }
+    if (this is FoldersPage) {
+      tr.addAll(Folders.inst.currentTracks);
+    }
+    return tr;
+  }
+
+  Widget? toTitle() {
+    if (this is SettingsPage) {
+      return Text(Language.inst.SETTINGS);
+    }
+    if (this is SettingsSubPage) {
+      return Text((this as SettingsSubPage).title);
+    }
+    if (this is QueuesPage) {
+      return Obx(() => Text("${Language.inst.QUEUES} • ${QueueController.inst.queueList.length}"));
+    }
+    if (this is AlbumSearchResultsPage) {
+      return Text(Language.inst.ALBUMS);
+    }
+    if (this is ArtistSearchResultsPage) {
+      return Text(Language.inst.ARTISTS);
+    }
+    return const NamidaSearchBar();
+  }
+
+  List<Widget> toActions() {
+    Widget getMoreIcon(void Function()? onPressed) {
+      return NamidaIconButton(
+        icon: Broken.more_2,
+        padding: const EdgeInsets.only(right: 14, left: 4.0),
+        onPressed: onPressed,
+      );
+    }
+
+    Widget getAnimatedCrossFade({required Widget child, required bool shouldShow}) {
+      final notSettings = this is! SettingsPage && this is! SettingsSubPage;
+      return AnimatedCrossFade(
+        firstChild: child,
+        secondChild: const SizedBox(),
+        crossFadeState: notSettings && shouldShow ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+        duration: const Duration(milliseconds: 500),
+        reverseDuration: const Duration(milliseconds: 500),
+        sizeCurve: Curves.easeOut,
+        firstCurve: Curves.easeInOutQuart,
+        secondCurve: Curves.easeInOutQuart,
+      );
+    }
+
+    final initialActions = <Widget>[
+      ...[
+        const NamidaStatsIcon(),
+        const ParsingJsonPercentage(size: 30.0),
+        const NamidaSettingsButton(),
+      ].map(
+        (e) => getAnimatedCrossFade(child: e, shouldShow: true),
+      ),
+      getAnimatedCrossFade(
+        child: getMoreIcon(() {
+          /// Album Subpage
+          if (this is AlbumTracksPage) {
+            final album = this as AlbumTracksPage;
+            NamidaDialogs.inst.showAlbumDialog(album.name);
+          }
+
+          /// Artist Subpage
+          if (this is ArtistTracksPage) {
+            final artist = this as ArtistTracksPage;
+            NamidaDialogs.inst.showArtistDialog(artist.name, artist.tracks);
+          }
+
+          /// Genre Subpage
+          if (this is GenreTracksPage) {
+            final g = this as GenreTracksPage;
+            NamidaDialogs.inst.showGenreDialog(g.name, g.tracks);
+          }
+
+          /// Queue Subpage
+          if (this is QueueTracksPage) {
+            final q = this as QueueTracksPage;
+            NamidaDialogs.inst.showQueueDialog(q.queue);
+          }
+        }),
+        shouldShow:
+            this is! PlaylisTracksPage && (this is AlbumTracksPage || this is ArtistTracksPage || this is GenreTracksPage || this is QueueTracksPage || this is PlaylisTracksPage),
+      ),
+      getAnimatedCrossFade(
+        child: this is PlaylisTracksPage
+            ? Obx(
+                () {
+                  final pl = this as PlaylisTracksPage;
+                  return NamidaIconButton(
+                    tooltip: pl.shouldReorder.value ? Language.inst.DISABLE_REORDERING : Language.inst.ENABLE_REORDERING,
+                    icon: pl.shouldReorder.value ? Broken.forward_item : Broken.lock_1,
+                    padding: const EdgeInsets.only(right: 14, left: 4.0),
+                    onPressed: () => pl.shouldReorder.value = !pl.shouldReorder.value,
+                  );
+                },
+              )
+            : const SizedBox(),
+        shouldShow: this is PlaylisTracksPage,
+      ),
+      getAnimatedCrossFade(
+        child: getMoreIcon(() {
+          final pl = this as PlaylisTracksPage;
+          NamidaDialogs.inst.showPlaylistDialog(pl.playlist);
+        }),
+        shouldShow: this is PlaylisTracksPage,
+      ),
+    ];
+    return initialActions;
+  }
+}
+
+// extension MEDIACONVERT on String {
+//   Media toMedia() => Media(this);
+// }
+
+extension TracksFromMaps on String {
+  List<Track> getAlbumTracks() {
+    return Indexer.inst.mainMapAlbums.value[this] ?? [];
+  }
+
+  List<Track> getArtistTracks() {
+    return Indexer.inst.mainMapArtists.value[this] ?? [];
+  }
+
+  List<Track> getGenresTracks() {
+    return Indexer.inst.mainMapGenres.value[this] ?? [];
+  }
+
+  Set<String> getArtistAlbums() {
+    final tracks = getArtistTracks();
+    final albums = <String>{};
+    tracks.loop((t, i) {
+      albums.add(t.album);
+    });
+    return albums;
   }
 }

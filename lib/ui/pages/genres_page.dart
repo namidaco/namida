@@ -69,16 +69,16 @@ class GenresPage extends StatelessWidget {
                       columnCount: Indexer.inst.genreSearchList.length,
                       position: i,
                       child: MultiArtworkCard(
-                        heroTag: 'parent_genre_artwork_${genre.name}',
-                        tracks: genre.tracks,
-                        name: genre.name,
+                        heroTag: 'genre_artwork_$genre',
+                        tracks: genre.getGenresTracks(),
+                        name: genre,
                         gridCount: countPerRow,
                         showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(
-                          genre.name,
-                          genre.tracks,
-                          heroTag: 'genre_artwork_${genre.name}',
+                          genre,
+                          genre.getGenresTracks(),
+                          heroTag: 'genre_artwork_$genre',
                         ),
-                        onTap: () => NamidaOnTaps.inst.onGenreTap(genre.name),
+                        onTap: () => NamidaOnTaps.inst.onGenreTap(genre),
                       ),
                     );
                   },

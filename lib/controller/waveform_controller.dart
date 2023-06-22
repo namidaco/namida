@@ -83,10 +83,8 @@ class WaveformController {
       }
 
       await waveFile.writeAsString(waveformData.toString());
-      Indexer.inst.updateWaveformSizeInStorage();
+      Indexer.inst.updateWaveformSizeInStorage(waveFile);
     }
-
-    Indexer.inst.waveformsInStorage.refresh();
   }
 
   void _updateScaleMap(List<double> doubleList) {

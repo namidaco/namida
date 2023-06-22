@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -43,13 +44,13 @@ class MiniplayerCustomization extends StatelessWidget {
                 if (SettingsController.inst.didSupportNamida) {
                   SettingsController.inst.save(enablePartyModeInMiniplayer: true);
                 } else {
-                  Get.dialog(
+                  NamidaNavigator.inst.navigateDialog(
                     CustomBlurryDialog(
                       normalTitleStyle: true,
                       title: 'uwu',
                       actions: [
                         NamidaSupportButton(
-                          onPressed: () => Get.close(1),
+                          onPressed: () => NamidaNavigator.inst.closeDialog(),
                         ),
                       ],
                       child: Column(
@@ -66,8 +67,8 @@ class MiniplayerCustomization extends StatelessWidget {
                           ),
                           GestureDetector(
                             onTap: () {
-                              Get.close(1);
-                              Get.dialog(
+                              NamidaNavigator.inst.closeDialog();
+                              NamidaNavigator.inst.navigateDialog(
                                 CustomBlurryDialog(
                                   normalTitleStyle: true,
                                   title: '!!',
@@ -75,12 +76,12 @@ class MiniplayerCustomization extends StatelessWidget {
                                   actions: [
                                     NamidaSupportButton(
                                       title: Language.inst.YES,
-                                      onPressed: () => Get.close(1),
+                                      onPressed: () => NamidaNavigator.inst.closeDialog(),
                                     ),
                                     ElevatedButton(
                                       onPressed: () {
-                                        Get.close(1);
-                                        Get.dialog(
+                                        NamidaNavigator.inst.closeDialog();
+                                        NamidaNavigator.inst.navigateDialog(
                                           CustomBlurryDialog(
                                             title: 'kechi',
                                             bodyText: 'hidoii ಥ_ಥ here use it as much as u can, dw im not upset or anything ^^, or am i?',
@@ -88,14 +89,14 @@ class MiniplayerCustomization extends StatelessWidget {
                                               ElevatedButton(
                                                 child: Text(Language.inst.UNLOCK.toUpperCase()),
                                                 onPressed: () {
-                                                  Get.close(1);
+                                                  NamidaNavigator.inst.closeDialog();
                                                   SettingsController.inst.save(enablePartyModeInMiniplayer: true);
                                                 },
                                               ),
                                               ElevatedButton(
                                                 child: Text(Language.inst.SUPPORT.toUpperCase()),
                                                 onPressed: () {
-                                                  Get.close(1);
+                                                  NamidaNavigator.inst.closeDialog();
                                                   launchUrlString(k_NAMIDA_SUPPORT_LINK);
                                                 },
                                               ),

@@ -13,9 +13,10 @@ import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:wheel_slider/wheel_slider.dart';
 
-import 'package:namida/class/track.dart';
 import 'package:namida/class/playlist.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -26,8 +27,8 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
+import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class CustomSwitch extends StatelessWidget {
@@ -268,11 +269,13 @@ class NamidaBgBlur extends StatelessWidget {
 }
 
 class CustomBlurryDialog extends StatelessWidget {
-  final Widget? child;
-  final List<Widget>? trailingWidgets;
-  final String? title;
   final IconData? icon;
+  final String? title;
+  final Widget? titleWidget;
+  final List<Widget>? trailingWidgets;
+  final Widget? child;
   final List<Widget>? actions;
+  final Widget? leftAction;
   final bool normalTitleStyle;
   final String? bodyText;
   final bool isWarning;
@@ -298,13 +301,15 @@ class CustomBlurryDialog extends StatelessWidget {
     this.tapToDismiss = true,
     this.contentPadding,
     this.onDismissing,
+    this.leftAction,
+    this.titleWidget,
   });
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () {
-        return Future.value(tapToDismiss);
+      onWillPop: () async {
+        return tapToDismiss;
       },
       child: NamidaBgBlur(
         blur: 5.0,
@@ -312,81 +317,116 @@ class CustomBlurryDialog extends StatelessWidget {
         child: Theme(
           data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
           child: GestureDetector(
-            onTap: tapToDismiss
-                ? () {
-                    Get.close(1);
-                    if (onDismissing != null) onDismissing!();
-                  }
-                : null,
+            onTap: () {
+              if (tapToDismiss) {
+                NamidaNavigator.inst.closeDialog();
+              }
+              if (onDismissing != null) onDismissing!();
+            },
             child: Container(
-              color: Colors.transparent,
-              child: AlertDialog(
-                scrollable: scrollable,
-                insetPadding: insetPadding ?? const EdgeInsets.symmetric(horizontal: 50, vertical: 32),
-                clipBehavior: Clip.antiAlias,
-                titlePadding: normalTitleStyle ? const EdgeInsets.only(top: 24.0, left: 24.0, right: 24.0) : EdgeInsets.zero,
-                contentPadding: contentPadding ?? const EdgeInsets.all(14.0),
-                title: GestureDetector(
-                  onTap: () {},
-                  child: normalTitleStyle
-                      ? Row(
-                          children: [
-                            if (icon != null || isWarning) ...[
-                              Icon(
-                                isWarning ? Broken.warning_2 : icon,
-                              ),
-                              const SizedBox(
-                                width: 10.0,
-                              ),
-                            ],
-                            Expanded(
-                              child: Text(
-                                isWarning ? Language.inst.WARNING : title ?? '',
-                                style: context.textTheme.displayLarge,
-                              ),
+              color: Colors.black45,
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Dialog(
+                    surfaceTintColor: Colors.transparent,
+                    insetPadding: insetPadding ?? const EdgeInsets.symmetric(horizontal: 50, vertical: 32),
+                    clipBehavior: Clip.antiAlias,
+                    child: GestureDetector(
+                      onTap: () {},
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          /// Title.
+                          if (titleWidget != null) titleWidget!,
+                          if (titleWidget == null)
+                            normalTitleStyle
+                                ? Padding(
+                                    padding: const EdgeInsets.only(top: 24.0, left: 24.0, right: 24.0),
+                                    child: Row(
+                                      children: [
+                                        if (icon != null || isWarning) ...[
+                                          Icon(
+                                            isWarning ? Broken.warning_2 : icon,
+                                          ),
+                                          const SizedBox(
+                                            width: 10.0,
+                                          ),
+                                        ],
+                                        Expanded(
+                                          child: Text(
+                                            isWarning ? Language.inst.WARNING : title ?? '',
+                                            style: context.textTheme.displayLarge,
+                                          ),
+                                        ),
+                                        if (trailingWidgets != null) ...trailingWidgets!
+                                      ],
+                                    ),
+                                  )
+                                : Container(
+                                    color: context.theme.cardColor,
+                                    padding: const EdgeInsets.all(16),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        if (icon != null) ...[
+                                          Icon(
+                                            icon,
+                                          ),
+                                          const SizedBox(
+                                            width: 10.0,
+                                          ),
+                                        ],
+                                        Text(
+                                          title ?? '',
+                                          style: context.theme.textTheme.displayMedium,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                          /// Body.
+                          Padding(
+                            padding: contentPadding ?? const EdgeInsets.all(14.0),
+                            child: SizedBox(
+                              width: context.width,
+                              child: bodyText != null
+                                  ? Padding(
+                                      padding: const EdgeInsets.all(12.0),
+                                      child: Text(
+                                        bodyText!,
+                                        style: context.textTheme.displayMedium,
+                                      ),
+                                    )
+                                  : child,
                             ),
-                            if (trailingWidgets != null) ...trailingWidgets!
-                          ],
-                        )
-                      : Container(
-                          color: context.theme.cardColor,
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (icon != null) ...[
-                                Icon(
-                                  icon,
-                                ),
-                                const SizedBox(
-                                  width: 10.0,
-                                ),
-                              ],
-                              Text(
-                                title ?? '',
-                                style: context.theme.textTheme.displayMedium,
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
                           ),
-                        ),
-                ),
-                content: GestureDetector(
-                  onTap: () {},
-                  child: SizedBox(
-                    width: Get.width,
-                    child: bodyText != null
-                        ? Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Text(
-                              bodyText!,
-                              style: context.textTheme.displayMedium,
+
+                          /// Actions.
+                          if (actions != null)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  if (leftAction != null) ...[
+                                    const SizedBox(width: 6.0),
+                                    leftAction!,
+                                    const SizedBox(width: 6.0),
+                                    const Spacer(),
+                                  ],
+                                  ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
+                                ],
+                              ),
                             ),
-                          )
-                        : child,
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                actions: actions,
               ),
             ),
           ),
@@ -746,7 +786,7 @@ class CancelButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextButton(
-      onPressed: () => Get.close(1),
+      onPressed: () => NamidaNavigator.inst.closeDialog(),
       child: Text(Language.inst.CANCEL),
     );
   }
@@ -762,10 +802,10 @@ class CollapsedSettingTileWidget extends StatelessWidget {
         icon: Broken.archive,
         title: Language.inst.USE_COLLAPSED_SETTING_TILES,
         value: SettingsController.inst.useSettingCollapsedTiles.value,
-        onChanged: (p0) {
-          SettingsController.inst.save(useSettingCollapsedTiles: !p0);
-          Get.back();
-          Get.to(() => const SettingsPage());
+        onChanged: (isTrue) {
+          SettingsController.inst.save(useSettingCollapsedTiles: !isTrue);
+          NamidaNavigator.inst.popPage();
+          NamidaNavigator.inst.navigateOff(const SettingsPage());
         },
       ),
     );
@@ -1047,24 +1087,9 @@ class NamidaPartyContainer extends StatelessWidget {
         opacity: opacity,
         child: Obx(
           () {
-            final List<Color> palette = CurrentColor.inst.palette.toList();
-            RxList<Color> firstHalf = palette.getRange(0, palette.length ~/ 3).toList().obs;
-            RxList<Color> secondHalf = palette.getRange(palette.length ~/ 3, palette.length).toList().obs;
             final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value);
-            if (SettingsController.inst.enablePartyModeColorSwap.value) {
-              final sc = (100 * finalScale ~/ 1.5).clamp(1, 4);
-              for (int h = 1; h <= sc; h++) {
-                if (firstHalf.isEmpty || secondHalf.isEmpty) {
-                  break;
-                }
-                final lastItem1 = firstHalf.last;
-                firstHalf.remove(lastItem1);
-                firstHalf.insertSafe(0, lastItem1);
-                final lastItem2 = secondHalf.last;
-                secondHalf.remove(lastItem2);
-                secondHalf.insertSafe(0, lastItem2);
-              }
-            }
+            final firstHalf = CurrentColor.inst.paletteFirstHalf;
+            final secondHalf = CurrentColor.inst.paletteSecondHalf;
             return height != null
                 ? Row(
                     children: firstHalf
@@ -1428,11 +1453,11 @@ class NamidaLogoContainer extends StatelessWidget {
             height: 54.0,
             padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
             decoration: BoxDecoration(
-              color: Get.isDarkMode ? const Color(0xffb9a48b).withAlpha(200) : const Color(0xffdfc6a7).withAlpha(255),
+              color: context.isDarkMode ? const Color(0xffb9a48b).withAlpha(200) : const Color(0xffdfc6a7).withAlpha(255),
               borderRadius: BorderRadius.circular(12.0.multipliedRadius),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xffdfc6a7).withAlpha(Get.isDarkMode ? 40 : 100),
+                  color: const Color(0xffdfc6a7).withAlpha(context.isDarkMode ? 40 : 100),
                   spreadRadius: 0.2,
                   blurRadius: 8.0,
                   offset: const Offset(0.0, 4.0),

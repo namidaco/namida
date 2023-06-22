@@ -1,9 +1,9 @@
 // This is originally a part of [Tear Music](https://github.com/tearone/tearmusic), edited to fit Namida.
 // Credits goes for the original author @55nknown
 
-import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,13 +11,14 @@ import 'package:flutter/services.dart';
 import 'package:animated_background/animated_background.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:get/get.dart';
-import 'package:namida/core/namida_converter_ext.dart';
 import 'package:video_player/video_player.dart';
+import 'package:wakelock/wakelock.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -30,16 +31,16 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/packages/youtube_miniplayer.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
-import 'package:wakelock/wakelock.dart';
 
 class MiniPlayerParent extends StatefulWidget {
   const MiniPlayerParent({super.key});
@@ -335,7 +336,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () {
+      onWillPop: () async {
         bool val = true;
         // final isMini = maxOffset == 0;
         final isExpanded = offset == maxOffset;
@@ -348,12 +349,8 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
           snapToMini();
           val = false;
         }
-        if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
-          ScrollSearchController.inst.isGlobalSearchMenuShown.value = false;
-          val = false;
-        }
 
-        return Future.value(val);
+        return val;
       },
       child: Listener(
         onPointerDown: (event) {
@@ -843,8 +840,8 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                               padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 12.0),
                               child: TextButton(
                                 onLongPress: () {
-                                  Get.focusScope?.unfocus();
-                                  Get.dialog(const Dialog(child: PlaybackSettings(disableSubtitle: true)));
+                                  ScrollSearchController.inst.unfocusKeyboard();
+                                  NamidaNavigator.inst.navigateDialog(const Dialog(child: PlaybackSettings(isInDialog: true)));
                                 },
                                 onPressed: () async {
                                   VideoController.inst.updateYTLink(Player.inst.nowPlayingTrack.value);
@@ -1122,7 +1119,8 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                 color: context.theme.colorScheme.onBackground.withAlpha(110),
                                               ),
                                               // Slider
-                                              if (percentage > 0)
+                                              // TODO: fix non-accurate seeking.
+                                              if (percentage >= 0)
                                                 Opacity(
                                                   opacity: 0.0,
                                                   child: Material(
@@ -1240,7 +1238,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                               message: Language.inst.NEW_TRACKS_ADD,
                                               child: ElevatedButton(
                                                 onPressed: () {
-                                                  Get.dialog(
+                                                  NamidaNavigator.inst.navigateDialog(
                                                     CustomBlurryDialog(
                                                       normalTitleStyle: true,
                                                       title: Language.inst.NEW_TRACKS_ADD,
@@ -1252,7 +1250,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                             icon: Broken.format_circle,
                                                             maxSubtitleLines: 22,
                                                             onTap: () {
-                                                              Get.close(1);
+                                                              NamidaNavigator.inst.closeDialog();
                                                               final rt = getRandomTracks(8, 11);
                                                               if (rt.isEmpty) {
                                                                 Get.snackbar(Language.inst.ERROR, Language.inst.NO_ENOUGH_TRACKS);
@@ -1267,13 +1265,17 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                             icon: Broken.calendar,
                                                             maxSubtitleLines: 22,
                                                             onTap: () {
-                                                              Get.close(1);
+                                                              NamidaNavigator.inst.closeDialog();
+                                                              if (namidaHistoryPlaylist.tracks.isEmpty) {
+                                                                Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_IN_HISTORY);
+                                                                return;
+                                                              }
                                                               List<int> dates = [];
                                                               final dts = [namidaHistoryPlaylist.tracks.last.dateAdded, namidaHistoryPlaylist.tracks.first.dateAdded];
                                                               dts.sort((a, b) => a.compareTo(b));
                                                               final firstDateInHistory = dts.first;
                                                               final lastDateInHistory = dts.last;
-                                                              Get.dialog(
+                                                              NamidaNavigator.inst.navigateDialog(
                                                                 Transform.scale(
                                                                   scale: 0.9,
                                                                   child: CustomBlurryDialog(
@@ -1289,7 +1291,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                                             return;
                                                                           }
                                                                           Player.inst.addToQueue(tracks);
-                                                                          Get.close(1);
+                                                                          NamidaNavigator.inst.closeDialog();
                                                                         },
                                                                         child: Text(Language.inst.GENERATE),
                                                                       ),
@@ -1298,11 +1300,6 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                                       onValueChanged: (value) => dates.assignAll(value.map((e) => e?.millisecondsSinceEpoch ?? 0).toList()),
                                                                       config: CalendarDatePicker2Config(
                                                                         calendarType: CalendarDatePicker2Type.range,
-                                                                        yearBuilder: ({decoration, isCurrentYear, isDisabled, isSelected, textStyle, int? year}) {
-                                                                          return SizedBox(
-                                                                            child: Text(year.toString()),
-                                                                          );
-                                                                        },
                                                                         firstDate: DateTime.fromMillisecondsSinceEpoch(firstDateInHistory),
                                                                         lastDate: DateTime.fromMillisecondsSinceEpoch(lastDateInHistory),
                                                                       ),
@@ -1319,7 +1316,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                             icon: Broken.emoji_happy,
                                                             maxSubtitleLines: 22,
                                                             onTap: () {
-                                                              Get.close(1);
+                                                              NamidaNavigator.inst.closeDialog();
 
                                                               final moods = [];
                                                               moods.addAll(PlaylistController.inst.playlistList.expand((element) => element.moods.toList()).toSet().toList());
@@ -1329,7 +1326,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                                 return;
                                                               }
                                                               final RxSet<String> selectedmoods = <String>{}.obs;
-                                                              Get.dialog(
+                                                              NamidaNavigator.inst.navigateDialog(
                                                                 CustomBlurryDialog(
                                                                   normalTitleStyle: true,
                                                                   insetPadding: const EdgeInsets.symmetric(horizontal: 48.0),
@@ -1339,7 +1336,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                                     ElevatedButton(
                                                                       onPressed: () {
                                                                         Player.inst.addToQueue(generateTracksFromMoods(selectedmoods.toList()));
-                                                                        Get.close(1);
+                                                                        NamidaNavigator.inst.closeDialog();
                                                                       },
                                                                       child: Text(Language.inst.GENERATE),
                                                                     ),
@@ -1384,12 +1381,12 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                             icon: Broken.happyemoji,
                                                             maxSubtitleLines: 22,
                                                             onTap: () {
-                                                              Get.close(1);
+                                                              NamidaNavigator.inst.closeDialog();
 
                                                               final RxInt minRating = 80.obs;
                                                               final RxInt maxRating = 100.obs;
                                                               final RxInt maxNumberOfTracks = 40.obs;
-                                                              Get.dialog(
+                                                              NamidaNavigator.inst.navigateDialog(
                                                                 CustomBlurryDialog(
                                                                   normalTitleStyle: true,
                                                                   title: Language.inst.NEW_TRACKS_RATINGS,
@@ -1403,7 +1400,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                                         }
                                                                         final tracks = generateTracksFromRatings(minRating.value, maxRating.value, maxNumberOfTracks.value);
                                                                         Player.inst.addToQueue(tracks);
-                                                                        Get.close(1);
+                                                                        NamidaNavigator.inst.closeDialog();
                                                                       },
                                                                       child: Text(Language.inst.GENERATE),
                                                                     ),
@@ -1493,7 +1490,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                               icon: Broken.bezier,
                                                               maxSubtitleLines: 22,
                                                               onTap: () {
-                                                                Get.close(1);
+                                                                NamidaNavigator.inst.closeDialog();
                                                                 final gentracks = generateRecommendedTrack(Player.inst.nowPlayingTrack.value);
                                                                 if (gentracks.isEmpty) {
                                                                   Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_IN_HISTORY);
@@ -1713,6 +1710,7 @@ class TrackImage extends StatelessWidget {
                               child: ArtworkWidget(
                                 key: const ValueKey('imagecontainer'),
                                 path: track.pathToImage,
+                                track: track,
                                 thumnailSize: Get.width,
                                 compressed: false,
                                 borderRadius: 6.0 + 10.0 * cp,

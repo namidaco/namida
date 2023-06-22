@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -11,7 +12,7 @@ class ExpandableBox extends StatelessWidget {
   final bool isBarVisible;
   final bool showSearchBox;
   final bool displayloadingIndicator;
-  final void Function()? onFilterIconTap;
+  final void Function() onFilterIconTap;
   final String leftText;
   final void Function() onCloseButtonPressed;
   final SortByMenu sortByMenuWidget;
@@ -23,7 +24,7 @@ class ExpandableBox extends StatelessWidget {
     required this.isBarVisible,
     required this.showSearchBox,
     this.displayloadingIndicator = false,
-    this.onFilterIconTap,
+    required this.onFilterIconTap,
     required this.leftText,
     required this.onCloseButtonPressed,
     required this.sortByMenuWidget,
@@ -89,7 +90,7 @@ class ExpandableBox extends StatelessWidget {
                   NamidaIconButton(
                     onPressed: () {
                       onCloseButtonPressed();
-                      Get.focusScope?.unfocus();
+                      ScrollSearchController.inst.unfocusKeyboard();
                     },
                     icon: Broken.close_circle,
                   ),
@@ -157,7 +158,7 @@ class SortByMenu extends StatelessWidget {
           onPressed: () async => await showMenu(
             color: context.theme.appBarTheme.backgroundColor,
             context: context,
-            position: RelativeRect.fromLTRB(Get.width, Get.mediaQuery.padding.top + 56.0 * 2, 20, 0),
+            position: RelativeRect.fromLTRB(Get.width, 56.0, 20, 0),
             constraints: BoxConstraints(maxHeight: Get.height / 1.5),
             items: [
               PopupMenuItem(

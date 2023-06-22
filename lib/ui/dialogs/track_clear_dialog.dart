@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
-
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 void showTrackClearDialog(List<Track> tracks) {
   final isSingle = tracks.length == 1;
-  Get.dialog(
+  NamidaNavigator.inst.navigateDialog(
     CustomBlurryDialog(
       normalTitleStyle: true,
       icon: Broken.trash,
@@ -23,7 +22,7 @@ void showTrackClearDialog(List<Track> tracks) {
               icon: Broken.video,
               onTap: () async {
                 await EditDeleteController.inst.deleteCachedVideos(tracks);
-                Get.close(1);
+                NamidaNavigator.inst.closeDialog();
               },
             ),
           if (tracks.hasWaveformCached)
@@ -32,7 +31,7 @@ void showTrackClearDialog(List<Track> tracks) {
               icon: Broken.sound,
               onTap: () async {
                 await EditDeleteController.inst.deleteWaveFormData(tracks);
-                Get.close(1);
+                NamidaNavigator.inst.closeDialog();
               },
             ),
           if (tracks.hasLyricsCached)
@@ -41,7 +40,7 @@ void showTrackClearDialog(List<Track> tracks) {
               icon: Broken.document,
               onTap: () async {
                 await EditDeleteController.inst.deleteLyrics(tracks);
-                Get.close(1);
+                NamidaNavigator.inst.closeDialog();
               },
             ),
           if (tracks.hasArtworkCached)
@@ -50,7 +49,7 @@ void showTrackClearDialog(List<Track> tracks) {
               icon: Broken.image,
               onTap: () async {
                 await EditDeleteController.inst.deleteArtwork(tracks);
-                Get.close(1);
+                NamidaNavigator.inst.closeDialog();
               },
             ),
         ],

@@ -4,12 +4,13 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/themes.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
@@ -28,45 +29,6 @@ class ThemeSetting extends StatelessWidget {
         child: Column(
           children: [
             CustomListTile(
-              // onTap: () {
-              //   Get.dialog(
-              //     CustomBlurryDialog(
-              //       title: Language.inst.THEME_MODE,
-              //       child: Material(
-              //         borderRadius: BorderRadius.circular(24),
-              //         child: Column(
-              //           mainAxisSize: MainAxisSize.min,
-              //           children: [
-              //             CustomListTile(
-              //               icon: Broken.autobrightness,
-              //               title: Language.inst.THEME_MODE_SYSTEM,
-              //               onTap: () {
-              //                 SettingsController.inst.save(themeMode: ThemeMode.system);
-              //                 Get.close(1);
-              //               },
-              //             ),
-              //             CustomListTile(
-              //               icon: Broken.sun_1,
-              //               title: Language.inst.THEME_MODE_LIGHT,
-              //               onTap: () {
-              //                 SettingsController.inst.save(themeMode: ThemeMode.light);
-              //                 Get.close(1);
-              //               },
-              //             ),
-              //             CustomListTile(
-              //               icon: Broken.moon,
-              //               title: Language.inst.THEME_MODE_DARK,
-              //               onTap: () {
-              //                 SettingsController.inst.save(themeMode: ThemeMode.dark);
-              //                 Get.close(1);
-              //               },
-              //             ),
-              //           ],
-              //         ),
-              //       ),
-              //     ),
-              //   );
-              // },
               icon: Broken.brush_4,
               title: Language.inst.THEME_MODE,
               trailing: const ToggleThemeModeContainer(),
@@ -77,10 +39,10 @@ class ThemeSetting extends StatelessWidget {
                 title: Language.inst.AUTO_COLORING,
                 subtitle: Language.inst.AUTO_COLORING_SUBTITLE,
                 value: SettingsController.inst.autoColor.value,
-                onChanged: (p0) async {
-                  SettingsController.inst.save(autoColor: !p0);
-                  if (p0) {
-                    CurrentColor.inst.color.value = playerStaticColor;
+                onChanged: (isTrue) async {
+                  SettingsController.inst.save(autoColor: !isTrue);
+                  if (isTrue) {
+                    CurrentColor.inst.updatePlayerColorFromColor(playerStaticColor);
                   } else {
                     await CurrentColor.inst.setPlayerColor(Player.inst.nowPlayingTrack.value);
                   }
@@ -99,7 +61,7 @@ class ThemeSetting extends StatelessWidget {
                   minRadius: 12,
                   backgroundColor: playerStaticColor,
                 ),
-                onTap: () => Get.dialog(
+                onTap: () => NamidaNavigator.inst.navigateDialog(
                   CustomBlurryDialog(
                     actions: [
                       IconButton(
@@ -107,11 +69,11 @@ class ThemeSetting extends StatelessWidget {
                         tooltip: Language.inst.RESTORE_DEFAULTS,
                         onPressed: () {
                           _updateColor(kMainColor);
-                          Get.close(1);
+                          NamidaNavigator.inst.closeDialog();
                         },
                       ),
                       ElevatedButton(
-                        onPressed: () => Get.close(1),
+                        onPressed: () => NamidaNavigator.inst.closeDialog(),
                         child: Text(Language.inst.DONE),
                       ),
                     ],
@@ -133,8 +95,7 @@ class ThemeSetting extends StatelessWidget {
 
   void _updateColor(Color color) {
     SettingsController.inst.save(staticColor: color.value);
-    CurrentColor.inst.color.value = color;
-    CurrentColor.inst.updateThemeAndRefresh();
+    CurrentColor.inst.updatePlayerColorFromColor(color, false);
   }
 }
 
@@ -143,10 +104,10 @@ class ToggleThemeModeContainer extends StatelessWidget {
   final double blurRadius;
   const ToggleThemeModeContainer({super.key, this.width, this.blurRadius = 6.0});
 
-  onThemeChangeTap(ThemeMode themeMode, bool light) {
+  onThemeChangeTap(ThemeMode themeMode) {
     SettingsController.inst.save(themeMode: themeMode);
-    Get.changeTheme(AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, light));
     Get.changeThemeMode(themeMode);
+    CurrentColor.inst.updateThemeAndRefresh();
   }
 
   @override
@@ -191,29 +152,17 @@ class ToggleThemeModeContainer extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 1.2),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    InkWell(
-                      onTap: () => onThemeChangeTap(ThemeMode.system, !context.isDarkMode),
-                      child: Icon(
-                        Broken.autobrightness,
-                        color: currentTheme == ThemeMode.system ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.background.withAlpha(180),
-                      ),
-                    ),
-                    InkWell(
-                      onTap: () => onThemeChangeTap(ThemeMode.light, true),
-                      child: Icon(
-                        Broken.sun_1,
-                        color: currentTheme == ThemeMode.light ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.background.withAlpha(180),
-                      ),
-                    ),
-                    InkWell(
-                      onTap: () => onThemeChangeTap(ThemeMode.dark, false),
-                      child: Icon(
-                        Broken.moon,
-                        color: currentTheme == ThemeMode.dark ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.background.withAlpha(180),
-                      ),
-                    ),
-                  ],
+                  children: ThemeMode.values
+                      .map(
+                        (e) => InkWell(
+                          onTap: () => onThemeChangeTap(e),
+                          child: Icon(
+                            e.toIcon(),
+                            color: currentTheme == e ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.background.withAlpha(180),
+                          ),
+                        ),
+                      )
+                      .toList(),
                 ),
               ),
             ],

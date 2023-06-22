@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -19,7 +20,7 @@ void showTrackListensDialog(Track track, {List<int>? datesOfListen, ThemeData? t
 
   if (datesOfListen.isEmpty) return;
 
-  Get.dialog(
+  NamidaNavigator.inst.navigateDialog(
     CustomBlurryDialog(
       normalTitleStyle: true,
       title: Language.inst.TOTAL_LISTENS,

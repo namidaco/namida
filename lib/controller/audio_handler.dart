@@ -101,6 +101,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     _player.playingStream.listen((event) async {
       isPlaying.value = event;
       await updateVideoPlayingState();
+      CurrentColor.inst.switchColorPalettes(event);
     });
 
     _player.positionStream.listen((event) {
@@ -167,7 +168,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     nowPlayingTrack.value = tr;
     currentIndex.value = index;
 
-    CurrentColor.inst.updatePlayerColor(tr, index);
+    CurrentColor.inst.updatePlayerColorFromTrack(tr, index);
     VideoController.inst.updateLocalVidPath(tr);
     updateVideoPlayingState();
     updateCurrentMediaItem(tr);
@@ -178,7 +179,8 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
       if (startPlaying && !isPlaying.value) {
         _player.play();
       }
-      await _player.setAudioSource(tr.toAudioSource(), preload: preload);
+      final dur = await _player.setAudioSource(tr.toAudioSource(), preload: preload);
+      if (tr.duration == 0) tr.duration = dur?.inMilliseconds ?? 0;
       _player.pause();
       await tryRestoringLastPosition(tr);
 
@@ -363,7 +365,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     currentQueue.assignAll(q);
     final index = currentQueue.indexOf(ct);
     currentIndex.value = index;
-    CurrentColor.inst.updatePlayerColor(ct, index);
+    CurrentColor.inst.updatePlayerColorFromTrack(ct, index);
   }
 
   void addToQueue(List<Track> tracks, {bool insertNext = false, bool insertAfterLatest = false}) {

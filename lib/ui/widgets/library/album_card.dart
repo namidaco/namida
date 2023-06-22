@@ -15,6 +15,7 @@ import 'package:namida/ui/dialogs/common_dialogs.dart';
 
 class AlbumCard extends StatelessWidget {
   final int? gridCountOverride;
+  final String name;
   final List<Track> album;
   final bool staggered;
   final bool compact;
@@ -22,6 +23,7 @@ class AlbumCard extends StatelessWidget {
   const AlbumCard({
     super.key,
     this.gridCountOverride,
+    required this.name,
     required this.album,
     required this.staggered,
     this.compact = false,
@@ -57,13 +59,14 @@ class AlbumCard extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             highlightColor: const Color.fromARGB(60, 120, 120, 120),
-            onLongPress: () => NamidaDialogs.inst.showAlbumDialog(album, heroTag: 'parent_album_artwork_${album.album}'),
+            onLongPress: () => NamidaDialogs.inst.showAlbumDialog(name),
             onTap: () => NamidaOnTaps.inst.onAlbumTap(album.album),
             child: Column(
               children: [
                 Hero(
-                  tag: 'parent_album_artwork_${album.album}',
+                  tag: 'album_$name',
                   child: ArtworkWidget(
+                    track: album.trackOfImage,
                     thumnailSize: thumnailSize,
                     path: album.pathToImage,
                     borderRadius: 10.0,

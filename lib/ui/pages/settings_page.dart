@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/main_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/advanced_settings.dart';
 import 'package:namida/ui/widgets/settings/backup_restore_settings.dart';
@@ -22,42 +22,38 @@ class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
   @override
   Widget build(BuildContext context) {
-    return MainPageWrapper(
-      title: Text(Language.inst.SETTINGS),
-      actions: const [],
-      child: AnimatedContainer(
-        duration: const Duration(seconds: 4),
-        child: Stack(
-          children: [
-            Container(
-              height: context.height,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    CurrentColor.inst.color.value.withAlpha(context.isDarkMode ? 0 : 25),
-                    CurrentColor.inst.color.value.withAlpha(context.isDarkMode ? 55 : 110),
-                  ],
-                ),
+    return AnimatedContainer(
+      duration: const Duration(seconds: 4),
+      child: Stack(
+        children: [
+          Container(
+            height: context.height,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  context.theme.appBarTheme.backgroundColor ?? CurrentColor.inst.color.value.withAlpha(context.isDarkMode ? 0 : 25),
+                  CurrentColor.inst.color.value.withAlpha(context.isDarkMode ? 40 : 60),
+                ],
               ),
             ),
-            SettingsController.inst.useSettingCollapsedTiles.value
-                ? const CollapsedSettingTiles()
-                : ListView(
-                    children: [
-                      const ThemeSetting(),
-                      IndexerSettings(),
-                      const PlaybackSettings(),
-                      CustomizationSettings(),
-                      const ExtrasSettings(),
-                      const BackupAndRestore(),
-                      AdvancedSettings(),
-                      kBottomPaddingWidget,
-                    ],
-                  ),
-          ],
-        ),
+          ),
+          SettingsController.inst.useSettingCollapsedTiles.value
+              ? const CollapsedSettingTiles()
+              : ListView(
+                  children: const [
+                    ThemeSetting(),
+                    IndexerSettings(),
+                    PlaybackSettings(),
+                    CustomizationSettings(),
+                    ExtrasSettings(),
+                    BackupAndRestore(),
+                    AdvancedSettings(),
+                    kBottomPaddingWidget,
+                  ],
+                ),
+        ],
       ),
     );
   }
@@ -69,38 +65,31 @@ class SettingsSubPage extends StatelessWidget {
   const SettingsSubPage({super.key, required this.child, required this.title});
   @override
   Widget build(BuildContext context) {
-    return MainPageWrapper(
-      title: Text(title),
-      actions: const [],
-      child: AnimatedContainer(
-        duration: const Duration(seconds: 4),
-        child: Stack(
-          children: [
-            Container(
-              height: context.height,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    CurrentColor.inst.color.value.withAlpha(context.isDarkMode ? 0 : 25),
-                    CurrentColor.inst.color.value.withAlpha(context.isDarkMode ? 55 : 110),
-                  ],
-                ),
-              ),
+    return Stack(
+      children: [
+        Container(
+          height: context.height,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                context.theme.appBarTheme.backgroundColor ?? CurrentColor.inst.color.value.withAlpha(context.isDarkMode ? 0 : 25),
+                CurrentColor.inst.color.value.withAlpha(context.isDarkMode ? 40 : 60),
+              ],
             ),
-            SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  child,
-                  kBottomPaddingWidget,
-                ],
-              ),
-            )
-          ],
+          ),
         ),
-      ),
+        SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              child,
+              kBottomPaddingWidget,
+            ],
+          ),
+        )
+      ],
     );
   }
 }
@@ -122,7 +111,7 @@ class CollapsedSettingTiles extends StatelessWidget {
           title: Language.inst.INDEXER,
           subtitle: Language.inst.INDEXER_SUBTITLE,
           icon: Broken.component,
-          page: IndexerSettings(),
+          page: const IndexerSettings(),
           trailing: const IndexingPercentage(size: 32.0),
         ),
         CustomCollapsedListTile(
@@ -135,7 +124,7 @@ class CollapsedSettingTiles extends StatelessWidget {
           title: Language.inst.CUSTOMIZATIONS,
           subtitle: Language.inst.CUSTOMIZATIONS_SUBTITLE,
           icon: Broken.brush_1,
-          page: CustomizationSettings(),
+          page: const CustomizationSettings(),
         ),
         CustomCollapsedListTile(
           title: Language.inst.EXTRAS,
@@ -154,7 +143,7 @@ class CollapsedSettingTiles extends StatelessWidget {
           title: Language.inst.ADVANCED_SETTINGS,
           subtitle: Language.inst.ADVANCED_SETTINGS_SUBTITLE,
           icon: Broken.hierarchy_3,
-          page: AdvancedSettings(),
+          page: const AdvancedSettings(),
         ),
         const CollapsedSettingTileWidget(),
         kBottomPaddingWidget,
@@ -187,8 +176,8 @@ class CustomCollapsedListTile extends StatelessWidget {
           ),
         ],
       ),
-      onTap: () => Get.to(
-        () => SettingsSubPage(
+      onTap: () => NamidaNavigator.inst.navigateTo(
+        SettingsSubPage(
           title: title,
           child: page,
         ),

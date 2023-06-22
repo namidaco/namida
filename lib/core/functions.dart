@@ -10,13 +10,14 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
-import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/artist_tracks_subpage.dart';
@@ -28,49 +29,41 @@ class NamidaOnTaps {
   static final NamidaOnTaps inst = NamidaOnTaps();
 
   Future<void> onArtistTap(String name, [List<Track>? tracksPre]) async {
-    ScrollSearchController.inst.isGlobalSearchMenuShown.value = false;
-    final tracks = tracksPre ?? Indexer.inst.artistSearchList.firstWhere((element) => element.name == name).tracks;
-    SelectedTracksController.inst.updateCurrentTracks(tracks);
-    final albums = name.artistAlbums;
+    final tracks = tracksPre ?? name.getArtistTracks();
+
+    final albums = name.getArtistAlbums();
     final color = await CurrentColor.inst.getTrackDelightnedColor(tracks[tracks.indexOfImage]);
 
-    Get.to(
-      () => ArtistTracksPage(
+    NamidaNavigator.inst.navigateTo(
+      ArtistTracksPage(
         name: name,
         colorScheme: color,
         tracks: tracks,
         albums: albums,
       ),
-      preventDuplicates: false,
     );
   }
 
-  Future<void> onAlbumTap(String name) async {
+  Future<void> onAlbumTap(String album) async {
     ScrollSearchController.inst.isGlobalSearchMenuShown.value = false;
-    final tracks = Indexer.inst.albumSearchList.firstWhere((element) => element.name == name).tracks;
+    final tracks = album.getAlbumTracks();
     final color = await CurrentColor.inst.getTrackDelightnedColor(tracks[tracks.indexOfImage]);
-    SelectedTracksController.inst.updateCurrentTracks(tracks);
 
-    await Get.to(
-      () => AlbumTracksPage(
-        name: name,
+    NamidaNavigator.inst.navigateTo(
+      AlbumTracksPage(
+        name: album,
         colorScheme: color,
         tracks: tracks,
       ),
-      preventDuplicates: false,
     );
   }
 
   Future<void> onGenreTap(String name) async {
-    final tracks = Indexer.inst.groupedGenresList.firstWhere((element) => element.name == name).tracks;
-    SelectedTracksController.inst.updateCurrentTracks(tracks);
-
-    await Get.to(
-      () => GenreTracksPage(
+    NamidaNavigator.inst.navigateTo(
+      GenreTracksPage(
         name: name,
-        tracks: tracks,
+        tracks: name.getGenresTracks(),
       ),
-      preventDuplicates: false,
     );
   }
 
@@ -80,26 +73,24 @@ class NamidaOnTaps {
     ScrollController? scrollController,
     int? indexToHighlight,
   }) async {
-    final tracks = playlist.tracks.map((e) => e.track);
-    SelectedTracksController.inst.updateCurrentTracks(tracks);
-    await Get.to(
-      () => PlaylisTracksPage(
+    NamidaNavigator.inst.navigateTo(
+      PlaylisTracksPage(
         playlist: playlist,
         disableAnimation: disableAnimation,
         indexToHighlight: indexToHighlight,
         scrollController: scrollController,
       ),
-      preventDuplicates: false,
     );
   }
 
-  Future<void> onFolderOpen(Folder folder, bool isMainStoragePath) async {
+  Future<void> onFolderTap(Folder folder, bool isMainStoragePath) async {
     Folders.inst.stepIn(folder, isMainStoragePath: isMainStoragePath);
   }
 
   Future<void> onQueueTap(Queue queue) async {
-    SelectedTracksController.inst.updateCurrentTracks(queue.tracks);
-    await Get.to(() => QueueTracksPage(queue: queue), preventDuplicates: false);
+    NamidaNavigator.inst.navigateTo(
+      QueueTracksPage(queue: queue),
+    );
   }
 
   void onRemoveTrackFromPlaylist(int index, Playlist playlist) {
@@ -278,24 +269,20 @@ List<Track> generateTracksFromRatings(
 }
 
 List<Track> generateTracksFromAlbum(String album) {
-  final trs = Indexer.inst.albumsList.firstWhere((element) => element.name == album).tracks;
-  return _addTheseTracksFromMedia(trs);
+  return _addTheseTracksFromMedia(album.getAlbumTracks());
 }
 
 List<Track> generateTracksFromArtist(String artist) {
-  final trs = Indexer.inst.groupedArtistsList.firstWhere((element) => element.name == artist).tracks;
-  return _addTheseTracksFromMedia(trs);
+  return _addTheseTracksFromMedia(artist.getArtistTracks());
 }
 
-List<Track> generateTracksFromFolder(String folderPath) {
-  final trs = Folders.inst.folderslist.firstWhere((element) => element.path == folderPath).tracks;
-  return _addTheseTracksFromMedia(trs);
+List<Track> generateTracksFromFolder(Folder folder) {
+  return _addTheseTracksFromMedia(folder.tracks);
 }
 
 List<Track> _addTheseTracksFromMedia(Iterable<Track> tracks, [int maxCount = 10]) {
-  final trs = <Track>[];
-  trs.addAll(tracks);
+  final trs = List<Track>.from(tracks);
   trs.shuffle();
-  trs.remove(Player.inst.nowPlayingTrack.value);
+  trs.removeWhere((element) => Player.inst.currentQueue.contains(element));
   return trs.take(maxCount).toList();
 }

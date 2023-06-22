@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -25,7 +26,7 @@ class JsonToHistoryParser {
   final Rx<TrackSource> currentParsingSource = TrackSource.local.obs;
 
   void showParsingProgressDialog() {
-    Get.dialog(
+    NamidaNavigator.inst.navigateDialog(
       Obx(
         () => CustomBlurryDialog(
           normalTitleStyle: true,
@@ -33,7 +34,7 @@ class JsonToHistoryParser {
           actions: [
             TextButton(
               child: Text(Language.inst.CONFIRM),
-              onPressed: () => Get.close(1),
+              onPressed: () => NamidaNavigator.inst.closeDialog(),
             )
           ],
           bodyText:
@@ -66,6 +67,7 @@ class JsonToHistoryParser {
       if (contents.isNotEmpty) {
         final jsonResponse = jsonDecode(contents) as List;
         totalJsonToParse.value = jsonResponse.length;
+        isLoadingFile.value = false;
 
         for (final p in jsonResponse) {
           final link = utf8.decode((p['titleUrl']).toString().codeUnits);
@@ -112,7 +114,6 @@ class JsonToHistoryParser {
     }
 
     isParsing.value = false;
-    isLoadingFile.value = false;
   }
 
   void _resetValues() {
@@ -124,6 +125,7 @@ class JsonToHistoryParser {
   Future<void> addFileSourceToNamidaHistory(File file, TrackSource source, {bool isMatchingTypeLink = true, bool matchYT = true, bool matchYTMusic = true}) async {
     _resetValues();
     isParsing.value = true;
+    isLoadingFile.value = true;
 
     await PlaylistController.inst.backupHistoryPlaylist();
 

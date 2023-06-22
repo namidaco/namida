@@ -5,6 +5,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -168,7 +169,7 @@ class PlaylistsPage extends StatelessWidget {
                                       icon: Broken.driver,
                                       title: Language.inst.QUEUES,
                                       text: QueueController.inst.queueList.length.toString(),
-                                      onTap: () => Get.to(() => const QueuesPage()),
+                                      onTap: () => NamidaNavigator.inst.navigateTo(const QueuesPage()),
                                     ),
                                   ),
                                 ],
@@ -209,7 +210,7 @@ class PlaylistsPage extends StatelessWidget {
                                 columnCount: PlaylistController.inst.playlistSearchList.length,
                                 position: i,
                                 child: MultiArtworkCard(
-                                  heroTag: 'parent_playlist_artwork_${playlist.name}',
+                                  heroTag: 'playlist_artwork_${playlist.name}',
                                   tracks: playlist.tracks.map((e) => e.track).toList(),
                                   name: playlist.name.translatePlaylistName(),
                                   gridCount: playlistGridCount,

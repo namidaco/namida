@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/folder.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -14,12 +15,24 @@ import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 
 class FolderTile extends StatelessWidget {
   final Folder folder;
+  final List<Track>? dummyTracks;
   final void Function()? onTap;
   final bool isMainStoragePath;
-  const FolderTile({super.key, required this.folder, this.onTap, this.isMainStoragePath = false});
+  final String? subtitle;
+
+  const FolderTile({
+    super.key,
+    required this.folder,
+    this.onTap,
+    this.isMainStoragePath = false,
+    this.dummyTracks,
+    this.subtitle,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final dirInside = folder.getDirectoriesInside();
+    final tracks = dummyTracks ?? folder.tracks;
     return Container(
       margin: const EdgeInsets.only(bottom: 4.0),
       child: Material(
@@ -27,22 +40,17 @@ class FolderTile extends StatelessWidget {
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 0, 0, 0),
           onLongPress: () {},
-          onTap: onTap ?? () => NamidaOnTaps.inst.onFolderOpen(folder, isMainStoragePath),
+          onTap: onTap ?? () => NamidaOnTaps.inst.onFolderTap(folder, isMainStoragePath),
           child: Container(
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(vertical: 4.0),
             height: SettingsController.inst.trackListTileHeight.value + 4.0 + 4.0,
             child: Row(
               children: [
-                const SizedBox(
-                  width: 12.0,
-                ),
+                const SizedBox(width: 12.0),
                 Stack(
                   children: [
-                    Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 0.0,
-                      ),
+                    SizedBox(
                       width: SettingsController.inst.trackThumbnailSizeinList.value,
                       height: SettingsController.inst.trackThumbnailSizeinList.value,
                       child: Stack(
@@ -53,15 +61,14 @@ class FolderTile extends StatelessWidget {
                             size: (SettingsController.inst.trackThumbnailSizeinList.value / 1.35).clamp(0, SettingsController.inst.trackListTileHeight.value),
                           ),
                           Positioned(
-                            // top: 0,
-                            // right: 0,
                             child: Padding(
                               padding: const EdgeInsets.only(top: 8.0),
                               child: ArtworkWidget(
                                 blur: 0,
                                 borderRadius: 6,
                                 thumnailSize: (SettingsController.inst.trackThumbnailSizeinList.value / 2.6).clamp(0, SettingsController.inst.trackListTileHeight.value * 0.5),
-                                path: folder.tracks.pathToImage,
+                                path: tracks.firstOrNull?.pathToImage,
+                                track: tracks.firstOrNull,
                                 forceSquared: true,
                               ),
                             ),
@@ -71,9 +78,7 @@ class FolderTile extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(
-                  width: 12.0,
-                ),
+                const SizedBox(width: 12.0),
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -85,11 +90,17 @@ class FolderTile extends StatelessWidget {
                         maxLines: 1,
                         style: context.textTheme.displayMedium!,
                       ),
+                      if (subtitle != null)
+                        Text(
+                          subtitle!,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: context.textTheme.displaySmall!,
+                        ),
                       Text(
                         [
-                          folder.tracks.displayTrackKeyword,
-                          //TODO(MSOB7YY): fix
-                          if (folder.path.getDirectoriesInside.isNotEmpty) folder.path.getDirectoriesInside.length.displayFolderKeyword,
+                          tracks.displayTrackKeyword,
+                          if (dirInside.isNotEmpty) dirInside.length.displayFolderKeyword,
                         ].join(' - '),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
@@ -105,14 +116,14 @@ class FolderTile extends StatelessWidget {
                   padding: 6.0,
                   onPressed: () {
                     showGeneralPopupDialog(
-                      folder.tracks,
+                      tracks,
                       folder.folderName,
                       [
-                        folder.tracks.displayTrackKeyword,
-                        folder.tracks.totalDurationFormatted,
+                        tracks.displayTrackKeyword,
+                        tracks.totalDurationFormatted,
                       ].join(' • '),
                       QueueSource.folder,
-                      thirdLineText: folder.tracks.map((e) => e.size).reduce((a, b) => a + b).fileSizeFormatted,
+                      thirdLineText: tracks.map((e) => e.size).reduce((a, b) => a + b).fileSizeFormatted,
                     );
                   },
                 ),

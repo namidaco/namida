@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
@@ -11,10 +12,8 @@ import 'package:on_audio_edit/on_audio_edit.dart' as audioedit;
 import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:namida/class/folder.dart';
-import 'package:namida/class/group.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
-import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -49,22 +48,24 @@ class Indexer {
   final TextEditingController artistsSearchController = TextEditingController();
   final TextEditingController genresSearchController = TextEditingController();
 
+  RxBool get isSearching => (trackSearchTemp.isNotEmpty || albumSearchTemp.isNotEmpty || artistSearchTemp.isNotEmpty).obs;
+
+  final Rx<Map<String, List<Track>>> mainMapAlbums = LinkedHashMap<String, List<Track>>(equals: (p0, p1) => p0.toLowerCase() == p1.toLowerCase()).obs;
+  final Rx<Map<String, List<Track>>> mainMapArtists = LinkedHashMap<String, List<Track>>(equals: (p0, p1) => p0.toLowerCase() == p1.toLowerCase()).obs;
+  final Rx<Map<String, List<Track>>> mainMapGenres = LinkedHashMap<String, List<Track>>(equals: (p0, p1) => p0.toLowerCase() == p1.toLowerCase()).obs;
+  final RxMap<Folder, List<Track>> mainMapFolders = <Folder, List<Track>>{}.obs;
+
   final RxList<Track> tracksInfoList = <Track>[].obs;
-  final RxList<Group> albumsList = <Group>[].obs;
-  final RxList<Group> groupedArtistsList = <Group>[].obs;
-  final RxList<Group> groupedGenresList = <Group>[].obs;
-  final RxList<Folder> groupedFoldersList = <Folder>[].obs;
-  // final RxMap<String, List<Track>> groupedFoldersMap = <String, List<Track>>{}.obs;
 
   final RxList<Track> trackSearchList = <Track>[].obs;
-  final RxList<Group> albumSearchList = <Group>[].obs;
-  final RxList<Group> artistSearchList = <Group>[].obs;
-  final RxList<Group> genreSearchList = <Group>[].obs;
+  final RxList<String> albumSearchList = <String>[].obs;
+  final RxList<String> artistSearchList = <String>[].obs;
+  final RxList<String> genreSearchList = <String>[].obs;
 
   /// Temporary lists.
   final RxList<Track> trackSearchTemp = <Track>[].obs;
-  final RxList<Group> albumSearchTemp = <Group>[].obs;
-  final RxList<Group> artistSearchTemp = <Group>[].obs;
+  final RxList<String> albumSearchTemp = <String>[].obs;
+  final RxList<String> artistSearchTemp = <String>[].obs;
 
   /// tracks map used for lookup
   final Map<String, Track> allTracksMappedByPath = {};
@@ -98,10 +99,10 @@ class Indexer {
   }
 
   void _afterIndexing() {
-    albumsList.clear();
-    groupedArtistsList.clear();
-    groupedGenresList.clear();
-    groupedFoldersList.clear();
+    mainMapAlbums.value.clear();
+    mainMapArtists.value.clear();
+    mainMapGenres.value.clear();
+    mainMapFolders.clear();
 
     _addTheseTracksToAlbumGenreArtistEtc(tracksInfoList);
 
@@ -116,62 +117,33 @@ class Indexer {
   }
 
   void _addTheseTracksToAlbumGenreArtistEtc(List<Track> tracks, {bool preventDuplicates = false}) {
-    //TODO(MSOB7YY): make the check optional, its only really needed when updating tracks (like after editing metadata)
-    for (final tr in tracks) {
+    // TODO sort after adding
+    tracks.loop((tr, i) {
       /// Assigning Albums
-      final album = albumsList.firstWhereOrNull((element) => element.name.toLowerCase() == tr.album.toLowerCase());
-      if (album == null) {
-        albumsList.add(Group(tr.album, [tr]));
-      } else {
-        album.tracks.addNoDuplicates(tr, preventDuplicates: preventDuplicates);
-      }
-      album?.tracks.sort((a, b) => a.title.compareTo(b.title));
+      mainMapAlbums.value.addNoDuplicatesForce(tr.album, tr, preventDuplicates: preventDuplicates);
 
-      /// Assigning Artist
-      for (final artist in tr.artistsList) {
-        final art = groupedArtistsList.firstWhereOrNull((element) => element.name.toLowerCase() == artist.toLowerCase());
-        if (art == null) {
-          groupedArtistsList.add(Group(artist, [tr]));
-        } else {
-          art.tracks.addNoDuplicates(tr, preventDuplicates: preventDuplicates);
-        }
-        art?.tracks.sort((a, b) => a.title.compareTo(b.title));
-      }
+      /// Assigning Artists
+      tr.artistsList.loop((artist, i) {
+        mainMapArtists.value.addNoDuplicatesForce(artist, tr, preventDuplicates: preventDuplicates);
+      });
 
       /// Assigning Genres
-      for (final genre in tr.genresList) {
-        final gen = groupedGenresList.firstWhereOrNull((element) => element.name.toLowerCase() == genre.toLowerCase());
-        if (gen == null) {
-          groupedGenresList.add(Group(genre, [tr]));
-        } else {
-          gen.tracks.addNoDuplicates(tr, preventDuplicates: preventDuplicates);
-        }
-        gen?.tracks.sort((a, b) => a.title.compareTo(b.title));
-      }
+      tr.genresList.loop((genre, i) {
+        mainMapGenres.value.addNoDuplicatesForce(genre, tr, preventDuplicates: preventDuplicates);
+      });
 
       /// Assigning Folders
-      final folder = groupedFoldersList.firstWhereOrNull((element) => element.path == tr.folderPath);
-      if (folder == null) {
-        groupedFoldersList.add(Folder(tr.folderPath, [tr]));
-      } else {
-        folder.tracks.addNoDuplicates(tr, preventDuplicates: preventDuplicates);
-      }
-      // final folder = groupedFoldersMap[tr.folderPath];
-      // if (folder == null) {
-      //   groupedFoldersMap[tr.folderPath] = [tr];
-      // } else {
-      //   groupedFoldersMap[tr.folderPath]!.add(tr);
-      // }
-      Folders.inst.sortFolderTracks();
-    }
+      mainMapFolders.addNoDuplicatesForce(tr.folder, tr, preventDuplicates: preventDuplicates);
+    });
+
     _sortAll();
   }
 
-  /// extracts artwork from [bytes] or [path] and save to file.
+  /// extracts artwork from [bytes] or [path] of an audio file and save to file.
   /// path is needed bothways for making the file name.
   /// using path for extracting will call [onAudioEdit.readAudio] so it will be slower.
-  Future<void> extractOneArtwork(String path, {Uint8List? bytes, bool forceReExtract = false}) async {
-    final fileOfFull = File("$k_DIR_ARTWORKS${path.getFilename}.png");
+  Future<Uint8List?> extractOneArtwork(String pathOfAudio, {Uint8List? bytes, bool forceReExtract = false}) async {
+    final fileOfFull = File("$k_DIR_ARTWORKS${pathOfAudio.getFilename}.png");
 
     if (forceReExtract) {
       await fileOfFull.delete();
@@ -179,14 +151,17 @@ class Indexer {
 
     /// prevent redundent re-creation of image file
     if (!await fileOfFull.exists()) {
-      final art = bytes ?? await onAudioEdit.readAudio(path).then((value) => value.firstArtwork);
+      final art = bytes ?? await onAudioEdit.readAudio(pathOfAudio).then((value) => value.firstArtwork);
+      if (!SettingsController.inst.enableImageCaching.value) {
+        return art;
+      }
       if (art != null) {
         final imgFile = await fileOfFull.create(recursive: true);
-        imgFile.writeAsBytesSync(art);
+        await imgFile.writeAsBytes(art);
+        updateImageSizeInStorage(imgFile);
       }
     }
-
-    updateImageSizeInStorage();
+    return null;
   }
 
   Future<void> updateTracks(List<Track> tracks, {bool updateArtwork = false}) async {
@@ -203,21 +178,6 @@ class Indexer {
     }
     final newtracks = paths.map((e) => e.toTrackOrNull());
     _addTheseTracksToAlbumGenreArtistEtc(newtracks.whereType<Track>().toList(), preventDuplicates: true);
-  }
-
-  Map<String?, Set<Track>> getAlbumsForArtist(String artist) {
-    Map<String?, Set<Track>> trackAlbumsMap = {};
-    for (final track in tracksInfoList) {
-      if (track.artistsList.contains(artist)) {
-        final k = track.album;
-        if (trackAlbumsMap.containsKey(k)) {
-          trackAlbumsMap[k]!.add(track);
-        } else {
-          trackAlbumsMap[k] = {track};
-        }
-      }
-    }
-    return trackAlbumsMap;
   }
 
   Future<Track?> convertPathToTrack(String trackPath) async {
@@ -434,11 +394,7 @@ class Indexer {
     await _saveTrackFileToStorage();
 
     /// Creating Default Artwork
-    if (!await File(k_FILE_PATH_NAMIDA_LOGO).exists()) {
-      ByteData byteData = await rootBundle.load('assets/namida_icon.png');
-      File file = await File(k_FILE_PATH_NAMIDA_LOGO).create(recursive: true);
-      await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
-    }
+    await _createDefaultNamidaArtwork();
   }
 
   Future<void> _saveTrackFileToStorage() async {
@@ -566,7 +522,7 @@ class Indexer {
 
   /// [strictNoMedia] forces all subdirectories to follow the same result of the parent
   /// ex: if (.nomedia) was found in [/storage/0/Music/],
-  /// then subdirectories [/storage/0/Music/folder1],[/storage/0/Music/folder2] will be excluded too.
+  /// then subdirectories [/storage/0/Music/folder1/], [/storage/0/Music/folder2/] & [/storage/0/Music/folder2/subfolder/] will be excluded too.
   Future<Set<String>> getAudioFiles({bool strictNoMedia = true}) async {
     tracksExcludedByNoMedia.value = 0;
     final allPaths = <String>{};
@@ -687,14 +643,22 @@ class Indexer {
         albumSearchTemp.clear();
       } else {
         albumsSearchController.clear();
-        albumSearchList.assignAll(albumsList);
+        albumSearchList
+          ..clear()
+          ..addAll(mainMapAlbums.value.keys);
       }
       return;
     }
+    final results = mainMapAlbums.value.keys.where((albumName) => textCleanedForSearch(albumName).contains(textCleanedForSearch(text)));
+
     if (temp) {
-      albumSearchTemp.assignAll(albumsList.where((al) => textCleanedForSearch(al.name).contains(textCleanedForSearch(text))));
+      albumSearchTemp
+        ..clear()
+        ..addAll(results);
     } else {
-      albumSearchList.assignAll(albumsList.where((al) => textCleanedForSearch(al.name).contains(textCleanedForSearch(text))));
+      albumSearchList
+        ..clear()
+        ..addAll(results);
     }
   }
 
@@ -704,25 +668,36 @@ class Indexer {
         artistSearchTemp.clear();
       } else {
         artistsSearchController.clear();
-        artistSearchList.assignAll(groupedArtistsList);
+        artistSearchList
+          ..clear()
+          ..addAll(mainMapArtists.value.keys);
       }
-
       return;
     }
+    final results = mainMapArtists.value.keys.where((artistName) => textCleanedForSearch(artistName).contains(textCleanedForSearch(text)));
+
     if (temp) {
-      artistSearchTemp.assignAll(groupedArtistsList.where((ar) => textCleanedForSearch(ar.name).contains(textCleanedForSearch(text))));
+      artistSearchTemp
+        ..clear()
+        ..addAll(results);
     } else {
-      artistSearchList.assignAll(groupedArtistsList.where((ar) => textCleanedForSearch(ar.name).contains(textCleanedForSearch(text))));
+      artistSearchList
+        ..clear()
+        ..addAll(results);
     }
   }
 
   void searchGenres(String text) {
     if (text == '') {
       genresSearchController.clear();
-      genreSearchList.assignAll(groupedGenresList);
+      genreSearchList.assignAll(mainMapGenres.value.keys);
       return;
     }
-    genreSearchList.assignAll(groupedGenresList.where((gen) => textCleanedForSearch(gen.name).contains(textCleanedForSearch(text))));
+    final results = mainMapGenres.value.keys.where((genreName) => textCleanedForSearch(genreName).contains(textCleanedForSearch(text)));
+
+    genreSearchList
+      ..clear()
+      ..addAll(results);
   }
 
   /// Sorts Tracks and Saves automatically to settings
@@ -794,40 +769,42 @@ class Indexer {
   void sortAlbums({GroupSortType? sortBy, bool? reverse}) {
     sortBy ??= SettingsController.inst.albumSort.value;
     reverse ??= SettingsController.inst.albumSortReversed.value;
+
+    final albumsList = mainMapAlbums.value.entries.toList();
     switch (sortBy) {
       case GroupSortType.album:
-        albumsList.sort((a, b) => a.name.compareTo(b.name));
+        albumsList.sort((a, b) => a.key.compareTo(b.key));
         break;
       case GroupSortType.albumArtist:
-        albumsList.sort((a, b) => a.tracks.first.albumArtist.compareTo(b.tracks.first.albumArtist));
+        albumsList.sort((a, b) => a.value.first.albumArtist.compareTo(b.value.first.albumArtist));
         break;
       case GroupSortType.year:
-        albumsList.sort((a, b) => a.tracks.first.year.compareTo(b.tracks.first.year));
+        albumsList.sort((a, b) => a.value.first.year.compareTo(b.value.first.year));
         break;
       case GroupSortType.artistsList:
-        albumsList.sort((a, b) => a.tracks.first.artistsList.toString().compareTo(b.tracks.first.artistsList.toString()));
+        albumsList.sort((a, b) => a.value.first.artistsList.toString().compareTo(b.value.first.artistsList.toString()));
         break;
 
       case GroupSortType.composer:
-        albumsList.sort((a, b) => a.tracks.first.composer.compareTo(b.tracks.first.composer));
+        albumsList.sort((a, b) => a.value.first.composer.compareTo(b.value.first.composer));
         break;
       case GroupSortType.dateModified:
-        albumsList.sort((a, b) => a.tracks.first.dateModified.compareTo(b.tracks.first.dateModified));
+        albumsList.sort((a, b) => a.value.first.dateModified.compareTo(b.value.first.dateModified));
         break;
       case GroupSortType.duration:
-        albumsList.sort((a, b) => a.tracks.toList().totalDuration.compareTo(b.tracks.toList().totalDuration));
+        albumsList.sort((a, b) => a.value.toList().totalDuration.compareTo(b.value.toList().totalDuration));
         break;
       case GroupSortType.numberOfTracks:
-        albumsList.sort((a, b) => a.tracks.length.compareTo(b.tracks.length));
+        albumsList.sort((a, b) => a.value.length.compareTo(b.value.length));
         break;
 
       default:
         null;
     }
 
-    if (reverse) {
-      albumsList.value = albumsList.reversed.toList();
-    }
+    mainMapAlbums.value
+      ..clear()
+      ..addEntries(reverse ? albumsList.reversed : albumsList);
 
     SettingsController.inst.save(albumSort: sortBy, albumSortReversed: reverse);
 
@@ -838,43 +815,45 @@ class Indexer {
   void sortArtists({GroupSortType? sortBy, bool? reverse}) {
     sortBy ??= SettingsController.inst.artistSort.value;
     reverse ??= SettingsController.inst.artistSortReversed.value;
+
+    final artistsList = mainMapArtists.value.entries.toList();
     switch (sortBy) {
       case GroupSortType.album:
-        groupedArtistsList.sort((a, b) => a.tracks.elementAt(0).album.compareTo(b.tracks.elementAt(0).album));
+        artistsList.sort((a, b) => a.value.elementAt(0).album.compareTo(b.value.elementAt(0).album));
         break;
       case GroupSortType.albumArtist:
-        groupedArtistsList.sort((a, b) => a.tracks.elementAt(0).albumArtist.compareTo(b.tracks.elementAt(0).albumArtist));
+        artistsList.sort((a, b) => a.value.elementAt(0).albumArtist.compareTo(b.value.elementAt(0).albumArtist));
         break;
       case GroupSortType.year:
-        groupedArtistsList.sort((a, b) => a.tracks.elementAt(0).year.compareTo(b.tracks.elementAt(0).year));
+        artistsList.sort((a, b) => a.value.elementAt(0).year.compareTo(b.value.elementAt(0).year));
         break;
       case GroupSortType.artistsList:
-        groupedArtistsList.sort(((a, b) => a.name.compareTo(b.name)));
+        artistsList.sort(((a, b) => a.key.compareTo(b.key)));
         break;
       case GroupSortType.genresList:
-        groupedArtistsList.sort((a, b) => a.tracks.elementAt(0).genresList.toString().compareTo(b.tracks.elementAt(0).genresList.toString()));
+        artistsList.sort((a, b) => a.value.elementAt(0).genresList.toString().compareTo(b.value.elementAt(0).genresList.toString()));
         break;
       case GroupSortType.composer:
-        groupedArtistsList.sort((a, b) => a.tracks.elementAt(0).composer.compareTo(b.tracks.elementAt(0).composer));
+        artistsList.sort((a, b) => a.value.elementAt(0).composer.compareTo(b.value.elementAt(0).composer));
         break;
       case GroupSortType.dateModified:
-        groupedArtistsList.sort((a, b) => a.tracks.elementAt(0).dateModified.compareTo(b.tracks.elementAt(0).dateModified));
+        artistsList.sort((a, b) => a.value.elementAt(0).dateModified.compareTo(b.value.elementAt(0).dateModified));
         break;
       case GroupSortType.duration:
-        groupedArtistsList.sort((a, b) => a.tracks.toList().totalDuration.compareTo(b.tracks.toList().totalDuration));
+        artistsList.sort((a, b) => a.value.toList().totalDuration.compareTo(b.value.toList().totalDuration));
         break;
       case GroupSortType.numberOfTracks:
-        groupedArtistsList.sort((a, b) => a.tracks.length.compareTo(b.tracks.length));
+        artistsList.sort((a, b) => a.value.length.compareTo(b.value.length));
         break;
       case GroupSortType.albumsCount:
-        groupedArtistsList.sort((a, b) => a.tracks.map((e) => e.album).toSet().length.compareTo(b.tracks.map((e) => e.album).toSet().length));
+        artistsList.sort((a, b) => a.value.map((e) => e.album).toSet().length.compareTo(b.value.map((e) => e.album).toSet().length));
         break;
       default:
         null;
     }
-    if (reverse) {
-      groupedArtistsList.value = groupedArtistsList.reversed.toList();
-    }
+    mainMapArtists.value
+      ..clear()
+      ..addEntries(reverse ? artistsList.reversed : artistsList);
 
     SettingsController.inst.save(artistSort: sortBy, artistSortReversed: reverse);
 
@@ -885,99 +864,104 @@ class Indexer {
   void sortGenres({GroupSortType? sortBy, bool? reverse}) {
     sortBy ??= SettingsController.inst.genreSort.value;
     reverse ??= SettingsController.inst.genreSortReversed.value;
+
+    final genresList = mainMapGenres.value.entries.toList();
     switch (sortBy) {
       case GroupSortType.album:
-        groupedGenresList.sort((a, b) => a.tracks.elementAt(0).album.compareTo(b.tracks.elementAt(0).album));
+        genresList.sort((a, b) => a.value.elementAt(0).album.compareTo(b.value.elementAt(0).album));
         break;
       case GroupSortType.albumArtist:
-        groupedGenresList.sort((a, b) => a.tracks.elementAt(0).albumArtist.compareTo(b.tracks.elementAt(0).albumArtist));
+        genresList.sort((a, b) => a.value.elementAt(0).albumArtist.compareTo(b.value.elementAt(0).albumArtist));
         break;
       case GroupSortType.year:
-        groupedGenresList.sort((a, b) => a.tracks.elementAt(0).year.compareTo(b.tracks.elementAt(0).year));
+        genresList.sort((a, b) => a.value.elementAt(0).year.compareTo(b.value.elementAt(0).year));
         break;
       case GroupSortType.artistsList:
-        groupedGenresList.sort((a, b) => a.tracks.elementAt(0).artistsList.toString().compareTo(b.tracks.elementAt(0).artistsList.toString()));
+        genresList.sort((a, b) => a.value.elementAt(0).artistsList.toString().compareTo(b.value.elementAt(0).artistsList.toString()));
         break;
       case GroupSortType.genresList:
-        groupedGenresList.sort(((a, b) => a.name.compareTo(b.name)));
+        genresList.sort(((a, b) => a.key.compareTo(b.key)));
         break;
       case GroupSortType.composer:
-        groupedGenresList.sort((a, b) => a.tracks.elementAt(0).composer.compareTo(b.tracks.elementAt(0).composer));
+        genresList.sort((a, b) => a.value.elementAt(0).composer.compareTo(b.value.elementAt(0).composer));
         break;
       case GroupSortType.dateModified:
-        groupedGenresList.sort((a, b) => a.tracks.elementAt(0).dateModified.compareTo(b.tracks.elementAt(0).dateModified));
+        genresList.sort((a, b) => a.value.elementAt(0).dateModified.compareTo(b.value.elementAt(0).dateModified));
         break;
       case GroupSortType.duration:
-        groupedGenresList.sort((a, b) => a.tracks.toList().totalDuration.compareTo(b.tracks.toList().totalDuration));
+        genresList.sort((a, b) => a.value.toList().totalDuration.compareTo(b.value.toList().totalDuration));
         break;
       case GroupSortType.numberOfTracks:
-        groupedGenresList.sort((a, b) => a.tracks.length.compareTo(b.tracks.length));
+        genresList.sort((a, b) => a.value.length.compareTo(b.value.length));
         break;
 
       default:
         null;
     }
-    if (reverse) {
-      groupedGenresList.value = groupedGenresList.reversed.toList();
-    }
+
+    mainMapGenres.value
+      ..clear()
+      ..addEntries(reverse ? genresList.reversed : genresList);
 
     SettingsController.inst.save(genreSort: sortBy, genreSortReversed: reverse);
     searchGenres(genresSearchController.value.text);
   }
 
-  void updateImageSizeInStorage() {
-    // resets values
-    artworksInStorage.value = 0;
-    artworksSizeInStorage.value = 0;
-
-    Directory(k_DIR_ARTWORKS).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
-      if (entity is File) {
-        artworksInStorage.value++;
-        artworksSizeInStorage.value += entity.lengthSync();
-      }
-    });
+  Future<void> updateImageSizeInStorage([File? newImgFile]) async {
+    if (newImgFile != null) {
+      artworksInStorage.value++;
+      artworksSizeInStorage.value += await newImgFile.stat().then((value) => value.size);
+      return;
+    }
+    await _updateDirectoryStats(k_DIR_ARTWORKS, artworksInStorage, artworksSizeInStorage);
   }
 
-  void updateWaveformSizeInStorage() {
-    // resets values
-    waveformsInStorage.value = 0;
-    waveformsSizeInStorage.value = 0;
-
-    Directory(k_DIR_WAVEFORMS).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
-      if (entity is File) {
-        waveformsInStorage.value++;
-        waveformsSizeInStorage.value += entity.lengthSync();
-      }
-    });
+  Future<void> updateWaveformSizeInStorage([File? newWaveFile]) async {
+    if (newWaveFile != null) {
+      waveformsInStorage.value++;
+      waveformsSizeInStorage.value += await newWaveFile.stat().then((value) => value.size);
+      return;
+    }
+    await _updateDirectoryStats(k_DIR_WAVEFORMS, waveformsInStorage, waveformsSizeInStorage);
   }
 
-  void updateColorPalettesSizeInStorage() {
-    // resets values
-    colorPalettesInStorage.value = 0;
-
-    Directory(k_DIR_PALETTES).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
-      if (entity is File) {
-        colorPalettesInStorage.value++;
-      }
-    });
+  Future<void> updateColorPalettesSizeInStorage([File? newPaletteFile]) async {
+    if (newPaletteFile != null) {
+      colorPalettesInStorage.value++;
+      return;
+    }
+    await _updateDirectoryStats(k_DIR_PALETTES, colorPalettesInStorage, null);
   }
 
-  void updateVideosSizeInStorage() {
-    // resets values
-    videosInStorage.value = 0;
-    videosSizeInStorage.value = 0;
+  Future<void> updateVideosSizeInStorage([File? newVideoFile]) async {
+    if (newVideoFile != null) {
+      videosInStorage.value++;
+      videosSizeInStorage.value += await newVideoFile.stat().then((value) => value.size);
+      return;
+    }
+    await _updateDirectoryStats(k_DIR_VIDEOS_CACHE, videosInStorage, videosSizeInStorage);
+  }
 
-    Directory(k_DIR_VIDEOS_CACHE).listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
-      if (entity is File) {
-        videosInStorage.value++;
-        videosSizeInStorage.value += entity.lengthSync();
+  Future<void> _updateDirectoryStats(String dirPath, RxInt? filesCountVariable, RxInt? filesSizeVariable) async {
+    // resets values
+    filesCountVariable?.value = 0;
+    filesSizeVariable?.value = 0;
+
+    final dir = Directory(dirPath);
+
+    await for (final f in dir.list()) {
+      if (f is File) {
+        filesCountVariable?.value++;
+        final st = await f.stat();
+        filesSizeVariable?.value += st.size;
       }
-    });
+    }
   }
 
   Future<void> clearImageCache() async {
     await Directory(k_DIR_ARTWORKS).delete(recursive: true);
     await Directory(k_DIR_ARTWORKS).create();
+    await _createDefaultNamidaArtwork();
     updateImageSizeInStorage();
   }
 
@@ -999,5 +983,13 @@ class Indexer {
     }
 
     updateVideosSizeInStorage();
+  }
+
+  Future<void> _createDefaultNamidaArtwork() async {
+    if (!await File(k_FILE_PATH_NAMIDA_LOGO).exists()) {
+      final byteData = await rootBundle.load('assets/namida_icon.png');
+      final file = await File(k_FILE_PATH_NAMIDA_LOGO).create(recursive: true);
+      await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+    }
   }
 }

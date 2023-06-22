@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -79,7 +80,7 @@ class BackupController {
     if (!await requestManageStoragePermission()) {
       return;
     }
-    Get.close(1);
+    NamidaNavigator.inst.closeDialog();
     File? backupzip;
     if (auto) {
       final dir = Directory(SettingsController.inst.defaultBackupLocation.value);

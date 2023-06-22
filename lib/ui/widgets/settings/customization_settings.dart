@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -14,9 +15,9 @@ import 'package:namida/ui/widgets/settings/track_tile_customization.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
 class CustomizationSettings extends StatelessWidget {
-  CustomizationSettings({super.key});
+  const CustomizationSettings({super.key});
 
-  final SettingsController stg = SettingsController.inst;
+  SettingsController get stg => SettingsController.inst;
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +106,7 @@ class CustomizationSettings extends StatelessWidget {
                                         active: stg.dateTimeFormat.value == e.key,
                                         onTap: () {
                                           stg.save(dateTimeFormat: e.key);
-                                          Get.close(1);
+                                          NamidaNavigator.inst.closeDialog();
                                         },
                                       ),
                                     )

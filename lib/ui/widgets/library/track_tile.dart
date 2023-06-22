@@ -7,6 +7,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/trackitem.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
@@ -105,7 +106,7 @@ class TrackTile extends StatelessWidget {
                           SelectedTracksController.inst.selectOrUnselect(track, queueSource);
                         } else {
                           if (queueSource == QueueSource.search) {
-                            Get.focusScope?.unfocus();
+                            ScrollSearchController.inst.unfocusKeyboard();
                             await Player.inst.playOrPause(
                               SettingsController.inst.trackPlayMode.value.shouldBeIndex0 ? 0 : index,
                               SettingsController.inst.trackPlayMode.value.getQueue(track),
@@ -142,6 +143,7 @@ class TrackTile extends StatelessWidget {
                                 child: Hero(
                                   tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
                                   child: ArtworkWidget(
+                                    track: track,
                                     thumnailSize: thumnailSize,
                                     path: track.pathToImage,
                                     forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
@@ -352,7 +354,7 @@ String _getChoosenTrackTileItem(TrackTileItem trackItem, Track track) {
     if (trackItem == TrackTileItem.extension) track.extension,
     if (trackItem == TrackTileItem.fileName) track.filename.overflow,
     if (trackItem == TrackTileItem.folder) track.folderName.overflow,
-    if (trackItem == TrackTileItem.path) track.path.formatPath,
+    if (trackItem == TrackTileItem.path) track.path.formatPath(),
     if (trackItem == TrackTileItem.channels) track.channels.channelToLabel,
     if (trackItem == TrackTileItem.comment) track.comment.overflow,
     if (trackItem == TrackTileItem.composer) track.composer.overflow,

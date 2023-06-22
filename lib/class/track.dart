@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:namida/class/folder.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -183,11 +184,11 @@ class Track {
     if (other is! Track) {
       return false;
     }
-    return path == other.path && title == other.title && album == other.album && artistsList == other.artistsList;
+    return path == other.path;
   }
 
   @override
-  int get hashCode => (path + title + album + artistsList.toString()).hashCode;
+  int get hashCode => path.hashCode;
 }
 
 extension TrackUtils on Track {
@@ -195,6 +196,7 @@ extension TrackUtils on Track {
   String get filenameWOExt => path.getFilenameWOExt;
   String get extension => path.getExtension;
   String get folderPath => path.getDirectoryName;
+  Folder get folder => Folder(folderPath);
   String get folderName => folderPath.split(Platform.pathSeparator).last;
   String get pathToImage => "$k_DIR_ARTWORKS$filename.png";
   String get youtubeLink {
@@ -220,7 +222,7 @@ extension TrackUtils on Track {
   bool get hasUnknownTitle => title == k_UNKNOWN_TRACK_TITLE;
   bool get hasUnknownAlbum => album == k_UNKNOWN_TRACK_ALBUM;
   bool get hasUnknownAlbumArtist => albumArtist == k_UNKNOWN_TRACK_ALBUMARTIST;
-  bool get hasUnknownArtist => artistsList.first == k_UNKNOWN_TRACK_ARTIST;
-  bool get hasUnknownGenre => genresList.first == k_UNKNOWN_TRACK_GENRE;
+  bool get hasUnknownArtist => artistsList.firstOrNull == k_UNKNOWN_TRACK_ARTIST;
+  bool get hasUnknownGenre => genresList.firstOrNull == k_UNKNOWN_TRACK_GENRE;
   bool get hasUnknownComposer => composer == k_UNKNOWN_TRACK_COMPOSER;
 }

@@ -1,8 +1,9 @@
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/folders_controller.dart';
-import 'package:namida/core/constants.dart';
+import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -11,7 +12,13 @@ class SelectedTracksController {
   static final SelectedTracksController inst = SelectedTracksController();
 
   final RxList<Track> selectedTracks = <Track>[].obs;
-  final RxList<Track> currentAllTracks = <Track>[].obs;
+
+  List<Track> get currentAllTracks {
+    if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
+      return Indexer.inst.trackSearchTemp.toList();
+    }
+    return NamidaNavigator.inst.currentWidgetStack.lastOrNull?.tracksInside ?? [];
+  }
 
   final RxBool isMenuMinimized = true.obs;
   final RxBool isExpanded = false.obs;
@@ -26,7 +33,6 @@ class SelectedTracksController {
     } else {
       selectedTracks.add(track);
     }
-    updateCurrentTracks(queueSource.toTracks());
     bottomPadding.value = selectedTracks.isEmpty ? 0.0 : 102.0;
     printInfo(info: "length: ${selectedTracks.length}");
   }
@@ -52,23 +58,7 @@ class SelectedTracksController {
   }
 
   void selectAllTracks() {
-    selectedTracks.clear();
-    selectedTracks.addAll(currentAllTracks.toSet());
-  }
-
-  void updateCurrentTracks(Iterable<Track> tracks) {
-    currentAllTracks.clear();
-    currentAllTracks.addAll(tracks);
-  }
-
-  void updatePageTracks(LibraryTab page) {
-    if (page == LibraryTab.folders) {
-      if (Folders.inst.currentTracks.isNotEmpty) {
-        SelectedTracksController.inst.updateCurrentTracks(Folders.inst.currentTracks.toList());
-      }
-    }
-    if (page == LibraryTab.tracks) {
-      SelectedTracksController.inst.updateCurrentTracks(allTracksInLibrary);
-    }
+    selectedTracks.addAll(currentAllTracks);
+    selectedTracks.removeDuplicates((element) => element.path);
   }
 }
