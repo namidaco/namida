@@ -112,7 +112,7 @@ class PlaylisTracksPage extends StatelessWidget {
                           bgColor: i == indexToHighlight ? context.theme.colorScheme.onBackground.withAlpha(40) : null,
                           thirdLineText: isHistoryPlaylist ? track.dateAdded.dateAndClockFormattedOriginal : '',
                         ),
-                        Obx(() => ThreeLineSmallContainers(enabled: shouldReorder.value)),
+                        if (!isHistoryPlaylist && !isMostPlayedPlaylist) Obx(() => ThreeLineSmallContainers(enabled: shouldReorder.value)),
                       ],
                     ),
                   );

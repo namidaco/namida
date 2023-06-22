@@ -832,6 +832,9 @@ extension WidgetsPages on Widget {
       );
     }
 
+    PlaylisTracksPage? playlist = this is PlaylisTracksPage ? this as PlaylisTracksPage : null;
+    final bool shouldShowReorderIcon = playlist != null && playlist.playlist.name != k_PLAYLIST_NAME_HISTORY && playlist.playlist.name != k_PLAYLIST_NAME_MOST_PLAYED;
+
     final initialActions = <Widget>[
       ...[
         const NamidaStatsIcon(),
@@ -870,36 +873,30 @@ extension WidgetsPages on Widget {
             this is! PlaylisTracksPage && (this is AlbumTracksPage || this is ArtistTracksPage || this is GenreTracksPage || this is QueueTracksPage || this is PlaylisTracksPage),
       ),
       getAnimatedCrossFade(
-        child: this is PlaylisTracksPage
+        child: shouldShowReorderIcon
             ? Obx(
                 () {
-                  final pl = this as PlaylisTracksPage;
                   return NamidaIconButton(
-                    tooltip: pl.shouldReorder.value ? Language.inst.DISABLE_REORDERING : Language.inst.ENABLE_REORDERING,
-                    icon: pl.shouldReorder.value ? Broken.forward_item : Broken.lock_1,
+                    tooltip: playlist.shouldReorder.value ? Language.inst.DISABLE_REORDERING : Language.inst.ENABLE_REORDERING,
+                    icon: playlist.shouldReorder.value ? Broken.forward_item : Broken.lock_1,
                     padding: const EdgeInsets.only(right: 14, left: 4.0),
-                    onPressed: () => pl.shouldReorder.value = !pl.shouldReorder.value,
+                    onPressed: () => playlist.shouldReorder.value = !playlist.shouldReorder.value,
                   );
                 },
               )
             : const SizedBox(),
-        shouldShow: this is PlaylisTracksPage,
+        shouldShow: shouldShowReorderIcon,
       ),
       getAnimatedCrossFade(
         child: getMoreIcon(() {
-          final pl = this as PlaylisTracksPage;
-          NamidaDialogs.inst.showPlaylistDialog(pl.playlist);
+          NamidaDialogs.inst.showPlaylistDialog(playlist!.playlist);
         }),
-        shouldShow: this is PlaylisTracksPage,
+        shouldShow: playlist != null,
       ),
     ];
     return initialActions;
   }
 }
-
-// extension MEDIACONVERT on String {
-//   Media toMedia() => Media(this);
-// }
 
 extension TracksFromMaps on String {
   List<Track> getAlbumTracks() {
