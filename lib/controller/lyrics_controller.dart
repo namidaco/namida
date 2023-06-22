@@ -13,7 +13,9 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 
 class Lyrics {
-  static final Lyrics inst = Lyrics();
+  static Lyrics get inst => _instance;
+  static final Lyrics _instance = Lyrics._internal();
+  Lyrics._internal();
 
   final RxString currentLyrics = ''.obs;
   final RxBool lyricsAvailable = true.obs;

@@ -11,7 +11,9 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/packages/inner_drawer.dart';
 
 class NamidaNavigator {
-  static final NamidaNavigator inst = NamidaNavigator();
+  static NamidaNavigator get inst => _instance;
+  static final NamidaNavigator _instance = NamidaNavigator._internal();
+  NamidaNavigator._internal();
 
   final navKey = Get.nestedKey(1);
 

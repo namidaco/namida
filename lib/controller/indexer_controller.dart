@@ -23,7 +23,9 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/strings.dart';
 
 class Indexer {
-  static final Indexer inst = Indexer();
+  static Indexer get inst => _instance;
+  static final Indexer _instance = Indexer._internal();
+  Indexer._internal();
 
   final RxBool isIndexing = false.obs;
 

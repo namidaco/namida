@@ -12,7 +12,9 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
 class WaveformController {
-  static final WaveformController inst = WaveformController();
+  static WaveformController get inst => _instance;
+  static final WaveformController _instance = WaveformController._internal();
+  WaveformController._internal();
 
   final RxList<double> curentWaveform = kDefaultWaveFormData.obs;
   final RxBool generatingAllWaveforms = false.obs;

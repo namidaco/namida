@@ -13,7 +13,9 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/main.dart';
 
 class EditDeleteController {
-  static final EditDeleteController inst = EditDeleteController();
+  static EditDeleteController get inst => _instance;
+  static final EditDeleteController _instance = EditDeleteController._internal();
+  EditDeleteController._internal();
 
   Future<void> deleteCachedVideos(List<Track> tracks) async {
     final idsToDelete = tracks.map((e) => e.youtubeID);

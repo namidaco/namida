@@ -9,7 +9,9 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 
 class SelectedTracksController {
-  static final SelectedTracksController inst = SelectedTracksController();
+  static SelectedTracksController get inst => _instance;
+  static final SelectedTracksController _instance = SelectedTracksController._internal();
+  SelectedTracksController._internal();
 
   final RxList<Track> selectedTracks = <Track>[].obs;
 

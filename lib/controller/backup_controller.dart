@@ -16,7 +16,9 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/main.dart';
 
 class BackupController {
-  static final BackupController inst = BackupController();
+  static BackupController get inst => _instance;
+  static final BackupController _instance = BackupController._internal();
+  BackupController._internal();
 
   final RxBool isCreatingBackup = false.obs;
   final RxBool isRestoringBackup = false.obs;

@@ -17,7 +17,9 @@ import 'package:namida/core/extensions.dart';
 Color get playerStaticColor => Color(SettingsController.inst.staticColor.value);
 
 class CurrentColor {
-  static final CurrentColor inst = CurrentColor();
+  static CurrentColor get inst => _instance;
+  static final CurrentColor _instance = CurrentColor._internal();
+  CurrentColor._internal();
 
   Rx<Color> get color => namidaColor.value.color.obs;
   RxList<Color> get palette => namidaColor.value.palette.obs;

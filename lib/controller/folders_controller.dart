@@ -6,7 +6,9 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 
 class Folders {
-  static final Folders inst = Folders();
+  static Folders get inst => _instance;
+  static final Folders _instance = Folders._internal();
+  Folders._internal();
 
   final Rxn<Folder> currentFolder = Rxn<Folder>();
 

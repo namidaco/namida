@@ -15,7 +15,9 @@ import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class NamidaDialogs {
-  static final NamidaDialogs inst = NamidaDialogs();
+  static NamidaDialogs get inst => _instance;
+  static final NamidaDialogs _instance = NamidaDialogs._internal();
+  NamidaDialogs._internal();
 
   Future<void> showTrackDialog(Track track,
       {Widget? leading, Playlist? playlist, int? index, bool comingFromQueue = false, bool isFromPlayerQueue = false, bool errorPlayingTrack = false}) async {

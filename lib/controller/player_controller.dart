@@ -14,7 +14,9 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/strings.dart';
 
 class Player {
-  static final Player inst = Player();
+  static Player get inst => _instance;
+  static final Player _instance = Player._internal();
+  Player._internal();
 
   NamidaAudioVideoHandler? _audioHandler;
 

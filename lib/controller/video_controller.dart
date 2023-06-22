@@ -18,7 +18,9 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
 
 class VideoController {
-  static final VideoController inst = VideoController();
+  static VideoController get inst => _instance;
+  static final VideoController _instance = VideoController._internal();
+  VideoController._internal();
 
   /// Local Video
   final RxList<String> videoFilesPathList = <String>[].obs;

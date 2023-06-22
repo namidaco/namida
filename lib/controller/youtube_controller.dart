@@ -11,7 +11,9 @@ import 'package:namida/class/video.dart';
 import 'package:namida/core/constants.dart';
 
 class YoutubeController {
-  static final YoutubeController inst = YoutubeController();
+  static YoutubeController get inst => _instance;
+  static final YoutubeController _instance = YoutubeController._internal();
+  YoutubeController._internal();
 
   final currentYoutubeMetadata = Rxn<YTLVideo>();
   final currentSearchList = Rxn<VideoSearchList>();

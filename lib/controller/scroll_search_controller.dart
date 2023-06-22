@@ -13,7 +13,9 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 
 class ScrollSearchController {
-  static final ScrollSearchController inst = ScrollSearchController();
+  static ScrollSearchController get inst => _instance;
+  static final ScrollSearchController _instance = ScrollSearchController._internal();
+  ScrollSearchController._internal();
 
   final RxDouble miniplayerHeightPercentage = 0.0.obs;
   final RxDouble miniplayerHeightPercentageQueue = 0.0.obs;

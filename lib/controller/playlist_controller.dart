@@ -19,7 +19,9 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/strings.dart';
 
 class PlaylistController {
-  static final PlaylistController inst = PlaylistController();
+  static PlaylistController get inst => _instance;
+  static final PlaylistController _instance = PlaylistController._internal();
+  PlaylistController._internal();
 
   final RxList<Playlist> playlistList = <Playlist>[].obs;
   final RxList<Playlist> playlistSearchList = <Playlist>[].obs;

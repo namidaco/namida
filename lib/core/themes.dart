@@ -6,7 +6,9 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/core/extensions.dart';
 
 class AppThemes {
-  static final AppThemes inst = AppThemes();
+  static AppThemes get inst => _instance;
+  static final AppThemes _instance = AppThemes._internal();
+  AppThemes._internal();
 
   ThemeData getAppTheme([Color? color, bool? light]) {
     color ??= CurrentColor.inst.color.value;

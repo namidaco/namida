@@ -1,7 +1,9 @@
 // ignore_for_file: non_constant_identifier_names
 
 class Language {
-  static Language inst = Language();
+  static Language get inst => _instance;
+  static final Language _instance = Language._internal();
+  Language._internal();
 
   /// Youtube Miniplayer:
   String get YOUTUBE => 'Youtube';

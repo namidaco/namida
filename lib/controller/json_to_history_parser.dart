@@ -16,7 +16,9 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class JsonToHistoryParser {
-  static final JsonToHistoryParser inst = JsonToHistoryParser();
+  static JsonToHistoryParser get inst => _instance;
+  static final JsonToHistoryParser _instance = JsonToHistoryParser._internal();
+  JsonToHistoryParser._internal();
 
   final RxInt parsedHistoryJson = 0.obs;
   final RxInt totalJsonToParse = 0.obs;

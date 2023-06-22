@@ -26,7 +26,9 @@ import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 
 class NamidaOnTaps {
-  static final NamidaOnTaps inst = NamidaOnTaps();
+  static NamidaOnTaps get inst => _instance;
+  static final NamidaOnTaps _instance = NamidaOnTaps._internal();
+  NamidaOnTaps._internal();
 
   Future<void> onArtistTap(String name, [List<Track>? tracksPre]) async {
     final tracks = tracksPre ?? name.getArtistTracks();

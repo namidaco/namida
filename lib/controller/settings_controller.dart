@@ -11,7 +11,9 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
 class SettingsController {
-  static final SettingsController inst = SettingsController();
+  static SettingsController get inst => _instance;
+  static final SettingsController _instance = SettingsController._internal();
+  SettingsController._internal();
 
   final Rx<ThemeMode> themeMode = ThemeMode.system.obs;
   final RxBool autoColor = true.obs;

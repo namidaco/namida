@@ -14,7 +14,9 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 
 class QueueController {
-  static final QueueController inst = QueueController();
+  static QueueController get inst => _instance;
+  static final QueueController _instance = QueueController._internal();
+  QueueController._internal();
 
   final RxList<Queue> queueList = <Queue>[].obs;
   final RxList<Track> latestQueue = <Track>[].obs;
