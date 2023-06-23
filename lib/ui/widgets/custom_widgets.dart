@@ -195,7 +195,6 @@ class CustomListTile extends StatelessWidget {
           ),
           onTap: onTap,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
-          horizontalTitleGap: 0.0,
           minVerticalPadding: 8.0,
           leading: icon != null
               ? SizedBox(
@@ -521,7 +520,7 @@ class SmallListTile extends StatelessWidget {
     this.subtitle,
     this.color,
     this.padding,
-    this.titleGap,
+    this.titleGap = 14.0,
     this.borderRadius = 0.0,
     this.leading,
   });
@@ -606,6 +605,7 @@ class ListTileWithCheckMark extends StatelessWidget {
       borderRadius: BorderRadius.circular(16.0.multipliedRadius),
       color: tileColor ?? Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(10), context.theme.cardTheme.color!),
       child: ListTile(
+        horizontalTitleGap: 10.0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0.multipliedRadius)),
         leading: Icon(icon ?? Broken.arrange_circle),
         title: Text(title ?? Language.inst.REVERSE_ORDER),
@@ -622,6 +622,76 @@ class ListTileWithCheckMark extends StatelessWidget {
         ),
         visualDensity: VisualDensity.compact,
         onTap: onTap,
+      ),
+    );
+  }
+}
+
+class NamidaExpansionTile extends StatelessWidget {
+  final IconData? icon;
+  final Color? iconColor;
+  final Widget? leading;
+  final IconData? trailingIcon;
+  final double trailingIconSize;
+  final String titleText;
+  final Color? textColor;
+  final Color? textColorScheme;
+  final List<Widget> children;
+  final EdgeInsetsGeometry? childrenPadding;
+  final bool initiallyExpanded;
+  final Widget? trailing;
+
+  const NamidaExpansionTile({
+    super.key,
+    this.icon,
+    this.iconColor,
+    this.leading,
+    this.trailingIcon = Broken.arrow_down_2,
+    this.trailingIconSize = 20.0,
+    required this.titleText,
+    this.textColor,
+    this.textColorScheme,
+    this.children = const <Widget>[],
+    this.childrenPadding = EdgeInsets.zero,
+    this.initiallyExpanded = false,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTileTheme(
+      horizontalTitleGap: 14.0,
+      child: ExpansionTile(
+        initiallyExpanded: initiallyExpanded,
+        expandedAlignment: Alignment.centerLeft,
+        leading: leading ??
+            Icon(
+              icon,
+              color: iconColor,
+            ),
+        trailing: trailing ??
+            (trailingIcon == null
+                ? null
+                : IgnorePointer(
+                    child: IconButton(
+                      onPressed: () {},
+                      icon: Icon(trailingIcon, size: trailingIconSize),
+                    ),
+                  )),
+        title: Text(
+          titleText,
+          style: context.textTheme.displayMedium?.copyWith(
+            color: textColor ??
+                (textColorScheme == null
+                    ? null
+                    : Color.alphaBlend(
+                        textColorScheme!.withAlpha(40),
+                        context.textTheme.displayMedium!.color!,
+                      )),
+          ),
+        ),
+        childrenPadding: childrenPadding,
+        children: children,
       ),
     );
   }

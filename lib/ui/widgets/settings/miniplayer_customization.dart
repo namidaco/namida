@@ -15,19 +15,13 @@ class MiniplayerCustomization extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ExpansionTile(
+    return NamidaExpansionTile(
       initiallyExpanded: SettingsController.inst.useSettingCollapsedTiles.value,
       leading: const StackedIcon(
         baseIcon: Broken.brush,
         secondaryIcon: Broken.external_drive,
       ),
-      title: Text(
-        Language.inst.MINIPLAYER_CUSTOMIZATION,
-        style: context.textTheme.displayMedium,
-      ),
-      trailing: const Icon(
-        Broken.arrow_down_2,
-      ),
+      titleText: Language.inst.MINIPLAYER_CUSTOMIZATION,
       children: [
         Obx(
           () => CustomSwitchListTile(

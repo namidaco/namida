@@ -62,7 +62,7 @@ class AppThemes {
       focusColor: light ? const Color.fromARGB(200, 190, 190, 190) : const Color.fromARGB(150, 80, 80, 80),
       dialogTheme: DialogTheme(surfaceTintColor: Colors.transparent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0.multipliedRadius))),
       listTileTheme: ListTileThemeData(
-        horizontalTitleGap: 4.0,
+        horizontalTitleGap: 16.0,
         selectedColor:
             light ? Color.alphaBlend(color.withAlpha(40), const Color.fromARGB(255, 182, 182, 182)) : Color.alphaBlend(color.withAlpha(40), const Color.fromARGB(255, 55, 55, 55)),
         iconColor: Color.alphaBlend(

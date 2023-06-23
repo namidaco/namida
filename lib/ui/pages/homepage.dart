@@ -95,7 +95,7 @@ class HomePage extends StatelessWidget {
                       final initialChild = SettingsController.inst.selectedLibraryTab.value.toWidget();
 
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        NamidaNavigator.inst.navigateOffAll(initialChild);
+                        NamidaNavigator.inst.currentWidgetStack.add(initialChild);
                       });
                       return GetPageRoute(page: () => initialChild);
                     },

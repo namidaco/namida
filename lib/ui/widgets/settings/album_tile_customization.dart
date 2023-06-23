@@ -16,19 +16,13 @@ class AlbumTileCustomization extends StatelessWidget {
   final SettingsController stg = SettingsController.inst;
   @override
   Widget build(BuildContext context) {
-    return ExpansionTile(
+    return NamidaExpansionTile(
       initiallyExpanded: SettingsController.inst.useSettingCollapsedTiles.value,
       leading: const StackedIcon(
         baseIcon: Broken.brush,
         secondaryIcon: Broken.music_dashboard,
       ),
-      title: Text(
-        Language.inst.ALBUM_TILE_CUSTOMIZATION,
-        style: context.textTheme.displayMedium,
-      ),
-      trailing: const Icon(
-        Broken.arrow_down_2,
-      ),
+      titleText: Language.inst.ALBUM_TILE_CUSTOMIZATION,
       children: [
         /// Track Number in a small Box
         Obx(

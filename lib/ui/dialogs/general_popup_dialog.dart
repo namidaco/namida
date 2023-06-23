@@ -739,25 +739,12 @@ Future<void> showGeneralPopupDialog(
                                   ),
 
                                 if (availableAlbums.length > 1)
-                                  ExpansionTile(
-                                    expandedAlignment: Alignment.centerLeft,
-                                    leading: Icon(
-                                      Broken.music_dashboard,
-                                      color: iconColor,
-                                    ),
-                                    trailing: IgnorePointer(
-                                      child: IconButton(
-                                        onPressed: () {},
-                                        icon: const Icon(Broken.arrow_down_2, size: 20.0),
-                                      ),
-                                    ),
-                                    title: Text(
-                                      Language.inst.GO_TO_ALBUM,
-                                      style: Get.textTheme.displayMedium?.copyWith(
-                                        color: Color.alphaBlend(colorDelightened.withAlpha(40), Get.textTheme.displayMedium!.color!),
-                                      ),
-                                    ),
-                                    childrenPadding: const EdgeInsets.symmetric(horizontal: 20.0).add(const EdgeInsets.only(bottom: 12.0)),
+                                  NamidaExpansionTile(
+                                    icon: Broken.music_dashboard,
+                                    iconColor: iconColor,
+                                    titleText: Language.inst.GO_TO_ALBUM,
+                                    textColorScheme: colorDelightened,
+                                    childrenPadding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 12.0, top: 0),
                                     children: [
                                       Wrap(
                                         alignment: WrapAlignment.start,
@@ -812,25 +799,12 @@ Future<void> showGeneralPopupDialog(
                                   ),
 
                                 if (artistToAddFrom == null && availableArtists.length > 1)
-                                  ExpansionTile(
-                                    expandedAlignment: Alignment.centerLeft,
-                                    leading: Icon(
-                                      Broken.profile_2user,
-                                      color: iconColor,
-                                    ),
-                                    trailing: IgnorePointer(
-                                      child: IconButton(
-                                        onPressed: () {},
-                                        icon: const Icon(Broken.arrow_down_2, size: 20.0),
-                                      ),
-                                    ),
-                                    title: Text(
-                                      Language.inst.GO_TO_ARTIST,
-                                      style: Get.textTheme.displayMedium?.copyWith(
-                                        color: Color.alphaBlend(colorDelightened.withAlpha(40), Get.textTheme.displayMedium!.color!),
-                                      ),
-                                    ),
-                                    childrenPadding: const EdgeInsets.symmetric(horizontal: 20.0).add(const EdgeInsets.only(bottom: 12.0)),
+                                  NamidaExpansionTile(
+                                    icon: Broken.profile_2user,
+                                    iconColor: iconColor,
+                                    titleText: Language.inst.GO_TO_ARTIST,
+                                    textColorScheme: colorDelightened,
+                                    childrenPadding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 12.0, top: 0),
                                     children: [
                                       Wrap(
                                         alignment: WrapAlignment.start,

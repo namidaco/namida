@@ -276,7 +276,6 @@ class AdvancedSettings extends StatelessWidget {
                 final id = file.path.getFilename.split('').take(11).join();
                 return Obx(
                   () => ListTile(
-                    horizontalTitleGap: 16.0,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 24.0),
                     leading: YoutubeThumbnail(
                       borderRadius: 8.0,

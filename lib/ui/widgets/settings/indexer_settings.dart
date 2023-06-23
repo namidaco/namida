@@ -239,9 +239,10 @@ class IndexerSettings extends StatelessWidget {
             onTap: () => _showRefreshPromptDialog(),
           ),
           Obx(
-            () => ExpansionTile(
-              leading: const Icon(Broken.folder),
-              title: Text(Language.inst.LIST_OF_FOLDERS),
+            () => NamidaExpansionTile(
+              icon: Broken.folder,
+              titleText: Language.inst.LIST_OF_FOLDERS,
+              textColor: context.textTheme.displayLarge!.color,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -305,9 +306,10 @@ class IndexerSettings extends StatelessWidget {
             ),
           ),
           Obx(
-            () => ExpansionTile(
-              leading: const Icon(Broken.folder_minus),
-              title: Text(Language.inst.EXCLUDED_FODLERS),
+            () => NamidaExpansionTile(
+              icon: Broken.folder_minus,
+              titleText: Language.inst.EXCLUDED_FODLERS,
+              textColor: context.textTheme.displayLarge!.color,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

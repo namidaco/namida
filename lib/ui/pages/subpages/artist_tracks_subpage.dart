@@ -54,13 +54,9 @@ class ArtistTracksPage extends StatelessWidget {
             ),
             tracks: tracks,
           ),
-          ExpansionTile(
-            leading: const Icon(Broken.music_dashboard),
-            trailing: const Icon(Broken.arrow_down_2),
-            title: Text(
-              "${Language.inst.ALBUMS} ${albums.length}",
-              style: context.textTheme.displayMedium,
-            ),
+          NamidaExpansionTile(
+            icon: Broken.music_dashboard,
+            titleText: "${Language.inst.ALBUMS} ${albums.length}",
             initiallyExpanded: true,
             children: [
               SizedBox(
