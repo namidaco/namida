@@ -107,7 +107,7 @@ class ExpandableBox extends StatelessWidget {
 }
 
 class CustomTextFiled extends StatelessWidget {
-  final TextEditingController textFieldController;
+  final TextEditingController? textFieldController;
   final String textFieldHintText;
   final void Function(String value)? onTextFieldValueChanged;
   const CustomTextFiled({

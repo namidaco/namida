@@ -130,6 +130,7 @@ class ScrollSearchController {
     textSearchControllers[libraryTab]?.dispose();
     textSearchControllers.remove(libraryTab);
     unfocusKeyboard();
+    isSearchBoxVisibleMap[libraryTab]!.value = false;
   }
 
   void _openTextController(LibraryTab libraryTab) {
@@ -170,7 +171,7 @@ class ScrollSearchController {
 
 extension LibraryTabStuff on LibraryTab {
   ScrollController get scrollController => ScrollSearchController.inst.scrollControllersMap[this]!;
-  TextEditingController get textSearchController => ScrollSearchController.inst.textSearchControllers[this]!;
+  TextEditingController? get textSearchController => ScrollSearchController.inst.textSearchControllers[this];
   double get scrollPosition => ScrollSearchController.inst.getScrollPosition(this);
   bool get isBarVisible => ScrollSearchController.inst.getIsBarVisible(this);
   bool get isSearchBoxVisible => ScrollSearchController.inst.getIsSearchBoxVisible(this);

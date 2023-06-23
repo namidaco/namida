@@ -65,7 +65,7 @@ class PlaylistController {
 
   void searchPlaylists(String text) {
     if (text == '') {
-      LibraryTab.playlists.textSearchController.clear();
+      LibraryTab.playlists.textSearchController?.clear();
       playlistSearchList.assignAll(playlistList);
       return;
     }
@@ -125,7 +125,7 @@ class PlaylistController {
 
     SettingsController.inst.save(playlistSort: sortBy, playlistSortReversed: reverse);
 
-    searchPlaylists(LibraryTab.playlists.textSearchController.text);
+    searchPlaylists(LibraryTab.playlists.textSearchController?.text ?? '');
   }
 
   void addNewPlaylist(

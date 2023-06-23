@@ -602,7 +602,7 @@ class Indexer {
       if (temp) {
         trackSearchTemp.clear();
       } else {
-        LibraryTab.tracks.textSearchController.clear();
+        LibraryTab.tracks.textSearchController?.clear();
         trackSearchList.assignAll(tracksInfoList);
       }
 
@@ -639,7 +639,7 @@ class Indexer {
       if (temp) {
         albumSearchTemp.clear();
       } else {
-        LibraryTab.albums.textSearchController.clear();
+        LibraryTab.albums.textSearchController?.clear();
         albumSearchList
           ..clear()
           ..addAll(mainMapAlbums.value.keys);
@@ -664,7 +664,7 @@ class Indexer {
       if (temp) {
         artistSearchTemp.clear();
       } else {
-        LibraryTab.artists.textSearchController.clear();
+        LibraryTab.artists.textSearchController?.clear();
         artistSearchList
           ..clear()
           ..addAll(mainMapArtists.value.keys);
@@ -686,7 +686,7 @@ class Indexer {
 
   void searchGenres(String text) {
     if (text == '') {
-      LibraryTab.genres.textSearchController.clear();
+      LibraryTab.genres.textSearchController?.clear();
       genreSearchList.assignAll(mainMapGenres.value.keys);
       return;
     }
@@ -759,7 +759,7 @@ class Indexer {
       tracksInfoList.value = tracksInfoList.reversed.toList();
     }
     SettingsController.inst.save(tracksSort: sortBy, tracksSortReversed: reverse);
-    searchTracks(LibraryTab.tracks.textSearchController.text);
+    searchTracks(LibraryTab.tracks.textSearchController?.text ?? '');
   }
 
   /// Sorts Albums and Saves automatically to settings
@@ -805,7 +805,7 @@ class Indexer {
 
     SettingsController.inst.save(albumSort: sortBy, albumSortReversed: reverse);
 
-    searchAlbums(LibraryTab.albums.textSearchController.text);
+    searchAlbums(LibraryTab.albums.textSearchController?.text ?? '');
   }
 
   /// Sorts Artists and Saves automatically to settings
@@ -854,7 +854,7 @@ class Indexer {
 
     SettingsController.inst.save(artistSort: sortBy, artistSortReversed: reverse);
 
-    searchArtists(LibraryTab.artists.textSearchController.text);
+    searchArtists(LibraryTab.artists.textSearchController?.text ?? '');
   }
 
   /// Sorts Genres and Saves automatically to settings
@@ -901,7 +901,7 @@ class Indexer {
       ..addEntries(reverse ? genresList.reversed : genresList);
 
     SettingsController.inst.save(genreSort: sortBy, genreSortReversed: reverse);
-    searchGenres(LibraryTab.genres.textSearchController.text);
+    searchGenres(LibraryTab.genres.textSearchController?.text ?? '');
   }
 
   Future<void> updateImageSizeInStorage([File? newImgFile]) async {

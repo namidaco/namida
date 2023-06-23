@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -206,7 +207,9 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
       tryResettingLatestInsertedIndex();
     } catch (e) {
       /// if track doesnt exist
-      NamidaDialogs.inst.showTrackDialog(tr, isFromPlayerQueue: true, errorPlayingTrack: true);
+      SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+        NamidaDialogs.inst.showTrackDialog(tr, isFromPlayerQueue: true, errorPlayingTrack: true);
+      });
       return;
     }
   }
