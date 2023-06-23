@@ -1168,90 +1168,79 @@ class SubpagesTopContainer extends StatelessWidget {
       padding: const EdgeInsets.all(12.0),
       margin: EdgeInsets.symmetric(vertical: verticalPadding),
       height: height,
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              imageWidget,
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(
-                      height: 18.0,
-                    ),
-                    Container(
-                      padding: const EdgeInsets.only(left: 14.0),
-                      child: Text(
-                        title,
-                        style: context.textTheme.displayLarge,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 2.0,
-                    ),
-                    Container(
-                      padding: const EdgeInsets.only(left: 14.0),
-                      child: Text(
-                        subtitle,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
-                      ),
-                    ),
-                    if (thirdLineText != '') ...[
-                      const SizedBox(
-                        height: 2.0,
-                      ),
-                      Container(
-                        padding: const EdgeInsets.only(left: 14.0),
-                        child: Text(
-                          thirdLineText,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(
-                      height: 18.0,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () => Player.inst.playOrPause(
-                            0,
-                            tracks,
-                            source,
-                            shuffle: true,
-                          ),
-                          child: const Icon(Broken.shuffle),
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: () => Player.inst.addToQueue(tracks),
-                          icon: const StackedIcon(baseIcon: Broken.play, secondaryIcon: Broken.add_circle),
-                          label: Text(Language.inst.PLAY_LAST),
-                        ),
-                      ],
-                    )
-                  ],
+          imageWidget,
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(
+                  height: 18.0,
                 ),
-              )
-            ],
-          ),
-          if (false)
-            Container(
-              padding: const EdgeInsets.all(6.0),
-              color: context.theme.cardColor,
-              child: Row(
-                children: const [Text('bottomText')],
-              ),
+                Container(
+                  padding: const EdgeInsets.only(left: 14.0),
+                  child: Text(
+                    title,
+                    style: context.textTheme.displayLarge,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(
+                  height: 2.0,
+                ),
+                Container(
+                  padding: const EdgeInsets.only(left: 14.0),
+                  child: Text(
+                    subtitle,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
+                  ),
+                ),
+                if (thirdLineText != '') ...[
+                  const SizedBox(
+                    height: 2.0,
+                  ),
+                  Container(
+                    padding: const EdgeInsets.only(left: 14.0),
+                    child: Text(
+                      thirdLineText,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
+                    ),
+                  ),
+                ],
+                const SizedBox(
+                  height: 18.0,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => Player.inst.playOrPause(
+                        0,
+                        tracks,
+                        source,
+                        shuffle: true,
+                      ),
+                      child: const Icon(Broken.shuffle),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () => Player.inst.addToQueue(tracks),
+                      icon: const StackedIcon(baseIcon: Broken.play, secondaryIcon: Broken.add_circle),
+                      label: Text(Language.inst.PLAY_LAST),
+                    ),
+                  ],
+                )
+              ],
             ),
+          ),
+          // TODO: widget for most played music [CalendarSelectDay(), DateType(day, week, month, year, custom)]
         ],
       ),
     );

@@ -517,7 +517,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 0.0),
             titleGap: 0,
           ),
-          onTap: () => Clipboard.setData(ClipboardData(text: comment?.text)),
+          onTap: () => comment != null ? Clipboard.setData(ClipboardData(text: comment.text)) : null,
         ),
         PopupMenuItem(
           child: SmallListTile(

@@ -20,7 +20,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=2.19.4 <3.0.0'
+  sdk: '>=3.0.5 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -44,12 +44,12 @@ dependencies:
   intl: ^0.18.0
   flutter_archive: ^5.0.0
   url_launcher: ^6.1.10
-  connectivity_plus: ^3.0.3
+  connectivity_plus: ^4.0.1
   selectable_autolink_text: ^2.4.1
   share_plus: ^6.3.1
   timeago: ^3.4.0
   readmore: ^2.2.0
-  calendar_date_picker2: ^0.4.9
+  calendar_date_picker2: ^0.5.2
   receive_intent: ^0.2.3
   receive_sharing_intent:
     git:
@@ -80,7 +80,7 @@ dependencies:
   youtube_explode_dart: ^1.12.4
 
   # Image Utilities
-  extended_image: ^7.0.2
+  extended_image: ^8.0.2
   palette_generator: ^0.3.3+2
   cached_network_image: ^3.2.3
 
@@ -109,9 +109,12 @@ dependencies:
   webview_cookie_manager: ^2.0.6
   google_sign_in: ^6.0.2
   video_compress: ^3.1.2
-  shimmer: ^2.0.0
+  shimmer: ^3.0.0
   liquid_pull_to_refresh: ^3.0.1
   lazy_load_scrollview: ^1.3.0
+  # reorderables: ^0.6.0
+  # flutter_reorderable_list: ^1.3.0
+  # isolate_image_compress: ^2.0.0
 
 dev_dependencies:
   flutter_test:
