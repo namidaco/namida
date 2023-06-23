@@ -42,7 +42,7 @@ class VideoController {
 
   bool get shouldShowVideo => vidcontroller != null && (localVidPath.value != '' || youtubeLink.value != '') && (vidcontroller?.value.isInitialized ?? false);
 
-  VideoController() {
+  void initialize() {
     /// Listen for connection changes, if a connection was restored, fetch video.
     connectivity.onConnectivityChanged.listen((ConnectivityResult result) async {
       if (result != ConnectivityResult.none && !shouldShowVideo) {

@@ -60,7 +60,7 @@ class NamidaNavigator {
     }
   }
 
-  void navigateDialog(Widget dialog, {int durationInMs = 400}) {
+  void navigateDialog(Widget dialog, {int durationInMs = 400, Future<bool> Function()? onWillPop}) {
     ScrollSearchController.inst.unfocusKeyboard();
     currentDialogNumber++;
     Get.to(
@@ -68,8 +68,10 @@ class NamidaNavigator {
         onWillPop: () async {
           if (currentDialogNumber > 0) {
             closeDialog();
+            if (onWillPop != null) await onWillPop();
             return false;
           }
+
           return true;
         },
         child: dialog,

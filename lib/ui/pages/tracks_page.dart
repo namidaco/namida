@@ -13,6 +13,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
+import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class TracksPage extends StatelessWidget {
@@ -22,15 +23,27 @@ class TracksPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () => NamidaTracksList(
-        pageKey: const PageStorageKey(LibraryTab.tracks),
         queueLength: Indexer.inst.trackSearchList.length,
-        queue: Indexer.inst.trackSearchList,
         queueSource: QueueSource.allTracks,
-        scrollController: ScrollSearchController.inst.trackScrollcontroller,
+        scrollController: LibraryTab.tracks.scrollController,
+        itemBuilder: (context, i) {
+          final track = Indexer.inst.trackSearchList[i];
+          return AnimatingTile(
+            key: ValueKey(i),
+            position: i,
+            shouldAnimate: LibraryTab.tracks.shouldAnimateTiles,
+            child: TrackTile(
+              index: i,
+              track: track,
+              draggableThumbnail: false,
+              queueSource: QueueSource.allTracks,
+            ),
+          );
+        },
         widgetsInColumn: [
           ExpandableBox(
-            isBarVisible: ScrollSearchController.inst.isTrackBarVisible.value,
-            showSearchBox: ScrollSearchController.inst.showTrackSearchBox.value,
+            isBarVisible: LibraryTab.tracks.isBarVisible,
+            showSearchBox: LibraryTab.tracks.isSearchBoxVisible,
             displayloadingIndicator: Indexer.inst.isIndexing.value,
             leftWidgets: [
               NamidaIconButton(
@@ -49,9 +62,9 @@ class TracksPage extends StatelessWidget {
               const SizedBox(width: 12.0),
             ],
             leftText: Indexer.inst.trackSearchList.toList().displayTrackKeyword,
-            onFilterIconTap: () => ScrollSearchController.inst.switchTrackSearchBoxVisibilty(),
+            onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.tracks),
             onCloseButtonPressed: () {
-              ScrollSearchController.inst.clearTrackSearchTextField();
+              ScrollSearchController.inst.clearSearchTextField(LibraryTab.tracks);
             },
             sortByMenuWidget: SortByMenu(
               title: SettingsController.inst.tracksSort.value.toText(),

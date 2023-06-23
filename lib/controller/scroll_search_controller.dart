@@ -6,9 +6,9 @@ import 'package:get/get.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
-import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 
@@ -23,84 +23,71 @@ class ScrollSearchController {
   final RxBool isGlobalSearchMenuShown = false.obs;
   final TextEditingController searchTextEditingController = Indexer.inst.globalSearchController;
 
-  final RxBool showTrackSearchBox = false.obs;
-  final RxBool showAlbumSearchBox = false.obs;
-  final RxBool showArtistSearchBox = false.obs;
-  final RxBool showGenreSearchBox = false.obs;
-  final RxBool showPlaylistSearchBox = false.obs;
-
-  final ScrollController trackScrollcontroller = ScrollController();
-  final ScrollController albumScrollcontroller = ScrollController();
-  final ScrollController artistScrollcontroller = ScrollController();
-  final ScrollController genreScrollcontroller = ScrollController();
-  final ScrollController playlistScrollcontroller = ScrollController();
-
   ScrollController queueScrollController = ScrollController();
   double get trackTileItemScrollOffsetInQueue => trackTileItemExtent * Player.inst.currentIndex.value - Get.height * 0.3;
 
-  final RxBool isTrackBarVisible = true.obs;
-  final RxBool isAlbumBarVisible = true.obs;
-  final RxBool isArtistBarVisible = true.obs;
-  final RxBool isGenreBarVisible = true.obs;
-  final RxBool isPlaylistBarVisible = true.obs;
+  final Map<LibraryTab, RxBool> isSearchBoxVisibleMap = <LibraryTab, RxBool>{};
+  final Map<LibraryTab, RxBool> isBarVisibleMap = <LibraryTab, RxBool>{};
 
-  ScrollSearchController() {
-    trackScrollcontroller.addListener(() {
-      if (trackScrollcontroller.position.userScrollDirection == ScrollDirection.reverse) {
-        isTrackBarVisible.value = false;
-      }
-      if (trackScrollcontroller.position.userScrollDirection == ScrollDirection.forward) {
-        isTrackBarVisible.value = true;
-      }
-    });
+  final Map<LibraryTab, ScrollController> scrollControllersMap = <LibraryTab, ScrollController>{};
+  final Map<LibraryTab, double> scrollPositionsMap = {};
 
-    albumScrollcontroller.addListener(() {
-      if (albumScrollcontroller.position.userScrollDirection == ScrollDirection.reverse) {
-        isAlbumBarVisible.value = false;
-      }
-      if (albumScrollcontroller.position.userScrollDirection == ScrollDirection.forward) {
-        isAlbumBarVisible.value = true;
-      }
-    });
-    artistScrollcontroller.addListener(() {
-      if (artistScrollcontroller.position.userScrollDirection == ScrollDirection.reverse) {
-        isArtistBarVisible.value = false;
-      }
-      if (artistScrollcontroller.position.userScrollDirection == ScrollDirection.forward) {
-        isArtistBarVisible.value = true;
-      }
-    });
-    genreScrollcontroller.addListener(() {
-      if (genreScrollcontroller.position.userScrollDirection == ScrollDirection.reverse) {
-        isGenreBarVisible.value = false;
-      }
-      if (genreScrollcontroller.position.userScrollDirection == ScrollDirection.forward) {
-        isGenreBarVisible.value = true;
-      }
-    });
-    playlistScrollcontroller.addListener(() {
-      if (playlistScrollcontroller.position.userScrollDirection == ScrollDirection.reverse) {
-        isPlaylistBarVisible.value = false;
-      }
-      if (playlistScrollcontroller.position.userScrollDirection == ScrollDirection.forward) {
-        isPlaylistBarVisible.value = true;
-      }
+  Future<void> animatePageController(int animateTo) async {
+    final tab = animateTo.toEnum();
+    final w = tab.toWidget();
+
+    if (w.runtimeType == NamidaNavigator.inst.currentWidgetStack.lastOrNull.runtimeType) {
+      tab.scrollController.animateTo(0.0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOutQuart);
+      return;
+    }
+
+    final isPageToTheRight = animateTo > SettingsController.inst.selectedLibraryTab.value.toInt();
+    final transition = isPageToTheRight ? Transition.rightToLeft : Transition.leftToRight;
+
+    _updateScrollPositions(SettingsController.inst.selectedLibraryTab.value, tab);
+    SettingsController.inst.save(selectedLibraryTab: tab);
+    NamidaNavigator.inst.navigateOffAll(w, transition: transition);
+  }
+
+  void initialize() {
+    _assignScrollController(SettingsController.inst.selectedLibraryTab.value);
+  }
+
+  void _assignScrollController(LibraryTab tab) {
+    scrollControllersMap[tab]?.removeListener(() {});
+    scrollControllersMap[tab] = ScrollController(initialScrollOffset: tab.scrollPosition);
+    scrollControllersMap[tab]!.addListener(() {
+      isBarVisibleMap[tab]!.value = scrollControllersMap[tab]!.position.userScrollDirection == ScrollDirection.forward;
     });
   }
 
-  Future<void> animatePageController(int animateTo) async {
-    final w = animateTo.toEnum().toWidget();
-    if (w.runtimeType == NamidaNavigator.inst.currentWidgetStack.lastOrNull.runtimeType) {
-      return;
+  bool getIsSearchBoxVisible(LibraryTab tab) {
+    if (isSearchBoxVisibleMap[tab] != null) {
+      return isSearchBoxVisibleMap[tab]!.value;
     }
-    final libList = SettingsController.inst.libraryTabs;
-    final isPageToTheRight = libList.indexOf(animateTo.toEnum().convertToString) > libList.indexOf(SettingsController.inst.selectedLibraryTab.value.convertToString);
-    final transition = isPageToTheRight ? Transition.rightToLeft : Transition.leftToRight;
+    isSearchBoxVisibleMap[tab] = false.obs;
+    return isSearchBoxVisibleMap[tab]!.value;
+  }
 
-    SettingsController.inst.save(selectedLibraryTab: animateTo.toEnum());
-    NamidaNavigator.inst.navigateOffAll(w, transition: transition);
+  bool getIsBarVisible(LibraryTab tab) {
+    if (isBarVisibleMap[tab] != null) {
+      return isBarVisibleMap[tab]!.value;
+    }
+    isBarVisibleMap[tab] = true.obs;
+    return isBarVisibleMap[tab]!.value;
+  }
 
-    printInfo(info: animateTo.toEnum().toText());
+  double getScrollPosition(LibraryTab tab) {
+    if (scrollPositionsMap[tab] != null) {
+      return scrollPositionsMap[tab]!;
+    }
+    scrollPositionsMap[tab] = 0.0;
+    return scrollPositionsMap[tab]!;
+  }
+
+  void _updateScrollPositions(LibraryTab oldTab, LibraryTab newTab) {
+    scrollPositionsMap[oldTab] = oldTab.offsetOrZero;
+    _assignScrollController(newTab);
   }
 
   void hideSearchMenu() {
@@ -119,120 +106,64 @@ class ScrollSearchController {
 
   void unfocusKeyboard() => Get.focusScope?.unfocus();
 
-  /// Tracks
-  void switchTrackSearchBoxVisibilty({bool forceHide = false, bool forceShow = false}) {
+  void switchSearchBoxVisibilty(LibraryTab libraryTab, {bool forceHide = false, bool forceShow = false}) {
     if (forceHide) {
-      showTrackSearchBox.value = false;
+      isSearchBoxVisibleMap[libraryTab]!.value = false;
       return;
     }
     if (forceShow) {
-      showTrackSearchBox.value = true;
+      isSearchBoxVisibleMap[libraryTab]!.value = true;
       return;
     }
     if (Indexer.inst.tracksSearchController.value.text == '') {
-      showTrackSearchBox.value = !showTrackSearchBox.value;
+      isSearchBoxVisibleMap[libraryTab]!.value = !isSearchBoxVisibleMap[libraryTab]!.value;
       unfocusKeyboard();
     } else {
-      showTrackSearchBox.value = true;
+      isSearchBoxVisibleMap[libraryTab]!.value = true;
     }
   }
 
-  void clearTrackSearchTextField() {
-    Indexer.inst.searchTracks('');
-    showTrackSearchBox.value = false;
-  }
-
-  /// Albums
-  void switchAlbumSearchBoxVisibilty({bool forceHide = false, bool forceShow = false}) {
-    if (forceHide) {
-      showAlbumSearchBox.value = false;
-      return;
+  void clearSearchTextField(LibraryTab libraryTab) {
+    if (libraryTab == LibraryTab.tracks) {
+      Indexer.inst.searchTracks('');
     }
-    if (forceShow) {
-      showAlbumSearchBox.value = true;
-      return;
+    if (libraryTab == LibraryTab.albums) {
+      Indexer.inst.searchAlbums('');
     }
-    if (Indexer.inst.albumsSearchController.value.text == '') {
-      showAlbumSearchBox.value = !showAlbumSearchBox.value;
-      unfocusKeyboard();
-    } else {
-      showAlbumSearchBox.value = true;
+    if (libraryTab == LibraryTab.artists) {
+      Indexer.inst.searchArtists('');
     }
-  }
-
-  void clearAlbumSearchTextField() {
-    Indexer.inst.searchAlbums('');
-    showAlbumSearchBox.value = false;
-  }
-
-  /// Artists
-  void switchArtistSearchBoxVisibilty({bool forceHide = false, bool forceShow = false}) {
-    if (forceHide) {
-      showArtistSearchBox.value = false;
-      return;
+    if (libraryTab == LibraryTab.genres) {
+      Indexer.inst.searchGenres('');
     }
-    if (forceShow) {
-      showArtistSearchBox.value = true;
-      return;
+    if (libraryTab == LibraryTab.playlists) {
+      Indexer.inst.searchTracks('');
     }
-    if (Indexer.inst.artistsSearchController.value.text == '') {
-      showArtistSearchBox.value = !showArtistSearchBox.value;
-      unfocusKeyboard();
-    } else {
-      showArtistSearchBox.value = true;
-    }
-  }
-
-  void clearArtistSearchTextField() {
-    Indexer.inst.searchArtists('');
-    showArtistSearchBox.value = false;
-  }
-
-  /// Genres
-  void switchGenreSearchBoxVisibilty({bool forceHide = false, bool forceShow = false}) {
-    if (forceHide) {
-      showGenreSearchBox.value = false;
-      return;
-    }
-    if (forceShow) {
-      showGenreSearchBox.value = true;
-      return;
-    }
-    if (Indexer.inst.genresSearchController.value.text == '') {
-      showGenreSearchBox.value = !showGenreSearchBox.value;
-      unfocusKeyboard();
-    } else {
-      showGenreSearchBox.value = true;
-    }
-  }
-
-  void clearGenreSearchTextField() {
-    Indexer.inst.searchGenres('');
-    showGenreSearchBox.value = false;
+    isSearchBoxVisibleMap[libraryTab]!.value = true;
   }
 
   /// Playlists
-  void switchPlaylistSearchBoxVisibilty({bool forceHide = false, bool forceShow = false}) {
-    if (forceHide) {
-      showPlaylistSearchBox.value = false;
-      return;
-    }
-    if (forceShow) {
-      showPlaylistSearchBox.value = true;
-      return;
-    }
-    if (PlaylistController.inst.playlistSearchController.value.text == '') {
-      showPlaylistSearchBox.value = !showPlaylistSearchBox.value;
-      unfocusKeyboard();
-    } else {
-      showPlaylistSearchBox.value = true;
-    }
-  }
+  // void switchPlaylistSearchBoxVisibilty({bool forceHide = false, bool forceShow = false}) {
+  //   if (forceHide) {
+  //     showPlaylistSearchBox.value = false;
+  //     return;
+  //   }
+  //   if (forceShow) {
+  //     showPlaylistSearchBox.value = true;
+  //     return;
+  //   }
+  //   if (PlaylistController.inst.playlistSearchController.value.text == '') {
+  //     showPlaylistSearchBox.value = !showPlaylistSearchBox.value;
+  //     unfocusKeyboard();
+  //   } else {
+  //     showPlaylistSearchBox.value = true;
+  //   }
+  // }
 
-  void clearPlaylistSearchTextField() {
-    PlaylistController.inst.searchPlaylists('');
-    showPlaylistSearchBox.value = false;
-  }
+  // void clearPlaylistSearchTextField() {
+  //   PlaylistController.inst.searchPlaylists('');
+  //   showPlaylistSearchBox.value = false;
+  // }
 
   void animateQueueToCurrentTrack() {
     if (queueScrollController.hasClients) {
@@ -243,4 +174,13 @@ class ScrollSearchController {
       );
     }
   }
+}
+
+extension LibraryTabStuff on LibraryTab {
+  ScrollController get scrollController => ScrollSearchController.inst.scrollControllersMap[this]!;
+  double get scrollPosition => ScrollSearchController.inst.getScrollPosition(this);
+  bool get isBarVisible => ScrollSearchController.inst.getIsBarVisible(this);
+  bool get isSearchBoxVisible => ScrollSearchController.inst.getIsSearchBoxVisible(this);
+  double get offsetOrZero => (ScrollSearchController.inst.scrollControllersMap[this]?.hasClients ?? false) ? scrollController.positions.lastOrNull?.pixels ?? 0.0 : 0.0;
+  bool get shouldAnimateTiles => offsetOrZero == 0.0;
 }

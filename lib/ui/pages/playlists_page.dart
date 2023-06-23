@@ -11,6 +11,7 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -29,14 +30,17 @@ class PlaylistsPage extends StatelessWidget {
   final List<Track>? tracksToAdd;
   final bool displayTopRow;
   final bool disableBottomPadding;
-  PlaylistsPage({
+
+  const PlaylistsPage({
     super.key,
     this.countPerRow,
     this.tracksToAdd,
     this.displayTopRow = true,
     this.disableBottomPadding = false,
   });
-  final ScrollController _scrollController = ScrollSearchController.inst.playlistScrollcontroller;
+
+  ScrollController get _scrollController => LibraryTab.playlists.scrollController;
+
   @override
   Widget build(BuildContext context) {
     return Obx(
@@ -56,11 +60,11 @@ class PlaylistsPage extends StatelessWidget {
                       SettingsController.inst.save(playlistGridCount: nToSave);
                     },
                   ),
-                  isBarVisible: ScrollSearchController.inst.isPlaylistBarVisible.value,
-                  showSearchBox: ScrollSearchController.inst.showPlaylistSearchBox.value,
+                  isBarVisible: LibraryTab.playlists.isBarVisible,
+                  showSearchBox: LibraryTab.playlists.isSearchBoxVisible,
                   leftText: PlaylistController.inst.playlistSearchList.length.displayPlaylistKeyword,
-                  onFilterIconTap: () => ScrollSearchController.inst.switchPlaylistSearchBoxVisibilty(),
-                  onCloseButtonPressed: () => ScrollSearchController.inst.clearPlaylistSearchTextField(),
+                  onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.playlists),
+                  onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.playlists),
                   sortByMenuWidget: SortByMenu(
                     title: SettingsController.inst.playlistSort.value.toText(),
                     popupMenuChild: const SortByMenuPlaylist(),
@@ -185,6 +189,7 @@ class PlaylistsPage extends StatelessWidget {
                               final playlist = PlaylistController.inst.playlistSearchList[i];
                               return AnimatingTile(
                                 position: i,
+                                shouldAnimate: LibraryTab.playlists.shouldAnimateTiles,
                                 child: PlaylistTile(
                                   playlist: playlist,
                                   onTap: tracksToAdd != null
@@ -209,6 +214,7 @@ class PlaylistsPage extends StatelessWidget {
                               return AnimatingGrid(
                                 columnCount: PlaylistController.inst.playlistSearchList.length,
                                 position: i,
+                                shouldAnimate: LibraryTab.playlists.shouldAnimateTiles,
                                 child: MultiArtworkCard(
                                   heroTag: 'playlist_artwork_${playlist.name}',
                                   tracks: playlist.tracks.map((e) => e.track).toList(),

@@ -9,7 +9,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/youtube_controller.dart';
-import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -61,14 +61,14 @@ class MainPageWrapper extends StatelessWidget {
                       children: [
                         const NamidaLogoContainer(),
                         const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
-                        ...kLibraryTabsStock
+                        ...LibraryTab.values
                             .map(
                               (e) => NamidaDrawerListTile(
-                                enabled: SettingsController.inst.selectedLibraryTab.value == e.toEnum(),
-                                title: e.toEnum().toText(),
-                                icon: e.toEnum().toIcon(),
+                                enabled: SettingsController.inst.selectedLibraryTab.value == e,
+                                title: e.toText(),
+                                icon: e.toIcon(),
                                 onTap: () async {
-                                  ScrollSearchController.inst.animatePageController(e.toEnum().toInt());
+                                  ScrollSearchController.inst.animatePageController(e.toInt());
                                   await Future.delayed(const Duration(milliseconds: 100));
                                   toggleDrawer();
                                 },

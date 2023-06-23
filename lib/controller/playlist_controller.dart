@@ -121,7 +121,7 @@ class PlaylistController {
     }
 
     if (reverse) {
-      playlistList.assignAll(playlistList.toList().reversed);
+      playlistList.assignAll(playlistList.reversed);
     }
 
     SettingsController.inst.save(playlistSort: sortBy, playlistSortReversed: reverse);

@@ -112,7 +112,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
     if (widget.path == null && widget.bytes == null) return;
 
     final shouldDisplayMemory = _finalBytes != null && (_finalBytes ?? []).isNotEmpty;
-    final shouldDisplayPath = widget.path != null && FileSystemEntity.typeSync(widget.path!) != FileSystemEntityType.notFound;
+    final shouldDisplayPath = widget.path != null;
     if (!shouldDisplayMemory && !shouldDisplayPath) return;
     // [extImageChild] wont get assigned, leaving [extImageChild==null], i.e. displays [stockWidget] only.
 

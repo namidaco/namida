@@ -149,8 +149,8 @@ class HomePage extends StatelessWidget {
                     destinations: SettingsController.inst.libraryTabs
                         .map(
                           (e) => NavigationDestination(
-                            icon: Icon(e.toEnum().toIcon()),
-                            label: e.toEnum().toText(),
+                            icon: Icon(e.toIcon()),
+                            label: e.toText(),
                           ),
                         )
                         .toList(),

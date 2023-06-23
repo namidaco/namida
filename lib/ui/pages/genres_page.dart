@@ -20,8 +20,10 @@ import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class GenresPage extends StatelessWidget {
   GenresPage({super.key});
-  final ScrollController _scrollController = ScrollSearchController.inst.genreScrollcontroller;
+
+  ScrollController get _scrollController => LibraryTab.genres.scrollController;
   final countPerRow = SettingsController.inst.genreGridCount.value;
+
   @override
   Widget build(BuildContext context) {
     return CupertinoScrollbar(
@@ -39,11 +41,11 @@ class GenresPage extends StatelessWidget {
                     SettingsController.inst.save(genreGridCount: nToSave);
                   },
                 ),
-                isBarVisible: ScrollSearchController.inst.isGenreBarVisible.value,
-                showSearchBox: ScrollSearchController.inst.showGenreSearchBox.value,
+                isBarVisible: LibraryTab.genres.isBarVisible,
+                showSearchBox: LibraryTab.genres.isSearchBoxVisible,
                 leftText: Indexer.inst.genreSearchList.length.displayGenreKeyword,
-                onFilterIconTap: () => ScrollSearchController.inst.switchGenreSearchBoxVisibilty(),
-                onCloseButtonPressed: () => ScrollSearchController.inst.clearGenreSearchTextField(),
+                onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.genres),
+                onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.genres),
                 sortByMenuWidget: SortByMenu(
                   title: SettingsController.inst.genreSort.value.toText(),
                   popupMenuChild: const SortByMenuGenres(),
@@ -68,6 +70,7 @@ class GenresPage extends StatelessWidget {
                     return AnimatingGrid(
                       columnCount: Indexer.inst.genreSearchList.length,
                       position: i,
+                      shouldAnimate: LibraryTab.genres.shouldAnimateTiles,
                       child: MultiArtworkCard(
                         heroTag: 'genre_artwork_$genre',
                         tracks: genre.getGenresTracks(),

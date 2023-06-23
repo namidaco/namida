@@ -308,7 +308,9 @@ class CustomBlurryDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
+      // TODO: doesnt work, since [navigateToDialog] already has OnWillPop.
       onWillPop: () async {
+        if (onDismissing != null) onDismissing!();
         return tapToDismiss;
       },
       child: NamidaBgBlur(
@@ -1259,26 +1261,24 @@ class SubpagesTopContainer extends StatelessWidget {
 class AnimatingTile extends StatelessWidget {
   final int position;
   final Widget child;
-  const AnimatingTile({super.key, required this.position, required this.child});
+  final bool shouldAnimate;
+  const AnimatingTile({super.key, required this.position, required this.child, this.shouldAnimate = true});
 
   @override
   Widget build(BuildContext context) {
-    // since it doesnt work well with PageStorageKey(), which is needed for keeping scroll offset.
-    // the effect is only applied for the first 40 items.
-    if (position < 40) {
-      return AnimationConfiguration.staggeredList(
-        position: position,
-        duration: const Duration(milliseconds: 400),
-        child: SlideAnimation(
-          verticalOffset: 25.0,
-          child: FadeInAnimation(
+    return shouldAnimate
+        ? AnimationConfiguration.staggeredList(
+            position: position,
             duration: const Duration(milliseconds: 400),
-            child: child,
-          ),
-        ),
-      );
-    }
-    return child;
+            child: SlideAnimation(
+              verticalOffset: 25.0,
+              child: FadeInAnimation(
+                duration: const Duration(milliseconds: 400),
+                child: child,
+              ),
+            ),
+          )
+        : child;
   }
 }
 
@@ -1286,27 +1286,25 @@ class AnimatingGrid extends StatelessWidget {
   final int position;
   final int columnCount;
   final Widget child;
-  const AnimatingGrid({super.key, required this.position, required this.columnCount, required this.child});
+  final bool shouldAnimate;
+  const AnimatingGrid({super.key, required this.position, required this.columnCount, required this.child, this.shouldAnimate = true});
 
   @override
   Widget build(BuildContext context) {
-    // since it doesnt work well with PageStorageKey(), which is needed for keeping scroll offset.
-    // the effect is only applied for the first 40 items.
-    if (position < 40) {
-      return AnimationConfiguration.staggeredGrid(
-        columnCount: columnCount,
-        position: position,
-        duration: const Duration(milliseconds: 400),
-        child: SlideAnimation(
-          verticalOffset: 25.0,
-          child: FadeInAnimation(
+    return shouldAnimate
+        ? AnimationConfiguration.staggeredGrid(
+            columnCount: columnCount,
+            position: position,
             duration: const Duration(milliseconds: 400),
-            child: child,
-          ),
-        ),
-      );
-    }
-    return child;
+            child: SlideAnimation(
+              verticalOffset: 25.0,
+              child: FadeInAnimation(
+                duration: const Duration(milliseconds: 400),
+                child: child,
+              ),
+            ),
+          )
+        : child;
   }
 }
 
@@ -1836,7 +1834,6 @@ class NamidaListView extends StatelessWidget {
   final List<Widget>? moreWidgets;
   final bool buildDefaultDragHandles;
   final ScrollPhysics? physics;
-  final Key? pageKey;
 
   NamidaListView({
     super.key,
@@ -1853,7 +1850,6 @@ class NamidaListView extends StatelessWidget {
     this.onReorderStart,
     this.onReorderEnd,
     this.physics,
-    this.pageKey,
   });
 
   final ScrollController _scrollController = ScrollController();
@@ -1870,7 +1866,6 @@ class NamidaListView extends StatelessWidget {
             Expanded(
               child: itemExtents != null && onReorder != null
                   ? KnownExtentsReorderableListView.builder(
-                      key: pageKey,
                       itemExtents: itemExtents!,
                       scrollController: sc,
                       padding: padding ?? const EdgeInsets.only(bottom: kBottomPadding),
@@ -1885,7 +1880,6 @@ class NamidaListView extends StatelessWidget {
                       onReorderEnd: onReorderEnd,
                     )
                   : ReorderableListView.builder(
-                      key: pageKey,
                       itemExtent: itemExtent,
                       scrollController: sc,
                       padding: padding ?? const EdgeInsets.only(bottom: kBottomPadding),
@@ -1922,7 +1916,7 @@ class NamidaTracksList extends StatelessWidget {
   final ScrollPhysics? physics;
   final QueueSource queueSource;
   final bool displayIndex;
-  final Key? pageKey;
+  final bool shouldAnimate;
   const NamidaTracksList({
     super.key,
     this.queue,
@@ -1939,13 +1933,12 @@ class NamidaTracksList extends StatelessWidget {
     this.physics,
     required this.queueSource,
     this.displayIndex = false,
-    this.pageKey,
+    this.shouldAnimate = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return NamidaListView(
-      pageKey: pageKey,
       onReorder: onReorder,
       header: header,
       widgetsInColumn: widgetsInColumn,
@@ -1962,6 +1955,7 @@ class NamidaTracksList extends StatelessWidget {
               return AnimatingTile(
                 key: ValueKey(i),
                 position: i,
+                shouldAnimate: shouldAnimate,
                 child: TrackTile(
                   index: i,
                   track: track,

@@ -13,7 +13,7 @@ class QueuesPage extends StatelessWidget {
     return Obx(
       () => NamidaListView(
         itemBuilder: (context, i) {
-          final q = QueueController.inst.queueList.reversed.toList()[i];
+          final q = QueueController.inst.queueList.toList()[QueueController.inst.queueList.length - i - 1];
           return AnimatingTile(
             key: ValueKey(i),
             position: i,

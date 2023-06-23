@@ -20,8 +20,9 @@ import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class AlbumsPage extends StatelessWidget {
   final List<String>? albums;
-  AlbumsPage({super.key, this.albums});
-  final ScrollController _scrollController = ScrollSearchController.inst.albumScrollcontroller;
+  const AlbumsPage({super.key, this.albums});
+
+  ScrollController get _scrollController => LibraryTab.albums.scrollController;
   int get countPerRow => SettingsController.inst.albumGridCount.value;
 
   @override
@@ -43,11 +44,11 @@ class AlbumsPage extends StatelessWidget {
                     SettingsController.inst.save(albumGridCount: nToSave);
                   },
                 ),
-                isBarVisible: ScrollSearchController.inst.isAlbumBarVisible.value,
-                showSearchBox: ScrollSearchController.inst.showAlbumSearchBox.value,
+                isBarVisible: LibraryTab.albums.isBarVisible,
+                showSearchBox: LibraryTab.albums.isSearchBoxVisible,
                 leftText: finalAlbums.length.displayAlbumKeyword,
-                onFilterIconTap: () => ScrollSearchController.inst.switchAlbumSearchBoxVisibilty(),
-                onCloseButtonPressed: () => ScrollSearchController.inst.clearAlbumSearchTextField(),
+                onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.albums),
+                onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.albums),
                 sortByMenuWidget: SortByMenu(
                   title: SettingsController.inst.albumSort.value.toText(),
                   popupMenuChild: const SortByMenuAlbums(),
@@ -75,6 +76,7 @@ class AlbumsPage extends StatelessWidget {
                             final albumName = finalAlbums[i];
                             return AnimatingTile(
                               position: i,
+                              shouldAnimate: LibraryTab.albums.shouldAnimateTiles,
                               child: AlbumTile(
                                 name: albumName,
                                 album: albumName.getAlbumTracks(),
@@ -97,6 +99,7 @@ class AlbumsPage extends StatelessWidget {
                                 return AnimatingGrid(
                                   columnCount: finalAlbums.length,
                                   position: i,
+                                  shouldAnimate: LibraryTab.albums.shouldAnimateTiles,
                                   child: AlbumCard(
                                     name: albumName,
                                     album: albumName.getAlbumTracks(),
@@ -118,6 +121,7 @@ class AlbumsPage extends StatelessWidget {
                                 return AnimatingGrid(
                                   columnCount: finalAlbums.length,
                                   position: i,
+                                  shouldAnimate: LibraryTab.albums.shouldAnimateTiles,
                                   child: AlbumCard(
                                     name: albumName,
                                     album: albumName.getAlbumTracks(),

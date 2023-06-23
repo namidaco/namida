@@ -98,16 +98,16 @@ class ExtrasSettings extends StatelessWidget {
                                 () => Container(
                                   margin: const EdgeInsets.all(4.0),
                                   child: ListTileWithCheckMark(
-                                    title: "${e.key + 1}. ${e.value.toEnum().toText()}",
-                                    icon: e.value.toEnum().toIcon(),
+                                    title: "${e.key + 1}. ${e.value.toText()}",
+                                    icon: e.value.toIcon(),
                                     onTap: () {
                                       SettingsController.inst.save(
-                                        selectedLibraryTab: e.value.toEnum(),
-                                        staticLibraryTab: e.value.toEnum(),
+                                        selectedLibraryTab: e.value,
+                                        staticLibraryTab: e.value,
                                         autoLibraryTab: false,
                                       );
                                     },
-                                    active: SettingsController.inst.selectedLibraryTab.value == e.value.toEnum(),
+                                    active: SettingsController.inst.selectedLibraryTab.value == e.value,
                                   ),
                                 ),
                               ),
@@ -137,9 +137,9 @@ class ExtrasSettings extends StatelessWidget {
                     ],
                     child: Obx(
                       () {
-                        final subList = <String>[].obs;
+                        final subList = <LibraryTab>[].obs;
 
-                        kLibraryTabsStock.loop((e, index) {
+                        LibraryTab.values.loop((e, index) {
                           if (!SettingsController.inst.libraryTabs.contains(e)) {
                             subList.add(e);
                           }
@@ -165,12 +165,12 @@ class ExtrasSettings extends StatelessWidget {
                                     key: ValueKey(i),
                                     margin: const EdgeInsets.all(4.0),
                                     child: ListTileWithCheckMark(
-                                      title: "${i + 1}. ${tab.toEnum().toText()}",
-                                      icon: tab.toEnum().toIcon(),
+                                      title: "${i + 1}. ${tab.toText()}",
+                                      icon: tab.toIcon(),
                                       onTap: () {
                                         if (SettingsController.inst.libraryTabs.length > 3) {
                                           SettingsController.inst.removeFromList(libraryTab1: tab);
-                                          SettingsController.inst.save(selectedLibraryTab: SettingsController.inst.libraryTabs[0].toEnum());
+                                          SettingsController.inst.save(selectedLibraryTab: SettingsController.inst.libraryTabs[0]);
                                         } else {
                                           Get.snackbar(Language.inst.AT_LEAST_THREE_TABS, Language.inst.AT_LEAST_THREE_TABS_SUBTITLE);
                                         }
@@ -201,8 +201,8 @@ class ExtrasSettings extends StatelessWidget {
                                     key: UniqueKey(),
                                     children: [
                                       ListTileWithCheckMark(
-                                        title: "${e.key + 1}. ${e.value.toEnum().toText()}",
-                                        icon: e.value.toEnum().toIcon(),
+                                        title: "${e.key + 1}. ${e.value.toText()}",
+                                        icon: e.value.toIcon(),
                                         onTap: () => SettingsController.inst.save(libraryTabs: [e.value]),
                                         active: SettingsController.inst.libraryTabs.contains(e.value),
                                       ),
@@ -386,7 +386,7 @@ class ExtrasSettings extends StatelessWidget {
             trailing: Obx(
               () => Column(
                 children: [
-                  Text("${Indexer.inst.colorPalettesInStorage.value}/${Indexer.inst.artworksInStorage.value.toString()}"),
+                  Text("${Indexer.inst.colorPalettesInStorage.value}/${Indexer.inst.artworksInStorage.value}"),
                   if (CurrentColor.inst.generatingAllColorPalettes.value) const LoadingIndicator(),
                 ],
               ),

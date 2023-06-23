@@ -52,23 +52,6 @@ void main() async {
     }
   }
 
-  // await NamidaNavigator.inst.navigateDialog(
-  //   CustomBlurryDialog(
-  //     title: Language.inst.STORAGE_PERMISSION,
-  //     bodyText: Language.inst.STORAGE_PERMISSION_SUBTITLE,
-  //     actions: [
-  // CancelButton(),
-  //       ElevatedButton(
-  //         onPressed: () async {
-  //           await Permission.storage.request();
-  //           NamidaNavigator.inst.closeDialog();
-  //         },
-  //         child: Text(Language.inst.GRANT_ACCESS),
-  //       ),
-  //     ],
-  //   ),
-  // );
-
   k_DIR_USER_DATA = await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
 
   Future<void> createDirectories(List<String> paths) async {
@@ -97,8 +80,7 @@ void main() async {
   kDirectoriesPaths.add('${paths[0]}/Download/');
   k_DIR_APP_INTERNAL_STORAGE = "${paths[0]}/Namida";
 
-  Get.put(() => ScrollSearchController());
-  Get.put(() => VideoController());
+  VideoController.inst.initialize();
 
   await SettingsController.inst.prepareSettingsFile();
   await Indexer.inst.prepareTracksFile();
@@ -132,13 +114,18 @@ void main() async {
       cf.deleteSync();
     }
   }
+  void shouldErrorPlayingFileSnackbar() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.snackbar(Language.inst.ERROR, Language.inst.COULDNT_PLAY_FILE);
+    });
+  }
 
   /// Recieving Initial Android Shared Intent.
   final intentfiles = await ReceiveSharingIntent.getInitialMedia();
   if (intentfiles.isNotEmpty) {
     final playedsuccessfully = await playExternalFiles(intentfiles.map((e) => e.path).toList());
     if (!playedsuccessfully) {
-      Get.snackbar(Language.inst.ERROR, Language.inst.COULDNT_PLAY_FILE);
+      shouldErrorPlayingFileSnackbar();
     }
   }
 
@@ -147,12 +134,13 @@ void main() async {
   ReceiveSharingIntent.getMediaStream().listen((event) async {
     await playExternalFiles(event.map((e) => e.path).toList());
   }, onError: (err) {
-    Get.snackbar(Language.inst.ERROR, Language.inst.COULDNT_PLAY_FILE);
+    shouldErrorPlayingFileSnackbar();
   });
 
   /// should be removed soon when fullscreen video is available.
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
+  ScrollSearchController.inst.initialize();
   runApp(const Namida());
   Folders.inst.onFirstLoad();
 }

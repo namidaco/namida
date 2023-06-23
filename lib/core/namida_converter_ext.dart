@@ -35,97 +35,28 @@ import 'package:namida/ui/pages/tracks_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-extension LibraryTabToInt on LibraryTab {
-  int toInt() {
-    // return SettingsController.inst.libraryTabs.toList().indexOf(toText);
-    final libtabs = SettingsController.inst.libraryTabs.toList();
-    if (this == LibraryTab.albums) {
-      return libtabs.indexOf('albums');
-    }
-    if (this == LibraryTab.tracks) {
-      return libtabs.indexOf('tracks');
-    }
-    if (this == LibraryTab.artists) {
-      return libtabs.indexOf('artists');
-    }
-    if (this == LibraryTab.genres) {
-      return libtabs.indexOf('genres');
-    }
-    if (this == LibraryTab.playlists) {
-      return libtabs.indexOf('playlists');
-    }
-    if (this == LibraryTab.folders) {
-      return libtabs.indexOf('folders');
-    }
-    return libtabs.indexOf('tracks');
-  }
-}
-
 extension LibraryTabToEnum on int {
-  LibraryTab toEnum() {
-    final libtabs = SettingsController.inst.libraryTabs.toList();
-    if (this == libtabs.indexOf('albums')) {
-      return LibraryTab.albums;
-    }
-    if (this == libtabs.indexOf('tracks')) {
-      return LibraryTab.tracks;
-    }
-    if (this == libtabs.indexOf('artists')) {
-      return LibraryTab.artists;
-    }
-    if (this == libtabs.indexOf('genres')) {
-      return LibraryTab.genres;
-    }
-    if (this == libtabs.indexOf('playlists')) {
-      return LibraryTab.playlists;
-    }
-    if (this == libtabs.indexOf('folders')) {
-      return LibraryTab.folders;
-    }
-    return LibraryTab.tracks;
-  }
+  LibraryTab toEnum() => SettingsController.inst.libraryTabs.toList().elementAt(this);
 }
 
-extension LibraryTabFromString on String {
-  LibraryTab toEnum() {
-    if (this == 'albums') {
-      return LibraryTab.albums;
-    }
-    if (this == 'tracks') {
-      return LibraryTab.tracks;
-    }
-    if (this == 'artists') {
-      return LibraryTab.artists;
-    }
-    if (this == 'genres') {
-      return LibraryTab.genres;
-    }
-    if (this == 'playlists') {
-      return LibraryTab.playlists;
-    }
-    if (this == 'folders') {
-      return LibraryTab.folders;
-    }
-    return LibraryTab.tracks;
-  }
-}
+extension LibraryTabUtils on LibraryTab {
+  int toInt() => SettingsController.inst.libraryTabs.toList().indexOf(this);
 
-extension LibraryTabToWidget on LibraryTab {
   Widget toWidget() {
     if (this == LibraryTab.albums) {
-      return AlbumsPage();
+      return const AlbumsPage();
     }
     if (this == LibraryTab.tracks) {
       return const TracksPage();
     }
     if (this == LibraryTab.artists) {
-      return ArtistsPage();
+      return const ArtistsPage();
     }
     if (this == LibraryTab.genres) {
       return GenresPage();
     }
     if (this == LibraryTab.playlists) {
-      return PlaylistsPage();
+      return const PlaylistsPage();
     }
     if (this == LibraryTab.folders) {
       return FoldersPage();

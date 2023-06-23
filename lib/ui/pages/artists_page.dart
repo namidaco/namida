@@ -19,9 +19,9 @@ import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class ArtistsPage extends StatelessWidget {
   final List<String>? artists;
-  ArtistsPage({super.key, this.artists});
+  const ArtistsPage({super.key, this.artists});
 
-  final ScrollController _scrollController = ScrollSearchController.inst.artistScrollcontroller;
+  ScrollController get _scrollController => LibraryTab.artists.scrollController;
   int get gridCount => SettingsController.inst.artistGridCount.value;
   @override
   Widget build(BuildContext context) {
@@ -41,11 +41,11 @@ class ArtistsPage extends StatelessWidget {
                     SettingsController.inst.save(artistGridCount: nToSave);
                   },
                 ),
-                isBarVisible: ScrollSearchController.inst.isArtistBarVisible.value,
-                showSearchBox: ScrollSearchController.inst.showArtistSearchBox.value,
+                isBarVisible: LibraryTab.artists.isBarVisible,
+                showSearchBox: LibraryTab.artists.isSearchBoxVisible,
                 leftText: finalArtists.length.displayArtistKeyword,
-                onFilterIconTap: () => ScrollSearchController.inst.switchArtistSearchBoxVisibilty(),
-                onCloseButtonPressed: () => ScrollSearchController.inst.clearArtistSearchTextField(),
+                onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.artists),
+                onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.artists),
                 sortByMenuWidget: SortByMenu(
                   title: SettingsController.inst.artistSort.value.toText(),
                   popupMenuChild: const SortByMenuArtists(),
@@ -70,6 +70,7 @@ class ArtistsPage extends StatelessWidget {
                       final artist = finalArtists[i];
                       return AnimatingTile(
                         position: i,
+                        shouldAnimate: LibraryTab.artists.shouldAnimateTiles,
                         child: ArtistTile(
                           tracks: artist.getArtistTracks(),
                           name: artist,
@@ -96,6 +97,7 @@ class ArtistsPage extends StatelessWidget {
                       return AnimatingGrid(
                         columnCount: finalArtists.length,
                         position: i,
+                        shouldAnimate: LibraryTab.artists.shouldAnimateTiles,
                         child: ArtistCard(
                           name: artist,
                           artist: artist.getArtistTracks(),

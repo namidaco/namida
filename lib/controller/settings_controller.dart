@@ -21,7 +21,7 @@ class SettingsController {
   final Rx<LibraryTab> selectedLibraryTab = LibraryTab.tracks.obs;
   final Rx<LibraryTab> staticLibraryTab = LibraryTab.tracks.obs;
   final RxBool autoLibraryTab = true.obs;
-  final RxList<String> libraryTabs = kLibraryTabsStock.obs;
+  final RxList<LibraryTab> libraryTabs = LibraryTab.values.obs;
   final RxInt searchResultsPlayMode = 1.obs;
   final RxDouble borderRadiusMultiplier = 1.0.obs;
   final RxDouble fontScaleFactor = 0.9.obs;
@@ -170,7 +170,10 @@ class SettingsController {
           : LibraryTab.values.getEnum(json['staticLibraryTab']) ?? staticLibraryTab.value;
       staticLibraryTab.value = LibraryTab.values.getEnum(json['staticLibraryTab']) ?? staticLibraryTab.value;
       autoLibraryTab.value = json['autoLibraryTab'] ?? autoLibraryTab.value;
-      libraryTabs.value = List<String>.from(json['libraryTabs'] ?? libraryTabs.toList());
+      final libraryListFromStorage = List<String>.from(json['libraryTabs'] ?? []);
+      libraryTabs.value =
+          libraryListFromStorage.isNotEmpty ? List<LibraryTab>.from(libraryListFromStorage.map((e) => LibraryTab.values.getEnum(e)).toList()) : libraryTabs.toList();
+
       searchResultsPlayMode.value = json['searchResultsPlayMode'] ?? searchResultsPlayMode.value;
       borderRadiusMultiplier.value = json['borderRadiusMultiplier'] ?? borderRadiusMultiplier.value;
       fontScaleFactor.value = json['fontScaleFactor'] ?? fontScaleFactor.value;
@@ -293,7 +296,7 @@ class SettingsController {
       'selectedLibraryTab': selectedLibraryTab.value.convertToString,
       'staticLibraryTab': staticLibraryTab.value.convertToString,
       'autoLibraryTab': autoLibraryTab.value,
-      'libraryTabs': libraryTabs.toList(),
+      'libraryTabs': libraryTabs.map((element) => element.convertToString).toList(),
       'searchResultsPlayMode': searchResultsPlayMode.value,
       'borderRadiusMultiplier': borderRadiusMultiplier.value,
       'fontScaleFactor': fontScaleFactor.value,
@@ -406,7 +409,7 @@ class SettingsController {
     LibraryTab? selectedLibraryTab,
     LibraryTab? staticLibraryTab,
     bool? autoLibraryTab,
-    List<String>? libraryTabs,
+    List<LibraryTab>? libraryTabs,
     double? borderRadiusMultiplier,
     double? fontScaleFactor,
     double? trackThumbnailSizeinList,
@@ -815,7 +818,7 @@ class SettingsController {
 
   void insertInList(
     index, {
-    String? libraryTab1,
+    LibraryTab? libraryTab1,
     String? youtubeVideoQualities1,
     TagField? tagFieldsToEdit1,
   }) {
@@ -844,8 +847,8 @@ class SettingsController {
     List<String>? directoriesToScanAll,
     String? directoriesToExclude1,
     List<String>? directoriesToExcludeAll,
-    String? libraryTab1,
-    List<String>? libraryTabsAll,
+    LibraryTab? libraryTab1,
+    List<LibraryTab>? libraryTabsAll,
     String? backupItemslist1,
     List<String>? backupItemslistAll,
     String? youtubeVideoQualities1,

@@ -22,6 +22,9 @@ class YoutubeController {
   final RxList<Channel> commentsChannels = <Channel>[].obs;
   final RxList<Channel> searchChannels = <Channel>[].obs;
 
+  String sussyBaka = '';
+  Map<String, String> sussyBakaHeader = {};
+
   Future<void> prepareHomePage() async {
     final ytexp = YoutubeExplode(YoutubeHttpClient(NamidaClient()));
     currentSearchList.value = await ytexp.search.search('');
@@ -34,6 +37,7 @@ class YoutubeController {
     for (final ch in search) {
       searchChannels.add(await ytexp.channels.get(ch.channelId));
     }
+    searchChannels.refresh();
     ytexp.close();
   }
 
@@ -53,7 +57,7 @@ class YoutubeController {
     final videometafile = File('$k_DIR_YT_METADATA$id.txt');
     YTLVideo? vid;
     if (!forceReload && await videometafile.exists()) {
-      String contents = await videometafile.readAsString();
+      final contents = await videometafile.readAsString();
       if (contents.isNotEmpty) {
         currentYoutubeMetadata.value = YTLVideo.fromJson(jsonDecode(contents));
         vid = YTLVideo.fromJson(jsonDecode(contents));
@@ -84,7 +88,7 @@ class YoutubeController {
 
     /// Comments from cache
     if (!forceReload && await videocommentfile.exists()) {
-      String contents = await videocommentfile.readAsString();
+      final contents = await videocommentfile.readAsString();
       if (contents.isNotEmpty) {
         newcomm = NamidaCommentsList.fromJson(Map<String, dynamic>.from(jsonDecode(contents)));
       }
@@ -119,22 +123,25 @@ class YoutubeController {
 }
 
 class NamidaClient extends http.BaseClient {
-  final String? cookie;
-  NamidaClient({this.cookie});
-
   final _client = http.Client();
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) {
-    if (cookie != null) {
-      request.headers.addAll({'Cookie': cookie!});
+    if (YoutubeController.inst.sussyBakaHeader.isNotEmpty) {
+      request.headers.addAll(YoutubeController.inst.sussyBakaHeader);
     }
-    printInfo(info: 'NamidaClient: $request');
+    if (YoutubeController.inst.sussyBaka.isNotEmpty) {
+      request.headers.addAll({'Authorization': 'Bearer ${YoutubeController.inst.sussyBaka}'});
+    }
+
+    // printInfo(info: 'ACCCCCCCCCC NamidaClient: ${YoutubeController.inst.sussyBaka}');
+    printInfo(info: 'ACCCCCCCCCC Header NamidaClient: ${request.headers}');
+    // printInfo(info: 'ACCCCCCCCCC NamidaClient: $request');
     return _client.send(request);
   }
 
   @override
   void close() => _client.close();
 }
-
+// set-cookie: GPS=1; Domain=.youtube.com; Expires=Fri, 07-Apr-2023 20:56:22 GMT; Path=/; Secure; HttpOnly,YSC=XHicZ70B0ko; Domain=.youtube.com; Path=/; Secure; HttpOnly; SameSite=none,VISITOR_INFO1_LIVE=1nIEHpLKuxA; Domain=.youtube.com; Expires=Wed, 04-Oct-2023 20:26:22 GMT; Path=/; Secure; HttpOnly; SameSite=none, cache-control: no-cache, no-store, max-age=0, must-revalidate, transfer-encoding: chunked, date: Fri, 07 Apr 2023 20:26:22 GMT, content-encoding: gzip, permissions-policy: ch-ua-arch=*, ch-ua-bitness=*, ch-ua-full-version=*, ch-ua-full-version-list=*, ch-ua-model=*, ch-ua-wow64=*, ch-ua-platform=*, ch-ua-platform-version=*, strict-transport-security: max-age=31536000, report-to: {"group":"youtube_main","max_age":2592000,"endpoints":[{"url":"https://csp.withgoogle.com/csp/report-to/youtube_main"}]}, origin-trial: AvC9UlR6RDk2crliDsFl66RWLnTbHrDbp+DiY6AYz/PNQ4G4tdUTjrHYr2sghbkhGQAVxb7jaPTHpEVBz0uzQwkAAAB4eyJvcmlnaW4iOiJodHRwczovL3lvdXR1YmUuY29tOjQ0MyIsImZlYXR1cmUiOiJXZWJWaWV3WFJlcXVlc3RlZ
 // YSC; PREF; VISITOR_INFO; SID; HSID; SSID; APISID; SAPISID; LOGIN_INFO

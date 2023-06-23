@@ -74,16 +74,6 @@ bool get shouldAlbumBeSquared =>
     (SettingsController.inst.albumGridCount.value > 1 && !SettingsController.inst.useAlbumStaggeredGridView.value) ||
     (SettingsController.inst.albumGridCount.value == 1 && SettingsController.inst.forceSquaredAlbumThumbnail.value);
 
-/// Stock Library Tabs List
-final List<String> kLibraryTabsStock = [
-  'albums',
-  'tracks',
-  'artists',
-  'genres',
-  'playlists',
-  'folders',
-];
-
 /// Stock Video Qualities List
 final List<String> kStockVideoQualities = [
   '144p',
