@@ -1,5 +1,6 @@
 // ignore_for_file: depend_on_referenced_packages
 
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -15,6 +16,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
 
 extension DurationLabel on Duration {
@@ -30,13 +32,18 @@ extension DurationLabel on Duration {
 extension StringUtils on String {
   String get overflow => this != '' ? characters.replaceAll(Characters(''), Characters('\u{200B}')).toString() : '';
 
-  String get formatPath => replaceFirst('/0', '').replaceFirst('/storage/', '').replaceFirst('emulated/', '');
+  String formatPath() {
+    String formatted = replaceFirst('/storage/', '/').replaceFirst('/emulated/0', 'main');
+    if (formatted[0] == '/') {
+      formatted = formatted.substring(1);
+    }
+    return formatted;
+  }
 
-  List<String> get getDirectoriesInside {
-    final allFolders = Indexer.inst.groupedFoldersList;
-    final allInside = allFolders.map((element) => element.path).where((key) => key.startsWith(this)).toList();
-    allInside.remove(this);
-    return allInside;
+  String withoutLast(String splitBy) {
+    final parts = split(splitBy);
+    parts.removeLast();
+    return parts.join(splitBy);
   }
 
   List<String> multiSplit(Iterable<String> delimiters, Iterable<String> blacklist) {
@@ -53,10 +60,6 @@ extension StringUtils on String {
 
   String get cleanUpForComparison => toLowerCase()
       .replaceAll(RegExp(r'''[\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\>\=\?\@\[\]\{\}\\\\\^\_\`\~\s\|\@\#\$\%\^\&\*\(\)\-\+\=\[\]\{\}\:\;\"\'\<\>\.\,\?\/\`\~\!\_\s]+'''), '');
-
-  Map<String?, Set<Track>> get artistAlbums {
-    return Indexer.inst.getAlbumsForArtist(this);
-  }
 }
 
 extension Iterables<E> on Iterable<E> {
@@ -101,6 +104,11 @@ extension TracksUtils on List<Track> {
   String get pathToImage {
     if (isEmpty) return '';
     return this[indexOfImage].pathToImage;
+  }
+
+  Track? get trackOfImage {
+    if (isEmpty) return null;
+    return this[indexOfImage];
   }
 
   int get indexOfImage => length - 1;
@@ -243,11 +251,7 @@ extension FileNameUtils on String {
   String get getFilenameWOExt => p.basenameWithoutExtension(this);
   String get getExtension => p.extension(this).substring(1);
   String get getDirectoryName => p.dirname(this);
-  String get getDirectoryPath {
-    final pieces = split(Platform.pathSeparator);
-    pieces.removeLast();
-    return pieces.join(Platform.pathSeparator);
-  }
+  String get getDirectoryPath => withoutLast(Platform.pathSeparator);
 }
 
 extension EnumUtils on Enum {
@@ -286,13 +290,13 @@ extension TRACKPLAYMODE on TrackPlayMode {
       queue = searchQueue ?? (Indexer.inst.trackSearchTemp.isNotEmpty ? Indexer.inst.trackSearchTemp.toList() : Indexer.inst.trackSearchList.toList());
     }
     if (this == TrackPlayMode.trackAlbum) {
-      queue = Indexer.inst.albumsList.firstWhere((al) => al.name == track.album).tracks;
+      queue = track.album.getAlbumTracks();
     }
     if (this == TrackPlayMode.trackArtist) {
-      queue = Indexer.inst.groupedArtistsList.firstWhere((element) => element.name == track.artistsList.first).tracks;
+      queue = track.artistsList.first.getArtistTracks();
     }
     if (this == TrackPlayMode.trackGenre) {
-      queue = Indexer.inst.groupedGenresList.firstWhere((element) => element.name == track.genresList.first).tracks;
+      queue = track.artistsList.first.getGenresTracks();
     }
     if (shouldBeIndex0) {
       queue.remove(track);
@@ -385,11 +389,139 @@ extension WAKELOCKMODETEXT on WakelockMode {
   }
 }
 
-extension ListieExt<E> on List<E> {
-  void addNoDuplicates(E item, {bool preventDuplicates = true}) {
-    if (preventDuplicates && contains(item)) {
-      return;
+extension FileUtils<R> on File {
+  // TODO: use
+  Future<bool> existsAndValid([int minValidSize = 2]) async {
+    final st = await stat();
+    final doesExist = await exists();
+    return (doesExist && st.size > minValidSize);
+  }
+
+  bool existsAndValidSync([int minValidSize = 2]) {
+    return existsSync() && statSync().size > minValidSize;
+  }
+
+  /// returns [true] if deleted successfully.
+  Future<bool> deleteIfExists() async {
+    if (await exists()) {
+      await delete();
+      return true;
     }
+    return false;
+  }
+
+  Future<bool> tryDeleting() async {
+    try {
+      await delete();
+      return true;
+    } catch (e) {
+      debugPrint(e.toString());
+      return false;
+    }
+  }
+
+  /// returns [true] if deleted successfully.
+  bool deleteIfExistsSync() {
+    if (existsSync()) {
+      deleteSync();
+      return true;
+    }
+    return false;
+  }
+
+  /// TODO: use
+  Future<dynamic> readAsJson() async {
+    try {
+      final content = await readAsString();
+      return jsonDecode(content);
+    } catch (e) {
+      debugPrint(e.toString());
+      return null;
+    }
+  }
+
+  /// Returns [true] if executed successfully.
+  /// <br>
+  /// Otherwise, executes [onError] and returns [false].
+  /// <br>
+  /// has a built in try-catch.
+  Future<bool> readAsJsonAnd(void Function(R respone) execute, {void Function()? onError}) async {
+    final respone = await readAsJson();
+
+    try {
+      execute(respone);
+      return true;
+    } catch (e) {
+      if (onError != null) onError();
+      debugPrint(e.toString());
+      return false;
+    }
+  }
+
+  /// Automatically creates the file if it doesnt exist
+  /// TODO: use
+  Future<void> writeAsJson(Map<String, dynamic> json) async {
+    await create();
+    await writeAsString(jsonEncode(json));
+  }
+}
+
+extension NumberUtils<E extends num> on E {
+  E withMinimum(E min) {
+    if (this < min) return min;
+    return this;
+  }
+
+  E withMaximum(E max) {
+    if (this > max) return max;
+    return this;
+  }
+}
+
+extension MapExtNull<K, E> on Map<K, List<E>?> {
+  /// Same as [addNoDuplicates], but initializes new list in case list was null.
+  /// i.e: entry doesnt exist in map.
+  void addNoDuplicatesForce(K key, E item, {bool preventDuplicates = true}) {
+    if (keyExists(key)) {
+      this[key]!.addNoDuplicates(item, preventDuplicates: preventDuplicates);
+    } else {
+      this[key] = <E>[item];
+    }
+  }
+}
+
+extension ListieExt<E, Id> on List<E> {
+  bool isEqualTo(List<E> q2) {
+    final q1 = this;
+    if (q1.isEmpty && q2.isEmpty) {
+      return true;
+    }
+    final finalLength = q1.length > q2.length ? q2.length : q1.length;
+
+    for (int i = 0; i < finalLength; i++) {
+      if (q1[i] != q2[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /// TODO: use
+  void removeDuplicates(Id Function(E element)? id) {
+    final uniquedSet = <dynamic>{};
+    retainWhere((e) => uniquedSet.add(id != null ? id(e) : e));
+  }
+
+  List<E> uniqued(Id Function(E element)? id) {
+    final uniquedSet = <dynamic>{};
+    final list = List<E>.from(this);
+    list.retainWhere((e) => uniquedSet.add(id != null ? id(e) : e));
+    return list;
+  }
+
+  void addNoDuplicates(E item, {bool preventDuplicates = true}) {
+    if (preventDuplicates && contains(item)) return;
+
     add(item);
   }
 
@@ -404,16 +536,23 @@ extension ListieExt<E> on List<E> {
     return fallback;
   }
 
-  // TODO: use instead of [for .. in]
-  void loop(void Function(E e) function) {
-    for (int i = 0; i <= length - 1; i++) {
-      final item = this[i];
-      function(item);
+  /// Efficent looping, uses normal for loop.
+  ///
+  /// Doesn't support keywork statements like [return], [break], [continue], etc...
+  ///
+  /// TODO: use instead of [for .. in]
+  void loop(void Function(E e, int index) function) {
+    for (int i = 0; i < length; i++) {
+      final element = this[i];
+      function(element, i);
     }
   }
 
+  /// Efficent looping, uses normal for loop.
+  ///
+  /// Doesn't support keywork statements like [return], [break], [continue], etc...
   void reverseLoop(void Function(E e) function) {
-    for (int i = length; i >= 0; i--) {
+    for (int i = length - 1; i >= 0; i--) {
       final item = this[i];
       function(item);
     }
@@ -421,6 +560,11 @@ extension ListieExt<E> on List<E> {
 
   E? get firstOrNull => isEmpty ? null : this[0];
   E? get lastOrNull => isEmpty ? null : this[length - 1];
+}
+
+extension IterableUtils<E> on Iterable<E> {
+  E? get firstOrNull => isEmpty ? null : first;
+  E? get lastOrNull => isEmpty ? null : last;
 }
 
 extension WidgetsSeparator on Iterable<Widget> {
@@ -438,4 +582,8 @@ extension WidgetsSeparator on Iterable<Widget> {
       count++;
     }
   }
+}
+
+extension MapUtils<K, V> on Map<K, V> {
+  bool keyExists(K key) => this[key] != null;
 }
