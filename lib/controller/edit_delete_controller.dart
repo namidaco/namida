@@ -56,12 +56,31 @@ class EditDeleteController {
     }
   }
 
-  Future<void> saveArtworkToStorage(Track track) async {
+  /// returns true if saved successfully
+  Future<bool> saveArtworkToStorage(Track track) async {
     if (!await requestManageStoragePermission()) {
-      return;
+      return false;
     }
     final newPath = "${SettingsController.inst.defaultBackupLocation.value}${Platform.pathSeparator}${track.filenameWOExt}.png";
-    await File(track.pathToImage).copy(newPath);
+    final imgFile = File(track.pathToImage);
+    try {
+      await imgFile.copy(newPath);
+      return true;
+    } catch (e) {
+      imgFile.tryDeleting();
+
+      try {
+        final img = await Indexer.inst.extractOneArtwork(track.path);
+        if (img != null) {
+          final newImgFile = await File(newPath).create();
+          await newImgFile.writeAsBytes(img);
+          return true;
+        }
+      } catch (e) {
+        return false;
+      }
+    }
+    return false;
   }
 
   Future<void> updateTrackPathInEveryPartOfNamida(Track oldTrack, String newPath) async {
@@ -135,14 +154,6 @@ class EditDeleteController {
     // player queue
     loopPlayerQueue();
 
-    // currentAllTracks
-    for (final tr in SelectedTracksController.inst.currentAllTracks.toList()) {
-      if (tr.path == oldTrack.path) {
-        final index = SelectedTracksController.inst.currentAllTracks.toList().indexOf(tr);
-        SelectedTracksController.inst.currentAllTracks.removeAt(index);
-        SelectedTracksController.inst.currentAllTracks.insertSafe(index, tr);
-      }
-    }
     // Selected Tracks
     for (final tr in SelectedTracksController.inst.selectedTracks.toList()) {
       if (tr.path == oldTrack.path) {

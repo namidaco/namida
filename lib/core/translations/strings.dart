@@ -109,6 +109,9 @@ class Language {
   String get SET_YOUTUBE_LINK => 'Set Youtube Link';
   String get OPEN_YOUTUBE_LINK => 'Open Youtube Link';
   String get COULDNT_OPEN => 'Couldn\'t open :(';
+  String get COPIED_ARTWORK => 'Copied Artwork';
+  String get SAVED_IN => 'Saved in';
+  String get COULDNT_SAVE_IMAGE => 'Couldn\'t save image';
   String get COULDNT_OPEN_YT_LINK => 'No Youtube Link Available for this track.';
   String get WAVEFORM_DATA => 'Waveform data';
   String get WAVEFORMS_DATA => 'Waveforms data';

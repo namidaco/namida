@@ -1712,7 +1712,7 @@ class TrackImage extends StatelessWidget {
                                 path: track.pathToImage,
                                 track: track,
                                 thumnailSize: Get.width,
-                                compressed: false,
+                                compressed: cp == 0,
                                 borderRadius: 6.0 + 10.0 * cp,
                                 forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
                                 boxShadow: [

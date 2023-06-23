@@ -148,15 +148,13 @@ class Indexer {
     final fileOfFull = File("$k_DIR_ARTWORKS${pathOfAudio.getFilename}.png");
 
     if (forceReExtract) {
-      await fileOfFull.delete();
+      await fileOfFull.tryDeleting();
     }
 
     /// prevent redundent re-creation of image file
-    if (!await fileOfFull.exists()) {
+    if (!await fileOfFull.existsAndValid()) {
       final art = bytes ?? await onAudioEdit.readAudio(pathOfAudio).then((value) => value.firstArtwork);
-      if (!SettingsController.inst.enableImageCaching.value) {
-        return art;
-      }
+
       if (art != null) {
         final imgFile = await fileOfFull.create(recursive: true);
         await imgFile.writeAsBytes(art);
@@ -170,7 +168,6 @@ class Indexer {
     final paths = tracks.map((e) => e.path).toSet();
     await fetchAllSongsAndWriteToFile(audioFiles: {}, deletedPaths: paths, forceReIndex: false);
     await fetchAllSongsAndWriteToFile(audioFiles: paths, deletedPaths: {}, forceReIndex: false);
-    await _saveTrackFileToStorage();
 
     if (updateArtwork) {
       for (final track in tracks) {

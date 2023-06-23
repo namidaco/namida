@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:extended_image/extended_image.dart';
@@ -14,7 +14,10 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/packages/drop_shadow.dart';
 
 /// Always displays compressed image, if not [compressed] then it will add the full res image on top of it.
-class ArtworkWidget extends StatelessWidget {
+class ArtworkWidget extends StatefulWidget {
+  final Track? track;
+
+  /// path of image file.
   final String? path;
   final Uint8List? bytes;
   final double thumnailSize;
@@ -59,137 +62,165 @@ class ArtworkWidget extends StatelessWidget {
     this.boxShadow,
     this.onTopWidgets,
     this.path,
+    required this.track,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final stockWidget = Container(
-      width: width ?? thumnailSize,
-      height: height ?? thumnailSize,
+  State<ArtworkWidget> createState() => _ArtworkWidgetState();
+}
+
+class _ArtworkWidgetState extends State<ArtworkWidget> {
+  Uint8List? _finalBytes;
+  late Widget _stockWidget;
+  double? _realWidthAndHeight;
+  Widget? _finalWidget;
+  Track? _lastTrack;
+  double? _lastBorderRadius;
+
+  @override
+  void initState() {
+    _finalBytes = widget.bytes;
+    super.initState();
+  }
+
+  void fillWidgets() {
+    _lastTrack = widget.track;
+    _lastBorderRadius = widget.borderRadius;
+
+    _stockWidget = Container(
+      width: widget.width ?? widget.thumnailSize,
+      height: widget.height ?? widget.thumnailSize,
       key: const ValueKey("empty"),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
-        borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
+        color: widget.bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
+        borderRadius: BorderRadius.circular(widget.borderRadius.multipliedRadius),
       ),
       child: Stack(
         alignment: Alignment.center,
         children: [
           Icon(
             Broken.musicnote,
-            size: iconSize ?? thumnailSize / 2,
+            size: widget.iconSize ?? widget.thumnailSize / 2,
           ),
-          if (onTopWidget != null) onTopWidget!,
-          if (onTopWidgets != null) ...onTopWidgets!,
+          if (widget.onTopWidget != null) widget.onTopWidget!,
+          if (widget.onTopWidgets != null) ...widget.onTopWidgets!,
         ],
       ),
     );
-    if (forceDummyArtwork) {
-      return stockWidget;
-    }
-    if (path == null && bytes == null) {
-      return stockWidget;
-    }
-    // if path is sent but not valid.
-    // or bytes are sent but not valid.
-    if ((path != null && path != '' && FileSystemEntity.typeSync(path!) == FileSystemEntityType.notFound) || (bytes != null && (bytes ?? []).isEmpty)) {
-      return stockWidget;
-    }
-    final realWidthAndHeight = forceSquared ? context.width : null;
+    if (widget.forceDummyArtwork) return;
+    if (widget.path == null && widget.bytes == null) return;
+
+    final shouldDisplayMemory = _finalBytes != null && (_finalBytes ?? []).isNotEmpty;
+    final shouldDisplayPath = widget.path != null && FileSystemEntity.typeSync(widget.path!) != FileSystemEntityType.notFound;
+    if (!shouldDisplayMemory && !shouldDisplayPath) return;
+    // [extImageChild] wont get assigned, leaving [extImageChild==null], i.e. displays [stockWidget] only.
+
+    _realWidthAndHeight = widget.forceSquared ? context.width : null;
 
     final extImageChild = Stack(
       alignment: Alignment.center,
       children: [
-        bytes != null
-            ? ExtendedImage.memory(
-                bytes!,
-                gaplessPlayback: true,
-                fit: BoxFit.cover,
-                clearMemoryCacheWhenDispose: true,
-                filterQuality: FilterQuality.high,
-                width: realWidthAndHeight,
-                height: realWidthAndHeight,
-              )
-            : Image.file(
-                File(path!),
-                gaplessPlayback: true,
-                fit: BoxFit.cover,
-                cacheHeight: useTrackTileCacheHeight
-                    ? SettingsController.inst.trackThumbnailSizeinList.value.toInt() > 120
-                        ? null
-                        : 60 * (Get.mediaQuery.devicePixelRatio).round()
-                    : (cacheHeight ?? 100) * (Get.mediaQuery.devicePixelRatio).round(),
-                filterQuality: FilterQuality.medium,
-                width: realWidthAndHeight,
-                height: realWidthAndHeight,
-                frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
-                  if (wasSynchronouslyLoaded) return child;
-                  return AnimatedSwitcher(
-                    duration: Duration(milliseconds: fadeMilliSeconds),
-                    child: frame != null ? child : const SizedBox(),
-                  );
-                }),
-                errorBuilder: (context, error, stackTrace) {
-                  return stockWidget;
-                },
-              ),
-        if (!compressed)
-          ExtendedImage.file(
-            File(path!),
+        // if bytes are sent and valid.
+        if (shouldDisplayMemory)
+          ExtendedImage.memory(
+            _finalBytes!,
             gaplessPlayback: true,
             fit: BoxFit.cover,
             clearMemoryCacheWhenDispose: true,
             filterQuality: FilterQuality.high,
-            width: realWidthAndHeight,
-            height: realWidthAndHeight,
+            width: _realWidthAndHeight,
+            height: _realWidthAndHeight,
           ),
-        if (onTopWidget != null) onTopWidget!,
-        if (onTopWidgets != null) ...onTopWidgets!,
+        if (shouldDisplayPath) ...[
+          Image.file(
+            File(widget.path!),
+            gaplessPlayback: true,
+            fit: BoxFit.cover,
+            cacheHeight: widget.useTrackTileCacheHeight
+                ? SettingsController.inst.trackThumbnailSizeinList.value.toInt() > 120
+                    ? null
+                    : 60 * (context.mediaQuery.devicePixelRatio).round()
+                : (widget.cacheHeight ?? 100) * (context.mediaQuery.devicePixelRatio).round(),
+            filterQuality: FilterQuality.medium,
+            width: _realWidthAndHeight,
+            height: _realWidthAndHeight,
+            frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
+              if (wasSynchronouslyLoaded) return child;
+              return AnimatedSwitcher(
+                duration: Duration(milliseconds: widget.fadeMilliSeconds),
+                child: frame != null ? child : const SizedBox(),
+              );
+            }),
+            errorBuilder: (context, error, stackTrace) {
+              return _stockWidget;
+            },
+          ),
+          if (!widget.compressed)
+            ExtendedImage.file(
+              File(widget.path!),
+              gaplessPlayback: true,
+              fit: BoxFit.cover,
+              clearMemoryCacheWhenDispose: true,
+              filterQuality: FilterQuality.high,
+              width: _realWidthAndHeight,
+              height: _realWidthAndHeight,
+            ),
+        ],
+        if (widget.onTopWidget != null) widget.onTopWidget!,
+        if (widget.onTopWidgets != null) ...widget.onTopWidgets!,
       ],
     );
-
-    return SettingsController.inst.enableGlowEffect.value && blur != 0.0
+    _finalWidget = SettingsController.inst.enableGlowEffect.value && widget.blur != 0.0
         ? SizedBox(
-            width: staggered ? null : width ?? thumnailSize * scale,
-            height: staggered ? null : height ?? thumnailSize * scale,
+            width: widget.staggered ? null : widget.width ?? widget.thumnailSize * widget.scale,
+            height: widget.staggered ? null : widget.height ?? widget.thumnailSize * widget.scale,
             child: Center(
-              child: SettingsController.inst.borderRadiusMultiplier.value == 0.0 || borderRadius == 0
+              child: SettingsController.inst.borderRadiusMultiplier.value == 0.0 || widget.borderRadius == 0
                   ? DropShadow(
-                      borderRadius: borderRadius.multipliedRadius,
-                      blurRadius: blur,
+                      borderRadius: widget.borderRadius.multipliedRadius,
+                      blurRadius: widget.blur,
                       spread: 0.8,
                       offset: const Offset(0, 1),
-                      boxShadow: boxShadow,
-                      child: child ?? extImageChild,
+                      boxShadow: widget.boxShadow,
+                      child: widget.child ?? extImageChild,
                     )
                   : ClipRRect(
-                      borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
+                      borderRadius: BorderRadius.circular(widget.borderRadius.multipliedRadius),
                       child: DropShadow(
-                        borderRadius: borderRadius.multipliedRadius,
-                        blurRadius: blur,
+                        borderRadius: widget.borderRadius.multipliedRadius,
+                        blurRadius: widget.blur,
                         spread: 0.8,
                         offset: const Offset(0, 1),
-                        boxShadow: boxShadow,
-                        child: child ?? extImageChild,
+                        boxShadow: widget.boxShadow,
+                        child: widget.child ?? extImageChild,
                       ),
                     ),
             ),
           )
         : SizedBox(
-            width: staggered ? null : width ?? thumnailSize * scale,
-            height: staggered ? null : height ?? thumnailSize * scale,
+            width: widget.staggered ? null : widget.width ?? widget.thumnailSize * widget.scale,
+            height: widget.staggered ? null : widget.height ?? widget.thumnailSize * widget.scale,
             child: Center(
               child: Container(
-                decoration: BoxDecoration(boxShadow: boxShadow),
+                decoration: BoxDecoration(boxShadow: widget.boxShadow),
                 child: SettingsController.inst.borderRadiusMultiplier.value == 0.0
-                    ? child ?? extImageChild
+                    ? widget.child ?? extImageChild
                     : ClipRRect(
-                        borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
-                        child: child ?? extImageChild,
+                        borderRadius: BorderRadius.circular(widget.borderRadius.multipliedRadius),
+                        child: widget.child ?? extImageChild,
                       ),
               ),
             ),
           );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_finalWidget == null || widget.track != _lastTrack || widget.borderRadius != _lastBorderRadius) {
+      fillWidgets();
+    }
+    return _finalWidget ?? _stockWidget;
   }
 }
 
@@ -214,7 +245,8 @@ class MultiArtworks extends StatelessWidget {
       child: paths.isEmpty
           ? ArtworkWidget(
               thumnailSize: thumbnailSize,
-              path: allTracksInLibrary.first.pathToImage,
+              track: allTracksInLibrary.firstOrNull,
+              path: allTracksInLibrary.firstOrNull?.pathToImage,
               forceSquared: true,
               blur: 0,
               forceDummyArtwork: true,
@@ -226,6 +258,7 @@ class MultiArtworks extends StatelessWidget {
               ? ArtworkWidget(
                   thumnailSize: thumbnailSize,
                   path: paths.elementAt(0),
+                  track: null,
                   forceSquared: true,
                   blur: 0,
                   borderRadius: 0,
@@ -235,6 +268,7 @@ class MultiArtworks extends StatelessWidget {
                   ? Row(
                       children: [
                         ArtworkWidget(
+                          track: null,
                           thumnailSize: thumbnailSize / 2,
                           height: thumbnailSize,
                           path: paths.elementAt(0),
@@ -244,6 +278,7 @@ class MultiArtworks extends StatelessWidget {
                           iconSize: iconSize - 2.0,
                         ),
                         ArtworkWidget(
+                          track: null,
                           thumnailSize: thumbnailSize / 2,
                           height: thumbnailSize,
                           path: paths.elementAt(1),
@@ -260,6 +295,7 @@ class MultiArtworks extends StatelessWidget {
                             Column(
                               children: [
                                 ArtworkWidget(
+                                  track: null,
                                   thumnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(0),
                                   forceSquared: true,
@@ -268,6 +304,7 @@ class MultiArtworks extends StatelessWidget {
                                   iconSize: iconSize - 2.0,
                                 ),
                                 ArtworkWidget(
+                                  track: null,
                                   thumnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(1),
                                   forceSquared: true,
@@ -280,6 +317,7 @@ class MultiArtworks extends StatelessWidget {
                             Column(
                               children: [
                                 ArtworkWidget(
+                                  track: null,
                                   thumnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(2),
                                   forceSquared: true,
@@ -297,6 +335,7 @@ class MultiArtworks extends StatelessWidget {
                             Row(
                               children: [
                                 ArtworkWidget(
+                                  track: null,
                                   thumnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(0),
                                   forceSquared: true,
@@ -305,6 +344,7 @@ class MultiArtworks extends StatelessWidget {
                                   iconSize: iconSize - 3.0,
                                 ),
                                 ArtworkWidget(
+                                  track: null,
                                   thumnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(1),
                                   forceSquared: true,
@@ -317,6 +357,7 @@ class MultiArtworks extends StatelessWidget {
                             Row(
                               children: [
                                 ArtworkWidget(
+                                  track: null,
                                   thumnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(2),
                                   forceSquared: true,
@@ -325,6 +366,7 @@ class MultiArtworks extends StatelessWidget {
                                   iconSize: iconSize - 3.0,
                                 ),
                                 ArtworkWidget(
+                                  track: null,
                                   thumnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(3),
                                   forceSquared: true,
