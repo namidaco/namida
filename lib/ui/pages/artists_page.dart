@@ -53,7 +53,7 @@ class ArtistsPage extends StatelessWidget {
                   onReverseIconTap: () => Indexer.inst.sortArtists(reverse: !SettingsController.inst.artistSortReversed.value),
                 ),
                 textField: CustomTextFiled(
-                  textFieldController: Indexer.inst.artistsSearchController,
+                  textFieldController: LibraryTab.artists.textSearchController,
                   textFieldHintText: Language.inst.FILTER_ARTISTS,
                   onTextFieldValueChanged: (value) => Indexer.inst.searchArtists(value),
                 ),

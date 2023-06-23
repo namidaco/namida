@@ -53,7 +53,7 @@ class GenresPage extends StatelessWidget {
                   onReverseIconTap: () => Indexer.inst.sortGenres(reverse: !SettingsController.inst.genreSortReversed.value),
                 ),
                 textField: CustomTextFiled(
-                  textFieldController: Indexer.inst.genresSearchController,
+                  textFieldController: LibraryTab.genres.textSearchController,
                   textFieldHintText: Language.inst.FILTER_GENRES,
                   onTextFieldValueChanged: (value) => Indexer.inst.searchGenres(value),
                 ),

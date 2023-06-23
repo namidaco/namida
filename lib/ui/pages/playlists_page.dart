@@ -72,7 +72,7 @@ class PlaylistsPage extends StatelessWidget {
                     onReverseIconTap: () => PlaylistController.inst.sortPlaylists(reverse: !SettingsController.inst.playlistSortReversed.value),
                   ),
                   textField: CustomTextFiled(
-                    textFieldController: PlaylistController.inst.playlistSearchController,
+                    textFieldController: LibraryTab.playlists.textSearchController,
                     textFieldHintText: Language.inst.FILTER_PLAYLISTS,
                     onTextFieldValueChanged: (value) => PlaylistController.inst.searchPlaylists(value),
                   ),

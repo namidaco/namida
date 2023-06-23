@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -26,8 +27,6 @@ class PlaylistController {
   final RxList<Playlist> playlistList = <Playlist>[].obs;
   final RxList<Playlist> playlistSearchList = <Playlist>[].obs;
   final RxList<Playlist> defaultPlaylists = <Playlist>[].obs;
-
-  final TextEditingController playlistSearchController = TextEditingController();
 
   final RxMap<Track, List<int>> topTracksMapListens = <Track, List<int>>{}.obs;
 
@@ -66,7 +65,7 @@ class PlaylistController {
 
   void searchPlaylists(String text) {
     if (text == '') {
-      playlistSearchController.clear();
+      LibraryTab.playlists.textSearchController.clear();
       playlistSearchList.assignAll(playlistList);
       return;
     }
@@ -126,7 +125,7 @@ class PlaylistController {
 
     SettingsController.inst.save(playlistSort: sortBy, playlistSortReversed: reverse);
 
-    searchPlaylists(playlistSearchController.value.text);
+    searchPlaylists(LibraryTab.playlists.textSearchController.text);
   }
 
   void addNewPlaylist(

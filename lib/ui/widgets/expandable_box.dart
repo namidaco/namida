@@ -120,6 +120,7 @@ class CustomTextFiled extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextField(
+      focusNode: ScrollSearchController.inst.focusNode,
       controller: textFieldController,
       decoration: InputDecoration(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),

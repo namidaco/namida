@@ -32,6 +32,10 @@ class ScrollSearchController {
   final Map<LibraryTab, ScrollController> scrollControllersMap = <LibraryTab, ScrollController>{};
   final Map<LibraryTab, double> scrollPositionsMap = {};
 
+  final Map<LibraryTab, TextEditingController> textSearchControllers = {};
+
+  final FocusNode focusNode = FocusNode();
+
   Future<void> animatePageController(int animateTo) async {
     final tab = animateTo.toEnum();
     final w = tab.toWidget();
@@ -105,22 +109,32 @@ class ScrollSearchController {
   }
 
   void unfocusKeyboard() => Get.focusScope?.unfocus();
+  void focusKeyboard() => Get.focusScope?.requestFocus(focusNode);
 
-  void switchSearchBoxVisibilty(LibraryTab libraryTab, {bool forceHide = false, bool forceShow = false}) {
-    if (forceHide) {
-      isSearchBoxVisibleMap[libraryTab]!.value = false;
-      return;
+  void switchSearchBoxVisibilty(LibraryTab libraryTab) {
+    textSearchControllers[libraryTab] ??= TextEditingController();
+
+    if (textSearchControllers[libraryTab]!.text == '') {
+      final isCurrentyVisible = isSearchBoxVisibleMap[libraryTab]!.value;
+      if (isCurrentyVisible) {
+        _closeTextController(libraryTab);
+      } else {
+        _openTextController(libraryTab);
+      }
+
+      isSearchBoxVisibleMap[libraryTab]!.value = !isCurrentyVisible;
     }
-    if (forceShow) {
-      isSearchBoxVisibleMap[libraryTab]!.value = true;
-      return;
-    }
-    if (Indexer.inst.tracksSearchController.value.text == '') {
-      isSearchBoxVisibleMap[libraryTab]!.value = !isSearchBoxVisibleMap[libraryTab]!.value;
-      unfocusKeyboard();
-    } else {
-      isSearchBoxVisibleMap[libraryTab]!.value = true;
-    }
+  }
+
+  void _closeTextController(LibraryTab libraryTab) {
+    textSearchControllers[libraryTab]?.dispose();
+    textSearchControllers.remove(libraryTab);
+    unfocusKeyboard();
+  }
+
+  void _openTextController(LibraryTab libraryTab) {
+    textSearchControllers[libraryTab] ??= TextEditingController();
+    focusKeyboard();
   }
 
   void clearSearchTextField(LibraryTab libraryTab) {
@@ -140,37 +154,15 @@ class ScrollSearchController {
       Indexer.inst.searchTracks('');
     }
     isSearchBoxVisibleMap[libraryTab]!.value = true;
+    _closeTextController(libraryTab);
   }
-
-  /// Playlists
-  // void switchPlaylistSearchBoxVisibilty({bool forceHide = false, bool forceShow = false}) {
-  //   if (forceHide) {
-  //     showPlaylistSearchBox.value = false;
-  //     return;
-  //   }
-  //   if (forceShow) {
-  //     showPlaylistSearchBox.value = true;
-  //     return;
-  //   }
-  //   if (PlaylistController.inst.playlistSearchController.value.text == '') {
-  //     showPlaylistSearchBox.value = !showPlaylistSearchBox.value;
-  //     unfocusKeyboard();
-  //   } else {
-  //     showPlaylistSearchBox.value = true;
-  //   }
-  // }
-
-  // void clearPlaylistSearchTextField() {
-  //   PlaylistController.inst.searchPlaylists('');
-  //   showPlaylistSearchBox.value = false;
-  // }
 
   void animateQueueToCurrentTrack() {
     if (queueScrollController.hasClients) {
       queueScrollController.animateTo(
         trackTileItemScrollOffsetInQueue,
         duration: const Duration(milliseconds: 600),
-        curve: Curves.easeInOutQuint,
+        curve: Curves.easeInOutQuart,
       );
     }
   }
@@ -178,6 +170,7 @@ class ScrollSearchController {
 
 extension LibraryTabStuff on LibraryTab {
   ScrollController get scrollController => ScrollSearchController.inst.scrollControllersMap[this]!;
+  TextEditingController get textSearchController => ScrollSearchController.inst.textSearchControllers[this]!;
   double get scrollPosition => ScrollSearchController.inst.getScrollPosition(this);
   bool get isBarVisible => ScrollSearchController.inst.getIsBarVisible(this);
   bool get isSearchBoxVisible => ScrollSearchController.inst.getIsSearchBoxVisible(this);

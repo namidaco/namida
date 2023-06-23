@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:on_audio_edit/on_audio_edit.dart' as audioedit;
 import 'package:on_audio_query/on_audio_query.dart';
 
@@ -45,10 +46,6 @@ class Indexer {
   final RxInt videosSizeInStorage = 0.obs;
 
   final TextEditingController globalSearchController = TextEditingController();
-  final TextEditingController tracksSearchController = TextEditingController();
-  final TextEditingController albumsSearchController = TextEditingController();
-  final TextEditingController artistsSearchController = TextEditingController();
-  final TextEditingController genresSearchController = TextEditingController();
 
   RxBool get isSearching => (trackSearchTemp.isNotEmpty || albumSearchTemp.isNotEmpty || artistSearchTemp.isNotEmpty).obs;
 
@@ -494,6 +491,7 @@ class Indexer {
   /// list.first = title
   ///
   /// list.last = artist
+  /// TODO: refactor
   List<String> getTitleAndArtistFromFilename(String filename) {
     final filenameWOEx = filename.replaceAll('_', ' ');
     final titleAndArtist = <String>[];
@@ -604,7 +602,7 @@ class Indexer {
       if (temp) {
         trackSearchTemp.clear();
       } else {
-        tracksSearchController.clear();
+        LibraryTab.tracks.textSearchController.clear();
         trackSearchList.assignAll(tracksInfoList);
       }
 
@@ -641,7 +639,7 @@ class Indexer {
       if (temp) {
         albumSearchTemp.clear();
       } else {
-        albumsSearchController.clear();
+        LibraryTab.albums.textSearchController.clear();
         albumSearchList
           ..clear()
           ..addAll(mainMapAlbums.value.keys);
@@ -666,7 +664,7 @@ class Indexer {
       if (temp) {
         artistSearchTemp.clear();
       } else {
-        artistsSearchController.clear();
+        LibraryTab.artists.textSearchController.clear();
         artistSearchList
           ..clear()
           ..addAll(mainMapArtists.value.keys);
@@ -688,7 +686,7 @@ class Indexer {
 
   void searchGenres(String text) {
     if (text == '') {
-      genresSearchController.clear();
+      LibraryTab.genres.textSearchController.clear();
       genreSearchList.assignAll(mainMapGenres.value.keys);
       return;
     }
@@ -761,7 +759,7 @@ class Indexer {
       tracksInfoList.value = tracksInfoList.reversed.toList();
     }
     SettingsController.inst.save(tracksSort: sortBy, tracksSortReversed: reverse);
-    searchTracks(tracksSearchController.value.text);
+    searchTracks(LibraryTab.tracks.textSearchController.text);
   }
 
   /// Sorts Albums and Saves automatically to settings
@@ -807,7 +805,7 @@ class Indexer {
 
     SettingsController.inst.save(albumSort: sortBy, albumSortReversed: reverse);
 
-    searchAlbums(albumsSearchController.value.text);
+    searchAlbums(LibraryTab.albums.textSearchController.text);
   }
 
   /// Sorts Artists and Saves automatically to settings
@@ -856,7 +854,7 @@ class Indexer {
 
     SettingsController.inst.save(artistSort: sortBy, artistSortReversed: reverse);
 
-    searchArtists(artistsSearchController.value.text);
+    searchArtists(LibraryTab.artists.textSearchController.text);
   }
 
   /// Sorts Genres and Saves automatically to settings
@@ -903,7 +901,7 @@ class Indexer {
       ..addEntries(reverse ? genresList.reversed : genresList);
 
     SettingsController.inst.save(genreSort: sortBy, genreSortReversed: reverse);
-    searchGenres(genresSearchController.value.text);
+    searchGenres(LibraryTab.genres.textSearchController.text);
   }
 
   Future<void> updateImageSizeInStorage([File? newImgFile]) async {

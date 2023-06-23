@@ -56,7 +56,7 @@ class AlbumsPage extends StatelessWidget {
                   onReverseIconTap: () => Indexer.inst.sortAlbums(reverse: !SettingsController.inst.albumSortReversed.value),
                 ),
                 textField: CustomTextFiled(
-                  textFieldController: Indexer.inst.albumsSearchController,
+                  textFieldController: LibraryTab.albums.textSearchController,
                   textFieldHintText: Language.inst.FILTER_ALBUMS,
                   onTextFieldValueChanged: (value) => Indexer.inst.searchAlbums(value),
                 ),
