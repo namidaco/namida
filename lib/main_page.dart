@@ -68,7 +68,7 @@ class MainPageWrapper extends StatelessWidget {
                                 title: e.toText(),
                                 icon: e.toIcon(),
                                 onTap: () async {
-                                  ScrollSearchController.inst.animatePageController(e.toInt());
+                                  ScrollSearchController.inst.animatePageController(e);
                                   await Future.delayed(const Duration(milliseconds: 100));
                                   toggleDrawer();
                                 },

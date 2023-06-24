@@ -22,6 +22,7 @@ class PlaylistTile extends StatelessWidget {
   Widget build(BuildContext context) {
     const double playlistThumnailSize = 75;
     const double playlistTileHeight = 75;
+    final hero = 'playlist_${playlist.name}';
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 3.0),
       child: Material(
@@ -37,7 +38,7 @@ class PlaylistTile extends StatelessWidget {
             child: Row(
               children: [
                 MultiArtworkContainer(
-                  heroTag: 'playlist_artwork_${playlist.name}',
+                  heroTag: hero,
                   size: playlistThumnailSize,
                   tracks: playlist.tracks.map((e) => e.track).toList(),
                 ),
@@ -46,21 +47,30 @@ class PlaylistTile extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        playlist.name.translatePlaylistName(),
-                        style: context.textTheme.displayMedium,
-                        overflow: TextOverflow.ellipsis,
+                      Hero(
+                        tag: 'line1_$hero',
+                        child: Text(
+                          playlist.name.translatePlaylistName(),
+                          style: context.textTheme.displayMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      Text(
-                        [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
-                        style: context.textTheme.displaySmall?.copyWith(fontSize: 13.7.multipliedFontScale),
-                        overflow: TextOverflow.ellipsis,
+                      Hero(
+                        tag: 'line2_$hero',
+                        child: Text(
+                          [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
+                          style: context.textTheme.displaySmall?.copyWith(fontSize: 13.7.multipliedFontScale),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       if (playlist.moods.isNotEmpty)
-                        Text(
-                          playlist.moods.join(', ').overflow,
-                          style: context.textTheme.displaySmall,
-                          overflow: TextOverflow.ellipsis,
+                        Hero(
+                          tag: 'line3_$hero',
+                          child: Text(
+                            playlist.moods.join(', ').overflow,
+                            style: context.textTheme.displaySmall,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                     ],
                   ),

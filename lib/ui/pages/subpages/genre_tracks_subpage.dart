@@ -27,9 +27,10 @@ class GenreTracksPage extends StatelessWidget {
         title: name,
         source: QueueSource.genre,
         subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
+        heroTag: 'genre_$name',
         imageWidget: MultiArtworkContainer(
           size: Get.width * 0.35,
-          heroTag: 'genre_artwork_$name',
+          heroTag: 'genre_$name',
           tracks: tracks,
         ),
         tracks: tracks,

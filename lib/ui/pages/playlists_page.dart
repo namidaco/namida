@@ -26,220 +26,220 @@ import 'package:namida/ui/widgets/library/playlist_tile.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class PlaylistsPage extends StatelessWidget {
-  final int? countPerRow;
   final List<Track>? tracksToAdd;
   final bool displayTopRow;
   final bool disableBottomPadding;
+  final int? gridCountOverride;
 
   const PlaylistsPage({
     super.key,
-    this.countPerRow,
     this.tracksToAdd,
     this.displayTopRow = true,
     this.disableBottomPadding = false,
+    this.gridCountOverride,
   });
 
   ScrollController get _scrollController => LibraryTab.playlists.scrollController;
+  int get countPerRow => gridCountOverride ?? SettingsController.inst.playlistGridCount.value;
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () {
-        final playlistGridCount = countPerRow ?? SettingsController.inst.playlistGridCount.value;
-        return CupertinoScrollbar(
-          controller: _scrollController,
-          child: AnimationLimiter(
-            child: Column(
-              children: [
-                ExpandableBox(
-                  gridWidget: ChangeGridCountWidget(
-                    currentCount: SettingsController.inst.playlistGridCount.value,
-                    onTap: () {
-                      final n = SettingsController.inst.playlistGridCount.value;
-                      final nToSave = n < 4 ? n + 1 : 1;
-                      SettingsController.inst.save(playlistGridCount: nToSave);
-                    },
-                  ),
-                  isBarVisible: LibraryTab.playlists.isBarVisible,
-                  showSearchBox: LibraryTab.playlists.isSearchBoxVisible,
-                  leftText: PlaylistController.inst.playlistSearchList.length.displayPlaylistKeyword,
-                  onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.playlists),
-                  onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.playlists),
-                  sortByMenuWidget: SortByMenu(
-                    title: SettingsController.inst.playlistSort.value.toText(),
-                    popupMenuChild: const SortByMenuPlaylist(),
-                    isCurrentlyReversed: SettingsController.inst.playlistSortReversed.value,
-                    onReverseIconTap: () => PlaylistController.inst.sortPlaylists(reverse: !SettingsController.inst.playlistSortReversed.value),
-                  ),
-                  textField: CustomTextFiled(
-                    textFieldController: LibraryTab.playlists.textSearchController,
-                    textFieldHintText: Language.inst.FILTER_PLAYLISTS,
-                    onTextFieldValueChanged: (value) => PlaylistController.inst.searchPlaylists(value),
-                  ),
+    return CupertinoScrollbar(
+      controller: _scrollController,
+      child: AnimationLimiter(
+        child: Column(
+          children: [
+            Obx(
+              () => ExpandableBox(
+                gridWidget: ChangeGridCountWidget(
+                  currentCount: SettingsController.inst.playlistGridCount.value,
+                  onTap: () {
+                    final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.playlists, countPerRow);
+                    SettingsController.inst.save(playlistGridCount: newCount);
+                  },
                 ),
-                Expanded(
-                  child: CustomScrollView(
-                    controller: _scrollController,
-                    slivers: [
-                      if (displayTopRow)
-                        SliverToBoxAdapter(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                const SizedBox(
-                                  width: 12.0,
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    PlaylistController.inst.playlistList.length.displayPlaylistKeyword,
-                                    style: Theme.of(context).textTheme.displayLarge,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const FittedBox(
-                                  child: GeneratePlaylistButton(),
-                                ),
-                                const SizedBox(
-                                  width: 8.0,
-                                ),
-                                const FittedBox(
-                                  child: CreatePlaylistButton(),
-                                ),
-                                const SizedBox(
-                                  width: 8.0,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      const SliverPadding(padding: EdgeInsets.only(top: 6.0)),
-
-                      /// Default Playlists.
-                      if (displayTopRow)
-                        SliverToBoxAdapter(
+                isBarVisible: LibraryTab.playlists.isBarVisible,
+                showSearchBox: LibraryTab.playlists.isSearchBoxVisible,
+                leftText: PlaylistController.inst.playlistSearchList.length.displayPlaylistKeyword,
+                onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.playlists),
+                onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.playlists),
+                sortByMenuWidget: SortByMenu(
+                  title: SettingsController.inst.playlistSort.value.toText(),
+                  popupMenuChild: const SortByMenuPlaylist(),
+                  isCurrentlyReversed: SettingsController.inst.playlistSortReversed.value,
+                  onReverseIconTap: () => PlaylistController.inst.sortPlaylists(reverse: !SettingsController.inst.playlistSortReversed.value),
+                ),
+                textField: CustomTextFiled(
+                  textFieldController: LibraryTab.playlists.textSearchController,
+                  textFieldHintText: Language.inst.FILTER_PLAYLISTS,
+                  onTextFieldValueChanged: (value) => PlaylistController.inst.searchPlaylists(value),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Obx(
+                () => CustomScrollView(
+                  controller: _scrollController,
+                  slivers: [
+                    if (displayTopRow)
+                      SliverToBoxAdapter(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              Column(
-                                children: [
-                                  Obx(
-                                    () {
-                                      PlaylistController.inst.defaultPlaylists.toList();
-                                      return DefaultPlaylistCard(
-                                        width: context.width / 2.4,
-                                        colorScheme: Colors.grey,
-                                        icon: Broken.refresh,
-                                        title: Language.inst.HISTORY,
-                                        playlist: namidaHistoryPlaylist,
-                                        onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaHistoryPlaylist),
-                                      );
-                                    },
-                                  ),
-                                  Obx(
-                                    () {
-                                      PlaylistController.inst.defaultPlaylists.toList();
-                                      return DefaultPlaylistCard(
-                                        width: context.width / 2.4,
-                                        colorScheme: Colors.red,
-                                        icon: Broken.heart,
-                                        title: Language.inst.FAVOURITES,
-                                        playlist: namidaFavouritePlaylist,
-                                        onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaFavouritePlaylist),
-                                      );
-                                    },
-                                  ),
-                                ],
+                              const SizedBox(
+                                width: 12.0,
                               ),
-                              const SizedBox(width: 12.0),
-                              Column(
-                                children: [
-                                  Obx(
-                                    () => DefaultPlaylistCard(
-                                      width: context.width / 2.4,
-                                      colorScheme: Colors.green,
-                                      icon: Broken.award,
-                                      title: Language.inst.MOST_PLAYED,
-                                      text: PlaylistController.inst.topTracksMapListens.length.toString(),
-                                      onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaMostPlayedPlaylist),
-                                    ),
-                                  ),
-                                  Obx(
-                                    () => DefaultPlaylistCard(
-                                      width: context.width / 2.4,
-                                      colorScheme: Colors.blue,
-                                      icon: Broken.driver,
-                                      title: Language.inst.QUEUES,
-                                      text: QueueController.inst.queueList.length.toString(),
-                                      onTap: () => NamidaNavigator.inst.navigateTo(const QueuesPage()),
-                                    ),
-                                  ),
-                                ],
+                              Expanded(
+                                child: Text(
+                                  PlaylistController.inst.playlistList.length.displayPlaylistKeyword,
+                                  style: Theme.of(context).textTheme.displayLarge,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const FittedBox(
+                                child: GeneratePlaylistButton(),
+                              ),
+                              const SizedBox(
+                                width: 8.0,
+                              ),
+                              const FittedBox(
+                                child: CreatePlaylistButton(),
+                              ),
+                              const SizedBox(
+                                width: 8.0,
                               ),
                             ],
                           ),
                         ),
-                      const SliverPadding(padding: EdgeInsets.only(top: 10.0)),
-                      if (playlistGridCount == 1)
-                        SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, i) {
-                              final playlist = PlaylistController.inst.playlistSearchList[i];
-                              return AnimatingTile(
-                                position: i,
-                                shouldAnimate: LibraryTab.playlists.shouldAnimateTiles,
-                                child: PlaylistTile(
-                                  playlist: playlist,
-                                  onTap: tracksToAdd != null
-                                      ? () => PlaylistController.inst.addTracksToPlaylist(playlist, tracksToAdd!)
-                                      : () => NamidaOnTaps.inst.onPlaylistTap(playlist),
+                      ),
+                    const SliverPadding(padding: EdgeInsets.only(top: 6.0)),
+
+                    /// Default Playlists.
+                    if (displayTopRow)
+                      SliverToBoxAdapter(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Column(
+                              children: [
+                                Obx(
+                                  () {
+                                    PlaylistController.inst.defaultPlaylists.toList();
+                                    return DefaultPlaylistCard(
+                                      width: context.width / 2.4,
+                                      colorScheme: Colors.grey,
+                                      icon: Broken.refresh,
+                                      title: Language.inst.HISTORY,
+                                      playlist: namidaHistoryPlaylist,
+                                      onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaHistoryPlaylist),
+                                    );
+                                  },
                                 ),
-                              );
-                            },
-                            childCount: PlaylistController.inst.playlistSearchList.length,
-                          ),
-                        ),
-                      if (playlistGridCount > 1)
-                        SliverGrid(
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: playlistGridCount,
-                            childAspectRatio: 0.8,
-                            mainAxisSpacing: 8.0,
-                          ),
-                          delegate: SliverChildBuilderDelegate(
-                            (context, i) {
-                              final playlist = PlaylistController.inst.playlistSearchList[i];
-                              return AnimatingGrid(
-                                columnCount: PlaylistController.inst.playlistSearchList.length,
-                                position: i,
-                                shouldAnimate: LibraryTab.playlists.shouldAnimateTiles,
-                                child: MultiArtworkCard(
-                                  heroTag: 'playlist_artwork_${playlist.name}',
-                                  tracks: playlist.tracks.map((e) => e.track).toList(),
-                                  name: playlist.name.translatePlaylistName(),
-                                  gridCount: playlistGridCount,
-                                  showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(playlist),
-                                  onTap: () => NamidaOnTaps.inst.onPlaylistTap(playlist),
+                                Obx(
+                                  () {
+                                    PlaylistController.inst.defaultPlaylists.toList();
+                                    return DefaultPlaylistCard(
+                                      width: context.width / 2.4,
+                                      colorScheme: Colors.red,
+                                      icon: Broken.heart,
+                                      title: Language.inst.FAVOURITES,
+                                      playlist: namidaFavouritePlaylist,
+                                      onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaFavouritePlaylist),
+                                    );
+                                  },
                                 ),
-                              );
-                            },
-                            childCount: PlaylistController.inst.playlistSearchList.length,
-                          ),
+                              ],
+                            ),
+                            const SizedBox(width: 12.0),
+                            Column(
+                              children: [
+                                Obx(
+                                  () => DefaultPlaylistCard(
+                                    width: context.width / 2.4,
+                                    colorScheme: Colors.green,
+                                    icon: Broken.award,
+                                    title: Language.inst.MOST_PLAYED,
+                                    text: PlaylistController.inst.topTracksMapListens.length.toString(),
+                                    onTap: () => NamidaOnTaps.inst.onPlaylistTap(namidaMostPlayedPlaylist),
+                                  ),
+                                ),
+                                Obx(
+                                  () => DefaultPlaylistCard(
+                                    width: context.width / 2.4,
+                                    colorScheme: Colors.blue,
+                                    icon: Broken.driver,
+                                    title: Language.inst.QUEUES,
+                                    text: QueueController.inst.queueList.length.toString(),
+                                    onTap: () => NamidaNavigator.inst.navigateTo(const QueuesPage()),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      if (!disableBottomPadding)
-                        const SliverPadding(
-                          padding: EdgeInsets.only(bottom: kBottomPadding),
-                        )
-                    ],
-                  ),
+                      ),
+                    const SliverPadding(padding: EdgeInsets.only(top: 10.0)),
+                    if (countPerRow == 1)
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i) {
+                            final playlist = PlaylistController.inst.playlistSearchList[i];
+                            return AnimatingTile(
+                              position: i,
+                              shouldAnimate: LibraryTab.playlists.shouldAnimateTiles,
+                              child: PlaylistTile(
+                                playlist: playlist,
+                                onTap: tracksToAdd != null
+                                    ? () => PlaylistController.inst.addTracksToPlaylist(playlist, tracksToAdd!)
+                                    : () => NamidaOnTaps.inst.onPlaylistTap(playlist),
+                              ),
+                            );
+                          },
+                          childCount: PlaylistController.inst.playlistSearchList.length,
+                        ),
+                      ),
+                    if (countPerRow > 1)
+                      SliverGrid(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: countPerRow,
+                          childAspectRatio: 0.8,
+                          mainAxisSpacing: 8.0,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i) {
+                            final playlist = PlaylistController.inst.playlistSearchList[i];
+                            return AnimatingGrid(
+                              columnCount: PlaylistController.inst.playlistSearchList.length,
+                              position: i,
+                              shouldAnimate: LibraryTab.playlists.shouldAnimateTiles,
+                              child: MultiArtworkCard(
+                                // TODO: hero doesnt work.
+                                heroTag: 'playlist_${playlist.name}',
+                                tracks: playlist.tracks.map((e) => e.track).toList(),
+                                name: playlist.name.translatePlaylistName(),
+                                gridCount: countPerRow,
+                                showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(playlist),
+                                onTap: () => NamidaOnTaps.inst.onPlaylistTap(playlist),
+                              ),
+                            );
+                          },
+                          childCount: PlaylistController.inst.playlistSearchList.length,
+                        ),
+                      ),
+                    if (!disableBottomPadding)
+                      const SliverPadding(
+                        padding: EdgeInsets.only(bottom: kBottomPadding),
+                      )
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 }

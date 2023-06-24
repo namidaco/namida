@@ -42,18 +42,18 @@ extension LibraryTabToEnum on int {
 extension LibraryTabUtils on LibraryTab {
   int toInt() => SettingsController.inst.libraryTabs.toList().indexOf(this);
 
-  Widget toWidget() {
+  Widget toWidget([int? gridCount]) {
     if (this == LibraryTab.albums) {
-      return const AlbumsPage();
+      return AlbumsPage(gridCountOverride: gridCount);
     }
     if (this == LibraryTab.tracks) {
       return const TracksPage();
     }
     if (this == LibraryTab.artists) {
-      return const ArtistsPage();
+      return ArtistsPage(gridCountOverride: gridCount);
     }
     if (this == LibraryTab.genres) {
-      return GenresPage();
+      return GenresPage(gridCountOverride: gridCount);
     }
     if (this == LibraryTab.playlists) {
       return const PlaylistsPage();
@@ -785,13 +785,13 @@ extension WidgetsPages on Widget {
           /// Artist Subpage
           if (this is ArtistTracksPage) {
             final artist = this as ArtistTracksPage;
-            NamidaDialogs.inst.showArtistDialog(artist.name, artist.tracks);
+            NamidaDialogs.inst.showArtistDialog(artist.name);
           }
 
           /// Genre Subpage
           if (this is GenreTracksPage) {
             final g = this as GenreTracksPage;
-            NamidaDialogs.inst.showGenreDialog(g.name, g.tracks);
+            NamidaDialogs.inst.showGenreDialog(g.name);
           }
 
           /// Queue Subpage

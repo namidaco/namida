@@ -19,10 +19,11 @@ import 'package:namida/ui/widgets/library/multi_artwork_card.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class GenresPage extends StatelessWidget {
-  GenresPage({super.key});
+  final int? gridCountOverride;
+  const GenresPage({super.key, this.gridCountOverride});
 
   ScrollController get _scrollController => LibraryTab.genres.scrollController;
-  final countPerRow = SettingsController.inst.genreGridCount.value;
+  int get countPerRow => gridCountOverride ?? SettingsController.inst.genreGridCount.value;
 
   @override
   Widget build(BuildContext context) {
@@ -36,9 +37,8 @@ class GenresPage extends StatelessWidget {
                 gridWidget: ChangeGridCountWidget(
                   currentCount: SettingsController.inst.genreGridCount.value,
                   onTap: () {
-                    final n = SettingsController.inst.genreGridCount.value;
-                    final nToSave = n < 4 ? n + 1 : 2;
-                    SettingsController.inst.save(genreGridCount: nToSave);
+                    final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.genres, countPerRow, minimum: 2);
+                    SettingsController.inst.save(genreGridCount: newCount);
                   },
                 ),
                 isBarVisible: LibraryTab.genres.isBarVisible,
@@ -60,7 +60,6 @@ class GenresPage extends StatelessWidget {
               ),
               Expanded(
                 child: GridView.builder(
-                  key: const PageStorageKey(LibraryTab.genres),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.8, mainAxisSpacing: 8.0),
                   controller: _scrollController,
                   itemCount: Indexer.inst.genreSearchList.length,
@@ -72,15 +71,11 @@ class GenresPage extends StatelessWidget {
                       position: i,
                       shouldAnimate: LibraryTab.genres.shouldAnimateTiles,
                       child: MultiArtworkCard(
-                        heroTag: 'genre_artwork_$genre',
+                        heroTag: 'genre_$genre',
                         tracks: genre.getGenresTracks(),
                         name: genre,
                         gridCount: countPerRow,
-                        showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(
-                          genre,
-                          genre.getGenresTracks(),
-                          heroTag: 'genre_artwork_$genre',
-                        ),
+                        showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(genre),
                         onTap: () => NamidaOnTaps.inst.onGenreTap(genre),
                       ),
                     );

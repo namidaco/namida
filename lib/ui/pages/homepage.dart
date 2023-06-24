@@ -144,7 +144,7 @@ class HomePage extends StatelessWidget {
                     elevation: 22,
                     labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
                     height: 64.0,
-                    onDestinationSelected: (value) => ScrollSearchController.inst.animatePageController(value),
+                    onDestinationSelected: (value) => ScrollSearchController.inst.animatePageController(value.toEnum()),
                     selectedIndex: SettingsController.inst.selectedLibraryTab.value.toInt(),
                     destinations: SettingsController.inst.libraryTabs
                         .map(

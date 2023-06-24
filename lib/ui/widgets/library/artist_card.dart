@@ -26,18 +26,19 @@ class ArtistCard extends StatelessWidget {
     const double horizontalPadding = 4.0;
     final double thumnailSize = (Get.width / gridCount) - horizontalPadding * 2;
     final fontSize = (18.0 - (gridCount * 1.7)).multipliedFontScale;
+    final hero = 'artist_$name';
     return GridTile(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 120, 120, 120),
           borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-          onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, artist),
+          onLongPress: () => NamidaDialogs.inst.showArtistDialog(name),
           onTap: () => NamidaOnTaps.inst.onArtistTap(name, artist),
           child: Column(
             children: [
               Hero(
-                tag: 'artist_$name',
+                tag: hero,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: horizontalPadding),
                   child: ContainerWithBorder(
@@ -63,10 +64,13 @@ class ArtistCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (name != '')
-                        Text(
-                          name.overflow,
-                          style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize),
-                          overflow: TextOverflow.ellipsis,
+                        Hero(
+                          tag: 'line1_$hero',
+                          child: Text(
+                            name.overflow,
+                            style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                     ],
                   ),

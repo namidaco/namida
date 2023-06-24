@@ -102,6 +102,7 @@ class NamidaNavigator {
     Widget page, {
     bool nested = true,
     Transition transition = Transition.cupertino,
+    int durationInMs = 500,
   }) async {
     _hideSearchMenuAndUnfocus();
 
@@ -116,7 +117,7 @@ class NamidaNavigator {
       preventDuplicates: false,
       transition: transition,
       curve: Curves.easeOut,
-      duration: const Duration(milliseconds: 500),
+      duration: Duration(milliseconds: durationInMs),
       opaque: true,
       fullscreenDialog: false,
     );

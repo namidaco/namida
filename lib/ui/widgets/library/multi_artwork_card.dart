@@ -10,7 +10,7 @@ class MultiArtworkCard extends StatelessWidget {
   final List<Track> tracks;
   final String name;
   final int gridCount;
-  final Object heroTag;
+  final String heroTag;
   final void Function()? onTap;
   final void Function()? showMenuFunction;
 
@@ -34,12 +34,16 @@ class MultiArtworkCard extends StatelessWidget {
           children: [
             Column(
               children: [
-                MultiArtworks(
-                  borderRadius: 12.0.multipliedFontScale,
-                  heroTag: heroTag,
-                  paths: tracks.map((e) => e.pathToImage).toList(),
-                  thumbnailSize: thumnailSize,
-                  iconSize: 92.0 - 14 * gridCount,
+                Hero(
+                  tag: heroTag,
+                  child: MultiArtworks(
+                    borderRadius: 12.0.multipliedFontScale,
+                    heroTag: heroTag,
+                    disableHero: true,
+                    paths: tracks.map((e) => e.pathToImage).toList(),
+                    thumbnailSize: thumnailSize,
+                    iconSize: 92.0 - 14 * gridCount,
+                  ),
                 ),
                 Expanded(
                   child: Container(
@@ -50,18 +54,24 @@ class MultiArtworkCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (name != '')
-                          Text(
-                            name.overflow,
-                            style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize),
+                          Hero(
+                            tag: 'line1_$heroTag',
+                            child: Text(
+                              name.overflow,
+                              style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        Hero(
+                          tag: 'line2_$heroTag',
+                          child: Text(
+                            [tracks.displayTrackKeyword, if (tracks.totalDuration != 0) tracks.totalDurationFormatted].join(' - '),
+                            style: context.textTheme.displaySmall?.copyWith(
+                              fontWeight: FontWeight.w500,
+                              fontSize: fontSize * 0.85,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
-                        Text(
-                          [tracks.displayTrackKeyword, if (tracks.totalDuration != 0) tracks.totalDurationFormatted].join(' - '),
-                          style: context.textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
-                            fontSize: fontSize * 0.85,
-                          ),
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),

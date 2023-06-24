@@ -21,6 +21,8 @@ class ArtistTile extends StatelessWidget {
     const artistthumnailSize = 65.0;
     const artistTileHeight = 65.0;
 
+    final hero = 'artist_$name';
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
       clipBehavior: Clip.antiAlias,
@@ -29,7 +31,7 @@ class ArtistTile extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 120, 120, 120),
-          onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, tracks),
+          onLongPress: () => NamidaDialogs.inst.showArtistDialog(name),
           onTap: () => NamidaOnTaps.inst.onArtistTap(name, tracks),
           child: Container(
             alignment: Alignment.center,
@@ -39,7 +41,7 @@ class ArtistTile extends StatelessWidget {
               children: [
                 const SizedBox(width: 8.0),
                 Hero(
-                  tag: 'artist_$name',
+                  tag: hero,
                   child: ContainerWithBorder(
                     child: ArtworkWidget(
                       thumnailSize: artistthumnailSize,
@@ -57,18 +59,24 @@ class ArtistTile extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        name,
-                        style: context.textTheme.displayMedium,
-                        overflow: TextOverflow.ellipsis,
+                      Hero(
+                        tag: 'line1_$hero',
+                        child: Text(
+                          name,
+                          style: context.textTheme.displayMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      Text(
-                        [
-                          tracks.displayTrackKeyword,
-                          albums.length.displayAlbumKeyword,
-                        ].join(' & '),
-                        style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
-                        overflow: TextOverflow.ellipsis,
+                      Hero(
+                        tag: 'line2_$hero',
+                        child: Text(
+                          [
+                            tracks.displayTrackKeyword,
+                            albums.length.displayAlbumKeyword,
+                          ].join(' & '),
+                          style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
@@ -82,7 +90,7 @@ class ArtistTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 4.0),
                 MoreIcon(
-                  onPressed: () => NamidaDialogs.inst.showArtistDialog(name, tracks),
+                  onPressed: () => NamidaDialogs.inst.showArtistDialog(name),
                   padding: 6.0,
                 ),
               ],

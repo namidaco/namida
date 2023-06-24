@@ -25,7 +25,6 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
@@ -58,7 +57,7 @@ Future<void> showGeneralPopupDialog(
   bool errorPlayingTrack = false,
   String? artistToAddFrom,
   String? albumToAddFrom,
-  Object? heroTag,
+  String? heroTag,
 }) async {
   final tracksExisting = <Track>[];
   for (final t in tracks) {
@@ -841,7 +840,7 @@ Future<void> showGeneralPopupDialog(
                                     icon: Broken.folder,
                                     onTap: () {
                                       NamidaNavigator.inst.closeDialog();
-                                      ScrollSearchController.inst.animatePageController(LibraryTab.folders.toInt());
+                                      ScrollSearchController.inst.animatePageController(LibraryTab.folders);
                                       NamidaOnTaps.inst.onFolderTap(availableFolders.first, false, trackToScrollTo: tracks.first);
                                     },
                                     trailing: IconButton(

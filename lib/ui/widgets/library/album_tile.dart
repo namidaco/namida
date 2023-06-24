@@ -25,6 +25,7 @@ class AlbumTile extends StatelessWidget {
     final albumthumnailSize = SettingsController.inst.albumThumbnailSizeinList.value;
     final albumTileHeight = SettingsController.inst.albumListTileHeight.value;
     final finalYear = album.year.yearFormatted;
+    final hero = 'album_$name';
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 8.0),
@@ -51,14 +52,14 @@ class AlbumTile extends StatelessWidget {
             height: albumTileHeight + 14,
             child: Row(
               children: [
-                Hero(
-                  tag: 'album_$name',
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 12.0,
-                    ),
-                    width: albumthumnailSize,
-                    height: albumthumnailSize,
+                Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                  ),
+                  width: albumthumnailSize,
+                  height: albumthumnailSize,
+                  child: Hero(
+                    tag: hero,
                     child: ArtworkWidget(
                       thumnailSize: albumthumnailSize,
                       track: album.trackOfImage,
@@ -72,26 +73,35 @@ class AlbumTile extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        album.album,
-                        style: context.textTheme.displayMedium,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (album.albumArtist != '')
-                        Text(
-                          album.albumArtist,
-                          style: context.textTheme.displaySmall,
+                      Hero(
+                        tag: 'line1_$hero',
+                        child: Text(
+                          album.album,
+                          style: context.textTheme.displayMedium,
                           overflow: TextOverflow.ellipsis,
                         ),
-                      Text(
-                        [
-                          album.displayTrackKeyword,
-                          if (finalYear != '') finalYear,
-                        ].join(' • '),
-                        style: context.textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w500,
+                      ),
+                      if (album.albumArtist != '')
+                        Hero(
+                          tag: 'line2_$hero',
+                          child: Text(
+                            album.albumArtist,
+                            style: context.textTheme.displaySmall,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        overflow: TextOverflow.ellipsis,
+                      Hero(
+                        tag: 'line3_$hero',
+                        child: Text(
+                          [
+                            album.displayTrackKeyword,
+                            if (finalYear != '') finalYear,
+                          ].join(' • '),
+                          style: context.textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),

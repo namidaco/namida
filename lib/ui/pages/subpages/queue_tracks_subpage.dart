@@ -26,9 +26,10 @@ class QueueTracksPage extends StatelessWidget {
           queue.tracks.displayTrackKeyword,
           queue.tracks.totalDurationFormatted,
         ].join(' - '),
+        heroTag: 'queue_${queue.date}',
         imageWidget: MultiArtworkContainer(
           size: Get.width * 0.35,
-          heroTag: 'queue_artwork_${queue.date}',
+          heroTag: 'queue_${queue.date}',
           tracks: queue.tracks,
         ),
         tracks: queue.tracks,

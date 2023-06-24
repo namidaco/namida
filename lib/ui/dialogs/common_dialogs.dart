@@ -19,8 +19,15 @@ class NamidaDialogs {
   static final NamidaDialogs _instance = NamidaDialogs._internal();
   NamidaDialogs._internal();
 
-  Future<void> showTrackDialog(Track track,
-      {Widget? leading, Playlist? playlist, int? index, bool comingFromQueue = false, bool isFromPlayerQueue = false, bool errorPlayingTrack = false}) async {
+  Future<void> showTrackDialog(
+    Track track, {
+    Widget? leading,
+    Playlist? playlist,
+    int? index,
+    bool comingFromQueue = false,
+    bool isFromPlayerQueue = false,
+    bool errorPlayingTrack = false,
+  }) async {
     await showGeneralPopupDialog(
       [track],
       track.originalArtist,
@@ -54,7 +61,8 @@ class NamidaDialogs {
     );
   }
 
-  Future<void> showArtistDialog(String name, List<Track> tracks) async {
+  Future<void> showArtistDialog(String name) async {
+    final tracks = name.getArtistTracks();
     final albums = tracks.map((e) => e.album).toList();
     await showGeneralPopupDialog(
       tracks,
@@ -70,18 +78,19 @@ class NamidaDialogs {
     );
   }
 
-  Future<void> showGenreDialog(String name, List<Track> tracks, {Object? heroTag}) async {
+  Future<void> showGenreDialog(String name) async {
+    final tracks = name.getGenresTracks();
     await showGeneralPopupDialog(
       tracks,
       name,
       [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
       QueueSource.genre,
       extractColor: false,
-      heroTag: heroTag,
+      heroTag: 'genre_$name',
     );
   }
 
-  Future<void> showPlaylistDialog(Playlist playlist, {Object? heroTag}) async {
+  Future<void> showPlaylistDialog(Playlist playlist) async {
     if (playlist.tracks.isEmpty) {
       NamidaNavigator.inst.navigateDialog(
         CustomBlurryDialog(
@@ -109,11 +118,11 @@ class NamidaDialogs {
       thirdLineText: playlist.moods.join(', ').overflow,
       playlist: playlist,
       extractColor: false,
-      heroTag: 'playlist_artwork_${playlist.name}',
+      heroTag: 'playlist_${playlist.name}',
     );
   }
 
-  Future<void> showQueueDialog(Queue queue, {Object? heroTag}) async {
+  Future<void> showQueueDialog(Queue queue) async {
     await showGeneralPopupDialog(
       queue.tracks,
       queue.date.dateFormatted,
@@ -125,7 +134,8 @@ class NamidaDialogs {
       ].join(' - '),
       extractColor: false,
       queue: queue,
-      heroTag: heroTag,
+      forceSquared: true,
+      heroTag: 'queue_${queue.date}',
     );
   }
 }

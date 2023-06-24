@@ -1219,6 +1219,7 @@ class SubpagesTopContainer extends StatelessWidget {
   final Widget imageWidget;
   final List<Track> tracks;
   final QueueSource source;
+  final String heroTag;
   const SubpagesTopContainer({
     super.key,
     required this.title,
@@ -1229,10 +1230,12 @@ class SubpagesTopContainer extends StatelessWidget {
     required this.tracks,
     this.verticalPadding = 16.0,
     required this.source,
+    required this.heroTag,
   });
 
   @override
   Widget build(BuildContext context) {
+    const pauseHero = 'kururing';
     return Container(
       alignment: Alignment.center,
       padding: const EdgeInsets.all(12.0),
@@ -1252,11 +1255,14 @@ class SubpagesTopContainer extends StatelessWidget {
                 ),
                 Container(
                   padding: const EdgeInsets.only(left: 14.0),
-                  child: Text(
-                    title,
-                    style: context.textTheme.displayLarge,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  child: Hero(
+                    tag: '${pauseHero}line1_$heroTag',
+                    child: Text(
+                      title,
+                      style: context.textTheme.displayLarge,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
                 const SizedBox(
@@ -1264,11 +1270,14 @@ class SubpagesTopContainer extends StatelessWidget {
                 ),
                 Container(
                   padding: const EdgeInsets.only(left: 14.0),
-                  child: Text(
-                    subtitle,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
+                  child: Hero(
+                    tag: '${pauseHero}line2_$heroTag',
+                    child: Text(
+                      subtitle,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
+                    ),
                   ),
                 ),
                 if (thirdLineText != '') ...[
@@ -1277,11 +1286,14 @@ class SubpagesTopContainer extends StatelessWidget {
                   ),
                   Container(
                     padding: const EdgeInsets.only(left: 14.0),
-                    child: Text(
-                      thirdLineText,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
+                    child: Hero(
+                      tag: '${pauseHero}line3_$heroTag',
+                      child: Text(
+                        thirdLineText,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
+                      ),
                     ),
                   ),
                 ],
@@ -1291,6 +1303,7 @@ class SubpagesTopContainer extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
+                    const SizedBox(width: 6.0),
                     ElevatedButton(
                       onPressed: () => Player.inst.playOrPause(
                         0,
@@ -1298,13 +1311,25 @@ class SubpagesTopContainer extends StatelessWidget {
                         source,
                         shuffle: true,
                       ),
+                      style: ElevatedButton.styleFrom(
+                        fixedSize: const Size(0.0, 0.0),
+                        padding: EdgeInsets.zero,
+                      ),
                       child: const Icon(Broken.shuffle),
                     ),
-                    ElevatedButton.icon(
-                      onPressed: () => Player.inst.addToQueue(tracks),
-                      icon: const StackedIcon(baseIcon: Broken.play, secondaryIcon: Broken.add_circle),
-                      label: Text(Language.inst.PLAY_LAST),
+                    const SizedBox(width: 6.0),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => Player.inst.addToQueue(tracks),
+                        icon: const StackedIcon(baseIcon: Broken.play, secondaryIcon: Broken.add_circle),
+                        label: FittedBox(child: Text(Language.inst.PLAY_LAST)),
+                        style: ElevatedButton.styleFrom(
+                          fixedSize: const Size(0.0, 0.0),
+                          padding: EdgeInsets.zero,
+                        ),
+                      ),
                     ),
+                    const SizedBox(width: 6.0),
                   ],
                 )
               ],

@@ -30,6 +30,7 @@ class AlbumTracksPage extends StatelessWidget {
           source: QueueSource.album,
           subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
           thirdLineText: tracks.albumArtist,
+          heroTag: 'album_$name',
           imageWidget: shouldAlbumBeSquared
               ? MultiArtworkContainer(
                   size: Get.width * 0.35,
@@ -54,7 +55,6 @@ class AlbumTracksPage extends StatelessWidget {
           tracks: tracks,
         ),
       ),
-      // ),
     );
   }
 }

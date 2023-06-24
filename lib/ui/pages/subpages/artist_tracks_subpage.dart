@@ -36,6 +36,7 @@ class ArtistTracksPage extends StatelessWidget {
               tracks.displayTrackKeyword,
               if (tracks.year != 0) tracks.year.yearFormatted,
             ].join(' - '),
+            heroTag: 'artist_$name',
             imageWidget: Hero(
               tag: 'artist_$name',
               child: Padding(

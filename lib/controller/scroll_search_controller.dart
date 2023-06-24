@@ -36,8 +36,7 @@ class ScrollSearchController {
 
   final FocusNode focusNode = FocusNode();
 
-  Future<void> animatePageController(int animateTo) async {
-    final tab = animateTo.toEnum();
+  void animatePageController(LibraryTab tab) {
     final w = tab.toWidget();
 
     if (w.runtimeType == NamidaNavigator.inst.currentWidgetStack.lastOrNull.runtimeType) {
@@ -45,12 +44,20 @@ class ScrollSearchController {
       return;
     }
 
-    final isPageToTheRight = animateTo > SettingsController.inst.selectedLibraryTab.value.toInt();
+    final isPageToTheRight = tab.toInt() > SettingsController.inst.selectedLibraryTab.value.toInt();
     final transition = isPageToTheRight ? Transition.rightToLeft : Transition.leftToRight;
 
     _updateScrollPositions(SettingsController.inst.selectedLibraryTab.value, tab);
     SettingsController.inst.save(selectedLibraryTab: tab);
     NamidaNavigator.inst.navigateOffAll(w, transition: transition);
+  }
+
+  int animateChangingGridSize(LibraryTab tab, int currentGridCount, {int minimum = 1, int maximum = 4}) {
+    final n = currentGridCount;
+    final nToSave = n < maximum ? n + 1 : minimum;
+    _updateScrollPositions(tab, tab);
+    NamidaNavigator.inst.navigateOff(tab.toWidget(nToSave), durationInMs: 300);
+    return nToSave;
   }
 
   void initialize() {

@@ -39,8 +39,9 @@ class PlaylisTracksPage extends StatelessWidget {
           title: playlist.name.translatePlaylistName(),
           subtitle: [finalTracks.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' - '),
           thirdLineText: playlist.moods.isNotEmpty ? playlist.moods.join(', ') : '',
+          heroTag: 'playlist_${playlist.name}',
           imageWidget: MultiArtworkContainer(
-            heroTag: 'playlist_artwork_${playlist.name}',
+            heroTag: 'playlist_${playlist.name}',
             size: Get.width * 0.35,
             tracks: finalTracks,
           ),

@@ -20,10 +20,11 @@ import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class AlbumsPage extends StatelessWidget {
   final List<String>? albums;
-  const AlbumsPage({super.key, this.albums});
+  final int? gridCountOverride;
+  const AlbumsPage({super.key, this.albums, this.gridCountOverride});
 
   ScrollController get _scrollController => LibraryTab.albums.scrollController;
-  int get countPerRow => SettingsController.inst.albumGridCount.value;
+  int get countPerRow => gridCountOverride ?? SettingsController.inst.albumGridCount.value;
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +39,9 @@ class AlbumsPage extends StatelessWidget {
                 gridWidget: ChangeGridCountWidget(
                   currentCount: countPerRow,
                   forStaggered: SettingsController.inst.useAlbumStaggeredGridView.value,
-                  onTap: () async {
-                    final n = countPerRow;
-                    final nToSave = n < 4 ? n + 1 : 1;
-                    SettingsController.inst.save(albumGridCount: nToSave);
+                  onTap: () {
+                    final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.albums, countPerRow);
+                    SettingsController.inst.save(albumGridCount: newCount);
                   },
                 ),
                 isBarVisible: LibraryTab.albums.isBarVisible,
@@ -67,7 +67,6 @@ class AlbumsPage extends StatelessWidget {
                 return countPerRow == 1
                     ? Expanded(
                         child: ListView.builder(
-                          key: const PageStorageKey(LibraryTab.albums),
                           controller: _scrollController,
                           itemCount: finalAlbums.length,
                           itemExtent: SettingsController.inst.albumListTileHeight.value + 4.0 * 5,
@@ -88,7 +87,6 @@ class AlbumsPage extends StatelessWidget {
                     : SettingsController.inst.useAlbumStaggeredGridView.value
                         ? Expanded(
                             child: MasonryGridView.builder(
-                              key: const PageStorageKey(LibraryTab.albums),
                               controller: _scrollController,
                               padding: const EdgeInsets.only(bottom: kBottomPadding),
                               itemCount: finalAlbums.length,
@@ -111,7 +109,6 @@ class AlbumsPage extends StatelessWidget {
                           )
                         : Expanded(
                             child: GridView.builder(
-                              key: const PageStorageKey(LibraryTab.albums),
                               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.75, mainAxisSpacing: 8.0),
                               controller: _scrollController,
                               itemCount: finalAlbums.length,

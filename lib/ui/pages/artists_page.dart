@@ -19,10 +19,12 @@ import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class ArtistsPage extends StatelessWidget {
   final List<String>? artists;
-  const ArtistsPage({super.key, this.artists});
+  final int? gridCountOverride;
+  const ArtistsPage({super.key, this.artists, this.gridCountOverride});
 
   ScrollController get _scrollController => LibraryTab.artists.scrollController;
-  int get gridCount => SettingsController.inst.artistGridCount.value;
+  int get countPerRow => gridCountOverride ?? SettingsController.inst.artistGridCount.value;
+
   @override
   Widget build(BuildContext context) {
     final finalArtists = artists ?? Indexer.inst.artistSearchList;
@@ -36,9 +38,8 @@ class ArtistsPage extends StatelessWidget {
                 gridWidget: ChangeGridCountWidget(
                   currentCount: SettingsController.inst.artistGridCount.value,
                   onTap: () {
-                    final n = SettingsController.inst.artistGridCount.value;
-                    final nToSave = n < 4 ? n + 1 : 1;
-                    SettingsController.inst.save(artistGridCount: nToSave);
+                    final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.artists, countPerRow);
+                    SettingsController.inst.save(artistGridCount: newCount);
                   },
                 ),
                 isBarVisible: LibraryTab.artists.isBarVisible,
@@ -58,10 +59,9 @@ class ArtistsPage extends StatelessWidget {
                   onTextFieldValueChanged: (value) => Indexer.inst.searchArtists(value),
                 ),
               ),
-              if (gridCount == 1)
+              if (countPerRow == 1)
                 Expanded(
                   child: ListView.builder(
-                    key: const PageStorageKey(LibraryTab.artists),
                     controller: _scrollController,
                     itemCount: finalArtists.length,
                     padding: const EdgeInsets.only(bottom: kBottomPadding),
@@ -80,12 +80,11 @@ class ArtistsPage extends StatelessWidget {
                     },
                   ),
                 ),
-              if (gridCount > 1)
+              if (countPerRow > 1)
                 Expanded(
                   child: GridView.builder(
-                    key: const PageStorageKey(LibraryTab.artists),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: gridCount,
+                      crossAxisCount: countPerRow,
                       childAspectRatio: 0.88,
                       mainAxisSpacing: 8.0,
                     ),
@@ -101,7 +100,7 @@ class ArtistsPage extends StatelessWidget {
                         child: ArtistCard(
                           name: artist,
                           artist: artist.getArtistTracks(),
-                          gridCount: gridCount,
+                          gridCount: countPerRow,
                         ),
                       );
                     },

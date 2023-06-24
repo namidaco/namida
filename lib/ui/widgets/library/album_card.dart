@@ -38,8 +38,11 @@ class AlbumCard extends StatelessWidget {
     final shouldDisplayTopRightDate = SettingsController.inst.albumCardTopRightDate.value && finalYear != '';
     final shouldDisplayNormalDate = !SettingsController.inst.albumCardTopRightDate.value && finalYear != '';
     final shouldDisplayAlbumArtist = album.albumArtist != '';
-    const double horizontalPadding = 4.0;
-    double thumnailSize = (Get.width / gridCount) - horizontalPadding * 2;
+    const horizontalPadding = 4.0;
+    final thumnailSize = (Get.width / gridCount) - horizontalPadding * 2;
+
+    final hero = 'album_$name';
+
     return GridTile(
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: horizontalPadding),
@@ -64,7 +67,7 @@ class AlbumCard extends StatelessWidget {
             child: Column(
               children: [
                 Hero(
-                  tag: 'album_$name',
+                  tag: hero,
                   child: ArtworkWidget(
                     track: album.trackOfImage,
                     thumnailSize: thumnailSize,
@@ -131,34 +134,43 @@ class AlbumCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (staggered && !compact) SizedBox(height: fontSize * 0.7),
-                            Text(
-                              album.album.overflow,
-                              style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize * 1.16),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            Hero(
+                              tag: 'line1_$hero',
+                              child: Text(
+                                album.album.overflow,
+                                style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize * 1.16),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                             if (!SettingsController.inst.albumCardTopRightDate.value || album.albumArtist != '') ...[
                               // if (!compact) const SizedBox(height: 2.0),
                               if (shouldDisplayNormalDate || shouldDisplayAlbumArtist)
-                                Text(
-                                  [
-                                    if (shouldDisplayNormalDate) finalYear,
-                                    if (shouldDisplayAlbumArtist) album.albumArtist.overflow,
-                                  ].join(' - '),
-                                  style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize * 1.08),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                Hero(
+                                  tag: 'line2_$hero',
+                                  child: Text(
+                                    [
+                                      if (shouldDisplayNormalDate) finalYear,
+                                      if (shouldDisplayAlbumArtist) album.albumArtist.overflow,
+                                    ].join(' - '),
+                                    style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize * 1.08),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                             ],
                             // if (staggered && !compact) SizedBox(height: fontSize * 0.1),
-                            Text(
-                              [
-                                album.displayTrackKeyword,
-                                album.totalDurationFormatted,
-                              ].join(' • '),
-                              style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            Hero(
+                              tag: 'line3_$hero',
+                              child: Text(
+                                [
+                                  album.displayTrackKeyword,
+                                  album.totalDurationFormatted,
+                                ].join(' • '),
+                                style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                             if (staggered && !compact) SizedBox(height: fontSize * 0.7),
                           ],

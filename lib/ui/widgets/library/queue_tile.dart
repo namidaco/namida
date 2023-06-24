@@ -15,6 +15,7 @@ class QueueTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hero = 'queue_${queue.date}';
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 8.0),
       clipBehavior: Clip.antiAlias,
@@ -43,7 +44,7 @@ class QueueTile extends StatelessWidget {
                 SizedBox(
                   height: 64.0,
                   child: MultiArtworkContainer(
-                    heroTag: 'queue_artwork_${queue.date}',
+                    heroTag: hero,
                     size: 64.0,
                     tracks: queue.tracks,
                   ),
@@ -52,20 +53,26 @@ class QueueTile extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      queue.date.dateAndClockFormattedOriginal,
-                      style: context.textTheme.displayMedium?.copyWith(
-                        fontSize: 14.0.multipliedFontScale,
+                    Hero(
+                      tag: 'line1_$hero',
+                      child: Text(
+                        queue.date.dateAndClockFormattedOriginal,
+                        style: context.textTheme.displayMedium?.copyWith(
+                          fontSize: 14.0.multipliedFontScale,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 1.0),
-                    Text(
-                      [queue.name, queue.tracks.displayTrackKeyword].join(' - '),
-                      style: context.textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.w500,
+                    Hero(
+                      tag: 'line2_$hero',
+                      child: Text(
+                        [queue.name, queue.tracks.displayTrackKeyword].join(' - '),
+                        style: context.textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
