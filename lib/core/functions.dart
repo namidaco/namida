@@ -181,27 +181,31 @@ List<Track> getRandomTracks([int? min, int? max]) {
 }
 
 List<Track> generateRecommendedTrack(Track track) {
-  final gentracks = <Track>[];
-  final historytracks = namidaHistoryPlaylist.tracks.map((e) => e.track).toList();
+  final historytracks = namidaHistoryPlaylist.tracks;
   if (historytracks.isEmpty) {
     return [];
   }
-  for (int i = 0; i < historytracks.length; i++) {
-    final t = historytracks[i];
-    if (t == track) {
-      const length = 10;
-      final max = historytracks.length;
-      gentracks.addAll(historytracks.getRange((i - length).clamp(0, max), (i + length).clamp(0, max)));
+
+  final Map<Track, int> numberOfListensMap = {};
+  final max = historytracks.length;
+  const length = 10;
+
+  historytracks.loop((t, i) {
+    if (t.track == track) {
+      final heatTracks = historytracks.getRange((i - length).clamp(0, max), (i + length).clamp(0, max)).toList();
+      heatTracks.loop((e, index) {
+        numberOfListensMap.update(e.track, (value) => value + 1, ifAbsent: () => 1);
+      });
       // skip length since we already took 10 tracks.
       i += length;
     }
-  }
-  gentracks.removeWhere((element) => element.path == track.path);
+  });
 
-  Map<Track, int> numberOf = {for (final x in gentracks.toSet()) x: gentracks.where((item) => item == x).length};
-  final sortedByValueMap = Map.fromEntries(numberOf.entries.toList()..sort((b, a) => a.value.compareTo(b.value)));
+  numberOfListensMap.remove(track);
 
-  return sortedByValueMap.keys.take(20).toList();
+  final sortedByValueMap = numberOfListensMap.entries.toList()..sort((b, a) => a.value.compareTo(b.value));
+
+  return sortedByValueMap.take(20).map((e) => e.key).toList();
 }
 
 /// if [maxCount == null], it will generate all available tracks
