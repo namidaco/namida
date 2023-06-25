@@ -71,7 +71,7 @@ class Language {
   String get MINIMUM_ONE_FIELD => 'Couldn\'t remove field';
   String get MINIMUM_ONE_FIELD_SUBTITLE => 'At least 3 fields should remain';
   String get EXTRACT_FEAT_ARTIST => 'Extract feat. artists from title';
-  String get EXTRACT_FEAT_ARTIST_SUBTITLE => 'Extracts (feat. X) and (ft. X) artists, only as a new artist entry.';
+  String get EXTRACT_FEAT_ARTIST_SUBTITLE => 'Extracts (feat. X) and (ft. X) artists, as a new artist entry.';
   String get PICK_FROM_STORAGE => 'Pick from storage';
 
   String get IMPORT_YOUTUBE_HISTORY_GUIDE =>

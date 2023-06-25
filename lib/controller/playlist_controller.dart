@@ -79,7 +79,7 @@ class PlaylistController {
     final formatDate = DateFormat('yyyyMMdd');
 
     playlistSearchList.clear();
-    for (final item in playlistList) {
+    playlistList.loop((item, index) {
       final lctext = textCleanedForSearch(text);
       final dateCreatedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.creationDate));
       final dateModifiedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.modifiedDate));
@@ -91,7 +91,7 @@ class PlaylistController {
           (sMoods && item.moods.any((element) => textCleanedForSearch(element).contains(lctext)))) {
         playlistSearchList.add(item);
       }
-    }
+    });
   }
 
   /// Sorts Playlists and Saves automatically to settings
@@ -109,7 +109,7 @@ class PlaylistController {
         playlistList.sort((a, b) => a.modifiedDate.compareTo(b.modifiedDate));
         break;
       case GroupSortType.duration:
-        playlistList.sort((a, b) => a.tracks.map((e) => e.track).toList().totalDuration.compareTo(b.tracks.map((e) => e.track).toList().totalDuration));
+        playlistList.sort((a, b) => a.tracks.map((e) => e.track).toList().totalDurationInS.compareTo(b.tracks.map((e) => e.track).toList().totalDurationInS));
         break;
       case GroupSortType.numberOfTracks:
         playlistList.sort((a, b) => a.tracks.length.compareTo(b.tracks.length));
@@ -344,11 +344,10 @@ class PlaylistController {
     await for (final p in Directory(k_DIR_PLAYLISTS).list()) {
       // prevents freezing the ui. cheap alternative for Isolate/compute.
       await Future.delayed(Duration.zero);
-      final string = await File(p.path).readAsString();
-      if (string.isNotEmpty) {
-        final content = jsonDecode(string) as Map<String, dynamic>;
-        playlistList.add(Playlist.fromJson(content));
-      }
+
+      await File(p.path).readAsJsonAnd((response) async {
+        playlistList.add(Playlist.fromJson(response));
+      });
     }
 
     /// Sorting accensingly by date since [await for] doesnt maintain order
@@ -402,11 +401,10 @@ class PlaylistController {
 
   Future<void> _prepareFavouritesFile() async {
     final file = File(k_PLAYLIST_PATH_FAVOURITES);
-    await file.create();
-    final String content = await file.readAsString();
-    if (content.isNotEmpty) {
-      defaultPlaylists.add(Playlist.fromJson(jsonDecode(content)));
-    }
+
+    await file.readAsJsonAnd((response) async {
+      defaultPlaylists.add(Playlist.fromJson(response));
+    });
   }
 
   Future<void> backupHistoryPlaylist() async {
@@ -419,7 +417,7 @@ class PlaylistController {
   /// If a history backup was found, copies it and returns [true].
   Future<bool> tryRestoringHistory() async {
     final backupfile = File(k_PLAYLIST_PATH_HISTORY_BACKUP);
-    if (await backupfile.exists()) {
+    if (await backupfile.existsAndValid()) {
       await backupfile.copy(k_PLAYLIST_PATH_HISTORY);
       return true;
     }
@@ -436,14 +434,14 @@ class PlaylistController {
 
   Future<void> _saveDefaultPlaylistToStorageAndRefresh(String path, Playlist playlist) async {
     _refreshStuff();
-    await File(path).writeAsString(jsonEncode(playlist.toJson()));
+    await File(path).writeAsJson(playlist.toJson());
   }
 
   Future<void> _savePlaylistToStorageAndRefresh(Playlist playlist) async {
     /// TODO(MSOB7YY): separate playlist methods above.
     if (playlist.isOneOfTheMainPlaylists) return;
     _refreshStuff();
-    await File('$k_DIR_PLAYLISTS/${playlist.name}.json').writeAsString(jsonEncode(playlist.toJson()));
+    await File('$k_DIR_PLAYLISTS/${playlist.name}.json').writeAsJson(playlist.toJson());
   }
 
   Future<void> _deletePlaylistFromStorageAndRefresh(Playlist playlist) async {

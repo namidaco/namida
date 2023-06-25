@@ -34,7 +34,7 @@ class TrackWithDate {
 
 class TrackStats {
   /// Path of the track.
-  String? path;
+  late String path;
 
   /// Rating of the track out of 100.
   int rating = 0;
@@ -84,7 +84,7 @@ class Track {
   late final List<String> genresList;
   late final String composer;
   late final int track;
-  late final int duration;
+  late int duration;
   late final int year;
   late final int size;
   late final int dateAdded;

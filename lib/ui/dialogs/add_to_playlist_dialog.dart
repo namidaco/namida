@@ -56,7 +56,7 @@ void showAddToPlaylistDialog(List<Track> tracks) {
             width: Get.width,
             child: PlaylistsPage(
               tracksToAdd: tracks,
-              gridCountOverride: 1,
+              countPerRow: 1,
               displayTopRow: false,
               disableBottomPadding: true,
             ),

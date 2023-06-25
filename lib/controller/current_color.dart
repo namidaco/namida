@@ -126,21 +126,19 @@ class CurrentColor {
   }
 
   Future<void> generateAllColorPalettes() async {
-    if (!await Directory(k_DIR_PALETTES).exists()) {
-      Directory(k_DIR_PALETTES).create();
-    }
+    await Directory(k_DIR_PALETTES).create();
+
     generatingAllColorPalettes.value = true;
-
-    for (final tr in allTracksInLibrary) {
-      if (!generatingAllColorPalettes.value) {
-        break;
-      }
-
-      await getTrackColors(tr);
+    for (int i = 0; i < allTracksInLibrary.length; i++) {
+      // stops extracting
+      if (!generatingAllColorPalettes.value) break;
+      await getTrackColors(allTracksInLibrary[i]);
     }
 
     generatingAllColorPalettes.value = false;
   }
+
+  void stopGeneratingColorPalettes() => generatingAllColorPalettes.value = false;
 
   /// Equivalent to calling [getTrackColors] and [generateDelightnedColorFromPalette].
   Future<Color> getTrackDelightnedColor(Track track) async {
@@ -207,8 +205,8 @@ class CurrentColor {
     await for (final f in Directory(k_DIR_PALETTES).list()) {
       f as File;
       final didExecute = await f.readAsJsonAnd(
-        (respone) {
-          final nc = NamidaColor.fromJson(respone);
+        (response) async {
+          final nc = NamidaColor.fromJson(response);
           _updateInColorMap(f.path.getFilenameWOExt, nc);
         },
         onError: () async => await f.deleteIfExists(),

@@ -277,7 +277,10 @@ class AlbumSearchResultsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlbumsPage(albums: Indexer.inst.albumSearchTemp);
+    return AlbumsPage(
+      albums: Indexer.inst.albumSearchTemp,
+      countPerRow: SettingsController.inst.albumGridCount.value,
+    );
   }
 }
 
@@ -286,6 +289,9 @@ class ArtistSearchResultsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ArtistsPage(artists: Indexer.inst.artistSearchTemp);
+    return ArtistsPage(
+      artists: Indexer.inst.artistSearchTemp,
+      countPerRow: SettingsController.inst.artistGridCount.value,
+    );
   }
 }

@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/extensions.dart';
 
 class Lyrics {
   static Lyrics get inst => _instance;
@@ -24,10 +25,9 @@ class Lyrics {
     currentLyrics.value = '';
     if (SettingsController.inst.enableLyrics.value) {
       final lyricsFile = File("$k_DIR_LYRICS${track.filename}.txt");
-      final lyricsFileStat = await lyricsFile.stat();
 
       /// get from storage
-      if (await lyricsFile.exists() && lyricsFileStat.size > 2) {
+      if (await lyricsFile.existsAndValid()) {
         currentLyrics.value = await lyricsFile.readAsString();
       }
 

@@ -14,7 +14,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
-import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -108,12 +107,13 @@ void main() async {
   await CurrentColor.inst.prepareColors();
 
   /// Clearing files cached by intents
-  final cacheDirFiles = await getTemporaryDirectory().then((value) => value.listSync());
-  for (final cf in cacheDirFiles) {
+  final cacheDir = await getTemporaryDirectory();
+  await for (final cf in cacheDir.list()) {
     if (cf is File) {
-      cf.deleteSync();
+      cf.tryDeleting();
     }
   }
+
   void shouldErrorPlayingFileSnackbar() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Get.snackbar(Language.inst.ERROR, Language.inst.COULDNT_PLAY_FILE);
@@ -147,13 +147,7 @@ void main() async {
 
 /// returns [true] if played successfully.
 Future<bool> playExternalFiles(List<String> paths) async {
-  final List<Track> trs = [];
-  for (final p in paths) {
-    final tr = await Indexer.inst.convertPathToTrack(p);
-    if (tr != null) {
-      trs.add(tr);
-    }
-  }
+  final trs = await Indexer.inst.convertPathToTrack(paths);
   if (trs.isNotEmpty) {
     await Player.inst.playOrPause(0, trs, QueueSource.externalFile);
     return true;

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
@@ -28,19 +27,15 @@ class WaveformController {
   /// Extracts waveform data from a given track, or immediately read from .wave file if exists, then assigns wavedata to [curentWaveform].
   ///
   /// Has a timeout of 3 minutes, otherwise it will assign [kDefaultWaveFormData] permanently.
-  ///
-  /// <br>
   Future<void> generateWaveform(Track track) async {
-    final wavePath = "$k_DIR_WAVEFORMS${track.path.getFilename}.wave";
+    final wavePath = "$k_DIR_WAVEFORMS${track.filename}.wave";
     final waveFile = File(wavePath);
-    final waveFileStat = await waveFile.stat();
     final numberOfScales = _getlistSize(track.duration);
 
     // If Waveform file exists in storage
-    if (await waveFile.exists() && waveFileStat.size > 10) {
+    if (await waveFile.existsAndValid()) {
       try {
-        final content = await waveFile.readAsString();
-        final waveform = List<double>.from(json.decode(content));
+        final waveform = List<double>.from(await waveFile.readAsJson() ?? []);
 
         // A Delay to prevent glitches caused by theme change
         Future.delayed(const Duration(milliseconds: 400), () async {
@@ -96,9 +91,8 @@ class WaveformController {
   }
 
   Future<void> generateAllWaveforms() async {
-    if (!await Directory(k_DIR_WAVEFORMS).exists()) {
-      Directory(k_DIR_WAVEFORMS).create();
-    }
+    Directory(k_DIR_WAVEFORMS).create();
+
     generatingAllWaveforms.value = true;
 
     for (final tr in allTracksInLibrary) {

@@ -1,5 +1,4 @@
 import 'dart:collection';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -15,7 +14,6 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
-import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -75,7 +73,7 @@ class Indexer {
 
   Future<void> prepareTracksFile() async {
     /// Only awaits if the track file exists, otherwise it will get into normally and start indexing.
-    if (await File(k_FILE_PATH_TRACKS).exists() && await File(k_FILE_PATH_TRACKS).stat().then((value) => value.size >= 2)) {
+    if (await File(k_FILE_PATH_TRACKS).existsAndValid()) {
       await readTrackData();
       _afterIndexing();
     }
@@ -167,29 +165,41 @@ class Indexer {
     await fetchAllSongsAndWriteToFile(audioFiles: paths, deletedPaths: {}, forceReIndex: false);
 
     if (updateArtwork) {
-      for (final track in tracks) {
-        await EditDeleteController.inst.deleteArtwork(tracks);
+      await EditDeleteController.inst.deleteArtwork(tracks);
+      await tracks.loopFuture((track, index) async {
         await extractOneArtwork(track.path, forceReExtract: true);
-      }
+      });
     }
     final newtracks = paths.map((e) => e.toTrackOrNull());
     _addTheseTracksToAlbumGenreArtistEtc(newtracks.whereType<Track>().toList(), preventDuplicates: true);
   }
 
-  Future<Track?> convertPathToTrack(String trackPath) async {
-    final trako = trackPath.toTrackOrNull();
-    if (trako != null) return trako;
+  Future<List<Track>> convertPathToTrack(List<String> tracksPath) async {
+    final List<Track> finalTracks = <Track>[];
+    final List<String> pathsToExtract = <String>[];
+    tracksPath.loop((tp, index) {
+      final trako = tp.toTrackOrNull();
+      if (trako != null) {
+        finalTracks.add(trako);
+      } else {
+        pathsToExtract.add(tp);
+      }
+    });
 
-    await fetchAllSongsAndWriteToFile(audioFiles: {trackPath}, deletedPaths: {}, forceReIndex: false, bypassAllChecks: true);
-
-    final t = trackPath.toTrackOrNull();
-    if (t != null) {
-      _addTheseTracksToAlbumGenreArtistEtc([t], preventDuplicates: true);
-      _sortAll();
-      return trackPath.toTrackOrNull();
+    if (pathsToExtract.isNotEmpty) {
+      await fetchAllSongsAndWriteToFile(audioFiles: pathsToExtract.toSet(), deletedPaths: {}, forceReIndex: false, bypassAllChecks: true);
+      await pathsToExtract.loopFuture((tp, index) async {
+        final t = tp.toTrackOrNull();
+        if (t != null) {
+          _addTheseTracksToAlbumGenreArtistEtc([t], preventDuplicates: true);
+          _sortAll();
+          final trako = tp.toTrackOrNull();
+          if (trako != null) finalTracks.add(trako);
+        }
+      });
     }
 
-    return null;
+    return finalTracks;
   }
 
   Future<void> fetchAllSongsAndWriteToFile({
@@ -223,9 +233,11 @@ class Indexer {
         printInfo(info: trackPath);
         try {
           /// skip duplicated tracks according to filename
-          if (!bypassAllChecks && SettingsController.inst.preventDuplicatedTracks.value && listOfCurrentFileNames.contains(trackPath.getFilename)) {
-            duplicatedTracksLength.value++;
-            continue;
+          if (SettingsController.inst.preventDuplicatedTracks.value) {
+            if (!bypassAllChecks && listOfCurrentFileNames.contains(trackPath.getFilename)) {
+              duplicatedTracksLength.value++;
+              continue;
+            }
           }
 
           final trackInfo = await onAudioEdit.readAudio(trackPath);
@@ -310,7 +322,7 @@ class Indexer {
         } catch (e) {
           printError(info: e.toString());
 
-          /// adding cummy track that couldnt be read by [onAudioEdit]
+          /// adding dummy track that couldnt be read by [onAudioEdit]
           final file = File(trackPath);
           final fileStat = await file.stat();
 
@@ -369,17 +381,10 @@ class Indexer {
 
       /// removes duplicated tracks after a refresh
       if (SettingsController.inst.preventDuplicatedTracks.value) {
-        Set<String> listOfCurrentFileNames = <String>{};
-        final listOfTracksWithoutDuplicates = <Track>[];
-        for (final tr in tracksInfoList) {
-          if (!listOfCurrentFileNames.contains(tr.filename)) {
-            listOfTracksWithoutDuplicates.add(tr);
-            listOfCurrentFileNames.add(tr.filename);
-          } else {
-            duplicatedTracksLength.value++;
-          }
-        }
-        tracksInfoList.assignAll(listOfTracksWithoutDuplicates);
+        final lengthBefore = tracksInfoList.length;
+        tracksInfoList.removeDuplicates((element) => element.filename);
+        final lengthAfter = tracksInfoList.length;
+        duplicatedTracksLength.value = (lengthBefore - lengthAfter).withMinimum(0);
       }
     }
 
@@ -394,57 +399,40 @@ class Indexer {
   }
 
   Future<void> _saveTrackFileToStorage() async {
-    await File(k_FILE_PATH_TRACKS).writeAsString(json.encode(tracksInfoList));
+    await File(k_FILE_PATH_TRACKS).writeAsJson(tracksInfoList);
   }
 
   Future<void> saveTrackStatsFileToStorage() async {
-    await File(k_FILE_PATH_TRACKS_STATS).writeAsString(json.encode(trackStatsMap.values.toList()));
+    await File(k_FILE_PATH_TRACKS_STATS).writeAsJson(trackStatsMap.values.toList());
   }
 
   Future<void> readTrackData() async {
     /// reading stats file containing track rating etc.
-    try {
-      final jsonResponse = await JsonToHistoryParser.inst.readJSONFile(k_FILE_PATH_TRACKS_STATS);
 
-      if (jsonResponse != null) {
-        for (final p in jsonResponse) {
-          final trst = TrackStats.fromJson(p);
-          if (trst.path != null) {
-            trackStatsMap[trst.path!] = trst;
-          }
-        }
-      }
-    } catch (e) {
-      printError(info: e.toString());
-    }
-
+    await File(k_FILE_PATH_TRACKS_STATS).readAsJsonAndLoop((item, i) {
+      final trst = TrackStats.fromJson(item);
+      trackStatsMap[trst.path] = trst;
+    });
     // clearing for cases which refreshing library is required (like after changing separators)
     tracksInfoList.clear();
 
-    /// reading actual track file.
-    try {
-      final jsonResponse = await JsonToHistoryParser.inst.readJSONFile(k_FILE_PATH_TRACKS);
+    /// Reading actual track file.
+    await File(k_FILE_PATH_TRACKS).readAsJsonAndLoop((item, i) {
+      final tr = Track.fromJson(item);
+      tr.stats = trackStatsMap[tr.path] ?? TrackStats('', 0, [], [], 0);
+      tracksInfoList.add(tr);
+      allTracksMappedByPath[tr.path] = tr;
+    });
 
-      if (jsonResponse != null) {
-        for (final p in jsonResponse) {
-          final tr = Track.fromJson(p);
-          tr.stats = trackStatsMap[tr.path] ?? TrackStats('', 0, [], [], 0);
-          tracksInfoList.add(tr);
-          allTracksMappedByPath[tr.path] = tr;
-        }
-      }
-      debugPrint("Tracks Info List Length From File: ${tracksInfoList.length}");
-    } catch (e) {
-      printError(info: e.toString());
-    }
+    debugPrint("Tracks Info List Length From File: ${tracksInfoList.length}");
   }
 
   List<String> splitBySeparators(String? string, Iterable<String> separators, String fallback, List<String> blacklist) {
     final List<String> finalStrings = <String>[];
     final List<String> pre = string?.trim().multiSplit(separators, blacklist) ?? [fallback];
-    for (final element in pre) {
-      finalStrings.addIf(element != '', element.trim());
-    }
+    pre.loop((e, index) {
+      finalStrings.addIf(e != '', e.trim());
+    });
     return finalStrings;
   }
 
@@ -525,23 +513,22 @@ class Indexer {
     final allPaths = <String>{};
     final allAvailableDirectories = <Directory, bool>{};
 
-    for (final dirPath in SettingsController.inst.directoriesToScan.toList()) {
+    await SettingsController.inst.directoriesToScan.toList().loopFuture((dirPath, index) async {
       final directory = Directory(dirPath);
 
       if (await directory.exists()) {
         allAvailableDirectories[directory] = false;
-
         await for (final file in directory.list(recursive: true, followLinks: true)) {
           if (file is Directory) {
             allAvailableDirectories[file] = false;
           }
         }
       }
-    }
+    });
 
     /// Assigning directories and sub-subdirectories that has .nomedia.
     if (SettingsController.inst.respectNoMedia.value) {
-      for (final d in allAvailableDirectories.keys) {
+      await allAvailableDirectories.keys.toList().loopFuture((d, index) async {
         final hasNoMedia = await File("${d.path}/.nomedia").exists();
         if (hasNoMedia) {
           // TODO: expose [strictNoMedia] in settings?
@@ -556,10 +543,9 @@ class Indexer {
             allAvailableDirectories[d] = true;
           }
         }
-      }
+      });
     }
-
-    for (final d in allAvailableDirectories.keys) {
+    await allAvailableDirectories.keys.toList().loopFuture((d, index) async {
       final hasNoMedia = allAvailableDirectories[d] ?? false;
 
       await for (final file in d.list()) {
@@ -576,11 +562,11 @@ class Indexer {
           if (SettingsController.inst.directoriesToExclude.toList().any((exc) => file.path.startsWith(exc))) {
             continue;
           }
-
           allPaths.add(file.path);
         }
       }
-    }
+    });
+
     allAudioFiles
       ..clear()
       ..addAll(allPaths);
@@ -618,7 +604,7 @@ class Indexer {
     final sComposer = tsf.contains('composer');
     final sYear = tsf.contains('year');
 
-    for (final item in tracksInfoList) {
+    tracksInfoList.loop((item, index) {
       final lctext = textCleanedForSearch(text);
 
       if ((sTitle && textCleanedForSearch(item.title).contains(lctext)) ||
@@ -630,7 +616,8 @@ class Indexer {
           (sYear && textCleanedForSearch(item.year.toString()).contains(lctext))) {
         finalList.add(item);
       }
-    }
+    });
+
     printInfo(info: "Tracks Found: ${trackSearchList.length}");
   }
 
@@ -789,7 +776,7 @@ class Indexer {
         albumsList.sort((a, b) => a.value.first.dateModified.compareTo(b.value.first.dateModified));
         break;
       case GroupSortType.duration:
-        albumsList.sort((a, b) => a.value.toList().totalDuration.compareTo(b.value.toList().totalDuration));
+        albumsList.sort((a, b) => a.value.toList().totalDurationInS.compareTo(b.value.toList().totalDurationInS));
         break;
       case GroupSortType.numberOfTracks:
         albumsList.sort((a, b) => a.value.length.compareTo(b.value.length));
@@ -837,7 +824,7 @@ class Indexer {
         artistsList.sort((a, b) => a.value.elementAt(0).dateModified.compareTo(b.value.elementAt(0).dateModified));
         break;
       case GroupSortType.duration:
-        artistsList.sort((a, b) => a.value.toList().totalDuration.compareTo(b.value.toList().totalDuration));
+        artistsList.sort((a, b) => a.value.toList().totalDurationInS.compareTo(b.value.toList().totalDurationInS));
         break;
       case GroupSortType.numberOfTracks:
         artistsList.sort((a, b) => a.value.length.compareTo(b.value.length));
@@ -886,7 +873,7 @@ class Indexer {
         genresList.sort((a, b) => a.value.elementAt(0).dateModified.compareTo(b.value.elementAt(0).dateModified));
         break;
       case GroupSortType.duration:
-        genresList.sort((a, b) => a.value.toList().totalDuration.compareTo(b.value.toList().totalDuration));
+        genresList.sort((a, b) => a.value.toList().totalDurationInS.compareTo(b.value.toList().totalDurationInS));
         break;
       case GroupSortType.numberOfTracks:
         genresList.sort((a, b) => a.value.length.compareTo(b.value.length));
@@ -971,9 +958,7 @@ class Indexer {
   /// Deletes specific videos or the whole cache.
   Future<void> clearVideoCache([List<FileSystemEntity>? videosToDelete]) async {
     if (videosToDelete != null) {
-      for (final v in videosToDelete) {
-        await v.delete();
-      }
+      await videosToDelete.loopFuture((v, index) async => await v.delete());
     } else {
       await Directory(k_DIR_VIDEOS_CACHE).delete(recursive: true);
       await Directory(k_DIR_VIDEOS_CACHE).create();

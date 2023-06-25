@@ -159,7 +159,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
   @override
   void initState() {
     super.initState();
-    final media = MediaQueryData.fromWindow(window);
+    final media = MediaQueryData.fromView(window);
     topInset = media.padding.top;
     bottomInset = media.padding.bottom;
     screenSize = media.size;

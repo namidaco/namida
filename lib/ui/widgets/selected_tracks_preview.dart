@@ -193,7 +193,7 @@ class SelectedTracksRow extends StatelessWidget {
               tracks,
               tracks.displayTrackKeyword,
               [
-                tracks.map((e) => e.size).reduce((a, b) => a + b).fileSizeFormatted,
+                tracks.totalSizeFormatted,
                 tracks.totalDurationFormatted,
               ].join(' • '),
               QueueSource.selectedTracks,

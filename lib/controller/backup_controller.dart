@@ -42,14 +42,16 @@ class BackupController {
 
     List<File> filesOnly = [];
     List<Directory> dirsOnly = [];
-    for (final f in SettingsController.inst.backupItemslist.toList()) {
-      if (FileSystemEntity.typeSync(f) == FileSystemEntityType.file) {
+
+    await SettingsController.inst.backupItemslist.toList().loopFuture((f, index) async {
+      if (await FileSystemEntity.type(f) == FileSystemEntityType.file) {
         filesOnly.add(File(f));
       }
-      if (FileSystemEntity.typeSync(f) == FileSystemEntityType.directory) {
+      if (await FileSystemEntity.type(f) == FileSystemEntityType.directory) {
         dirsOnly.add(Directory(f));
       }
-    }
+    });
+
     try {
       for (final d in dirsOnly) {
         try {
@@ -66,11 +68,11 @@ class BackupController {
 
       // after finishing
       final all = sourceDir.listSync();
-      for (final one in all) {
+      await all.loopFuture((one, index) async {
         if (one.path.getFilename.startsWith('TEMPDIR_')) {
           await one.delete();
         }
-      }
+      });
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -89,13 +91,14 @@ class BackupController {
       final possibleFiles = dir.listSync();
 
       List<File> filessss = [];
-      for (final pf in possibleFiles) {
+      await possibleFiles.loopFuture((pf, index) async {
         if (pf.path.getFilename.startsWith('Namida Backup - ')) {
           if (pf is File) {
             filessss.add(pf);
           }
         }
-      }
+      });
+
       // seems like the files are already sorted but anyways
       filessss.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
       backupzip = filessss.first;
@@ -114,7 +117,7 @@ class BackupController {
 
     // after finishing, extracts zip files inside the main zip
     final all = Directory(k_DIR_USER_DATA).listSync();
-    for (final one in all) {
+    await all.loopFuture((one, index) async {
       if (one.path.getFilename.startsWith('TEMPDIR_')) {
         if (one is File) {
           await ZipFile.extractToDirectory(
@@ -122,7 +125,7 @@ class BackupController {
           await one.delete();
         }
       }
-    }
+    });
 
     Indexer.inst.refreshLibraryAndCheckForDiff();
     Indexer.inst.updateImageSizeInStorage();

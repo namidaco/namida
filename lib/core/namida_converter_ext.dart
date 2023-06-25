@@ -44,19 +44,19 @@ extension LibraryTabUtils on LibraryTab {
 
   Widget toWidget([int? gridCount]) {
     if (this == LibraryTab.albums) {
-      return AlbumsPage(gridCountOverride: gridCount);
+      return AlbumsPage(countPerRow: gridCount ?? SettingsController.inst.albumGridCount.value);
     }
     if (this == LibraryTab.tracks) {
       return const TracksPage();
     }
     if (this == LibraryTab.artists) {
-      return ArtistsPage(gridCountOverride: gridCount);
+      return ArtistsPage(countPerRow: gridCount ?? SettingsController.inst.artistGridCount.value);
     }
     if (this == LibraryTab.genres) {
-      return GenresPage(gridCountOverride: gridCount);
+      return GenresPage(countPerRow: gridCount ?? SettingsController.inst.genreGridCount.value);
     }
     if (this == LibraryTab.playlists) {
-      return const PlaylistsPage();
+      return PlaylistsPage(countPerRow: gridCount ?? SettingsController.inst.playlistGridCount.value);
     }
     if (this == LibraryTab.folders) {
       return FoldersPage();
@@ -679,7 +679,8 @@ extension ThemeUtils on ThemeMode {
 
 extension WidgetsPages on Widget {
   Future<void> updateColorScheme() async {
-    // TODO: Option to disable.
+    // a delay to prevent navigation glitches
+    await Future.delayed(const Duration(milliseconds: 500));
     Color? color;
     if (this is AlbumTracksPage || this is ArtistTracksPage) {
       final Track? tr = tracksInside.trackOfImage;

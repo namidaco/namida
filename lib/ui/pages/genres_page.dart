@@ -19,11 +19,10 @@ import 'package:namida/ui/widgets/library/multi_artwork_card.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class GenresPage extends StatelessWidget {
-  final int? gridCountOverride;
-  const GenresPage({super.key, this.gridCountOverride});
+  final int countPerRow;
+  const GenresPage({super.key, required this.countPerRow});
 
   ScrollController get _scrollController => LibraryTab.genres.scrollController;
-  int get countPerRow => gridCountOverride ?? SettingsController.inst.genreGridCount.value;
 
   @override
   Widget build(BuildContext context) {

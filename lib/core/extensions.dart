@@ -1,5 +1,6 @@
 // ignore_for_file: depend_on_referenced_packages
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -74,17 +75,25 @@ extension Iterables<E> on Iterable<E> {
 }
 
 extension TracksUtils on List<Track> {
-  int get totalDuration {
-    int totalFinalDuration = 0;
+  String get totalSizeFormatted {
+    int size = 0;
+    loop((t, index) {
+      size += t.size;
+    });
+    return size.fileSizeFormatted;
+  }
 
-    for (final t in this) {
-      totalFinalDuration += t.duration ~/ 1000;
-    }
-    return totalFinalDuration;
+  int get totalDurationInS {
+    int totalFinalDurationInMs = 0;
+    loop((t, index) {
+      totalFinalDurationInMs += t.duration;
+    });
+
+    return totalFinalDurationInMs ~/ 1000;
   }
 
   String get totalDurationFormatted {
-    return totalDuration.getTimeFormatted;
+    return totalDurationInS.getTimeFormatted;
   }
 
   String get displayTrackKeyword {
@@ -390,15 +399,14 @@ extension WAKELOCKMODETEXT on WakelockMode {
 }
 
 extension FileUtils<R> on File {
-  // TODO: use
-  Future<bool> existsAndValid([int minValidSize = 2]) async {
+  Future<bool> existsAndValid([int minValidSize = 3]) async {
     final st = await stat();
     final doesExist = await exists();
-    return (doesExist && st.size > minValidSize);
+    return (doesExist && st.size >= minValidSize);
   }
 
-  bool existsAndValidSync([int minValidSize = 2]) {
-    return existsSync() && statSync().size > minValidSize;
+  bool existsAndValidSync([int minValidSize = 3]) {
+    return existsSync() && statSync().size >= minValidSize;
   }
 
   /// returns [true] if deleted successfully.
@@ -433,6 +441,7 @@ extension FileUtils<R> on File {
   Future<dynamic> readAsJson() async {
     try {
       final content = await readAsString();
+      if (content.isEmpty) return null;
       return jsonDecode(content);
     } catch (e) {
       debugPrint(e.toString());
@@ -445,11 +454,15 @@ extension FileUtils<R> on File {
   /// Otherwise, executes [onError] and returns [false].
   /// <br>
   /// has a built in try-catch.
-  Future<bool> readAsJsonAnd(void Function(R respone) execute, {void Function()? onError}) async {
+  Future<bool> readAsJsonAnd(Future<void> Function(R response) execute, {void Function()? onError}) async {
     final respone = await readAsJson();
+    if (respone == null) {
+      if (onError != null) onError();
+      return false;
+    }
 
     try {
-      execute(respone);
+      await execute(respone);
       return true;
     } catch (e) {
       if (onError != null) onError();
@@ -458,11 +471,25 @@ extension FileUtils<R> on File {
     }
   }
 
+  Future<bool> readAsJsonAndLoop(FutureOr<void> Function(dynamic item, int index) execute, {FutureOr<void> Function(R response)? onListReady, void Function()? onError}) async {
+    final success = await readAsJsonAnd(
+      (response) async {
+        if (onListReady != null) onListReady(response);
+
+        (response as List).loop((e, index) async {
+          await execute(e, index);
+        });
+      },
+      onError: onError,
+    );
+    return success;
+  }
+
   /// Automatically creates the file if it doesnt exist
-  /// TODO: use
-  Future<void> writeAsJson(Map<String, dynamic> json) async {
+  Future<void> writeAsJson(Object? object, {Object? Function(Object? nonEncodable)? toEncodable}) async {
     await create();
-    await writeAsString(jsonEncode(json));
+    const encoder = JsonEncoder.withIndent("  ");
+    await writeAsString(encoder.convert(object));
   }
 }
 
@@ -475,6 +502,12 @@ extension NumberUtils<E extends num> on E {
   E withMaximum(E max) {
     if (this > max) return max;
     return this;
+  }
+}
+
+extension IntUtils on int {
+  int getRandomNumberBelow([int minimum = 0]) {
+    return minimum + (Random().nextInt(this));
   }
 }
 
@@ -506,7 +539,6 @@ extension ListieExt<E, Id> on List<E> {
     return true;
   }
 
-  /// TODO: use
   void removeDuplicates(Id Function(E element)? id) {
     final uniquedSet = <dynamic>{};
     retainWhere((e) => uniquedSet.add(id != null ? id(e) : e));
@@ -536,25 +568,45 @@ extension ListieExt<E, Id> on List<E> {
     return fallback;
   }
 
-  /// Efficent looping, uses normal for loop.
+  /// Efficient looping, uses normal for loop.
   ///
-  /// Doesn't support keywork statements like [return], [break], [continue], etc...
-  ///
-  /// TODO: use instead of [for .. in]
-  void loop(void Function(E e, int index) function) {
+  /// Doesn't support keywork statements like [break], [continue], etc...
+  void loop(void Function(E e, int index) function) async {
     for (int i = 0; i < length; i++) {
       final element = this[i];
       function(element, i);
     }
   }
 
+  void retainWhereAdvanced(bool Function(E element, int index) test, {int? keepIndex}) {
+    final indexesToRemove = <int>[];
+
+    loop((element, index) {
+      if (!test(element, index)) {
+        indexesToRemove.add(index);
+      }
+    });
+
+    indexesToRemove.remove(keepIndex);
+    indexesToRemove.reverseLoop((indexToRemove, index) {
+      removeAt(indexToRemove);
+    });
+  }
+
+  Future<void> loopFuture(Future<void> Function(E e, int index) function) async {
+    for (int i = 0; i < length; i++) {
+      final element = this[i];
+      await function(element, i);
+    }
+  }
+
   /// Efficent looping, uses normal for loop.
   ///
   /// Doesn't support keywork statements like [return], [break], [continue], etc...
-  void reverseLoop(void Function(E e) function) {
+  void reverseLoop(void Function(E e, int index) function) {
     for (int i = length - 1; i >= 0; i--) {
       final item = this[i];
-      function(item);
+      function(item, i);
     }
   }
 
@@ -585,5 +637,9 @@ extension WidgetsSeparator on Iterable<Widget> {
 }
 
 extension MapUtils<K, V> on Map<K, V> {
+  /// [keyExists] : Less accurate but instant, O(1).
+  /// Shouldn't be used if the value could be null.
+  ///
+  /// [containsKey] : Certain but not instant, O(keys.length).
   bool keyExists(K key) => this[key] != null;
 }

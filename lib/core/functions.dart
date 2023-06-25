@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -118,16 +116,19 @@ class NamidaOnTaps {
 }
 
 // Returns a [0-1] scale representing how much similar both are.
-double checkIfQueuesSimilar(List<Track> q1, List<Track> q2) {
-  if (q1.isEmpty || q2.isEmpty) {
-    return 0.0;
+double checkIfQueuesSimilar(List<Track> q1, List<Track> q2, {bool fullyFunctional = false}) {
+  if (fullyFunctional) {
+    if (q1.isEmpty || q2.isEmpty) {
+      return 1.0;
+    }
+    final finallength = q1.length > q2.length ? q2.length : q1.length;
+    int trueconditions = 0;
+    for (int i = 0; i < finallength; i++) {
+      if (q1[i].path == q2[i].path) trueconditions++;
+    }
+    return trueconditions / finallength;
   }
-  final finallength = q1.length > q2.length ? q2.length : q1.length;
-  int trueconditions = 0;
-  for (int i = 0; i < finallength; i++) {
-    if (q1[i].path == q2[i].path) trueconditions++;
-  }
-  return trueconditions / finallength;
+  return q1.isEqualTo(q2) ? 1.0 : 0.0;
 }
 
 bool checkIfQueueSameAsCurrent(List<Track> queue) {
@@ -173,9 +174,12 @@ List<Track> getRandomTracks([int? min, int? max]) {
   }
   min ??= trackslistLength ~/ 12;
   max ??= trackslistLength ~/ 8;
-  final int randomNumber = min + Random().nextInt(max - min);
+
+  // number of resulting tracks.
+  final int randomNumber = (max - min).getRandomNumberBelow(min);
+
   for (int i = 0; i < randomNumber; i++) {
-    randomList.add(trackslist.toList()[Random().nextInt(trackslistLength)]);
+    randomList.add(trackslist.toList()[trackslistLength.getRandomNumberBelow()]);
   }
   return randomList;
 }

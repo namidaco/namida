@@ -359,16 +359,13 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   //   currentQueue.shuffle();
   //   currentIndex.value == currentQueue.indexOf(nowPlayingTrack.value);
   // }
+
   void removeDuplicatesFromQueue() {
-    final q = currentQueue.toSet().toList();
     final ct = nowPlayingTrack.value;
-    final diff = currentQueue.length - q.length;
-    q.remove(nowPlayingTrack.value);
-    q.insert((currentIndex.value - diff).clamp(0, currentQueue.length - diff), ct);
-    currentQueue.assignAll(q);
-    final index = currentQueue.indexOf(ct);
-    currentIndex.value = index;
-    CurrentColor.inst.updatePlayerColorFromTrack(ct, index);
+    currentQueue.removeDuplicates((element) => element.path);
+    final newIndex = currentQueue.indexOf(ct);
+    currentIndex.value = newIndex;
+    CurrentColor.inst.updatePlayerColorFromTrack(ct, newIndex);
   }
 
   void addToQueue(List<Track> tracks, {bool insertNext = false, bool insertAfterLatest = false}) {

@@ -65,7 +65,7 @@ class MultiArtworkCard extends StatelessWidget {
                         Hero(
                           tag: 'line2_$heroTag',
                           child: Text(
-                            [tracks.displayTrackKeyword, if (tracks.totalDuration != 0) tracks.totalDurationFormatted].join(' - '),
+                            [tracks.displayTrackKeyword, if (tracks.totalDurationInS != 0) tracks.totalDurationFormatted].join(' - '),
                             style: context.textTheme.displaySmall?.copyWith(
                               fontWeight: FontWeight.w500,
                               fontSize: fontSize * 0.85,

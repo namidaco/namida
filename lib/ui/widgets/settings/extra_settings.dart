@@ -401,7 +401,7 @@ class ExtrasSettings extends StatelessWidget {
                       const CancelButton(),
                       ElevatedButton(
                         onPressed: () {
-                          CurrentColor.inst.generatingAllColorPalettes.value = false;
+                          CurrentColor.inst.stopGeneratingColorPalettes();
                           NamidaNavigator.inst.closeDialog();
                         },
                         child: Text(Language.inst.STOP),

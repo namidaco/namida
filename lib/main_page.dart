@@ -36,7 +36,7 @@ class MainPageWrapper extends StatelessWidget {
     return Obx(
       () => AnimatedTheme(
         duration: const Duration(milliseconds: 500),
-        data: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme.value, !Get.isDarkMode),
+        data: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme.value, !context.isDarkMode),
         child: InnerDrawer(
           key: NamidaNavigator.inst.innerDrawerKey,
           onTapClose: true,

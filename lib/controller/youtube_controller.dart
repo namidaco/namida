@@ -1,14 +1,14 @@
 // ignore_for_file: depend_on_referenced_packages
 
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 import 'package:namida/class/video.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/extensions.dart';
 
 class YoutubeController {
   static YoutubeController get inst => _instance;
@@ -34,9 +34,10 @@ class YoutubeController {
     if (search == null) {
       return;
     }
-    for (final ch in search) {
+    await search.loopFuture((ch, index) async {
       searchChannels.add(await ytexp.channels.get(ch.channelId));
-    }
+    });
+
     searchChannels.refresh();
     ytexp.close();
   }
@@ -56,11 +57,12 @@ class YoutubeController {
     }
     final videometafile = File('$k_DIR_YT_METADATA$id.txt');
     YTLVideo? vid;
-    if (!forceReload && await videometafile.exists()) {
-      final contents = await videometafile.readAsString();
-      if (contents.isNotEmpty) {
-        currentYoutubeMetadata.value = YTLVideo.fromJson(jsonDecode(contents));
-        vid = YTLVideo.fromJson(jsonDecode(contents));
+    if (!forceReload && await videometafile.existsAndValid()) {
+      final jsonResponse = await videometafile.readAsJson();
+      if (jsonResponse != null) {
+        final ytl = YTLVideo.fromJson(jsonResponse);
+        currentYoutubeMetadata.value = ytl;
+        vid = ytl;
       }
     } else {
       final ytexp = YoutubeExplode(YoutubeHttpClient(NamidaClient()));
@@ -69,7 +71,7 @@ class YoutubeController {
       final ytlvideo = YTLVideo(video, channel);
       currentYoutubeMetadata.value = ytlvideo;
       final file = await videometafile.create();
-      await file.writeAsString(json.encode(ytlvideo.toJson()));
+      await file.writeAsJson(ytlvideo.toJson());
       vid = ytlvideo;
       ytexp.close();
     }
@@ -87,10 +89,10 @@ class YoutubeController {
     final finalcomm = _commentlistclient.value?.map((p0) => p0).toList() ?? <Comment>[];
 
     /// Comments from cache
-    if (!forceReload && await videocommentfile.exists()) {
-      final contents = await videocommentfile.readAsString();
-      if (contents.isNotEmpty) {
-        newcomm = NamidaCommentsList.fromJson(Map<String, dynamic>.from(jsonDecode(contents)));
+    if (!forceReload && await videocommentfile.existsAndValid()) {
+      final jsonResponse = await videocommentfile.readAsJson();
+      if (jsonResponse != null) {
+        newcomm = NamidaCommentsList.fromJson(jsonResponse);
       }
     }
 
@@ -107,16 +109,16 @@ class YoutubeController {
       if (_commentlistclient.value != null) {
         newcomm = NamidaCommentsList(finalcomm, _commentlistclient.value?.totalLength ?? 0);
         final file = await videocommentfile.create();
-        await file.writeAsString(json.encode(newcomm.toJson()));
+        await file.writeAsJson(newcomm.toJson());
       }
     }
     if (newcomm != null) {
       comments.value = newcomm;
 
       /// Comments Channels
-      for (final ch in comments.value!.comments) {
+      await comments.value!.comments.loopFuture((ch, index) async {
         commentsChannels.add(await ytexp.channels.get(ch.channelId));
-      }
+      });
     }
     ytexp.close();
   }

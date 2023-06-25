@@ -96,6 +96,7 @@ class ThemeSetting extends StatelessWidget {
   void _updateColor(Color color) {
     SettingsController.inst.save(staticColor: color.value);
     CurrentColor.inst.updatePlayerColorFromColor(color, false);
+    CurrentColor.inst.updateThemeAndRefresh();
   }
 }
 

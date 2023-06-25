@@ -76,9 +76,8 @@ class AdvancedSettings extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () async {
                         final lengthBefore = namidaHistoryPlaylist.tracks.length;
-                        for (final s in sourcesToDelete) {
-                          await PlaylistController.inst.removeSourceTracksFromHistory(s);
-                        }
+                        await sourcesToDelete.loopFuture((s, index) async => await PlaylistController.inst.removeSourceTracksFromHistory(s));
+
                         final lengthAfter = namidaHistoryPlaylist.tracks.length;
                         final removedNum = lengthBefore - lengthAfter;
                         Get.snackbar(Language.inst.NOTE, "${Language.inst.REMOVED} ${removedNum.displayTrackKeyword}");

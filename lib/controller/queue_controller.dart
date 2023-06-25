@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:get/get.dart';
@@ -90,33 +89,22 @@ class QueueController {
     await for (final p in Directory(k_DIR_QUEUES).list()) {
       // prevents freezing the ui. cheap alternative for Isolate/compute.
       await Future.delayed(Duration.zero);
-      try {
-        final string = await File(p.path).readAsString();
-        if (string.isNotEmpty) {
-          final content = jsonDecode(string) as Map<String, dynamic>;
-          queueList.add(Queue.fromJson(content));
-        }
-      } catch (e) {
-        printError(info: e.toString());
-      }
 
-      /// Sorting accensingly by date since [await for] doesnt maintain order
+      await File(p.path).readAsJsonAnd((response) async {
+        queueList.add(Queue.fromJson(response));
+      });
+
+      /// Sorting accensingly by date since [Directory().list()] doesnt maintain order
       queueList.sort((a, b) => a.date.compareTo(b.date));
     }
   }
 
   ///
   Future<void> prepareLatestQueueFile() async {
-    try {
-      final file = await File(k_FILE_PATH_LATEST_QUEUE).create();
-      final String content = await file.readAsString();
-      if (content.isNotEmpty) {
-        final lq = Queue.fromJson(jsonDecode(content) as Map<String, dynamic>);
-        latestQueue.assignAll(lq.tracks);
-      }
-    } catch (e) {
-      printError(info: e.toString());
-    }
+    await File(k_FILE_PATH_LATEST_QUEUE).readAsJsonAnd((response) async {
+      final lq = Queue.fromJson(response);
+      latestQueue.assignAll(lq.tracks);
+    });
   }
 
   /// Assigns the last queue to the [Player]
@@ -138,11 +126,11 @@ class QueueController {
   }
 
   Future<void> _saveQueueToStorage(Queue queue) async {
-    await File('$k_DIR_QUEUES${queue.date}.json').writeAsString(jsonEncode(queue.toJson()));
+    await File('$k_DIR_QUEUES${queue.date}.json').writeAsJson(queue.toJson());
   }
 
   Future<void> _saveLatestQueueToStorage(Queue queue) async {
-    await File(k_FILE_PATH_LATEST_QUEUE).writeAsString(jsonEncode(queue.toJson()));
+    await File(k_FILE_PATH_LATEST_QUEUE).writeAsJson(queue.toJson());
   }
 
   Future<void> _deleteQueueFromStorage(Queue queue) async {

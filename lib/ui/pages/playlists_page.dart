@@ -29,18 +29,17 @@ class PlaylistsPage extends StatelessWidget {
   final List<Track>? tracksToAdd;
   final bool displayTopRow;
   final bool disableBottomPadding;
-  final int? gridCountOverride;
+  final int countPerRow;
 
   const PlaylistsPage({
     super.key,
     this.tracksToAdd,
     this.displayTopRow = true,
     this.disableBottomPadding = false,
-    this.gridCountOverride,
+    required this.countPerRow,
   });
 
   ScrollController get _scrollController => LibraryTab.playlists.scrollController;
-  int get countPerRow => gridCountOverride ?? SettingsController.inst.playlistGridCount.value;
 
   @override
   Widget build(BuildContext context) {

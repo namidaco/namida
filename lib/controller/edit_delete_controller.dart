@@ -18,13 +18,13 @@ class EditDeleteController {
   EditDeleteController._internal();
 
   Future<void> deleteCachedVideos(List<Track> tracks) async {
-    final idsToDelete = tracks.map((e) => e.youtubeID);
+    final idsToDelete = tracks.map((e) => e.youtubeID).toList();
     await for (final v in Directory(k_DIR_VIDEOS_CACHE).list()) {
-      for (final id in idsToDelete) {
+      await idsToDelete.loopFuture((id, index) async {
         if (v.path.getFilename.startsWith(id)) {
           await v.delete();
         }
-      }
+      });
     }
 
     VideoController.inst.resetEverything();
@@ -32,60 +32,67 @@ class EditDeleteController {
   }
 
   Future<void> deleteWaveFormData(List<Track> tracks) async {
-    for (final track in tracks) {
+    await tracks.loopFuture((track, index) async {
       await File("$k_DIR_WAVEFORMS${track.filename}.wave").delete();
-    }
+    });
   }
 
   Future<void> deleteLyrics(List<Track> tracks) async {
-    for (final track in tracks) {
+    await tracks.loopFuture((track, index) async {
       await File("$k_DIR_LYRICS${track.filename}.txt").delete();
-    }
+    });
   }
 
   Future<void> deleteArtwork(List<Track> tracks) async {
-    for (final track in tracks) {
+    await tracks.loopFuture((track, index) async {
       await File("$k_DIR_ARTWORKS${track.filename}.png").delete();
-    }
+    });
+
     await deleteExtractedColor(tracks);
   }
 
   Future<void> deleteExtractedColor(List<Track> tracks) async {
-    for (final track in tracks) {
+    await tracks.loopFuture((track, index) async {
       await File("$k_DIR_PALETTES${track.filename}.palette").delete();
-    }
+    });
   }
 
-  /// returns true if saved successfully
-  Future<bool> saveArtworkToStorage(Track track) async {
+  /// returns save directory path if saved successfully
+  Future<String?> saveArtworkToStorage(Track track) async {
     if (!await requestManageStoragePermission()) {
-      return false;
+      return null;
     }
-    final newPath = "${SettingsController.inst.defaultBackupLocation.value}${Platform.pathSeparator}${track.filenameWOExt}.png";
+    final saveDirPath = SettingsController.inst.defaultBackupLocation.value;
+    final newPath = "$saveDirPath${Platform.pathSeparator}${track.filenameWOExt}.png";
     final imgFile = File(track.pathToImage);
+
     try {
+      // try coping
       await imgFile.copy(newPath);
-      return true;
+      return saveDirPath;
     } catch (e) {
       imgFile.tryDeleting();
 
+      // try extracting artwork
       try {
         final img = await Indexer.inst.extractOneArtwork(track.path);
         if (img != null) {
           final newImgFile = await File(newPath).create();
           await newImgFile.writeAsBytes(img);
-          return true;
+          return saveDirPath;
         }
       } catch (e) {
-        return false;
+        return null;
       }
     }
-    return false;
+    return null;
   }
 
+  /// TODO: refactor after implementing new Track class
   Future<void> updateTrackPathInEveryPartOfNamida(Track oldTrack, String newPath) async {
-    final newtr = await Indexer.inst.convertPathToTrack(newPath);
-    if (newtr == null) return;
+    final newtrlist = await Indexer.inst.convertPathToTrack([newPath]);
+    if (newtrlist.isEmpty) return;
+    final newtr = newtrlist.first;
     // void loopPlaylists(List<Playlist> playlists) {
     //   for (final pl in playlists) {
     //     for (final tr in pl.tracks) {

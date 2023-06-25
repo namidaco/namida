@@ -46,74 +46,55 @@ class JsonToHistoryParser {
     );
   }
 
-  Future<dynamic> readJSONFile(String path) async {
-    final file = File(path);
-    if (await file.exists()) {
-      final contents = await file.readAsString();
-      if (contents.isNotEmpty) {
-        final jsonResponse = jsonDecode(contents);
-        return jsonResponse;
-      }
-    }
-
-    return null;
-  }
-
   Future<void> _parseYTHistoryJsonAndAdd(File file, bool isMatchingTypeLink, bool matchYT, bool matchYTMusic) async {
     _resetValues();
     isParsing.value = true;
     isLoadingFile.value = true;
     await Future.delayed(const Duration(milliseconds: 300));
-    try {
-      final String contents = await file.readAsString();
-      if (contents.isNotEmpty) {
-        final jsonResponse = jsonDecode(contents) as List;
-        totalJsonToParse.value = jsonResponse.length;
+    await file.readAsJsonAndLoop(
+      (p, index) async {
+        final link = utf8.decode((p['titleUrl']).toString().codeUnits);
+        final id = link.length >= 11 ? link.substring(link.length - 11) : link;
+        final z = List<Map<String, dynamic>>.from((p['subtitles'] ?? []));
+
+        /// matching in real time, each object.
+        await Future.delayed(Duration.zero);
+        final yth = YoutubeVideoHistory(
+          id,
+          (p['title'] as String).replaceFirst('Watched ', ''),
+          z.isNotEmpty ? z.first['name'] : '',
+          z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
+          [YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music")],
+        );
+        _matchYTVHToNamidaHistory(yth, isMatchingTypeLink, matchYT, matchYTMusic);
+
+        /// extracting and saving to [k_DIR_YOUTUBE_STATS] directory.
+        ///  [_addYoutubeSourceFromDirectory] should be called after this.
+
+        // final file = File('$k_DIR_YOUTUBE_STATS$id.txt');
+        // final string = await file.exists() ? await File('$k_DIR_YOUTUBE_STATS$id.txt').readAsString() : '';
+        // YoutubeVideoHistory? obj = string.isEmpty ? null : YoutubeVideoHistory.fromJson(jsonDecode(string));
+
+        // if (obj == null) {
+        //   obj = YoutubeVideoHistory(
+        //     id,
+        //     (p['title'] as String).replaceFirst('Watched ', ''),
+        //     z.isNotEmpty ? z.first['name'] : '',
+        //     z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
+        //     [YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music")],
+        //   );
+        // } else {
+        //   obj.watches.add(YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music"));
+        // }
+        // await File('$k_DIR_YOUTUBE_STATS$id.txt').writeAsJson(obj);
+
+        parsedHistoryJson.value++;
+      },
+      onListReady: (response) {
+        totalJsonToParse.value = response.length;
         isLoadingFile.value = false;
-
-        for (final p in jsonResponse) {
-          final link = utf8.decode((p['titleUrl']).toString().codeUnits);
-          final id = link.length >= 11 ? link.substring(link.length - 11) : link;
-          final z = List<Map<String, dynamic>>.from((p['subtitles'] ?? []));
-
-          /// matching in real time, each object.
-          await Future.delayed(Duration.zero);
-          final yth = YoutubeVideoHistory(
-            id,
-            (p['title'] as String).replaceFirst('Watched ', ''),
-            z.isNotEmpty ? z.first['name'] : '',
-            z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
-            [YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music")],
-          );
-          _matchYTVHToNamidaHistory(yth, isMatchingTypeLink, matchYT, matchYTMusic);
-
-          /// extracting and saving to [k_DIR_YOUTUBE_STATS] directory.
-          ///  [_addYoutubeSourceFromDirectory] should be called after this.
-
-          // final file = File('$k_DIR_YOUTUBE_STATS$id.txt');
-          // final string = await file.exists() ? await File('$k_DIR_YOUTUBE_STATS$id.txt').readAsString() : '';
-          // YoutubeVideoHistory? obj = string.isEmpty ? null : YoutubeVideoHistory.fromJson(jsonDecode(string));
-
-          // if (obj == null) {
-          //   obj = YoutubeVideoHistory(
-          //     id,
-          //     (p['title'] as String).replaceFirst('Watched ', ''),
-          //     z.isNotEmpty ? z.first['name'] : '',
-          //     z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
-          //     [YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music")],
-          //   );
-          // } else {
-          //   obj.watches.add(YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music"));
-          // }
-          // await File('$k_DIR_YOUTUBE_STATS$id.txt').writeAsString(jsonEncode(obj));
-
-          parsedHistoryJson.value++;
-        }
-      }
-    } catch (e) {
-      printError(info: e.toString());
-      Get.snackbar(Language.inst.ERROR, Language.inst.CORRUPTED_FILE);
-    }
+      },
+    );
 
     isParsing.value = false;
   }
@@ -160,7 +141,7 @@ class JsonToHistoryParser {
 
     /// Adding tracks that their link matches.
     await for (final f in Directory(k_DIR_YOUTUBE_STATS).list()) {
-      final p = jsonDecode(await File(f.path).readAsString());
+      final p = await File(f.path).readAsJson();
       final vh = YoutubeVideoHistory.fromJson(p);
       _matchYTVHToNamidaHistory(vh, isMatchingTypeLink, matchYT, matchYTMusic);
       parsedHistoryJson.value++;
@@ -186,7 +167,9 @@ class JsonToHistoryParser {
                   vh.channel.cleanUpForComparison.contains(element.artistsList.first.cleanUpForComparison));
     });
     if (tr != null) {
-      for (final d in vh.watches) {
+      for (int i = 0; i < vh.watches.length; i++) {
+        final d = vh.watches[i];
+
         /// sussy checks
         // if the type is youtube music, but the user dont want ytm.
         if (d.isYTMusic && !matchYTMusic) continue;

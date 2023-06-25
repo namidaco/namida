@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -90,9 +89,7 @@ class VideoController {
     final file = File("$k_DIR_VIDEOS_CACHE_TEMP${videoId}_${streamToBeUsed.videoQualityLabel}.mp4");
 
     /// deletes file if it exists, fixes write issues/corrupted video
-    if (await file.exists()) {
-      await file.delete();
-    }
+    await file.deleteIfExists();
 
     /// Open a file for writing.
     final fileStream = file.openWrite();
@@ -146,7 +143,8 @@ class VideoController {
     }
 
     /// Video Found in Local Storage
-    for (final vf in videoFilesPathList) {
+    await videoFilesPathList.loopFuture((vf, index) async {
+      track as Track;
       final videoName = vf.getFilenameWOExt;
       final videoNameContainsMusicFileName = checkFileNameAudioVideo(videoName, track.filenameWOExt);
       final videoContainsTitle = videoName.contains(track.title.cleanUpForComparison);
@@ -161,7 +159,7 @@ class VideoController {
         printInfo(info: 'RETURNED AFTER LOCAL');
         return;
       }
-    }
+    });
 
     if (youtubeVideoId.isEmpty) {
       return;
@@ -239,13 +237,11 @@ class VideoController {
   Future<Set<String>> getVideoFiles({bool forceRescan = false}) async {
     isUpdatingVideoFiles.value = true;
     final videoFile = File(k_FILE_PATH_VIDEO_PATHS);
-    final videoFileStats = await videoFile.stat();
-    final shouldReadFile = !forceRescan && await videoFile.exists() && videoFileStats.size != 0;
+    final shouldReadFile = !forceRescan && await videoFile.existsAndValid();
 
     if (shouldReadFile) {
       try {
-        final content = await videoFile.readAsString();
-        final txt = List<String>.from(json.decode(content));
+        final txt = List<String>.from(await videoFile.readAsJson());
         videoFilesPathList.assignAll(txt);
       } catch (e) {
         printInfo(info: e.toString());

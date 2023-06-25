@@ -99,11 +99,12 @@ Future<void> showEditTrackTagsDialog(Track track) async {
             icon: Broken.edit_2,
             onPressed: () {
               final subList = <TagField>[].obs;
-              for (final element in TagField.values) {
-                if (!SettingsController.inst.tagFieldsToEdit.contains(element)) {
-                  subList.add(element);
+              SettingsController.inst.tagFieldsToEdit.loop((e, index) {
+                if (!SettingsController.inst.tagFieldsToEdit.contains(e)) {
+                  subList.add(e);
                 }
-              }
+              });
+
               NamidaNavigator.inst.navigateDialog(
                 Transform.scale(
                   scale: 0.94,
@@ -244,11 +245,11 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                     /// this prevents crash resulted from assigning empty string to int.
                     /// TODO(MSOB7YY): fix, if the value is 0, it doesnt get updated
                     void fixEmptyInts(List<TagField> fields) {
-                      for (final field in fields) {
+                      fields.loop((field, index) {
                         if (editedTags[field] != null && editedTags[field] == '') {
                           editedTags[field] = 0;
                         }
-                      }
+                      });
                     }
 
                     fixEmptyInts([
@@ -493,9 +494,9 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
   ];
 
   /// creating controllers
-  for (final at in availableTagsToEdit) {
+  availableTagsToEdit.loop((at, index) {
     tagsControllers[at] = TextEditingController();
-  }
+  });
   Widget getTagTextField(TagField tag) {
     return CustomTagTextField(
       controller: tagsControllers[tag]!,
@@ -583,11 +584,11 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                         /// this prevents crash resulted from assigning empty string to int.
                         /// TODO(MSOB7YY): fix, if the value is 0, it doesnt get updated
                         void fixEmptyInts(List<TagField> fields) {
-                          for (final field in fields) {
+                          fields.loop((field, index) {
                             if (editedTags[field] != null && editedTags[field] == '') {
                               editedTags[field] = 0;
                             }
-                          }
+                          });
                         }
 
                         fixEmptyInts([
@@ -626,7 +627,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                             ),
                           ),
                         );
-                        for (final tr in tracks) {
+                        await tracks.loopFuture((tr, index) async {
                           final didUpdate = await editTrackMetadata(
                             tr,
                             tags: {
@@ -649,15 +650,15 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                           } else {
                             failedEdits.value++;
                           }
-                        }
+                        });
+
                         updatingLibrary.value = '...';
                         if (failedEdits > 0) {
                           Get.snackbar('${Language.inst.METADATA_EDIT_FAILED} ($failedEdits)', Language.inst.METADATA_EDIT_FAILED_SUBTITLE);
                         }
                         await Indexer.inst.updateTracks(tracks, updateArtwork: currentImagePath.value != '');
-                        for (final t in tracks) {
-                          await EditDeleteController.inst.updateTrackPathInEveryPartOfNamida(t, t.path);
-                        }
+                        // TODO: might need [EditDeleteController.inst.updateTrackPathInEveryPartOfNamida()] ?
+
                         updatingLibrary.value = '✓';
                         finishedEditing.value = true;
                       },
@@ -821,7 +822,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                       () => Text(
                         [
                           tracks.displayTrackKeyword,
-                          tracks.map((e) => e.size).reduce((a, b) => a + b).fileSizeFormatted,
+                          tracks.totalSizeFormatted,
                           tracks.totalDurationFormatted,
                         ].join(' • '),
                         style: Get.textTheme.displaySmall,

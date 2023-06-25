@@ -98,12 +98,12 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                           tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
                                           child: GestureDetector(
                                             onLongPress: () async {
-                                              final didSave = await EditDeleteController.inst.saveArtworkToStorage(track);
+                                              final saveDirPath = await EditDeleteController.inst.saveArtworkToStorage(track);
                                               String title = Language.inst.COPIED_ARTWORK;
-                                              String subtitle = '${Language.inst.SAVED_IN} ${SettingsController.inst.defaultBackupLocation.value}';
+                                              String subtitle = '${Language.inst.SAVED_IN} $saveDirPath';
                                               Color snackColor = CurrentColor.inst.color.value;
 
-                                              if (!didSave) {
+                                              if (saveDirPath == null) {
                                                 title = Language.inst.ERROR;
                                                 subtitle = Language.inst.COULDNT_SAVE_IMAGE;
                                                 snackColor = Colors.red;

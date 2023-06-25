@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -155,11 +154,8 @@ class SettingsController {
   Future<void> prepareSettingsFile() async {
     final file = await File(k_FILE_PATH_SETTINGS).create(recursive: true);
     try {
-      final String contents = await file.readAsString();
-      if (contents.isEmpty) {
-        return;
-      }
-      final json = jsonDecode(contents);
+      final json = await file.readAsJson();
+      if (json == null) return;
 
       /// Assigning Values
       themeMode.value = ThemeMode.values.getEnum(json['themeMode']) ?? themeMode.value;
@@ -387,7 +383,7 @@ class SettingsController {
       'displayFavouriteIconInListTile': displayFavouriteIconInListTile.value,
       'trackItem': trackItem.value.toJson(),
     };
-    await file.writeAsString(json.encode(res));
+    await file.writeAsJson(res);
 
     debugPrint("Setting File Write");
 
@@ -516,11 +512,11 @@ class SettingsController {
       this.autoLibraryTab.value = autoLibraryTab;
     }
     if (libraryTabs != null) {
-      for (final t in libraryTabs) {
+      libraryTabs.loop((t, index) {
         if (!this.libraryTabs.contains(t)) {
           this.libraryTabs.add(t);
         }
-      }
+      });
     }
 
     if (searchResultsPlayMode != null) {
@@ -654,32 +650,32 @@ class SettingsController {
       this.indexMinFileSizeInB.value = indexMinFileSizeInB;
     }
     if (trackSearchFilter != null) {
-      for (final f in trackSearchFilter) {
+      trackSearchFilter.loop((f, index) {
         if (!this.trackSearchFilter.contains(f)) {
           this.trackSearchFilter.add(f);
         }
-      }
+      });
     }
     if (playlistSearchFilter != null) {
-      for (final f in playlistSearchFilter) {
+      playlistSearchFilter.loop((f, index) {
         if (!this.playlistSearchFilter.contains(f)) {
           this.playlistSearchFilter.add(f);
         }
-      }
+      });
     }
     if (directoriesToScan != null) {
-      for (final d in directoriesToScan) {
+      directoriesToScan.loop((d, index) {
         if (!this.directoriesToScan.contains(d)) {
           this.directoriesToScan.add(d);
         }
-      }
+      });
     }
     if (directoriesToExclude != null) {
-      for (final d in directoriesToExclude) {
+      directoriesToExclude.loop((d, index) {
         if (!this.directoriesToExclude.contains(d)) {
           this.directoriesToExclude.add(d);
         }
-      }
+      });
     }
     if (preventDuplicatedTracks != null) {
       this.preventDuplicatedTracks.value = preventDuplicatedTracks;
@@ -697,18 +693,18 @@ class SettingsController {
       this.enableFoldersHierarchy.value = enableFoldersHierarchy;
     }
     if (backupItemslist != null) {
-      for (final d in backupItemslist) {
+      backupItemslist.loop((d, index) {
         if (!this.backupItemslist.contains(d)) {
           this.backupItemslist.add(d);
         }
-      }
+      });
     }
     if (youtubeVideoQualities != null) {
-      for (final q in youtubeVideoQualities) {
+      youtubeVideoQualities.loop((q, index) {
         if (!this.youtubeVideoQualities.contains(q)) {
           this.youtubeVideoQualities.add(q);
         }
-      }
+      });
     }
     if (enableVideoPlayback != null) {
       this.enableVideoPlayback.value = enableVideoPlayback;
@@ -795,11 +791,11 @@ class SettingsController {
       this.extractFeatArtistFromTitle.value = extractFeatArtistFromTitle;
     }
     if (tagFieldsToEdit != null) {
-      for (final d in tagFieldsToEdit) {
+      tagFieldsToEdit.loop((d, index) {
         if (!this.tagFieldsToEdit.contains(d)) {
           this.tagFieldsToEdit.add(d);
         }
-      }
+      });
     }
     if (wakelockMode != null) {
       this.wakelockMode.value = wakelockMode;
@@ -872,81 +868,81 @@ class SettingsController {
       trackSearchFilter.remove(trackSearchFilter1);
     }
     if (trackSearchFilterAll != null) {
-      for (final f in trackSearchFilterAll) {
+      trackSearchFilterAll.loop((f, index) {
         if (trackSearchFilter.contains(f)) {
           trackSearchFilter.remove(f);
         }
-      }
+      });
     }
     if (playlistSearchFilter1 != null) {
       playlistSearchFilter.remove(playlistSearchFilter1);
     }
     if (playlistSearchFilterAll != null) {
-      for (final f in playlistSearchFilterAll) {
+      playlistSearchFilterAll.loop((f, index) {
         if (playlistSearchFilter.contains(f)) {
           playlistSearchFilter.remove(f);
         }
-      }
+      });
     }
     if (directoriesToScan1 != null) {
       directoriesToScan.remove(directoriesToScan1);
     }
     if (directoriesToScanAll != null) {
-      for (final f in directoriesToScanAll) {
+      directoriesToScanAll.loop((f, index) {
         if (directoriesToScan.contains(f)) {
           directoriesToScan.remove(f);
         }
-      }
+      });
     }
     if (directoriesToExclude1 != null) {
       directoriesToExclude.remove(directoriesToExclude1);
     }
     if (directoriesToExcludeAll != null) {
-      for (final f in directoriesToExcludeAll) {
+      directoriesToExcludeAll.loop((f, index) {
         if (directoriesToExclude.contains(f)) {
           directoriesToExclude.remove(f);
         }
-      }
+      });
     }
     if (libraryTab1 != null) {
       libraryTabs.remove(libraryTab1);
     }
     if (libraryTabsAll != null) {
-      for (final t in libraryTabsAll) {
+      libraryTabsAll.loop((t, index) {
         if (libraryTabs.contains(t)) {
           libraryTabs.remove(t);
         }
-      }
+      });
     }
     if (backupItemslist1 != null) {
       backupItemslist.remove(backupItemslist1);
     }
     if (backupItemslistAll != null) {
-      for (final t in backupItemslistAll) {
+      backupItemslistAll.loop((t, index) {
         if (backupItemslist.contains(t)) {
           backupItemslist.remove(t);
         }
-      }
+      });
     }
     if (youtubeVideoQualities1 != null) {
       youtubeVideoQualities.remove(youtubeVideoQualities1);
     }
     if (youtubeVideoQualitiesAll != null) {
-      for (final t in youtubeVideoQualitiesAll) {
+      youtubeVideoQualitiesAll.loop((t, index) {
         if (youtubeVideoQualities.contains(t)) {
           youtubeVideoQualities.remove(t);
         }
-      }
+      });
     }
     if (tagFieldsToEdit1 != null) {
       tagFieldsToEdit.remove(tagFieldsToEdit1);
     }
     if (tagFieldsToEditAll != null) {
-      for (final t in tagFieldsToEditAll) {
+      tagFieldsToEditAll.loop((t, index) {
         if (tagFieldsToEdit.contains(t)) {
           tagFieldsToEdit.remove(t);
         }
-      }
+      });
     }
     _writeToStorage();
   }

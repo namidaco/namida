@@ -123,7 +123,7 @@ class FolderTile extends StatelessWidget {
                         tracks.totalDurationFormatted,
                       ].join(' • '),
                       QueueSource.folder,
-                      thirdLineText: tracks.map((e) => e.size).reduce((a, b) => a + b).fileSizeFormatted,
+                      thirdLineText: tracks.totalSizeFormatted,
                     );
                   },
                 ),

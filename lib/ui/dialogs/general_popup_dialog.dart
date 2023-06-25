@@ -60,10 +60,10 @@ Future<void> showGeneralPopupDialog(
   String? heroTag,
 }) async {
   final tracksExisting = <Track>[];
-  for (final t in tracks) {
+  tracks.loop((t, index) {
     final existingTrack = t.path.toTrackOrNull();
     if (existingTrack != null) tracksExisting.add(existingTrack);
-  }
+  });
 
   forceSingleArtwork ??= tracks.length == 1;
   final isSingle = tracks.length == 1;
@@ -129,12 +129,12 @@ Future<void> showGeneralPopupDialog(
             onPressed: () async {
               List<String> moodsPre = controller.text.split(',');
               List<String> moodsFinal = [];
-              for (final m in moodsPre) {
-                if (m.contains(',') || m == ' ' || m.isEmpty) {
-                  continue;
+              moodsPre.loop((m, index) {
+                if (!m.contains(',') && m != ' ' && m.isNotEmpty) {
+                  moodsFinal.add(m.trim());
                 }
-                moodsFinal.add(m.trim());
-              }
+              });
+
               saveFunction(moodsFinal.toSet().toList());
 
               NamidaNavigator.inst.closeDialog();

@@ -20,11 +20,11 @@ import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class AlbumsPage extends StatelessWidget {
   final List<String>? albums;
-  final int? gridCountOverride;
-  const AlbumsPage({super.key, this.albums, this.gridCountOverride});
+  final int countPerRow;
+
+  const AlbumsPage({super.key, this.albums, required this.countPerRow});
 
   ScrollController get _scrollController => LibraryTab.albums.scrollController;
-  int get countPerRow => gridCountOverride ?? SettingsController.inst.albumGridCount.value;
 
   @override
   Widget build(BuildContext context) {
