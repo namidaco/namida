@@ -437,29 +437,31 @@ extension FileUtils<R> on File {
     return false;
   }
 
-  /// TODO: use
-  Future<dynamic> readAsJson() async {
+  /// Returns [response] if executed successfully.
+  ///
+  /// Otherwise, executes [onError] and returns [null].
+  ///
+  /// has a built in try-catch.
+  Future<dynamic> readAsJson({void Function()? onError}) async {
     try {
       final content = await readAsString();
       if (content.isEmpty) return null;
       return jsonDecode(content);
     } catch (e) {
       debugPrint(e.toString());
+      if (onError != null) onError();
       return null;
     }
   }
 
   /// Returns [true] if executed successfully.
-  /// <br>
+  ///
   /// Otherwise, executes [onError] and returns [false].
-  /// <br>
+  ///
   /// has a built in try-catch.
   Future<bool> readAsJsonAnd(Future<void> Function(R response) execute, {void Function()? onError}) async {
-    final respone = await readAsJson();
-    if (respone == null) {
-      if (onError != null) onError();
-      return false;
-    }
+    final respone = await readAsJson(onError: onError);
+    if (respone == null) return false;
 
     try {
       await execute(respone);

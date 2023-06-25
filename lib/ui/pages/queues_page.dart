@@ -11,20 +11,24 @@ class QueuesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () => NamidaListView(
-        itemBuilder: (context, i) {
-          final q = QueueController.inst.queueList.toList()[QueueController.inst.queueList.length - i - 1];
-          return AnimatingTile(
-            key: ValueKey(i),
-            position: i,
-            child: QueueTile(
-              queue: q,
-            ),
-          );
-        },
-        itemCount: QueueController.inst.queueList.length,
-        itemExtents: QueueController.inst.queueList.map((element) => 68.0 + 18.0).toList(),
-      ),
+      () {
+        final queuesKeys = QueueController.inst.queuesMap.value.keys.toList();
+        final queuesLength = QueueController.inst.queuesMap.value.length;
+        return NamidaListView(
+          itemBuilder: (context, i) {
+            final q = QueueController.inst.queuesMap.value[queuesKeys[i]]!;
+            return AnimatingTile(
+              key: ValueKey(i),
+              position: i,
+              child: QueueTile(
+                queue: q,
+              ),
+            );
+          },
+          itemCount: queuesLength,
+          itemExtents: List.generate(queuesLength, (index) => 68.0 + 18.0),
+        );
+      },
     );
   }
 }

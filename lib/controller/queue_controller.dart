@@ -1,5 +1,7 @@
+import 'dart:collection';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/queue.dart';
@@ -17,8 +19,8 @@ class QueueController {
   static final QueueController _instance = QueueController._internal();
   QueueController._internal();
 
-  final RxList<Queue> queueList = <Queue>[].obs;
-  final RxList<Track> latestQueue = <Track>[].obs;
+  final Rx<SplayTreeMap<int, Queue>> queuesMap = SplayTreeMap<int, Queue>((date1, date2) => date2.compareTo(date1)).obs;
+  final List<Track> latestQueue = <Track>[];
 
   /// doesnt save queues with more than 2000 tracks.
   void addNewQueue(
@@ -28,30 +30,37 @@ class QueueController {
   }) async {
     /// if there are more than 2000 tracks.
     if (tracks.length > 2000) {
-      printInfo(info: "UWAH QUEUE DEKKA");
+      debugPrint("UWAH QUEUE DEKKA");
       return;
     }
 
     /// if the queue is the same, it will skip instead of saving the same queue.
     if (checkIfQueueSameAsCurrent(tracks)) {
-      printInfo(info: "Didnt Save Queue: Similar as Current");
+      debugPrint("Didnt Save Queue: Similar as Current");
       return;
     }
     printInfo(info: "Added New Queue");
     date ??= DateTime.now().millisecondsSinceEpoch;
     final q = Queue(source.toText(), date, false, tracks);
-    queueList.add(q);
+    _updateMap(q);
     await _saveQueueToStorage(q);
   }
 
   void removeQueue(Queue queue) async {
-    queueList.remove(queue);
+    queuesMap.value.remove(queue.date);
+    queuesMap.refresh();
     await _deleteQueueFromStorage(queue);
   }
 
-  void insertQueue(Queue queue, int index) async {
-    queueList.insertSafe(index, queue);
+  void reAddQueue(Queue queue) async {
+    _updateMap(queue);
     await _saveQueueToStorage(queue);
+  }
+
+  void _updateMap(Queue queue, [int? date]) {
+    date ??= queue.date;
+    queuesMap.value[date] = queue;
+    queuesMap.refresh();
   }
 
   // void removeQueues(List<Queue> queues) async {
@@ -59,18 +68,23 @@ class QueueController {
   // }
 
   void updateQueue(Queue oldQueue, Queue newQueue) async {
-    final plIndex = queueList.indexOf(oldQueue);
-    queueList.remove(oldQueue);
-    queueList.insertSafe(plIndex, newQueue);
-
+    _updateMap(newQueue, oldQueue.date);
     await _saveQueueToStorage(newQueue);
   }
 
   void updateLatestQueue(List<Track> tracks) async {
-    latestQueue.assignAll(tracks);
-    if (queueList.isNotEmpty) {
-      queueList.last.tracks.assignAll(tracks);
-      await _saveLatestQueueToStorage(queueList.last);
+    // updating current last queue.
+    latestQueue
+      ..clear()
+      ..addAll(tracks);
+
+    // updating last queue inside queuesMap.
+    final latestQueueInsideMap = queuesMap.value[queuesMap.value.keys.lastOrNull];
+    if (latestQueueInsideMap != null) {
+      latestQueueInsideMap.tracks
+        ..clear
+        ..addAll(tracks);
+      await _saveLatestQueueToStorage(latestQueueInsideMap);
     }
   }
 
@@ -91,11 +105,9 @@ class QueueController {
       await Future.delayed(Duration.zero);
 
       await File(p.path).readAsJsonAnd((response) async {
-        queueList.add(Queue.fromJson(response));
+        final q = Queue.fromJson(response);
+        _updateMap(q);
       });
-
-      /// Sorting accensingly by date since [Directory().list()] doesnt maintain order
-      queueList.sort((a, b) => a.date.compareTo(b.date));
     }
   }
 
@@ -113,8 +125,9 @@ class QueueController {
       return;
     }
     final latestTrack = SettingsController.inst.lastPlayedTrackPath.value.toTrackOrNull();
-    final ind = latestQueue.indexOf(latestTrack);
     if (latestTrack == null) return;
+
+    final ind = latestQueue.indexOf(latestTrack);
 
     await Player.inst.playOrPause(
       ind == -1 ? 0 : ind,

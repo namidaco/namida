@@ -287,7 +287,6 @@ class PlaybackSettings extends StatelessWidget {
             itemSize: 2,
             squeeze: 0.4,
             onValueChanged: (val) {
-              // TODO: prevent lots of rebuilds
               final v = (val * 50 + 100) as int;
               SettingsController.inst.save(playerPlayFadeDurInMilli: v);
             },

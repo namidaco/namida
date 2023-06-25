@@ -106,7 +106,7 @@ class EditDeleteController {
     // }
 
     void loopQueues() {
-      for (final queue in QueueController.inst.queueList.toList()) {
+      for (final queue in QueueController.inst.queuesMap.value.values) {
         for (final tr in queue.tracks) {
           if (tr.path == oldTrack.path) {
             final index = queue.tracks.indexOf(tr);

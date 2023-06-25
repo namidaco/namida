@@ -730,7 +730,7 @@ extension WidgetsPages on Widget {
       return Text((this as SettingsSubPage).title);
     }
     if (this is QueuesPage) {
-      return Obx(() => Text("${Language.inst.QUEUES} • ${QueueController.inst.queueList.length}"));
+      return Obx(() => Text("${Language.inst.QUEUES} • ${QueueController.inst.queuesMap.value.length}"));
     }
     if (this is AlbumSearchResultsPage) {
       return Text(Language.inst.ALBUMS);

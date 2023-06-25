@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -17,7 +18,6 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
-import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -502,6 +502,7 @@ Future<void> showGeneralPopupDialog(
           },
         )
       : null;
+
   final Widget? playlistUtilsRow = (playlist != null && !isTrackInPlaylist && !playlist.isOneOfTheMainPlaylists)
       ? SizedBox(
           height: 48.0,
@@ -518,6 +519,31 @@ Future<void> showGeneralPopupDialog(
           ),
         )
       : null;
+  final Widget? removeQueueTile = queue != null
+      ? SmallListTile(
+          color: colorDelightened,
+          compact: false,
+          title: Language.inst.REMOVE_QUEUE,
+          icon: Broken.pen_remove,
+          onTap: () {
+            final oldQueue = queue;
+            QueueController.inst.removeQueue(oldQueue);
+            Get.snackbar(
+              Language.inst.UNDO_CHANGES,
+              Language.inst.UNDO_CHANGES_DELETED_QUEUE,
+              mainButton: TextButton(
+                onPressed: () {
+                  QueueController.inst.reAddQueue(oldQueue);
+                  Get.closeAllSnackbars();
+                },
+                child: Text(Language.inst.UNDO),
+              ),
+            );
+            NamidaNavigator.inst.closeDialog();
+          },
+        )
+      : null;
+
   NamidaNavigator.inst.navigateDialog(
     NamidaBgBlur(
       blur: 5.0,
@@ -696,6 +722,7 @@ Future<void> showGeneralPopupDialog(
                                 if (clearStuffListTile != null) clearStuffListTile,
                                 if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,
                                 if (playlistUtilsRow != null) playlistUtilsRow,
+                                if (removeQueueTile != null) removeQueueTile,
                                 const SizedBox(height: 8.0),
                               ],
                             )
@@ -931,30 +958,7 @@ Future<void> showGeneralPopupDialog(
                                 ),
                                 if (clearStuffListTile != null) clearStuffListTile,
 
-                                if (queue != null)
-                                  SmallListTile(
-                                    color: colorDelightened,
-                                    compact: false,
-                                    title: Language.inst.REMOVE_QUEUE,
-                                    icon: Broken.pen_remove,
-                                    onTap: () {
-                                      final q = queue;
-                                      final qindex = QueueController.inst.queueList.indexOf(q);
-                                      QueueController.inst.removeQueue(queue);
-                                      Get.snackbar(
-                                        Language.inst.UNDO_CHANGES,
-                                        Language.inst.UNDO_CHANGES_DELETED_QUEUE,
-                                        mainButton: TextButton(
-                                          onPressed: () {
-                                            QueueController.inst.insertQueue(q, qindex);
-                                            Get.closeAllSnackbars();
-                                          },
-                                          child: Text(Language.inst.UNDO),
-                                        ),
-                                      );
-                                      NamidaNavigator.inst.closeDialog();
-                                    },
-                                  ),
+                                if (removeQueueTile != null) removeQueueTile,
 
                                 if (Player.inst.latestInsertedIndex != Player.inst.currentIndex.value)
                                   SmallListTile(

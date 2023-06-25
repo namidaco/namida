@@ -171,7 +171,7 @@ class PlaylistsPage extends StatelessWidget {
                                     colorScheme: Colors.blue,
                                     icon: Broken.driver,
                                     title: Language.inst.QUEUES,
-                                    text: QueueController.inst.queueList.length.toString(),
+                                    text: QueueController.inst.queuesMap.value.length.toString(),
                                     onTap: () => NamidaNavigator.inst.navigateTo(const QueuesPage()),
                                   ),
                                 ),
@@ -215,7 +215,6 @@ class PlaylistsPage extends StatelessWidget {
                               position: i,
                               shouldAnimate: LibraryTab.playlists.shouldAnimateTiles,
                               child: MultiArtworkCard(
-                                // TODO: hero doesnt work.
                                 heroTag: 'playlist_${playlist.name}',
                                 tracks: playlist.tracks.map((e) => e.track).toList(),
                                 name: playlist.name.translatePlaylistName(),
