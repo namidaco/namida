@@ -149,8 +149,8 @@ Set<String> getHighMatcheFilesFromFilename(Iterable<String> files, String filena
       final trackFilename = filename;
       final fileSystemFilenameCleaned = element.getFilename.cleanUpForComparison;
       final l = Indexer.inst.getTitleAndArtistFromFilename(trackFilename);
-      final trackTitle = l.first;
-      final trackArtist = l.last;
+      final trackTitle = l.$1;
+      final trackArtist = l.$2;
       final matching1 = fileSystemFilenameCleaned.contains(trackFilename.cleanUpForComparison);
       final matching2 = fileSystemFilenameCleaned.contains(trackTitle.split('(').first) && fileSystemFilenameCleaned.contains(trackArtist);
       return matching1 || matching2;

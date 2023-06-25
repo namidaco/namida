@@ -388,8 +388,8 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                 InkWell(
                   onTap: () {
                     final titleAndArtist = Indexer.inst.getTitleAndArtistFromFilename(track.path.getFilenameWOExt);
-                    final title = titleAndArtist.first;
-                    final artist = titleAndArtist.last;
+                    final title = titleAndArtist.$1;
+                    final artist = titleAndArtist.$2;
 
                     if (tagsControllers[TagField.title]!.text != title || tagsControllers[TagField.artist]!.text != artist) {
                       tagsControllers[TagField.title]!.text = title;

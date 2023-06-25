@@ -327,8 +327,8 @@ class Indexer {
           final fileStat = await file.stat();
 
           final titleAndArtist = getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
-          final title = titleAndArtist.first;
-          final artist = titleAndArtist.last;
+          final title = titleAndArtist.$1;
+          final artist = titleAndArtist.$2;
 
           final tr = Track(
             title,
@@ -476,11 +476,10 @@ class Indexer {
     );
   }
 
-  /// list.first = title
+  /// $1 = title
   ///
-  /// list.last = artist
-  /// TODO: refactor
-  List<String> getTitleAndArtistFromFilename(String filename) {
+  /// $2 = artist
+  (String, String) getTitleAndArtistFromFilename(String filename) {
     final filenameWOEx = filename.replaceAll('_', ' ');
     final titleAndArtist = <String>[];
 
@@ -499,7 +498,7 @@ class Indexer {
     final cleanedUpTitle = title.split('[').first.trim();
     final cleanedUpArtist = artist.split(']').last.trim();
 
-    return [cleanedUpTitle, cleanedUpArtist];
+    return (cleanedUpTitle, cleanedUpArtist);
   }
 
   Set<String> getNewFoundPaths(Set<String> currentFiles) => currentFiles.difference(Set.of(tracksInfoList.map((t) => t.path)));
