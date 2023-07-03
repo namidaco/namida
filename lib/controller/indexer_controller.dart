@@ -381,10 +381,8 @@ class Indexer {
 
       /// removes duplicated tracks after a refresh
       if (SettingsController.inst.preventDuplicatedTracks.value) {
-        final lengthBefore = tracksInfoList.length;
-        tracksInfoList.removeDuplicates((element) => element.filename);
-        final lengthAfter = tracksInfoList.length;
-        duplicatedTracksLength.value = (lengthBefore - lengthAfter).withMinimum(0);
+        final removedNumber = tracksInfoList.removeDuplicates((element) => element.filename);
+        duplicatedTracksLength.value = removedNumber;
       }
     }
 
@@ -409,7 +407,7 @@ class Indexer {
   Future<void> readTrackData() async {
     /// reading stats file containing track rating etc.
 
-    await File(k_FILE_PATH_TRACKS_STATS).readAsJsonAndLoop((item, i) {
+    await File(k_FILE_PATH_TRACKS_STATS).readAsJsonAndLoop((item, i) async {
       final trst = TrackStats.fromJson(item);
       trackStatsMap[trst.path] = trst;
     });
@@ -417,7 +415,7 @@ class Indexer {
     tracksInfoList.clear();
 
     /// Reading actual track file.
-    await File(k_FILE_PATH_TRACKS).readAsJsonAndLoop((item, i) {
+    await File(k_FILE_PATH_TRACKS).readAsJsonAndLoop((item, i) async {
       final tr = Track.fromJson(item);
       tr.stats = trackStatsMap[tr.path] ?? TrackStats('', 0, [], [], 0);
       tracksInfoList.add(tr);

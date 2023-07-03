@@ -277,10 +277,9 @@ class TrackTileCustomization extends StatelessWidget {
                       height: 3.0,
                     ),
                     if (SettingsController.inst.displayFavouriteIconInListTile.value)
-                      NamidaLikeButton(
-                        track: kDummyTrack,
+                      const NamidaLikeButton(
+                        track: null,
                         size: 20,
-                        isDummy: true,
                       ),
                   ],
                 ),

@@ -95,10 +95,10 @@ class BackupAndRestore extends StatelessWidget {
                                 height: 12.0,
                               ),
                               ListTileWithCheckMark(
-                                active: isActive(k_PLAYLIST_PATH_HISTORY),
+                                active: isActive(k_PLAYLIST_DIR_PATH_HISTORY),
                                 title: Language.inst.HISTORY,
                                 icon: Broken.refresh,
-                                onTap: () => onItemTap(k_PLAYLIST_PATH_HISTORY),
+                                onTap: () => onItemTap(k_PLAYLIST_DIR_PATH_HISTORY),
                               ),
                               const SizedBox(
                                 height: 12.0,

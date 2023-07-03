@@ -19,7 +19,8 @@ class QueueController {
   static final QueueController _instance = QueueController._internal();
   QueueController._internal();
 
-  final Rx<SplayTreeMap<int, Queue>> queuesMap = SplayTreeMap<int, Queue>((date1, date2) => date2.compareTo(date1)).obs;
+  /// holds all queues mapped & sorted by [date] chronologically.
+  final Rx<SplayTreeMap<int, Queue>> queuesMap = SplayTreeMap<int, Queue>((date1, date2) => date1.compareTo(date2)).obs;
   final List<Track> latestQueue = <Track>[];
 
   /// doesnt save queues with more than 2000 tracks.
@@ -82,7 +83,7 @@ class QueueController {
     final latestQueueInsideMap = queuesMap.value[queuesMap.value.keys.lastOrNull];
     if (latestQueueInsideMap != null) {
       latestQueueInsideMap.tracks
-        ..clear
+        ..clear()
         ..addAll(tracks);
       await _saveLatestQueueToStorage(latestQueueInsideMap);
     }

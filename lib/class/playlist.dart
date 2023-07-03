@@ -4,7 +4,7 @@ class Playlist {
   late String name;
   late final List<TrackWithDate> tracks;
   late final int creationDate;
-  late int modifiedDate;
+  late final int modifiedDate;
   late final String comment;
   late final List<String> moods;
   late final bool isFav;
@@ -39,5 +39,24 @@ class Playlist {
       'moods': moods,
       'isFav': isFav,
     };
+  }
+
+  Playlist copyWith({
+    String? name,
+    List<TrackWithDate>? tracks,
+    int? creationDate,
+    int? modifiedDate,
+    String? comment,
+    bool? isFav,
+    List<String>? moods,
+  }) {
+    name ??= this.name;
+    tracks ??= this.tracks;
+    creationDate ??= this.creationDate;
+    modifiedDate ??= this.modifiedDate;
+    comment ??= this.comment;
+    moods ??= this.moods;
+    isFav ??= this.isFav;
+    return Playlist(name, tracks, creationDate, modifiedDate, comment, moods, isFav);
   }
 }

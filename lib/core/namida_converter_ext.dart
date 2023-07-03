@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' hide Playlist;
+
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -413,47 +414,50 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
     return s;
   }
 
-  List<Track> toTracks() {
+  List<Track> toTracks([int? limit, int? dayOfHistory]) {
     final trs = <Track>[];
+    void addThese(Iterable<Track> tracks) => trs.addAll(tracks.withLimit(limit));
     if (this == QueueSource.allTracks) {
-      trs.addAll(Indexer.inst.trackSearchList.toList());
+      addThese(Indexer.inst.trackSearchList.toList());
     }
     // onMediaTap should have handled it already.
     if (this == QueueSource.album) {
-      trs.addAll(SelectedTracksController.inst.currentAllTracks);
+      addThese(SelectedTracksController.inst.currentAllTracks);
     }
     if (this == QueueSource.artist) {
-      trs.addAll(SelectedTracksController.inst.currentAllTracks);
+      addThese(SelectedTracksController.inst.currentAllTracks);
     }
     if (this == QueueSource.genre) {
-      trs.addAll(SelectedTracksController.inst.currentAllTracks);
+      addThese(SelectedTracksController.inst.currentAllTracks);
     }
     if (this == QueueSource.playlist) {
-      trs.addAll(SelectedTracksController.inst.currentAllTracks);
+      addThese(SelectedTracksController.inst.currentAllTracks);
     }
     if (this == QueueSource.folder) {
-      trs.addAll(SelectedTracksController.inst.currentAllTracks);
+      addThese(SelectedTracksController.inst.currentAllTracks);
     }
     if (this == QueueSource.search) {
-      trs.addAll(Indexer.inst.trackSearchTemp.toList());
+      addThese(Indexer.inst.trackSearchTemp.toList());
     }
     if (this == QueueSource.mostPlayed) {
-      trs.addAll(PlaylistController.inst.topTracksMapListens.keys);
+      addThese(HistoryController.inst.topTracksMapListens.keys);
     }
     if (this == QueueSource.history) {
-      trs.addAll(namidaHistoryPlaylist.tracks.map((e) => e.track).toList());
+      dayOfHistory != null
+          ? addThese(HistoryController.inst.historyMap.value[dayOfHistory]?.map((e) => e.track).toList().reversed ?? [])
+          : addThese(HistoryController.inst.historyTracks.withLimit(limit).map((e) => e.track));
     }
     if (this == QueueSource.favourites) {
-      trs.addAll(namidaFavouritePlaylist.tracks.map((e) => e.track).toList());
+      addThese(PlaylistController.inst.favouritesPlaylist.value.tracks.map((e) => e.track).toList());
     }
     if (this == QueueSource.playerQueue) {
-      trs.addAll(Player.inst.currentQueue.toList());
+      addThese(Player.inst.currentQueue.toList());
     }
     if (this == QueueSource.queuePage) {
-      trs.addAll(SelectedTracksController.inst.currentAllTracks);
+      addThese(SelectedTracksController.inst.currentAllTracks);
     }
     if (this == QueueSource.selectedTracks) {
-      trs.addAll(SelectedTracksController.inst.selectedTracks.toList());
+      addThese(SelectedTracksController.inst.selectedTracks.toList());
     }
 
     return trs;
@@ -462,12 +466,12 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
 
 extension PlaylistToQueueSource on Playlist {
   QueueSource toQueueSource() {
-    if (name == k_PLAYLIST_NAME_MOST_PLAYED) {
-      return QueueSource.mostPlayed;
-    }
-    if (name == k_PLAYLIST_NAME_HISTORY) {
-      return QueueSource.history;
-    }
+    // if (name == k_PLAYLIST_NAME_MOST_PLAYED) {
+    //   return QueueSource.mostPlayed;
+    // }
+    // if (name == k_PLAYLIST_NAME_HISTORY) {
+    //   return QueueSource.history;
+    // }
     if (name == k_PLAYLIST_NAME_FAV) {
       return QueueSource.favourites;
     }
@@ -712,9 +716,10 @@ extension WidgetsPages on Widget {
       final q = this as QueueTracksPage;
       tr.addAll(q.queue.tracks);
     }
-    if (this is PlaylisTracksPage) {
-      final pl = this as PlaylisTracksPage;
-      tr.addAll(pl.playlist.tracks.map((e) => e.track));
+    // TODO: other playlist pages
+    if (this is NormalPlaylistTracksPage) {
+      final pl = this as NormalPlaylistTracksPage;
+      tr.addAll(PlaylistController.inst.getPlaylist(pl.playlistName)?.tracks.map((e) => e.track) ?? []);
     }
     if (this is FoldersPage) {
       tr.addAll(Folders.inst.currentTracks);
@@ -764,8 +769,9 @@ extension WidgetsPages on Widget {
       );
     }
 
-    PlaylisTracksPage? playlist = this is PlaylisTracksPage ? this as PlaylisTracksPage : null;
-    final bool shouldShowReorderIcon = playlist != null && playlist.playlist.name != k_PLAYLIST_NAME_HISTORY && playlist.playlist.name != k_PLAYLIST_NAME_MOST_PLAYED;
+// TODO: other playlists
+    NormalPlaylistTracksPage? playlist = this is NormalPlaylistTracksPage ? this as NormalPlaylistTracksPage : null;
+    final bool shouldShowReorderIcon = playlist != null && playlist.playlistName != k_PLAYLIST_NAME_HISTORY && playlist.playlistName != k_PLAYLIST_NAME_MOST_PLAYED;
 
     final initialActions = <Widget>[
       ...[
@@ -801,8 +807,8 @@ extension WidgetsPages on Widget {
             NamidaDialogs.inst.showQueueDialog(q.queue);
           }
         }),
-        shouldShow:
-            this is! PlaylisTracksPage && (this is AlbumTracksPage || this is ArtistTracksPage || this is GenreTracksPage || this is QueueTracksPage || this is PlaylisTracksPage),
+        shouldShow: this is! NormalPlaylistTracksPage &&
+            (this is AlbumTracksPage || this is ArtistTracksPage || this is GenreTracksPage || this is QueueTracksPage || this is NormalPlaylistTracksPage),
       ),
       getAnimatedCrossFade(
         child: shouldShowReorderIcon
@@ -821,7 +827,7 @@ extension WidgetsPages on Widget {
       ),
       getAnimatedCrossFade(
         child: getMoreIcon(() {
-          NamidaDialogs.inst.showPlaylistDialog(playlist!.playlist);
+          NamidaDialogs.inst.showPlaylistDialog(playlist!.playlistName);
         }),
         shouldShow: playlist != null,
       ),

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -128,7 +129,7 @@ class EditDeleteController {
     }
 
     // all playlists
-    for (final pl in PlaylistController.inst.playlistList.toList()) {
+    for (final pl in PlaylistController.inst.playlistsMap.values) {
       for (final tr in pl.tracks) {
         if (tr.track.path == oldTrack.path) {
           final index = pl.tracks.indexOf(tr);
@@ -139,21 +140,20 @@ class EditDeleteController {
     }
 
     // default playlist
-    final historyTracks = namidaHistoryPlaylist.tracks;
+    final historyTracks = HistoryController.inst.historyTracks;
     for (final tr in historyTracks) {
       if (tr.track.path == oldTrack.path) {
         final index = historyTracks.indexOf(tr);
-        PlaylistController.inst.removeFromHistory(index);
-        PlaylistController.inst.addTrackToHistory([TrackWithDate(tr.dateAdded, newtr, tr.source)]);
+        HistoryController.inst.removeFromHistory(tr.dateAdded.toDaysSinceEpoch(), index);
+        HistoryController.inst.addTracksToHistory([TrackWithDate(tr.dateAdded, newtr, tr.source)]);
       }
     }
-    final favTracks = namidaFavouritePlaylist.tracks;
+    final favTracks = PlaylistController.inst.favouritesPlaylist.value.tracks;
     for (final tr in favTracks) {
       if (tr.track.path == oldTrack.path) {
         PlaylistController.inst.favouriteButtonOnPressed(tr.track, updatedTrack: newtr);
       }
     }
-    PlaylistController.inst.updateMostPlayedPlaylist();
 
     // Queues
     loopQueues();

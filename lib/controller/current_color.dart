@@ -36,6 +36,9 @@ class CurrentColor {
   final RxString currentPlayingTrackPath = ''.obs;
   final RxInt currentPlayingIndex = 0.obs;
 
+  /// Used for history playlist where same track can exist in more than one list.
+  final Rxn<int> currentPlayingTrackDateAdded = Rxn<int>();
+
   final RxBool generatingAllColorPalettes = false.obs;
 
   Map<String, NamidaColor> colorsMap = {};
@@ -70,13 +73,14 @@ class CurrentColor {
     updateThemeAndRefresh();
   }
 
-  Future<void> updatePlayerColorFromTrack(Track track, int index) async {
+  Future<void> updatePlayerColorFromTrack(Track track, int index, {int? dateAdded}) async {
     if (SettingsController.inst.autoColor.value) {
       await setPlayerColor(track);
       updateThemeAndRefresh();
     }
     currentPlayingTrackPath.value = track.path;
     currentPlayingIndex.value = index;
+    currentPlayingTrackDateAdded.value = dateAdded;
   }
 
   void updatePlayerColorFromColor(Color color, [bool customAlpha = true]) async {
@@ -133,6 +137,7 @@ class CurrentColor {
       // stops extracting
       if (!generatingAllColorPalettes.value) break;
       await getTrackColors(allTracksInLibrary[i]);
+      await Future.delayed(Duration.zero);
     }
 
     generatingAllColorPalettes.value = false;

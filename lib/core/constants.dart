@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 
-import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -36,8 +35,7 @@ final String k_FILE_PATH_LATEST_QUEUE = '$k_DIR_USER_DATA/latestqueue.json';
 
 final String k_FILE_PATH_TOTAL_LISTEN_TIME = '$k_DIR_USER_DATA/total_listen.txt';
 
-final String k_PLAYLIST_PATH_HISTORY = '$k_DIR_USER_DATA/sussybaka.json';
-final String k_PLAYLIST_PATH_HISTORY_BACKUP = '$k_DIR_USER_DATA/sussybakabk.json';
+final String k_PLAYLIST_DIR_PATH_HISTORY = '$k_DIR_USER_DATA/History/';
 final String k_PLAYLIST_PATH_FAVOURITES = '$k_DIR_USER_DATA/favs.json';
 
 final String k_DIR_PLAYLISTS = '$k_DIR_USER_DATA/Playlists/';
@@ -63,10 +61,6 @@ const k_PLAYLIST_NAME_FAV = '_FAVOURITES_';
 const k_PLAYLIST_NAME_HISTORY = '_HISTORY_';
 const k_PLAYLIST_NAME_MOST_PLAYED = '_MOST_PLAYED_';
 const k_PLAYLIST_NAME_AUTO_GENERATED = '_AUTO_GENERATED_';
-
-late final Playlist namidaHistoryPlaylist;
-late final Playlist namidaFavouritePlaylist;
-late final Playlist namidaMostPlayedPlaylist;
 
 double get trackTileItemExtent => SettingsController.inst.trackListTileHeight.value + 4.0 * 3.0;
 List<Track> get allTracksInLibrary => Indexer.inst.tracksInfoList.toList();
@@ -190,3 +184,11 @@ const k_UNKNOWN_TRACK_ALBUMARTIST = '';
 const k_UNKNOWN_TRACK_ARTIST = 'Unknown Artist';
 const k_UNKNOWN_TRACK_GENRE = 'Unknown Genre';
 const k_UNKNOWN_TRACK_COMPOSER = 'Unknown Composer';
+
+int get currentTimeMS => DateTime.now().millisecondsSinceEpoch;
+
+const kHistoryDayHeaderHeight = 40.0;
+const kHistoryDayListTopPadding = 6.0;
+const kHistoryDayListBottomPadding = 12.0;
+
+const kHistoryDayHeaderHeightWithPadding = kHistoryDayHeaderHeight + kHistoryDayListTopPadding + kHistoryDayListBottomPadding;

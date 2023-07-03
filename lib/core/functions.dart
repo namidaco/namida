@@ -7,6 +7,7 @@ import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -67,20 +68,37 @@ class NamidaOnTaps {
     );
   }
 
-  Future<void> onPlaylistTap(
-    Playlist playlist, {
+  Future<void> onNormalPlaylistTap(
+    String playlistName, {
     bool disableAnimation = false,
     ScrollController? scrollController,
     int? indexToHighlight,
   }) async {
     NamidaNavigator.inst.navigateTo(
-      PlaylisTracksPage(
-        playlist: playlist,
+      NormalPlaylistTracksPage(
+        playlistName: playlistName,
         disableAnimation: disableAnimation,
+      ),
+    );
+  }
+
+  Future<void> onHistoryPlaylistTap({
+    ScrollController? scrollController,
+    int? indexToHighlight,
+    int? dayOfHighLight,
+  }) async {
+    NamidaNavigator.inst.navigateTo(
+      HistoryTracksPage(
+        disableAnimation: scrollController != null,
         indexToHighlight: indexToHighlight,
+        dayOfHighLight: dayOfHighLight,
         scrollController: scrollController,
       ),
     );
+  }
+
+  Future<void> onMostPlayedPlaylistTap() async {
+    NamidaNavigator.inst.navigateTo(const MostPlayedTracksPage());
   }
 
   Future<void> onFolderTap(Folder folder, bool isMainStoragePath, {Track? trackToScrollTo}) async {
@@ -93,19 +111,33 @@ class NamidaOnTaps {
     );
   }
 
-  void onRemoveTrackFromPlaylist(int index, Playlist playlist) {
-    final track = playlist.tracks.elementAt(index);
-    PlaylistController.inst.removeTrackFromPlaylist(playlist, index);
+  void onRemoveTrackFromPlaylist(String name, int index, TrackWithDate trackWithDate) {
+    final bool isHistory = name == k_PLAYLIST_NAME_HISTORY;
+    Playlist? playlist;
+    if (isHistory) {
+      final day = trackWithDate.dateAdded.toDaysSinceEpoch();
+      HistoryController.inst.historyMap.value[day];
+    } else {
+      playlist = PlaylistController.inst.getPlaylist(name);
+      if (playlist == null) return;
+      trackWithDate = playlist.tracks.elementAt(index);
+      PlaylistController.inst.removeTrackFromPlaylist(playlist, index);
+    }
+
     Get.snackbar(
       Language.inst.UNDO_CHANGES,
       Language.inst.UNDO_CHANGES_DELETED_TRACK,
       mainButton: TextButton(
         onPressed: () {
-          PlaylistController.inst.insertTracksInPlaylist(
-            playlist,
-            [track],
-            index,
-          );
+          if (isHistory) {
+            HistoryController.inst.addTracksToHistory([trackWithDate]);
+          } else {
+            PlaylistController.inst.insertTracksInPlaylist(
+              playlist!,
+              [trackWithDate],
+              index,
+            );
+          }
 
           Get.closeAllSnackbars();
         },
@@ -185,7 +217,7 @@ List<Track> getRandomTracks([int? min, int? max]) {
 }
 
 List<Track> generateRecommendedTrack(Track track) {
-  final historytracks = namidaHistoryPlaylist.tracks;
+  final historytracks = HistoryController.inst.historyTracks;
   if (historytracks.isEmpty) {
     return [];
   }
@@ -214,7 +246,8 @@ List<Track> generateRecommendedTrack(Track track) {
 
 /// if [maxCount == null], it will generate all available tracks
 List<Track> generateTracksFromDates(int oldestDate, int newestDate, [int? maxCount]) {
-  final historytracks = namidaHistoryPlaylist.tracks;
+  // TODO: improve by looping only on dates in between.
+  final historytracks = HistoryController.inst.historyTracks;
   final tracksAvailable =
       historytracks.where((element) => element.dateAdded >= oldestDate && element.dateAdded <= (newestDate + 1.days.inMilliseconds)).map((e) => e.track).toSet().toList();
 
@@ -233,11 +266,11 @@ List<Track> generateTracksFromMoods(List<String> moods, [int maxCount = 20]) {
 
   /// Generating from Playlists.
   finalTracks.addAll(
-    PlaylistController.inst.playlistList
-        .where((pl) => pl.moods.any((e) => moods.contains(e)))
-        .expand(
-          (pl) => pl.tracks.map((e) => e.track),
+    PlaylistController.inst.playlistsMap.entries
+        .where(
+          (pl) => pl.value.moods.any((e) => moods.contains(e)),
         )
+        .expand((pl) => pl.value.tracks.map((e) => e.track))
         .toList(),
   );
 

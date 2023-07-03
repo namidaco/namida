@@ -44,7 +44,7 @@ void showAddToPlaylistDialog(List<Track> tracks) {
           ),
           leftAction: Obx(
             () => Text(
-              "${PlaylistController.inst.playlistList.length.toString()} ${Language.inst.PLAYLISTS}",
+              "${PlaylistController.inst.playlistsMap.length.toString()} ${Language.inst.PLAYLISTS}",
               style: Get.theme.textTheme.displayMedium,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

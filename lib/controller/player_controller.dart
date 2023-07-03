@@ -185,6 +185,7 @@ class Player {
     bool shuffle = false,
     bool startPlaying = true,
     bool dontAddQueue = false,
+    int? dateAdded,
   }) async {
     List<Track> finalQueue = <Track>[];
 
@@ -232,7 +233,7 @@ class Player {
     }
     currentQueue.assignAll(finalQueue);
 
-    await _audioHandler?.setAudioSource(index, startPlaying: startPlaying);
+    await _audioHandler?.setAudioSource(index, startPlaying: startPlaying, dateAdded: dateAdded);
   }
 
   Future<void> prepareTotalListenTime() async {

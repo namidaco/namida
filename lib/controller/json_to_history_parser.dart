@@ -7,8 +7,8 @@ import 'package:intl/intl.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -46,11 +46,69 @@ class JsonToHistoryParser {
     );
   }
 
-  Future<void> _parseYTHistoryJsonAndAdd(File file, bool isMatchingTypeLink, bool matchYT, bool matchYTMusic) async {
+  void _resetValues() {
+    totalJsonToParse.value = 0;
+    parsedHistoryJson.value = 0;
+    addedHistoryJsonToPlaylist.value = 0;
+  }
+
+  Future<void> addFileSourceToNamidaHistory(File file, TrackSource source, {bool isMatchingTypeLink = true, bool matchYT = true, bool matchYTMusic = true}) async {
+    _resetValues();
+    isParsing.value = true;
+    isLoadingFile.value = true;
+
+    // TODO: warning to backup history
+
+    /// Removing previous source tracks.
+    final isytsource = source == TrackSource.youtube || source == TrackSource.youtubeMusic;
+    if (isytsource) {
+      HistoryController.inst.removeSourcesTracksFromHistory([TrackSource.youtube, TrackSource.youtubeMusic]);
+    } else {
+      HistoryController.inst.removeSourcesTracksFromHistory([source]);
+    }
+    await Future.delayed(Duration.zero);
+
+    final datesAdded = <int>[];
+
+    if (isytsource) {
+      currentParsingSource.value = TrackSource.youtube;
+      final res = await _parseYTHistoryJsonAndAdd(file, isMatchingTypeLink, matchYT, matchYTMusic);
+      datesAdded.addAll(res);
+      // await _addYoutubeSourceFromDirectory(isMatchingTypeLink, matchYT, matchYTMusic);
+    }
+    if (source == TrackSource.lastfm) {
+      currentParsingSource.value = TrackSource.lastfm;
+      final res = await _addLastFmSource(file);
+      datesAdded.addAll(res);
+    }
+    isParsing.value = false;
+    HistoryController.inst.sortHistoryTracks(datesAdded);
+    HistoryController.inst.saveHistoryToStorage(datesAdded);
+    HistoryController.inst.updateMostPlayedPlaylist();
+  }
+
+  /// needs rewrite
+  // Future<void> _addYoutubeSourceFromDirectory(bool isMatchingTypeLink, bool matchYT, bool matchYTMusic) async {
+  //   totalJsonToParse.value = Directory(k_DIR_YOUTUBE_STATS).listSync().length;
+
+  //   /// Adding tracks that their link matches.
+  //   await for (final f in Directory(k_DIR_YOUTUBE_STATS).list()) {
+  //     final p = await File(f.path).readAsJson();
+  //     final vh = YoutubeVideoHistory.fromJson(p);
+  //     final addedTracks = _matchYTVHToNamidaHistory(vh, isMatchingTypeLink, matchYT, matchYTMusic);
+  //     addedHistoryJsonToPlaylist.value += addedTracks.length;
+  //     parsedHistoryJson.value++;
+  //   }
+  // }
+
+  /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
+  Future<List<int>> _parseYTHistoryJsonAndAdd(File file, bool isMatchingTypeLink, bool matchYT, bool matchYTMusic) async {
     _resetValues();
     isParsing.value = true;
     isLoadingFile.value = true;
     await Future.delayed(const Duration(milliseconds: 300));
+    final datesToSave = <int>[];
+
     await file.readAsJsonAndLoop(
       (p, index) async {
         final link = utf8.decode((p['titleUrl']).toString().codeUnits);
@@ -66,7 +124,8 @@ class JsonToHistoryParser {
           z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
           [YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music")],
         );
-        _matchYTVHToNamidaHistory(yth, isMatchingTypeLink, matchYT, matchYTMusic);
+        final addedDates = _matchYTVHToNamidaHistory(yth, isMatchingTypeLink, matchYT, matchYTMusic);
+        addedDates.addAll(addedDates);
 
         /// extracting and saving to [k_DIR_YOUTUBE_STATS] directory.
         ///  [_addYoutubeSourceFromDirectory] should be called after this.
@@ -90,65 +149,18 @@ class JsonToHistoryParser {
 
         parsedHistoryJson.value++;
       },
-      onListReady: (response) {
-        totalJsonToParse.value = response.length;
+      onListReady: (response) async {
+        totalJsonToParse.value = response?.length ?? 0;
         isLoadingFile.value = false;
       },
     );
 
     isParsing.value = false;
+    return datesToSave;
   }
 
-  void _resetValues() {
-    totalJsonToParse.value = 0;
-    parsedHistoryJson.value = 0;
-    addedHistoryJsonToPlaylist.value = 0;
-  }
-
-  Future<void> addFileSourceToNamidaHistory(File file, TrackSource source, {bool isMatchingTypeLink = true, bool matchYT = true, bool matchYTMusic = true}) async {
-    _resetValues();
-    isParsing.value = true;
-    isLoadingFile.value = true;
-
-    await PlaylistController.inst.backupHistoryPlaylist();
-
-    /// Removing previous source tracks.
-    final isytsource = source == TrackSource.youtube || source == TrackSource.youtubeMusic;
-    if (isytsource) {
-      PlaylistController.inst.removeSourceTracksFromHistory(TrackSource.youtube);
-      PlaylistController.inst.removeSourceTracksFromHistory(TrackSource.youtubeMusic);
-    } else {
-      PlaylistController.inst.removeSourceTracksFromHistory(source);
-    }
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    if (isytsource) {
-      currentParsingSource.value = TrackSource.youtube;
-      await _parseYTHistoryJsonAndAdd(file, isMatchingTypeLink, matchYT, matchYTMusic);
-      // await _addYoutubeSourceFromDirectory(isMatchingTypeLink, matchYT, matchYTMusic);
-    }
-    if (source == TrackSource.lastfm) {
-      currentParsingSource.value = TrackSource.lastfm;
-      await _addLastFmSource(file);
-    }
-    isParsing.value = false;
-    PlaylistController.inst.sortHistoryAndSave();
-    PlaylistController.inst.updateMostPlayedPlaylist();
-  }
-
-  Future<void> _addYoutubeSourceFromDirectory(bool isMatchingTypeLink, bool matchYT, bool matchYTMusic) async {
-    totalJsonToParse.value = Directory(k_DIR_YOUTUBE_STATS).listSync().length;
-
-    /// Adding tracks that their link matches.
-    await for (final f in Directory(k_DIR_YOUTUBE_STATS).list()) {
-      final p = await File(f.path).readAsJson();
-      final vh = YoutubeVideoHistory.fromJson(p);
-      _matchYTVHToNamidaHistory(vh, isMatchingTypeLink, matchYT, matchYTMusic);
-      parsedHistoryJson.value++;
-    }
-  }
-
-  void _matchYTVHToNamidaHistory(YoutubeVideoHistory vh, bool isMatchingTypeLink, bool matchYT, bool matchYTMusic) {
+  /// Returns [daysToSave].
+  List<int> _matchYTVHToNamidaHistory(YoutubeVideoHistory vh, bool isMatchingTypeLink, bool matchYT, bool matchYTMusic) {
     final tr = allTracksInLibrary.firstWhereOrNull((element) {
       return isMatchingTypeLink
           ? element.youtubeID == vh.id
@@ -166,6 +178,7 @@ class JsonToHistoryParser {
                   vh.channel.cleanUpForComparison.contains(element.album.cleanUpForComparison) ||
                   vh.channel.cleanUpForComparison.contains(element.artistsList.first.cleanUpForComparison));
     });
+    final tracksToAdd = <TrackWithDate>[];
     if (tr != null) {
       for (int i = 0; i < vh.watches.length; i++) {
         final d = vh.watches[i];
@@ -177,21 +190,33 @@ class JsonToHistoryParser {
         // if the type is youtube, but the user dont want yt.
         if (!d.isYTMusic && !matchYT) continue;
 
-        PlaylistController.inst.addTrackToHistory([TrackWithDate(d.date, tr, d.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube)], sortAndSave: false);
+        tracksToAdd.add(TrackWithDate(d.date, tr, d.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube));
         addedHistoryJsonToPlaylist.value++;
       }
     }
+    final daysToSave = HistoryController.inst.addTracksToHistoryOnly(tracksToAdd);
+    return daysToSave;
   }
 
-  Future<void> _addLastFmSource(File file) async {
+  /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
+  Future<List<int>> _addLastFmSource(File file) async {
     totalJsonToParse.value = file.readAsLinesSync().length;
     final stream = file.openRead();
     final lines = stream.transform(utf8.decoder).transform(const LineSplitter());
+
+    final totalDaysToSave = <int>[];
+    final tracksToAdd = <TrackWithDate>[];
 
     // used for cases where date couldnt be parsed, so it uses this one as a reference
     int? lastDate;
     await for (final line in lines) {
       parsedHistoryJson.value++;
+
+      /// updates history every 10 tracks
+      if (tracksToAdd.length == 10) {
+        totalDaysToSave.addAll(HistoryController.inst.addTracksToHistoryOnly(tracksToAdd));
+        tracksToAdd.clear();
+      }
 
       // pls forgive me
       await Future.delayed(Duration.zero);
@@ -220,8 +245,7 @@ class JsonToHistoryParser {
               date = lastDate - 30000;
             }
           }
-
-          PlaylistController.inst.addTrackToHistory([TrackWithDate(date, tr, TrackSource.lastfm)], sortAndSave: false);
+          tracksToAdd.add(TrackWithDate(date, tr, TrackSource.lastfm));
           addedHistoryJsonToPlaylist.value++;
         }
       } catch (e) {
@@ -229,5 +253,9 @@ class JsonToHistoryParser {
         continue;
       }
     }
+    // normally the loop automatically adds every 10 tracks, this one is to ensure adding any tracks left.
+    totalDaysToSave.addAll(HistoryController.inst.addTracksToHistoryOnly(tracksToAdd));
+
+    return totalDaysToSave;
   }
 }

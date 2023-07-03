@@ -71,6 +71,7 @@ void main() async {
     k_DIR_PLAYLISTS,
     k_DIR_QUEUES,
     k_DIR_YOUTUBE_STATS,
+    k_PLAYLIST_DIR_PATH_HISTORY,
   ]);
 
   final paths = await ExternalPath.getExternalStorageDirectories();
@@ -94,7 +95,6 @@ void main() async {
 
   FlutterNativeSplash.remove();
 
-  // playlists should be prepared first since it can used as reference in queues.
   await PlaylistController.inst.prepareDefaultPlaylistsFile();
 
   PlaylistController.inst.prepareAllPlaylistsFile();

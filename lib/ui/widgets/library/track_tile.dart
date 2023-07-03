@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
-import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/trackitem.dart';
 import 'package:namida/controller/current_color.dart';
@@ -23,27 +22,30 @@ import 'package:namida/ui/dialogs/track_info_dialog.dart';
 class TrackTile extends StatelessWidget {
   final int index;
   final Track track;
+  final TrackWithDate? trackWithDate;
   final bool displayRightDragHandler;
   final bool draggableThumbnail;
   final Color? bgColor;
   final Widget? trailingWidget;
   final void Function()? onTap;
-  final Playlist? playlist;
+  final String? playlistName;
   final String thirdLineText;
   final bool displayIndex;
   final QueueSource queueSource;
   final void Function(PointerDownEvent event)? onDragStart;
   final void Function(PointerUpEvent event)? onDragEnd;
   final void Function()? onRightAreaTap;
+
   const TrackTile({
     super.key,
     required this.track,
+    this.trackWithDate,
     this.displayRightDragHandler = false,
     this.draggableThumbnail = true,
     this.bgColor,
     this.onTap,
     this.trailingWidget,
-    this.playlist,
+    this.playlistName,
     required this.index,
     this.thirdLineText = '',
     this.displayIndex = false,
@@ -63,7 +65,13 @@ class TrackTile extends StatelessWidget {
         queueSource == QueueSource.history;
     final isInSelectedTracksPreview = queueSource == QueueSource.selectedTracks;
 
-    void triggerTrackDialog() => NamidaDialogs.inst.showTrackDialog(track, playlist: playlist, index: index, comingFromQueue: comingFromQueue);
+    void triggerTrackDialog() => NamidaDialogs.inst.showTrackDialog(
+          track,
+          playlistName: playlistName,
+          index: index,
+          comingFromQueue: comingFromQueue,
+          trackWithDate: trackWithDate,
+        );
     void triggerTrackInfoDialog() => showTrackInfoDialog(track, true, comingFromQueue: comingFromQueue, index: index);
 
     final willSleepAfterThis = queueSource == QueueSource.playerQueue && Player.inst.isSleepingTrack(index);
@@ -78,8 +86,10 @@ class TrackTile extends StatelessWidget {
             final double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
             final bool isTrackSelected = SelectedTracksController.inst.selectedTracks.contains(track);
             final bool isTrackSamePath = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
+            final bool isRightHistoryList =
+                trackWithDate != null && queueSource == QueueSource.history ? trackWithDate!.dateAdded == CurrentColor.inst.currentPlayingTrackDateAdded.value : true;
             final bool isRightIndex = canHaveDuplicates ? index == CurrentColor.inst.currentPlayingIndex.value : true;
-            final bool isTrackCurrentlyPlaying = isRightIndex && isTrackSamePath;
+            final bool isTrackCurrentlyPlaying = isRightHistoryList && isRightIndex && isTrackSamePath;
 
             final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
             return Padding(
@@ -113,7 +123,12 @@ class TrackTile extends StatelessWidget {
                               queueSource,
                             );
                           } else {
-                            await Player.inst.playOrPause(index, queueSource.toTracks(), queueSource);
+                            await Player.inst.playOrPause(
+                              index,
+                              queueSource.toTracks(null, trackWithDate?.dateAdded.toDaysSinceEpoch()),
+                              queueSource,
+                              dateAdded: trackWithDate?.dateAdded,
+                            );
                           }
                           debugPrint(track.path);
                         }

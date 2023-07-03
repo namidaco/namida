@@ -7,9 +7,9 @@ import 'package:checkmark/checkmark.dart';
 import 'package:get/get.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -75,11 +75,7 @@ class AdvancedSettings extends StatelessWidget {
                     const CancelButton(),
                     ElevatedButton(
                       onPressed: () async {
-                        final lengthBefore = namidaHistoryPlaylist.tracks.length;
-                        await sourcesToDelete.loopFuture((s, index) async => await PlaylistController.inst.removeSourceTracksFromHistory(s));
-
-                        final lengthAfter = namidaHistoryPlaylist.tracks.length;
-                        final removedNum = lengthBefore - lengthAfter;
+                        final removedNum = await HistoryController.inst.removeSourcesTracksFromHistory(sourcesToDelete);
                         Get.snackbar(Language.inst.NOTE, "${Language.inst.REMOVED} ${removedNum.displayTrackKeyword}");
                         NamidaNavigator.inst.closeDialog();
                       },

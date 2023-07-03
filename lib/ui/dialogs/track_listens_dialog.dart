@@ -4,8 +4,8 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -15,7 +15,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 
 void showTrackListensDialog(Track track, {List<int>? datesOfListen, ThemeData? theme, bool enableBlur = false}) async {
   // listens ??= namidaHistoryPlaylist.tracks.where((element) => element.track.path == track.path).toList();
-  datesOfListen ??= PlaylistController.inst.topTracksMapListens[track] ?? [];
+  datesOfListen ??= HistoryController.inst.topTracksMapListens[track] ?? [];
   theme ??= AppThemes.inst.getAppTheme(await CurrentColor.inst.getTrackDelightnedColor(track), !Get.isDarkMode);
 
   if (datesOfListen.isEmpty) return;
@@ -37,7 +37,8 @@ void showTrackListensDialog(Track track, {List<int>? datesOfListen, ThemeData? t
         child: NamidaListView(
           padding: EdgeInsets.zero,
           itemBuilder: (context, i) {
-            final t = datesOfListen![i];
+            final reverseIndex = (datesOfListen!.length - 1) - i;
+            final t = datesOfListen[reverseIndex];
             return SmallListTile(
               key: ValueKey(i),
               borderRadius: 14.0,
@@ -48,14 +49,24 @@ void showTrackListensDialog(Track track, {List<int>? datesOfListen, ThemeData? t
                     borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                     color: theme?.cardColor,
                   ),
-                  child: Text((datesOfListen.length - i).toString())),
+                  child: Text((reverseIndex + 1).toString())),
               onTap: () async {
-                final i = namidaHistoryPlaylist.tracks.indexWhere((element) => element.dateAdded == t);
-                NamidaOnTaps.inst.onPlaylistTap(
-                  namidaHistoryPlaylist,
-                  disableAnimation: true,
-                  indexToHighlight: i,
-                  scrollController: ScrollController(initialScrollOffset: trackTileItemExtent * i),
+                final daysKeys = HistoryController.inst.historyDays.toList();
+                daysKeys.removeWhere((element) => element <= t.toDaysSinceEpoch());
+                final daysToScroll = daysKeys.length + 1;
+                int tracksToScroll = 0;
+                daysKeys.loop((e, index) {
+                  tracksToScroll += HistoryController.inst.historyMap.value[e]?.length ?? 0;
+                });
+                final trackSmallList = HistoryController.inst.historyMap.value[t.toDaysSinceEpoch()]!;
+                final indexOfSmallList = trackSmallList.indexWhere((element) => element.dateAdded == t);
+                final reverseIndexOfSmallList = trackSmallList.length - indexOfSmallList;
+                tracksToScroll += reverseIndexOfSmallList;
+                tracksToScroll -= 2;
+                NamidaOnTaps.inst.onHistoryPlaylistTap(
+                  indexToHighlight: indexOfSmallList,
+                  dayOfHighLight: t.toDaysSinceEpoch(),
+                  scrollController: ScrollController(initialScrollOffset: (tracksToScroll * trackTileItemExtent) + (daysToScroll * kHistoryDayHeaderHeightWithPadding)),
                 );
               },
             );

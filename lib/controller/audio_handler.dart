@@ -8,6 +8,7 @@ import 'package:just_audio/just_audio.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -162,14 +163,14 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
 
   //
   // Namida Methods.
-  Future<void> setAudioSource(int index, {bool preload = true, bool startPlaying = true}) async {
+  Future<void> setAudioSource(int index, {bool preload = true, bool startPlaying = true, int? dateAdded}) async {
     updateTrackLastPosition(nowPlayingTrack.value, nowPlayingPosition.value);
 
     final tr = currentQueue.elementAt(index);
     nowPlayingTrack.value = tr;
     currentIndex.value = index;
 
-    CurrentColor.inst.updatePlayerColorFromTrack(tr, index);
+    CurrentColor.inst.updatePlayerColorFromTrack(tr, index, dateAdded: dateAdded);
     VideoController.inst.updateLocalVidPath(tr);
     updateVideoPlayingState();
     updateCurrentMediaItem(tr);
@@ -200,7 +201,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
 
       startSleepAfterMinCount(tr);
       WaveformController.inst.generateWaveform(tr);
-      PlaylistController.inst.startCounterToAListen(nowPlayingTrack.value);
+      HistoryController.inst.startCounterToAListen(nowPlayingTrack.value);
       increaseListenTime(tr);
       SettingsController.inst.save(lastPlayedTrackPath: tr.path);
       Lyrics.inst.updateLyrics(tr);
@@ -467,7 +468,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
       final diffInSeek = nowPlayingPosition.value - position.inMilliseconds;
       final percentage = diffInSeek / (_player.duration?.inMilliseconds ?? 1);
       if (percentage >= 0.2) {
-        PlaylistController.inst.startCounterToAListen(nowPlayingTrack.value);
+        HistoryController.inst.startCounterToAListen(nowPlayingTrack.value);
       }
     }
     await _player.seek(p.milliseconds);

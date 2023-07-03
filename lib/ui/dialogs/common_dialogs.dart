@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:namida/class/playlist.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -22,7 +21,8 @@ class NamidaDialogs {
   Future<void> showTrackDialog(
     Track track, {
     Widget? leading,
-    Playlist? playlist,
+    String? playlistName,
+    TrackWithDate? trackWithDate,
     int? index,
     bool comingFromQueue = false,
     bool isFromPlayerQueue = false,
@@ -35,8 +35,8 @@ class NamidaDialogs {
       QueueSource.selectedTracks,
       thirdLineText: track.album.overflow,
       forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
-      isTrackInPlaylist: playlist != null,
-      playlist: playlist,
+      trackWithDate: trackWithDate,
+      playlistName: playlistName,
       index: index,
       comingFromQueue: comingFromQueue,
       useTrackTileCacheHeight: true,
@@ -90,7 +90,9 @@ class NamidaDialogs {
     );
   }
 
-  Future<void> showPlaylistDialog(Playlist playlist) async {
+  Future<void> showPlaylistDialog(String playlistName) async {
+    final playlist = PlaylistController.inst.getPlaylist(playlistName);
+    if (playlist == null) return;
     if (playlist.tracks.isEmpty) {
       NamidaNavigator.inst.navigateDialog(
         CustomBlurryDialog(
@@ -116,7 +118,7 @@ class NamidaDialogs {
       [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
       playlist.toQueueSource(),
       thirdLineText: playlist.moods.join(', ').overflow,
-      playlist: playlist,
+      playlistName: playlist.name,
       extractColor: false,
       heroTag: 'playlist_${playlist.name}',
     );

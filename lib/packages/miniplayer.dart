@@ -16,6 +16,7 @@ import 'package:wakelock/wakelock.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -1266,12 +1267,13 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                             maxSubtitleLines: 22,
                                                             onTap: () {
                                                               NamidaNavigator.inst.closeDialog();
-                                                              if (namidaHistoryPlaylist.tracks.isEmpty) {
+                                                              final historyTracks = HistoryController.inst.historyTracks;
+                                                              if (historyTracks.isEmpty) {
                                                                 Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_IN_HISTORY);
                                                                 return;
                                                               }
                                                               List<int> dates = [];
-                                                              final dts = [namidaHistoryPlaylist.tracks.last.dateAdded, namidaHistoryPlaylist.tracks.first.dateAdded];
+                                                              final dts = [historyTracks.last.dateAdded, historyTracks.first.dateAdded];
                                                               dts.sort((a, b) => a.compareTo(b));
                                                               final firstDateInHistory = dts.first;
                                                               final lastDateInHistory = dts.last;
@@ -1318,8 +1320,13 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                             onTap: () {
                                                               NamidaNavigator.inst.closeDialog();
 
-                                                              final moods = [];
-                                                              moods.addAll(PlaylistController.inst.playlistList.expand((element) => element.moods.toList()).toSet().toList());
+                                                              final moods = <String>[];
+
+                                                              // moods from playlists.
+                                                              final allAvailableMoodsPlaylists =
+                                                                  PlaylistController.inst.playlistsMap.entries.expand((element) => element.value.moods).toSet();
+                                                              moods.addAll(allAvailableMoodsPlaylists);
+                                                              // moods from tracks.
                                                               Indexer.inst.trackStatsMap.forEach((key, value) => moods.addAll(value.moods));
                                                               if (moods.isEmpty) {
                                                                 Get.snackbar(Language.inst.ERROR, Language.inst.NO_MOODS_AVAILABLE);

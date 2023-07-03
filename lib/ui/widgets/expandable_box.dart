@@ -156,11 +156,11 @@ class SortByMenu extends StatelessWidget {
             visualDensity: VisualDensity.compact,
           ),
           child: Text(title),
-          onPressed: () async => await showMenu(
+          onPressed: () => showMenu(
             color: context.theme.appBarTheme.backgroundColor,
             context: context,
-            position: RelativeRect.fromLTRB(Get.width, 56.0, 20, 0),
-            constraints: BoxConstraints(maxHeight: Get.height / 1.5),
+            position: RelativeRect.fromLTRB(context.width, 56.0, 20, 0),
+            constraints: BoxConstraints(maxHeight: context.height * 0.6),
             items: [
               PopupMenuItem(
                 padding: const EdgeInsets.symmetric(vertical: 0.0),

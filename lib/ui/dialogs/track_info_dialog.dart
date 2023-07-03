@@ -6,10 +6,10 @@ import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
-import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -29,7 +29,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
     return;
   }
 
-  final totalListens = PlaylistController.inst.topTracksMapListens[track] ?? [];
+  final totalListens = HistoryController.inst.topTracksMapListens[track] ?? [];
   totalListens.sort((a, b) => b.compareTo(a));
   final firstListenTrack = totalListens.lastOrNull;
 

@@ -13,7 +13,6 @@ import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:wheel_slider/wheel_slider.dart';
 
-import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -719,7 +718,12 @@ class GeneratePlaylistButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
-      onPressed: () => PlaylistController.inst.generateRandomPlaylist(),
+      onPressed: () {
+        final numbers = PlaylistController.inst.generateRandomPlaylist();
+        if (numbers == 0) {
+          Get.snackbar(Language.inst.ERROR, Language.inst.NO_ENOUGH_TRACKS);
+        }
+      },
       icon: const Icon(Broken.shuffle),
       label: Text(Language.inst.RANDOM),
     );
@@ -1024,11 +1028,10 @@ class NamidaWheelSlider extends StatelessWidget {
 }
 
 class NamidaLikeButton extends StatelessWidget {
-  final Track track;
+  final Track? track;
   final double size;
   final Color? color;
-  final bool isDummy;
-  const NamidaLikeButton({super.key, required this.track, this.size = 30.0, this.color, this.isDummy = false});
+  const NamidaLikeButton({super.key, required this.track, this.size = 30.0, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -1042,9 +1045,11 @@ class NamidaLikeButton extends StatelessWidget {
         start: context.theme.colorScheme.tertiary,
         end: context.theme.colorScheme.tertiary,
       ),
-      isLiked: track.isFavourite,
+      isLiked: track?.isFavourite,
       onTap: (isLiked) async {
-        if (!isDummy) PlaylistController.inst.favouriteButtonOnPressed(track);
+        if (track != null) {
+          PlaylistController.inst.favouriteButtonOnPressed(track!);
+        }
         return !isLiked;
       },
       likeBuilder: (value) => value
@@ -1660,11 +1665,18 @@ class DefaultPlaylistCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String text;
-  final Playlist? playlist;
   final double? width;
   final void Function()? onTap;
 
-  const DefaultPlaylistCard({super.key, required this.colorScheme, required this.icon, required this.title, this.text = '', this.playlist, this.width, this.onTap});
+  const DefaultPlaylistCard({
+    super.key,
+    required this.colorScheme,
+    required this.icon,
+    required this.title,
+    this.text = '',
+    this.width,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1699,7 +1711,7 @@ class DefaultPlaylistCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 6.0),
                 Text(
-                  playlist?.tracks.length.toString() ?? text,
+                  text,
                   style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(30), context.textTheme.displayMedium!.color!)),
                 ),
                 const SizedBox(width: 2.0),

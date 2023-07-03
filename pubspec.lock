@@ -194,6 +194,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  cupertino_icons:
+    dependency: transitive
+    description:
+      name: cupertino_icons
+      sha256: e35129dc44c9118cee2a5603506d823bab99c68393879edb440e0090d07586be
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.5"
   dbus:
     dependency: transitive
     description:
@@ -335,6 +343,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.15"
+  flutter_scrollbar_modified:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "5707419b42fd0149c39573b33e80970df18b21c8"
+      url: "https://github.com/MSOB7YY/flutter_scrollbar_modified"
+    source: git
+    version: "0.0.1"
   flutter_staggered_animations:
     dependency: "direct main"
     description:
@@ -623,10 +640,10 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: f595260b1a4a7fddc226f173cb4dd5219cca95a1
-      url: "https://github.com/MSOB7YY/on_audio_edit"
+      resolved-ref: e3d76dfef0e7b3aa1e723050aa300ce3afb71c9c
+      url: "https://github.com/MSOB7YY/on_audio_edit_dart3"
     source: git
-    version: "1.5.1"
+    version: "1.0.0+1"
   on_audio_query:
     dependency: "direct main"
     description:
@@ -897,6 +914,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.1"
+  sliver_tools:
+    dependency: "direct main"
+    description:
+      name: sliver_tools
+      sha256: ccdc502098a8bfa07b3ec582c282620031481300035584e1bb3aca296a505e8c
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.10"
   source_span:
     dependency: transitive
     description:
@@ -929,6 +954,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.11.0"
+  sticky_headers:
+    dependency: "direct main"
+    description:
+      name: sticky_headers
+      sha256: "9b3dd2cb0fd6a7038170af3261f855660cbb241cb56c501452cb8deed7023ede"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.0+2"
   stream_channel:
     dependency: transitive
     description:

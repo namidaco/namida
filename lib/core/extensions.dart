@@ -11,9 +11,9 @@ import 'package:collection/collection.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -147,6 +147,12 @@ extension TracksUtils on List<Track> {
 }
 
 extension TotalTime on int {
+  /// Converts milliSecondsSinceEpoch to DaysSinceEpoch
+  int toDaysSinceEpoch() {
+    const msinday = 86400000;
+    return (this / msinday).floor();
+  }
+
   String get getTimeFormatted {
     final durInSec = Duration(seconds: this).inSeconds.remainder(60);
 
@@ -241,7 +247,7 @@ extension Channels on String {
 
 extension FavouriteTrack on Track {
   bool get isFavourite {
-    return namidaFavouritePlaylist.tracks.firstWhereOrNull((element) => element.track.path == path) != null;
+    return PlaylistController.inst.favouritesPlaylist.value.tracks.firstWhereOrNull((element) => element.track.path == path) != null;
   }
 }
 
@@ -326,10 +332,6 @@ extension PlayerRepeatModeUtils on RepeatMode {
   }
 }
 
-extension PlaylistToQueueSource on Playlist {
-  bool get isOneOfTheMainPlaylists => name == k_PLAYLIST_NAME_FAV || name == k_PLAYLIST_NAME_HISTORY || name == k_PLAYLIST_NAME_MOST_PLAYED;
-}
-
 extension ConvertPathToTrack on String {
   Track? toTrackOrNull() => Indexer.inst.allTracksMappedByPath[this];
 
@@ -409,11 +411,16 @@ extension FileUtils<R> on File {
     return existsSync() && statSync().size >= minValidSize;
   }
 
-  /// returns [true] if deleted successfully.
+  /// returns [true] if deleted successfully. or [false] if failed.
   Future<bool> deleteIfExists() async {
-    if (await exists()) {
-      await delete();
-      return true;
+    try {
+      if (await exists()) {
+        await delete();
+        return true;
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+      return false;
     }
     return false;
   }
@@ -437,7 +444,7 @@ extension FileUtils<R> on File {
     return false;
   }
 
-  /// Returns [response] if executed successfully.
+  /// Returns decoded [response] if executed successfully.
   ///
   /// Otherwise, executes [onError] and returns [null].
   ///
@@ -454,7 +461,7 @@ extension FileUtils<R> on File {
     }
   }
 
-  /// Returns [true] if executed successfully.
+  /// returns [true] if executed successfully.
   ///
   /// Otherwise, executes [onError] and returns [false].
   ///
@@ -473,13 +480,18 @@ extension FileUtils<R> on File {
     }
   }
 
-  Future<bool> readAsJsonAndLoop(FutureOr<void> Function(dynamic item, int index) execute, {FutureOr<void> Function(R response)? onListReady, void Function()? onError}) async {
+  Future<bool> readAsJsonAndLoop(
+    void Function(dynamic item, int index) execute, {
+    void Function(List? responseList)? onListReady,
+    void Function()? onError,
+  }) async {
     final success = await readAsJsonAnd(
       (response) async {
-        if (onListReady != null) onListReady(response);
+        response as List?;
+        if (onListReady != null) onListReady(response ?? []);
 
-        (response as List).loop((e, index) async {
-          await execute(e, index);
+        (response)?.loop((e, index) {
+          execute(e, index);
         });
       },
       onError: onError,
@@ -488,10 +500,17 @@ extension FileUtils<R> on File {
   }
 
   /// Automatically creates the file if it doesnt exist
-  Future<void> writeAsJson(Object? object, {Object? Function(Object? nonEncodable)? toEncodable}) async {
-    await create();
-    const encoder = JsonEncoder.withIndent("  ");
-    await writeAsString(encoder.convert(object));
+  ///
+  /// Has a built-in try-catch that returns [File] if wrote successfully, or [null] if failed.
+  Future<File?> writeAsJson(Object? object, {Object? Function(Object? nonEncodable)? toEncodable}) async {
+    try {
+      await create(recursive: true);
+      const encoder = JsonEncoder.withIndent("  ");
+      return (await writeAsString(encoder.convert(object)));
+    } catch (e) {
+      debugPrint('$e');
+      return null;
+    }
   }
 }
 
@@ -514,6 +533,14 @@ extension IntUtils on int {
 }
 
 extension MapExtNull<K, E> on Map<K, List<E>?> {
+  void addForce(K key, E item) {
+    if (keyExists(key)) {
+      this[key]!.add(item);
+    } else {
+      this[key] = <E>[item];
+    }
+  }
+
   /// Same as [addNoDuplicates], but initializes new list in case list was null.
   /// i.e: entry doesnt exist in map.
   void addNoDuplicatesForce(K key, E item, {bool preventDuplicates = true}) {
@@ -523,9 +550,25 @@ extension MapExtNull<K, E> on Map<K, List<E>?> {
       this[key] = <E>[item];
     }
   }
+
+  void addAllNoDuplicatesForce(K key, Iterable<E> items, {bool preventDuplicates = true}) {
+    if (keyExists(key)) {
+      this[key]!.addAllNoDuplicates(items, preventDuplicates: preventDuplicates);
+    } else {
+      this[key] = items.toList();
+    }
+  }
 }
 
 extension ListieExt<E, Id> on List<E> {
+  /// returns number of items removed.
+  int removeWhereWithDifference(bool Function(E element) test) {
+    final lengthBefore = length;
+    removeWhere(test);
+    final lengthAfter = length;
+    return lengthBefore - lengthAfter;
+  }
+
   bool isEqualTo(List<E> q2) {
     final q1 = this;
     if (q1.isEmpty && q2.isEmpty) {
@@ -541,9 +584,13 @@ extension ListieExt<E, Id> on List<E> {
     return true;
   }
 
-  void removeDuplicates(Id Function(E element)? id) {
+  /// returns number of items removed.
+  int removeDuplicates([Id Function(E element)? id]) {
     final uniquedSet = <dynamic>{};
+    final lengthBefore = length;
     retainWhere((e) => uniquedSet.add(id != null ? id(e) : e));
+    final lengthAfter = length;
+    return lengthBefore - lengthAfter;
   }
 
   List<E> uniqued(Id Function(E element)? id) {
@@ -557,6 +604,13 @@ extension ListieExt<E, Id> on List<E> {
     if (preventDuplicates && contains(item)) return;
 
     add(item);
+  }
+
+  void addAllNoDuplicates(Iterable<E> item, {bool preventDuplicates = true}) {
+    addAll(item);
+    if (preventDuplicates) {
+      removeDuplicates();
+    }
   }
 
   /// Efficient version of lastWhere()
@@ -619,6 +673,8 @@ extension ListieExt<E, Id> on List<E> {
 extension IterableUtils<E> on Iterable<E> {
   E? get firstOrNull => isEmpty ? null : first;
   E? get lastOrNull => isEmpty ? null : last;
+
+  Iterable<E> withLimit([int? limit]) => limit != null ? take(limit) : this;
 }
 
 extension WidgetsSeparator on Iterable<Widget> {

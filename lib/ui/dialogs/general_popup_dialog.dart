@@ -9,7 +9,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:namida/class/folder.dart';
-import 'package:namida/class/playlist.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
@@ -42,13 +41,13 @@ Future<void> showGeneralPopupDialog(
   String subtitle,
   QueueSource source, {
   void Function()? onTopBarTap,
-  Playlist? playlist,
+  String? playlistName,
+  TrackWithDate? trackWithDate,
   Queue? queue,
   int? index,
   String thirdLineText = '',
   bool forceSquared = false,
   bool? forceSingleArtwork,
-  bool isTrackInPlaylist = false,
   bool extractColor = true,
   bool comingFromQueue = false,
   bool useTrackTileCacheHeight = false,
@@ -80,6 +79,9 @@ Future<void> showGeneralPopupDialog(
   RxBool isLoadingFilesToShare = false.obs;
 
   final iconColor = Color.alphaBlend(colorDelightened.withAlpha(120), Get.textTheme.displayMedium!.color!);
+
+  bool shoulShowPlaylistUtils() => trackWithDate == null && playlistName != null && !PlaylistController.inst.isOneOfDefaultPlaylists(playlistName);
+  bool shoulShowRemoveFromPlaylist() => trackWithDate != null && index != null && playlistName != null && playlistName != k_PLAYLIST_NAME_MOST_PLAYED;
 
   Widget bigIcon(IconData icon, String tooltipMessage, void Function()? onTap, {String subtitle = '', Widget? iconWidget}) {
     return InkWell(
@@ -164,10 +166,14 @@ Future<void> showGeneralPopupDialog(
   }
 
   void setPlaylistMoods() {
-    if (playlist == null) return;
+    // function button won't be visible is playlistName == null.
+    if (!shoulShowPlaylistUtils()) return;
+
+    final pl = PlaylistController.inst.getPlaylist(playlistName!);
+    if (pl == null) return;
     setMoodsOrTags(
-      playlist.moods,
-      (moodsFinal) => PlaylistController.inst.updatePropertyInPlaylist(playlist, moods: moodsFinal.toSet().toList()),
+      pl.moods,
+      (moodsFinal) => PlaylistController.inst.updatePropertyInPlaylist(playlistName, moods: moodsFinal.toSet().toList()),
     );
   }
 
@@ -228,7 +234,10 @@ Future<void> showGeneralPopupDialog(
   }
 
   void renamePlaylist() {
-    TextEditingController controller = TextEditingController(text: playlist!.name);
+    // function button won't be visible is playlistName == null.
+    if (!shoulShowPlaylistUtils()) return;
+
+    TextEditingController controller = TextEditingController(text: playlistName);
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
     NamidaNavigator.inst.navigateDialog(
       Form(
@@ -240,7 +249,7 @@ Future<void> showGeneralPopupDialog(
             ElevatedButton(
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
-                  await PlaylistController.inst.renamePlaylist(playlist, controller.text);
+                  await PlaylistController.inst.renamePlaylist(playlistName!, controller.text);
                   NamidaNavigator.inst.closeDialog();
                 }
               },
@@ -255,7 +264,7 @@ Future<void> showGeneralPopupDialog(
               ),
               CustomTagTextField(
                 controller: controller,
-                hintText: playlist.name,
+                hintText: playlistName!,
                 labelText: Language.inst.NAME,
                 validator: (value) => PlaylistController.inst.validatePlaylistName(value),
               ),
@@ -267,16 +276,20 @@ Future<void> showGeneralPopupDialog(
   }
 
   void deletePlaylist() {
+    // function button won't be visible is playlistName == null.
+    if (!shoulShowPlaylistUtils()) return;
+
     NamidaNavigator.inst.closeDialog();
-    final pl = playlist;
-    final plindex = PlaylistController.inst.playlistList.indexOf(pl);
-    PlaylistController.inst.removePlaylist(playlist!);
+    final pl = PlaylistController.inst.getPlaylist(playlistName!);
+    if (pl == null) return;
+
+    PlaylistController.inst.removePlaylist(pl);
     Get.snackbar(
       Language.inst.UNDO_CHANGES,
       Language.inst.UNDO_CHANGES_DELETED_PLAYLIST,
       mainButton: TextButton(
         onPressed: () {
-          PlaylistController.inst.insertPlaylist(playlist, plindex);
+          PlaylistController.inst.reAddPlaylist(pl, pl.modifiedDate);
           Get.closeAllSnackbars();
         },
         child: Text(Language.inst.UNDO),
@@ -489,21 +502,22 @@ Future<void> showGeneralPopupDialog(
           onTap: () => showTrackClearDialog(tracks),
         )
       : null;
-  final Widget? removeFromPlaylistListTile = (playlist != null && index != null && isTrackInPlaylist && playlist.name != k_PLAYLIST_NAME_MOST_PLAYED)
+
+  final Widget? removeFromPlaylistListTile = shoulShowRemoveFromPlaylist()
       ? SmallListTile(
           color: colorDelightened,
           compact: true,
           title: Language.inst.REMOVE_FROM_PLAYLIST,
-          subtitle: playlist.name.translatePlaylistName(),
+          subtitle: playlistName!.translatePlaylistName(),
           icon: Broken.box_remove,
           onTap: () {
-            NamidaOnTaps.inst.onRemoveTrackFromPlaylist(index, playlist);
+            NamidaOnTaps.inst.onRemoveTrackFromPlaylist(playlistName, index!, trackWithDate!);
             NamidaNavigator.inst.closeDialog();
           },
         )
       : null;
 
-  final Widget? playlistUtilsRow = (playlist != null && !isTrackInPlaylist && !playlist.isOneOfTheMainPlaylists)
+  final Widget? playlistUtilsRow = shoulShowPlaylistUtils()
       ? SizedBox(
           height: 48.0,
           child: Row(
@@ -1009,7 +1023,7 @@ Future<void> showGeneralPopupDialog(
                                 if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,
 
                                 /// Track Utils
-                                if (playlist == null || isTrackInPlaylist)
+                                if (playlistName == null || trackWithDate != null)
                                   Row(
                                     children: [
                                       const SizedBox(width: 24.0),
