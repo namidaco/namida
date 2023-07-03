@@ -19,40 +19,42 @@ class AlbumTracksPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => NamidaTracksList(
-        queueSource: QueueSource.album,
-        queueLength: tracks.length,
-        queue: tracks,
-        displayIndex: SettingsController.inst.displayTrackNumberinAlbumPage.value,
-        header: SubpagesTopContainer(
-          title: name,
-          source: QueueSource.album,
-          subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
-          thirdLineText: tracks.albumArtist,
-          heroTag: 'album_$name',
-          imageWidget: shouldAlbumBeSquared
-              ? MultiArtworkContainer(
-                  size: Get.width * 0.35,
-                  heroTag: 'album_$name',
-                  tracks: [tracks.firstTrackWithImage],
-                )
-              : Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 12.0),
-                  padding: const EdgeInsets.all(3.0),
-                  child: Hero(
-                    tag: 'album_$name',
-                    child: ArtworkWidget(
-                      track: tracks.trackOfImage,
-                      thumnailSize: Get.width * 0.35,
-                      forceSquared: false,
-                      path: tracks.pathToImage,
-                      compressed: false,
-                      borderRadius: 12.0,
+    return BackgroundWrapper(
+      child: Obx(
+        () => NamidaTracksList(
+          queueSource: QueueSource.album,
+          queueLength: tracks.length,
+          queue: tracks,
+          displayIndex: SettingsController.inst.displayTrackNumberinAlbumPage.value,
+          header: SubpagesTopContainer(
+            title: name,
+            source: QueueSource.album,
+            subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
+            thirdLineText: tracks.albumArtist,
+            heroTag: 'album_$name',
+            imageWidget: shouldAlbumBeSquared
+                ? MultiArtworkContainer(
+                    size: Get.width * 0.35,
+                    heroTag: 'album_$name',
+                    tracks: [tracks.firstTrackWithImage],
+                  )
+                : Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 12.0),
+                    padding: const EdgeInsets.all(3.0),
+                    child: Hero(
+                      tag: 'album_$name',
+                      child: ArtworkWidget(
+                        track: tracks.trackOfImage,
+                        thumnailSize: Get.width * 0.35,
+                        forceSquared: false,
+                        path: tracks.pathToImage,
+                        compressed: false,
+                        borderRadius: 12.0,
+                      ),
                     ),
                   ),
-                ),
-          tracks: tracks,
+            tracks: tracks,
+          ),
         ),
       ),
     );

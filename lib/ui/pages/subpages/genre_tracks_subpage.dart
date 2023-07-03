@@ -18,21 +18,23 @@ class GenreTracksPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NamidaTracksList(
-      queueSource: QueueSource.genre,
-      queueLength: tracks.length,
-      queue: tracks,
-      header: SubpagesTopContainer(
-        title: name,
-        source: QueueSource.genre,
-        subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
-        heroTag: 'genre_$name',
-        imageWidget: MultiArtworkContainer(
-          size: Get.width * 0.35,
+    return BackgroundWrapper(
+      child: NamidaTracksList(
+        queueSource: QueueSource.genre,
+        queueLength: tracks.length,
+        queue: tracks,
+        header: SubpagesTopContainer(
+          title: name,
+          source: QueueSource.genre,
+          subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
           heroTag: 'genre_$name',
+          imageWidget: MultiArtworkContainer(
+            size: Get.width * 0.35,
+            heroTag: 'genre_$name',
+            tracks: tracks,
+          ),
           tracks: tracks,
         ),
-        tracks: tracks,
       ),
     );
   }

@@ -2085,3 +2085,16 @@ class NamidaSupportButton extends StatelessWidget {
     );
   }
 }
+
+class BackgroundWrapper extends StatelessWidget {
+  final Widget child;
+  const BackgroundWrapper({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: context.theme.scaffoldBackgroundColor,
+      child: child,
+    );
+  }
+}

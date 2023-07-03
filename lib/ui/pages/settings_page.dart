@@ -22,8 +22,7 @@ class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(seconds: 4),
+    return BackgroundWrapper(
       child: Stack(
         children: [
           Container(
@@ -65,31 +64,33 @@ class SettingsSubPage extends StatelessWidget {
   const SettingsSubPage({super.key, required this.child, required this.title});
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          height: context.height,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                context.theme.appBarTheme.backgroundColor ?? CurrentColor.inst.color.value.withAlpha(context.isDarkMode ? 0 : 25),
-                CurrentColor.inst.color.value.withAlpha(context.isDarkMode ? 40 : 60),
-              ],
+    return BackgroundWrapper(
+      child: Stack(
+        children: [
+          Container(
+            height: context.height,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  context.theme.appBarTheme.backgroundColor ?? CurrentColor.inst.color.value.withAlpha(context.isDarkMode ? 0 : 25),
+                  CurrentColor.inst.color.value.withAlpha(context.isDarkMode ? 40 : 60),
+                ],
+              ),
             ),
           ),
-        ),
-        SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              child,
-              kBottomPaddingWidget,
-            ],
-          ),
-        )
-      ],
+          SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                child,
+                kBottomPaddingWidget,
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 }

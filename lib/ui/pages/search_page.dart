@@ -28,8 +28,7 @@ class SearchPage extends StatelessWidget {
   final ScrollController _scrollController = ScrollController();
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: context.theme.scaffoldBackgroundColor,
+    return BackgroundWrapper(
       child: Obx(
         () => AnimatedSwitcher(
           duration: const Duration(milliseconds: 400),

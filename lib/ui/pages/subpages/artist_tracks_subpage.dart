@@ -21,71 +21,73 @@ class ArtistTracksPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NamidaTracksList(
-      queueSource: QueueSource.artist,
-      queueLength: tracks.length,
-      queue: tracks,
-      paddingAfterHeader: const EdgeInsets.only(bottom: 12.0),
-      header: Column(
-        children: [
-          SubpagesTopContainer(
-            verticalPadding: 8.0,
-            title: name,
-            source: QueueSource.artist,
-            subtitle: [
-              tracks.displayTrackKeyword,
-              if (tracks.year != 0) tracks.year.yearFormatted,
-            ].join(' - '),
-            heroTag: 'artist_$name',
-            imageWidget: Hero(
-              tag: 'artist_$name',
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 2),
-                child: ContainerWithBorder(
-                  child: ArtworkWidget(
-                    thumnailSize: Get.width * 0.35,
-                    track: tracks.trackOfImage,
-                    path: tracks.pathToImage,
-                    forceSquared: true,
-                    blur: 0,
-                    iconSize: 32.0,
+    return BackgroundWrapper(
+      child: NamidaTracksList(
+        queueSource: QueueSource.artist,
+        queueLength: tracks.length,
+        queue: tracks,
+        paddingAfterHeader: const EdgeInsets.only(bottom: 12.0),
+        header: Column(
+          children: [
+            SubpagesTopContainer(
+              verticalPadding: 8.0,
+              title: name,
+              source: QueueSource.artist,
+              subtitle: [
+                tracks.displayTrackKeyword,
+                if (tracks.year != 0) tracks.year.yearFormatted,
+              ].join(' - '),
+              heroTag: 'artist_$name',
+              imageWidget: Hero(
+                tag: 'artist_$name',
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 2),
+                  child: ContainerWithBorder(
+                    child: ArtworkWidget(
+                      thumnailSize: Get.width * 0.35,
+                      track: tracks.trackOfImage,
+                      path: tracks.pathToImage,
+                      forceSquared: true,
+                      blur: 0,
+                      iconSize: 32.0,
+                    ),
                   ),
                 ),
               ),
+              tracks: tracks,
             ),
-            tracks: tracks,
-          ),
-          NamidaExpansionTile(
-            icon: Broken.music_dashboard,
-            titleText: "${Language.inst.ALBUMS} ${albums.length}",
-            initiallyExpanded: true,
-            children: [
-              SizedBox(
-                height: 130,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemExtent: 100.0,
-                  itemCount: albums.length,
-                  itemBuilder: (context, i) {
-                    final albumName = albums.elementAt(i);
-                    return Container(
-                      width: 100.0,
-                      margin: const EdgeInsets.only(left: 2.0),
-                      child: AlbumCard(
-                        gridCountOverride: 4,
-                        name: albumName,
-                        album: albumName.getAlbumTracks(),
-                        staggered: false,
-                        compact: true,
-                      ),
-                    );
-                  },
+            NamidaExpansionTile(
+              icon: Broken.music_dashboard,
+              titleText: "${Language.inst.ALBUMS} ${albums.length}",
+              initiallyExpanded: true,
+              children: [
+                SizedBox(
+                  height: 130,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemExtent: 100.0,
+                    itemCount: albums.length,
+                    itemBuilder: (context, i) {
+                      final albumName = albums.elementAt(i);
+                      return Container(
+                        width: 100.0,
+                        margin: const EdgeInsets.only(left: 2.0),
+                        child: AlbumCard(
+                          gridCountOverride: 4,
+                          name: albumName,
+                          album: albumName.getAlbumTracks(),
+                          staggered: false,
+                          compact: true,
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12.0),
-            ],
-          ),
-        ],
+                const SizedBox(height: 12.0),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

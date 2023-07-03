@@ -128,8 +128,6 @@ class PlaylistController {
   }
 
   Future<void> reAddPlaylist(Playlist playlist, int modifiedDate) async {
-    assert(!playlist.isOneOfTheMainPlaylists, kUnsupportedOperationMessage);
-
     final newPlaylist = playlist.copyWith(modifiedDate: modifiedDate);
     _updateMap(newPlaylist);
     sortPlaylists();
@@ -137,8 +135,6 @@ class PlaylistController {
   }
 
   void removePlaylist(Playlist playlist) async {
-    assert(!playlist.isOneOfTheMainPlaylists, kUnsupportedOperationMessage);
-
     // navigate back in case the current route is this playlist
     final lastPage = NamidaNavigator.inst.currentWidgetStack.lastOrNull;
     if (lastPage is NormalPlaylistTracksPage) {
@@ -209,8 +205,6 @@ class PlaylistController {
   }
 
   void addTracksToPlaylist(Playlist playlist, List<Track> tracks, {TrackSource source = TrackSource.local}) async {
-    assert(!playlist.isOneOfTheMainPlaylists, kUnsupportedOperationMessage);
-
     final newtracks = tracks.map((e) => TrackWithDate(currentTimeMS, e, source)).toList();
     playlist.tracks.addAll(newtracks);
 

@@ -21,52 +21,54 @@ class YoutubePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => AnimatedTheme(
-        duration: const Duration(milliseconds: 400),
-        data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
-        child: Scaffold(
-          backgroundColor: context.theme.scaffoldBackgroundColor,
-          appBar: AppBar(
-            leading: NamidaIconButton(
-              icon: Broken.arrow_left_2,
-              onPressed: () => NamidaNavigator.inst.popPage(),
+    return BackgroundWrapper(
+      child: Obx(
+        () => AnimatedTheme(
+          duration: const Duration(milliseconds: 400),
+          data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
+          child: Scaffold(
+            backgroundColor: context.theme.scaffoldBackgroundColor,
+            appBar: AppBar(
+              leading: NamidaIconButton(
+                icon: Broken.arrow_left_2,
+                onPressed: () => NamidaNavigator.inst.popPage(),
+              ),
+              title: Text(Language.inst.YOUTUBE),
             ),
-            title: Text(Language.inst.YOUTUBE),
-          ),
-          body: Obx(
-            () {
-              VideoSearchList? searchList = YoutubeController.inst.currentSearchList.value;
-              YoutubeController.inst.searchChannels.toList();
-              final List<Video?> l = [];
-              if (searchList == null || searchList.isEmpty) {
-                l.addAll(List.filled(20, null));
-              } else {
-                l.addAll(searchList);
-              }
-              return NamidaListView(
-                itemBuilder: (context, i) {
-                  if (searchList == null) {
+            body: Obx(
+              () {
+                VideoSearchList? searchList = YoutubeController.inst.currentSearchList.value;
+                YoutubeController.inst.searchChannels.toList();
+                final List<Video?> l = [];
+                if (searchList == null || searchList.isEmpty) {
+                  l.addAll(List.filled(20, null));
+                } else {
+                  l.addAll(searchList);
+                }
+                return NamidaListView(
+                  itemBuilder: (context, i) {
+                    if (searchList == null) {
+                      return YoutubeVideoCard(
+                        index: i,
+                        key: ValueKey(i),
+                        video: null,
+                        searchChannel: null,
+                      );
+                    }
+                    final v = searchList[i];
+                    final searchChannel = YoutubeController.inst.searchChannels.firstWhereOrNull((element) => element.id.value == v.channelId.value);
                     return YoutubeVideoCard(
                       index: i,
                       key: ValueKey(i),
-                      video: null,
-                      searchChannel: null,
+                      video: v,
+                      searchChannel: searchChannel,
                     );
-                  }
-                  final v = searchList[i];
-                  final searchChannel = YoutubeController.inst.searchChannels.firstWhereOrNull((element) => element.id.value == v.channelId.value);
-                  return YoutubeVideoCard(
-                    index: i,
-                    key: ValueKey(i),
-                    video: v,
-                    searchChannel: searchChannel,
-                  );
-                },
-                itemCount: l.length,
-                itemExtents: null,
-              );
-            },
+                  },
+                  itemCount: l.length,
+                  itemExtents: null,
+                );
+              },
+            ),
           ),
         ),
       ),

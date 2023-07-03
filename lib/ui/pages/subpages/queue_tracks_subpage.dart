@@ -14,25 +14,27 @@ class QueueTracksPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NamidaTracksList(
-      queueSource: QueueSource.queuePage,
-      queueLength: queue.tracks.length,
-      queue: queue.tracks,
-      header: SubpagesTopContainer(
-        source: QueueSource.queuePage,
-        title: queue.date.dateFormattedOriginal,
-        subtitle: queue.date.clockFormatted,
-        thirdLineText: [
-          queue.tracks.displayTrackKeyword,
-          queue.tracks.totalDurationFormatted,
-        ].join(' - '),
-        heroTag: 'queue_${queue.date}',
-        imageWidget: MultiArtworkContainer(
-          size: Get.width * 0.35,
+    return BackgroundWrapper(
+      child: NamidaTracksList(
+        queueSource: QueueSource.queuePage,
+        queueLength: queue.tracks.length,
+        queue: queue.tracks,
+        header: SubpagesTopContainer(
+          source: QueueSource.queuePage,
+          title: queue.date.dateFormattedOriginal,
+          subtitle: queue.date.clockFormatted,
+          thirdLineText: [
+            queue.tracks.displayTrackKeyword,
+            queue.tracks.totalDurationFormatted,
+          ].join(' - '),
           heroTag: 'queue_${queue.date}',
+          imageWidget: MultiArtworkContainer(
+            size: Get.width * 0.35,
+            heroTag: 'queue_${queue.date}',
+            tracks: queue.tracks,
+          ),
           tracks: queue.tracks,
         ),
-        tracks: queue.tracks,
       ),
     );
   }

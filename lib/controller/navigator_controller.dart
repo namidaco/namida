@@ -29,8 +29,6 @@ class NamidaNavigator {
 
   void _hideSearchMenuAndUnfocus() => ScrollSearchController.inst.hideSearchMenu();
 
-  Widget _getNewPageWidget(Widget child) => Material(child: child);
-
   Future<void> navigateTo(
     Widget page, {
     bool nested = true,
@@ -48,7 +46,7 @@ class NamidaNavigator {
     } else {
       currentWidgetStack.add(page);
       await Get.to(
-        () => _getNewPageWidget(page),
+        () => page,
         id: nested ? 1 : null,
         preventDuplicates: false,
         transition: transition,
@@ -112,7 +110,7 @@ class NamidaNavigator {
     page.updateColorScheme();
 
     await Get.off(
-      () => _getNewPageWidget(page),
+      () => page,
       id: nested ? 1 : null,
       preventDuplicates: false,
       transition: transition,
@@ -137,7 +135,7 @@ class NamidaNavigator {
     page.updateColorScheme();
 
     await Get.offAll(
-      () => _getNewPageWidget(page),
+      () => page,
       id: nested ? 1 : null,
       transition: transition,
       curve: Curves.easeOut,

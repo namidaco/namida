@@ -20,66 +20,68 @@ class TracksPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => NamidaTracksList(
-        queueLength: Indexer.inst.trackSearchList.length,
-        queueSource: QueueSource.allTracks,
-        scrollController: LibraryTab.tracks.scrollController,
-        itemBuilder: (context, i) {
-          final track = Indexer.inst.trackSearchList[i];
-          return AnimatingTile(
-            key: ValueKey(i),
-            position: i,
-            shouldAnimate: LibraryTab.tracks.shouldAnimateTiles,
-            child: TrackTile(
-              index: i,
-              track: track,
-              draggableThumbnail: false,
-              queueSource: QueueSource.allTracks,
-            ),
-          );
-        },
-        widgetsInColumn: [
-          ExpandableBox(
-            isBarVisible: LibraryTab.tracks.isBarVisible,
-            showSearchBox: LibraryTab.tracks.isSearchBoxVisible,
-            displayloadingIndicator: Indexer.inst.isIndexing.value,
-            leftWidgets: [
-              NamidaIconButton(
-                icon: Broken.shuffle,
-                onPressed: () => Player.inst.playOrPause(0, Indexer.inst.trackSearchList.toList(), QueueSource.allTracks, shuffle: true),
-                iconSize: 18.0,
-                horizontalPadding: 0,
+    return BackgroundWrapper(
+      child: Obx(
+        () => NamidaTracksList(
+          queueLength: Indexer.inst.trackSearchList.length,
+          queueSource: QueueSource.allTracks,
+          scrollController: LibraryTab.tracks.scrollController,
+          itemBuilder: (context, i) {
+            final track = Indexer.inst.trackSearchList[i];
+            return AnimatingTile(
+              key: ValueKey(i),
+              position: i,
+              shouldAnimate: LibraryTab.tracks.shouldAnimateTiles,
+              child: TrackTile(
+                index: i,
+                track: track,
+                draggableThumbnail: false,
+                queueSource: QueueSource.allTracks,
               ),
-              const SizedBox(width: 12.0),
-              NamidaIconButton(
-                icon: Broken.play,
-                onPressed: () => Player.inst.playOrPause(0, Indexer.inst.trackSearchList.toList(), QueueSource.allTracks),
-                iconSize: 18.0,
-                horizontalPadding: 0,
-              ),
-              const SizedBox(width: 12.0),
-            ],
-            leftText: Indexer.inst.trackSearchList.toList().displayTrackKeyword,
-            onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.tracks),
-            onCloseButtonPressed: () {
-              ScrollSearchController.inst.clearSearchTextField(LibraryTab.tracks);
-            },
-            sortByMenuWidget: SortByMenu(
-              title: SettingsController.inst.tracksSort.value.toText(),
-              popupMenuChild: const SortByMenuTracks(),
-              isCurrentlyReversed: SettingsController.inst.tracksSortReversed.value,
-              onReverseIconTap: () {
-                Indexer.inst.sortTracks(reverse: !SettingsController.inst.tracksSortReversed.value);
+            );
+          },
+          widgetsInColumn: [
+            ExpandableBox(
+              isBarVisible: LibraryTab.tracks.isBarVisible,
+              showSearchBox: LibraryTab.tracks.isSearchBoxVisible,
+              displayloadingIndicator: Indexer.inst.isIndexing.value,
+              leftWidgets: [
+                NamidaIconButton(
+                  icon: Broken.shuffle,
+                  onPressed: () => Player.inst.playOrPause(0, Indexer.inst.trackSearchList.toList(), QueueSource.allTracks, shuffle: true),
+                  iconSize: 18.0,
+                  horizontalPadding: 0,
+                ),
+                const SizedBox(width: 12.0),
+                NamidaIconButton(
+                  icon: Broken.play,
+                  onPressed: () => Player.inst.playOrPause(0, Indexer.inst.trackSearchList.toList(), QueueSource.allTracks),
+                  iconSize: 18.0,
+                  horizontalPadding: 0,
+                ),
+                const SizedBox(width: 12.0),
+              ],
+              leftText: Indexer.inst.trackSearchList.toList().displayTrackKeyword,
+              onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.tracks),
+              onCloseButtonPressed: () {
+                ScrollSearchController.inst.clearSearchTextField(LibraryTab.tracks);
               },
+              sortByMenuWidget: SortByMenu(
+                title: SettingsController.inst.tracksSort.value.toText(),
+                popupMenuChild: const SortByMenuTracks(),
+                isCurrentlyReversed: SettingsController.inst.tracksSortReversed.value,
+                onReverseIconTap: () {
+                  Indexer.inst.sortTracks(reverse: !SettingsController.inst.tracksSortReversed.value);
+                },
+              ),
+              textField: CustomTextFiled(
+                textFieldController: LibraryTab.tracks.textSearchController,
+                textFieldHintText: Language.inst.FILTER_TRACKS,
+                onTextFieldValueChanged: (value) => Indexer.inst.searchTracks(value),
+              ),
             ),
-            textField: CustomTextFiled(
-              textFieldController: LibraryTab.tracks.textSearchController,
-              textFieldHintText: Language.inst.FILTER_TRACKS,
-              onTextFieldValueChanged: (value) => Indexer.inst.searchTracks(value),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

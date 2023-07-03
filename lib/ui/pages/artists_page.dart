@@ -28,85 +28,87 @@ class ArtistsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final finalArtists = artists ?? Indexer.inst.artistSearchList;
-    return CupertinoScrollbar(
-      controller: _scrollController,
-      child: AnimationLimiter(
-        child: Obx(
-          () => Column(
-            children: [
-              ExpandableBox(
-                gridWidget: ChangeGridCountWidget(
-                  currentCount: SettingsController.inst.artistGridCount.value,
-                  onTap: () {
-                    final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.artists, countPerRow);
-                    SettingsController.inst.save(artistGridCount: newCount);
-                  },
-                ),
-                isBarVisible: LibraryTab.artists.isBarVisible,
-                showSearchBox: LibraryTab.artists.isSearchBoxVisible,
-                leftText: finalArtists.length.displayArtistKeyword,
-                onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.artists),
-                onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.artists),
-                sortByMenuWidget: SortByMenu(
-                  title: SettingsController.inst.artistSort.value.toText(),
-                  popupMenuChild: const SortByMenuArtists(),
-                  isCurrentlyReversed: SettingsController.inst.artistSortReversed.value,
-                  onReverseIconTap: () => Indexer.inst.sortArtists(reverse: !SettingsController.inst.artistSortReversed.value),
-                ),
-                textField: CustomTextFiled(
-                  textFieldController: LibraryTab.artists.textSearchController,
-                  textFieldHintText: Language.inst.FILTER_ARTISTS,
-                  onTextFieldValueChanged: (value) => Indexer.inst.searchArtists(value),
-                ),
-              ),
-              if (countPerRow == 1)
-                Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    itemCount: finalArtists.length,
-                    padding: const EdgeInsets.only(bottom: kBottomPadding),
-                    itemExtent: 65.0 + 2.0 * 9,
-                    itemBuilder: (BuildContext context, int i) {
-                      final artist = finalArtists[i];
-                      return AnimatingTile(
-                        position: i,
-                        shouldAnimate: LibraryTab.artists.shouldAnimateTiles,
-                        child: ArtistTile(
-                          tracks: artist.getArtistTracks(),
-                          name: artist,
-                          albums: artist.getArtistAlbums(),
-                        ),
-                      );
+    return BackgroundWrapper(
+      child: CupertinoScrollbar(
+        controller: _scrollController,
+        child: AnimationLimiter(
+          child: Obx(
+            () => Column(
+              children: [
+                ExpandableBox(
+                  gridWidget: ChangeGridCountWidget(
+                    currentCount: SettingsController.inst.artistGridCount.value,
+                    onTap: () {
+                      final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.artists, countPerRow);
+                      SettingsController.inst.save(artistGridCount: newCount);
                     },
                   ),
+                  isBarVisible: LibraryTab.artists.isBarVisible,
+                  showSearchBox: LibraryTab.artists.isSearchBoxVisible,
+                  leftText: finalArtists.length.displayArtistKeyword,
+                  onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.artists),
+                  onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.artists),
+                  sortByMenuWidget: SortByMenu(
+                    title: SettingsController.inst.artistSort.value.toText(),
+                    popupMenuChild: const SortByMenuArtists(),
+                    isCurrentlyReversed: SettingsController.inst.artistSortReversed.value,
+                    onReverseIconTap: () => Indexer.inst.sortArtists(reverse: !SettingsController.inst.artistSortReversed.value),
+                  ),
+                  textField: CustomTextFiled(
+                    textFieldController: LibraryTab.artists.textSearchController,
+                    textFieldHintText: Language.inst.FILTER_ARTISTS,
+                    onTextFieldValueChanged: (value) => Indexer.inst.searchArtists(value),
+                  ),
                 ),
-              if (countPerRow > 1)
-                Expanded(
-                  child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: countPerRow,
-                      childAspectRatio: 0.88,
-                      mainAxisSpacing: 8.0,
+                if (countPerRow == 1)
+                  Expanded(
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      itemCount: finalArtists.length,
+                      padding: const EdgeInsets.only(bottom: kBottomPadding),
+                      itemExtent: 65.0 + 2.0 * 9,
+                      itemBuilder: (BuildContext context, int i) {
+                        final artist = finalArtists[i];
+                        return AnimatingTile(
+                          position: i,
+                          shouldAnimate: LibraryTab.artists.shouldAnimateTiles,
+                          child: ArtistTile(
+                            tracks: artist.getArtistTracks(),
+                            name: artist,
+                            albums: artist.getArtistAlbums(),
+                          ),
+                        );
+                      },
                     ),
-                    controller: _scrollController,
-                    itemCount: finalArtists.length,
-                    padding: const EdgeInsets.only(bottom: kBottomPadding),
-                    itemBuilder: (BuildContext context, int i) {
-                      final artist = finalArtists[i];
-                      return AnimatingGrid(
-                        columnCount: finalArtists.length,
-                        position: i,
-                        shouldAnimate: LibraryTab.artists.shouldAnimateTiles,
-                        child: ArtistCard(
-                          name: artist,
-                          artist: artist.getArtistTracks(),
-                          gridCount: countPerRow,
-                        ),
-                      );
-                    },
                   ),
-                ),
-            ],
+                if (countPerRow > 1)
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: countPerRow,
+                        childAspectRatio: 0.88,
+                        mainAxisSpacing: 8.0,
+                      ),
+                      controller: _scrollController,
+                      itemCount: finalArtists.length,
+                      padding: const EdgeInsets.only(bottom: kBottomPadding),
+                      itemBuilder: (BuildContext context, int i) {
+                        final artist = finalArtists[i];
+                        return AnimatingGrid(
+                          columnCount: finalArtists.length,
+                          position: i,
+                          shouldAnimate: LibraryTab.artists.shouldAnimateTiles,
+                          child: ArtistCard(
+                            name: artist,
+                            artist: artist.getArtistTracks(),
+                            gridCount: countPerRow,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
