@@ -21,16 +21,19 @@ import 'package:namida/ui/widgets/sort_by_button.dart';
 class ArtistsPage extends StatelessWidget {
   final List<String>? artists;
   final int countPerRow;
-  const ArtistsPage({super.key, this.artists, required this.countPerRow});
+  final bool animateTiles;
+  const ArtistsPage({super.key, this.artists, required this.countPerRow, this.animateTiles = true});
 
-  ScrollController get _scrollController => LibraryTab.artists.scrollController;
+  bool get _shouldAnimate => animateTiles && LibraryTab.artists.shouldAnimateTiles;
 
   @override
   Widget build(BuildContext context) {
     final finalArtists = artists ?? Indexer.inst.artistSearchList;
+    final scrollController = LibraryTab.artists.scrollController;
+
     return BackgroundWrapper(
       child: CupertinoScrollbar(
-        controller: _scrollController,
+        controller: scrollController,
         child: AnimationLimiter(
           child: Obx(
             () => Column(
@@ -63,7 +66,7 @@ class ArtistsPage extends StatelessWidget {
                 if (countPerRow == 1)
                   Expanded(
                     child: ListView.builder(
-                      controller: _scrollController,
+                      controller: scrollController,
                       itemCount: finalArtists.length,
                       padding: const EdgeInsets.only(bottom: kBottomPadding),
                       itemExtent: 65.0 + 2.0 * 9,
@@ -71,7 +74,7 @@ class ArtistsPage extends StatelessWidget {
                         final artist = finalArtists[i];
                         return AnimatingTile(
                           position: i,
-                          shouldAnimate: LibraryTab.artists.shouldAnimateTiles,
+                          shouldAnimate: _shouldAnimate,
                           child: ArtistTile(
                             tracks: artist.getArtistTracks(),
                             name: artist,
@@ -89,7 +92,7 @@ class ArtistsPage extends StatelessWidget {
                         childAspectRatio: 0.88,
                         mainAxisSpacing: 8.0,
                       ),
-                      controller: _scrollController,
+                      controller: scrollController,
                       itemCount: finalArtists.length,
                       padding: const EdgeInsets.only(bottom: kBottomPadding),
                       itemBuilder: (BuildContext context, int i) {
@@ -97,7 +100,7 @@ class ArtistsPage extends StatelessWidget {
                         return AnimatingGrid(
                           columnCount: finalArtists.length,
                           position: i,
-                          shouldAnimate: LibraryTab.artists.shouldAnimateTiles,
+                          shouldAnimate: _shouldAnimate,
                           child: ArtistCard(
                             name: artist,
                             artist: artist.getArtistTracks(),

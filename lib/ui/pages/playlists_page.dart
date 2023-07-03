@@ -31,6 +31,7 @@ class PlaylistsPage extends StatelessWidget {
   final bool displayTopRow;
   final bool disableBottomPadding;
   final int countPerRow;
+  final bool animateTiles;
 
   const PlaylistsPage({
     super.key,
@@ -38,15 +39,18 @@ class PlaylistsPage extends StatelessWidget {
     this.displayTopRow = true,
     this.disableBottomPadding = false,
     required this.countPerRow,
+    this.animateTiles = true,
   });
 
-  ScrollController get _scrollController => LibraryTab.playlists.scrollController;
+  bool get _shouldAnimate => animateTiles && LibraryTab.playlists.shouldAnimateTiles;
 
   @override
   Widget build(BuildContext context) {
+    final scrollController = LibraryTab.playlists.scrollController;
+
     return BackgroundWrapper(
       child: CupertinoScrollbar(
-        controller: _scrollController,
+        controller: scrollController,
         child: AnimationLimiter(
           child: Column(
             children: [
@@ -80,7 +84,7 @@ class PlaylistsPage extends StatelessWidget {
               Expanded(
                 child: Obx(
                   () => CustomScrollView(
-                    controller: _scrollController,
+                    controller: scrollController,
                     slivers: [
                       if (displayTopRow)
                         SliverToBoxAdapter(
@@ -185,7 +189,7 @@ class PlaylistsPage extends StatelessWidget {
                               final playlist = PlaylistController.inst.playlistsMap[key]!;
                               return AnimatingTile(
                                 position: i,
-                                shouldAnimate: LibraryTab.playlists.shouldAnimateTiles,
+                                shouldAnimate: _shouldAnimate,
                                 child: PlaylistTile(
                                   playlistName: key,
                                   onTap: tracksToAdd != null
@@ -211,7 +215,7 @@ class PlaylistsPage extends StatelessWidget {
                               return AnimatingGrid(
                                 columnCount: PlaylistController.inst.playlistSearchList.length,
                                 position: i,
-                                shouldAnimate: LibraryTab.playlists.shouldAnimateTiles,
+                                shouldAnimate: _shouldAnimate,
                                 child: MultiArtworkCard(
                                   heroTag: 'playlist_${playlist.name}',
                                   tracks: playlist.tracks.map((e) => e.track).toList(),

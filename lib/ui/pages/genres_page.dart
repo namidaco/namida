@@ -21,15 +21,18 @@ import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class GenresPage extends StatelessWidget {
   final int countPerRow;
-  const GenresPage({super.key, required this.countPerRow});
+  final bool animateTiles;
+  const GenresPage({super.key, required this.countPerRow, this.animateTiles = true});
 
-  ScrollController get _scrollController => LibraryTab.genres.scrollController;
+  bool get _shouldAnimate => animateTiles && LibraryTab.genres.shouldAnimateTiles;
 
   @override
   Widget build(BuildContext context) {
+    final scrollController = LibraryTab.genres.scrollController;
+
     return BackgroundWrapper(
       child: CupertinoScrollbar(
-        controller: _scrollController,
+        controller: scrollController,
         child: AnimationLimiter(
           child: Obx(
             () => Column(
@@ -62,7 +65,7 @@ class GenresPage extends StatelessWidget {
                 Expanded(
                   child: GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.8, mainAxisSpacing: 8.0),
-                    controller: _scrollController,
+                    controller: scrollController,
                     itemCount: Indexer.inst.genreSearchList.length,
                     padding: const EdgeInsets.only(bottom: kBottomPadding),
                     itemBuilder: (BuildContext context, int i) {
@@ -70,7 +73,7 @@ class GenresPage extends StatelessWidget {
                       return AnimatingGrid(
                         columnCount: Indexer.inst.genreSearchList.length,
                         position: i,
-                        shouldAnimate: LibraryTab.genres.shouldAnimateTiles,
+                        shouldAnimate: _shouldAnimate,
                         child: MultiArtworkCard(
                           heroTag: 'genre_$genre',
                           tracks: genre.getGenresTracks(),

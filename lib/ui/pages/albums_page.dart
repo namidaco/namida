@@ -22,17 +22,20 @@ import 'package:namida/ui/widgets/sort_by_button.dart';
 class AlbumsPage extends StatelessWidget {
   final List<String>? albums;
   final int countPerRow;
+  final bool animateTiles;
 
-  const AlbumsPage({super.key, this.albums, required this.countPerRow});
+  const AlbumsPage({super.key, this.albums, required this.countPerRow, this.animateTiles = true});
 
-  ScrollController get _scrollController => LibraryTab.albums.scrollController;
+  bool get _shouldAnimate => animateTiles && LibraryTab.albums.shouldAnimateTiles;
 
   @override
   Widget build(BuildContext context) {
     final finalAlbums = albums ?? Indexer.inst.albumSearchList;
+    final scrollController = LibraryTab.albums.scrollController;
+
     return BackgroundWrapper(
       child: CupertinoScrollbar(
-        controller: _scrollController,
+        controller: scrollController,
         child: AnimationLimiter(
           child: Column(
             children: [
@@ -42,7 +45,7 @@ class AlbumsPage extends StatelessWidget {
                     currentCount: countPerRow,
                     forStaggered: SettingsController.inst.useAlbumStaggeredGridView.value,
                     onTap: () {
-                      final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.albums, countPerRow);
+                      final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.albums, countPerRow, animateTiles: false);
                       SettingsController.inst.save(albumGridCount: newCount);
                     },
                   ),
@@ -69,7 +72,7 @@ class AlbumsPage extends StatelessWidget {
                   return countPerRow == 1
                       ? Expanded(
                           child: ListView.builder(
-                            controller: _scrollController,
+                            controller: scrollController,
                             itemCount: finalAlbums.length,
                             itemExtent: SettingsController.inst.albumListTileHeight.value + 4.0 * 5,
                             padding: const EdgeInsets.only(bottom: kBottomPadding),
@@ -77,7 +80,7 @@ class AlbumsPage extends StatelessWidget {
                               final albumName = finalAlbums[i];
                               return AnimatingTile(
                                 position: i,
-                                shouldAnimate: LibraryTab.albums.shouldAnimateTiles,
+                                shouldAnimate: _shouldAnimate,
                                 child: AlbumTile(
                                   name: albumName,
                                   album: albumName.getAlbumTracks(),
@@ -89,7 +92,7 @@ class AlbumsPage extends StatelessWidget {
                       : SettingsController.inst.useAlbumStaggeredGridView.value
                           ? Expanded(
                               child: MasonryGridView.builder(
-                                controller: _scrollController,
+                                controller: scrollController,
                                 padding: const EdgeInsets.only(bottom: kBottomPadding),
                                 itemCount: finalAlbums.length,
                                 mainAxisSpacing: 8.0,
@@ -99,7 +102,7 @@ class AlbumsPage extends StatelessWidget {
                                   return AnimatingGrid(
                                     columnCount: finalAlbums.length,
                                     position: i,
-                                    shouldAnimate: LibraryTab.albums.shouldAnimateTiles,
+                                    shouldAnimate: _shouldAnimate,
                                     child: AlbumCard(
                                       name: albumName,
                                       album: albumName.getAlbumTracks(),
@@ -112,7 +115,7 @@ class AlbumsPage extends StatelessWidget {
                           : Expanded(
                               child: GridView.builder(
                                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.75, mainAxisSpacing: 8.0),
-                                controller: _scrollController,
+                                controller: scrollController,
                                 itemCount: finalAlbums.length,
                                 padding: const EdgeInsets.only(bottom: kBottomPadding),
                                 itemBuilder: (BuildContext context, int i) {
@@ -120,7 +123,7 @@ class AlbumsPage extends StatelessWidget {
                                   return AnimatingGrid(
                                     columnCount: finalAlbums.length,
                                     position: i,
-                                    shouldAnimate: LibraryTab.albums.shouldAnimateTiles,
+                                    shouldAnimate: _shouldAnimate,
                                     child: AlbumCard(
                                       name: albumName,
                                       album: albumName.getAlbumTracks(),

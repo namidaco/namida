@@ -53,11 +53,11 @@ class ScrollSearchController {
     NamidaNavigator.inst.navigateOffAll(w, transition: transition);
   }
 
-  int animateChangingGridSize(LibraryTab tab, int currentGridCount, {int minimum = 1, int maximum = 4}) {
+  int animateChangingGridSize(LibraryTab tab, int currentGridCount, {int minimum = 1, int maximum = 4, bool animateTiles = true}) {
     final n = currentGridCount;
     final nToSave = n < maximum ? n + 1 : minimum;
     _updateScrollPositions(tab, tab);
-    NamidaNavigator.inst.navigateOff(tab.toWidget(nToSave), durationInMs: 300);
+    NamidaNavigator.inst.navigateOff(tab.toWidget(nToSave, false), durationInMs: 500);
     return nToSave;
   }
 
@@ -178,7 +178,8 @@ class ScrollSearchController {
 }
 
 extension LibraryTabStuff on LibraryTab {
-  ScrollController get scrollController => ScrollSearchController.inst.scrollControllersMap[this]!;
+  // note: a new [ScrollController] is initialized only when navigating to album/artist search results.
+  ScrollController get scrollController => ScrollSearchController.inst.scrollControllersMap[this] ?? ScrollController();
   TextEditingController? get textSearchController => ScrollSearchController.inst.textSearchControllers[this];
   double get scrollPosition => ScrollSearchController.inst.getScrollPosition(this);
   bool get isBarVisible => ScrollSearchController.inst.getIsBarVisible(this);

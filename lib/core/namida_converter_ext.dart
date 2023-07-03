@@ -43,21 +43,21 @@ extension LibraryTabToEnum on int {
 extension LibraryTabUtils on LibraryTab {
   int toInt() => SettingsController.inst.libraryTabs.toList().indexOf(this);
 
-  Widget toWidget([int? gridCount]) {
+  Widget toWidget([int? gridCount, bool animateTiles = true]) {
     if (this == LibraryTab.albums) {
-      return AlbumsPage(countPerRow: gridCount ?? SettingsController.inst.albumGridCount.value);
+      return AlbumsPage(countPerRow: gridCount ?? SettingsController.inst.albumGridCount.value, animateTiles: animateTiles);
     }
     if (this == LibraryTab.tracks) {
       return const TracksPage();
     }
     if (this == LibraryTab.artists) {
-      return ArtistsPage(countPerRow: gridCount ?? SettingsController.inst.artistGridCount.value);
+      return ArtistsPage(countPerRow: gridCount ?? SettingsController.inst.artistGridCount.value, animateTiles: animateTiles);
     }
     if (this == LibraryTab.genres) {
-      return GenresPage(countPerRow: gridCount ?? SettingsController.inst.genreGridCount.value);
+      return GenresPage(countPerRow: gridCount ?? SettingsController.inst.genreGridCount.value, animateTiles: animateTiles);
     }
     if (this == LibraryTab.playlists) {
-      return PlaylistsPage(countPerRow: gridCount ?? SettingsController.inst.playlistGridCount.value);
+      return PlaylistsPage(countPerRow: gridCount ?? SettingsController.inst.playlistGridCount.value, animateTiles: animateTiles);
     }
     if (this == LibraryTab.folders) {
       return FoldersPage();
