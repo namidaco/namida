@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' hide Playlist;
 
 import 'package:namida/class/playlist.dart';
+import 'package:namida/class/queue.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
@@ -440,7 +442,7 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
       addThese(Indexer.inst.trackSearchTemp.toList());
     }
     if (this == QueueSource.mostPlayed) {
-      addThese(HistoryController.inst.topTracksMapListens.keys);
+      addThese(HistoryController.inst.mostPlayedTracks);
     }
     if (this == QueueSource.history) {
       dayOfHistory != null
@@ -681,69 +683,161 @@ extension ThemeUtils on ThemeMode {
   }
 }
 
-extension WidgetsPages on Widget {
-  Future<void> updateColorScheme() async {
-    // a delay to prevent navigation glitches
-    await Future.delayed(const Duration(milliseconds: 500));
-    Color? color;
-    if (this is AlbumTracksPage || this is ArtistTracksPage) {
-      final Track? tr = tracksInside.trackOfImage;
-      if (tr != null) {
-        color = await CurrentColor.inst.getTrackDelightnedColor(tr);
-      }
-    }
-    CurrentColor.inst.updateCurrentColorSchemeOfSubPages(color);
-  }
+extension WidgetsPagess on Widget {
+  NamidaRoute toNamidaRoute() {
+    String name = '';
+    RouteType route = RouteType.UNKNOWN;
+    switch (runtimeType) {
+      // ----- Pages -----
+      case TracksPage:
+        route = RouteType.PAGE_allTracks;
+        break;
+      case AlbumsPage:
+        route = RouteType.PAGE_albums;
+        break;
+      case ArtistsPage:
+        route = RouteType.PAGE_artists;
+        break;
+      case GenresPage:
+        route = RouteType.PAGE_genres;
+        break;
+      case PlaylistsPage:
+        route = RouteType.PAGE_playlists;
+        break;
+      case FoldersPage:
+        route = RouteType.PAGE_folders;
+        break;
+      case QueuesPage:
+        route = RouteType.PAGE_queue;
+        break;
 
+      // ----- Subpages -----
+      case AlbumTracksPage:
+        route = RouteType.SUBPAGE_albumTracks;
+        name = (this as AlbumTracksPage).name;
+        break;
+      case ArtistTracksPage:
+        route = RouteType.SUBPAGE_artistTracks;
+        name = (this as ArtistTracksPage).name;
+        break;
+      case GenreTracksPage:
+        route = RouteType.SUBPAGE_genreTracks;
+        name = (this as GenreTracksPage).name;
+        break;
+      case NormalPlaylistTracksPage:
+        route = RouteType.SUBPAGE_playlistTracks;
+        name = (this as NormalPlaylistTracksPage).playlistName;
+        break;
+      case HistoryTracksPage:
+        route = RouteType.SUBPAGE_historyTracks;
+        name = k_PLAYLIST_NAME_HISTORY;
+        break;
+      case MostPlayedTracksPage:
+        route = RouteType.SUBPAGE_mostPlayedTracks;
+        name = k_PLAYLIST_NAME_MOST_PLAYED;
+        break;
+      case QueueTracksPage:
+        route = RouteType.SUBPAGE_queueTracks;
+        name = (this as QueueTracksPage).queue.date.toString();
+        break;
+
+      // ----- Search Results -----
+      case AlbumSearchResultsPage:
+        route = RouteType.SEARCH_albumResults;
+        break;
+      case ArtistSearchResultsPage:
+        route = RouteType.SEARCH_artistResults;
+        break;
+
+      // ----- Settings -----
+      case SettingsPage:
+        route = RouteType.SETTINGS_page;
+        break;
+      case SettingsSubPage:
+        route = RouteType.SETTINGS_subpage;
+        name = (this as SettingsSubPage).title;
+        break;
+    }
+
+    return NamidaRoute(route, name);
+  }
+}
+
+extension RouteUtils on NamidaRoute {
   List<Track> get tracksInside {
     final tr = <Track>[];
-    if (this is TracksPage) {
-      tr.addAll(Indexer.inst.trackSearchList);
-    }
-    if (this is AlbumTracksPage) {
-      final album = this as AlbumTracksPage;
-      tr.addAll(album.tracks);
-    }
-    if (this is ArtistTracksPage) {
-      final artist = this as ArtistTracksPage;
-      tr.addAll(artist.tracks);
-    }
-    if (this is GenreTracksPage) {
-      final g = this as GenreTracksPage;
-      tr.addAll(g.tracks);
-    }
-    if (this is QueueTracksPage) {
-      final q = this as QueueTracksPage;
-      tr.addAll(q.queue.tracks);
-    }
-    // TODO: other playlist pages
-    if (this is NormalPlaylistTracksPage) {
-      final pl = this as NormalPlaylistTracksPage;
-      tr.addAll(PlaylistController.inst.getPlaylist(pl.playlistName)?.tracks.map((e) => e.track) ?? []);
-    }
-    if (this is FoldersPage) {
-      tr.addAll(Folders.inst.currentTracks);
+    switch (route) {
+      case RouteType.PAGE_allTracks:
+        tr.addAll(Indexer.inst.trackSearchList);
+      case RouteType.PAGE_folders:
+        tr.addAll(Folders.inst.currentTracks);
+      case RouteType.SUBPAGE_albumTracks:
+        tr.addAll(name.getAlbumTracks());
+      case RouteType.SUBPAGE_artistTracks:
+        tr.addAll(name.getArtistTracks());
+      case RouteType.SUBPAGE_genreTracks:
+        tr.addAll(name.getGenresTracks());
+      case RouteType.SUBPAGE_queueTracks:
+        tr.addAll(name.getQueue()?.tracks ?? []);
+      case RouteType.SUBPAGE_playlistTracks:
+        tr.addAll(PlaylistController.inst.getPlaylist(name)?.tracks.map((e) => e.track) ?? []);
+      case RouteType.SUBPAGE_historyTracks:
+        tr.addAll(HistoryController.inst.historyTracks.map((e) => e.track));
+      case RouteType.SUBPAGE_mostPlayedTracks:
+        tr.addAll(HistoryController.inst.mostPlayedTracks);
+
+      default:
+        null;
     }
     return tr;
   }
 
+  /// Currently Supports only [RouteType.SUBPAGE_albumTracks] & [RouteType.SUBPAGE_artistTracks].
+  Track? get trackOfColor {
+    if (route == RouteType.SUBPAGE_albumTracks) {
+      return name.getAlbumTracks().trackOfImage;
+    }
+    if (route == RouteType.SUBPAGE_artistTracks) {
+      return name.getArtistTracks().trackOfImage;
+    }
+    return null;
+  }
+
+  /// Currently Supports only [RouteType.SUBPAGE_albumTracks] & [RouteType.SUBPAGE_artistTracks].
+  Future<void> updateColorScheme() async {
+    // a delay to prevent navigation glitches
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    Color? color;
+    final trackToExtractFrom = trackOfColor;
+    if (trackToExtractFrom != null) {
+      color = await CurrentColor.inst.getTrackDelightnedColor(trackToExtractFrom);
+    }
+    CurrentColor.inst.updateCurrentColorSchemeOfSubPages(color);
+  }
+
   Widget? toTitle() {
-    if (this is SettingsPage) {
-      return Text(Language.inst.SETTINGS);
+    Widget getTextWidget(String t) => Text(t);
+    Widget? finalWidget;
+    switch (route) {
+      case RouteType.SETTINGS_page:
+        finalWidget = getTextWidget(Language.inst.SETTINGS);
+      case RouteType.SETTINGS_subpage:
+        finalWidget = getTextWidget(name);
+      case RouteType.SEARCH_albumResults:
+        finalWidget = getTextWidget(Language.inst.ALBUMS);
+      case RouteType.SEARCH_artistResults:
+        finalWidget = getTextWidget(Language.inst.ARTISTS);
+      case RouteType.PAGE_queue:
+        finalWidget = Obx(() => getTextWidget("${Language.inst.QUEUES} • ${QueueController.inst.queuesMap.value.length}"));
+      default:
+        null;
     }
-    if (this is SettingsSubPage) {
-      return Text((this as SettingsSubPage).title);
-    }
-    if (this is QueuesPage) {
-      return Obx(() => Text("${Language.inst.QUEUES} • ${QueueController.inst.queuesMap.value.length}"));
-    }
-    if (this is AlbumSearchResultsPage) {
-      return Text(Language.inst.ALBUMS);
-    }
-    if (this is ArtistSearchResultsPage) {
-      return Text(Language.inst.ARTISTS);
-    }
-    return const NamidaSearchBar();
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: finalWidget ?? const NamidaSearchBar(),
+    );
   }
 
   List<Widget> toActions() {
@@ -769,70 +863,53 @@ extension WidgetsPages on Widget {
       );
     }
 
-// TODO: other playlists
-    NormalPlaylistTracksPage? playlist = this is NormalPlaylistTracksPage ? this as NormalPlaylistTracksPage : null;
-    final bool shouldShowReorderIcon = playlist != null && playlist.playlistName != k_PLAYLIST_NAME_HISTORY && playlist.playlistName != k_PLAYLIST_NAME_MOST_PLAYED;
+    final shouldHideInitialActions = route == RouteType.PAGE_stats || route == RouteType.SETTINGS_page || route == RouteType.SETTINGS_subpage;
+    return <Widget>[
+      getAnimatedCrossFade(child: const NamidaStatsIcon(), shouldShow: !shouldHideInitialActions),
+      getAnimatedCrossFade(child: const ParsingJsonPercentage(size: 30.0), shouldShow: true),
+      getAnimatedCrossFade(child: const NamidaSettingsButton(), shouldShow: !shouldHideInitialActions),
 
-    final initialActions = <Widget>[
-      ...[
-        const NamidaStatsIcon(),
-        const ParsingJsonPercentage(size: 30.0),
-        const NamidaSettingsButton(),
-      ].map(
-        (e) => getAnimatedCrossFade(child: e, shouldShow: true),
+      getAnimatedCrossFade(
+        child: getMoreIcon(() {
+          switch (route) {
+            case RouteType.SUBPAGE_albumTracks:
+              NamidaDialogs.inst.showAlbumDialog(name);
+            case RouteType.SUBPAGE_artistTracks:
+              NamidaDialogs.inst.showArtistDialog(name);
+            case RouteType.SUBPAGE_genreTracks:
+              NamidaDialogs.inst.showGenreDialog(name);
+            case RouteType.SUBPAGE_queueTracks:
+              NamidaDialogs.inst.showQueueDialog(int.parse(name));
+
+            default:
+              null;
+          }
+        }),
+        shouldShow:
+            route == RouteType.SUBPAGE_albumTracks || route == RouteType.SUBPAGE_artistTracks || route == RouteType.SUBPAGE_genreTracks || route == RouteType.SUBPAGE_queueTracks,
+      ),
+      // ---- Playlist Tracks ----
+      getAnimatedCrossFade(
+        child: Obx(
+          () {
+            final reorderable = PlaylistController.inst.canReorderTracks.value;
+            return NamidaIconButton(
+              tooltip: reorderable ? Language.inst.DISABLE_REORDERING : Language.inst.ENABLE_REORDERING,
+              icon: reorderable ? Broken.forward_item : Broken.lock_1,
+              padding: const EdgeInsets.only(right: 14, left: 4.0),
+              onPressed: () => PlaylistController.inst.canReorderTracks.value = !PlaylistController.inst.canReorderTracks.value,
+            );
+          },
+        ),
+        shouldShow: route == RouteType.SUBPAGE_playlistTracks,
       ),
       getAnimatedCrossFade(
         child: getMoreIcon(() {
-          /// Album Subpage
-          if (this is AlbumTracksPage) {
-            final album = this as AlbumTracksPage;
-            NamidaDialogs.inst.showAlbumDialog(album.name);
-          }
-
-          /// Artist Subpage
-          if (this is ArtistTracksPage) {
-            final artist = this as ArtistTracksPage;
-            NamidaDialogs.inst.showArtistDialog(artist.name);
-          }
-
-          /// Genre Subpage
-          if (this is GenreTracksPage) {
-            final g = this as GenreTracksPage;
-            NamidaDialogs.inst.showGenreDialog(g.name);
-          }
-
-          /// Queue Subpage
-          if (this is QueueTracksPage) {
-            final q = this as QueueTracksPage;
-            NamidaDialogs.inst.showQueueDialog(q.queue);
-          }
+          NamidaDialogs.inst.showPlaylistDialog(name);
         }),
-        shouldShow: this is! NormalPlaylistTracksPage &&
-            (this is AlbumTracksPage || this is ArtistTracksPage || this is GenreTracksPage || this is QueueTracksPage || this is NormalPlaylistTracksPage),
-      ),
-      getAnimatedCrossFade(
-        child: shouldShowReorderIcon
-            ? Obx(
-                () {
-                  return NamidaIconButton(
-                    tooltip: playlist.shouldReorder.value ? Language.inst.DISABLE_REORDERING : Language.inst.ENABLE_REORDERING,
-                    icon: playlist.shouldReorder.value ? Broken.forward_item : Broken.lock_1,
-                    padding: const EdgeInsets.only(right: 14, left: 4.0),
-                    onPressed: () => playlist.shouldReorder.value = !playlist.shouldReorder.value,
-                  );
-                },
-              )
-            : const SizedBox(),
-        shouldShow: shouldShowReorderIcon,
-      ),
-      getAnimatedCrossFade(
-        child: getMoreIcon(() {
-          NamidaDialogs.inst.showPlaylistDialog(playlist!.playlistName);
-        }),
-        shouldShow: playlist != null,
+        shouldShow: route == RouteType.SUBPAGE_playlistTracks || route == RouteType.SUBPAGE_historyTracks || route == RouteType.SUBPAGE_mostPlayedTracks,
       ),
     ];
-    return initialActions;
   }
 }
 
@@ -857,4 +934,10 @@ extension TracksFromMaps on String {
     });
     return albums;
   }
+
+  Queue? getQueue() => QueueController.inst.queuesMap.value[int.parse(this)];
+}
+
+extension QueueFromMap on int {
+  Queue? getQueue() => QueueController.inst.queuesMap.value[this];
 }

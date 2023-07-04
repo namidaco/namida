@@ -20,16 +20,19 @@ class HistoryController {
 
   int get historyTracksLength => historyMap.value.entries.fold(0, (sum, obj) => sum + obj.value.length);
   List<TrackWithDate> get historyTracks => historyMap.value.entries.fold([], (mainList, newEntry) => [...mainList, ...newEntry.value]);
-  TrackWithDate? get oldestTrack => historyMap.value[historyDays.lastOrNull]?.lastOrNull;
-  TrackWithDate? get newestTrack => historyMap.value[historyDays.firstOrNull]?.firstOrNull;
+  TrackWithDate? get oldestTrack => historyMap.value[historyDays.lastOrNull]?.firstOrNull;
+  TrackWithDate? get newestTrack => historyMap.value[historyDays.firstOrNull]?.lastOrNull;
   Iterable<int> get historyDays => historyMap.value.keys;
 
   /// History tracks, key = dayInMSSE && value = <TrackWithDate>[]
   ///
-  /// Sorted by newest date, oldest track would be the last.
+  /// Sorted by newest date, i.e. newest list would be the first.
+  ///
+  /// for List<TrackWithDate>, the tracks are added to the last index, i.e. newest track will be the last in the list.
   final Rx<SplayTreeMap<int, List<TrackWithDate>>> historyMap = SplayTreeMap<int, List<TrackWithDate>>((date1, date2) => date2.compareTo(date1)).obs;
 
   final RxMap<Track, List<int>> topTracksMapListens = <Track, List<int>>{}.obs;
+  Iterable<Track> get mostPlayedTracks => topTracksMapListens.keys;
 
   Timer? _historyTimer;
 
@@ -80,10 +83,8 @@ class HistoryController {
       final trackday = (e.dateAdded / msinday).floor();
       daysToSave.add(trackday);
       historyMap.value.addForce(trackday, e);
-      print("sdsds ${e.dateAdded}");
     });
 
-    historyMap.refresh();
     return daysToSave;
   }
 
@@ -108,7 +109,8 @@ class HistoryController {
   }
 
   Future<void> removeFromHistory(int dayOfTrack, int index) async {
-    historyMap.value[dayOfTrack]!.removeAt(index);
+    final trs = historyMap.value[dayOfTrack]!;
+    trs.removeAt(trs.length - 1 - index);
     await saveHistoryToStorage([dayOfTrack]);
   }
 

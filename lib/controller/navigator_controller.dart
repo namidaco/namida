@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -17,7 +18,8 @@ class NamidaNavigator {
 
   final navKey = Get.nestedKey(1);
 
-  final RxList<Widget> currentWidgetStack = <Widget>[].obs;
+  final RxList<NamidaRoute> currentWidgetStack = <NamidaRoute>[].obs;
+  NamidaRoute? get currentRoute => currentWidgetStack.lastOrNull;
   int currentDialogNumber = 0;
 
   final GlobalKey<InnerDrawerState> innerDrawerKey = GlobalKey<InnerDrawerState>();
@@ -32,30 +34,24 @@ class NamidaNavigator {
   Future<void> navigateTo(
     Widget page, {
     bool nested = true,
-    bool shouldGetOffAll = false,
     Transition transition = Transition.cupertino,
   }) async {
     _hideSearchMenuAndUnfocus();
-
-    page.updateColorScheme();
-
+    currentWidgetStack.add(page.toNamidaRoute());
     closeAllDialogs();
 
-    if (shouldGetOffAll) {
-      await navigateOffAll(page, nested: nested, transition: transition);
-    } else {
-      currentWidgetStack.add(page);
-      await Get.to(
-        () => page,
-        id: nested ? 1 : null,
-        preventDuplicates: false,
-        transition: transition,
-        curve: Curves.easeOut,
-        duration: const Duration(milliseconds: 500),
-        opaque: true,
-        fullscreenDialog: false,
-      );
-    }
+    currentRoute?.updateColorScheme();
+
+    await Get.to(
+      () => page,
+      id: nested ? 1 : null,
+      preventDuplicates: false,
+      transition: transition,
+      curve: Curves.easeOut,
+      duration: const Duration(milliseconds: 500),
+      opaque: true,
+      fullscreenDialog: false,
+    );
   }
 
   void navigateDialog(Widget dialog, {int durationInMs = 400, Future<bool> Function()? onWillPop}) {
@@ -105,9 +101,9 @@ class NamidaNavigator {
     _hideSearchMenuAndUnfocus();
 
     currentWidgetStack.removeLast();
-    currentWidgetStack.add(page);
+    currentWidgetStack.add(page.toNamidaRoute());
 
-    page.updateColorScheme();
+    currentRoute?.updateColorScheme();
 
     await Get.off(
       () => page,
@@ -130,9 +126,9 @@ class NamidaNavigator {
 
     currentWidgetStack
       ..clear()
-      ..add(page);
+      ..add(page.toNamidaRoute());
 
-    page.updateColorScheme();
+    currentRoute?.updateColorScheme();
 
     await Get.offAll(
       () => page,
@@ -156,7 +152,7 @@ class NamidaNavigator {
     if (currentWidgetStack.length > 1) {
       currentWidgetStack.removeLast();
     }
-    currentWidgetStack.lastOrNull?.updateColorScheme();
+    currentRoute?.updateColorScheme();
     _hideSearchMenuAndUnfocus();
   }
 

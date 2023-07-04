@@ -19,7 +19,7 @@ class SelectedTracksController {
     if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
       return Indexer.inst.trackSearchTemp.toList();
     }
-    return NamidaNavigator.inst.currentWidgetStack.lastOrNull?.tracksInside ?? [];
+    return NamidaNavigator.inst.currentRoute?.tracksInside ?? [];
   }
 
   final RxBool isMenuMinimized = true.obs;

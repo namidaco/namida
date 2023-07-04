@@ -132,7 +132,7 @@ class MostPlayedTracksPage extends StatelessWidget {
     return BackgroundWrapper(
       child: Obx(
         () {
-          final tracks = HistoryController.inst.topTracksMapListens.keys.toList();
+          final tracks = HistoryController.inst.mostPlayedTracks.toList();
           return NamidaListView(
             itemExtents: List.generate(tracks.length, (index) => trackTileItemExtent),
             header: SubpagesTopContainer(
@@ -188,18 +188,18 @@ class MostPlayedTracksPage extends StatelessWidget {
 class NormalPlaylistTracksPage extends StatelessWidget {
   final String playlistName;
   final bool disableAnimation;
-  NormalPlaylistTracksPage({super.key, required this.playlistName, this.disableAnimation = false});
-
-  final RxBool shouldReorder = false.obs;
+  const NormalPlaylistTracksPage({super.key, required this.playlistName, this.disableAnimation = false});
 
   @override
   Widget build(BuildContext context) {
     return BackgroundWrapper(
       child: Obx(
         () {
+          PlaylistController.inst.playlistsMap.entries;
           final playlist = PlaylistController.inst.getPlaylist(playlistName)!;
           final tracksWithDate = playlist.tracks;
           final tracks = tracksWithDate.map((e) => e.track).toList();
+          final reorderable = PlaylistController.inst.canReorderTracks.value;
 
           return NamidaTracksList(
             queueSource: playlist.toQueueSource(),
@@ -217,7 +217,7 @@ class NormalPlaylistTracksPage extends StatelessWidget {
               ),
               tracks: tracks,
             ),
-            buildDefaultDragHandles: shouldReorder.value,
+            buildDefaultDragHandles: reorderable,
             padding: const EdgeInsets.only(bottom: kBottomPadding),
             onReorder: (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
             queueLength: playlist.tracks.length,
@@ -225,7 +225,7 @@ class NormalPlaylistTracksPage extends StatelessWidget {
               final trackWithDate = tracksWithDate[i];
               final w = FadeDismissible(
                 key: Key("Diss_$i${trackWithDate.track.path}"),
-                direction: shouldReorder.value ? DismissDirection.horizontal : DismissDirection.none,
+                direction: reorderable ? DismissDirection.horizontal : DismissDirection.none,
                 onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTrackFromPlaylist(playlist.name, i, trackWithDate),
                 child: Stack(
                   alignment: Alignment.centerLeft,
@@ -236,9 +236,9 @@ class NormalPlaylistTracksPage extends StatelessWidget {
                       trackWithDate: trackWithDate,
                       playlistName: playlist.name,
                       queueSource: playlist.toQueueSource(),
-                      draggableThumbnail: shouldReorder.value,
+                      draggableThumbnail: reorderable,
                     ),
-                    Obx(() => ThreeLineSmallContainers(enabled: shouldReorder.value)),
+                    ThreeLineSmallContainers(enabled: reorderable),
                   ],
                 ),
               );

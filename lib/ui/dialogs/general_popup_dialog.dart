@@ -166,7 +166,7 @@ Future<void> showGeneralPopupDialog(
   }
 
   void setPlaylistMoods() {
-    // function button won't be visible is playlistName == null.
+    // function button won't be visible if playlistName == null.
     if (!shoulShowPlaylistUtils()) return;
 
     final pl = PlaylistController.inst.getPlaylist(playlistName!);
@@ -178,6 +178,7 @@ Future<void> showGeneralPopupDialog(
   }
 
   Rx<TrackStats> stats = tracks.first.stats.obs;
+
   Future<void> saveStatsToFile() async {
     stats.refresh();
     Indexer.inst.trackStatsMap[tracks.first.path] = TrackStats(tracks.first.path, stats.value.rating, stats.value.tags, stats.value.moods, stats.value.lastPositionInMs);
@@ -234,7 +235,7 @@ Future<void> showGeneralPopupDialog(
   }
 
   void renamePlaylist() {
-    // function button won't be visible is playlistName == null.
+    // function button won't be visible if playlistName == null.
     if (!shoulShowPlaylistUtils()) return;
 
     TextEditingController controller = TextEditingController(text: playlistName);
@@ -276,7 +277,7 @@ Future<void> showGeneralPopupDialog(
   }
 
   void deletePlaylist() {
-    // function button won't be visible is playlistName == null.
+    // function button won't be visible if playlistName == null.
     if (!shoulShowPlaylistUtils()) return;
 
     NamidaNavigator.inst.closeDialog();
@@ -1023,7 +1024,8 @@ Future<void> showGeneralPopupDialog(
                                 if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,
 
                                 /// Track Utils
-                                if (playlistName == null || trackWithDate != null)
+                                /// todo: support for multiple tracks editing
+                                if (isSingle && (playlistName == null || trackWithDate != null))
                                   Row(
                                     children: [
                                       const SizedBox(width: 24.0),

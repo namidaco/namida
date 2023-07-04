@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/queue_tile.dart';
 
@@ -14,11 +15,11 @@ class QueuesPage extends StatelessWidget {
       child: Obx(
         () {
           final queuesKeys = QueueController.inst.queuesMap.value.keys.toList();
-          final queuesLength = QueueController.inst.queuesMap.value.length;
+          final queuesLength = queuesKeys.length;
           return NamidaListView(
             itemBuilder: (context, i) {
               final reverseIndex = (queuesKeys.length - 1) - i;
-              final q = QueueController.inst.queuesMap.value[queuesKeys[reverseIndex]]!;
+              final q = queuesKeys[reverseIndex].getQueue()!;
               return AnimatingTile(
                 key: ValueKey(i),
                 position: i,

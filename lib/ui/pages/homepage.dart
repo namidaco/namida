@@ -7,7 +7,6 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -36,8 +35,8 @@ class HomePage extends StatelessWidget {
                 ),
                 titleSpacing: 0,
                 automaticallyImplyLeading: false,
-                title: NamidaNavigator.inst.currentWidgetStack.lastOrNull?.toTitle(),
-                actions: NamidaNavigator.inst.currentWidgetStack.lastOrNull?.toActions()
+                title: NamidaNavigator.inst.currentRoute?.toTitle(),
+                actions: NamidaNavigator.inst.currentRoute?.toActions()
                 // [
                 // Hero(
                 //   tag: 'dsfdfds',
@@ -95,7 +94,7 @@ class HomePage extends StatelessWidget {
                       final initialChild = SettingsController.inst.selectedLibraryTab.value.toWidget();
 
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        NamidaNavigator.inst.currentWidgetStack.add(initialChild);
+                        NamidaNavigator.inst.currentWidgetStack.add(initialChild.toNamidaRoute());
                       });
                       return GetPageRoute(page: () => initialChild);
                     },

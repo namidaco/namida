@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 enum SortType {
   title,
   album,
@@ -163,4 +165,36 @@ enum WakelockMode {
   none,
   expanded,
   expandedAndVideo,
+}
+
+enum RouteType {
+  // ----- Pages -----
+  PAGE_allTracks,
+  PAGE_albums,
+  PAGE_artists,
+  PAGE_genres,
+  PAGE_playlists,
+  PAGE_folders,
+  PAGE_queue,
+  PAGE_stats,
+
+  // ----- Subpages -----
+  SUBPAGE_albumTracks,
+  SUBPAGE_artistTracks,
+  SUBPAGE_genreTracks,
+  SUBPAGE_playlistTracks,
+  SUBPAGE_historyTracks,
+  SUBPAGE_mostPlayedTracks,
+  SUBPAGE_queueTracks,
+
+  // ----- Subpages -----
+  SETTINGS_page,
+  SETTINGS_subpage,
+
+  // ----- Search Results -----
+  SEARCH_albumResults,
+  SEARCH_artistResults,
+
+  /// others
+  UNKNOWN,
 }

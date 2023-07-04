@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -91,8 +91,38 @@ class NamidaDialogs {
   }
 
   Future<void> showPlaylistDialog(String playlistName) async {
+    if (playlistName == k_PLAYLIST_NAME_HISTORY) {
+      final trs = HistoryController.inst.historyTracks.map((e) => e.track).toList();
+      await showGeneralPopupDialog(
+        trs,
+        k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
+        trs.length.displayTrackKeyword,
+        QueueSource.history,
+        thirdLineText: HistoryController.inst.newestTrack?.dateAdded.dateAndClockFormattedOriginal ?? '',
+        playlistName: k_PLAYLIST_NAME_HISTORY,
+        extractColor: false,
+        heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
+      );
+      return;
+    }
+    if (playlistName == k_PLAYLIST_NAME_MOST_PLAYED) {
+      final trs = HistoryController.inst.mostPlayedTracks.toList();
+      await showGeneralPopupDialog(
+        trs,
+        k_PLAYLIST_NAME_MOST_PLAYED.translatePlaylistName(),
+        trs.length.displayTrackKeyword,
+        QueueSource.mostPlayed,
+        thirdLineText: "↑ ${HistoryController.inst.topTracksMapListens[trs.firstOrNull]?.length.toString()} • ${trs.firstOrNull?.title}",
+        playlistName: k_PLAYLIST_NAME_MOST_PLAYED,
+        extractColor: false,
+        heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
+      );
+      return;
+    }
+
     final playlist = PlaylistController.inst.getPlaylist(playlistName);
     if (playlist == null) return;
+    // -- Delete Empty Playlists --
     if (playlist.tracks.isEmpty) {
       NamidaNavigator.inst.navigateDialog(
         CustomBlurryDialog(
@@ -110,21 +140,22 @@ class NamidaDialogs {
           ],
         ),
       );
-      return;
+    } else {
+      await showGeneralPopupDialog(
+        playlist.tracks.map((e) => e.track).toList(),
+        playlist.name.translatePlaylistName(),
+        [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
+        playlist.toQueueSource(),
+        thirdLineText: playlist.moods.join(', ').overflow,
+        playlistName: playlist.name,
+        extractColor: false,
+        heroTag: 'playlist_${playlist.name}',
+      );
     }
-    await showGeneralPopupDialog(
-      playlist.tracks.map((e) => e.track).toList(),
-      playlist.name.translatePlaylistName(),
-      [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
-      playlist.toQueueSource(),
-      thirdLineText: playlist.moods.join(', ').overflow,
-      playlistName: playlist.name,
-      extractColor: false,
-      heroTag: 'playlist_${playlist.name}',
-    );
   }
 
-  Future<void> showQueueDialog(Queue queue) async {
+  Future<void> showQueueDialog(int date) async {
+    final queue = date.getQueue()!;
     await showGeneralPopupDialog(
       queue.tracks,
       queue.date.dateFormatted,

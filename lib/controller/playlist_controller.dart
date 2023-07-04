@@ -17,7 +17,6 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 
 class PlaylistController {
   static PlaylistController get inst => _instance;
@@ -30,6 +29,8 @@ class PlaylistController {
   final RxList<String> playlistSearchList = <String>[].obs;
 
   late final Rx<Playlist> favouritesPlaylist;
+
+  final RxBool canReorderTracks = false.obs;
 
   void searchPlaylists(String text) {
     playlistSearchList.clear();
@@ -136,9 +137,9 @@ class PlaylistController {
 
   void removePlaylist(Playlist playlist) async {
     // navigate back in case the current route is this playlist
-    final lastPage = NamidaNavigator.inst.currentWidgetStack.lastOrNull;
-    if (lastPage is NormalPlaylistTracksPage) {
-      if (lastPage.playlistName == playlist.name) {
+    final lastPage = NamidaNavigator.inst.currentRoute;
+    if (lastPage?.route == RouteType.SUBPAGE_playlistTracks) {
+      if (lastPage?.name == playlist.name) {
         NamidaNavigator.inst.popPage();
       }
     }

@@ -116,7 +116,7 @@ class NamidaOnTaps {
     Playlist? playlist;
     if (isHistory) {
       final day = trackWithDate.dateAdded.toDaysSinceEpoch();
-      HistoryController.inst.historyMap.value[day];
+      HistoryController.inst.removeFromHistory(day, index);
     } else {
       playlist = PlaylistController.inst.getPlaylist(name);
       if (playlist == null) return;
@@ -131,6 +131,7 @@ class NamidaOnTaps {
         onPressed: () {
           if (isHistory) {
             HistoryController.inst.addTracksToHistory([trackWithDate]);
+            HistoryController.inst.sortHistoryTracks([trackWithDate.dateAdded.toDaysSinceEpoch()]);
           } else {
             PlaylistController.inst.insertTracksInPlaylist(
               playlist!,

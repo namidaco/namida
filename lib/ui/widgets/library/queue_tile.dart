@@ -33,7 +33,7 @@ class QueueTile extends StatelessWidget {
         color: context.theme.cardColor,
         child: InkWell(
           highlightColor: const Color.fromARGB(60, 120, 120, 120),
-          onLongPress: () => NamidaDialogs.inst.showQueueDialog(queue),
+          onLongPress: () => NamidaDialogs.inst.showQueueDialog(queue.date),
           onTap: () => NamidaOnTaps.inst.onQueueTap(queue),
           child: Container(
             alignment: Alignment.center,
@@ -88,7 +88,7 @@ class QueueTile extends StatelessWidget {
                 const SizedBox(width: 4.0),
                 MoreIcon(
                   padding: 6.0,
-                  onPressed: () => NamidaDialogs.inst.showQueueDialog(queue),
+                  onPressed: () => NamidaDialogs.inst.showQueueDialog(queue.date),
                 ),
               ],
             ),

@@ -30,7 +30,7 @@ class ScrollSearchController {
   final Map<LibraryTab, RxBool> isSearchBoxVisibleMap = <LibraryTab, RxBool>{};
   final Map<LibraryTab, RxBool> isBarVisibleMap = <LibraryTab, RxBool>{};
 
-  final Map<LibraryTab, ScrollController> scrollControllersMap = <LibraryTab, ScrollController>{};
+  ScrollController scrollController = ScrollController();
   final Map<LibraryTab, double> scrollPositionsMap = {};
 
   final Map<LibraryTab, TextEditingController> textSearchControllers = {};
@@ -39,9 +39,10 @@ class ScrollSearchController {
 
   void animatePageController(LibraryTab tab) {
     final w = tab.toWidget();
+    hideSearchMenu();
 
-    if (w.runtimeType == NamidaNavigator.inst.currentWidgetStack.lastOrNull.runtimeType) {
-      tab.scrollController.animateTo(0.0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOutQuart);
+    if (w.toNamidaRoute() == NamidaNavigator.inst.currentRoute) {
+      scrollController.animateTo(0.0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOutQuart);
       return;
     }
 
@@ -66,10 +67,10 @@ class ScrollSearchController {
   }
 
   void _assignScrollController(LibraryTab tab) {
-    scrollControllersMap[tab]?.removeListener(() {});
-    scrollControllersMap[tab] = ScrollController(initialScrollOffset: tab.scrollPosition);
-    scrollControllersMap[tab]!.addListener(() {
-      isBarVisibleMap[tab]!.value = scrollControllersMap[tab]!.position.userScrollDirection == ScrollDirection.forward;
+    scrollController.removeListener(() {});
+    scrollController = ScrollController(initialScrollOffset: tab.scrollPosition);
+    scrollController.addListener(() {
+      isBarVisibleMap[tab]!.value = scrollController.position.userScrollDirection == ScrollDirection.forward;
     });
   }
 
@@ -178,12 +179,11 @@ class ScrollSearchController {
 }
 
 extension LibraryTabStuff on LibraryTab {
-  // note: a new [ScrollController] is initialized only when navigating to album/artist search results.
-  ScrollController get scrollController => ScrollSearchController.inst.scrollControllersMap[this] ?? ScrollController();
+  ScrollController get scrollController => ScrollSearchController.inst.scrollController;
   TextEditingController? get textSearchController => ScrollSearchController.inst.textSearchControllers[this];
   double get scrollPosition => ScrollSearchController.inst.getScrollPosition(this);
   bool get isBarVisible => ScrollSearchController.inst.getIsBarVisible(this);
   bool get isSearchBoxVisible => ScrollSearchController.inst.getIsSearchBoxVisible(this);
-  double get offsetOrZero => (ScrollSearchController.inst.scrollControllersMap[this]?.hasClients ?? false) ? scrollController.positions.lastOrNull?.pixels ?? 0.0 : 0.0;
+  double get offsetOrZero => (ScrollSearchController.inst.scrollController.hasClients) ? scrollController.positions.lastOrNull?.pixels ?? 0.0 : 0.0;
   bool get shouldAnimateTiles => offsetOrZero == 0.0;
 }
