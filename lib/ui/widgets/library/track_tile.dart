@@ -94,244 +94,241 @@ class TrackTile extends StatelessWidget {
             final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
             return Padding(
               padding: const EdgeInsets.only(bottom: 4.0),
-              child: Material(
-                color: bgColor ??
+              child: NamidaInkWell(
+                borderRadius: 0.0,
+                bgColor: bgColor ??
                     Color.alphaBlend(
                       isTrackSelected & !isInSelectedTracksPreview ? context.theme.focusColor : Colors.transparent,
                       isTrackCurrentlyPlaying ? CurrentColor.inst.color.value : context.theme.cardTheme.color!,
                     ),
-                child: InkWell(
-                  highlightColor: const Color.fromARGB(60, 0, 0, 0),
-                  key: ValueKey(track),
-                  onLongPress: onTap != null
-                      ? null
-                      : () {
-                          if (!isInSelectedTracksPreview) {
-                            SelectedTracksController.inst.selectOrUnselect(track, queueSource);
-                          }
-                        },
-                  onTap: onTap ??
-                      () async {
-                        if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
-                          SelectedTracksController.inst.selectOrUnselect(track, queueSource);
+                onTap: onTap ??
+                    () async {
+                      if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
+                        SelectedTracksController.inst.selectOrUnselect(track, queueSource);
+                      } else {
+                        if (queueSource == QueueSource.search) {
+                          ScrollSearchController.inst.unfocusKeyboard();
+                          await Player.inst.playOrPause(
+                            SettingsController.inst.trackPlayMode.value.shouldBeIndex0 ? 0 : index,
+                            SettingsController.inst.trackPlayMode.value.getQueue(track),
+                            queueSource,
+                          );
                         } else {
-                          if (queueSource == QueueSource.search) {
-                            ScrollSearchController.inst.unfocusKeyboard();
-                            await Player.inst.playOrPause(
-                              SettingsController.inst.trackPlayMode.value.shouldBeIndex0 ? 0 : index,
-                              SettingsController.inst.trackPlayMode.value.getQueue(track),
-                              queueSource,
-                            );
-                          } else {
-                            await Player.inst.playOrPause(
-                              index,
-                              queueSource.toTracks(null, trackWithDate?.dateAdded.toDaysSinceEpoch()),
-                              queueSource,
-                              dateAdded: trackWithDate?.dateAdded,
-                            );
-                          }
-                          debugPrint(track.path);
+                          await Player.inst.playOrPause(
+                            index,
+                            queueSource.toTracks(null, trackWithDate?.dateAdded.toDaysSinceEpoch()),
+                            queueSource,
+                            dateAdded: trackWithDate?.dateAdded,
+                          );
+                        }
+                        debugPrint(track.path);
+                      }
+                    },
+                onLongPress: onTap != null
+                    ? null
+                    : () {
+                        if (!isInSelectedTracksPreview) {
+                          SelectedTracksController.inst.selectOrUnselect(track, queueSource);
                         }
                       },
-                  child: Container(
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    height: trackTileHeight + 4.0 + 4.0,
-                    child: Row(
-                      children: [
-                        const SizedBox(
-                          width: 12.0,
-                        ),
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            AnimatedScale(
-                              duration: const Duration(milliseconds: 400),
-                              scale: isTrackCurrentlyPlaying ? 0.96 : 1.0,
-                              curve: Curves.easeInOut,
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 0.0,
-                                ),
-                                width: thumnailSize,
-                                height: thumnailSize,
-                                child: Hero(
-                                  tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
-                                  child: ArtworkWidget(
-                                    track: track,
-                                    thumnailSize: thumnailSize,
-                                    path: track.pathToImage,
-                                    forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
-                                    useTrackTileCacheHeight: true,
-                                    onTopWidget: displayIndex
-                                        ? Positioned(
-                                            bottom: 0,
-                                            right: 0,
-                                            child: NamidaBlurryContainer(
-                                              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
-                                              borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
-                                              child: Text(
-                                                (index + 1).toString(),
-                                                style: context.textTheme.displaySmall,
-                                              ),
+                child: Container(
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  height: trackTileHeight + 4.0 + 4.0,
+                  child: Row(
+                    children: [
+                      const SizedBox(
+                        width: 12.0,
+                      ),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          AnimatedScale(
+                            duration: const Duration(milliseconds: 400),
+                            scale: isTrackCurrentlyPlaying ? 0.96 : 1.0,
+                            curve: Curves.easeInOut,
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 0.0,
+                              ),
+                              width: thumnailSize,
+                              height: thumnailSize,
+                              child: Hero(
+                                tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
+                                child: ArtworkWidget(
+                                  track: track,
+                                  thumnailSize: thumnailSize,
+                                  path: track.pathToImage,
+                                  forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+                                  useTrackTileCacheHeight: true,
+                                  onTopWidget: displayIndex
+                                      ? Positioned(
+                                          bottom: 0,
+                                          right: 0,
+                                          child: NamidaBlurryContainer(
+                                            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
+                                            borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
+                                            child: Text(
+                                              (index + 1).toString(),
+                                              style: context.textTheme.displaySmall,
                                             ),
-                                          )
-                                        : willSleepAfterThis
-                                            ? Positioned(
-                                                bottom: 0,
-                                                right: 0,
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(2.0),
-                                                  decoration: BoxDecoration(
-                                                    color: context.theme.colorScheme.background.withAlpha(160),
-                                                    borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                                                  ),
-                                                  child: const Icon(
-                                                    Broken.timer_1,
-                                                    size: 16.0,
-                                                  ),
+                                          ),
+                                        )
+                                      : willSleepAfterThis
+                                          ? Positioned(
+                                              bottom: 0,
+                                              right: 0,
+                                              child: Container(
+                                                padding: const EdgeInsets.all(2.0),
+                                                decoration: BoxDecoration(
+                                                  color: context.theme.colorScheme.background.withAlpha(160),
+                                                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                                                 ),
-                                              )
-                                            : null,
-                                  ),
+                                                child: const Icon(
+                                                  Broken.timer_1,
+                                                  size: 16.0,
+                                                ),
+                                              ),
+                                            )
+                                          : null,
                                 ),
                               ),
                             ),
-                            if (draggableThumbnail)
-                              CustomReorderableDelayedDragStartListener(
-                                index: index,
-                                delay: const Duration(milliseconds: 80),
-                                onDragStart: onDragStart,
-                                onDragEnd: onDragEnd,
-                                child: Container(
-                                  color: Colors.transparent,
-                                  height: trackTileHeight,
-                                  width: thumnailSize,
+                          ),
+                          if (draggableThumbnail)
+                            CustomReorderableDelayedDragStartListener(
+                              index: index,
+                              delay: const Duration(milliseconds: 80),
+                              onDragStart: onDragStart,
+                              onDragEnd: onDragEnd,
+                              child: Container(
+                                color: Colors.transparent,
+                                height: trackTileHeight,
+                                width: thumnailSize,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(
+                        width: 12.0,
+                      ),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // check if first row isnt empty
+                            if (tritem.row1Item1 != TrackTileItem.none || tritem.row1Item2 != TrackTileItem.none || tritem.row1Item3 != TrackTileItem.none)
+                              Text(
+                                _joinTrackItems(tritem.row1Item1, tritem.row1Item2, tritem.row1Item3, track),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                style: context.textTheme.displayMedium!.copyWith(
+                                  color: textColor?.withAlpha(170),
                                 ),
+                              ),
+
+                            // check if second row isnt empty
+                            if (tritem.row2Item1 != TrackTileItem.none || tritem.row2Item2 != TrackTileItem.none || tritem.row2Item3 != TrackTileItem.none)
+                              Text(
+                                _joinTrackItems(tritem.row2Item1, tritem.row2Item2, tritem.row2Item3, track),
+                                style: context.textTheme.displaySmall?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                  color: textColor?.withAlpha(140),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+
+                            // check if third row isnt empty
+                            if (thirdLineText == '' && SettingsController.inst.displayThirdRow.value)
+                              if (tritem.row3Item1 != TrackTileItem.none || tritem.row3Item2 != TrackTileItem.none || tritem.row3Item3 != TrackTileItem.none)
+                                Text(
+                                  _joinTrackItems(tritem.row3Item1, tritem.row3Item2, tritem.row3Item3, track),
+                                  style: context.textTheme.displaySmall?.copyWith(
+                                    color: textColor?.withAlpha(130),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+
+                            if (thirdLineText != '')
+                              Text(
+                                thirdLineText,
+                                style: context.textTheme.displaySmall?.copyWith(color: textColor?.withAlpha(130)),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                           ],
                         ),
-                        const SizedBox(
-                          width: 12.0,
-                        ),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // check if first row isnt empty
-                              if (tritem.row1Item1 != TrackTileItem.none || tritem.row1Item2 != TrackTileItem.none || tritem.row1Item3 != TrackTileItem.none)
-                                Text(
-                                  _joinTrackItems(tritem.row1Item1, tritem.row1Item2, tritem.row1Item3, track),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                  style: context.textTheme.displayMedium!.copyWith(
-                                    color: textColor?.withAlpha(170),
-                                  ),
+                      ),
+                      const SizedBox(width: 6.0),
+                      if (SettingsController.inst.displayFavouriteIconInListTile.value || tritem.rightItem1 != TrackTileItem.none || tritem.rightItem2 != TrackTileItem.none)
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (tritem.rightItem1 != TrackTileItem.none)
+                              Text(
+                                _getChoosenTrackTileItem(tritem.rightItem1, track),
+                                style: context.textTheme.displaySmall?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                  color: textColor?.withAlpha(170),
                                 ),
-
-                              // check if second row isnt empty
-                              if (tritem.row2Item1 != TrackTileItem.none || tritem.row2Item2 != TrackTileItem.none || tritem.row2Item3 != TrackTileItem.none)
-                                Text(
-                                  _joinTrackItems(tritem.row2Item1, tritem.row2Item2, tritem.row2Item3, track),
-                                  style: context.textTheme.displaySmall?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    color: textColor?.withAlpha(140),
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-
-                              // check if third row isnt empty
-                              if (thirdLineText == '' && SettingsController.inst.displayThirdRow.value)
-                                if (tritem.row3Item1 != TrackTileItem.none || tritem.row3Item2 != TrackTileItem.none || tritem.row3Item3 != TrackTileItem.none)
-                                  Text(
-                                    _joinTrackItems(tritem.row3Item1, tritem.row3Item2, tritem.row3Item3, track),
-                                    style: context.textTheme.displaySmall?.copyWith(
-                                      color: textColor?.withAlpha(130),
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-
-                              if (thirdLineText != '')
-                                Text(
-                                  thirdLineText,
-                                  style: context.textTheme.displaySmall?.copyWith(color: textColor?.withAlpha(130)),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 6.0),
-                        if (SettingsController.inst.displayFavouriteIconInListTile.value || tritem.rightItem1 != TrackTileItem.none || tritem.rightItem2 != TrackTileItem.none)
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (tritem.rightItem1 != TrackTileItem.none)
-                                Text(
-                                  _getChoosenTrackTileItem(tritem.rightItem1, track),
-                                  style: context.textTheme.displaySmall?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    color: textColor?.withAlpha(170),
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              if (tritem.rightItem2 != TrackTileItem.none)
-                                Text(
-                                  _getChoosenTrackTileItem(tritem.rightItem2, track),
-                                  style: context.textTheme.displaySmall?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    color: textColor?.withAlpha(170),
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              if (SettingsController.inst.displayFavouriteIconInListTile.value)
-                                NamidaLikeButton(
-                                  track: track,
-                                  size: 22.0,
-                                  color: textColor?.withAlpha(140) ?? context.textTheme.displayMedium?.color?.withAlpha(140),
-                                ),
-                            ],
-                          ),
-                        if (displayRightDragHandler) ...[
-                          const SizedBox(
-                            width: 8.0,
-                          ),
-                          CustomReorderableDelayedDragStartListener(
-                            index: index,
-                            onDragStart: onDragStart,
-                            onDragEnd: onDragEnd,
-                            child: FittedBox(
-                              child: Icon(
-                                Broken.menu_1,
-                                color: textColor?.withAlpha(160),
+                                overflow: TextOverflow.ellipsis,
                               ),
+                            if (tritem.rightItem2 != TrackTileItem.none)
+                              Text(
+                                _getChoosenTrackTileItem(tritem.rightItem2, track),
+                                style: context.textTheme.displaySmall?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                  color: textColor?.withAlpha(170),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            if (SettingsController.inst.displayFavouriteIconInListTile.value)
+                              NamidaLikeButton(
+                                track: track,
+                                size: 22.0,
+                                color: textColor?.withAlpha(140) ?? context.textTheme.displayMedium?.color?.withAlpha(140),
+                              ),
+                          ],
+                        ),
+                      if (displayRightDragHandler) ...[
+                        const SizedBox(
+                          width: 8.0,
+                        ),
+                        CustomReorderableDelayedDragStartListener(
+                          index: index,
+                          onDragStart: onDragStart,
+                          onDragEnd: onDragEnd,
+                          child: FittedBox(
+                            child: Icon(
+                              Broken.menu_1,
+                              color: textColor?.withAlpha(160),
                             ),
                           ),
-                        ],
-                        const SizedBox(
-                          width: 2.0,
                         ),
-                        MoreIcon(
-                          padding: 6.0,
-                          iconColor: textColor?.withAlpha(160),
-                          onPressed: triggerTrackDialog,
-                          onLongPress: triggerTrackInfoDialog,
-                        ),
-                        if (trailingWidget == null)
-                          const SizedBox(
-                            width: 4.0,
-                          ),
-                        if (trailingWidget != null) ...[
-                          trailingWidget!,
-                          const SizedBox(
-                            width: 10.0,
-                          ),
-                        ],
                       ],
-                    ),
+                      const SizedBox(
+                        width: 2.0,
+                      ),
+                      MoreIcon(
+                        padding: 6.0,
+                        iconColor: textColor?.withAlpha(160),
+                        onPressed: triggerTrackDialog,
+                        onLongPress: triggerTrackInfoDialog,
+                      ),
+                      if (trailingWidget == null)
+                        const SizedBox(
+                          width: 4.0,
+                        ),
+                      if (trailingWidget != null) ...[
+                        trailingWidget!,
+                        const SizedBox(
+                          width: 10.0,
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ),

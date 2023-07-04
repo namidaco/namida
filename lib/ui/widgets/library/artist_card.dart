@@ -28,56 +28,51 @@ class ArtistCard extends StatelessWidget {
     final fontSize = (18.0 - (gridCount * 1.7)).multipliedFontScale;
     final hero = 'artist_$name';
     return GridTile(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          highlightColor: const Color.fromARGB(60, 120, 120, 120),
-          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-          onLongPress: () => NamidaDialogs.inst.showArtistDialog(name),
-          onTap: () => NamidaOnTaps.inst.onArtistTap(name, artist),
-          child: Column(
-            children: [
-              Hero(
-                tag: hero,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: horizontalPadding),
-                  child: ContainerWithBorder(
-                    child: ArtworkWidget(
-                      thumnailSize: thumnailSize,
-                      track: artist.trackOfImage,
-                      path: artist.pathToImage,
-                      borderRadius: 10.0,
-                      forceSquared: true,
-                      blur: 0,
-                      iconSize: 32.0,
-                    ),
+      child: NamidaInkWell(
+        onTap: () => NamidaOnTaps.inst.onArtistTap(name, artist),
+        onLongPress: () => NamidaDialogs.inst.showArtistDialog(name),
+        child: Column(
+          children: [
+            Hero(
+              tag: hero,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: horizontalPadding),
+                child: ContainerWithBorder(
+                  child: ArtworkWidget(
+                    thumnailSize: thumnailSize,
+                    track: artist.trackOfImage,
+                    path: artist.pathToImage,
+                    borderRadius: 10.0,
+                    forceSquared: true,
+                    blur: 0,
+                    iconSize: 32.0,
                   ),
                 ),
               ),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  width: double.infinity,
-                  alignment: Alignment.center,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (name != '')
-                        Hero(
-                          tag: 'line1_$hero',
-                          child: Text(
-                            name.overflow,
-                            style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+            ),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                width: double.infinity,
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (name != '')
+                      Hero(
+                        tag: 'line1_$hero',
+                        child: Text(
+                          name.overflow,
+                          style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

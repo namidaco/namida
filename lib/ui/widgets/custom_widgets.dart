@@ -743,22 +743,15 @@ class MoreIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return RotatedBox(
       quarterTurns: rotated ? 1 : 0,
-      child: Material(
-        borderRadius: BorderRadius.circular(34.0.multipliedRadius),
-        color: Colors.transparent,
-        child: InkWell(
-          highlightColor: const Color.fromARGB(60, 120, 120, 120),
-          borderRadius: BorderRadius.circular(34.0.multipliedRadius),
-          onTap: onPressed,
-          onLongPress: onLongPress,
-          child: Padding(
-            padding: EdgeInsets.all(padding),
-            child: Icon(
-              Broken.more,
-              size: iconSize,
-              color: iconColor,
-            ),
-          ),
+      child: NamidaInkWell(
+        borderRadius: 4.0,
+        onTap: onPressed,
+        onLongPress: onLongPress,
+        padding: EdgeInsets.all(padding),
+        child: Icon(
+          Broken.more,
+          size: iconSize,
+          color: iconColor,
         ),
       ),
     );
@@ -1424,51 +1417,47 @@ class NamidaDrawerListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: margin,
-      child: Material(
-        color: enabled ? CurrentColor.inst.color.value : context.theme.cardColor,
-        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-        child: InkWell(
-          onTap: onTap,
-          highlightColor: context.theme.scaffoldBackgroundColor.withAlpha(100),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 500),
+        alignment: Alignment.center,
+        width: width,
+        decoration: BoxDecoration(
+          color: enabled ? CurrentColor.inst.color.value : context.theme.cardColor,
           borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            alignment: Alignment.center,
-            width: width,
-            padding: padding,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-              boxShadow: enabled
-                  ? [
-                      BoxShadow(
-                        color: CurrentColor.inst.color.value.withAlpha(100),
-                        spreadRadius: 0.2,
-                        blurRadius: 8.0,
-                        offset: const Offset(0.0, 4.0),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Row(
-              mainAxisAlignment: isCentered ? MainAxisAlignment.center : MainAxisAlignment.start,
-              children: [
-                Icon(
-                  icon,
-                  color: enabled ? Colors.white.withAlpha(200) : null,
-                  size: iconSize,
-                ),
-                if (title != '') ...[
-                  const SizedBox(width: 12.0),
-                  Text(
-                    title,
-                    style: context.textTheme.displayMedium?.copyWith(
-                      color: enabled ? Colors.white.withAlpha(200) : null,
-                      fontSize: context.width / 29,
-                    ),
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: CurrentColor.inst.color.value.withAlpha(100),
+                    spreadRadius: 0.2,
+                    blurRadius: 8.0,
+                    offset: const Offset(0.0, 4.0),
                   ),
-                ],
+                ]
+              : null,
+        ),
+        child: NamidaInkWell(
+          padding: padding,
+          onTap: onTap,
+          borderRadius: 8.0,
+          child: Row(
+            mainAxisAlignment: isCentered ? MainAxisAlignment.center : MainAxisAlignment.start,
+            children: [
+              Icon(
+                icon,
+                color: enabled ? Colors.white.withAlpha(200) : null,
+                size: iconSize,
+              ),
+              if (title != '') ...[
+                const SizedBox(width: 12.0),
+                Text(
+                  title,
+                  style: context.textTheme.displayMedium?.copyWith(
+                    color: enabled ? Colors.white.withAlpha(200) : null,
+                    fontSize: context.width / 29,
+                  ),
+                ),
               ],
-            ),
+            ],
           ),
         ),
       ),
@@ -1528,48 +1517,44 @@ class NamidaLogoContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0).add(const EdgeInsets.only(top: 16.0, bottom: 8.0)),
-      child: Material(
-        borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-        child: InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            alignment: Alignment.center,
-            width: double.infinity,
-            height: 54.0,
-            padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
-            decoration: BoxDecoration(
-              color: context.isDarkMode ? const Color(0xffb9a48b).withAlpha(200) : const Color(0xffdfc6a7).withAlpha(255),
-              borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xffdfc6a7).withAlpha(context.isDarkMode ? 40 : 100),
-                  spreadRadius: 0.2,
-                  blurRadius: 8.0,
-                  offset: const Offset(0.0, 4.0),
+      child: NamidaInkWell(
+        onTap: () {},
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          alignment: Alignment.center,
+          width: double.infinity,
+          height: 54.0,
+          padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+          decoration: BoxDecoration(
+            color: context.isDarkMode ? const Color(0xffb9a48b).withAlpha(200) : const Color(0xffdfc6a7).withAlpha(255),
+            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xffdfc6a7).withAlpha(context.isDarkMode ? 40 : 100),
+                spreadRadius: 0.2,
+                blurRadius: 8.0,
+                offset: const Offset(0.0, 4.0),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Image.asset(
+                'assets/namida_icon.png',
+                width: 40.0,
+                height: 40.0,
+                cacheHeight: 240,
+                cacheWidth: 240,
+              ),
+              const SizedBox(width: 8.0),
+              Text(
+                'Namida',
+                style: context.textTheme.displayLarge?.copyWith(
+                  color: Color.alphaBlend(const Color(0xffdfc6a7).withAlpha(90), Colors.white),
+                  fontSize: context.width / 26,
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Image.asset(
-                  'assets/namida_icon.png',
-                  width: 40.0,
-                  height: 40.0,
-                  cacheHeight: 240,
-                  cacheWidth: 240,
-                ),
-                const SizedBox(width: 8.0),
-                Text(
-                  'Namida',
-                  style: context.textTheme.displayLarge?.copyWith(
-                    color: Color.alphaBlend(const Color(0xffdfc6a7).withAlpha(90), Colors.white),
-                    fontSize: context.width / 26,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -1687,37 +1672,31 @@ class DefaultPlaylistCard extends StatelessWidget {
         color: Color.alphaBlend(colorScheme.withAlpha(10), context.theme.cardColor),
         borderRadius: BorderRadius.circular(12.0.multipliedRadius),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  color: colorScheme.withAlpha(200),
-                ),
-                const SizedBox(width: 10.0),
-                Expanded(
-                  child: Text(
-                    title.overflow,
-                    style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(10), context.textTheme.displayMedium!.color!)),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 6.0),
-                Text(
-                  text,
-                  style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(30), context.textTheme.displayMedium!.color!)),
-                ),
-                const SizedBox(width: 2.0),
-              ],
+      child: NamidaInkWell(
+        onTap: onTap,
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: colorScheme.withAlpha(200),
             ),
-          ),
+            const SizedBox(width: 10.0),
+            Expanded(
+              child: Text(
+                title.overflow,
+                style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(10), context.textTheme.displayMedium!.color!)),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 6.0),
+            Text(
+              text,
+              style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(30), context.textTheme.displayMedium!.color!)),
+            ),
+            const SizedBox(width: 2.0),
+          ],
         ),
       ),
     );
@@ -2094,6 +2073,46 @@ class BackgroundWrapper extends StatelessWidget {
     return Material(
       color: context.theme.scaffoldBackgroundColor,
       child: child,
+    );
+  }
+}
+
+class NamidaInkWell extends StatelessWidget {
+  final Color? bgColor;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+  final double borderRadius;
+  final EdgeInsetsGeometry padding;
+  final Widget? child;
+  final bool transparentHighlight;
+  const NamidaInkWell({
+    super.key,
+    this.bgColor,
+    this.onTap,
+    this.onLongPress,
+    this.borderRadius = 12.0,
+    this.padding = EdgeInsets.zero,
+    this.child,
+    this.transparentHighlight = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: bgColor ?? Colors.transparent,
+      borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        highlightColor: transparentHighlight ? Colors.transparent : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor),
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: child != null
+            ? Padding(
+                padding: padding,
+                child: child,
+              )
+            : null,
+      ),
     );
   }
 }

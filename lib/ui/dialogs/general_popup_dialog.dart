@@ -84,10 +84,9 @@ Future<void> showGeneralPopupDialog(
   bool shoulShowRemoveFromPlaylist() => trackWithDate != null && index != null && playlistName != null && playlistName != k_PLAYLIST_NAME_MOST_PLAYED;
 
   Widget bigIcon(IconData icon, String tooltipMessage, void Function()? onTap, {String subtitle = '', Widget? iconWidget}) {
-    return InkWell(
-      highlightColor: Get.theme.highlightColor,
+    return NamidaInkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+      borderRadius: 8.0,
       child: Tooltip(
         message: tooltipMessage,
         preferBelow: false,
@@ -579,9 +578,8 @@ Future<void> showGeneralPopupDialog(
                   child: Column(
                     children: [
                       /// Top Widget
-                      InkWell(
-                        highlightColor: Color.fromARGB(Get.isDarkMode ? 60 : 20, 0, 0, 0),
-                        splashColor: Colors.transparent,
+                      NamidaInkWell(
+                        borderRadius: 0.0,
                         onTap: () => isSingle ? showTrackInfoDialog(tracks.first, false, comingFromQueue: comingFromQueue, index: index) : null,
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -794,7 +792,7 @@ Future<void> showGeneralPopupDialog(
                                               .map(
                                                 (e) => Padding(
                                                   padding: const EdgeInsets.all(2.0),
-                                                  child: InkWell(
+                                                  child: NamidaInkWell(
                                                       onTap: () => NamidaOnTaps.inst.onAlbumTap(e),
                                                       child: Text(
                                                         "$e  ",
@@ -854,7 +852,7 @@ Future<void> showGeneralPopupDialog(
                                               .map(
                                                 (e) => Padding(
                                                   padding: const EdgeInsets.all(2.0),
-                                                  child: InkWell(
+                                                  child: NamidaInkWell(
                                                     onTap: () => NamidaOnTaps.inst.onArtistTap(e),
                                                     child: Text(
                                                       "$e  ",

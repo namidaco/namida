@@ -23,81 +23,77 @@ class PlaylistTile extends StatelessWidget {
     const double playlistThumnailSize = 75;
     const double playlistTileHeight = 75;
     final hero = 'playlist_$playlistName';
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 3.0),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          highlightColor: const Color.fromARGB(60, 120, 120, 120),
-          onLongPress: () => NamidaDialogs.inst.showPlaylistDialog(playlistName),
-          onTap: onTap ?? () {},
-          child: Container(
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-            height: playlistTileHeight + 14,
-            child: Obx(
-              () {
-                final playlist = PlaylistController.inst.getPlaylist(playlistName);
-                if (playlist == null) return const SizedBox();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3.0),
+      child: NamidaInkWell(
+        borderRadius: 0.0,
+        onTap: onTap,
+        onLongPress: () => NamidaDialogs.inst.showPlaylistDialog(playlistName),
+        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        child: SizedBox(
+          height: playlistTileHeight + 14,
+          child: Obx(
+            () {
+              final playlist = PlaylistController.inst.getPlaylist(playlistName);
+              if (playlist == null) return const SizedBox();
 
-                return Row(
-                  children: [
-                    MultiArtworkContainer(
-                      heroTag: hero,
-                      size: playlistThumnailSize,
-                      tracks: playlist.tracks.map((e) => e.track).toList(),
-                    ),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+              return Row(
+                children: [
+                  MultiArtworkContainer(
+                    heroTag: hero,
+                    size: playlistThumnailSize,
+                    tracks: playlist.tracks.map((e) => e.track).toList(),
+                  ),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Hero(
+                          tag: 'line1_$hero',
+                          child: Text(
+                            playlist.name.translatePlaylistName(),
+                            style: context.textTheme.displayMedium,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Hero(
+                          tag: 'line2_$hero',
+                          child: Text(
+                            [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
+                            style: context.textTheme.displaySmall?.copyWith(fontSize: 13.7.multipliedFontScale),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (playlist.moods.isNotEmpty)
                           Hero(
-                            tag: 'line1_$hero',
+                            tag: 'line3_$hero',
                             child: Text(
-                              playlist.name.translatePlaylistName(),
-                              style: context.textTheme.displayMedium,
+                              playlist.moods.join(', ').overflow,
+                              style: context.textTheme.displaySmall,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Hero(
-                            tag: 'line2_$hero',
-                            child: Text(
-                              [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
-                              style: context.textTheme.displaySmall?.copyWith(fontSize: 13.7.multipliedFontScale),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (playlist.moods.isNotEmpty)
-                            Hero(
-                              tag: 'line3_$hero',
-                              child: Text(
-                                playlist.moods.join(', ').overflow,
-                                style: context.textTheme.displaySmall,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                        ],
-                      ),
+                      ],
                     ),
-                    const SizedBox(width: 12.0),
-                    Text(
-                      playlist.tracks.map((e) => e.track).toList().totalDurationFormatted,
-                      style: context.textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(width: 12.0),
+                  Text(
+                    playlist.tracks.map((e) => e.track).toList().totalDurationFormatted,
+                    style: context.textTheme.displaySmall?.copyWith(
+                      fontWeight: FontWeight.w500,
                     ),
-                    const SizedBox(width: 2.0),
-                    MoreIcon(
-                      iconSize: 20,
-                      onPressed: () => NamidaDialogs.inst.showPlaylistDialog(playlistName),
-                    ),
-                    const SizedBox(width: 8.0),
-                  ],
-                );
-              },
-            ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(width: 2.0),
+                  MoreIcon(
+                    iconSize: 20,
+                    onPressed: () => NamidaDialogs.inst.showPlaylistDialog(playlistName),
+                  ),
+                  const SizedBox(width: 8.0),
+                ],
+              );
+            },
           ),
         ),
       ),

@@ -119,7 +119,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
                               opacity: inversePerc,
                               child: SizedBox(
                                 width: finalspace4buttons / 2,
-                                child: InkWell(
+                                child: NamidaInkWell(
+                                  transparentHighlight: true,
                                   onTap: () => Player.inst.playOrPause(Player.inst.currentIndex.value, [], QueueSource.playerQueue),
                                   child: Obx(() => Icon(Player.inst.isPlaying.value ? Broken.pause : Broken.play)),
                                 ),
@@ -130,14 +131,13 @@ class YoutubeMiniPlayer extends StatelessWidget {
                               child: SizedBox(
                                 width: finalspace4buttons / 2,
                                 height: miniplayerHeight,
-                                child: Material(
-                                  child: InkWell(
-                                    onTap: () {
-                                      minicontroller.animateToHeight(height: 10);
-                                      minioffset.value = 1.0;
-                                    },
-                                    child: const Icon(Broken.close_circle),
-                                  ),
+                                child: NamidaInkWell(
+                                  transparentHighlight: true,
+                                  onTap: () {
+                                    minicontroller.animateToHeight(height: 10);
+                                    minioffset.value = 1.0;
+                                  },
+                                  child: const Icon(Broken.close_circle),
                                 ),
                               ),
                             ),
@@ -548,15 +548,11 @@ class SmallYTActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Material(
-          child: InkWell(
-            borderRadius: BorderRadius.circular(32.0.multipliedRadius),
-            onTap: onPressed,
-            child: Padding(
-              padding: const EdgeInsets.all(6.0),
-              child: Icon(icon),
-            ),
-          ),
+        NamidaInkWell(
+          borderRadius: 32.0,
+          onTap: onPressed,
+          padding: const EdgeInsets.all(6.0),
+          child: Icon(icon),
         ),
         const SizedBox(height: 4.0),
         title == null

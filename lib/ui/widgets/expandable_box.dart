@@ -188,7 +188,8 @@ class ChangeGridCountWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     //  final List<IconData> normal = [Broken.grid_1 /* dummy */, Broken.row_vertical, Broken.grid_2, Broken.grid_8, Broken.grid_1];
     // final List<IconData> staggered = [Broken.grid_1 /* dummy */, Broken.row_vertical, Broken.grid_3, Broken.grid_edit, Broken.grid_1];
-    return InkWell(
+    return NamidaInkWell(
+      transparentHighlight: true,
       onTap: onTap,
       child: StackedIcon(
         baseIcon: currentCount == 2

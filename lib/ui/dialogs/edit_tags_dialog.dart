@@ -192,41 +192,34 @@ Future<void> showEditTrackTagsDialog(Track track) async {
           )
         ],
         actions: [
-          Material(
-            color: Get.theme.cardColor,
-            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () => trimWhiteSpaces.value = !trimWhiteSpaces.value,
-              hoverColor: Get.theme.colorScheme.onSecondary,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Obx(
-                      () => SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CheckMark(
-                          strokeWidth: 2,
-                          activeColor: Get.theme.listTileTheme.iconColor!,
-                          inactiveColor: Get.theme.listTileTheme.iconColor!,
-                          duration: const Duration(milliseconds: 400),
-                          active: trimWhiteSpaces.value,
-                        ),
-                      ),
+          NamidaInkWell(
+            bgColor: Get.theme.cardColor,
+            onTap: () => trimWhiteSpaces.value = !trimWhiteSpaces.value,
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Obx(
+                  () => SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CheckMark(
+                      strokeWidth: 2,
+                      activeColor: Get.theme.listTileTheme.iconColor!,
+                      inactiveColor: Get.theme.listTileTheme.iconColor!,
+                      duration: const Duration(milliseconds: 400),
+                      active: trimWhiteSpaces.value,
                     ),
-                    const SizedBox(
-                      width: 8.0,
-                    ),
-                    Text(
-                      Language.inst.REMOVE_WHITESPACES,
-                      style: Get.textTheme.displaySmall,
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                const SizedBox(
+                  width: 8.0,
+                ),
+                Text(
+                  Language.inst.REMOVE_WHITESPACES,
+                  style: Get.textTheme.displaySmall,
+                ),
+              ],
             ),
           ),
           Obx(
@@ -385,7 +378,8 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                   style: Get.textTheme.displaySmall,
                 ),
                 const SizedBox(height: 4.0),
-                InkWell(
+                NamidaInkWell(
+                  borderRadius: 2.0,
                   onTap: () {
                     final titleAndArtist = Indexer.inst.getTitleAndArtistFromFilename(track.path.getFilenameWOExt);
                     final title = titleAndArtist.$1;
@@ -524,41 +518,34 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
         icon: Broken.edit,
         title: Language.inst.EDIT_TAGS,
         actions: [
-          Material(
-            color: Get.theme.cardColor,
-            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () => trimWhiteSpaces.value = !trimWhiteSpaces.value,
-              hoverColor: Get.theme.colorScheme.onSecondary,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Obx(
-                      () => SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CheckMark(
-                          strokeWidth: 2,
-                          activeColor: Get.theme.listTileTheme.iconColor!,
-                          inactiveColor: Get.theme.listTileTheme.iconColor!,
-                          duration: const Duration(milliseconds: 400),
-                          active: trimWhiteSpaces.value,
-                        ),
-                      ),
+          NamidaInkWell(
+            bgColor: Get.theme.cardColor,
+            onTap: () => trimWhiteSpaces.value = !trimWhiteSpaces.value,
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Obx(
+                  () => SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CheckMark(
+                      strokeWidth: 2,
+                      activeColor: Get.theme.listTileTheme.iconColor!,
+                      inactiveColor: Get.theme.listTileTheme.iconColor!,
+                      duration: const Duration(milliseconds: 400),
+                      active: trimWhiteSpaces.value,
                     ),
-                    const SizedBox(
-                      width: 8.0,
-                    ),
-                    Text(
-                      Language.inst.REMOVE_WHITESPACES,
-                      style: Get.textTheme.displaySmall,
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                const SizedBox(
+                  width: 8.0,
+                ),
+                Text(
+                  Language.inst.REMOVE_WHITESPACES,
+                  style: Get.textTheme.displaySmall,
+                ),
+              ],
             ),
           ),
           ElevatedButton.icon(

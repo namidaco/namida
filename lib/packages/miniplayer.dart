@@ -619,9 +619,13 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                     iconSize: 22.0,
                                   ),
                                   Expanded(
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(45.0),
-                                      onTap: () => NamidaOnTaps.inst.onAlbumTap(Player.inst.nowPlayingTrack.value.album),
+                                    child: NamidaInkWell(
+                                      borderRadius: 16.0,
+                                      onTap: () {
+                                        //todo: remove after exposing to another class.
+                                        snapToMini();
+                                        NamidaOnTaps.inst.onAlbumTap(Player.inst.nowPlayingTrack.value.album);
+                                      },
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
@@ -1598,38 +1602,36 @@ class TrackInfo extends StatelessWidget {
                         Expanded(
                           child: Padding(
                             padding: EdgeInsets.only(right: 22.0 + 92 * (1 - cp)),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(12.0),
+                            child: NamidaInkWell(
+                              borderRadius: 12.0,
                               onTap: cp == 1 ? () => NamidaDialogs.inst.showTrackDialog(track) : null,
-                              child: Padding(
-                                padding: EdgeInsets.only(left: 8.0 * cp),
-                                child: Column(
-                                  key: Key(track.title),
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      track.originalArtist.overflow,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: context.textTheme.displayMedium?.copyWith(
-                                        fontSize: vp(a: 15.0, b: 20.0, c: p).multipliedFontScale,
-                                        height: 1,
-                                      ),
+                              padding: EdgeInsets.only(left: 8.0 * cp),
+                              child: Column(
+                                key: Key(track.title),
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    track.originalArtist.overflow,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: context.textTheme.displayMedium?.copyWith(
+                                      fontSize: vp(a: 15.0, b: 20.0, c: p).multipliedFontScale,
+                                      height: 1,
                                     ),
-                                    const SizedBox(
-                                      height: 4.0,
+                                  ),
+                                  const SizedBox(
+                                    height: 4.0,
+                                  ),
+                                  Text(
+                                    track.title.overflow,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: context.textTheme.displayMedium?.copyWith(
+                                      fontSize: vp(a: 13.0, b: 15.0, c: p).multipliedFontScale,
                                     ),
-                                    Text(
-                                      track.title.overflow,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: context.textTheme.displayMedium?.copyWith(
-                                        fontSize: vp(a: 13.0, b: 15.0, c: p).multipliedFontScale,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),

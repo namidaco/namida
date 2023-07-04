@@ -84,117 +84,109 @@ class YoutubeVideoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-      decoration: BoxDecoration(
-        color: context.theme.cardColor,
-        borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-          onTap: () {},
-          child: Padding(
-            padding: const EdgeInsets.all(4.0).add(const EdgeInsets.symmetric(horizontal: 2.0)),
-            child: Row(
-              children: [
-                video == null
-                    ? NamidaBasicShimmer(
-                        index: index,
-                        width: context.width * 0.36,
-                        height: context.width * 0.36 * 9 / 16,
-                      )
-                    : YoutubeThumbnail(
-                        url: video!.thumbnails.mediumResUrl,
-                        width: context.width * 0.36,
-                      ),
-                const SizedBox(width: 8.0),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+      child: NamidaInkWell(
+        bgColor: context.theme.cardColor,
+        borderRadius: 12.0,
+        onTap: () {},
+        padding: const EdgeInsets.all(4.0).add(const EdgeInsets.symmetric(horizontal: 2.0)),
+        child: Row(
+          children: [
+            video == null
+                ? NamidaBasicShimmer(
+                    index: index,
+                    width: context.width * 0.36,
+                    height: context.width * 0.36 * 9 / 16,
+                  )
+                : YoutubeThumbnail(
+                    url: video!.thumbnails.mediumResUrl,
+                    width: context.width * 0.36,
+                  ),
+            const SizedBox(width: 8.0),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  /// First Line
+
+                  const SizedBox(height: 2.0),
+                  video == null
+                      ? NamidaBasicShimmer(
+                          index: index,
+                          width: context.width / 2,
+                          height: 8.0,
+                        )
+                      : Text(
+                          video!.title,
+                          style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0.multipliedFontScale),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+
+                  /// Second Line
+                  const SizedBox(height: 2.0),
+                  video == null
+                      ? NamidaBasicShimmer(
+                          index: index,
+                          width: context.width / 2,
+                          height: 8.0,
+                        )
+                      : Text(
+                          [
+                            video!.engagement.viewCount.formatDecimal(),
+                            if (video?.uploadDate != null) '${timeago.format(video!.uploadDate!, locale: 'en_short')} ${Language.inst.AGO}'
+                          ].join(' - '),
+                          style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+
+                  /// Third Line
+                  const SizedBox(height: 4.0),
+                  Row(
                     children: [
-                      /// First Line
-
-                      const SizedBox(height: 2.0),
-                      video == null
+                      searchChannel == null
                           ? NamidaBasicShimmer(
                               index: index,
-                              width: context.width / 2,
-                              height: 8.0,
+                              width: 22.0,
+                              height: 22.0,
+                            )
+                          : YoutubeThumbnail(
+                              url: searchChannel?.logoUrl ?? '',
+                              width: 22.0,
+                              isCircle: true,
+                              errorWidget: (context, url, error) => ArtworkWidget(
+                                track: null,
+                                thumnailSize: 22.0,
+                                forceDummyArtwork: true,
+                                borderRadius: 124.0.multipliedRadius,
+                              ),
+                            ),
+                      const SizedBox(width: 6.0),
+                      searchChannel == null
+                          ? NamidaBasicShimmer(
+                              index: index,
+                              width: context.width / 3,
+                              height: 6.0,
                             )
                           : Text(
-                              video!.title,
-                              style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0.multipliedFontScale),
+                              searchChannel?.title ?? '',
+                              style: context.textTheme.displaySmall?.copyWith(
+                                fontWeight: FontWeight.w400,
+                                fontSize: 11.0.multipliedFontScale,
+                              ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-
-                      /// Second Line
-                      const SizedBox(height: 2.0),
-                      video == null
-                          ? NamidaBasicShimmer(
-                              index: index,
-                              width: context.width / 2,
-                              height: 8.0,
-                            )
-                          : Text(
-                              [
-                                video!.engagement.viewCount.formatDecimal(),
-                                if (video?.uploadDate != null) '${timeago.format(video!.uploadDate!, locale: 'en_short')} ${Language.inst.AGO}'
-                              ].join(' - '),
-                              style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-
-                      /// Third Line
-                      const SizedBox(height: 4.0),
-                      Row(
-                        children: [
-                          searchChannel == null
-                              ? NamidaBasicShimmer(
-                                  index: index,
-                                  width: 22.0,
-                                  height: 22.0,
-                                )
-                              : YoutubeThumbnail(
-                                  url: searchChannel?.logoUrl ?? '',
-                                  width: 22.0,
-                                  isCircle: true,
-                                  errorWidget: (context, url, error) => ArtworkWidget(
-                                    track: null,
-                                    thumnailSize: 22.0,
-                                    forceDummyArtwork: true,
-                                    borderRadius: 124.0.multipliedRadius,
-                                  ),
-                                ),
-                          const SizedBox(width: 6.0),
-                          searchChannel == null
-                              ? NamidaBasicShimmer(
-                                  index: index,
-                                  width: context.width / 3,
-                                  height: 6.0,
-                                )
-                              : Text(
-                                  searchChannel?.title ?? '',
-                                  style: context.textTheme.displaySmall?.copyWith(
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 11.0.multipliedFontScale,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                        ],
-                      ),
-                      const SizedBox(height: 6.0),
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 6.0),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

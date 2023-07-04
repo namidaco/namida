@@ -40,88 +40,84 @@ class AlbumTile extends StatelessWidget {
           )
         ],
       ),
-      child: Material(
-        color: context.theme.cardColor,
-        child: InkWell(
-          highlightColor: const Color.fromARGB(60, 120, 120, 120),
-          onLongPress: () => NamidaDialogs.inst.showAlbumDialog(name),
-          onTap: () => NamidaOnTaps.inst.onAlbumTap(album.album),
-          child: Container(
-            alignment: Alignment.center,
-            padding: const EdgeInsets.only(top: 3.0, bottom: 3.0, right: 8.0),
-            height: albumTileHeight + 14,
-            child: Row(
-              children: [
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 12.0,
+      child: NamidaInkWell(
+        bgColor: context.theme.cardColor,
+        onTap: () => NamidaOnTaps.inst.onAlbumTap(album.album),
+        onLongPress: () => NamidaDialogs.inst.showAlbumDialog(name),
+        padding: const EdgeInsets.only(top: 3.0, bottom: 3.0, right: 8.0),
+        child: SizedBox(
+          height: albumTileHeight + 14,
+          child: Row(
+            children: [
+              Container(
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                ),
+                width: albumthumnailSize,
+                height: albumthumnailSize,
+                child: Hero(
+                  tag: hero,
+                  child: ArtworkWidget(
+                    thumnailSize: albumthumnailSize,
+                    track: album.trackOfImage,
+                    path: album.pathToImage,
+                    forceSquared: SettingsController.inst.forceSquaredAlbumThumbnail.value,
                   ),
-                  width: albumthumnailSize,
-                  height: albumthumnailSize,
-                  child: Hero(
-                    tag: hero,
-                    child: ArtworkWidget(
-                      thumnailSize: albumthumnailSize,
-                      track: album.trackOfImage,
-                      path: album.pathToImage,
-                      forceSquared: SettingsController.inst.forceSquaredAlbumThumbnail.value,
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Hero(
+                      tag: 'line1_$hero',
+                      child: Text(
+                        album.album,
+                        style: context.textTheme.displayMedium,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    if (album.albumArtist != '')
                       Hero(
-                        tag: 'line1_$hero',
+                        tag: 'line2_$hero',
                         child: Text(
-                          album.album,
-                          style: context.textTheme.displayMedium,
+                          album.albumArtist,
+                          style: context.textTheme.displaySmall,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (album.albumArtist != '')
-                        Hero(
-                          tag: 'line2_$hero',
-                          child: Text(
-                            album.albumArtist,
-                            style: context.textTheme.displaySmall,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                    Hero(
+                      tag: 'line3_$hero',
+                      child: Text(
+                        [
+                          album.displayTrackKeyword,
+                          if (finalYear != '') finalYear,
+                        ].join(' • '),
+                        style: context.textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w500,
                         ),
-                      Hero(
-                        tag: 'line3_$hero',
-                        child: Text(
-                          [
-                            album.displayTrackKeyword,
-                            if (finalYear != '') finalYear,
-                          ].join(' • '),
-                          style: context.textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                Text(
-                  [
-                    album.totalDurationFormatted,
-                  ].join(' - '),
-                  style: context.textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                [
+                  album.totalDurationFormatted,
+                ].join(' - '),
+                style: context.textTheme.displaySmall?.copyWith(
+                  fontWeight: FontWeight.w500,
                 ),
-                const SizedBox(width: 4.0),
-                MoreIcon(
-                  padding: 6.0,
-                  onPressed: () => NamidaDialogs.inst.showAlbumDialog(name),
-                ),
-              ],
-            ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(width: 4.0),
+              MoreIcon(
+                padding: 6.0,
+                onPressed: () => NamidaDialogs.inst.showAlbumDialog(name),
+              ),
+            ],
           ),
         ),
       ),

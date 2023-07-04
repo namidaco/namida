@@ -29,69 +29,65 @@ class QueueTile extends StatelessWidget {
           )
         ],
       ),
-      child: Material(
-        color: context.theme.cardColor,
-        child: InkWell(
-          highlightColor: const Color.fromARGB(60, 120, 120, 120),
-          onLongPress: () => NamidaDialogs.inst.showQueueDialog(queue.date),
-          onTap: () => NamidaOnTaps.inst.onQueueTap(queue),
-          child: Container(
-            alignment: Alignment.center,
-            padding: const EdgeInsets.only(top: 3.0, bottom: 3.0, right: 8.0),
-            height: 68.0 + 12.0,
-            child: Row(
-              children: [
-                SizedBox(
-                  height: 64.0,
-                  child: MultiArtworkContainer(
-                    heroTag: hero,
-                    size: 64.0,
-                    tracks: queue.tracks,
-                  ),
+      child: NamidaInkWell(
+        bgColor: context.theme.cardColor,
+        onTap: () => NamidaOnTaps.inst.onQueueTap(queue),
+        onLongPress: () => NamidaDialogs.inst.showQueueDialog(queue.date),
+        padding: const EdgeInsets.only(top: 3.0, bottom: 3.0, right: 8.0),
+        child: SizedBox(
+          height: 68.0 + 12.0,
+          child: Row(
+            children: [
+              SizedBox(
+                height: 64.0,
+                child: MultiArtworkContainer(
+                  heroTag: hero,
+                  size: 64.0,
+                  tracks: queue.tracks,
                 ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Hero(
-                      tag: 'line1_$hero',
-                      child: Text(
-                        queue.date.dateAndClockFormattedOriginal,
-                        style: context.textTheme.displayMedium?.copyWith(
-                          fontSize: 14.0.multipliedFontScale,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+              ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Hero(
+                    tag: 'line1_$hero',
+                    child: Text(
+                      queue.date.dateAndClockFormattedOriginal,
+                      style: context.textTheme.displayMedium?.copyWith(
+                        fontSize: 14.0.multipliedFontScale,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 1.0),
-                    Hero(
-                      tag: 'line2_$hero',
-                      child: Text(
-                        [queue.name, queue.tracks.displayTrackKeyword].join(' - '),
-                        style: context.textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                Text(
-                  queue.tracks.totalDurationFormatted,
-                  style: context.textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 12.5.multipliedFontScale,
                   ),
-                  overflow: TextOverflow.ellipsis,
+                  const SizedBox(height: 1.0),
+                  Hero(
+                    tag: 'line2_$hero',
+                    child: Text(
+                      [queue.name, queue.tracks.displayTrackKeyword].join(' - '),
+                      style: context.textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Text(
+                queue.tracks.totalDurationFormatted,
+                style: context.textTheme.displaySmall?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12.5.multipliedFontScale,
                 ),
-                const SizedBox(width: 4.0),
-                MoreIcon(
-                  padding: 6.0,
-                  onPressed: () => NamidaDialogs.inst.showQueueDialog(queue.date),
-                ),
-              ],
-            ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(width: 4.0),
+              MoreIcon(
+                padding: 6.0,
+                onPressed: () => NamidaDialogs.inst.showQueueDialog(queue.date),
+              ),
+            ],
           ),
         ),
       ),

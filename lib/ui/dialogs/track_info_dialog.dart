@@ -82,9 +82,9 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                       delegate: SliverChildListDelegate(
                         [
                           const SizedBox(height: 12.0),
-                          InkWell(
+                          NamidaInkWell(
                             onTap: () => showTrackListensDialog(track, datesOfListen: totalListens, theme: theme),
-                            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                            borderRadius: 12.0,
                             child: Row(
                               children: [
                                 const SizedBox(width: 2.0),
@@ -375,40 +375,35 @@ class TrackInfoListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-          onTap: _copyField,
-          onLongPress: _copyField,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 6.0),
-            child: Wrap(
-              runSpacing: 6.0,
-              children: [
-                Icon(
-                  icon,
-                  size: 17.0,
-                  color: context.theme.colorScheme.onBackground.withAlpha(220),
-                ),
-                const SizedBox(width: 6.0),
-                Text(
-                  '$title:',
-                  style: context.theme.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(220)),
-                ),
-                const SizedBox(width: 4.0),
-                isComment
-                    ? NamidaSelectableAutoLinkText(text: value == '' ? '?' : value)
-                    : Text(
-                        value == '' ? '?' : value,
-                        style: context.theme.textTheme.displayMedium?.copyWith(
-                          color: Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(100), context.theme.colorScheme.primary),
-                          fontSize: 13.5.multipliedFontScale,
-                        ),
-                      ),
-              ],
+      child: NamidaInkWell(
+        borderRadius: 16.0,
+        onTap: _copyField,
+        onLongPress: _copyField,
+        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 6.0),
+        child: Wrap(
+          runSpacing: 6.0,
+          children: [
+            Icon(
+              icon,
+              size: 17.0,
+              color: context.theme.colorScheme.onBackground.withAlpha(220),
             ),
-          ),
+            const SizedBox(width: 6.0),
+            Text(
+              '$title:',
+              style: context.theme.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(220)),
+            ),
+            const SizedBox(width: 4.0),
+            isComment
+                ? NamidaSelectableAutoLinkText(text: value == '' ? '?' : value)
+                : Text(
+                    value == '' ? '?' : value,
+                    style: context.theme.textTheme.displayMedium?.copyWith(
+                      color: Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(100), context.theme.colorScheme.primary),
+                      fontSize: 13.5.multipliedFontScale,
+                    ),
+                  ),
+          ],
         ),
       ),
     );

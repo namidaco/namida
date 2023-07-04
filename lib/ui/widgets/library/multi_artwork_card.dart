@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/artwork.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class MultiArtworkCard extends StatelessWidget {
   final List<Track> tracks;
@@ -37,7 +38,7 @@ class MultiArtworkCard extends StatelessWidget {
                 Hero(
                   tag: heroTag,
                   child: MultiArtworks(
-                    borderRadius: 12.0.multipliedFontScale,
+                    borderRadius: 12.0,
                     heroTag: heroTag,
                     disableHero: true,
                     paths: tracks.map((e) => e.pathToImage).toList(),
@@ -79,13 +80,9 @@ class MultiArtworkCard extends StatelessWidget {
                 ),
               ],
             ),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                highlightColor: const Color.fromARGB(40, 120, 120, 120),
-                onLongPress: showMenuFunction,
-                onTap: onTap,
-              ),
+            NamidaInkWell(
+              onTap: onTap,
+              onLongPress: showMenuFunction,
             ),
           ],
         ),

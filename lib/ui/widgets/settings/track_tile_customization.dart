@@ -342,22 +342,17 @@ class TrackItemSmallBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: context.theme.colorScheme.background.withAlpha(160),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0.multipliedRadius)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-          child: text != null
-              ? Text(
-                  text!,
-                  style: context.theme.textTheme.displaySmall,
-                )
-              : child,
-        ),
-      ),
+    return NamidaInkWell(
+      bgColor: context.theme.colorScheme.background.withAlpha(160),
+      onTap: onTap,
+      borderRadius: 8.0,
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      child: text != null
+          ? Text(
+              text!,
+              style: context.theme.textTheme.displaySmall,
+            )
+          : child,
     );
   }
 }

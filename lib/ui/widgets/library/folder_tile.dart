@@ -16,14 +16,12 @@ import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 class FolderTile extends StatelessWidget {
   final Folder folder;
   final List<Track>? dummyTracks;
-  final void Function()? onTap;
   final bool isMainStoragePath;
   final String? subtitle;
 
   const FolderTile({
     super.key,
     required this.folder,
-    this.onTap,
     this.isMainStoragePath = false,
     this.dummyTracks,
     this.subtitle,
@@ -33,105 +31,99 @@ class FolderTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final dirInside = folder.getDirectoriesInside();
     final tracks = dummyTracks ?? folder.tracks;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 4.0),
-      child: Material(
-        color: context.theme.cardColor,
-        child: InkWell(
-          highlightColor: const Color.fromARGB(60, 0, 0, 0),
-          onLongPress: () {},
-          onTap: onTap ?? () => NamidaOnTaps.inst.onFolderTap(folder, isMainStoragePath),
-          child: Container(
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
-            height: SettingsController.inst.trackListTileHeight.value + 4.0 + 4.0,
-            child: Row(
-              children: [
-                const SizedBox(width: 12.0),
-                Stack(
-                  children: [
-                    SizedBox(
-                      width: SettingsController.inst.trackThumbnailSizeinList.value,
-                      height: SettingsController.inst.trackThumbnailSizeinList.value,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Icon(
-                            Broken.folder,
-                            size: (SettingsController.inst.trackThumbnailSizeinList.value / 1.35).clamp(0, SettingsController.inst.trackListTileHeight.value),
-                          ),
-                          Positioned(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: ArtworkWidget(
-                                blur: 0,
-                                borderRadius: 6,
-                                thumnailSize: (SettingsController.inst.trackThumbnailSizeinList.value / 2.6).clamp(0, SettingsController.inst.trackListTileHeight.value * 0.5),
-                                path: tracks.firstOrNull?.pathToImage,
-                                track: tracks.firstOrNull,
-                                forceSquared: true,
-                              ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4.0),
+      child: NamidaInkWell(
+        bgColor: context.theme.cardColor,
+        onTap: () => NamidaOnTaps.inst.onFolderTap(folder, isMainStoragePath),
+        child: SizedBox(
+          height: SettingsController.inst.trackListTileHeight.value + 4.0 + 4.0,
+          child: Row(
+            children: [
+              const SizedBox(width: 12.0),
+              Stack(
+                children: [
+                  SizedBox(
+                    width: SettingsController.inst.trackThumbnailSizeinList.value,
+                    height: SettingsController.inst.trackThumbnailSizeinList.value,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(
+                          Broken.folder,
+                          size: (SettingsController.inst.trackThumbnailSizeinList.value / 1.35).clamp(0, SettingsController.inst.trackListTileHeight.value),
+                        ),
+                        Positioned(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: ArtworkWidget(
+                              blur: 0,
+                              borderRadius: 6,
+                              thumnailSize: (SettingsController.inst.trackThumbnailSizeinList.value / 2.6).clamp(0, SettingsController.inst.trackListTileHeight.value * 0.5),
+                              path: tracks.firstOrNull?.pathToImage,
+                              track: tracks.firstOrNull,
+                              forceSquared: true,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 12.0),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        folder.folderName,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        style: context.textTheme.displayMedium!,
-                      ),
-                      if (subtitle != null)
-                        Text(
-                          subtitle!,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          style: context.textTheme.displaySmall!,
                         ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 12.0),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      folder.folderName,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: context.textTheme.displayMedium!,
+                    ),
+                    if (subtitle != null)
                       Text(
-                        [
-                          tracks.displayTrackKeyword,
-                          if (dirInside.isNotEmpty) dirInside.length.displayFolderKeyword,
-                        ].join(' - '),
+                        subtitle!,
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                         style: context.textTheme.displaySmall!,
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(
-                  width: 2.0,
-                ),
-                MoreIcon(
-                  padding: 6.0,
-                  onPressed: () {
-                    showGeneralPopupDialog(
-                      tracks,
-                      folder.folderName,
+                    Text(
                       [
                         tracks.displayTrackKeyword,
-                        tracks.totalDurationFormatted,
-                      ].join(' • '),
-                      QueueSource.folder,
-                      thirdLineText: tracks.totalSizeFormatted,
-                    );
-                  },
+                        if (dirInside.isNotEmpty) dirInside.length.displayFolderKeyword,
+                      ].join(' - '),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: context.textTheme.displaySmall!,
+                    ),
+                  ],
                 ),
-                const SizedBox(
-                  width: 4.0,
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(
+                width: 2.0,
+              ),
+              MoreIcon(
+                padding: 6.0,
+                onPressed: () {
+                  showGeneralPopupDialog(
+                    tracks,
+                    folder.folderName,
+                    [
+                      tracks.displayTrackKeyword,
+                      tracks.totalDurationFormatted,
+                    ].join(' • '),
+                    QueueSource.folder,
+                    thirdLineText: tracks.totalSizeFormatted,
+                  );
+                },
+              ),
+              const SizedBox(
+                width: 4.0,
+              ),
+            ],
           ),
         ),
       ),

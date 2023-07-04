@@ -155,7 +155,7 @@ class ToggleThemeModeContainer extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: ThemeMode.values
                       .map(
-                        (e) => InkWell(
+                        (e) => NamidaInkWell(
                           onTap: () => onThemeChangeTap(e),
                           child: Icon(
                             e.toIcon(),
