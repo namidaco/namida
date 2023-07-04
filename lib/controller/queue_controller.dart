@@ -85,17 +85,20 @@ class QueueController {
       latestQueueInsideMap.tracks
         ..clear()
         ..addAll(tracks);
+      _updateMap(latestQueueInsideMap);
       await _saveLatestQueueToStorage(latestQueueInsideMap);
     }
   }
 
   void insertTracksQueue(Queue queue, List<Track> tracks, int index) async {
     queue.tracks.insertAllSafe(index, tracks);
+    _updateMap(queue);
     await _saveQueueToStorage(queue);
   }
 
   Future<void> removeTrackFromQueue(Queue queue, int index) async {
     queue.tracks.removeAt(index);
+    _updateMap(queue);
     await _saveQueueToStorage(queue);
   }
 

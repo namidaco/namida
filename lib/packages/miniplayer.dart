@@ -256,10 +256,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
   }
 
   void updateScrollPositionInQueue() {
-    scrollController.removeListener(() {});
-    ScrollSearchController.inst.queueScrollController = ScrollController(initialScrollOffset: ScrollSearchController.inst.trackTileItemScrollOffsetInQueue);
-    arrowDirection.value = Broken.cd;
-    scrollController.addListener(() {
+    void updateIcon() {
       final pixels = scrollController.position.pixels;
       final sizeInSettings = trackTileItemExtent * Player.inst.currentIndex.value - Get.height * 0.3;
       if (pixels > sizeInSettings) {
@@ -271,6 +268,16 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
       if (pixels == sizeInSettings) {
         arrowDirection.value = Broken.cd;
       }
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      ScrollSearchController.inst.queueScrollController.jumpTo(ScrollSearchController.inst.trackTileItemScrollOffsetInQueue);
+      updateIcon();
+    });
+
+    scrollController.removeListener(() {});
+    scrollController.addListener(() {
+      updateIcon();
     });
   }
 

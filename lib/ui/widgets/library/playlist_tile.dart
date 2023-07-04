@@ -37,7 +37,9 @@ class PlaylistTile extends StatelessWidget {
             height: playlistTileHeight + 14,
             child: Obx(
               () {
-                final playlist = PlaylistController.inst.getPlaylist(playlistName)!;
+                final playlist = PlaylistController.inst.getPlaylist(playlistName);
+                if (playlist == null) return const SizedBox();
+
                 return Row(
                   children: [
                     MultiArtworkContainer(

@@ -13,8 +13,8 @@ String k_DIR_APP_INTERNAL_STORAGE = '';
 
 final Set<String> kStoragePaths = {};
 final Set<String> kDirectoriesPaths = {};
-final List<double> kDefaultWaveFormData = List<double>.generate(1000, (index) => 0.02);
-final List<double> kDefaultScaleList = List<double>.generate(500, (index) => 0.01);
+final List<double> kDefaultWaveFormData = List<double>.filled(1000, 0.02);
+final List<double> kDefaultScaleList = List<double>.filled(500, 0.01);
 final RegExp kYoutubeRegex = RegExp(
   r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)(?:\S+)?',
   caseSensitive: false,

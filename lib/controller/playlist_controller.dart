@@ -208,19 +208,21 @@ class PlaylistController {
   void addTracksToPlaylist(Playlist playlist, List<Track> tracks, {TrackSource source = TrackSource.local}) async {
     final newtracks = tracks.map((e) => TrackWithDate(currentTimeMS, e, source)).toList();
     playlist.tracks.addAll(newtracks);
+    _updateMap(playlist);
 
     await _savePlaylistToStorage(playlist);
   }
 
   Future<void> insertTracksInPlaylist(Playlist playlist, List<TrackWithDate> tracks, int index) async {
     playlist.tracks.insertAllSafe(index, tracks);
+    _updateMap(playlist);
 
     await _savePlaylistToStorage(playlist);
   }
 
   Future<void> removeTrackFromPlaylist(Playlist playlist, int index) async {
     playlist.tracks.removeAt(index);
-
+    _updateMap(playlist);
     await _savePlaylistToStorage(playlist);
   }
 

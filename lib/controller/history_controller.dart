@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
@@ -17,6 +17,8 @@ class HistoryController {
   static HistoryController get inst => _instance;
   static final HistoryController _instance = HistoryController._internal();
   HistoryController._internal();
+
+  RxList<double> allItemsExtentsHistory = <double>[].obs;
 
   int get historyTracksLength => historyMap.value.entries.fold(0, (sum, obj) => sum + obj.value.length);
   List<TrackWithDate> get historyTracks => historyMap.value.entries.fold([], (mainList, newEntry) => [...mainList, ...newEntry.value]);
@@ -34,6 +36,7 @@ class HistoryController {
   final RxMap<Track, List<int>> topTracksMapListens = <Track, List<int>>{}.obs;
   Iterable<Track> get mostPlayedTracks => topTracksMapListens.keys;
 
+  final ScrollController scrollController = ScrollController();
   Timer? _historyTimer;
 
   /// Starts counting seconds listened, counter only increases when [isPlaying] is true.
@@ -84,6 +87,7 @@ class HistoryController {
       daysToSave.add(trackday);
       historyMap.value.addForce(trackday, e);
     });
+    _calculateAllItemsExtents();
 
     return daysToSave;
   }
@@ -111,6 +115,7 @@ class HistoryController {
   Future<void> removeFromHistory(int dayOfTrack, int index) async {
     final trs = historyMap.value[dayOfTrack]!;
     trs.removeAt(trs.length - 1 - index);
+    _calculateAllItemsExtents();
     await saveHistoryToStorage([dayOfTrack]);
   }
 
@@ -178,6 +183,7 @@ class HistoryController {
         await saveThisDay(key, value);
       });
     }
+    historyMap.refresh();
   }
 
   Future<void> prepareHistoryFile() async {
@@ -192,6 +198,13 @@ class HistoryController {
         historyMap.refresh();
       }
     }
+    _calculateAllItemsExtents();
     updateMostPlayedPlaylist();
+  }
+
+  void _calculateAllItemsExtents() {
+    allItemsExtentsHistory.assignAll(historyMap.value.entries.map(
+      (e) => kHistoryDayHeaderHeightWithPadding + (e.value.length * trackTileItemExtent),
+    ));
   }
 }

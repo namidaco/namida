@@ -244,6 +244,7 @@ class MultiArtworks extends StatelessWidget {
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(borderRadius.multipliedRadius)),
       child: paths.isEmpty
           ? ArtworkWidget(
+              key: UniqueKey(),
               thumnailSize: thumbnailSize,
               track: allTracksInLibrary.firstOrNull,
               path: allTracksInLibrary.firstOrNull?.pathToImage,
@@ -256,6 +257,7 @@ class MultiArtworks extends StatelessWidget {
             )
           : paths.length == 1
               ? ArtworkWidget(
+                  key: UniqueKey(),
                   thumnailSize: thumbnailSize,
                   path: paths.elementAt(0),
                   track: null,
@@ -268,6 +270,7 @@ class MultiArtworks extends StatelessWidget {
                   ? Row(
                       children: [
                         ArtworkWidget(
+                          key: UniqueKey(),
                           track: null,
                           thumnailSize: thumbnailSize / 2,
                           height: thumbnailSize,
@@ -278,6 +281,7 @@ class MultiArtworks extends StatelessWidget {
                           iconSize: iconSize - 2.0,
                         ),
                         ArtworkWidget(
+                          key: UniqueKey(),
                           track: null,
                           thumnailSize: thumbnailSize / 2,
                           height: thumbnailSize,
@@ -295,6 +299,7 @@ class MultiArtworks extends StatelessWidget {
                             Column(
                               children: [
                                 ArtworkWidget(
+                                  key: UniqueKey(),
                                   track: null,
                                   thumnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(0),
@@ -304,6 +309,7 @@ class MultiArtworks extends StatelessWidget {
                                   iconSize: iconSize - 2.0,
                                 ),
                                 ArtworkWidget(
+                                  key: UniqueKey(),
                                   track: null,
                                   thumnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(1),
@@ -317,6 +323,7 @@ class MultiArtworks extends StatelessWidget {
                             Column(
                               children: [
                                 ArtworkWidget(
+                                  key: UniqueKey(),
                                   track: null,
                                   thumnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(2),
@@ -335,6 +342,7 @@ class MultiArtworks extends StatelessWidget {
                             Row(
                               children: [
                                 ArtworkWidget(
+                                  key: UniqueKey(),
                                   track: null,
                                   thumnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(0),
@@ -344,6 +352,7 @@ class MultiArtworks extends StatelessWidget {
                                   iconSize: iconSize - 3.0,
                                 ),
                                 ArtworkWidget(
+                                  key: UniqueKey(),
                                   track: null,
                                   thumnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(1),
@@ -357,6 +366,7 @@ class MultiArtworks extends StatelessWidget {
                             Row(
                               children: [
                                 ArtworkWidget(
+                                  key: UniqueKey(),
                                   track: null,
                                   thumnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(2),
@@ -366,6 +376,7 @@ class MultiArtworks extends StatelessWidget {
                                   iconSize: iconSize - 3.0,
                                 ),
                                 ArtworkWidget(
+                                  key: UniqueKey(),
                                   track: null,
                                   thumnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(3),

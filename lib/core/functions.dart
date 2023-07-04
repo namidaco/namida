@@ -83,16 +83,18 @@ class NamidaOnTaps {
   }
 
   Future<void> onHistoryPlaylistTap({
-    ScrollController? scrollController,
+    double initialScrollOffset = 0,
     int? indexToHighlight,
     int? dayOfHighLight,
   }) async {
-    NamidaNavigator.inst.navigateTo(
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      HistoryController.inst.scrollController.jumpTo(initialScrollOffset);
+    });
+    await NamidaNavigator.inst.navigateTo(
       HistoryTracksPage(
-        disableAnimation: scrollController != null,
+        disableAnimation: initialScrollOffset != 0,
         indexToHighlight: indexToHighlight,
         dayOfHighLight: dayOfHighLight,
-        scrollController: scrollController,
       ),
     );
   }

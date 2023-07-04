@@ -1951,7 +1951,6 @@ class NamidaListView extends StatelessWidget {
   final ScrollController _scrollController = ScrollController();
   @override
   Widget build(BuildContext context) {
-    final double? itemExtent = (itemExtents != null && itemExtents!.isNotEmpty) ? itemExtents?.first : null;
     final sc = scrollController ?? _scrollController;
     return AnimationLimiter(
       child: CupertinoScrollbar(
@@ -1976,7 +1975,7 @@ class NamidaListView extends StatelessWidget {
                       onReorderEnd: onReorderEnd,
                     )
                   : ReorderableListView.builder(
-                      itemExtent: itemExtent,
+                      itemExtent: itemExtents?.firstOrNull,
                       scrollController: sc,
                       padding: padding ?? const EdgeInsets.only(bottom: kBottomPadding),
                       itemBuilder: itemBuilder,
@@ -2040,7 +2039,7 @@ class NamidaTracksList extends StatelessWidget {
       widgetsInColumn: widgetsInColumn,
       scrollController: scrollController,
       itemCount: queueLength,
-      itemExtents: List<double>.generate(queueLength, (index) => trackTileItemExtent),
+      itemExtents: List<double>.filled(queueLength, trackTileItemExtent),
       padding: padding,
       buildDefaultDragHandles: buildDefaultDragHandles ?? onReorder != null,
       physics: physics,

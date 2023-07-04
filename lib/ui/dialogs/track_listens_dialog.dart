@@ -66,7 +66,7 @@ void showTrackListensDialog(Track track, {List<int>? datesOfListen, ThemeData? t
                 NamidaOnTaps.inst.onHistoryPlaylistTap(
                   indexToHighlight: indexOfSmallList,
                   dayOfHighLight: t.toDaysSinceEpoch(),
-                  scrollController: ScrollController(initialScrollOffset: (tracksToScroll * trackTileItemExtent) + (daysToScroll * kHistoryDayHeaderHeightWithPadding)),
+                  initialScrollOffset: (tracksToScroll * trackTileItemExtent) + (daysToScroll * kHistoryDayHeaderHeightWithPadding),
                 );
               },
             );

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:get/get.dart';
-import 'package:sticky_headers/sticky_headers/widget.dart';
+import 'package:sticky_headers/sticky_headers.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -11,7 +10,9 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
@@ -26,98 +27,113 @@ class HistoryTracksPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sc = scrollController ?? ScrollController();
+    final sc = HistoryController.inst.scrollController;
 
     return BackgroundWrapper(
-      child: CupertinoScrollbar(
-        controller: sc,
-        child: CustomScrollView(
-          controller: sc,
-          slivers: [
-            SliverToBoxAdapter(
-              child: SubpagesTopContainer(
-                source: QueueSource.history,
-                title: k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
-                subtitle: HistoryController.inst.historyTracksLength.displayTrackKeyword,
-                heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
-                imageWidget: MultiArtworkContainer(
-                  heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
-                  size: Get.width * 0.35,
-                  tracks: QueueSource.history.toTracks(4),
-                ),
-                tracks: QueueSource.history.toTracks(100),
-              ),
+      child: Obx(
+        () => NamidaListView(
+          scrollController: sc,
+          itemCount: HistoryController.inst.historyDays.length,
+          itemExtents: HistoryController.inst.allItemsExtentsHistory.toList(),
+          header: SubpagesTopContainer(
+            source: QueueSource.history,
+            title: k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
+            subtitle: HistoryController.inst.historyTracksLength.displayTrackKeyword,
+            heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
+            imageWidget: MultiArtworkContainer(
+              heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
+              size: Get.width * 0.35,
+              tracks: QueueSource.history.toTracks(4),
             ),
-            SliverList.builder(
-              itemCount: HistoryController.inst.historyDays.length,
-              itemBuilder: (context, index) {
-                final day = HistoryController.inst.historyDays.toList()[index];
-                final tracks = HistoryController.inst.historyMap.value[day] ?? [];
+            tracks: QueueSource.history.toTracks(),
+          ),
+          itemBuilder: (context, index) {
+            final day = HistoryController.inst.historyDays.toList()[index];
+            final dayInMs = (day * 8.64e7).round();
+            final tracks = HistoryController.inst.historyMap.value[day] ?? [];
 
-                return StickyHeaderBuilder(
-                  builder: (context, stuckAmount) {
-                    final reverseStuck = 1 - stuckAmount;
-                    return Container(
-                      clipBehavior: Clip.antiAlias,
-                      width: context.width,
-                      height: kHistoryDayHeaderHeight,
-                      decoration: BoxDecoration(
-                          color: Color.alphaBlend(context.theme.cardTheme.color!.withAlpha(140), context.theme.scaffoldBackgroundColor),
-                          boxShadow: [
-                            BoxShadow(
-                              offset: Offset(0, 2.0 * reverseStuck),
-                              blurRadius: 4.0,
-                              color: Color.alphaBlend(context.theme.shadowColor.withAlpha(140), context.theme.scaffoldBackgroundColor).withOpacity(reverseStuck.clamp(0.0, 0.4)),
-                            ),
-                          ],
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(6.0.multipliedRadius * reverseStuck),
-                            bottomRight: Radius.circular(6.0.multipliedRadius * reverseStuck),
-                          )),
-                      child: Container(
-                        padding: const EdgeInsets.all(12.0),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            left: BorderSide(
-                              color: CurrentColor.inst.color.value,
-                              width: (4.0 * stuckAmount).withMinimum(3.0),
+            return StickyHeaderBuilder(
+              key: ValueKey(index),
+              builder: (context, stuckAmount) {
+                final reverseStuck = 1 - stuckAmount;
+                return Container(
+                  clipBehavior: Clip.antiAlias,
+                  width: context.width,
+                  height: kHistoryDayHeaderHeight,
+                  decoration: BoxDecoration(
+                      color: Color.alphaBlend(context.theme.cardTheme.color!.withAlpha(140), context.theme.scaffoldBackgroundColor),
+                      boxShadow: [
+                        BoxShadow(
+                          offset: Offset(0, 2.0 * reverseStuck),
+                          blurRadius: 4.0,
+                          color: Color.alphaBlend(context.theme.shadowColor.withAlpha(140), context.theme.scaffoldBackgroundColor).withOpacity(reverseStuck.clamp(0.0, 0.4)),
+                        ),
+                      ],
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(6.0.multipliedRadius * reverseStuck),
+                        bottomRight: Radius.circular(6.0.multipliedRadius * reverseStuck),
+                      )),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12.0),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              left: BorderSide(
+                                color: CurrentColor.inst.color.value,
+                                width: (4.0 * stuckAmount).withMinimum(3.0),
+                              ),
                             ),
                           ),
-                        ),
-                        child: Text(
-                          (day * 8.64e7).round().dateFormattedOriginal,
-                          style: context.textTheme.displayMedium,
+                          child: Text(
+                            dayInMs.dateFormattedOriginal,
+                            style: context.textTheme.displayMedium,
+                          ),
                         ),
                       ),
-                    );
-                  },
-                  content: ListView.builder(
-                    padding: const EdgeInsets.only(bottom: kHistoryDayListBottomPadding, top: kHistoryDayListTopPadding),
-                    primary: false,
-                    itemExtent: trackTileItemExtent,
-                    itemCount: tracks.length,
-                    // TODO: inefficient for huge lists
-                    shrinkWrap: true,
-                    itemBuilder: (context, i) {
-                      final reverseIndex = (tracks.length - 1) - i;
-                      final tr = tracks[reverseIndex];
-                      return TrackTile(
-                        track: tr.track,
-                        trackWithDate: tr,
-                        index: i,
-                        queueSource: QueueSource.history,
-                        bgColor: day == dayOfHighLight && reverseIndex == indexToHighlight ? context.theme.colorScheme.onBackground.withAlpha(40) : null,
-                        draggableThumbnail: false,
-                        playlistName: k_PLAYLIST_NAME_HISTORY,
-                        thirdLineText: tr.dateAdded.dateAndClockFormattedOriginal,
-                      );
-                    },
+                      NamidaIconButton(
+                        icon: Broken.more,
+                        iconSize: 22.0,
+                        onPressed: () {
+                          showGeneralPopupDialog(
+                            tracks.map((e) => e.track).toList(),
+                            dayInMs.dateFormattedOriginal,
+                            tracks.length.displayTrackKeyword,
+                            QueueSource.history,
+                            extractColor: false,
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 2.0),
+                    ],
                   ),
                 );
               },
-            ),
-            const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
-          ],
+              content: ListView.builder(
+                padding: const EdgeInsets.only(bottom: kHistoryDayListBottomPadding, top: kHistoryDayListTopPadding),
+                primary: false,
+                physics: const NeverScrollableScrollPhysics(),
+                itemExtent: trackTileItemExtent,
+                itemCount: tracks.length,
+                shrinkWrap: true, // fixed by calculating all itemsExtent.
+                itemBuilder: (context, i) {
+                  final reverseIndex = (tracks.length - 1) - i;
+                  final tr = tracks[reverseIndex];
+                  return TrackTile(
+                    track: tr.track,
+                    trackWithDate: tr,
+                    index: i,
+                    queueSource: QueueSource.history,
+                    bgColor: day == dayOfHighLight && reverseIndex == indexToHighlight ? context.theme.colorScheme.onBackground.withAlpha(40) : null,
+                    draggableThumbnail: false,
+                    playlistName: k_PLAYLIST_NAME_HISTORY,
+                    thirdLineText: tr.dateAdded.dateAndClockFormattedOriginal,
+                  );
+                },
+              ),
+            );
+          },
         ),
       ),
     );
@@ -132,9 +148,9 @@ class MostPlayedTracksPage extends StatelessWidget {
     return BackgroundWrapper(
       child: Obx(
         () {
-          final tracks = HistoryController.inst.mostPlayedTracks.toList();
+          final tracks = QueueSource.mostPlayed.toTracks();
           return NamidaListView(
-            itemExtents: List.generate(tracks.length, (index) => trackTileItemExtent),
+            itemExtents: List.filled(tracks.length, trackTileItemExtent),
             header: SubpagesTopContainer(
               source: QueueSource.mostPlayed,
               title: k_PLAYLIST_NAME_MOST_PLAYED.translatePlaylistName(),
@@ -143,7 +159,7 @@ class MostPlayedTracksPage extends StatelessWidget {
               imageWidget: MultiArtworkContainer(
                 heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
                 size: Get.width * 0.35,
-                tracks: QueueSource.mostPlayed.toTracks(4),
+                tracks: tracks.withLimit(4).toList(),
               ),
               tracks: tracks,
             ),
@@ -196,14 +212,15 @@ class NormalPlaylistTracksPage extends StatelessWidget {
       child: Obx(
         () {
           PlaylistController.inst.playlistsMap.entries;
-          final playlist = PlaylistController.inst.getPlaylist(playlistName)!;
+          final playlist = PlaylistController.inst.getPlaylist(playlistName);
+          if (playlist == null) return const SizedBox();
+
           final tracksWithDate = playlist.tracks;
           final tracks = tracksWithDate.map((e) => e.track).toList();
           final reorderable = PlaylistController.inst.canReorderTracks.value;
 
           return NamidaTracksList(
             queueSource: playlist.toQueueSource(),
-            scrollController: ScrollController(),
             header: SubpagesTopContainer(
               source: playlist.toQueueSource(),
               title: playlist.name.translatePlaylistName(),
@@ -260,9 +277,9 @@ class ThreeLineSmallContainers extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: List<Widget>.generate(
+      children: List<Widget>.filled(
         3,
-        (index) => AnimatedContainer(
+        AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.bounceIn,
           width: enabled ? 9.0 : 2.0,

@@ -29,7 +29,7 @@ class QueuesPage extends StatelessWidget {
               );
             },
             itemCount: queuesLength,
-            itemExtents: List.generate(queuesLength, (index) => 68.0 + 18.0),
+            itemExtents: List.filled(queuesLength, 68.0 + 18.0),
           );
         },
       ),
