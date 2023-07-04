@@ -77,13 +77,15 @@ class AppThemes {
       dividerColor: light ? const Color.fromARGB(100, 100, 100, 100) : const Color.fromARGB(200, 50, 50, 50),
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
-          color: Get.theme.colorScheme.background,
+          color: light
+              ? Color.alphaBlend(color.withAlpha(30), const Color.fromARGB(255, 242, 242, 242))
+              : Color.alphaBlend(color.withAlpha(80), const Color.fromARGB(255, 12, 12, 12)),
           borderRadius: BorderRadius.circular(10.0.multipliedRadius),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
-              color: Get.theme.shadowColor,
+              color: Color.fromARGB(70, 12, 12, 12),
               blurRadius: 6.0,
-              offset: const Offset(0, 2),
+              offset: Offset(0, 2),
             )
           ],
         ),
