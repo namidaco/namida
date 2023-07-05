@@ -15,6 +15,7 @@ import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -87,16 +88,20 @@ class NamidaOnTaps {
     int? indexToHighlight,
     int? dayOfHighLight,
   }) async {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+    HistoryController.inst.indexToHighlight.value = indexToHighlight;
+    HistoryController.inst.dayOfHighLight.value = dayOfHighLight;
+
+    if (NamidaNavigator.inst.currentRoute?.route == RouteType.SUBPAGE_historyTracks) {
+      NamidaNavigator.inst.closeAllDialogs();
       HistoryController.inst.scrollController.jumpTo(initialScrollOffset);
-    });
-    await NamidaNavigator.inst.navigateTo(
-      HistoryTracksPage(
-        disableAnimation: initialScrollOffset != 0,
-        indexToHighlight: indexToHighlight,
-        dayOfHighLight: dayOfHighLight,
-      ),
-    );
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        HistoryController.inst.scrollController.jumpTo(initialScrollOffset);
+      });
+      await NamidaNavigator.inst.navigateTo(
+        const HistoryTracksPage(),
+      );
+    }
   }
 
   Future<void> onMostPlayedPlaylistTap() async {

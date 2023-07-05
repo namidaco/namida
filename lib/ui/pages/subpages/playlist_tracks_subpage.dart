@@ -21,11 +21,7 @@ import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class HistoryTracksPage extends StatelessWidget {
-  final bool disableAnimation;
-  final ScrollController? scrollController;
-  final int? indexToHighlight;
-  final int? dayOfHighLight;
-  const HistoryTracksPage({super.key, this.disableAnimation = false, this.scrollController, this.indexToHighlight, this.dayOfHighLight});
+  const HistoryTracksPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +125,9 @@ class HistoryTracksPage extends StatelessWidget {
                       trackWithDate: tr,
                       index: i,
                       queueSource: QueueSource.history,
-                      bgColor: day == dayOfHighLight && reverseIndex == indexToHighlight ? context.theme.colorScheme.onBackground.withAlpha(40) : null,
+                      bgColor: day == HistoryController.inst.dayOfHighLight.value && reverseIndex == HistoryController.inst.indexToHighlight.value
+                          ? context.theme.colorScheme.onBackground.withAlpha(40)
+                          : null,
                       draggableThumbnail: false,
                       playlistName: k_PLAYLIST_NAME_HISTORY,
                       thirdLineText: tr.dateAdded.dateAndClockFormattedOriginal,

@@ -36,6 +36,8 @@ class HistoryController {
   Iterable<Track> get mostPlayedTracks => topTracksMapListens.keys;
 
   final ScrollController scrollController = ScrollController();
+  final Rxn<int> indexToHighlight = Rxn<int>();
+  final Rxn<int> dayOfHighLight = Rxn<int>();
   Timer? _historyTimer;
 
   /// Starts counting seconds listened, counter only increases when [isPlaying] is true.

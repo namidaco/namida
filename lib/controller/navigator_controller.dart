@@ -107,6 +107,7 @@ class NamidaNavigator {
     int durationInMs = 500,
   }) async {
     _hideSearchMenuAndUnfocus();
+    closeAllDialogs();
 
     currentWidgetStack.removeLast();
     currentWidgetStack.add(page.toNamidaRoute());
@@ -131,6 +132,7 @@ class NamidaNavigator {
     Transition transition = Transition.cupertino,
   }) async {
     _hideSearchMenuAndUnfocus();
+    closeAllDialogs();
 
     currentWidgetStack
       ..clear()
