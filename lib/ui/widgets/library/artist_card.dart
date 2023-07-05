@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -23,9 +24,10 @@ class ArtistCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const double horizontalPadding = 4.0;
-    final double thumnailSize = (Get.width / gridCount) - horizontalPadding * 2;
-    final fontSize = (18.0 - (gridCount * 1.7)).multipliedFontScale;
+    final d = Dimensions.inst.artistCardDimensions;
+    final thumbnailSize = d.$1;
+    final fontSize = d.$2.multipliedFontScale;
+
     final hero = 'artist_$name';
     return GridTile(
       child: NamidaInkWell(
@@ -36,10 +38,10 @@ class ArtistCard extends StatelessWidget {
             Hero(
               tag: hero,
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: horizontalPadding),
+                padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: Dimensions.gridHorizontalPadding),
                 child: ContainerWithBorder(
                   child: ArtworkWidget(
-                    thumnailSize: thumnailSize,
+                    thumbnailSize: thumbnailSize,
                     track: artist.trackOfImage,
                     path: artist.pathToImage,
                     borderRadius: 10.0,

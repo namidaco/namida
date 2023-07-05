@@ -159,7 +159,7 @@ class YoutubeVideoCard extends StatelessWidget {
                               isCircle: true,
                               errorWidget: (context, url, error) => ArtworkWidget(
                                 track: null,
-                                thumnailSize: 22.0,
+                                thumbnailSize: 22.0,
                                 forceDummyArtwork: true,
                                 borderRadius: 124.0.multipliedRadius,
                               ),

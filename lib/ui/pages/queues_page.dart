@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/queue_tile.dart';
@@ -29,7 +30,7 @@ class QueuesPage extends StatelessWidget {
               );
             },
             itemCount: queuesLength,
-            itemExtents: List.filled(queuesLength, 68.0 + 18.0),
+            itemExtents: List.filled(queuesLength, Dimensions.queueTileItemExtent),
           );
         },
       ),

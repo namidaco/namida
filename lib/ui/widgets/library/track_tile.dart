@@ -9,6 +9,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -82,7 +83,7 @@ class TrackTile extends StatelessWidget {
         Obx(
           () {
             final TrackItem tritem = SettingsController.inst.trackItem.value;
-            final double thumnailSize = SettingsController.inst.trackThumbnailSizeinList.value;
+            final double thumbnailSize = SettingsController.inst.trackThumbnailSizeinList.value;
             final double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
             final bool isTrackSelected = SelectedTracksController.inst.selectedTracks.contains(track);
             final bool isTrackSamePath = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
@@ -93,7 +94,7 @@ class TrackTile extends StatelessWidget {
 
             final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
             return Padding(
-              padding: const EdgeInsets.only(bottom: 4.0),
+              padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin),
               child: NamidaInkWell(
                 borderRadius: 0.0,
                 bgColor: bgColor ??
@@ -133,13 +134,11 @@ class TrackTile extends StatelessWidget {
                       },
                 child: Container(
                   alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  height: trackTileHeight + 4.0 + 4.0,
+                  padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
+                  height: Dimensions.inst.trackTileItemExtent,
                   child: Row(
                     children: [
-                      const SizedBox(
-                        width: 12.0,
-                      ),
+                      const SizedBox(width: 12.0),
                       Stack(
                         alignment: Alignment.center,
                         children: [
@@ -147,17 +146,14 @@ class TrackTile extends StatelessWidget {
                             duration: const Duration(milliseconds: 400),
                             scale: isTrackCurrentlyPlaying ? 0.96 : 1.0,
                             curve: Curves.easeInOut,
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 0.0,
-                              ),
-                              width: thumnailSize,
-                              height: thumnailSize,
+                            child: SizedBox(
+                              width: thumbnailSize,
+                              height: thumbnailSize,
                               child: Hero(
                                 tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
                                 child: ArtworkWidget(
                                   track: track,
-                                  thumnailSize: thumnailSize,
+                                  thumbnailSize: thumbnailSize,
                                   path: track.pathToImage,
                                   forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
                                   useTrackTileCacheHeight: true,
@@ -204,14 +200,12 @@ class TrackTile extends StatelessWidget {
                               child: Container(
                                 color: Colors.transparent,
                                 height: trackTileHeight,
-                                width: thumnailSize,
+                                width: thumbnailSize,
                               ),
                             ),
                         ],
                       ),
-                      const SizedBox(
-                        width: 12.0,
-                      ),
+                      const SizedBox(width: 12.0),
                       Expanded(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -294,9 +288,7 @@ class TrackTile extends StatelessWidget {
                           ],
                         ),
                       if (displayRightDragHandler) ...[
-                        const SizedBox(
-                          width: 8.0,
-                        ),
+                        const SizedBox(width: 8.0),
                         CustomReorderableDelayedDragStartListener(
                           index: index,
                           onDragStart: onDragStart,
@@ -309,24 +301,17 @@ class TrackTile extends StatelessWidget {
                           ),
                         ),
                       ],
-                      const SizedBox(
-                        width: 2.0,
-                      ),
+                      const SizedBox(width: 2.0),
                       MoreIcon(
                         padding: 6.0,
                         iconColor: textColor?.withAlpha(160),
                         onPressed: triggerTrackDialog,
                         onLongPress: triggerTrackInfoDialog,
                       ),
-                      if (trailingWidget == null)
-                        const SizedBox(
-                          width: 4.0,
-                        ),
+                      if (trailingWidget == null) const SizedBox(width: 4.0),
                       if (trailingWidget != null) ...[
                         trailingWidget!,
-                        const SizedBox(
-                          width: 10.0,
-                        ),
+                        const SizedBox(width: 10.0),
                       ],
                     ],
                   ),

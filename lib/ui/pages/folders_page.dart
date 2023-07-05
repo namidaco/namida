@@ -8,6 +8,7 @@ import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -86,44 +87,40 @@ class FoldersPage extends StatelessWidget {
                                   controller: _scrollController,
                                   slivers: [
                                     if (Folders.inst.isHome.value)
-                                      SliverList(
-                                        delegate: SliverChildBuilderDelegate(
-                                          (context, i) {
-                                            final p = kStoragePaths.elementAt(i);
-                                            return FolderTile(
-                                              folder: Folder(p),
-                                              isMainStoragePath: true,
-                                              dummyTracks: Indexer.inst.mainMapFolders.entries
-                                                  .where((element) => element.key.path.startsWith(p))
-                                                  .expand((element) => element.value)
-                                                  .toList(),
-                                            );
-                                          },
-                                          childCount: kStoragePaths.length,
-                                        ),
+                                      SliverFixedExtentList.builder(
+                                        itemCount: kStoragePaths.length,
+                                        itemExtent: Dimensions.inst.trackTileItemExtent,
+                                        itemBuilder: (context, i) {
+                                          final p = kStoragePaths.elementAt(i);
+                                          return FolderTile(
+                                            folder: Folder(p),
+                                            isMainStoragePath: true,
+                                            dummyTracks:
+                                                Indexer.inst.mainMapFolders.entries.where((element) => element.key.path.startsWith(p)).expand((element) => element.value).toList(),
+                                          );
+                                        },
                                       ),
                                     if (!Folders.inst.isHome.value) ...[
-                                      SliverList(
-                                        delegate: SliverChildBuilderDelegate(
-                                          (context, i) => FolderTile(
+                                      SliverFixedExtentList.builder(
+                                        itemCount: Folders.inst.currentFolderslist.length,
+                                        itemExtent: Dimensions.inst.trackTileItemExtent,
+                                        itemBuilder: (context, i) {
+                                          return FolderTile(
                                             folder: Folders.inst.currentFolderslist[i],
-                                          ),
-                                          childCount: Folders.inst.currentFolderslist.length,
-                                        ),
+                                          );
+                                        },
                                       ),
-                                      SliverFixedExtentList(
-                                        itemExtent: trackTileItemExtent,
-                                        delegate: SliverChildBuilderDelegate(
-                                          (context, i) {
-                                            return TrackTile(
-                                              index: i,
-                                              track: Folders.inst.currentTracks[i],
-                                              queueSource: QueueSource.folder,
-                                              bgColor: i == Folders.inst.indexToScrollTo.value ? highlighedColor : null,
-                                            );
-                                          },
-                                          childCount: Folders.inst.currentTracks.length,
-                                        ),
+                                      SliverFixedExtentList.builder(
+                                        itemCount: Folders.inst.currentTracks.length,
+                                        itemExtent: Dimensions.inst.trackTileItemExtent,
+                                        itemBuilder: (context, i) {
+                                          return TrackTile(
+                                            index: i,
+                                            track: Folders.inst.currentTracks[i],
+                                            queueSource: QueueSource.folder,
+                                            bgColor: i == Folders.inst.indexToScrollTo.value ? highlighedColor : null,
+                                          );
+                                        },
                                       ),
                                     ],
                                     const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
@@ -158,33 +155,29 @@ class FoldersPage extends StatelessWidget {
                                   controller: _scrollController,
                                   slivers: [
                                     if (!Folders.inst.isInside.value)
-                                      SliverFixedExtentList(
-                                        itemExtent: trackTileItemExtent,
-                                        delegate: SliverChildBuilderDelegate(
-                                          (context, i) {
-                                            final folder = mainMapFoldersKeys[i];
-                                            return FolderTile(
-                                              folder: folder,
-                                              subtitle: folder.hasSimilarFolderNames ? folder.parentPath.formatPath() : null,
-                                            );
-                                          },
-                                          childCount: Indexer.inst.mainMapFolders.length,
-                                        ),
-                                      ),
-                                    SliverFixedExtentList(
-                                      itemExtent: trackTileItemExtent,
-                                      delegate: SliverChildBuilderDelegate(
-                                        (context, i) {
-                                          final tr = Folders.inst.currentTracks[i];
-                                          return TrackTile(
-                                            index: i,
-                                            track: tr,
-                                            queueSource: QueueSource.folder,
-                                            bgColor: i == Folders.inst.indexToScrollTo.value ? highlighedColor : null,
+                                      SliverFixedExtentList.builder(
+                                        itemCount: Indexer.inst.mainMapFolders.length,
+                                        itemExtent: Dimensions.inst.trackTileItemExtent,
+                                        itemBuilder: (context, i) {
+                                          final folder = mainMapFoldersKeys[i];
+                                          return FolderTile(
+                                            folder: folder,
+                                            subtitle: folder.hasSimilarFolderNames ? folder.parentPath.formatPath() : null,
                                           );
                                         },
-                                        childCount: Folders.inst.currentTracks.length,
                                       ),
+                                    SliverFixedExtentList.builder(
+                                      itemCount: Folders.inst.currentTracks.length,
+                                      itemExtent: Dimensions.inst.trackTileItemExtent,
+                                      itemBuilder: (context, i) {
+                                        final tr = Folders.inst.currentTracks[i];
+                                        return TrackTile(
+                                          index: i,
+                                          track: tr,
+                                          queueSource: QueueSource.folder,
+                                          bgColor: i == Folders.inst.indexToScrollTo.value ? highlighedColor : null,
+                                        );
+                                      },
                                     ),
                                     const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
                                   ],
@@ -209,7 +202,7 @@ class FoldersPage extends StatelessWidget {
                         child: NamidaIconButton(
                           padding: const EdgeInsets.all(7.0),
                           onPressed: () {
-                            _scrollController.animateTo(trackTileItemExtent * (Folders.inst.indexToScrollTo.value! + Folders.inst.currentFolderslist.length - 2),
+                            _scrollController.animateTo(Dimensions.inst.trackTileItemExtent * (Folders.inst.indexToScrollTo.value! + Folders.inst.currentFolderslist.length - 2),
                                 duration: const Duration(milliseconds: 400), curve: Curves.bounceInOut);
                           },
                           icon: Broken.arrow_circle_down,

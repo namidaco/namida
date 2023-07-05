@@ -131,7 +131,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                             child: ArtworkWidget(
                                               track: track,
                                               path: track.pathToImage,
-                                              thumnailSize: Get.width,
+                                              thumbnailSize: Get.width,
                                               compressed: false,
                                               borderRadius: 0,
                                               blur: 0,
@@ -147,7 +147,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                     child: ArtworkWidget(
                                       track: track,
                                       path: track.pathToImage,
-                                      thumnailSize: 120,
+                                      thumbnailSize: 120,
                                       forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
                                       useTrackTileCacheHeight: true,
                                       compressed: false,

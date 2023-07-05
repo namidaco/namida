@@ -8,7 +8,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -25,7 +25,7 @@ class ScrollSearchController {
   final TextEditingController searchTextEditingController = Indexer.inst.globalSearchController;
 
   ScrollController queueScrollController = ScrollController();
-  double get trackTileItemScrollOffsetInQueue => trackTileItemExtent * Player.inst.currentIndex.value - Get.height * 0.3;
+  double get trackTileItemScrollOffsetInQueue => Dimensions.inst.trackTileItemExtent * Player.inst.currentIndex.value - Get.height * 0.3;
 
   final Map<LibraryTab, RxBool> isSearchBoxVisibleMap = <LibraryTab, RxBool>{};
   final Map<LibraryTab, RxBool> isBarVisibleMap = <LibraryTab, RxBool>{};
@@ -52,6 +52,7 @@ class ScrollSearchController {
     _updateScrollPositions(SettingsController.inst.selectedLibraryTab.value, tab);
     SettingsController.inst.save(selectedLibraryTab: tab);
     NamidaNavigator.inst.navigateOffAll(w, transition: transition);
+    Dimensions.inst.updateDimensions(tab);
   }
 
   int animateChangingGridSize(LibraryTab tab, int currentGridCount, {int minimum = 1, int maximum = 4, bool animateTiles = true}) {
@@ -59,6 +60,7 @@ class ScrollSearchController {
     final nToSave = n < maximum ? n + 1 : minimum;
     _updateScrollPositions(tab, tab);
     NamidaNavigator.inst.navigateOff(tab.toWidget(nToSave, false), durationInMs: 500);
+    Dimensions.inst.updateDimensions(tab, gridOverride: nToSave);
     return nToSave;
   }
 

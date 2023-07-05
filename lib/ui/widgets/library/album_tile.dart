@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -22,16 +23,14 @@ class AlbumTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final albumthumnailSize = SettingsController.inst.albumThumbnailSizeinList.value;
+    final albumThumbnailSize = SettingsController.inst.albumThumbnailSizeinList.value;
     final albumTileHeight = SettingsController.inst.albumListTileHeight.value;
     final finalYear = album.year.yearFormatted;
     final hero = 'album_$name';
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 8.0),
-      clipBehavior: Clip.antiAlias,
+      margin: const EdgeInsets.symmetric(horizontal: 8.0).add(const EdgeInsets.only(bottom: Dimensions.tileBottomMargin)),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular((0.2 * albumTileHeight).multipliedRadius),
         boxShadow: [
           BoxShadow(
             color: context.theme.shadowColor.withAlpha(20),
@@ -41,30 +40,30 @@ class AlbumTile extends StatelessWidget {
         ],
       ),
       child: NamidaInkWell(
+        borderRadius: 0.2 * albumTileHeight,
         bgColor: context.theme.cardColor,
         onTap: () => NamidaOnTaps.inst.onAlbumTap(album.album),
         onLongPress: () => NamidaDialogs.inst.showAlbumDialog(name),
-        padding: const EdgeInsets.only(top: 3.0, bottom: 3.0, right: 8.0),
+        padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
         child: SizedBox(
-          height: albumTileHeight + 14,
+          height: Dimensions.inst.albumTileItemExtent,
           child: Row(
             children: [
-              Container(
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 12.0,
-                ),
-                width: albumthumnailSize,
-                height: albumthumnailSize,
+              const SizedBox(width: 12.0),
+              SizedBox(
+                width: albumThumbnailSize,
+                height: albumThumbnailSize,
                 child: Hero(
                   tag: hero,
                   child: ArtworkWidget(
-                    thumnailSize: albumthumnailSize,
+                    thumbnailSize: albumThumbnailSize,
                     track: album.trackOfImage,
                     path: album.pathToImage,
                     forceSquared: SettingsController.inst.forceSquaredAlbumThumbnail.value,
                   ),
                 ),
               ),
+              const SizedBox(width: 12.0),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -117,6 +116,7 @@ class AlbumTile extends StatelessWidget {
                 padding: 6.0,
                 onPressed: () => NamidaDialogs.inst.showAlbumDialog(name),
               ),
+              const SizedBox(width: 10.0),
             ],
           ),
         ),

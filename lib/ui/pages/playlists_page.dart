@@ -12,6 +12,7 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -182,52 +183,49 @@ class PlaylistsPage extends StatelessWidget {
                         ),
                       const SliverPadding(padding: EdgeInsets.only(top: 10.0)),
                       if (countPerRow == 1)
-                        SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, i) {
-                              final key = PlaylistController.inst.playlistSearchList[i];
-                              final playlist = PlaylistController.inst.playlistsMap[key]!;
-                              return AnimatingTile(
-                                position: i,
-                                shouldAnimate: _shouldAnimate,
-                                child: PlaylistTile(
-                                  playlistName: key,
-                                  onTap: tracksToAdd != null
-                                      ? () => PlaylistController.inst.addTracksToPlaylist(playlist, tracksToAdd!)
-                                      : () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
-                                ),
-                              );
-                            },
-                            childCount: PlaylistController.inst.playlistSearchList.length,
-                          ),
+                        SliverFixedExtentList.builder(
+                          itemCount: PlaylistController.inst.playlistSearchList.length,
+                          itemExtent: Dimensions.playlistTileItemExtent,
+                          itemBuilder: (context, i) {
+                            final key = PlaylistController.inst.playlistSearchList[i];
+                            final playlist = PlaylistController.inst.playlistsMap[key]!;
+                            return AnimatingTile(
+                              position: i,
+                              shouldAnimate: _shouldAnimate,
+                              child: PlaylistTile(
+                                playlistName: key,
+                                onTap: tracksToAdd != null
+                                    ? () => PlaylistController.inst.addTracksToPlaylist(playlist, tracksToAdd!)
+                                    : () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
+                              ),
+                            );
+                          },
                         ),
                       if (countPerRow > 1)
-                        SliverGrid(
+                        SliverGrid.builder(
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: countPerRow,
                             childAspectRatio: 0.8,
                             mainAxisSpacing: 8.0,
                           ),
-                          delegate: SliverChildBuilderDelegate(
-                            (context, i) {
-                              final key = PlaylistController.inst.playlistSearchList[i];
-                              final playlist = PlaylistController.inst.playlistsMap[key]!;
-                              return AnimatingGrid(
-                                columnCount: PlaylistController.inst.playlistSearchList.length,
-                                position: i,
-                                shouldAnimate: _shouldAnimate,
-                                child: MultiArtworkCard(
-                                  heroTag: 'playlist_${playlist.name}',
-                                  tracks: playlist.tracks.map((e) => e.track).toList(),
-                                  name: playlist.name.translatePlaylistName(),
-                                  gridCount: countPerRow,
-                                  showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(key),
-                                  onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
-                                ),
-                              );
-                            },
-                            childCount: PlaylistController.inst.playlistSearchList.length,
-                          ),
+                          itemCount: PlaylistController.inst.playlistSearchList.length,
+                          itemBuilder: (context, i) {
+                            final key = PlaylistController.inst.playlistSearchList[i];
+                            final playlist = PlaylistController.inst.playlistsMap[key]!;
+                            return AnimatingGrid(
+                              columnCount: PlaylistController.inst.playlistSearchList.length,
+                              position: i,
+                              shouldAnimate: _shouldAnimate,
+                              child: MultiArtworkCard(
+                                heroTag: 'playlist_${playlist.name}',
+                                tracks: playlist.tracks.map((e) => e.track).toList(),
+                                name: playlist.name.translatePlaylistName(),
+                                gridCount: countPerRow,
+                                showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(key),
+                                onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
+                              ),
+                            );
+                          },
                         ),
                       if (!disableBottomPadding)
                         const SliverPadding(

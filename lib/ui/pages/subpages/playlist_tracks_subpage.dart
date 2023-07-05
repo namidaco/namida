@@ -7,6 +7,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -34,7 +35,7 @@ class HistoryTracksPage extends StatelessWidget {
         () => NamidaListView(
           scrollController: sc,
           itemCount: HistoryController.inst.historyDays.length,
-          itemExtents: HistoryController.inst.allItemsExtentsHistory.toList(),
+          itemExtents: Dimensions.inst.allItemsExtentsHistory.toList(),
           header: SubpagesTopContainer(
             source: QueueSource.history,
             title: k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
@@ -110,27 +111,31 @@ class HistoryTracksPage extends StatelessWidget {
                   ),
                 );
               },
-              content: ListView.builder(
-                padding: const EdgeInsets.only(bottom: kHistoryDayListBottomPadding, top: kHistoryDayListTopPadding),
-                primary: false,
-                physics: const NeverScrollableScrollPhysics(),
-                itemExtent: trackTileItemExtent,
-                itemCount: tracks.length,
-                shrinkWrap: true, // fixed by calculating all itemsExtent.
-                itemBuilder: (context, i) {
-                  final reverseIndex = (tracks.length - 1) - i;
-                  final tr = tracks[reverseIndex];
-                  return TrackTile(
-                    track: tr.track,
-                    trackWithDate: tr,
-                    index: i,
-                    queueSource: QueueSource.history,
-                    bgColor: day == dayOfHighLight && reverseIndex == indexToHighlight ? context.theme.colorScheme.onBackground.withAlpha(40) : null,
-                    draggableThumbnail: false,
-                    playlistName: k_PLAYLIST_NAME_HISTORY,
-                    thirdLineText: tr.dateAdded.dateAndClockFormattedOriginal,
-                  );
-                },
+              content: SizedBox(
+                height: Dimensions.inst.allItemsExtentsHistory[index],
+                width: context.width,
+                child: ListView.builder(
+                  padding: const EdgeInsets.only(bottom: kHistoryDayListBottomPadding, top: kHistoryDayListTopPadding),
+                  primary: false,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemExtent: Dimensions.inst.trackTileItemExtent,
+                  itemCount: tracks.length,
+                  itemBuilder: (context, i) {
+                    final reverseIndex = (tracks.length - 1) - i;
+                    final tr = tracks[reverseIndex];
+
+                    return TrackTile(
+                      track: tr.track,
+                      trackWithDate: tr,
+                      index: i,
+                      queueSource: QueueSource.history,
+                      bgColor: day == dayOfHighLight && reverseIndex == indexToHighlight ? context.theme.colorScheme.onBackground.withAlpha(40) : null,
+                      draggableThumbnail: false,
+                      playlistName: k_PLAYLIST_NAME_HISTORY,
+                      thirdLineText: tr.dateAdded.dateAndClockFormattedOriginal,
+                    );
+                  },
+                ),
               ),
             );
           },
@@ -150,7 +155,7 @@ class MostPlayedTracksPage extends StatelessWidget {
         () {
           final tracks = QueueSource.mostPlayed.toTracks();
           return NamidaListView(
-            itemExtents: List.filled(tracks.length, trackTileItemExtent),
+            itemExtents: tracks.toTrackItemExtents(),
             header: SubpagesTopContainer(
               source: QueueSource.mostPlayed,
               title: k_PLAYLIST_NAME_MOST_PLAYED.translatePlaylistName(),

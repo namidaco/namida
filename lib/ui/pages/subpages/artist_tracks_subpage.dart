@@ -44,7 +44,7 @@ class ArtistTracksPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 2),
                   child: ContainerWithBorder(
                     child: ArtworkWidget(
-                      thumnailSize: Get.width * 0.35,
+                      thumbnailSize: Get.width * 0.35,
                       track: tracks.trackOfImage,
                       path: tracks.pathToImage,
                       forceSquared: true,

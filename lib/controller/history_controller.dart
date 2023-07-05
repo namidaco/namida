@@ -10,6 +10,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -17,8 +18,6 @@ class HistoryController {
   static HistoryController get inst => _instance;
   static final HistoryController _instance = HistoryController._internal();
   HistoryController._internal();
-
-  RxList<double> allItemsExtentsHistory = <double>[].obs;
 
   int get historyTracksLength => historyMap.value.entries.fold(0, (sum, obj) => sum + obj.value.length);
   List<TrackWithDate> get historyTracks => historyMap.value.entries.fold([], (mainList, newEntry) => [...mainList, ...newEntry.value]);
@@ -87,7 +86,7 @@ class HistoryController {
       daysToSave.add(trackday);
       historyMap.value.addForce(trackday, e);
     });
-    _calculateAllItemsExtents();
+    Dimensions.inst.calculateAllItemsExtentsInHistory();
 
     return daysToSave;
   }
@@ -115,7 +114,7 @@ class HistoryController {
   Future<void> removeFromHistory(int dayOfTrack, int index) async {
     final trs = historyMap.value[dayOfTrack]!;
     trs.removeAt(trs.length - 1 - index);
-    _calculateAllItemsExtents();
+    Dimensions.inst.calculateAllItemsExtentsInHistory();
     await saveHistoryToStorage([dayOfTrack]);
   }
 
@@ -198,13 +197,7 @@ class HistoryController {
         historyMap.refresh();
       }
     }
-    _calculateAllItemsExtents();
+    Dimensions.inst.calculateAllItemsExtentsInHistory();
     updateMostPlayedPlaylist();
-  }
-
-  void _calculateAllItemsExtents() {
-    allItemsExtentsHistory.assignAll(historyMap.value.entries.map(
-      (e) => kHistoryDayHeaderHeightWithPadding + (e.value.length * trackTileItemExtent),
-    ));
   }
 }

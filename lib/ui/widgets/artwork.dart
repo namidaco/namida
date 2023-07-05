@@ -20,7 +20,7 @@ class ArtworkWidget extends StatefulWidget {
   /// path of image file.
   final String? path;
   final Uint8List? bytes;
-  final double thumnailSize;
+  final double thumbnailSize;
   final bool forceSquared;
   final bool staggered;
   final bool compressed;
@@ -44,7 +44,7 @@ class ArtworkWidget extends StatefulWidget {
     this.bytes,
     this.compressed = true,
     this.fadeMilliSeconds = 300,
-    required this.thumnailSize,
+    required this.thumbnailSize,
     this.forceSquared = false,
     this.child,
     this.scale = 1.0,
@@ -88,8 +88,8 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
     _lastBorderRadius = widget.borderRadius;
 
     _stockWidget = Container(
-      width: widget.width ?? widget.thumnailSize,
-      height: widget.height ?? widget.thumnailSize,
+      width: widget.width ?? widget.thumbnailSize,
+      height: widget.height ?? widget.thumbnailSize,
       key: const ValueKey("empty"),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -101,7 +101,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
         children: [
           Icon(
             Broken.musicnote,
-            size: widget.iconSize ?? widget.thumnailSize / 2,
+            size: widget.iconSize ?? widget.thumbnailSize / 2,
           ),
           if (widget.onTopWidget != null) widget.onTopWidget!,
           if (widget.onTopWidgets != null) ...widget.onTopWidgets!,
@@ -173,8 +173,8 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
     );
     _finalWidget = SettingsController.inst.enableGlowEffect.value && widget.blur != 0.0
         ? SizedBox(
-            width: widget.staggered ? null : widget.width ?? widget.thumnailSize * widget.scale,
-            height: widget.staggered ? null : widget.height ?? widget.thumnailSize * widget.scale,
+            width: widget.staggered ? null : widget.width ?? widget.thumbnailSize * widget.scale,
+            height: widget.staggered ? null : widget.height ?? widget.thumbnailSize * widget.scale,
             child: Center(
               child: SettingsController.inst.borderRadiusMultiplier.value == 0.0 || widget.borderRadius == 0
                   ? DropShadow(
@@ -199,8 +199,8 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
             ),
           )
         : SizedBox(
-            width: widget.staggered ? null : widget.width ?? widget.thumnailSize * widget.scale,
-            height: widget.staggered ? null : widget.height ?? widget.thumnailSize * widget.scale,
+            width: widget.staggered ? null : widget.width ?? widget.thumbnailSize * widget.scale,
+            height: widget.staggered ? null : widget.height ?? widget.thumbnailSize * widget.scale,
             child: Center(
               child: Container(
                 decoration: BoxDecoration(boxShadow: widget.boxShadow),
@@ -245,7 +245,7 @@ class MultiArtworks extends StatelessWidget {
       child: paths.isEmpty
           ? ArtworkWidget(
               key: UniqueKey(),
-              thumnailSize: thumbnailSize,
+              thumbnailSize: thumbnailSize,
               track: allTracksInLibrary.firstOrNull,
               path: allTracksInLibrary.firstOrNull?.pathToImage,
               forceSquared: true,
@@ -258,7 +258,7 @@ class MultiArtworks extends StatelessWidget {
           : paths.length == 1
               ? ArtworkWidget(
                   key: UniqueKey(),
-                  thumnailSize: thumbnailSize,
+                  thumbnailSize: thumbnailSize,
                   path: paths.elementAt(0),
                   track: null,
                   forceSquared: true,
@@ -272,7 +272,7 @@ class MultiArtworks extends StatelessWidget {
                         ArtworkWidget(
                           key: UniqueKey(),
                           track: null,
-                          thumnailSize: thumbnailSize / 2,
+                          thumbnailSize: thumbnailSize / 2,
                           height: thumbnailSize,
                           path: paths.elementAt(0),
                           forceSquared: true,
@@ -283,7 +283,7 @@ class MultiArtworks extends StatelessWidget {
                         ArtworkWidget(
                           key: UniqueKey(),
                           track: null,
-                          thumnailSize: thumbnailSize / 2,
+                          thumbnailSize: thumbnailSize / 2,
                           height: thumbnailSize,
                           path: paths.elementAt(1),
                           forceSquared: true,
@@ -301,7 +301,7 @@ class MultiArtworks extends StatelessWidget {
                                 ArtworkWidget(
                                   key: UniqueKey(),
                                   track: null,
-                                  thumnailSize: thumbnailSize / 2,
+                                  thumbnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(0),
                                   forceSquared: true,
                                   blur: 0,
@@ -311,7 +311,7 @@ class MultiArtworks extends StatelessWidget {
                                 ArtworkWidget(
                                   key: UniqueKey(),
                                   track: null,
-                                  thumnailSize: thumbnailSize / 2,
+                                  thumbnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(1),
                                   forceSquared: true,
                                   blur: 0,
@@ -325,7 +325,7 @@ class MultiArtworks extends StatelessWidget {
                                 ArtworkWidget(
                                   key: UniqueKey(),
                                   track: null,
-                                  thumnailSize: thumbnailSize / 2,
+                                  thumbnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(2),
                                   forceSquared: true,
                                   blur: 0,
@@ -344,7 +344,7 @@ class MultiArtworks extends StatelessWidget {
                                 ArtworkWidget(
                                   key: UniqueKey(),
                                   track: null,
-                                  thumnailSize: thumbnailSize / 2,
+                                  thumbnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(0),
                                   forceSquared: true,
                                   blur: 0,
@@ -354,7 +354,7 @@ class MultiArtworks extends StatelessWidget {
                                 ArtworkWidget(
                                   key: UniqueKey(),
                                   track: null,
-                                  thumnailSize: thumbnailSize / 2,
+                                  thumbnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(1),
                                   forceSquared: true,
                                   blur: 0,
@@ -368,7 +368,7 @@ class MultiArtworks extends StatelessWidget {
                                 ArtworkWidget(
                                   key: UniqueKey(),
                                   track: null,
-                                  thumnailSize: thumbnailSize / 2,
+                                  thumbnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(2),
                                   forceSquared: true,
                                   blur: 0,
@@ -378,7 +378,7 @@ class MultiArtworks extends StatelessWidget {
                                 ArtworkWidget(
                                   key: UniqueKey(),
                                   track: null,
-                                  thumnailSize: thumbnailSize / 2,
+                                  thumbnailSize: thumbnailSize / 2,
                                   path: paths.elementAt(3),
                                   forceSquared: true,
                                   blur: 0,

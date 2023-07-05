@@ -6,7 +6,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/themes.dart';
@@ -66,7 +66,7 @@ void showTrackListensDialog(Track track, {List<int>? datesOfListen, ThemeData? t
                 NamidaOnTaps.inst.onHistoryPlaylistTap(
                   indexToHighlight: indexOfSmallList,
                   dayOfHighLight: t.toDaysSinceEpoch(),
-                  initialScrollOffset: (tracksToScroll * trackTileItemExtent) + (daysToScroll * kHistoryDayHeaderHeightWithPadding),
+                  initialScrollOffset: (tracksToScroll * Dimensions.inst.trackTileItemExtent) + (daysToScroll * kHistoryDayHeaderHeightWithPadding),
                 );
               },
             );

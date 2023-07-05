@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -32,12 +33,13 @@ class FolderTile extends StatelessWidget {
     final dirInside = folder.getDirectoriesInside();
     final tracks = dummyTracks ?? folder.tracks;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4.0),
+      padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin),
       child: NamidaInkWell(
         bgColor: context.theme.cardColor,
+        borderRadius: 0.0,
         onTap: () => NamidaOnTaps.inst.onFolderTap(folder, isMainStoragePath),
         child: SizedBox(
-          height: SettingsController.inst.trackListTileHeight.value + 4.0 + 4.0,
+          height: Dimensions.inst.trackTileItemExtent,
           child: Row(
             children: [
               const SizedBox(width: 12.0),
@@ -59,7 +61,7 @@ class FolderTile extends StatelessWidget {
                             child: ArtworkWidget(
                               blur: 0,
                               borderRadius: 6,
-                              thumnailSize: (SettingsController.inst.trackThumbnailSizeinList.value / 2.6).clamp(0, SettingsController.inst.trackListTileHeight.value * 0.5),
+                              thumbnailSize: (SettingsController.inst.trackThumbnailSizeinList.value / 2.6).clamp(0, SettingsController.inst.trackListTileHeight.value * 0.5),
                               path: tracks.firstOrNull?.pathToImage,
                               track: tracks.firstOrNull,
                               forceSquared: true,

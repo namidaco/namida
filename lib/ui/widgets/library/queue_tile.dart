@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/queue.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -17,10 +18,8 @@ class QueueTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final hero = 'queue_${queue.date}';
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 8.0),
-      clipBehavior: Clip.antiAlias,
+      margin: const EdgeInsets.symmetric(horizontal: 8.0).add(const EdgeInsets.only(bottom: Dimensions.tileBottomMargin + Dimensions.tileAdditionalMargin)),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16.0.multipliedRadius),
         boxShadow: [
           BoxShadow(
             color: context.theme.shadowColor.withAlpha(20),
@@ -33,16 +32,17 @@ class QueueTile extends StatelessWidget {
         bgColor: context.theme.cardColor,
         onTap: () => NamidaOnTaps.inst.onQueueTap(queue),
         onLongPress: () => NamidaDialogs.inst.showQueueDialog(queue.date),
-        padding: const EdgeInsets.only(top: 3.0, bottom: 3.0, right: 8.0),
+        padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
+        borderRadius: 16.0,
         child: SizedBox(
-          height: 68.0 + 12.0,
+          height: Dimensions.queueTileItemExtent,
           child: Row(
             children: [
               SizedBox(
-                height: 64.0,
+                height: Dimensions.queueThumbnailSize,
                 child: MultiArtworkContainer(
                   heroTag: hero,
-                  size: 64.0,
+                  size: Dimensions.queueThumbnailSize,
                   tracks: queue.tracks,
                 ),
               ),
@@ -87,6 +87,7 @@ class QueueTile extends StatelessWidget {
                 padding: 6.0,
                 onPressed: () => NamidaDialogs.inst.showQueueDialog(queue.date),
               ),
+              const SizedBox(width: 8.0),
             ],
           ),
         ),

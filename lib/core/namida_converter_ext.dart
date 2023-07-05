@@ -16,6 +16,7 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -911,6 +912,27 @@ extension RouteUtils on NamidaRoute {
       ),
     ];
   }
+
+  LibraryTab? toLibraryTab() {
+    LibraryTab? tab;
+    switch (route) {
+      case RouteType.PAGE_allTracks:
+        tab = LibraryTab.tracks;
+      case RouteType.PAGE_albums:
+        tab = LibraryTab.albums;
+      case RouteType.PAGE_artists:
+        tab = LibraryTab.artists;
+      case RouteType.PAGE_genres:
+        tab = LibraryTab.genres;
+      case RouteType.PAGE_folders:
+        tab = LibraryTab.folders;
+      case RouteType.PAGE_playlists:
+        tab = LibraryTab.playlists;
+      default:
+        null;
+    }
+    return tab;
+  }
 }
 
 extension TracksFromMaps on String {
@@ -940,4 +962,8 @@ extension TracksFromMaps on String {
 
 extension QueueFromMap on int {
   Queue? getQueue() => QueueController.inst.queuesMap.value[this];
+}
+
+extension TrackTileItemExtentExt on Iterable {
+  List<double> toTrackItemExtents() => List.filled(length, Dimensions.inst.trackTileItemExtent);
 }

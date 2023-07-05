@@ -593,7 +593,7 @@ Future<void> showGeneralPopupDialog(
                                   child: ArtworkWidget(
                                     track: tracks.trackOfImage,
                                     path: tracks.pathToImage,
-                                    thumnailSize: 60,
+                                    thumbnailSize: 60,
                                     forceSquared: forceSquared,
                                     borderRadius: isCircle ? 200 : 8.0,
                                     useTrackTileCacheHeight: useTrackTileCacheHeight,

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
@@ -75,6 +76,7 @@ void showSettingDialogWithTextField({
                 if (trackListTileHeight) {
                   stg.save(trackListTileHeight: 70.0);
                   showSnackBarWithTitle("${stg.trackListTileHeight.value}", title: title, iconWidget: iconWidget);
+                  Dimensions.inst.updateTrackTileDimensions();
                 }
                 if (albumThumbnailSizeinList) {
                   stg.save(albumThumbnailSizeinList: 90.0);
@@ -83,6 +85,7 @@ void showSettingDialogWithTextField({
                 if (albumListTileHeight) {
                   stg.save(albumListTileHeight: 90.0);
                   showSnackBarWithTitle("${stg.albumListTileHeight.value}", title: title, iconWidget: iconWidget);
+                  Dimensions.inst.updateAlbumTileDimensions();
                 }
                 if (nowPlayingImageContainerHeight) {
                   stg.save(nowPlayingImageContainerHeight: 400.0);
@@ -113,50 +116,34 @@ void showSettingDialogWithTextField({
               onPressed: () {
                 if (formKey.currentState!.validate()) {
                   if (trackThumbnailSizeinList) {
-                    stg.save(
-                      trackThumbnailSizeinList: double.parse(controller.text),
-                    );
+                    stg.save(trackThumbnailSizeinList: double.parse(controller.text));
                   }
                   if (trackListTileHeight) {
-                    stg.save(
-                      trackListTileHeight: double.parse(controller.text),
-                    );
+                    stg.save(trackListTileHeight: double.parse(controller.text));
+                    Dimensions.inst.updateTrackTileDimensions();
                   }
                   if (albumThumbnailSizeinList) {
-                    stg.save(
-                      albumThumbnailSizeinList: double.parse(controller.text),
-                    );
+                    stg.save(albumThumbnailSizeinList: double.parse(controller.text));
                   }
                   if (albumListTileHeight) {
-                    stg.save(
-                      albumListTileHeight: double.parse(controller.text),
-                    );
+                    stg.save(albumListTileHeight: double.parse(controller.text));
+                    Dimensions.inst.updateAlbumTileDimensions();
                   }
 
                   if (nowPlayingImageContainerHeight) {
-                    stg.save(
-                      nowPlayingImageContainerHeight: double.parse(controller.text),
-                    );
+                    stg.save(nowPlayingImageContainerHeight: double.parse(controller.text));
                   }
                   if (borderRadiusMultiplier) {
-                    stg.save(
-                      borderRadiusMultiplier: double.parse(controller.text),
-                    );
+                    stg.save(borderRadiusMultiplier: double.parse(controller.text));
                   }
                   if (fontScaleFactor) {
-                    stg.save(
-                      fontScaleFactor: double.parse(controller.text) / 100,
-                    );
+                    stg.save(fontScaleFactor: double.parse(controller.text) / 100);
                   }
                   if (dateTimeFormat) {
-                    stg.save(
-                      dateTimeFormat: controller.text,
-                    );
+                    stg.save(dateTimeFormat: controller.text);
                   }
                   if (trackTileSeparator) {
-                    stg.save(
-                      trackTileSeparator: controller.text,
-                    );
+                    stg.save(trackTileSeparator: controller.text);
                   }
                   if (addNewPlaylist) {
                     PlaylistController.inst.addNewPlaylist(controller.text);

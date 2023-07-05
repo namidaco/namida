@@ -84,7 +84,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                               child: ArtworkWidget(
                                 track: currentTrack,
                                 path: currentTrack.pathToImage,
-                                thumnailSize: finalthumbnailsize,
+                                thumbnailSize: finalthumbnailsize,
                                 width: finalthumbnailsize,
                                 height: finalthumbnailsize * 9 / 16,
                                 blur: 0,
@@ -337,146 +337,144 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                           //   padding: const EdgeInsets.all(12.0),
                                           //   child: Text([Language.inst.COMMENT, comments?.totalLength.formatDecimal() ?? 0].join(' • ')),
                                           // ),
-                                          SliverList(
-                                            delegate: SliverChildBuilderDelegate(
-                                              (context, i) {
-                                                final com = comments?.comments[i];
-                                                final commentChannel = YoutubeController.inst.commentsChannels.firstWhereOrNull((element) => element.id == com?.channelId);
+                                          SliverList.builder(
+                                            itemCount: comments?.comments.length ?? 20,
+                                            itemBuilder: (context, i) {
+                                              final com = comments?.comments[i];
+                                              final commentChannel = YoutubeController.inst.commentsChannels.firstWhereOrNull((element) => element.id == com?.channelId);
 
-                                                return Container(
-                                                  key: ValueKey(i),
-                                                  margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                                                  padding: const EdgeInsets.all(10.0),
-                                                  decoration: BoxDecoration(
-                                                    color: Color.alphaBlend(context.theme.cardColor, context.theme.colorScheme.onBackground).withAlpha(180),
-                                                    borderRadius: BorderRadius.circular(
-                                                      12.0.multipliedRadius,
-                                                    ),
+                                              return Container(
+                                                key: ValueKey(i),
+                                                margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                                                padding: const EdgeInsets.all(10.0),
+                                                decoration: BoxDecoration(
+                                                  color: Color.alphaBlend(context.theme.cardColor, context.theme.colorScheme.onBackground).withAlpha(180),
+                                                  borderRadius: BorderRadius.circular(
+                                                    12.0.multipliedRadius,
                                                   ),
-                                                  child: SizedBox(
-                                                    width: context.width,
-                                                    child: Row(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        commentChannel == null
-                                                            ? NamidaBasicShimmer(
-                                                                width: 42.0,
-                                                                height: 42.0,
-                                                                index: i,
-                                                              )
-                                                            : YoutubeThumbnail(
-                                                                url: commentChannel.logoUrl,
-                                                                width: 42.0,
-                                                                isCircle: true,
-                                                                errorWidget: (context, url, error) => ArtworkWidget(
-                                                                  track: null,
-                                                                  thumnailSize: 42.0,
-                                                                  forceDummyArtwork: true,
-                                                                  borderRadius: 124.0.multipliedRadius,
-                                                                ),
+                                                ),
+                                                child: SizedBox(
+                                                  width: context.width,
+                                                  child: Row(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      commentChannel == null
+                                                          ? NamidaBasicShimmer(
+                                                              width: 42.0,
+                                                              height: 42.0,
+                                                              index: i,
+                                                            )
+                                                          : YoutubeThumbnail(
+                                                              url: commentChannel.logoUrl,
+                                                              width: 42.0,
+                                                              isCircle: true,
+                                                              errorWidget: (context, url, error) => ArtworkWidget(
+                                                                track: null,
+                                                                thumbnailSize: 42.0,
+                                                                forceDummyArtwork: true,
+                                                                borderRadius: 124.0.multipliedRadius,
                                                               ),
-                                                        const SizedBox(width: 10.0),
-                                                        Expanded(
-                                                          child: Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: [
-                                                              com == null
-                                                                  ? NamidaBasicShimmer(
-                                                                      width: context.width / 2,
-                                                                      height: 7.0,
-                                                                      index: i,
-                                                                    )
-                                                                  : Text(
-                                                                      com.author,
-                                                                      style: context.textTheme.displaySmall
-                                                                          ?.copyWith(fontWeight: FontWeight.w400, color: context.theme.colorScheme.onBackground.withAlpha(180)),
-                                                                    ),
-                                                              const SizedBox(height: 2.0),
-                                                              com == null
-                                                                  ? Column(
-                                                                      children: [
-                                                                        NamidaBasicShimmer(
-                                                                          width: context.width / 2,
-                                                                          height: 7.0,
-                                                                          index: i,
-                                                                        ),
-                                                                        const SizedBox(height: 12.0),
-                                                                        NamidaBasicShimmer(
-                                                                          width: context.width / 2,
-                                                                          height: 7.0,
-                                                                          index: i,
-                                                                        ),
-                                                                        const SizedBox(height: 12.0),
-                                                                        NamidaBasicShimmer(
-                                                                          width: context.width / 2,
-                                                                          height: 7.0,
-                                                                          index: i,
-                                                                        ),
-                                                                      ],
-                                                                    )
-                                                                  : ReadMoreText(
-                                                                      com.text,
-                                                                      trimLines: 5,
-                                                                      colorClickableText: context.theme.colorScheme.primary.withAlpha(200),
-                                                                      trimMode: TrimMode.Line,
-                                                                      trimCollapsedText: Language.inst.SHOW_MORE,
-                                                                      trimExpandedText: '',
-                                                                      style: context.textTheme.displaySmall
-                                                                          ?.copyWith(fontWeight: FontWeight.w500, color: context.theme.colorScheme.onBackground.withAlpha(220)),
-                                                                    ),
-                                                              const SizedBox(height: 8.0),
-                                                              Row(
-                                                                children: [
-                                                                  const Icon(Broken.like_1, size: 16.0),
-                                                                  const SizedBox(width: 4.0),
-                                                                  com == null
-                                                                      ? NamidaBasicShimmer(
-                                                                          width: 10.0,
-                                                                          height: 2.0,
-                                                                          index: i,
-                                                                        )
-                                                                      : Text(
-                                                                          com.likeCount.formatDecimal(),
-                                                                          style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w300),
-                                                                        ),
-                                                                  const SizedBox(width: 12.0),
-                                                                  const Icon(Broken.dislike, size: 16.0),
-                                                                  const SizedBox(width: 16.0),
-                                                                  SizedBox(
-                                                                    height: 24.0,
-                                                                    child: TextButton.icon(
-                                                                      style: TextButton.styleFrom(
-                                                                        visualDensity: VisualDensity.compact,
-                                                                        foregroundColor: context.theme.colorScheme.onBackground.withAlpha(200),
+                                                            ),
+                                                      const SizedBox(width: 10.0),
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
+                                                            com == null
+                                                                ? NamidaBasicShimmer(
+                                                                    width: context.width / 2,
+                                                                    height: 7.0,
+                                                                    index: i,
+                                                                  )
+                                                                : Text(
+                                                                    com.author,
+                                                                    style: context.textTheme.displaySmall
+                                                                        ?.copyWith(fontWeight: FontWeight.w400, color: context.theme.colorScheme.onBackground.withAlpha(180)),
+                                                                  ),
+                                                            const SizedBox(height: 2.0),
+                                                            com == null
+                                                                ? Column(
+                                                                    children: [
+                                                                      NamidaBasicShimmer(
+                                                                        width: context.width / 2,
+                                                                        height: 7.0,
+                                                                        index: i,
                                                                       ),
-                                                                      onPressed: () {},
-                                                                      icon: const Icon(Broken.document, size: 16.0),
-                                                                      label: Text(
-                                                                        Language.inst.REPLIES,
+                                                                      const SizedBox(height: 12.0),
+                                                                      NamidaBasicShimmer(
+                                                                        width: context.width / 2,
+                                                                        height: 7.0,
+                                                                        index: i,
+                                                                      ),
+                                                                      const SizedBox(height: 12.0),
+                                                                      NamidaBasicShimmer(
+                                                                        width: context.width / 2,
+                                                                        height: 7.0,
+                                                                        index: i,
+                                                                      ),
+                                                                    ],
+                                                                  )
+                                                                : ReadMoreText(
+                                                                    com.text,
+                                                                    trimLines: 5,
+                                                                    colorClickableText: context.theme.colorScheme.primary.withAlpha(200),
+                                                                    trimMode: TrimMode.Line,
+                                                                    trimCollapsedText: Language.inst.SHOW_MORE,
+                                                                    trimExpandedText: '',
+                                                                    style: context.textTheme.displaySmall
+                                                                        ?.copyWith(fontWeight: FontWeight.w500, color: context.theme.colorScheme.onBackground.withAlpha(220)),
+                                                                  ),
+                                                            const SizedBox(height: 8.0),
+                                                            Row(
+                                                              children: [
+                                                                const Icon(Broken.like_1, size: 16.0),
+                                                                const SizedBox(width: 4.0),
+                                                                com == null
+                                                                    ? NamidaBasicShimmer(
+                                                                        width: 10.0,
+                                                                        height: 2.0,
+                                                                        index: i,
+                                                                      )
+                                                                    : Text(
+                                                                        com.likeCount.formatDecimal(),
                                                                         style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w300),
                                                                       ),
+                                                                const SizedBox(width: 12.0),
+                                                                const Icon(Broken.dislike, size: 16.0),
+                                                                const SizedBox(width: 16.0),
+                                                                SizedBox(
+                                                                  height: 24.0,
+                                                                  child: TextButton.icon(
+                                                                    style: TextButton.styleFrom(
+                                                                      visualDensity: VisualDensity.compact,
+                                                                      foregroundColor: context.theme.colorScheme.onBackground.withAlpha(200),
+                                                                    ),
+                                                                    onPressed: () {},
+                                                                    icon: const Icon(Broken.document, size: 16.0),
+                                                                    label: Text(
+                                                                      Language.inst.REPLIES,
+                                                                      style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w300),
                                                                     ),
                                                                   ),
-                                                                ],
-                                                              ),
-                                                            ],
-                                                          ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ],
                                                         ),
-                                                        GestureDetector(
-                                                          child: const MoreIcon(),
-                                                          onTapDown: (details) => _showCommentMenu(context, details, com, commentChannel!),
-                                                        ),
+                                                      ),
+                                                      GestureDetector(
+                                                        child: const MoreIcon(),
+                                                        onTapDown: (details) => _showCommentMenu(context, details, com, commentChannel!),
+                                                      ),
 
-                                                        //  MoreIcon(
-                                                        //       onPressed: _showCommentMenu(e.value, commentChannel),
-                                                        //     ),
-                                                      ],
-                                                    ),
+                                                      //  MoreIcon(
+                                                      //       onPressed: _showCommentMenu(e.value, commentChannel),
+                                                      //     ),
+                                                    ],
                                                   ),
-                                                );
-                                              },
-                                              childCount: comments?.comments.length ?? 20,
-                                            ),
+                                                ),
+                                              );
+                                            },
                                           ),
                                         ],
                                       ),

@@ -28,6 +28,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -258,7 +259,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
   void updateScrollPositionInQueue() {
     void updateIcon() {
       final pixels = scrollController.position.pixels;
-      final sizeInSettings = trackTileItemExtent * Player.inst.currentIndex.value - Get.height * 0.3;
+      final sizeInSettings = Dimensions.inst.trackTileItemExtent * Player.inst.currentIndex.value - Get.height * 0.3;
       if (pixels > sizeInSettings) {
         arrowDirection.value = Broken.arrow_up_1;
       }
@@ -1180,7 +1181,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                 children: [
                                   Obx(
                                     () => NamidaListView(
-                                      itemExtents: Player.inst.currentQueue.map((element) => trackTileItemExtent).toList(),
+                                      itemExtents: Player.inst.currentQueue.toTrackItemExtents(),
                                       scrollController: scrollController,
                                       padding: EdgeInsets.only(bottom: 56.0 + SelectedTracksController.inst.bottomPadding.value),
                                       onReorderStart: (index) => isReorderingQueue = true,
@@ -1727,7 +1728,7 @@ class TrackImage extends StatelessWidget {
                                 key: const ValueKey('imagecontainer'),
                                 path: track.pathToImage,
                                 track: track,
-                                thumnailSize: Get.width,
+                                thumbnailSize: Get.width,
                                 compressed: cp == 0,
                                 borderRadius: 6.0 + 10.0 * cp,
                                 forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,

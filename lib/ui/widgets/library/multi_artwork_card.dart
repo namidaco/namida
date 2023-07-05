@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -19,13 +20,13 @@ class MultiArtworkCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const double horizontalPadding = 4.0;
-    final double thumnailSize = (Get.width / gridCount) - horizontalPadding * 2;
-    final fontSize = (18.0 - (gridCount * 1.7)).multipliedFontScale;
+    final d = Dimensions.inst.multiCardDimensions;
+    final thumbnailSize = d.$1;
+    final fontSize = d.$2.multipliedFontScale;
 
     return GridTile(
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: horizontalPadding),
+        margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: Dimensions.gridHorizontalPadding),
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: context.theme.cardColor,
@@ -42,7 +43,7 @@ class MultiArtworkCard extends StatelessWidget {
                     heroTag: heroTag,
                     disableHero: true,
                     paths: tracks.map((e) => e.pathToImage).toList(),
-                    thumbnailSize: thumnailSize,
+                    thumbnailSize: thumbnailSize,
                     iconSize: 92.0 - 14 * gridCount,
                   ),
                 ),

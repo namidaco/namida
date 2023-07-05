@@ -5,6 +5,8 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -30,6 +32,12 @@ class NamidaNavigator {
   }
 
   void _hideSearchMenuAndUnfocus() => ScrollSearchController.inst.hideSearchMenu();
+
+  void onFirstLoad() {
+    final initialTab = SettingsController.inst.selectedLibraryTab.value;
+    navigateTo(initialTab.toWidget());
+    Dimensions.inst.updateDimensions(initialTab);
+  }
 
   Future<void> navigateTo(
     Widget page, {

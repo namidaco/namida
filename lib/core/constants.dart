@@ -52,17 +52,12 @@ final String k_DIR_YOUTUBE_STATS = '$k_DIR_USER_DATA/Youtube Stats/';
 
 final String k_FILE_PATH_NAMIDA_LOGO = '$k_DIR_ARTWORKS.NAMIDA_DEFAULT_ARTWORK.PNG';
 
-/// Dimensions
-const double kBottomPadding = 102.0;
-const Widget kBottomPaddingWidget = SizedBox(height: 102.0);
-
 /// Default Playlists IDs
 const k_PLAYLIST_NAME_FAV = '_FAVOURITES_';
 const k_PLAYLIST_NAME_HISTORY = '_HISTORY_';
 const k_PLAYLIST_NAME_MOST_PLAYED = '_MOST_PLAYED_';
 const k_PLAYLIST_NAME_AUTO_GENERATED = '_AUTO_GENERATED_';
 
-double get trackTileItemExtent => SettingsController.inst.trackListTileHeight.value + 4.0 * 3.0;
 List<Track> get allTracksInLibrary => Indexer.inst.tracksInfoList.toList();
 bool get shouldAlbumBeSquared =>
     (SettingsController.inst.albumGridCount.value > 1 && !SettingsController.inst.useAlbumStaggeredGridView.value) ||
@@ -186,9 +181,3 @@ const k_UNKNOWN_TRACK_GENRE = 'Unknown Genre';
 const k_UNKNOWN_TRACK_COMPOSER = 'Unknown Composer';
 
 int get currentTimeMS => DateTime.now().millisecondsSinceEpoch;
-
-const kHistoryDayHeaderHeight = 40.0;
-const kHistoryDayListTopPadding = 6.0;
-const kHistoryDayListBottomPadding = 12.0;
-
-const kHistoryDayHeaderHeightWithPadding = kHistoryDayHeaderHeight + kHistoryDayListTopPadding + kHistoryDayListBottomPadding;

@@ -10,7 +10,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -164,22 +164,20 @@ class SearchPage extends StatelessWidget {
                           const SliverPadding(
                             padding: EdgeInsets.only(bottom: 12.0),
                           ),
-                          SliverFixedExtentList(
-                            itemExtent: trackTileItemExtent,
-                            delegate: SliverChildBuilderDelegate(
-                              (context, i) {
-                                final track = Indexer.inst.trackSearchTemp[i];
-                                return AnimatingTile(
-                                  position: i,
-                                  child: TrackTile(
-                                    index: i,
-                                    track: track,
-                                    queueSource: QueueSource.search,
-                                  ),
-                                );
-                              },
-                              childCount: Indexer.inst.trackSearchTemp.length,
-                            ),
+                          SliverFixedExtentList.builder(
+                            itemCount: Indexer.inst.trackSearchTemp.length,
+                            itemExtent: Dimensions.inst.trackTileItemExtent,
+                            itemBuilder: (context, i) {
+                              final track = Indexer.inst.trackSearchTemp[i];
+                              return AnimatingTile(
+                                position: i,
+                                child: TrackTile(
+                                  index: i,
+                                  track: track,
+                                  queueSource: QueueSource.search,
+                                ),
+                              );
+                            },
                           ),
                         ],
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
@@ -20,18 +21,16 @@ class PlaylistTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const double playlistThumnailSize = 75;
-    const double playlistTileHeight = 75;
     final hero = 'playlist_$playlistName';
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3.0),
+      padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin),
       child: NamidaInkWell(
         borderRadius: 0.0,
         onTap: onTap,
         onLongPress: () => NamidaDialogs.inst.showPlaylistDialog(playlistName),
-        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: Dimensions.tileVerticalPadding),
         child: SizedBox(
-          height: playlistTileHeight + 14,
+          height: Dimensions.playlistTileItemExtent,
           child: Obx(
             () {
               final playlist = PlaylistController.inst.getPlaylist(playlistName);
@@ -41,7 +40,7 @@ class PlaylistTile extends StatelessWidget {
                 children: [
                   MultiArtworkContainer(
                     heroTag: hero,
-                    size: playlistThumnailSize,
+                    size: Dimensions.playlistThumbnailSize,
                     tracks: playlist.tracks.map((e) => e.track).toList(),
                   ),
                   Expanded(

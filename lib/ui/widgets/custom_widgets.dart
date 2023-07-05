@@ -21,6 +21,7 @@ import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -1746,155 +1747,6 @@ class NamidaCircularPercentage extends StatelessWidget {
   }
 }
 
-// class NamidaListView extends StatelessWidget {
-//   final Widget Function(BuildContext context, int i) itemBuilder;
-//   final void Function(int oldIndex, int newIndex)? onReorder;
-//   final void Function(int index)? onReorderStart;
-//   final void Function(int index)? onReorderEnd;
-//   final Widget? header;
-//   final List<Widget>? widgetsInColumn;
-//   final EdgeInsets? padding;
-//   final List<double>? itemExtents;
-//   final ScrollController? scrollController;
-//   final int itemCount;
-//   final List<Widget>? moreWidgets;
-//   final bool buildDefaultDragHandles;
-//   final ScrollPhysics? physics;
-
-//   NamidaListView({
-//     super.key,
-//     this.header,
-//     this.widgetsInColumn,
-//     this.padding,
-//     this.onReorder,
-//     required this.itemBuilder,
-//     required this.itemCount,
-//     required this.itemExtents,
-//     this.moreWidgets,
-//     this.scrollController,
-//     this.buildDefaultDragHandles = true,
-//     this.onReorderStart,
-//     this.onReorderEnd,
-//     this.physics,
-//   });
-
-//   final ScrollController _scrollController = ScrollController();
-//   @override
-//   Widget build(BuildContext context) {
-//     final double? itemExtent = (itemExtents != null && itemExtents!.isNotEmpty) ? itemExtents?.first : null;
-//     final sc = scrollController ?? _scrollController;
-//     return AnimationLimiter(
-//       child: CupertinoScrollbar(
-//         controller: sc,
-//         child: CustomScrollView(
-//           controller: sc,
-//           slivers: [
-//             SliverToBoxAdapter(child: header),
-//             if (widgetsInColumn != null) ...widgetsInColumn!.map((e) => SliverToBoxAdapter(child: e)),
-//             if (padding != null) SliverPadding(padding: EdgeInsets.only(top: padding!.top)),
-//             onReorder == null
-//                 ? itemExtent == null
-//                     ? SliverList(
-//                         delegate: SliverChildBuilderDelegate(
-//                           itemBuilder,
-//                           childCount: itemCount,
-//                         ),
-//                       )
-//                     : SliverFixedExtentList(
-//                         itemExtent: itemExtent,
-//                         delegate: SliverChildBuilderDelegate(
-//                           itemBuilder,
-//                           childCount: itemCount,
-//                         ),
-//                       )
-//                 : SliverReorderableList(
-//                     itemBuilder: itemBuilder,
-//                     itemCount: itemCount,
-//                     onReorder: onReorder!,
-//                     itemExtent: itemExtent,
-//                     onReorderStart: onReorderStart,
-//                     onReorderEnd: onReorderEnd,
-//                     proxyDecorator: (child, index, animation) => child,
-//                   ),
-//             if (padding != null) SliverPadding(padding: EdgeInsets.only(bottom: padding!.bottom))
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-// class NamidaListView extends StatelessWidget {
-//   final Widget Function(BuildContext context, int i) itemBuilder;
-//   final void Function(int oldIndex, int newIndex)? onReorder;
-//   final void Function(int index)? onReorderStart;
-//   final void Function(int index)? onReorderEnd;
-//   final Widget? header;
-//   final List<Widget>? widgetsInColumn;
-//   final EdgeInsets? padding;
-//   final List<double>? itemExtents;
-//   final ScrollController? scrollController;
-//   final int itemCount;
-//   final List<Widget>? moreWidgets;
-//   final bool buildDefaultDragHandles;
-//   final ScrollPhysics? physics;
-//   final Key? pageKey;
-
-//   NamidaListView({
-//     super.key,
-//     this.header,
-//     this.widgetsInColumn,
-//     this.padding,
-//     this.onReorder,
-//     required this.itemBuilder,
-//     required this.itemCount,
-//     required this.itemExtents,
-//     this.moreWidgets,
-//     this.scrollController,
-//     this.buildDefaultDragHandles = true,
-//     this.onReorderStart,
-//     this.onReorderEnd,
-//     this.physics,
-//     this.pageKey,
-//   });
-
-//   final ScrollController _scrollController = ScrollController();
-//   @override
-//   Widget build(BuildContext context) {
-//     final double? itemExtent = (itemExtents != null && itemExtents!.isNotEmpty) ? itemExtents?.first : null;
-//     final sc = scrollController ?? _scrollController;
-//     sc.offset;
-//     // final h = sc.hasClients ? sc.position.maxScrollExtent : 1.0;
-//     return AnimationLimiter(
-//       child: DraggableScrollbar.arrows(
-//         heightScrollThumb: (context.height / sc.position.maxScrollExtent).clamp(1, context.height) * 30,
-//         controller: sc,
-//         child: CustomScrollView(
-//           physics: physics,
-//           controller: sc,
-//           slivers: [
-//             SliverKnownExtentsReorderableList(
-//               key: pageKey,
-//               itemExtents: itemExtents!,
-//               // scrollController: sc,
-//               // padding: padding ?? const EdgeInsets.only(bottom: kBottomPadding),
-//               itemBuilder: itemBuilder,
-//               itemCount: itemCount,
-//               onReorder: onReorder ?? (oldIndex, newIndex) {},
-//               proxyDecorator: (child, index, animation) => child,
-//               // header: header,
-//               // buildDefaultDragHandles: buildDefaultDragHandles,
-
-//               onReorderStart: onReorderStart,
-//               onReorderEnd: onReorderEnd,
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-
 class NamidaListView extends StatelessWidget {
   final Widget Function(BuildContext context, int i) itemBuilder;
   final void Function(int oldIndex, int newIndex)? onReorder;
@@ -1938,7 +1790,7 @@ class NamidaListView extends StatelessWidget {
           children: [
             if (widgetsInColumn != null) ...widgetsInColumn!,
             Expanded(
-              child: itemExtents != null && onReorder != null
+              child: itemExtents != null
                   ? KnownExtentsReorderableListView.builder(
                       itemExtents: itemExtents!,
                       scrollController: sc,
@@ -2018,7 +1870,7 @@ class NamidaTracksList extends StatelessWidget {
       widgetsInColumn: widgetsInColumn,
       scrollController: scrollController,
       itemCount: queueLength,
-      itemExtents: List<double>.filled(queueLength, trackTileItemExtent),
+      itemExtents: List<double>.filled(queueLength, Dimensions.inst.trackTileItemExtent),
       padding: padding,
       buildDefaultDragHandles: buildDefaultDragHandles ?? onReorder != null,
       physics: physics,
@@ -2084,6 +1936,8 @@ class NamidaInkWell extends StatelessWidget {
   final double borderRadius;
   final EdgeInsetsGeometry padding;
   final Widget? child;
+
+  /// Setting this to [true] will force the [borderRadius] to be [0.0].
   final bool transparentHighlight;
   const NamidaInkWell({
     super.key,
@@ -2098,9 +1952,10 @@ class NamidaInkWell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final realBorderRadius = transparentHighlight ? 0.0 : borderRadius;
     return Material(
       color: bgColor ?? Colors.transparent,
-      borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
+      borderRadius: BorderRadius.circular(realBorderRadius.multipliedRadius),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         highlightColor: transparentHighlight ? Colors.transparent : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor),

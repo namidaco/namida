@@ -45,7 +45,7 @@ class AlbumTracksPage extends StatelessWidget {
                       tag: 'album_$name',
                       child: ArtworkWidget(
                         track: tracks.trackOfImage,
-                        thumnailSize: Get.width * 0.35,
+                        thumbnailSize: Get.width * 0.35,
                         forceSquared: false,
                         path: tracks.pathToImage,
                         compressed: false,

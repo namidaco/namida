@@ -91,12 +91,10 @@ class HomePage extends StatelessWidget {
                     requestFocus: false,
                     observers: [NamidaNavigator.inst.heroController],
                     onGenerateRoute: (settings) {
-                      final initialChild = SettingsController.inst.selectedLibraryTab.value.toWidget();
-
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        NamidaNavigator.inst.currentWidgetStack.add(initialChild.toNamidaRoute());
+                        NamidaNavigator.inst.onFirstLoad();
                       });
-                      return GetPageRoute(page: () => initialChild);
+                      return GetPageRoute(page: () => const SizedBox());
                     },
                   ),
                 ),

@@ -137,7 +137,7 @@ class TrackTileCustomization extends StatelessWidget {
           () => Container(
             color: context.theme.cardTheme.color,
             width: context.width,
-            height: stg.trackListTileHeight * 1.4,
+            height: stg.trackListTileHeight * 1.5,
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(vertical: 7.0),
             child: Row(
@@ -154,7 +154,7 @@ class TrackTileCustomization extends StatelessWidget {
                   width: SettingsController.inst.trackThumbnailSizeinList.value,
                   height: SettingsController.inst.trackThumbnailSizeinList.value,
                   child: ArtworkWidget(
-                    thumnailSize: SettingsController.inst.trackThumbnailSizeinList.value,
+                    thumbnailSize: SettingsController.inst.trackThumbnailSizeinList.value,
                     track: allTracksInLibrary.firstOrNull,
                     path: allTracksInLibrary.firstOrNull?.pathToImage,
                     forceSquared: stg.forceSquaredTrackThumbnail.value,

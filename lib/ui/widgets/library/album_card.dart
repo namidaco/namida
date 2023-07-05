@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -31,21 +32,21 @@ class AlbumCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gridCount = gridCountOverride ?? SettingsController.inst.albumGridCount.value;
-    final inverseGrid = 4 - gridCount;
-    final fontSize = (16.0 - (gridCount * 1.8)).multipliedFontScale;
+    final d = Dimensions.inst.albumCardDimensions;
+    final thumbnailSize = d.$1;
+    final fontSize = d.$2.multipliedFontScale;
+    final sizeAlternative = d.$3;
+
     final finalYear = album.year.yearFormatted;
     final shouldDisplayTopRightDate = SettingsController.inst.albumCardTopRightDate.value && finalYear != '';
     final shouldDisplayNormalDate = !SettingsController.inst.albumCardTopRightDate.value && finalYear != '';
     final shouldDisplayAlbumArtist = album.albumArtist != '';
-    const horizontalPadding = 4.0;
-    final thumnailSize = (Get.width / gridCount) - horizontalPadding * 2;
 
     final hero = 'album_$name';
 
     return GridTile(
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: horizontalPadding),
+        margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: Dimensions.gridHorizontalPadding),
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: context.theme.cardColor,
@@ -67,7 +68,7 @@ class AlbumCard extends StatelessWidget {
                 tag: hero,
                 child: ArtworkWidget(
                   track: album.trackOfImage,
-                  thumnailSize: thumnailSize,
+                  thumbnailSize: thumbnailSize,
                   path: album.pathToImage,
                   borderRadius: 10.0,
                   blur: 0,
@@ -91,7 +92,7 @@ class AlbumCard extends StatelessWidget {
                       bottom: 0,
                       right: 0,
                       child: Container(
-                        margin: EdgeInsets.all(4.0 + 2.0 * inverseGrid),
+                        margin: EdgeInsets.all(4.0 + sizeAlternative),
                         decoration: BoxDecoration(
                           color: context.theme.cardColor,
                           borderRadius: BorderRadius.circular(10.0.multipliedRadius),
@@ -106,8 +107,8 @@ class AlbumCard extends StatelessWidget {
                           borderRadius: 10.0,
                           bgColor: context.theme.cardColor,
                           onTap: () => Player.inst.playOrPause(0, album, QueueSource.album),
-                          padding: EdgeInsets.all(2.5 + 2.0 * inverseGrid),
-                          child: Icon(Broken.play, size: 12.5 + 4.0 * inverseGrid),
+                          padding: EdgeInsets.all(2.5 + sizeAlternative),
+                          child: Icon(Broken.play, size: 12.5 + 2.0 * sizeAlternative),
                         ),
                       ),
                     )

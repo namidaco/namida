@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -18,19 +19,16 @@ class ArtistTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const artistthumnailSize = 65.0;
-    const artistTileHeight = 65.0;
-
     final hero = 'artist_$name';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 4.0).add(const EdgeInsets.only(bottom: Dimensions.tileBottomMargin)),
       child: NamidaInkWell(
         onTap: () => NamidaOnTaps.inst.onArtistTap(name, tracks),
         onLongPress: () => NamidaDialogs.inst.showArtistDialog(name),
-        padding: const EdgeInsets.symmetric(vertical: 6.0),
+        padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
         child: SizedBox(
-          height: artistTileHeight + 14,
+          height: Dimensions.artistTileHeight,
           child: Row(
             children: [
               const SizedBox(width: 8.0),
@@ -38,7 +36,7 @@ class ArtistTile extends StatelessWidget {
                 tag: hero,
                 child: ContainerWithBorder(
                   child: ArtworkWidget(
-                    thumnailSize: artistthumnailSize,
+                    thumbnailSize: Dimensions.artistThumbnailSize,
                     track: tracks.trackOfImage,
                     path: tracks.pathToImage,
                     borderRadius: 64.0,
