@@ -75,19 +75,18 @@ class AlbumCard extends StatelessWidget {
                   iconSize: 32.0,
                   forceSquared: !staggered,
                   staggered: staggered,
-                  onTopWidget: shouldDisplayTopRightDate
-                      ? Positioned(
-                          top: 0,
-                          right: 0,
-                          child: NamidaBlurryContainer(
-                            child: Text(
-                              finalYear,
-                              style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        )
-                      : null,
                   onTopWidgets: [
+                    if (shouldDisplayTopRightDate)
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: NamidaBlurryContainer(
+                          child: Text(
+                            finalYear,
+                            style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
                     Positioned(
                       bottom: 0,
                       right: 0,

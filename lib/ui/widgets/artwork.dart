@@ -13,7 +13,6 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/packages/drop_shadow.dart';
 
-/// Always displays compressed image, if not [compressed] then it will add the full res image on top of it.
 class ArtworkWidget extends StatefulWidget {
   final Track? track;
 
@@ -36,8 +35,7 @@ class ArtworkWidget extends StatefulWidget {
   final bool forceDummyArtwork;
   final Color? bgcolor;
   final Widget? child;
-  final Widget? onTopWidget;
-  final List<Widget>? onTopWidgets;
+  final List<Widget> onTopWidgets;
   final List<BoxShadow>? boxShadow;
   const ArtworkWidget({
     super.key,
@@ -58,9 +56,8 @@ class ArtworkWidget extends StatefulWidget {
     this.bgcolor,
     this.iconSize,
     this.staggered = false,
-    this.onTopWidget,
     this.boxShadow,
-    this.onTopWidgets,
+    this.onTopWidgets = const <Widget>[],
     this.path,
     required this.track,
   });
@@ -76,6 +73,32 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
   Widget? _finalWidget;
   Track? _lastTrack;
   double? _lastBorderRadius;
+
+  Widget getImagePathWidget() {
+    return Image.file(
+      File(widget.path!),
+      gaplessPlayback: true,
+      fit: BoxFit.cover,
+      cacheHeight: widget.useTrackTileCacheHeight
+          ? SettingsController.inst.trackThumbnailSizeinList.value.toInt() > 120
+              ? null
+              : 60 * (context.mediaQuery.devicePixelRatio).round()
+          : (widget.cacheHeight ?? 100) * (context.mediaQuery.devicePixelRatio).round(),
+      filterQuality: FilterQuality.medium,
+      width: _realWidthAndHeight,
+      height: _realWidthAndHeight,
+      frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded) return child;
+        return AnimatedSwitcher(
+          duration: Duration(milliseconds: widget.fadeMilliSeconds),
+          child: frame != null ? child : const SizedBox(),
+        );
+      }),
+      errorBuilder: (context, error, stackTrace) {
+        return _stockWidget;
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -103,8 +126,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
             Broken.musicnote,
             size: widget.iconSize ?? widget.thumbnailSize / 2,
           ),
-          if (widget.onTopWidget != null) widget.onTopWidget!,
-          if (widget.onTopWidgets != null) ...widget.onTopWidgets!,
+          if (widget.onTopWidgets.isNotEmpty) ...widget.onTopWidgets,
         ],
       ),
     );
@@ -133,42 +155,26 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
             height: _realWidthAndHeight,
           ),
         if (shouldDisplayPath) ...[
-          Image.file(
-            File(widget.path!),
-            gaplessPlayback: true,
-            fit: BoxFit.cover,
-            cacheHeight: widget.useTrackTileCacheHeight
-                ? SettingsController.inst.trackThumbnailSizeinList.value.toInt() > 120
-                    ? null
-                    : 60 * (context.mediaQuery.devicePixelRatio).round()
-                : (widget.cacheHeight ?? 100) * (context.mediaQuery.devicePixelRatio).round(),
-            filterQuality: FilterQuality.medium,
-            width: _realWidthAndHeight,
-            height: _realWidthAndHeight,
-            frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
-              if (wasSynchronouslyLoaded) return child;
-              return AnimatedSwitcher(
-                duration: Duration(milliseconds: widget.fadeMilliSeconds),
-                child: frame != null ? child : const SizedBox(),
-              );
-            }),
-            errorBuilder: (context, error, stackTrace) {
-              return _stockWidget;
-            },
-          ),
-          if (!widget.compressed)
-            ExtendedImage.file(
-              File(widget.path!),
-              gaplessPlayback: true,
-              fit: BoxFit.cover,
-              clearMemoryCacheWhenDispose: true,
-              filterQuality: FilterQuality.high,
-              width: _realWidthAndHeight,
-              height: _realWidthAndHeight,
-            ),
+          widget.compressed
+              ? getImagePathWidget()
+              : ExtendedImage.file(
+                  File(widget.path!),
+                  gaplessPlayback: true,
+                  fit: BoxFit.cover,
+                  clearMemoryCacheWhenDispose: true,
+                  filterQuality: FilterQuality.high,
+                  width: _realWidthAndHeight,
+                  height: _realWidthAndHeight,
+                  enableLoadState: true,
+                  loadStateChanged: (state) {
+                    if (state.extendedImageLoadState != LoadState.completed) {
+                      return getImagePathWidget();
+                    }
+                    return null;
+                  },
+                ),
         ],
-        if (widget.onTopWidget != null) widget.onTopWidget!,
-        if (widget.onTopWidgets != null) ...widget.onTopWidgets!,
+        if (widget.onTopWidgets.isNotEmpty) ...widget.onTopWidgets,
       ],
     );
     _finalWidget = SettingsController.inst.enableGlowEffect.value && widget.blur != 0.0

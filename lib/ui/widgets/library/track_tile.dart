@@ -152,41 +152,43 @@ class TrackTile extends StatelessWidget {
                               child: Hero(
                                 tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
                                 child: ArtworkWidget(
+                                  key: UniqueKey(),
                                   track: track,
                                   thumbnailSize: thumbnailSize,
                                   path: track.pathToImage,
                                   forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
                                   useTrackTileCacheHeight: true,
-                                  onTopWidget: displayIndex
-                                      ? Positioned(
-                                          bottom: 0,
-                                          right: 0,
-                                          child: NamidaBlurryContainer(
-                                            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
-                                            borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
-                                            child: Text(
-                                              (index + 1).toString(),
-                                              style: context.textTheme.displaySmall,
-                                            ),
+                                  onTopWidgets: [
+                                    if (displayIndex)
+                                      Positioned(
+                                        bottom: 0,
+                                        right: 0,
+                                        child: NamidaBlurryContainer(
+                                          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
+                                          borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
+                                          child: Text(
+                                            (index + 1).toString(),
+                                            style: context.textTheme.displaySmall,
                                           ),
-                                        )
-                                      : willSleepAfterThis
-                                          ? Positioned(
-                                              bottom: 0,
-                                              right: 0,
-                                              child: Container(
-                                                padding: const EdgeInsets.all(2.0),
-                                                decoration: BoxDecoration(
-                                                  color: context.theme.colorScheme.background.withAlpha(160),
-                                                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                                                ),
-                                                child: const Icon(
-                                                  Broken.timer_1,
-                                                  size: 16.0,
-                                                ),
-                                              ),
-                                            )
-                                          : null,
+                                        ),
+                                      ),
+                                    if (willSleepAfterThis)
+                                      Positioned(
+                                        bottom: 0,
+                                        right: 0,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(2.0),
+                                          decoration: BoxDecoration(
+                                            color: context.theme.colorScheme.background.withAlpha(160),
+                                            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                                          ),
+                                          child: const Icon(
+                                            Broken.timer_1,
+                                            size: 16.0,
+                                          ),
+                                        ),
+                                      )
+                                  ],
                                 ),
                               ),
                             ),

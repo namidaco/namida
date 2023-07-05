@@ -1725,7 +1725,6 @@ class TrackImage extends StatelessWidget {
                           : LyricsWrapper(
                               cp: cp,
                               child: ArtworkWidget(
-                                key: const ValueKey('imagecontainer'),
                                 path: track.pathToImage,
                                 track: track,
                                 thumbnailSize: Get.width,

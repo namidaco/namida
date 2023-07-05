@@ -312,22 +312,24 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                                   thumbnailSize: Get.width / 3,
                                   bytes: currentImagePath.value != '' ? null : info.firstArtwork,
                                   path: currentImagePath.value != '' ? currentImagePath.value : track.pathToImage,
-                                  onTopWidget: Positioned(
-                                    bottom: 0,
-                                    right: 0,
-                                    child: NamidaBlurryContainer(
-                                      onTap: () async {
-                                        final pickedFile = await FilePicker.platform.pickFiles(type: FileType.image);
-                                        final path = pickedFile?.files.first.path ?? '';
-                                        if (pickedFile != null && path != '') {
-                                          final copiedImage = await File(path).copy("${SettingsController.inst.defaultBackupLocation.value}/sussyimage.png");
-                                          currentImagePath.value = copiedImage.path;
-                                        }
-                                      },
-                                      borderRadius: BorderRadius.only(topLeft: Radius.circular(12.0.multipliedRadius)),
-                                      child: const Icon(Broken.edit_2),
+                                  onTopWidgets: [
+                                    Positioned(
+                                      bottom: 0,
+                                      right: 0,
+                                      child: NamidaBlurryContainer(
+                                        onTap: () async {
+                                          final pickedFile = await FilePicker.platform.pickFiles(type: FileType.image);
+                                          final path = pickedFile?.files.first.path ?? '';
+                                          if (pickedFile != null && path != '') {
+                                            final copiedImage = await File(path).copy("${SettingsController.inst.defaultBackupLocation.value}/sussyimage.png");
+                                            currentImagePath.value = copiedImage.path;
+                                          }
+                                        },
+                                        borderRadius: BorderRadius.only(topLeft: Radius.circular(12.0.multipliedRadius)),
+                                        child: const Icon(Broken.edit_2),
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ),
                               ),
                             ],
