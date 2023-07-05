@@ -14,7 +14,6 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 void showTrackListensDialog(Track track, {List<int>? datesOfListen, ThemeData? theme, bool enableBlur = false}) async {
-  // listens ??= namidaHistoryPlaylist.tracks.where((element) => element.track.path == track.path).toList();
   datesOfListen ??= HistoryController.inst.topTracksMapListens[track] ?? [];
   theme ??= AppThemes.inst.getAppTheme(await CurrentColor.inst.getTrackDelightnedColor(track), !Get.isDarkMode);
 

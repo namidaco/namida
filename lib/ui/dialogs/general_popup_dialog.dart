@@ -71,8 +71,8 @@ Future<void> showGeneralPopupDialog(
   final trackToExtractColorFrom = forceSingleArtwork ? tracks[tracks.indexOfImage] : tracks.first;
   final colorDelightened = extractColor ? await CurrentColor.inst.getTrackDelightnedColor(trackToExtractColorFrom) : CurrentColor.inst.color.value;
 
-  final List<String> availableAlbums = tracks.map((e) => e.album).toSet().toList();
-  final List<String> availableArtists = tracks.map((e) => e.artistsList).expand((list) => list).toSet().toList();
+  final List<String> availableAlbums = tracks.map((e) => e.toTrackExt().album).toSet().toList();
+  final List<String> availableArtists = tracks.map((e) => e.toTrackExt().artistsList).expand((list) => list).toSet().toList();
   final List<Folder> availableFolders = tracks.map((e) => e.folder).toSet().toList();
 
   RxInt numberOfRepeats = 1.obs;
@@ -178,19 +178,11 @@ Future<void> showGeneralPopupDialog(
 
   Rx<TrackStats> stats = tracks.first.stats.obs;
 
-  Future<void> saveStatsToFile() async {
-    stats.refresh();
-    Indexer.inst.trackStatsMap[tracks.first.path] = TrackStats(tracks.first.path, stats.value.rating, stats.value.tags, stats.value.moods, stats.value.lastPositionInMs);
-    tracks.first.stats = stats.value;
-    await Indexer.inst.saveTrackStatsFileToStorage();
-  }
-
   void setTrackMoods() {
     setMoodsOrTags(
       stats.value.moods,
       (moodsFinal) async {
-        stats.value.moods.addAll(moodsFinal);
-        await saveStatsToFile();
+        stats.value = await Indexer.inst.updateTrackStats(tracks.first, moods: moodsFinal);
       },
     );
   }
@@ -198,9 +190,8 @@ Future<void> showGeneralPopupDialog(
   void setTrackTags() {
     setMoodsOrTags(
       stats.value.tags,
-      (moodsFinal) async {
-        stats.value.tags.addAll(moodsFinal);
-        await saveStatsToFile();
+      (tagsFinal) async {
+        stats.value = await Indexer.inst.updateTrackStats(tracks.first, tags: tagsFinal);
       },
       isTags: true,
     );
@@ -217,8 +208,7 @@ Future<void> showGeneralPopupDialog(
             onPressed: () async {
               NamidaNavigator.inst.closeDialog();
               final val = int.tryParse(c.text) ?? 0;
-              stats.value.rating = val.clamp(0, 100);
-              await saveStatsToFile();
+              stats.value = await Indexer.inst.updateTrackStats(tracks.first, rating: val);
             },
             child: Text(Language.inst.SAVE),
           ),

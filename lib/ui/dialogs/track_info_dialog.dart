@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
-
 import 'package:namida/class/track.dart';
+
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -24,7 +24,8 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 
 Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQueue = false, int? index}) async {
   // [showTrackDialog] calls [showGeneralPopupDialog] which has a built-check for tracks that are not available.
-  if (track.path.toTrackOrNull() == null) {
+  final trackExt = track.toTrackExtOrNull();
+  if (trackExt == null) {
     NamidaDialogs.inst.showTrackDialog(track);
     return;
   }
@@ -95,7 +96,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                       child: InteractiveViewer(
                                         maxScale: 5,
                                         child: Hero(
-                                          tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
+                                          tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}',
                                           child: GestureDetector(
                                             onLongPress: () async {
                                               final saveDirPath = await EditDeleteController.inst.saveArtworkToStorage(track);
@@ -130,7 +131,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                             },
                                             child: ArtworkWidget(
                                               track: track,
-                                              path: track.pathToImage,
+                                              path: trackExt.pathToImage,
                                               thumbnailSize: Get.width,
                                               compressed: false,
                                               borderRadius: 0,
@@ -143,10 +144,10 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                     ),
                                   ),
                                   child: Hero(
-                                    tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
+                                    tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}',
                                     child: ArtworkWidget(
                                       track: track,
-                                      path: track.pathToImage,
+                                      path: trackExt.pathToImage,
                                       thumbnailSize: 120,
                                       forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
                                       useTrackTileCacheHeight: true,
@@ -205,125 +206,125 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                             ),
                           ),
                           const SizedBox(height: 12.0),
-                          if (shouldShowTheField(track.hasUnknownTitle))
+                          if (shouldShowTheField(trackExt.hasUnknownTitle))
                             TrackInfoListTile(
                               title: Language.inst.TITLE,
-                              value: track.title,
+                              value: trackExt.title,
                               icon: Broken.text,
                             ),
 
-                          if (shouldShowTheField(track.hasUnknownArtist))
+                          if (shouldShowTheField(trackExt.hasUnknownArtist))
                             TrackInfoListTile(
-                              title: Indexer.inst.splitArtist(track.title, track.originalArtist, addArtistsFromTitle: false).length == 1
+                              title: Indexer.inst.splitArtist(trackExt.title, trackExt.originalArtist, addArtistsFromTitle: false).length == 1
                                   ? Language.inst.ARTIST
                                   : Language.inst.ARTISTS,
-                              value: track.hasUnknownArtist ? k_UNKNOWN_TRACK_ARTIST : track.originalArtist,
+                              value: trackExt.hasUnknownArtist ? k_UNKNOWN_TRACK_ARTIST : trackExt.originalArtist,
                               icon: Broken.microphone,
                             ),
 
-                          if (shouldShowTheField(track.hasUnknownAlbum))
+                          if (shouldShowTheField(trackExt.hasUnknownAlbum))
                             TrackInfoListTile(
                               title: Language.inst.ALBUM,
-                              value: track.hasUnknownAlbum ? k_UNKNOWN_TRACK_ALBUM : track.album,
+                              value: trackExt.hasUnknownAlbum ? k_UNKNOWN_TRACK_ALBUM : trackExt.album,
                               icon: Broken.music_dashboard,
                             ),
 
-                          if (shouldShowTheField(track.hasUnknownAlbumArtist))
+                          if (shouldShowTheField(trackExt.hasUnknownAlbumArtist))
                             TrackInfoListTile(
                               title: Language.inst.ALBUM_ARTIST,
-                              value: track.hasUnknownAlbumArtist ? k_UNKNOWN_TRACK_ALBUMARTIST : track.albumArtist,
+                              value: trackExt.hasUnknownAlbumArtist ? k_UNKNOWN_TRACK_ALBUMARTIST : trackExt.albumArtist,
                               icon: Broken.user,
                             ),
 
-                          if (shouldShowTheField(track.hasUnknownGenre))
+                          if (shouldShowTheField(trackExt.hasUnknownGenre))
                             TrackInfoListTile(
-                              title: track.genresList.length == 1 ? Language.inst.GENRE : Language.inst.GENRES,
-                              value: track.hasUnknownGenre ? k_UNKNOWN_TRACK_GENRE : track.genresList.join(', '),
-                              icon: track.genresList.length == 1 ? Broken.emoji_happy : Broken.smileys,
+                              title: trackExt.genresList.length == 1 ? Language.inst.GENRE : Language.inst.GENRES,
+                              value: trackExt.hasUnknownGenre ? k_UNKNOWN_TRACK_GENRE : trackExt.genresList.join(', '),
+                              icon: trackExt.genresList.length == 1 ? Broken.emoji_happy : Broken.smileys,
                             ),
 
-                          if (shouldShowTheField(track.hasUnknownComposer))
+                          if (shouldShowTheField(trackExt.hasUnknownComposer))
                             TrackInfoListTile(
                               title: Language.inst.COMPOSER,
-                              value: track.hasUnknownComposer ? k_UNKNOWN_TRACK_COMPOSER : track.composer,
+                              value: trackExt.hasUnknownComposer ? k_UNKNOWN_TRACK_COMPOSER : trackExt.composer,
                               icon: Broken.profile_2user,
                             ),
 
-                          if (shouldShowTheField(track.duration == 0))
+                          if (shouldShowTheField(trackExt.duration == 0))
                             TrackInfoListTile(
                               title: Language.inst.DURATION,
-                              value: track.duration.milliseconds.label,
+                              value: trackExt.duration.milliseconds.label,
                               icon: Broken.clock,
                             ),
 
-                          if (shouldShowTheField(track.year == 0))
+                          if (shouldShowTheField(trackExt.year == 0))
                             TrackInfoListTile(
                               title: Language.inst.YEAR,
-                              value: track.year == 0 ? '?' : '${track.year} (${track.year.yearFormatted})',
+                              value: trackExt.year == 0 ? '?' : '${trackExt.year} (${trackExt.year.yearFormatted})',
                               icon: Broken.calendar,
                             ),
 
-                          if (shouldShowTheField(track.dateModified == 0))
+                          if (shouldShowTheField(trackExt.dateModified == 0))
                             TrackInfoListTile(
                               title: Language.inst.DATE_MODIFIED,
-                              value: track.dateModified.dateAndClockFormattedOriginal,
+                              value: trackExt.dateModified.dateAndClockFormattedOriginal,
                               icon: Broken.calendar_1,
                             ),
 
                           ///
-                          if (shouldShowTheField(track.discNo == 0))
+                          if (shouldShowTheField(trackExt.discNo == 0))
                             TrackInfoListTile(
                               title: Language.inst.DISC_NUMBER,
-                              value: track.discNo.toString(),
+                              value: trackExt.discNo.toString(),
                               icon: Broken.hashtag,
                             ),
 
-                          if (shouldShowTheField(track.track == 0))
+                          if (shouldShowTheField(trackExt.trackNo == 0))
                             TrackInfoListTile(
                               title: Language.inst.TRACK_NUMBER,
-                              value: track.track.toString(),
+                              value: trackExt.trackNo.toString(),
                               icon: Broken.hashtag,
                             ),
 
                           /// bruh moment
-                          if (shouldShowTheField(track.filenameWOExt == ''))
+                          if (shouldShowTheField(trackExt.filenameWOExt == ''))
                             TrackInfoListTile(
                               title: Language.inst.FILE_NAME,
-                              value: track.filenameWOExt,
+                              value: trackExt.filenameWOExt,
                               icon: Broken.quote_up_circle,
                             ),
 
-                          if (shouldShowTheField(track.folderName == ''))
+                          if (shouldShowTheField(trackExt.folderName == ''))
                             TrackInfoListTile(
                               title: Language.inst.FOLDER,
-                              value: track.folderName,
+                              value: trackExt.folderName,
                               icon: Broken.folder,
                             ),
 
-                          if (shouldShowTheField(track.path == ''))
+                          if (shouldShowTheField(trackExt.path == ''))
                             TrackInfoListTile(
                               title: Language.inst.PATH,
-                              value: track.path,
+                              value: trackExt.path,
                               icon: Broken.location,
                             ),
 
                           TrackInfoListTile(
                             title: Language.inst.FORMAT,
-                            value: '${track.audioInfoFormattedCompact}\n${track.extension} - ${track.size.fileSizeFormatted}',
+                            value: '${track.audioInfoFormattedCompact}\n${trackExt.extension} - ${trackExt.size.fileSizeFormatted}',
                             icon: Broken.voice_cricle,
                           ),
 
-                          if (shouldShowTheField(track.lyrics == ''))
+                          if (shouldShowTheField(trackExt.lyrics == ''))
                             TrackInfoListTile(
                               title: Language.inst.LYRICS,
-                              value: track.lyrics,
-                              icon: track.lyrics.isEmpty ? Broken.note_remove : Broken.message_text,
+                              value: trackExt.lyrics,
+                              icon: trackExt.lyrics.isEmpty ? Broken.note_remove : Broken.message_text,
                             ),
 
-                          if (shouldShowTheField(track.comment == ''))
+                          if (shouldShowTheField(trackExt.comment == ''))
                             TrackInfoListTile(
                               title: Language.inst.COMMENT,
-                              value: track.comment,
+                              value: trackExt.comment,
                               icon: Broken.message_text_1,
                               isComment: true,
                             ),

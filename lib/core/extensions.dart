@@ -247,7 +247,7 @@ extension Channels on String {
 
 extension FavouriteTrack on Track {
   bool get isFavourite {
-    return PlaylistController.inst.favouritesPlaylist.value.tracks.firstWhereOrNull((element) => element.track.path == path) != null;
+    return PlaylistController.inst.favouritesPlaylist.value.tracks.firstWhereOrNull((element) => element.track == this) != null;
   }
 }
 
@@ -273,10 +273,6 @@ extension EnumUtils on Enum {
   String get convertToString => toString().split('.').last;
 }
 
-extension EnumListExtensions<T extends Object> on List<T> {
-  T? getEnum(String? string) => firstWhereOrNull((element) => element.toString().split('.').last == string);
-}
-
 extension PLNAME on String {
   String translatePlaylistName() => replaceFirst(k_PLAYLIST_NAME_AUTO_GENERATED, Language.inst.AUTO_GENERATED)
       .replaceFirst(k_PLAYLIST_NAME_FAV, Language.inst.FAVOURITES)
@@ -296,10 +292,11 @@ extension TRACKPLAYMODE on TrackPlayMode {
 
   bool get shouldBeIndex0 => this == TrackPlayMode.selectedTrack || this == TrackPlayMode.trackAlbum || this == TrackPlayMode.trackArtist || this == TrackPlayMode.trackGenre;
 
-  List<Track> getQueue(Track track, {List<Track>? searchQueue}) {
+  List<Track> getQueue(Track trackPre, {List<Track>? searchQueue}) {
     List<Track> queue = [];
+    final track = trackPre.toTrackExt();
     if (this == TrackPlayMode.selectedTrack) {
-      queue = [track];
+      queue = [trackPre];
     }
     if (this == TrackPlayMode.searchResults) {
       queue = searchQueue ?? (Indexer.inst.trackSearchTemp.isNotEmpty ? Indexer.inst.trackSearchTemp.toList() : Indexer.inst.trackSearchList.toList());
@@ -314,8 +311,8 @@ extension TRACKPLAYMODE on TrackPlayMode {
       queue = track.artistsList.first.getGenresTracks();
     }
     if (shouldBeIndex0) {
-      queue.remove(track);
-      queue.insertSafe(0, track);
+      queue.remove(trackPre);
+      queue.insertSafe(0, trackPre);
     }
     return queue;
   }
@@ -333,11 +330,13 @@ extension PlayerRepeatModeUtils on RepeatMode {
 }
 
 extension ConvertPathToTrack on String {
-  Track? toTrackOrNull() => Indexer.inst.allTracksMappedByPath[this];
+  Track toTrack() => Track(this);
+  Track? toTrackOrNull() => Indexer.inst.allTracksMappedByPath[toTrack()] == null ? null : toTrack();
+  TrackExtended? toTrackExtOrNull() => Indexer.inst.allTracksMappedByPath[Track(this)];
 
-  Track toTrack() {
-    return toTrackOrNull() ??
-        Track(
+  TrackExtended toTrackExt() {
+    return toTrackExtOrNull() ??
+        TrackExtended(
           getFilenameWOExt,
           '',
           [],
@@ -361,7 +360,6 @@ extension ConvertPathToTrack on String {
           0,
           '',
           '',
-          TrackStats('', 0, [], [], 0),
         );
   }
 }
@@ -378,11 +376,6 @@ extension YTLinkToID on String {
 
 extension FORMATNUMBER on int? {
   String formatDecimal([bool full = false]) => (full ? NumberFormat('#,###,###') : NumberFormat.compact()).format(this);
-}
-
-extension SafeListInsertion<T> on List<T> {
-  void insertSafe(int index, T object) => insert(index.clamp(0, length), object);
-  void insertAllSafe(int index, Iterable<T> objects) => insertAll(index.clamp(0, length), objects);
 }
 
 extension TagFieldsUtils on TagField {
@@ -561,6 +554,54 @@ extension MapExtNull<K, E> on Map<K, List<E>?> {
 }
 
 extension ListieExt<E, Id> on List<E> {
+  /// Replaces All Items that fullfils [test] with [newElement] inside the list.
+  void replaceWhere(bool Function(E e) test, E Function(E old) newElement, {void Function()? onMatch}) {
+    loop((currentElement, index) {
+      if (test(currentElement)) {
+        this[index] = newElement(currentElement);
+        if (onMatch != null) onMatch();
+      }
+    });
+  }
+
+  /// Replaces Single Item inside the list.
+  void replaceSingleWhere(bool Function(E e) test, E Function(E old) newElement, {void Function()? onMatch}) {
+    for (int i = 0; i <= length - 1; i++) {
+      final currentElement = this[i];
+      if (test(currentElement)) {
+        this[i] = newElement(currentElement);
+        if (onMatch != null) onMatch();
+        break;
+      }
+    }
+  }
+
+  /// Replaces All Items that matches [oldElement] with [newElement] inside the list.
+  void replaceItems(E oldElement, E newElement, {void Function()? onMatch}) {
+    loop((currentElement, index) {
+      if (currentElement == oldElement) {
+        this[index] = newElement;
+        if (onMatch != null) onMatch();
+      }
+    });
+  }
+
+  /// Replaces Single Item inside the list.
+  void replaceItem(E oldElement, E newElement, {void Function()? onMatch}) {
+    for (int i = 0; i <= length - 1; i++) {
+      final currentElement = this[i];
+      if (currentElement == oldElement) {
+        this[i] = newElement;
+        if (onMatch != null) onMatch();
+        break;
+      }
+    }
+  }
+
+  E? getEnum(String? string) => firstWhereOrNull((element) => element.toString().split('.').last == string);
+  void insertSafe(int index, E object) => insert(index.clamp(0, length), object);
+  void insertAllSafe(int index, Iterable<E> objects) => insertAll(index.clamp(0, length), objects);
+
   /// returns number of items removed.
   int removeWhereWithDifference(bool Function(E element) test) {
     final lengthBefore = length;

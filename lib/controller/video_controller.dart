@@ -144,14 +144,14 @@ class VideoController {
 
     /// Video Found in Local Storage
     await videoFilesPathList.loopFuture((vf, index) async {
-      track as Track;
+      final trExt = track!.toTrackExt();
       final videoName = vf.getFilenameWOExt;
       final videoNameContainsMusicFileName = checkFileNameAudioVideo(videoName, track.filenameWOExt);
-      final videoContainsTitle = videoName.contains(track.title.cleanUpForComparison);
-      final videoNameContainsTitleAndArtist = videoContainsTitle && videoName.contains(track.artistsList.first.cleanUpForComparison);
+      final videoContainsTitle = videoName.contains(trExt.title.cleanUpForComparison);
+      final videoNameContainsTitleAndArtist = videoContainsTitle && videoName.contains(trExt.artistsList.first.cleanUpForComparison);
       // useful for [Nightcore - title]
       // track must contain Nightcore as the first Genre
-      final videoNameContainsTitleAndGenre = videoContainsTitle && videoName.contains(track.genresList.first.cleanUpForComparison);
+      final videoNameContainsTitleAndGenre = videoContainsTitle && videoName.contains(trExt.genresList.first.cleanUpForComparison);
       if (videoNameContainsMusicFileName || videoNameContainsTitleAndArtist || videoNameContainsTitleAndGenre) {
         await playAndInitializeVideo(vf, track);
         await vidcontroller?.setVolume(0.0);

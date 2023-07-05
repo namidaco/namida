@@ -125,6 +125,10 @@ class Player {
     await _audioHandler?.removeFromQueue(index);
   }
 
+  Future<void> replaceAllTracksInQueue(Track oldTrack, Track newTrack) async {
+    await _audioHandler?.replaceAllTracksInQueue(oldTrack, newTrack);
+  }
+
   void removeRangeFromQueue(int start, int end) {
     _audioHandler?.removeRangeFromQueue(start, end);
   }

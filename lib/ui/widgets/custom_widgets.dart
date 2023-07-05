@@ -664,6 +664,7 @@ class NamidaExpansionTile extends StatelessWidget {
       child: ExpansionTile(
         initiallyExpanded: initiallyExpanded,
         expandedAlignment: Alignment.centerLeft,
+        tilePadding: const EdgeInsets.only(left: 16.0, right: 8.0),
         leading: leading ??
             Icon(
               icon,
@@ -872,10 +873,10 @@ class CollapsedSettingTileWidget extends StatelessWidget {
         icon: Broken.archive,
         title: Language.inst.USE_COLLAPSED_SETTING_TILES,
         value: SettingsController.inst.useSettingCollapsedTiles.value,
-        onChanged: (isTrue) {
+        onChanged: (isTrue) async {
           SettingsController.inst.save(useSettingCollapsedTiles: !isTrue);
-          NamidaNavigator.inst.popPage();
-          NamidaNavigator.inst.navigateOff(const SettingsPage());
+          await NamidaNavigator.inst.popPage();
+          NamidaNavigator.inst.navigateTo(const SettingsPage());
         },
       ),
     );

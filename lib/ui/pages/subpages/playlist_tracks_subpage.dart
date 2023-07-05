@@ -88,7 +88,7 @@ class HistoryTracksPage extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            dayInMs.dateFormattedOriginal,
+                            [dayInMs.dateFormattedOriginal, tracks.length.displayTrackKeyword].join('  •  '),
                             style: context.textTheme.displayMedium,
                           ),
                         ),
@@ -117,7 +117,6 @@ class HistoryTracksPage extends StatelessWidget {
                 child: ListView.builder(
                   padding: const EdgeInsets.only(bottom: kHistoryDayListBottomPadding, top: kHistoryDayListTopPadding),
                   primary: false,
-                  physics: const NeverScrollableScrollPhysics(),
                   itemExtent: Dimensions.inst.trackTileItemExtent,
                   itemCount: tracks.length,
                   itemBuilder: (context, i) {

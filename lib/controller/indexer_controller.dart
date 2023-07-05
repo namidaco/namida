@@ -65,8 +65,8 @@ class Indexer {
   final RxList<String> artistSearchTemp = <String>[].obs;
 
   /// tracks map used for lookup
-  final Map<String, Track> allTracksMappedByPath = {};
-  final Map<String, TrackStats> trackStatsMap = {};
+  final Map<Track, TrackExtended> allTracksMappedByPath = {};
+  final Map<Track, TrackStats> trackStatsMap = {};
 
   final OnAudioQuery _query = OnAudioQuery();
   final onAudioEdit = audioedit.OnAudioEdit();
@@ -116,16 +116,18 @@ class Indexer {
   void _addTheseTracksToAlbumGenreArtistEtc(List<Track> tracks, {bool preventDuplicates = false}) {
     // TODO sort after adding
     tracks.loop((tr, i) {
+      final trExt = tr.toTrackExt();
+
       /// Assigning Albums
-      mainMapAlbums.value.addNoDuplicatesForce(tr.album, tr, preventDuplicates: preventDuplicates);
+      mainMapAlbums.value.addNoDuplicatesForce(trExt.album, tr, preventDuplicates: preventDuplicates);
 
       /// Assigning Artists
-      tr.artistsList.loop((artist, i) {
+      trExt.artistsList.loop((artist, i) {
         mainMapArtists.value.addNoDuplicatesForce(artist, tr, preventDuplicates: preventDuplicates);
       });
 
       /// Assigning Genres
-      tr.genresList.loop((genre, i) {
+      trExt.genresList.loop((genre, i) {
         mainMapGenres.value.addNoDuplicatesForce(genre, tr, preventDuplicates: preventDuplicates);
       });
 
@@ -198,7 +200,7 @@ class Indexer {
         }
       });
     }
-
+    finalTracks.sortBy((e) => tracksPath.indexOf(e.path));
     return finalTracks;
   }
 
@@ -285,7 +287,7 @@ class Indexer {
           finalAlbumArtist?.trim();
           finalComposer?.trim();
 
-          final tr = Track(
+          final trExt = TrackExtended(
             finalTitle ?? k_UNKNOWN_TRACK_TITLE,
             finalArtist ?? k_UNKNOWN_TRACK_ARTIST,
             artists,
@@ -310,11 +312,10 @@ class Indexer {
             getIntFromString(trackInfo.discNo) ?? 0,
             trackInfo.language ?? '',
             trackInfo.lyrics ?? '',
-            TrackStats('', 0, [], [], 0),
           );
-
+          final tr = trExt.toTrack();
+          allTracksMappedByPath[tr] = trExt;
           tracksInfoList.add(tr);
-          allTracksMappedByPath[trackPath] = tr;
 
           debugPrint(tracksInfoList.length.toString());
 
@@ -330,7 +331,7 @@ class Indexer {
           final title = titleAndArtist.$1;
           final artist = titleAndArtist.$2;
 
-          final tr = Track(
+          final trExt = TrackExtended(
             title,
             artist,
             [artist],
@@ -355,10 +356,10 @@ class Indexer {
             0,
             '',
             '',
-            TrackStats('', 0, [], [], 0),
           );
+          final tr = trExt.toTrack();
+          allTracksMappedByPath[tr] = trExt;
           tracksInfoList.add(tr);
-          allTracksMappedByPath[tr.path] = tr;
         }
         listOfCurrentFileNames.add(trackPath.getFilename);
         searchTracks('');
@@ -397,11 +398,30 @@ class Indexer {
   }
 
   Future<void> _saveTrackFileToStorage() async {
-    await File(k_FILE_PATH_TRACKS).writeAsJson(tracksInfoList);
+    await File(k_FILE_PATH_TRACKS).writeAsJson(allTracksMappedByPath.values.map((e) => e.toJson()).toList());
   }
 
-  Future<void> saveTrackStatsFileToStorage() async {
-    await File(k_FILE_PATH_TRACKS_STATS).writeAsJson(trackStatsMap.values.toList());
+  /// Returns new [TrackStats].
+  Future<TrackStats> updateTrackStats(
+    Track track, {
+    int? rating,
+    List<String>? tags,
+    List<String>? moods,
+    int? lastPositionInMs,
+  }) async {
+    rating ??= track.stats.rating;
+    tags ??= track.stats.tags;
+    moods ??= track.stats.moods;
+    lastPositionInMs ??= track.stats.lastPositionInMs;
+    final newStats = TrackStats(track, rating.clamp(0, 100), tags, moods, lastPositionInMs);
+    trackStatsMap[track] = newStats;
+
+    await _saveTrackStatsFileToStorage();
+    return newStats;
+  }
+
+  Future<void> _saveTrackStatsFileToStorage() async {
+    await File(k_FILE_PATH_TRACKS_STATS).writeAsJson(trackStatsMap.values.map((e) => e.toJson()).toList());
   }
 
   Future<void> readTrackData() async {
@@ -409,17 +429,18 @@ class Indexer {
 
     await File(k_FILE_PATH_TRACKS_STATS).readAsJsonAndLoop((item, i) async {
       final trst = TrackStats.fromJson(item);
-      trackStatsMap[trst.path] = trst;
+      trackStatsMap[trst.track] = trst;
     });
     // clearing for cases which refreshing library is required (like after changing separators)
     tracksInfoList.clear();
 
     /// Reading actual track file.
     await File(k_FILE_PATH_TRACKS).readAsJsonAndLoop((item, i) async {
-      final tr = Track.fromJson(item);
-      tr.stats = trackStatsMap[tr.path] ?? TrackStats('', 0, [], [], 0);
-      tracksInfoList.add(tr);
-      allTracksMappedByPath[tr.path] = tr;
+      final trExt = TrackExtended.fromJson(item);
+      final track = trExt.toTrack();
+
+      tracksInfoList.add(track);
+      allTracksMappedByPath[track] = trExt;
     });
 
     debugPrint("Tracks Info List Length From File: ${tracksInfoList.length}");
@@ -601,7 +622,8 @@ class Indexer {
     final sComposer = tsf.contains('composer');
     final sYear = tsf.contains('year');
 
-    tracksInfoList.loop((item, index) {
+    tracksInfoList.loop((tr, index) {
+      final item = tr.toTrackExt();
       final lctext = textCleanedForSearch(text);
 
       if ((sTitle && textCleanedForSearch(item.title).contains(lctext)) ||
@@ -611,7 +633,7 @@ class Indexer {
           (sGenre && item.genresList.any((element) => textCleanedForSearch(element).contains(lctext))) ||
           (sComposer && textCleanedForSearch(item.composer).contains(lctext)) ||
           (sYear && textCleanedForSearch(item.year.toString()).contains(lctext))) {
-        finalList.add(item);
+        finalList.add(tr);
       }
     });
 

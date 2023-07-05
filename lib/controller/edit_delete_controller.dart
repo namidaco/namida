@@ -89,86 +89,25 @@ class EditDeleteController {
     return null;
   }
 
-  /// TODO: refactor after implementing new Track class
   Future<void> updateTrackPathInEveryPartOfNamida(Track oldTrack, String newPath) async {
     final newtrlist = await Indexer.inst.convertPathToTrack([newPath]);
     if (newtrlist.isEmpty) return;
-    final newtr = newtrlist.first;
-    // void loopPlaylists(List<Playlist> playlists) {
-    //   for (final pl in playlists) {
-    //     for (final tr in pl.tracks) {
-    //       if (tr.track.path == oldTrack.path) {
-    //         final index = pl.tracks.indexOf(tr);
-    //         PlaylistController.inst.removeTrackFromPlaylist(pl.name, index);
-    //         PlaylistController.inst.insertTracksInPlaylist(pl.name, [TrackWithDate(tr.dateAdded, newtr, tr.source)], index);
-    //       }
-    //     }
-    //   }
-    // }
+    final newTrack = newtrlist.first;
 
-    void loopQueues() {
-      for (final queue in QueueController.inst.queuesMap.value.values) {
-        for (final tr in queue.tracks) {
-          if (tr.path == oldTrack.path) {
-            final index = queue.tracks.indexOf(tr);
-            QueueController.inst.removeTrackFromQueue(queue, index);
-            QueueController.inst.insertTracksQueue(queue, [newtr], index);
-          }
-        }
-      }
-    }
+    // --- Queues ---
+    QueueController.inst.replaceTrackInAllQueues(oldTrack, newTrack);
 
-    void loopPlayerQueue() async {
-      for (final tr in Player.inst.currentQueue.toList()) {
-        if (tr.path == oldTrack.path) {
-          final index = Player.inst.currentQueue.toList().indexOf(tr);
-          await Player.inst.removeFromQueue(index);
-          Player.inst.insertInQueue([newtr], index);
-        }
-      }
-    }
+    // --- Player Queue ---
+    Player.inst.replaceAllTracksInQueue(oldTrack, newTrack);
 
-    // all playlists
-    for (final pl in PlaylistController.inst.playlistsMap.values) {
-      for (final tr in pl.tracks) {
-        if (tr.track.path == oldTrack.path) {
-          final index = pl.tracks.indexOf(tr);
-          PlaylistController.inst.removeTrackFromPlaylist(pl, index);
-          PlaylistController.inst.insertTracksInPlaylist(pl, [TrackWithDate(tr.dateAdded, newtr, tr.source)], index);
-        }
-      }
-    }
+    // --- Playlists & Favourites---
+    PlaylistController.inst.replaceTrackInAllPlaylists(oldTrack, newTrack);
 
-    // default playlist
-    final historyTracks = HistoryController.inst.historyTracks;
-    for (final tr in historyTracks) {
-      if (tr.track.path == oldTrack.path) {
-        final index = historyTracks.indexOf(tr);
-        HistoryController.inst.removeFromHistory(tr.dateAdded.toDaysSinceEpoch(), index);
-        HistoryController.inst.addTracksToHistory([TrackWithDate(tr.dateAdded, newtr, tr.source)]);
-      }
-    }
-    final favTracks = PlaylistController.inst.favouritesPlaylist.value.tracks;
-    for (final tr in favTracks) {
-      if (tr.track.path == oldTrack.path) {
-        PlaylistController.inst.favouriteButtonOnPressed(tr.track, updatedTrack: newtr);
-      }
-    }
+    // --- History---
+    HistoryController.inst.replaceAllTracksInsideHistory(oldTrack, newTrack);
 
-    // Queues
-    loopQueues();
-
-    // player queue
-    loopPlayerQueue();
-
-    // Selected Tracks
-    for (final tr in SelectedTracksController.inst.selectedTracks.toList()) {
-      if (tr.path == oldTrack.path) {
-        final index = SelectedTracksController.inst.selectedTracks.toList().indexOf(tr);
-        SelectedTracksController.inst.selectedTracks.removeAt(index);
-        SelectedTracksController.inst.selectedTracks.insertSafe(index, tr);
-      }
-    }
+    // --- Selected Tracks ---
+    SelectedTracksController.inst.replaceThisTrack(oldTrack, newTrack);
   }
 }
 

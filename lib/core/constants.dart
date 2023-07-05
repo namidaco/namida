@@ -145,32 +145,7 @@ const List<String> kVideoFilesExtensions = [
   'mpeg2',
   'mpeg4'
 ];
-final kDummyTrack = Track(
-  '',
-  '',
-  [''],
-  '',
-  '',
-  '',
-  [''],
-  '',
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  '0',
-  '',
-  0,
-  0,
-  '',
-  '',
-  0,
-  '',
-  '',
-  TrackStats('', 0, [], [], 0),
-);
+const kDummyTrack = Track('');
 
 // Unknown Fields
 const k_UNKNOWN_TRACK_TITLE = '';

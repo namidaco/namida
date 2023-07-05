@@ -1045,7 +1045,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                 : (1 - bp)
                                             : 0.0)),
                                 child: TrackInfo(
-                                  track: Player.inst.nowPlayingTrack.value,
+                                  trackPre: Player.inst.nowPlayingTrack.value,
                                   p: bp,
                                   cp: bcp,
                                   bottomOffset: bottomOffset,
@@ -1564,7 +1564,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
 class TrackInfo extends StatelessWidget {
   const TrackInfo({
     Key? key,
-    required this.track,
+    required this.trackPre,
     required this.cp,
     required this.p,
     required this.screenSize,
@@ -1572,7 +1572,7 @@ class TrackInfo extends StatelessWidget {
     required this.maxOffset,
   }) : super(key: key);
 
-  final Track track;
+  final Track trackPre;
   final double cp;
   final double p;
   final Size screenSize;
@@ -1582,7 +1582,7 @@ class TrackInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double opacity = (inverseAboveOne(p) * 10 - 9).clamp(0, 1);
-
+    final track = trackPre.toTrackExt();
     return Transform.translate(
       offset: Offset(0, bottomOffset + (-maxOffset / 4.0 * p.clamp(0, 2))),
       child: Padding(
@@ -1605,7 +1605,7 @@ class TrackInfo extends StatelessWidget {
                             padding: EdgeInsets.only(right: 22.0 + 92 * (1 - cp)),
                             child: NamidaInkWell(
                               borderRadius: 12.0,
-                              onTap: cp == 1 ? () => NamidaDialogs.inst.showTrackDialog(track) : null,
+                              onTap: cp == 1 ? () => NamidaDialogs.inst.showTrackDialog(trackPre) : null,
                               padding: EdgeInsets.only(left: 8.0 * cp),
                               child: Column(
                                 key: Key(track.title),
@@ -1641,7 +1641,7 @@ class TrackInfo extends StatelessWidget {
                           opacity: opacity,
                           child: Transform.translate(
                             offset: Offset(-100 * (1.0 - cp), 0.0),
-                            child: NamidaLikeButton(track: track),
+                            child: NamidaLikeButton(track: trackPre),
                           ),
                         ),
                       ],

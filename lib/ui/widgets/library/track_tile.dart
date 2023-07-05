@@ -335,7 +335,8 @@ class TrackTile extends StatelessWidget {
   }
 }
 
-String _getChoosenTrackTileItem(TrackTileItem trackItem, Track track) {
+String _getChoosenTrackTileItem(TrackTileItem trackItem, Track trackPre) {
+  final track = trackPre.toTrackExt();
   final finalDate = track.dateModified.dateFormatted;
   final finalClock = track.dateModified.clockFormatted;
   final trackItemPlaceV = [
@@ -347,12 +348,12 @@ String _getChoosenTrackTileItem(TrackTileItem trackItem, Track track) {
     if (trackItem == TrackTileItem.genres) track.genresList.take(4).join(', ').overflow,
     if (trackItem == TrackTileItem.duration) track.duration.milliseconds.label,
     if (trackItem == TrackTileItem.year) track.year.yearFormatted,
-    if (trackItem == TrackTileItem.trackNumber) track.track,
+    if (trackItem == TrackTileItem.trackNumber) track.trackNo,
     if (trackItem == TrackTileItem.discNumber) track.discNo,
-    if (trackItem == TrackTileItem.fileNameWOExt) track.filenameWOExt.overflow,
-    if (trackItem == TrackTileItem.extension) track.extension,
-    if (trackItem == TrackTileItem.fileName) track.filename.overflow,
-    if (trackItem == TrackTileItem.folder) track.folderName.overflow,
+    if (trackItem == TrackTileItem.fileNameWOExt) trackPre.filenameWOExt.overflow,
+    if (trackItem == TrackTileItem.extension) trackPre.extension,
+    if (trackItem == TrackTileItem.fileName) trackPre.filename.overflow,
+    if (trackItem == TrackTileItem.folder) trackPre.folderName.overflow,
     if (trackItem == TrackTileItem.path) track.path.formatPath(),
     if (trackItem == TrackTileItem.channels) track.channels.channelToLabel,
     if (trackItem == TrackTileItem.comment) track.comment.overflow,

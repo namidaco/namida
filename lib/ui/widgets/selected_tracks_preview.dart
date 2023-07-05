@@ -200,8 +200,9 @@ class SelectedTracksRow extends StatelessWidget {
               thirdLineText: tracks.length == 1
                   ? tracks.first.title
                   : tracks.map((e) {
+                      final title = e.toTrackExt().title;
                       final maxLet = 20 - tracks.length.clamp(0, 17);
-                      return '${e.title.substring(0, (e.title.length > maxLet ? maxLet : e.title.length))}..';
+                      return '${title.substring(0, (title.length > maxLet ? maxLet : title.length))}..';
                     }).join(', '),
             );
           },

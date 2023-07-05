@@ -47,13 +47,13 @@ class QueueController {
     await _saveQueueToStorage(q);
   }
 
-  void removeQueue(Queue queue) async {
+  Future<void> removeQueue(Queue queue) async {
     queuesMap.value.remove(queue.date);
     queuesMap.refresh();
     await _deleteQueueFromStorage(queue);
   }
 
-  void reAddQueue(Queue queue) async {
+  Future<void> reAddQueue(Queue queue) async {
     _updateMap(queue);
     await _saveQueueToStorage(queue);
   }
@@ -68,12 +68,12 @@ class QueueController {
   //   queues.loop((q) => removeQueue(q));
   // }
 
-  void updateQueue(Queue oldQueue, Queue newQueue) async {
+  Future<void> updateQueue(Queue oldQueue, Queue newQueue) async {
     _updateMap(newQueue, oldQueue.date);
     await _saveQueueToStorage(newQueue);
   }
 
-  void updateLatestQueue(List<Track> tracks) async {
+  Future<void> updateLatestQueue(List<Track> tracks) async {
     // updating current last queue.
     latestQueue
       ..clear()
@@ -90,7 +90,7 @@ class QueueController {
     }
   }
 
-  void insertTracksQueue(Queue queue, List<Track> tracks, int index) async {
+  Future<void> insertTracksQueue(Queue queue, List<Track> tracks, int index) async {
     queue.tracks.insertAllSafe(index, tracks);
     _updateMap(queue);
     await _saveQueueToStorage(queue);
@@ -100,6 +100,23 @@ class QueueController {
     queue.tracks.removeAt(index);
     _updateMap(queue);
     await _saveQueueToStorage(queue);
+  }
+
+  /// Only use when updating missing track.
+  Future<void> replaceTrackInAllQueues(Track oldTrack, Track newTrack) async {
+    final queuesToSave = <Queue>[];
+    queuesMap.value.entries.toList().loop((entry, index) {
+      final q = entry.value;
+      q.tracks.replaceItems(
+        oldTrack,
+        newTrack,
+        onMatch: () => queuesToSave.add(q),
+      );
+    });
+    await queuesToSave.loopFuture((q, index) async {
+      _updateMap(q);
+      await _saveQueueToStorage(q);
+    });
   }
 
   ///

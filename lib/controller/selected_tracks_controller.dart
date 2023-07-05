@@ -63,4 +63,8 @@ class SelectedTracksController {
     selectedTracks.addAll(currentAllTracks);
     selectedTracks.removeDuplicates((element) => element.path);
   }
+
+  void replaceThisTrack(Track oldTrack, Track newTrack) {
+    selectedTracks.replaceItem(oldTrack, newTrack);
+  }
 }

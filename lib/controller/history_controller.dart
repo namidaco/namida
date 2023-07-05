@@ -128,6 +128,21 @@ class HistoryController {
     return totalRemoved;
   }
 
+  Future<void> replaceAllTracksInsideHistory(Track oldTrack, Track newTrack) async {
+    final daysToSave = <int>[];
+    historyMap.value.entries.toList().loop((entry, index) {
+      final day = entry.key;
+      final trs = entry.value;
+      trs.replaceWhere(
+        (e) => e.track == oldTrack,
+        (old) => TrackWithDate(old.dateAdded, newTrack, old.source),
+        onMatch: () => daysToSave.add(day),
+      );
+    });
+    await saveHistoryToStorage(daysToSave);
+    updateMostPlayedPlaylist();
+  }
+
   /// Most Played Playlist, relies totally on History Playlist.
   /// Sending [track && dateAdded] just adds it to the map and sort, it won't perform a re-lookup from history.
   void updateMostPlayedPlaylist([List<TrackWithDate>? tracksWithDate]) {
@@ -146,7 +161,7 @@ class HistoryController {
 
       sortAndUpdateMap(topTracksMapListens);
     } else {
-      final HashMap<Track, List<int>> tempMap = HashMap<Track, List<int>>(equals: (p0, p1) => p0.path == p1.path);
+      final Map<Track, List<int>> tempMap = <Track, List<int>>{};
 
       historyTracks.loop((t, index) {
         tempMap.addForce(t.track, t.dateAdded);

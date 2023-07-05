@@ -161,9 +161,10 @@ class JsonToHistoryParser {
 
   /// Returns [daysToSave].
   List<int> _matchYTVHToNamidaHistory(YoutubeVideoHistory vh, bool isMatchingTypeLink, bool matchYT, bool matchYTMusic) {
-    final tr = allTracksInLibrary.firstWhereOrNull((element) {
+    final tr = allTracksInLibrary.firstWhereOrNull((trPre) {
+      final element = trPre.toTrackExt();
       return isMatchingTypeLink
-          ? element.youtubeID == vh.id
+          ? trPre.youtubeID == vh.id
 
           /// matching has to meet 2 conditons:
           /// 1. [json title] contains [track.title]
@@ -229,9 +230,11 @@ class JsonToHistoryParser {
         /// [csv artist] contains [track.artistsList.first]
         /// [csv title] contains [track.title], anything after ( or [ is ignored.
         final tr = allTracksInLibrary.firstWhereOrNull(
-          (tr) =>
-              pieces.first.cleanUpForComparison.contains(tr.artistsList.first.cleanUpForComparison) &&
-              pieces[2].cleanUpForComparison.contains(tr.title.split('(').first.split('[').first.cleanUpForComparison),
+          (trPre) {
+            final tr = trPre.toTrackExt();
+            return pieces.first.cleanUpForComparison.contains(tr.artistsList.first.cleanUpForComparison) &&
+                pieces[2].cleanUpForComparison.contains(tr.title.split('(').first.split('[').first.cleanUpForComparison);
+          },
         );
         if (tr != null) {
           // success means: date == trueDate && lastDate is updated.

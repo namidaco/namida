@@ -28,12 +28,13 @@ class NamidaDialogs {
     bool isFromPlayerQueue = false,
     bool errorPlayingTrack = false,
   }) async {
+    final trExt = track.toTrackExt();
     await showGeneralPopupDialog(
       [track],
-      track.originalArtist,
-      track.title.overflow,
+      trExt.originalArtist,
+      trExt.title.overflow,
       QueueSource.selectedTracks,
-      thirdLineText: track.album.overflow,
+      thirdLineText: trExt.album.overflow,
       forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
       trackWithDate: trackWithDate,
       playlistName: playlistName,

@@ -215,19 +215,19 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     }
   }
 
-  Future<void> updateTrackLastPosition(Track track, int lastPosition) async {
+  Future<void> updateTrackLastPosition(Track trackPre, int lastPosition) async {
+    final track = trackPre.toTrackExt();
+
     /// Saves a starting position in case the remaining was less than 30 seconds.
     final remaining = track.duration - lastPosition;
     final positionToSave = remaining <= 30000 ? 0 : lastPosition;
 
-    Indexer.inst.trackStatsMap[track.path] = TrackStats(track.path, track.stats.rating, track.stats.tags, track.stats.moods, positionToSave);
-    track.stats.lastPositionInMs = positionToSave;
-    await Indexer.inst.saveTrackStatsFileToStorage();
+    await Indexer.inst.updateTrackStats(trackPre, lastPositionInMs: positionToSave);
   }
 
-  Future<void> tryRestoringLastPosition(Track track) async {
+  Future<void> tryRestoringLastPosition(Track trackPre) async {
     final minValueInSet = Duration(minutes: SettingsController.inst.minTrackDurationToRestoreLastPosInMinutes.value).inMilliseconds;
-
+    final track = trackPre.toTrackExt();
     if (minValueInSet > 0) {
       final lastPos = track.stats.lastPositionInMs;
       if (lastPos != 0 && track.duration >= minValueInSet) {
@@ -408,15 +408,21 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     afterQueueChange();
   }
 
-  void removeRangeFromQueue(int start, int end) {
+  Future<void> removeRangeFromQueue(int start, int end) async {
     currentQueue.removeRange(start, end);
+    await afterQueueChange();
+  }
+
+  /// Only use when updating missing track.
+  Future<void> replaceAllTracksInQueue(Track oldTrack, Track newTrack) async {
+    currentQueue.replaceItems(oldTrack, newTrack);
     afterQueueChange();
   }
 
-  void afterQueueChange() {
+  Future<void> afterQueueChange() async {
     tryResettingLatestInsertedIndex();
     updateCurrentMediaItem();
-    QueueController.inst.updateLatestQueue(currentQueue.toList());
+    await QueueController.inst.updateLatestQueue(currentQueue.toList());
   }
 
   void tryResettingLatestInsertedIndex() {
@@ -577,18 +583,21 @@ extension TrackToAudioSourceMediaItem on Track {
     );
   }
 
-  MediaItem toMediaItem() => MediaItem(
-        id: path,
-        title: title,
-        displayTitle: title,
-        displaySubtitle: hasUnknownAlbum ? originalArtist : "$originalArtist - $album",
-        displayDescription: "${Player.inst.currentIndex.value + 1}/${Player.inst.currentQueue.length}",
-        artist: originalArtist,
-        album: hasUnknownAlbum ? '' : album,
-        genre: genresList.take(3).join(', '),
-        duration: Duration(milliseconds: duration),
-        artUri: Uri.file(File(pathToImage).existsSync() ? pathToImage : k_FILE_PATH_NAMIDA_LOGO),
-      );
+  MediaItem toMediaItem() {
+    final track = toTrackExt();
+    return MediaItem(
+      id: path,
+      title: track.title,
+      displayTitle: track.title,
+      displaySubtitle: track.hasUnknownAlbum ? track.originalArtist : "${track.originalArtist} - ${track.album}",
+      displayDescription: "${Player.inst.currentIndex.value + 1}/${Player.inst.currentQueue.length}",
+      artist: track.originalArtist,
+      album: track.hasUnknownAlbum ? '' : track.album,
+      genre: track.genresList.take(3).join(', '),
+      duration: Duration(milliseconds: track.duration),
+      artUri: Uri.file(File(pathToImage).existsSync() ? pathToImage : k_FILE_PATH_NAMIDA_LOGO),
+    );
+  }
 }
 
 extension TracksListToAudioSourcesMediaItems on List<Track> {

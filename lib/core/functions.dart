@@ -159,7 +159,7 @@ double checkIfQueuesSimilar(List<Track> q1, List<Track> q2, {bool fullyFunctiona
     final finallength = q1.length > q2.length ? q2.length : q1.length;
     int trueconditions = 0;
     for (int i = 0; i < finallength; i++) {
-      if (q1[i].path == q2[i].path) trueconditions++;
+      if (q1[i] == q2[i]) trueconditions++;
     }
     return trueconditions / finallength;
   }
@@ -280,10 +280,7 @@ List<Track> generateTracksFromMoods(List<String> moods, [int maxCount = 20]) {
   /// Generating from all Tracks.
   Indexer.inst.trackStatsMap.forEach((key, value) {
     if (value.moods.toSet().intersection(moods.toSet()).isNotEmpty) {
-      final trackInsideMainList = key.toTrackOrNull();
-      if (trackInsideMainList != null) {
-        finalTracks.add(trackInsideMainList);
-      }
+      finalTracks.add(key);
     }
   });
   return finalTracks
@@ -302,10 +299,7 @@ List<Track> generateTracksFromRatings(
   final finalTracks = <Track>[];
   Indexer.inst.trackStatsMap.forEach((key, value) {
     if (value.rating >= min && value.rating <= max) {
-      final trackInsideMainList = key.toTrackOrNull();
-      if (trackInsideMainList != null) {
-        finalTracks.add(trackInsideMainList);
-      }
+      finalTracks.add(key);
     }
   });
   finalTracks.shuffle();

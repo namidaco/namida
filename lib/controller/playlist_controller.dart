@@ -226,6 +226,30 @@ class PlaylistController {
     await _savePlaylistToStorage(playlist);
   }
 
+  Future<void> replaceTrackInAllPlaylists(Track oldTrack, Track newTrack) async {
+    // -- normal
+    final playlistsToSave = <Playlist>[];
+    playlistsMap.entries.toList().loop((entry, index) {
+      final p = entry.value;
+      p.tracks.replaceWhere(
+        (e) => e.track == oldTrack,
+        (old) => TrackWithDate(old.dateAdded, newTrack, old.source),
+        onMatch: () => playlistsToSave.add(p),
+      );
+    });
+    await playlistsToSave.loopFuture((p, index) async {
+      _updateMap(p);
+      await _savePlaylistToStorage(p);
+    });
+
+    // -- favourite
+    favouritesPlaylist.value.tracks.replaceSingleWhere(
+      (e) => e.track == oldTrack,
+      (old) => TrackWithDate(old.dateAdded, newTrack, old.source),
+    );
+    await _saveFavouritesToStorage();
+  }
+
   void reorderTrack(Playlist playlist, int oldIndex, int newIndex) async {
     if (newIndex > oldIndex) {
       newIndex -= 1;
@@ -292,6 +316,7 @@ class PlaylistController {
   }
 
   Future<bool> _saveFavouritesToStorage() async {
+    favouritesPlaylist.refresh();
     final f = await File(k_PLAYLIST_PATH_FAVOURITES).writeAsJson(favouritesPlaylist.value.toJson());
     return f != null;
   }
