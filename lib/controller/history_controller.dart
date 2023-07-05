@@ -68,7 +68,12 @@ class HistoryController {
     });
   }
 
-  void addTracksToHistory(List<TrackWithDate> tracks) async {
+  Future<void> addTracksToHistory(List<TrackWithDate> tracks) async {
+    if (_isLoadingHistory) {
+      // after history full load, [addTracksToHistory] will be called to add tracks inside [_tracksToAddAfterHistoryLoad].
+      _tracksToAddAfterHistoryLoad.addAll(tracks);
+      return;
+    }
     final daysToSave = addTracksToHistoryOnly(tracks);
     updateMostPlayedPlaylist(tracks);
     await saveHistoryToStorage(daysToSave);
@@ -212,7 +217,18 @@ class HistoryController {
         historyMap.refresh();
       }
     }
+    _isLoadingHistory = false;
+    // Adding tracks that were rejected by [addToHistory] since history wasn't fully loaded.
+    if (_tracksToAddAfterHistoryLoad.isNotEmpty) {
+      await addTracksToHistory(_tracksToAddAfterHistoryLoad);
+    }
     Dimensions.inst.calculateAllItemsExtentsInHistory();
     updateMostPlayedPlaylist();
   }
+
+  /// Used to add tracks that were rejected by [addToHistory] after full loading of history.
+  ///
+  /// This is an extremely rare case, would happen only if history loading took more than 20s. (min seconds to count a listen)
+  final List<TrackWithDate> _tracksToAddAfterHistoryLoad = <TrackWithDate>[];
+  bool _isLoadingHistory = true;
 }
