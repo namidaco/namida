@@ -247,7 +247,7 @@ List<Track> generateRecommendedTrack(Track track) {
 
   numberOfListensMap.remove(track);
 
-  final sortedByValueMap = numberOfListensMap.entries.toList()..sort((b, a) => a.value.compareTo(b.value));
+  final sortedByValueMap = numberOfListensMap.entries.toList()..sortBy((e) => e.value);
 
   return sortedByValueMap.take(20).map((e) => e.key).toList();
 }

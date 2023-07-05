@@ -166,7 +166,7 @@ class PlaybackSettings extends StatelessWidget {
                 SettingsController.inst.save(youtubeVideoQualities: [val]);
               }
               // sorts and saves dec
-              SettingsController.inst.youtubeVideoQualities.sort((b, a) => kStockVideoQualities.indexOf(a).compareTo(kStockVideoQualities.indexOf(b)));
+              SettingsController.inst.youtubeVideoQualities.sortByReverse((e) => kStockVideoQualities.indexOf(e));
               SettingsController.inst.save(youtubeVideoQualities: SettingsController.inst.youtubeVideoQualities.toList());
             }
 

@@ -115,7 +115,7 @@ extension FolderUtils on Folder {
       }),
     );
 
-    allInside.sort((a, b) => a.folderName.toLowerCase().compareTo(b.folderName.toLowerCase()));
+    allInside.sortBy((e) => e.folderName.toLowerCase());
 
     return allInside;
   }

@@ -31,7 +31,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
   }
 
   final totalListens = HistoryController.inst.topTracksMapListens[track] ?? [];
-  totalListens.sort((a, b) => b.compareTo(a));
+  totalListens.sortByReverse((e) => e);
   final firstListenTrack = totalListens.lastOrNull;
 
   final color = await CurrentColor.inst.getTrackDelightnedColor(track);

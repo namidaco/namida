@@ -1286,7 +1286,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                               }
                                                               List<int> dates = [];
                                                               final dts = [historyTracks.last.dateAdded, historyTracks.first.dateAdded];
-                                                              dts.sort((a, b) => a.compareTo(b));
+                                                              dts.sortBy((e) => e);
                                                               final firstDateInHistory = dts.first;
                                                               final lastDateInHistory = dts.last;
                                                               NamidaNavigator.inst.navigateDialog(

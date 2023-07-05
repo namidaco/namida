@@ -100,7 +100,7 @@ class BackupController {
       });
 
       // seems like the files are already sorted but anyways
-      filessss.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+      filessss.sortByReverse((e) => e.lastModifiedSync());
       backupzip = filessss.first;
     } else {
       final filePicked = await FilePicker.platform.pickFiles(allowedExtensions: ['zip'], type: FileType.custom);

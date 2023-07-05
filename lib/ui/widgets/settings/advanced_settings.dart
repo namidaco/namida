@@ -175,7 +175,7 @@ class AdvancedSettings extends StatelessWidget {
               trailingText: Indexer.inst.videosSizeInStorage.value.fileSizeFormatted,
               onTap: () async {
                 final allvideo = Directory(k_DIR_VIDEOS_CACHE).listSync();
-                allvideo.sort((a, b) => b.statSync().size.compareTo(a.statSync().size));
+                allvideo.sortByReverse((e) => e.statSync().size);
                 allvideo.removeWhere((element) => element is Directory);
 
                 /// First Dialog

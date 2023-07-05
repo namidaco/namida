@@ -347,7 +347,7 @@ Future<void> showGeneralPopupDialog(
     }
 
     final paths = files.map((e) => e.path).toList();
-    paths.sort((a, b) => a.compareTo(b));
+    paths.sortBy((e) => e);
 
     final highMatchesFiles = getHighMatcheFilesFromFilename(paths, tracks.first.path.getFilename);
 

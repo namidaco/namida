@@ -102,7 +102,7 @@ class HistoryController {
   ///
   /// Providing [daysToSort] will sort these entries only.
   void sortHistoryTracks([List<int>? daysToSort]) {
-    void sortTheseTracks(List<TrackWithDate> tracks) => tracks.sort((a, b) => a.dateAdded.compareTo(b.dateAdded));
+    void sortTheseTracks(List<TrackWithDate> tracks) => tracks.sortBy((e) => e.dateAdded);
 
     if (daysToSort != null) {
       for (int i = 0; i < daysToSort.length; i++) {
@@ -184,7 +184,7 @@ class HistoryController {
       });
 
       tempMap.forEach((key, value) {
-        value.sort((a, b) => a.compareTo(b));
+        value.sortBy((e) => e);
       });
 
       sortAndUpdateMap(tempMap, mapToUpdate: topTracksMapListens);
