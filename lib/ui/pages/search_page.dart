@@ -92,7 +92,7 @@ class SearchPage extends StatelessWidget {
                                     margin: const EdgeInsets.only(left: 2.0),
                                     child: AlbumCard(
                                       name: albumName,
-                                      gridCountOverride: 3,
+                                      gridCountOverride: Dimensions.albumSearchGridCount,
                                       album: albumName.getAlbumTracks(),
                                       staggered: false,
                                     ),
@@ -133,7 +133,7 @@ class SearchPage extends StatelessWidget {
                                     width: 80.0,
                                     margin: const EdgeInsets.only(left: 2.0),
                                     child: ArtistCard(
-                                      gridCount: 5,
+                                      gridCount: Dimensions.artistSearchGridCount,
                                       name: artistName,
                                       artist: artistName.getArtistTracks(),
                                     ),

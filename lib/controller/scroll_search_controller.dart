@@ -108,10 +108,12 @@ class ScrollSearchController {
   void hideSearchMenu() {
     unfocusKeyboard();
     isGlobalSearchMenuShown.value = false;
+    Dimensions.inst.updateSearchDimensions(false);
   }
 
-  void showSearchMenu() {
-    isGlobalSearchMenuShown.value = true;
+  void showSearchMenu([bool show = true]) {
+    isGlobalSearchMenuShown.value = show;
+    Dimensions.inst.updateSearchDimensions(show);
   }
 
   void resetSearch() {

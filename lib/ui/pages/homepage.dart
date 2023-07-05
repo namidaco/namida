@@ -261,7 +261,7 @@ class NamidaSearchBar extends StatelessWidget {
       ),
       onTap: () => ScrollSearchController.inst.showSearchMenu(),
       onPressButton: (isOpen) {
-        ScrollSearchController.inst.isGlobalSearchMenuShown.value = isOpen;
+        ScrollSearchController.inst.showSearchMenu(isOpen);
         ScrollSearchController.inst.resetSearch();
       },
       onChanged: (value) => SearchSortController.inst.searchAll(value),

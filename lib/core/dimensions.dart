@@ -48,6 +48,9 @@ class Dimensions {
   /// {@macro card_dimensions}
   (double, double, double) multiCardDimensions = (0.0, 0.0, 0.0);
 
+  static const albumSearchGridCount = 3;
+  static const artistSearchGridCount = 5;
+
   void updateDimensions(LibraryTab tab, {int? gridOverride}) {
     switch (tab) {
       case LibraryTab.albums:
@@ -61,6 +64,11 @@ class Dimensions {
     }
     updateTrackTileDimensions();
     updateAlbumTileDimensions();
+  }
+
+  void updateSearchDimensions(bool isOpen) {
+    _updateAlbumDimensions(isOpen ? albumSearchGridCount : null);
+    _updateArtistDimensions(isOpen ? artistSearchGridCount : null);
   }
 
   void updateTrackTileDimensions() {
