@@ -154,7 +154,16 @@ class HistoryController {
   /// Sending [track && dateAdded] just adds it to the map and sort, it won't perform a re-lookup from history.
   void updateMostPlayedPlaylist([List<TrackWithDate>? tracksWithDate]) {
     void sortAndUpdateMap(Map<Track, List<int>> unsortedMap, {Map<Track, List<int>>? mapToUpdate}) {
-      final sortedEntries = unsortedMap.entries.toList()..sort((a, b) => b.value.length.compareTo(a.value.length));
+      final sortedEntries = unsortedMap.entries.toList()
+        ..sort((a, b) {
+          final compare = b.value.length.compareTo(a.value.length);
+          if (compare == 0) {
+            final lastListenB = b.value.lastOrNull ?? 0;
+            final lastListenA = a.value.lastOrNull ?? 0;
+            return lastListenB.compareTo(lastListenA);
+          }
+          return compare;
+        });
       final fmap = mapToUpdate ?? unsortedMap;
       fmap
         ..clear()
