@@ -18,6 +18,7 @@ void showTrackListensDialog(Track track, {List<int>? datesOfListen, ThemeData? t
   theme ??= AppThemes.inst.getAppTheme(await CurrentColor.inst.getTrackDelightnedColor(track), !Get.isDarkMode);
 
   if (datesOfListen.isEmpty) return;
+  datesOfListen.sortByReverse((e) => e);
 
   NamidaNavigator.inst.navigateDialog(
     CustomBlurryDialog(
@@ -36,8 +37,7 @@ void showTrackListensDialog(Track track, {List<int>? datesOfListen, ThemeData? t
         child: NamidaListView(
           padding: EdgeInsets.zero,
           itemBuilder: (context, i) {
-            final reverseIndex = (datesOfListen!.length - 1) - i;
-            final t = datesOfListen[reverseIndex];
+            final t = datesOfListen![i];
             return SmallListTile(
               key: ValueKey(i),
               borderRadius: 14.0,
@@ -48,7 +48,7 @@ void showTrackListensDialog(Track track, {List<int>? datesOfListen, ThemeData? t
                     borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                     color: theme?.cardColor,
                   ),
-                  child: Text((reverseIndex + 1).toString())),
+                  child: Text((datesOfListen.length - i).toString())),
               onTap: () async {
                 final daysKeys = HistoryController.inst.historyDays.toList();
                 daysKeys.removeWhere((element) => element <= t.toDaysSinceEpoch());
