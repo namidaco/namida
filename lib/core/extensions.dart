@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 
 import 'package:collection/collection.dart';
 import 'package:intl/intl.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:namida/class/track.dart';
@@ -140,6 +141,15 @@ extension TracksUtils on List<Track> {
     if (isEmpty) return '';
     for (int i = length - 1; i >= 0; i--) {
       final aa = this[i].albumArtist;
+      if (aa != '') return aa;
+    }
+    return '';
+  }
+
+  String get composer {
+    if (isEmpty) return '';
+    for (int i = length - 1; i >= 0; i--) {
+      final aa = this[i].composer;
       if (aa != '') return aa;
     }
     return '';
@@ -299,7 +309,8 @@ extension TRACKPLAYMODE on TrackPlayMode {
       queue = [trackPre];
     }
     if (this == TrackPlayMode.searchResults) {
-      queue = searchQueue ?? (Indexer.inst.trackSearchTemp.isNotEmpty ? Indexer.inst.trackSearchTemp.toList() : Indexer.inst.trackSearchList.toList());
+      queue = searchQueue ??
+          (SearchSortController.inst.trackSearchTemp.isNotEmpty ? SearchSortController.inst.trackSearchTemp.toList() : SearchSortController.inst.trackSearchList.toList());
     }
     if (this == TrackPlayMode.trackAlbum) {
       queue = track.album.getAlbumTracks();
@@ -601,6 +612,8 @@ extension ListieExt<E, Id> on List<E> {
   E? getEnum(String? string) => firstWhereOrNull((element) => element.toString().split('.').last == string);
   void insertSafe(int index, E object) => insert(index.clamp(0, length), object);
   void insertAllSafe(int index, Iterable<E> objects) => insertAll(index.clamp(0, length), objects);
+  void sortBy(Comparable Function(E e) key) => sort((a, b) => key(a).compareTo(key(b)));
+  void sortByReverse(Comparable Function(E e) key) => sort((a, b) => key(b).compareTo(key(a)));
 
   /// returns number of items removed.
   int removeWhereWithDifference(bool Function(E element) test) {

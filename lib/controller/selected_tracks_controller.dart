@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -17,7 +17,7 @@ class SelectedTracksController {
 
   List<Track> get currentAllTracks {
     if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
-      return Indexer.inst.trackSearchTemp.toList();
+      return SearchSortController.inst.trackSearchTemp.toList();
     }
     return NamidaNavigator.inst.currentRoute?.tracksInside ?? [];
   }

@@ -198,3 +198,15 @@ enum RouteType {
   /// others
   UNKNOWN,
 }
+
+/// Used for search and sort.
+enum MediaType {
+  track,
+  album,
+  artist,
+  genre,
+  playlist,
+
+  /// not used
+  folder,
+}

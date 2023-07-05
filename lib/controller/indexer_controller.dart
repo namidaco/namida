@@ -7,18 +7,16 @@ import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:on_audio_edit/on_audio_edit.dart' as audioedit;
 import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/strings.dart';
 
 class Indexer {
@@ -45,24 +43,12 @@ class Indexer {
 
   final TextEditingController globalSearchController = TextEditingController();
 
-  RxBool get isSearching => (trackSearchTemp.isNotEmpty || albumSearchTemp.isNotEmpty || artistSearchTemp.isNotEmpty).obs;
-
   final Rx<Map<String, List<Track>>> mainMapAlbums = LinkedHashMap<String, List<Track>>(equals: (p0, p1) => p0.toLowerCase() == p1.toLowerCase()).obs;
   final Rx<Map<String, List<Track>>> mainMapArtists = LinkedHashMap<String, List<Track>>(equals: (p0, p1) => p0.toLowerCase() == p1.toLowerCase()).obs;
   final Rx<Map<String, List<Track>>> mainMapGenres = LinkedHashMap<String, List<Track>>(equals: (p0, p1) => p0.toLowerCase() == p1.toLowerCase()).obs;
   final RxMap<Folder, List<Track>> mainMapFolders = <Folder, List<Track>>{}.obs;
 
   final RxList<Track> tracksInfoList = <Track>[].obs;
-
-  final RxList<Track> trackSearchList = <Track>[].obs;
-  final RxList<String> albumSearchList = <String>[].obs;
-  final RxList<String> artistSearchList = <String>[].obs;
-  final RxList<String> genreSearchList = <String>[].obs;
-
-  /// Temporary lists.
-  final RxList<Track> trackSearchTemp = <Track>[].obs;
-  final RxList<String> albumSearchTemp = <String>[].obs;
-  final RxList<String> artistSearchTemp = <String>[].obs;
 
   /// tracks map used for lookup
   final Map<Track, TrackExtended> allTracksMappedByPath = {};
@@ -107,10 +93,7 @@ class Indexer {
   }
 
   void _sortAll() {
-    sortTracks();
-    sortAlbums();
-    sortArtists();
-    sortGenres();
+    SearchSortController.inst.sortAll();
   }
 
   void _addTheseTracksToAlbumGenreArtistEtc(List<Track> tracks, {bool preventDuplicates = false}) {
@@ -360,9 +343,9 @@ class Indexer {
           final tr = trExt.toTrack();
           allTracksMappedByPath[tr] = trExt;
           tracksInfoList.add(tr);
+          SearchSortController.inst.trackSearchList.add(tr);
         }
         listOfCurrentFileNames.add(trackPath.getFilename);
-        searchTracks('');
       }
       debugPrint('Extracted All Metadata');
     }
@@ -591,323 +574,6 @@ class Indexer {
 
     debugPrint(allPaths.length.toString());
     return allPaths;
-  }
-
-  void searchAll(String text) {
-    searchTracks(text, temp: true);
-    searchAlbums(text, temp: true);
-    searchArtists(text, temp: true);
-  }
-
-  void searchTracks(String text, {bool temp = false}) {
-    final finalList = temp ? trackSearchTemp : trackSearchList;
-    finalList.clear();
-    if (text == '') {
-      if (temp) {
-        trackSearchTemp.clear();
-      } else {
-        LibraryTab.tracks.textSearchController?.clear();
-        trackSearchList.assignAll(tracksInfoList);
-      }
-
-      return;
-    }
-
-    final tsf = SettingsController.inst.trackSearchFilter;
-    final sTitle = tsf.contains('title');
-    final sAlbum = tsf.contains('album');
-    final sAlbumArtist = tsf.contains('albumartist');
-    final sArtist = tsf.contains('artist');
-    final sGenre = tsf.contains('genre');
-    final sComposer = tsf.contains('composer');
-    final sYear = tsf.contains('year');
-
-    tracksInfoList.loop((tr, index) {
-      final item = tr.toTrackExt();
-      final lctext = textCleanedForSearch(text);
-
-      if ((sTitle && textCleanedForSearch(item.title).contains(lctext)) ||
-          (sAlbum && textCleanedForSearch(item.album).contains(lctext)) ||
-          (sAlbumArtist && textCleanedForSearch(item.albumArtist).contains(lctext)) ||
-          (sArtist && item.artistsList.any((element) => textCleanedForSearch(element).contains(lctext))) ||
-          (sGenre && item.genresList.any((element) => textCleanedForSearch(element).contains(lctext))) ||
-          (sComposer && textCleanedForSearch(item.composer).contains(lctext)) ||
-          (sYear && textCleanedForSearch(item.year.toString()).contains(lctext))) {
-        finalList.add(tr);
-      }
-    });
-
-    printInfo(info: "Tracks Found: ${trackSearchList.length}");
-  }
-
-  void searchAlbums(String text, {bool temp = false}) {
-    if (text == '') {
-      if (temp) {
-        albumSearchTemp.clear();
-      } else {
-        LibraryTab.albums.textSearchController?.clear();
-        albumSearchList
-          ..clear()
-          ..addAll(mainMapAlbums.value.keys);
-      }
-      return;
-    }
-    final results = mainMapAlbums.value.keys.where((albumName) => textCleanedForSearch(albumName).contains(textCleanedForSearch(text)));
-
-    if (temp) {
-      albumSearchTemp
-        ..clear()
-        ..addAll(results);
-    } else {
-      albumSearchList
-        ..clear()
-        ..addAll(results);
-    }
-  }
-
-  void searchArtists(String text, {bool temp = false}) {
-    if (text == '') {
-      if (temp) {
-        artistSearchTemp.clear();
-      } else {
-        LibraryTab.artists.textSearchController?.clear();
-        artistSearchList
-          ..clear()
-          ..addAll(mainMapArtists.value.keys);
-      }
-      return;
-    }
-    final results = mainMapArtists.value.keys.where((artistName) => textCleanedForSearch(artistName).contains(textCleanedForSearch(text)));
-
-    if (temp) {
-      artistSearchTemp
-        ..clear()
-        ..addAll(results);
-    } else {
-      artistSearchList
-        ..clear()
-        ..addAll(results);
-    }
-  }
-
-  void searchGenres(String text) {
-    if (text == '') {
-      LibraryTab.genres.textSearchController?.clear();
-      genreSearchList.assignAll(mainMapGenres.value.keys);
-      return;
-    }
-    final results = mainMapGenres.value.keys.where((genreName) => textCleanedForSearch(genreName).contains(textCleanedForSearch(text)));
-
-    genreSearchList
-      ..clear()
-      ..addAll(results);
-  }
-
-  /// Sorts Tracks and Saves automatically to settings
-  void sortTracks({SortType? sortBy, bool? reverse}) {
-    sortBy ??= SettingsController.inst.tracksSort.value;
-    reverse ??= SettingsController.inst.tracksSortReversed.value;
-    switch (sortBy) {
-      case SortType.title:
-        tracksInfoList.sort((a, b) => (a.title).compareTo(b.title));
-        break;
-      case SortType.album:
-        tracksInfoList.sort((a, b) => (a.album).compareTo(b.album));
-        break;
-      case SortType.albumArtist:
-        tracksInfoList.sort((a, b) => (a.albumArtist).compareTo(b.albumArtist));
-        break;
-      case SortType.year:
-        tracksInfoList.sort((a, b) => (a.year).compareTo(b.year));
-        break;
-      case SortType.artistsList:
-        tracksInfoList.sort((a, b) => (a.artistsList.toString()).compareTo(b.artistsList.toString()));
-        break;
-      case SortType.genresList:
-        tracksInfoList.sort((a, b) => (a.genresList.toString()).compareTo(b.genresList.toString()));
-        break;
-      case SortType.dateAdded:
-        tracksInfoList.sort((a, b) => (a.dateAdded).compareTo(b.dateAdded));
-        break;
-      case SortType.dateModified:
-        tracksInfoList.sort((a, b) => (a.dateModified).compareTo(b.dateModified));
-        break;
-      case SortType.bitrate:
-        tracksInfoList.sort((a, b) => (a.bitrate).compareTo(b.bitrate));
-        break;
-      case SortType.composer:
-        tracksInfoList.sort((a, b) => (a.composer).compareTo(b.composer));
-        break;
-      case SortType.discNo:
-        tracksInfoList.sort((a, b) => (a.discNo).compareTo(b.discNo));
-        break;
-      case SortType.filename:
-        tracksInfoList.sort((a, b) => (a.filename.toLowerCase()).compareTo(b.filename.toLowerCase()));
-        break;
-      case SortType.duration:
-        tracksInfoList.sort((a, b) => (a.duration).compareTo(b.duration));
-        break;
-      case SortType.sampleRate:
-        tracksInfoList.sort((a, b) => (a.sampleRate).compareTo(b.sampleRate));
-        break;
-      case SortType.size:
-        tracksInfoList.sort((a, b) => (a.size).compareTo(b.size));
-        break;
-      case SortType.rating:
-        tracksInfoList.sort((a, b) => (a.stats.rating).compareTo(b.stats.rating));
-        break;
-
-      default:
-        null;
-    }
-
-    if (reverse) {
-      tracksInfoList.value = tracksInfoList.reversed.toList();
-    }
-    SettingsController.inst.save(tracksSort: sortBy, tracksSortReversed: reverse);
-    searchTracks(LibraryTab.tracks.textSearchController?.text ?? '');
-  }
-
-  /// Sorts Albums and Saves automatically to settings
-  void sortAlbums({GroupSortType? sortBy, bool? reverse}) {
-    sortBy ??= SettingsController.inst.albumSort.value;
-    reverse ??= SettingsController.inst.albumSortReversed.value;
-
-    final albumsList = mainMapAlbums.value.entries.toList();
-    switch (sortBy) {
-      case GroupSortType.album:
-        albumsList.sort((a, b) => a.key.compareTo(b.key));
-        break;
-      case GroupSortType.albumArtist:
-        albumsList.sort((a, b) => a.value.first.albumArtist.compareTo(b.value.first.albumArtist));
-        break;
-      case GroupSortType.year:
-        albumsList.sort((a, b) => a.value.first.year.compareTo(b.value.first.year));
-        break;
-      case GroupSortType.artistsList:
-        albumsList.sort((a, b) => a.value.first.artistsList.toString().compareTo(b.value.first.artistsList.toString()));
-        break;
-
-      case GroupSortType.composer:
-        albumsList.sort((a, b) => a.value.first.composer.compareTo(b.value.first.composer));
-        break;
-      case GroupSortType.dateModified:
-        albumsList.sort((a, b) => a.value.first.dateModified.compareTo(b.value.first.dateModified));
-        break;
-      case GroupSortType.duration:
-        albumsList.sort((a, b) => a.value.toList().totalDurationInS.compareTo(b.value.toList().totalDurationInS));
-        break;
-      case GroupSortType.numberOfTracks:
-        albumsList.sort((a, b) => a.value.length.compareTo(b.value.length));
-        break;
-
-      default:
-        null;
-    }
-
-    mainMapAlbums.value
-      ..clear()
-      ..addEntries(reverse ? albumsList.reversed : albumsList);
-
-    SettingsController.inst.save(albumSort: sortBy, albumSortReversed: reverse);
-
-    searchAlbums(LibraryTab.albums.textSearchController?.text ?? '');
-  }
-
-  /// Sorts Artists and Saves automatically to settings
-  void sortArtists({GroupSortType? sortBy, bool? reverse}) {
-    sortBy ??= SettingsController.inst.artistSort.value;
-    reverse ??= SettingsController.inst.artistSortReversed.value;
-
-    final artistsList = mainMapArtists.value.entries.toList();
-    switch (sortBy) {
-      case GroupSortType.album:
-        artistsList.sort((a, b) => a.value.elementAt(0).album.compareTo(b.value.elementAt(0).album));
-        break;
-      case GroupSortType.albumArtist:
-        artistsList.sort((a, b) => a.value.elementAt(0).albumArtist.compareTo(b.value.elementAt(0).albumArtist));
-        break;
-      case GroupSortType.year:
-        artistsList.sort((a, b) => a.value.elementAt(0).year.compareTo(b.value.elementAt(0).year));
-        break;
-      case GroupSortType.artistsList:
-        artistsList.sort(((a, b) => a.key.compareTo(b.key)));
-        break;
-      case GroupSortType.genresList:
-        artistsList.sort((a, b) => a.value.elementAt(0).genresList.toString().compareTo(b.value.elementAt(0).genresList.toString()));
-        break;
-      case GroupSortType.composer:
-        artistsList.sort((a, b) => a.value.elementAt(0).composer.compareTo(b.value.elementAt(0).composer));
-        break;
-      case GroupSortType.dateModified:
-        artistsList.sort((a, b) => a.value.elementAt(0).dateModified.compareTo(b.value.elementAt(0).dateModified));
-        break;
-      case GroupSortType.duration:
-        artistsList.sort((a, b) => a.value.toList().totalDurationInS.compareTo(b.value.toList().totalDurationInS));
-        break;
-      case GroupSortType.numberOfTracks:
-        artistsList.sort((a, b) => a.value.length.compareTo(b.value.length));
-        break;
-      case GroupSortType.albumsCount:
-        artistsList.sort((a, b) => a.value.map((e) => e.album).toSet().length.compareTo(b.value.map((e) => e.album).toSet().length));
-        break;
-      default:
-        null;
-    }
-    mainMapArtists.value
-      ..clear()
-      ..addEntries(reverse ? artistsList.reversed : artistsList);
-
-    SettingsController.inst.save(artistSort: sortBy, artistSortReversed: reverse);
-
-    searchArtists(LibraryTab.artists.textSearchController?.text ?? '');
-  }
-
-  /// Sorts Genres and Saves automatically to settings
-  void sortGenres({GroupSortType? sortBy, bool? reverse}) {
-    sortBy ??= SettingsController.inst.genreSort.value;
-    reverse ??= SettingsController.inst.genreSortReversed.value;
-
-    final genresList = mainMapGenres.value.entries.toList();
-    switch (sortBy) {
-      case GroupSortType.album:
-        genresList.sort((a, b) => a.value.elementAt(0).album.compareTo(b.value.elementAt(0).album));
-        break;
-      case GroupSortType.albumArtist:
-        genresList.sort((a, b) => a.value.elementAt(0).albumArtist.compareTo(b.value.elementAt(0).albumArtist));
-        break;
-      case GroupSortType.year:
-        genresList.sort((a, b) => a.value.elementAt(0).year.compareTo(b.value.elementAt(0).year));
-        break;
-      case GroupSortType.artistsList:
-        genresList.sort((a, b) => a.value.elementAt(0).artistsList.toString().compareTo(b.value.elementAt(0).artistsList.toString()));
-        break;
-      case GroupSortType.genresList:
-        genresList.sort(((a, b) => a.key.compareTo(b.key)));
-        break;
-      case GroupSortType.composer:
-        genresList.sort((a, b) => a.value.elementAt(0).composer.compareTo(b.value.elementAt(0).composer));
-        break;
-      case GroupSortType.dateModified:
-        genresList.sort((a, b) => a.value.elementAt(0).dateModified.compareTo(b.value.elementAt(0).dateModified));
-        break;
-      case GroupSortType.duration:
-        genresList.sort((a, b) => a.value.toList().totalDurationInS.compareTo(b.value.toList().totalDurationInS));
-        break;
-      case GroupSortType.numberOfTracks:
-        genresList.sort((a, b) => a.value.length.compareTo(b.value.length));
-        break;
-
-      default:
-        null;
-    }
-
-    mainMapGenres.value
-      ..clear()
-      ..addEntries(reverse ? genresList.reversed : genresList);
-
-    SettingsController.inst.save(genreSort: sortBy, genreSortReversed: reverse);
-    searchGenres(LibraryTab.genres.textSearchController?.text ?? '');
   }
 
   Future<void> updateImageSizeInStorage([File? newImgFile]) async {

@@ -6,9 +6,9 @@ import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -32,7 +32,7 @@ class SearchPage extends StatelessWidget {
       child: Obx(
         () => AnimatedSwitcher(
           duration: const Duration(milliseconds: 400),
-          child: !Indexer.inst.isSearching.value
+          child: !SearchSortController.inst.isSearching.value
               ? Container(
                   key: const ValueKey('emptysearch'),
                   padding: const EdgeInsets.all(64.0).add(const EdgeInsets.only(bottom: 64.0)),
@@ -65,10 +65,10 @@ class SearchPage extends StatelessWidget {
                         ),
 
                         /// Albums
-                        if (Indexer.inst.albumSearchTemp.isNotEmpty) ...[
+                        if (SearchSortController.inst.albumSearchTemp.isNotEmpty) ...[
                           SliverToBoxAdapter(
                             child: SearchPageTitleRow(
-                              title: '${Language.inst.ALBUMS} • ${Indexer.inst.albumSearchTemp.length}',
+                              title: '${Language.inst.ALBUMS} • ${SearchSortController.inst.albumSearchTemp.length}',
                               icon: Broken.music_dashboard,
                               buttonIcon: Broken.category,
                               buttonText: Language.inst.VIEW_ALL,
@@ -84,9 +84,9 @@ class SearchPage extends StatelessWidget {
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 itemExtent: 132.0,
-                                itemCount: Indexer.inst.albumSearchTemp.length,
+                                itemCount: SearchSortController.inst.albumSearchTemp.length,
                                 itemBuilder: (context, i) {
-                                  final albumName = Indexer.inst.albumSearchTemp[i];
+                                  final albumName = SearchSortController.inst.albumSearchTemp[i];
                                   return Container(
                                     width: 130.0,
                                     margin: const EdgeInsets.only(left: 2.0),
@@ -107,10 +107,10 @@ class SearchPage extends StatelessWidget {
                         ],
 
                         /// Artists
-                        if (Indexer.inst.artistSearchTemp.isNotEmpty) ...[
+                        if (SearchSortController.inst.artistSearchTemp.isNotEmpty) ...[
                           SliverToBoxAdapter(
                             child: SearchPageTitleRow(
-                              title: '${Language.inst.ARTISTS} • ${Indexer.inst.artistSearchTemp.length}',
+                              title: '${Language.inst.ARTISTS} • ${SearchSortController.inst.artistSearchTemp.length}',
                               icon: Broken.profile_2user,
                               buttonIcon: Broken.category,
                               buttonText: Language.inst.VIEW_ALL,
@@ -126,9 +126,9 @@ class SearchPage extends StatelessWidget {
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 itemExtent: 82.0,
-                                itemCount: Indexer.inst.artistSearchTemp.length,
+                                itemCount: SearchSortController.inst.artistSearchTemp.length,
                                 itemBuilder: (context, i) {
-                                  final artistName = Indexer.inst.artistSearchTemp[i];
+                                  final artistName = SearchSortController.inst.artistSearchTemp[i];
                                   return Container(
                                     width: 80.0,
                                     margin: const EdgeInsets.only(left: 2.0),
@@ -148,12 +148,12 @@ class SearchPage extends StatelessWidget {
                         ],
 
                         /// Tracks
-                        if (Indexer.inst.trackSearchTemp.isNotEmpty) ...[
+                        if (SearchSortController.inst.trackSearchTemp.isNotEmpty) ...[
                           SliverToBoxAdapter(
                             child: Tooltip(
                               message: Language.inst.TRACK_PLAY_MODE,
                               child: SearchPageTitleRow(
-                                title: '${Language.inst.TRACKS} • ${Indexer.inst.trackSearchTemp.length}',
+                                title: '${Language.inst.TRACKS} • ${SearchSortController.inst.trackSearchTemp.length}',
                                 icon: Broken.music_circle,
                                 buttonIcon: Broken.play,
                                 buttonText: SettingsController.inst.trackPlayMode.value.toText(),
@@ -165,10 +165,10 @@ class SearchPage extends StatelessWidget {
                             padding: EdgeInsets.only(bottom: 12.0),
                           ),
                           SliverFixedExtentList.builder(
-                            itemCount: Indexer.inst.trackSearchTemp.length,
+                            itemCount: SearchSortController.inst.trackSearchTemp.length,
                             itemExtent: Dimensions.inst.trackTileItemExtent,
                             itemBuilder: (context, i) {
-                              final track = Indexer.inst.trackSearchTemp[i];
+                              final track = SearchSortController.inst.trackSearchTemp[i];
                               return AnimatingTile(
                                 position: i,
                                 child: TrackTile(

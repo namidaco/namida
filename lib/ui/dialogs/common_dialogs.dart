@@ -93,7 +93,7 @@ class NamidaDialogs {
 
   Future<void> showPlaylistDialog(String playlistName) async {
     if (playlistName == k_PLAYLIST_NAME_HISTORY) {
-      final trs = HistoryController.inst.historyTracks.map((e) => e.track).toList();
+      final trs = HistoryController.inst.historyTracks.toTracks();
       await showGeneralPopupDialog(
         trs,
         k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
@@ -142,10 +142,11 @@ class NamidaDialogs {
         ),
       );
     } else {
+      final trackss = playlist.tracks.toTracks();
       await showGeneralPopupDialog(
-        playlist.tracks.map((e) => e.track).toList(),
+        trackss,
         playlist.name.translatePlaylistName(),
-        [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
+        [trackss.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
         playlist.toQueueSource(),
         thirdLineText: playlist.moods.join(', ').overflow,
         playlistName: playlist.name,

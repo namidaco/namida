@@ -4,8 +4,8 @@ import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -47,31 +47,31 @@ class GenresPage extends StatelessWidget {
                   ),
                   isBarVisible: LibraryTab.genres.isBarVisible,
                   showSearchBox: LibraryTab.genres.isSearchBoxVisible,
-                  leftText: Indexer.inst.genreSearchList.length.displayGenreKeyword,
+                  leftText: SearchSortController.inst.genreSearchList.length.displayGenreKeyword,
                   onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.genres),
                   onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.genres),
                   sortByMenuWidget: SortByMenu(
                     title: SettingsController.inst.genreSort.value.toText(),
                     popupMenuChild: const SortByMenuGenres(),
                     isCurrentlyReversed: SettingsController.inst.genreSortReversed.value,
-                    onReverseIconTap: () => Indexer.inst.sortGenres(reverse: !SettingsController.inst.genreSortReversed.value),
+                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !SettingsController.inst.genreSortReversed.value),
                   ),
                   textField: CustomTextFiled(
                     textFieldController: LibraryTab.genres.textSearchController,
                     textFieldHintText: Language.inst.FILTER_GENRES,
-                    onTextFieldValueChanged: (value) => Indexer.inst.searchGenres(value),
+                    onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.genre),
                   ),
                 ),
                 Expanded(
                   child: GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.8, mainAxisSpacing: 8.0),
                     controller: scrollController,
-                    itemCount: Indexer.inst.genreSearchList.length,
+                    itemCount: SearchSortController.inst.genreSearchList.length,
                     padding: const EdgeInsets.only(bottom: kBottomPadding),
                     itemBuilder: (BuildContext context, int i) {
-                      final genre = Indexer.inst.genreSearchList[i];
+                      final genre = SearchSortController.inst.genreSearchList[i];
                       return AnimatingGrid(
-                        columnCount: Indexer.inst.genreSearchList.length,
+                        columnCount: SearchSortController.inst.genreSearchList.length,
                         position: i,
                         shouldAnimate: _shouldAnimate,
                         child: MultiArtworkCard(

@@ -32,6 +32,14 @@ class TrackWithDate {
   }
 }
 
+extension TWDUtils on List<TrackWithDate> {
+  List<Track> toTracks() {
+    final list = <Track>[];
+    loop((e, index) => list.add(e.track));
+    return list;
+  }
+}
+
 class TrackStats {
   /// Path of the track.
   late Track track;

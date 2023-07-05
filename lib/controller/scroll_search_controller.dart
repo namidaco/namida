@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
-import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -116,7 +116,7 @@ class ScrollSearchController {
 
   void resetSearch() {
     searchTextEditingController.clear();
-    Indexer.inst.searchAll('');
+    SearchSortController.inst.searchAll('');
   }
 
   void unfocusKeyboard() => Get.focusScope?.unfocus();
@@ -150,21 +150,7 @@ class ScrollSearchController {
   }
 
   void clearSearchTextField(LibraryTab libraryTab) {
-    if (libraryTab == LibraryTab.tracks) {
-      Indexer.inst.searchTracks('');
-    }
-    if (libraryTab == LibraryTab.albums) {
-      Indexer.inst.searchAlbums('');
-    }
-    if (libraryTab == LibraryTab.artists) {
-      Indexer.inst.searchArtists('');
-    }
-    if (libraryTab == LibraryTab.genres) {
-      Indexer.inst.searchGenres('');
-    }
-    if (libraryTab == LibraryTab.playlists) {
-      PlaylistController.inst.searchPlaylists('');
-    }
+    SearchSortController.inst.searchMedia('', libraryTab.toMediaType());
     isSearchBoxVisibleMap[libraryTab]!.value = true;
     _closeTextController(libraryTab);
   }

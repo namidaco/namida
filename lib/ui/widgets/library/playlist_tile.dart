@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:namida/class/track.dart';
 
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -35,13 +36,14 @@ class PlaylistTile extends StatelessWidget {
             () {
               final playlist = PlaylistController.inst.getPlaylist(playlistName);
               if (playlist == null) return const SizedBox();
+              final tracksRaw = playlist.tracks.toTracks();
 
               return Row(
                 children: [
                   MultiArtworkContainer(
                     heroTag: hero,
                     size: Dimensions.playlistThumbnailSize,
-                    tracks: playlist.tracks.map((e) => e.track).toList(),
+                    tracks: tracksRaw,
                   ),
                   Expanded(
                     child: Column(
@@ -59,7 +61,7 @@ class PlaylistTile extends StatelessWidget {
                         Hero(
                           tag: 'line2_$hero',
                           child: Text(
-                            [playlist.tracks.map((e) => e.track).toList().displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
+                            [tracksRaw.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
                             style: context.textTheme.displaySmall?.copyWith(fontSize: 13.7.multipliedFontScale),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -78,7 +80,7 @@ class PlaylistTile extends StatelessWidget {
                   ),
                   const SizedBox(width: 12.0),
                   Text(
-                    playlist.tracks.map((e) => e.track).toList().totalDurationFormatted,
+                    tracksRaw.totalDurationFormatted,
                     style: context.textTheme.displaySmall?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),

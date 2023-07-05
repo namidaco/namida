@@ -5,8 +5,8 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
 
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -30,7 +30,7 @@ class AlbumsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final finalAlbums = albums ?? Indexer.inst.albumSearchList;
+    final finalAlbums = albums ?? SearchSortController.inst.albumSearchList;
     final scrollController = LibraryTab.albums.scrollController;
 
     return BackgroundWrapper(
@@ -58,12 +58,12 @@ class AlbumsPage extends StatelessWidget {
                     title: SettingsController.inst.albumSort.value.toText(),
                     popupMenuChild: const SortByMenuAlbums(),
                     isCurrentlyReversed: SettingsController.inst.albumSortReversed.value,
-                    onReverseIconTap: () => Indexer.inst.sortAlbums(reverse: !SettingsController.inst.albumSortReversed.value),
+                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !SettingsController.inst.albumSortReversed.value),
                   ),
                   textField: CustomTextFiled(
                     textFieldController: LibraryTab.albums.textSearchController,
                     textFieldHintText: Language.inst.FILTER_ALBUMS,
-                    onTextFieldValueChanged: (value) => Indexer.inst.searchAlbums(value),
+                    onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.album),
                   ),
                 ),
               ),

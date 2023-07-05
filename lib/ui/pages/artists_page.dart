@@ -4,8 +4,8 @@ import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -28,7 +28,7 @@ class ArtistsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final finalArtists = artists ?? Indexer.inst.artistSearchList;
+    final finalArtists = artists ?? SearchSortController.inst.artistSearchList;
     final scrollController = LibraryTab.artists.scrollController;
 
     return BackgroundWrapper(
@@ -55,12 +55,12 @@ class ArtistsPage extends StatelessWidget {
                     title: SettingsController.inst.artistSort.value.toText(),
                     popupMenuChild: const SortByMenuArtists(),
                     isCurrentlyReversed: SettingsController.inst.artistSortReversed.value,
-                    onReverseIconTap: () => Indexer.inst.sortArtists(reverse: !SettingsController.inst.artistSortReversed.value),
+                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.artist, reverse: !SettingsController.inst.artistSortReversed.value),
                   ),
                   textField: CustomTextFiled(
                     textFieldController: LibraryTab.artists.textSearchController,
                     textFieldHintText: Language.inst.FILTER_ARTISTS,
-                    onTextFieldValueChanged: (value) => Indexer.inst.searchArtists(value),
+                    onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.artist),
                   ),
                 ),
                 if (countPerRow == 1)

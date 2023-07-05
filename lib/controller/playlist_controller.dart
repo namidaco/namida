@@ -4,14 +4,12 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/scroll_search_controller.dart';
-import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -26,81 +24,10 @@ class PlaylistController {
   Playlist? getPlaylist(String name) => name == k_PLAYLIST_NAME_FAV ? favouritesPlaylist.value : playlistsMap[name];
 
   final RxMap<String, Playlist> playlistsMap = <String, Playlist>{}.obs;
-  final RxList<String> playlistSearchList = <String>[].obs;
 
   late final Rx<Playlist> favouritesPlaylist;
 
   final RxBool canReorderTracks = false.obs;
-
-  void searchPlaylists(String text) {
-    playlistSearchList.clear();
-
-    if (text == '') {
-      LibraryTab.playlists.textSearchController?.clear();
-      playlistSearchList.addAll(playlistsMap.keys);
-      return;
-    }
-    // TODO(MSOB7YY): expose in settings
-    final psf = SettingsController.inst.playlistSearchFilter.toList();
-    final sTitle = psf.contains('name');
-    final sCreationDate = psf.contains('creationDate');
-    final sModifiedDate = psf.contains('modifiedDate');
-    final sComment = psf.contains('comment');
-    final sMoods = psf.contains('moods');
-    final formatDate = DateFormat('yyyyMMdd');
-
-    final results = playlistsMap.entries.where((e) {
-      final playlistName = e.key;
-      final item = e.value;
-
-      final lctext = textCleanedForSearch(text);
-      final dateCreatedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.creationDate));
-      final dateModifiedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.modifiedDate));
-
-      return (sTitle && textCleanedForSearch(playlistName.translatePlaylistName()).contains(lctext)) ||
-          (sCreationDate && textCleanedForSearch(dateCreatedFormatted.toString()).contains(lctext)) ||
-          (sModifiedDate && textCleanedForSearch(dateModifiedFormatted.toString()).contains(lctext)) ||
-          (sComment && textCleanedForSearch(item.comment).contains(lctext)) ||
-          (sMoods && item.moods.any((element) => textCleanedForSearch(element).contains(lctext)));
-    });
-    playlistSearchList.addAll(results.map((e) => e.key));
-  }
-
-  /// Sorts Playlists and Saves automatically to settings
-  void sortPlaylists({GroupSortType? sortBy, bool? reverse}) {
-    sortBy ??= SettingsController.inst.playlistSort.value;
-    reverse ??= SettingsController.inst.playlistSortReversed.value;
-
-    final playlistList = playlistsMap.entries.toList();
-    switch (sortBy) {
-      case GroupSortType.title:
-        playlistList.sort((a, b) => a.key.translatePlaylistName().compareTo(b.key.translatePlaylistName()));
-        break;
-      case GroupSortType.creationDate:
-        playlistList.sort((a, b) => a.value.creationDate.compareTo(b.value.creationDate));
-        break;
-      case GroupSortType.modifiedDate:
-        playlistList.sort((a, b) => a.value.modifiedDate.compareTo(b.value.modifiedDate));
-        break;
-      case GroupSortType.duration:
-        playlistList.sort((a, b) => a.value.tracks.map((e) => e.track).toList().totalDurationInS.compareTo(b.value.tracks.map((e) => e.track).toList().totalDurationInS));
-        break;
-      case GroupSortType.numberOfTracks:
-        playlistList.sort((a, b) => a.value.tracks.length.compareTo(b.value.tracks.length));
-        break;
-
-      default:
-        null;
-    }
-
-    playlistsMap
-      ..clear()
-      ..addEntries(reverse ? playlistList.reversed : playlistList);
-
-    SettingsController.inst.save(playlistSort: sortBy, playlistSortReversed: reverse);
-
-    searchPlaylists(LibraryTab.playlists.textSearchController?.text ?? '');
-  }
 
   void addNewPlaylist(
     String name, {
@@ -131,7 +58,7 @@ class PlaylistController {
   Future<void> reAddPlaylist(Playlist playlist, int modifiedDate) async {
     final newPlaylist = playlist.copyWith(modifiedDate: modifiedDate);
     _updateMap(newPlaylist);
-    sortPlaylists();
+    _sortPlaylists();
     await _savePlaylistToStorage(playlist);
   }
 
@@ -300,7 +227,7 @@ class PlaylistController {
     }
 
     /// Sorting since [await for] doesnt maintain order
-    sortPlaylists();
+    _sortPlaylists();
   }
 
   Future<void> prepareDefaultPlaylistsFile() async {
@@ -338,13 +265,15 @@ class PlaylistController {
   void _updateMap(Playlist playlist, [String? name]) {
     name ??= playlist.name;
     playlistsMap[name] = playlist;
-    sortPlaylists();
+    _sortPlaylists();
   }
 
   void _removeFromMap(Playlist playlist) {
     playlistsMap.remove(playlist.name);
-    sortPlaylists();
+    _sortPlaylists();
   }
+
+  void _sortPlaylists() => SearchSortController.inst.sortMedia(MediaType.playlist);
 
   final String kUnsupportedOperationMessage = 'Operation not supported for this type of playlist';
   UnsupportedError get unsupportedOperation => UnsupportedError(kUnsupportedOperationMessage);

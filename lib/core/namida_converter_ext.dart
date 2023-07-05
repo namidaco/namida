@@ -13,6 +13,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -44,6 +45,23 @@ extension LibraryTabToEnum on int {
 }
 
 extension LibraryTabUtils on LibraryTab {
+  MediaType toMediaType() {
+    switch (this) {
+      case LibraryTab.tracks:
+        return MediaType.track;
+      case LibraryTab.albums:
+        return MediaType.album;
+      case LibraryTab.artists:
+        return MediaType.artist;
+      case LibraryTab.genres:
+        return MediaType.genre;
+      case LibraryTab.folders:
+        return MediaType.folder;
+      default:
+        return MediaType.track;
+    }
+  }
+
   int toInt() => SettingsController.inst.libraryTabs.toList().indexOf(this);
 
   Widget toWidget([int? gridCount, bool animateTiles = true]) {
@@ -421,7 +439,7 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
     final trs = <Track>[];
     void addThese(Iterable<Track> tracks) => trs.addAll(tracks.withLimit(limit));
     if (this == QueueSource.allTracks) {
-      addThese(Indexer.inst.trackSearchList.toList());
+      addThese(SearchSortController.inst.trackSearchList.toList());
     }
     // onMediaTap should have handled it already.
     if (this == QueueSource.album) {
@@ -440,18 +458,18 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
       addThese(SelectedTracksController.inst.currentAllTracks);
     }
     if (this == QueueSource.search) {
-      addThese(Indexer.inst.trackSearchTemp.toList());
+      addThese(SearchSortController.inst.trackSearchTemp.toList());
     }
     if (this == QueueSource.mostPlayed) {
       addThese(HistoryController.inst.mostPlayedTracks);
     }
     if (this == QueueSource.history) {
       dayOfHistory != null
-          ? addThese(HistoryController.inst.historyMap.value[dayOfHistory]?.map((e) => e.track).toList().reversed ?? [])
+          ? addThese(HistoryController.inst.historyMap.value[dayOfHistory]?.toTracks().reversed ?? [])
           : addThese(HistoryController.inst.historyTracks.withLimit(limit).map((e) => e.track));
     }
     if (this == QueueSource.favourites) {
-      addThese(PlaylistController.inst.favouritesPlaylist.value.tracks.map((e) => e.track).toList());
+      addThese(PlaylistController.inst.favouritesPlaylist.value.tracks.toTracks());
     }
     if (this == QueueSource.playerQueue) {
       addThese(Player.inst.currentQueue.toList());
@@ -769,7 +787,7 @@ extension RouteUtils on NamidaRoute {
     final tr = <Track>[];
     switch (route) {
       case RouteType.PAGE_allTracks:
-        tr.addAll(Indexer.inst.trackSearchList);
+        tr.addAll(SearchSortController.inst.trackSearchList);
       case RouteType.PAGE_folders:
         tr.addAll(Folders.inst.currentTracks);
       case RouteType.SUBPAGE_albumTracks:

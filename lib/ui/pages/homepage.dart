@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -264,7 +264,7 @@ class NamidaSearchBar extends StatelessWidget {
         ScrollSearchController.inst.isGlobalSearchMenuShown.value = isOpen;
         ScrollSearchController.inst.resetSearch();
       },
-      onChanged: (value) => Indexer.inst.searchAll(value),
+      onChanged: (value) => SearchSortController.inst.searchAll(value),
     );
   }
 }
@@ -275,7 +275,7 @@ class AlbumSearchResultsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlbumsPage(
-      albums: Indexer.inst.albumSearchTemp,
+      albums: SearchSortController.inst.albumSearchTemp,
       countPerRow: SettingsController.inst.albumGridCount.value,
     );
   }
@@ -287,7 +287,7 @@ class ArtistSearchResultsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ArtistsPage(
-      artists: Indexer.inst.artistSearchTemp,
+      artists: SearchSortController.inst.artistSearchTemp,
       countPerRow: SettingsController.inst.artistGridCount.value,
     );
   }

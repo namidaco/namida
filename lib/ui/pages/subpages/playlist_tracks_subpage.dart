@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:namida/class/track.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
 import 'package:namida/controller/current_color.dart';
@@ -98,7 +99,7 @@ class HistoryTracksPage extends StatelessWidget {
                         iconSize: 22.0,
                         onPressed: () {
                           showGeneralPopupDialog(
-                            tracks.map((e) => e.track).toList(),
+                            tracks.toTracks(),
                             dayInMs.dateFormattedOriginal,
                             tracks.length.displayTrackKeyword,
                             QueueSource.history,
@@ -220,7 +221,7 @@ class NormalPlaylistTracksPage extends StatelessWidget {
           if (playlist == null) return const SizedBox();
 
           final tracksWithDate = playlist.tracks;
-          final tracks = tracksWithDate.map((e) => e.track).toList();
+          final tracks = tracksWithDate.toTracks();
           final reorderable = PlaylistController.inst.canReorderTracks.value;
 
           return NamidaTracksList(

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
-import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -21,7 +20,7 @@ class SortByMenuTracks extends StatelessWidget {
           children: [
             ListTileWithCheckMark(
               active: SettingsController.inst.tracksSortReversed.value,
-              onTap: () => Indexer.inst.sortTracks(reverse: !SettingsController.inst.tracksSortReversed.value),
+              onTap: () => SearchSortController.inst.sortMedia(MediaType.track, reverse: !SettingsController.inst.tracksSortReversed.value),
             ),
             ...[
               SortType.title,
@@ -43,7 +42,7 @@ class SortByMenuTracks extends StatelessWidget {
               (e) => SmallListTile(
                 title: e.toText(),
                 active: tracksSort == e,
-                onTap: () => Indexer.inst.sortTracks(sortBy: e),
+                onTap: () => SearchSortController.inst.sortMedia(MediaType.track, sortBy: e),
               ),
             ),
           ],
@@ -65,7 +64,7 @@ class SortByMenuAlbums extends StatelessWidget {
           children: [
             ListTileWithCheckMark(
               active: SettingsController.inst.albumSortReversed.value,
-              onTap: () => Indexer.inst.sortAlbums(reverse: !SettingsController.inst.albumSortReversed.value),
+              onTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !SettingsController.inst.albumSortReversed.value),
             ),
             ...[
               GroupSortType.album,
@@ -80,7 +79,7 @@ class SortByMenuAlbums extends StatelessWidget {
               (e) => SmallListTile(
                 title: e.toText(),
                 active: albumsort == e,
-                onTap: () => Indexer.inst.sortAlbums(sortBy: e),
+                onTap: () => SearchSortController.inst.sortMedia(MediaType.album, groupSortBy: e),
               ),
             ),
           ],
@@ -102,7 +101,7 @@ class SortByMenuArtists extends StatelessWidget {
           children: [
             ListTileWithCheckMark(
               active: SettingsController.inst.artistSortReversed.value,
-              onTap: () => Indexer.inst.sortArtists(reverse: !SettingsController.inst.artistSortReversed.value),
+              onTap: () => SearchSortController.inst.sortMedia(MediaType.artist, reverse: !SettingsController.inst.artistSortReversed.value),
             ),
             ...[
               GroupSortType.artistsList,
@@ -119,7 +118,7 @@ class SortByMenuArtists extends StatelessWidget {
               (e) => SmallListTile(
                 title: e.toText(),
                 active: artistSort == e,
-                onTap: () => Indexer.inst.sortArtists(sortBy: e),
+                onTap: () => SearchSortController.inst.sortMedia(MediaType.artist, groupSortBy: e),
               ),
             ),
           ],
@@ -141,7 +140,7 @@ class SortByMenuGenres extends StatelessWidget {
           children: [
             ListTileWithCheckMark(
               active: SettingsController.inst.genreSortReversed.value,
-              onTap: () => Indexer.inst.sortGenres(reverse: !SettingsController.inst.genreSortReversed.value),
+              onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !SettingsController.inst.genreSortReversed.value),
             ),
             ...[
               GroupSortType.genresList,
@@ -157,7 +156,7 @@ class SortByMenuGenres extends StatelessWidget {
               (e) => SmallListTile(
                 title: e.toText(),
                 active: genreSort == e,
-                onTap: () => Indexer.inst.sortGenres(sortBy: e),
+                onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, groupSortBy: e),
               ),
             ),
           ],
@@ -179,7 +178,7 @@ class SortByMenuPlaylist extends StatelessWidget {
           children: [
             ListTileWithCheckMark(
               active: SettingsController.inst.playlistSortReversed.value,
-              onTap: () => PlaylistController.inst.sortPlaylists(reverse: !SettingsController.inst.playlistSortReversed.value),
+              onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !SettingsController.inst.playlistSortReversed.value),
             ),
             ...[
               GroupSortType.title,
@@ -191,7 +190,7 @@ class SortByMenuPlaylist extends StatelessWidget {
               (e) => SmallListTile(
                 title: e.toText(),
                 active: playlistSort == e,
-                onTap: () => PlaylistController.inst.sortPlaylists(sortBy: e),
+                onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, groupSortBy: e),
               ),
             ),
           ],

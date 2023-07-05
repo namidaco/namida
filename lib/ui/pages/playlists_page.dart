@@ -10,6 +10,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -66,19 +67,19 @@ class PlaylistsPage extends StatelessWidget {
                   ),
                   isBarVisible: LibraryTab.playlists.isBarVisible,
                   showSearchBox: LibraryTab.playlists.isSearchBoxVisible,
-                  leftText: PlaylistController.inst.playlistSearchList.length.displayPlaylistKeyword,
+                  leftText: SearchSortController.inst.playlistSearchList.length.displayPlaylistKeyword,
                   onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.playlists),
                   onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.playlists),
                   sortByMenuWidget: SortByMenu(
                     title: SettingsController.inst.playlistSort.value.toText(),
                     popupMenuChild: const SortByMenuPlaylist(),
                     isCurrentlyReversed: SettingsController.inst.playlistSortReversed.value,
-                    onReverseIconTap: () => PlaylistController.inst.sortPlaylists(reverse: !SettingsController.inst.playlistSortReversed.value),
+                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !SettingsController.inst.playlistSortReversed.value),
                   ),
                   textField: CustomTextFiled(
                     textFieldController: LibraryTab.playlists.textSearchController,
                     textFieldHintText: Language.inst.FILTER_PLAYLISTS,
-                    onTextFieldValueChanged: (value) => PlaylistController.inst.searchPlaylists(value),
+                    onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.playlist),
                   ),
                 ),
               ),
@@ -184,10 +185,10 @@ class PlaylistsPage extends StatelessWidget {
                       const SliverPadding(padding: EdgeInsets.only(top: 10.0)),
                       if (countPerRow == 1)
                         SliverFixedExtentList.builder(
-                          itemCount: PlaylistController.inst.playlistSearchList.length,
+                          itemCount: SearchSortController.inst.playlistSearchList.length,
                           itemExtent: Dimensions.playlistTileItemExtent,
                           itemBuilder: (context, i) {
-                            final key = PlaylistController.inst.playlistSearchList[i];
+                            final key = SearchSortController.inst.playlistSearchList[i];
                             final playlist = PlaylistController.inst.playlistsMap[key]!;
                             return AnimatingTile(
                               position: i,
@@ -208,17 +209,17 @@ class PlaylistsPage extends StatelessWidget {
                             childAspectRatio: 0.8,
                             mainAxisSpacing: 8.0,
                           ),
-                          itemCount: PlaylistController.inst.playlistSearchList.length,
+                          itemCount: SearchSortController.inst.playlistSearchList.length,
                           itemBuilder: (context, i) {
-                            final key = PlaylistController.inst.playlistSearchList[i];
+                            final key = SearchSortController.inst.playlistSearchList[i];
                             final playlist = PlaylistController.inst.playlistsMap[key]!;
                             return AnimatingGrid(
-                              columnCount: PlaylistController.inst.playlistSearchList.length,
+                              columnCount: SearchSortController.inst.playlistSearchList.length,
                               position: i,
                               shouldAnimate: _shouldAnimate,
                               child: MultiArtworkCard(
                                 heroTag: 'playlist_${playlist.name}',
-                                tracks: playlist.tracks.map((e) => e.track).toList(),
+                                tracks: playlist.tracks.toTracks(),
                                 name: playlist.name.translatePlaylistName(),
                                 gridCount: countPerRow,
                                 showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(key),
