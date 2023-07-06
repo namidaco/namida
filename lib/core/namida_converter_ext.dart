@@ -885,7 +885,7 @@ extension RouteUtils on NamidaRoute {
     final shouldHideInitialActions = route == RouteType.PAGE_stats || route == RouteType.SETTINGS_page || route == RouteType.SETTINGS_subpage;
     return <Widget>[
       getAnimatedCrossFade(child: const NamidaStatsIcon(), shouldShow: !shouldHideInitialActions),
-      getAnimatedCrossFade(child: const ParsingJsonPercentage(size: 30.0), shouldShow: true),
+      getAnimatedCrossFade(child: const ParsingJsonPercentage(size: 30.0), shouldShow: route != RouteType.SETTINGS_page && route != RouteType.SETTINGS_subpage),
       getAnimatedCrossFade(child: const NamidaSettingsButton(), shouldShow: !shouldHideInitialActions),
 
       getAnimatedCrossFade(
@@ -907,6 +907,8 @@ extension RouteUtils on NamidaRoute {
         shouldShow:
             route == RouteType.SUBPAGE_albumTracks || route == RouteType.SUBPAGE_artistTracks || route == RouteType.SUBPAGE_genreTracks || route == RouteType.SUBPAGE_queueTracks,
       ),
+      getAnimatedCrossFade(child: const HistoryJumpToDayIcon(), shouldShow: route == RouteType.SUBPAGE_historyTracks),
+
       // ---- Playlist Tracks ----
       getAnimatedCrossFade(
         child: Obx(

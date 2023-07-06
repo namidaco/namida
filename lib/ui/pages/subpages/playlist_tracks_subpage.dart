@@ -38,16 +38,17 @@ class HistoryTracksPage extends StatelessWidget {
             title: k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
             subtitle: HistoryController.inst.historyTracksLength.displayTrackKeyword,
             heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
+            tracks: QueueSource.history.toTracks(),
             imageWidget: MultiArtworkContainer(
               heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
               size: Get.width * 0.35,
               tracks: QueueSource.history.toTracks(4),
             ),
-            tracks: QueueSource.history.toTracks(),
+            bottomPadding: 8.0,
           ),
           itemBuilder: (context, index) {
             final day = HistoryController.inst.historyDays.toList()[index];
-            final dayInMs = (day * 8.64e7).round();
+            final dayInMs = (day * msInDay).round();
             final tracks = HistoryController.inst.historyMap.value[day] ?? [];
 
             return StickyHeaderBuilder(

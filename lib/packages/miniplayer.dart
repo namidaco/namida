@@ -1284,41 +1284,36 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                                 Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_IN_HISTORY);
                                                                 return;
                                                               }
-                                                              List<int> dates = [];
-                                                              final dts = [historyTracks.last.dateAdded, historyTracks.first.dateAdded];
-                                                              dts.sortBy((e) => e);
-                                                              final firstDateInHistory = dts.first;
-                                                              final lastDateInHistory = dts.last;
+                                                              List<DateTime?> dates = [];
                                                               NamidaNavigator.inst.navigateDialog(
-                                                                Transform.scale(
+                                                                CustomBlurryDialog(
                                                                   scale: 0.9,
-                                                                  child: CustomBlurryDialog(
-                                                                    normalTitleStyle: true,
-                                                                    insetPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-                                                                    actions: [
-                                                                      const CancelButton(),
-                                                                      ElevatedButton(
-                                                                        onPressed: () {
-                                                                          final tracks = generateTracksFromDates(dates.first, dates.last);
-                                                                          if (tracks.isEmpty) {
-                                                                            Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES);
-                                                                            return;
-                                                                          }
-                                                                          Player.inst.addToQueue(tracks);
-                                                                          NamidaNavigator.inst.closeDialog();
-                                                                        },
-                                                                        child: Text(Language.inst.GENERATE),
-                                                                      ),
-                                                                    ],
-                                                                    child: CalendarDatePicker2(
-                                                                      onValueChanged: (value) => dates.assignAll(value.map((e) => e?.millisecondsSinceEpoch ?? 0).toList()),
-                                                                      config: CalendarDatePicker2Config(
-                                                                        calendarType: CalendarDatePicker2Type.range,
-                                                                        firstDate: DateTime.fromMillisecondsSinceEpoch(firstDateInHistory),
-                                                                        lastDate: DateTime.fromMillisecondsSinceEpoch(lastDateInHistory),
-                                                                      ),
-                                                                      value: const [],
+                                                                  title: Language.inst.GENERATE_FROM_DATES,
+                                                                  normalTitleStyle: true,
+                                                                  insetPadding: const EdgeInsets.symmetric(horizontal: 28.0),
+                                                                  actions: [
+                                                                    const CancelButton(),
+                                                                    ElevatedButton(
+                                                                      onPressed: () {
+                                                                        final tracks = generateTracksFromHistoryDates(dates.firstOrNull, dates.lastOrNull);
+                                                                        if (tracks.isEmpty) {
+                                                                          Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES);
+                                                                          return;
+                                                                        }
+                                                                        Player.inst.addToQueue(tracks);
+                                                                        NamidaNavigator.inst.closeDialog();
+                                                                      },
+                                                                      child: Text(Language.inst.GENERATE),
                                                                     ),
+                                                                  ],
+                                                                  child: CalendarDatePicker2(
+                                                                    onValueChanged: (value) => dates.assignAll(value),
+                                                                    config: CalendarDatePicker2Config(
+                                                                      calendarType: CalendarDatePicker2Type.range,
+                                                                      firstDate: HistoryController.inst.oldestTrack?.dateAdded.milliSecondsSinceEpoch,
+                                                                      lastDate: HistoryController.inst.newestTrack?.dateAdded.milliSecondsSinceEpoch,
+                                                                    ),
+                                                                    value: const [],
                                                                   ),
                                                                 ),
                                                               );

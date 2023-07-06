@@ -86,10 +86,9 @@ class HistoryController {
   /// By using this instead of [addTracksToHistory], you gurantee that you WILL call [updateMostPlayedPlaylist], [sortHistoryTracks] and [saveHistoryToStorage].
   /// Use this ONLY when adding large number of tracks at once, such as adding from youtube or lastfm history.
   List<int> addTracksToHistoryOnly(List<TrackWithDate> tracks) {
-    const msinday = 86400000;
     final daysToSave = <int>[];
     tracks.loop((e, i) {
-      final trackday = (e.dateAdded / msinday).floor();
+      final trackday = (e.dateAdded / msInDay).floor();
       daysToSave.add(trackday);
       historyMap.value.addForce(trackday, e);
     });

@@ -100,6 +100,8 @@ class Language {
   String get UPDATING => 'Updating';
   String get SKIP => 'Skip';
   String get HIGH_MATCHES => 'High matches';
+  String get JUMP => 'Jump';
+  String get JUMP_TO_DAY => 'Jump to Day';
 
   ///
   String get REMOVE_WHITESPACES => 'Remove Whitespaces';
@@ -175,7 +177,7 @@ class Language {
   String get NO_ENOUGH_TRACKS => 'You don\'t have much tracks..';
   String get GENERATE_FROM_DATES => 'Time Range';
   String get GENERATE_FROM_DATES_SUBTITLE => 'Generate tracks you listened to in a time range';
-  String get NO_TRACKS_FOUND_BETWEEN_DATES => 'this timerange doesn\'t have any tracks.';
+  String get NO_TRACKS_FOUND_BETWEEN_DATES => 'This timerange doesn\'t have any tracks.';
   String get NO_TRACKS_FOUND_IN_DIRECTORY => 'No tracks found in this directory';
   String get NEW_TRACKS_MOODS => 'Mood';
   String get NEW_TRACKS_MOODS_SUBTITLE => 'Generate tracks based on available moods';

@@ -252,12 +252,21 @@ List<Track> generateRecommendedTrack(Track track) {
   return sortedByValueMap.take(20).map((e) => e.key).toList();
 }
 
-/// if [maxCount == null], it will generate all available tracks
-List<Track> generateTracksFromDates(int oldestDate, int newestDate, [int? maxCount]) {
-  // TODO: improve by looping only on dates in between.
-  final historytracks = HistoryController.inst.historyTracks;
-  final tracksAvailable =
-      historytracks.where((element) => element.dateAdded >= oldestDate && element.dateAdded <= (newestDate + 1.days.inMilliseconds)).map((e) => e.track).toSet().toList();
+/// if [maxCount == null], it will return all available tracks
+List<Track> generateTracksFromHistoryDates(DateTime? oldestDate, DateTime? newestDate, [int? maxCount]) {
+  if (oldestDate == null || newestDate == null) return [];
+
+  final tracksAvailable = <Track>[];
+  final entries = HistoryController.inst.historyMap.value.entries.toList();
+
+  entries.loop((entry, index) {
+    final day = entry.key;
+    if (day >= oldestDate.millisecondsSinceEpoch.toDaysSinceEpoch() && day <= (newestDate.millisecondsSinceEpoch.toDaysSinceEpoch())) {
+      tracksAvailable.addAll(entry.value.toTracks());
+    }
+  });
+
+  tracksAvailable.removeDuplicates((element) => element.path);
 
   if (maxCount == null) {
     return tracksAvailable;

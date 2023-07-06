@@ -30,7 +30,8 @@ class ArtistTracksPage extends StatelessWidget {
         header: Column(
           children: [
             SubpagesTopContainer(
-              verticalPadding: 8.0,
+              topPadding: 8.0,
+              bottomPadding: 8.0,
               title: name,
               source: QueueSource.artist,
               subtitle: [

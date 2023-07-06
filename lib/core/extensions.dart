@@ -156,6 +156,10 @@ extension TracksUtils on List<Track> {
   }
 }
 
+extension MSSEUtils on int? {
+  DateTime? get milliSecondsSinceEpoch => this == null ? null : DateTime.fromMillisecondsSinceEpoch(this!);
+}
+
 extension TotalTime on int {
   /// Converts milliSecondsSinceEpoch to DaysSinceEpoch
   int toDaysSinceEpoch() {

@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
 
 import 'package:checkmark/checkmark.dart';
@@ -15,6 +16,7 @@ import 'package:wheel_slider/wheel_slider.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -284,6 +286,7 @@ class CustomBlurryDialog extends StatelessWidget {
   final EdgeInsets? insetPadding;
   final EdgeInsetsGeometry? contentPadding;
   final void Function()? onDismissing;
+  final double scale;
   const CustomBlurryDialog({
     super.key,
     this.child,
@@ -302,6 +305,7 @@ class CustomBlurryDialog extends StatelessWidget {
     this.onDismissing,
     this.leftAction,
     this.titleWidget,
+    this.scale = 0.96,
   });
 
   @override
@@ -326,104 +330,107 @@ class CustomBlurryDialog extends StatelessWidget {
             },
             child: Container(
               color: Colors.black45,
-              child: Center(
-                child: SingleChildScrollView(
-                  child: Dialog(
-                    surfaceTintColor: Colors.transparent,
-                    insetPadding: insetPadding ?? const EdgeInsets.symmetric(horizontal: 50, vertical: 32),
-                    clipBehavior: Clip.antiAlias,
-                    child: GestureDetector(
-                      onTap: () {},
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          /// Title.
-                          if (titleWidget != null) titleWidget!,
-                          if (titleWidget == null)
-                            normalTitleStyle
-                                ? Padding(
-                                    padding: const EdgeInsets.only(top: 24.0, left: 24.0, right: 24.0),
-                                    child: Row(
-                                      children: [
-                                        if (icon != null || isWarning) ...[
-                                          Icon(
-                                            isWarning ? Broken.warning_2 : icon,
-                                          ),
-                                          const SizedBox(
-                                            width: 10.0,
-                                          ),
-                                        ],
-                                        Expanded(
-                                          child: Text(
-                                            isWarning ? Language.inst.WARNING : title ?? '',
-                                            style: context.textTheme.displayLarge,
-                                          ),
-                                        ),
-                                        if (trailingWidgets != null) ...trailingWidgets!
-                                      ],
-                                    ),
-                                  )
-                                : Container(
-                                    color: context.theme.cardColor,
-                                    padding: const EdgeInsets.all(16),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        if (icon != null) ...[
-                                          Icon(
-                                            icon,
-                                          ),
-                                          const SizedBox(
-                                            width: 10.0,
-                                          ),
-                                        ],
-                                        Text(
-                                          title ?? '',
-                                          style: context.theme.textTheme.displayMedium,
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                          /// Body.
-                          Padding(
-                            padding: contentPadding ?? const EdgeInsets.all(14.0),
-                            child: SizedBox(
-                              width: context.width,
-                              child: bodyText != null
+              child: Transform.scale(
+                scale: scale,
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: Dialog(
+                      surfaceTintColor: Colors.transparent,
+                      insetPadding: insetPadding ?? const EdgeInsets.symmetric(horizontal: 50, vertical: 32),
+                      clipBehavior: Clip.antiAlias,
+                      child: GestureDetector(
+                        onTap: () {},
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            /// Title.
+                            if (titleWidget != null) titleWidget!,
+                            if (titleWidget == null)
+                              normalTitleStyle
                                   ? Padding(
-                                      padding: const EdgeInsets.all(12.0),
-                                      child: Text(
-                                        bodyText!,
-                                        style: context.textTheme.displayMedium,
+                                      padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
+                                      child: Row(
+                                        children: [
+                                          if (icon != null || isWarning) ...[
+                                            Icon(
+                                              isWarning ? Broken.warning_2 : icon,
+                                            ),
+                                            const SizedBox(
+                                              width: 10.0,
+                                            ),
+                                          ],
+                                          Expanded(
+                                            child: Text(
+                                              isWarning ? Language.inst.WARNING : title ?? '',
+                                              style: context.textTheme.displayLarge,
+                                            ),
+                                          ),
+                                          if (trailingWidgets != null) ...trailingWidgets!
+                                        ],
                                       ),
                                     )
-                                  : child,
-                            ),
-                          ),
+                                  : Container(
+                                      color: context.theme.cardColor,
+                                      padding: const EdgeInsets.all(16),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          if (icon != null) ...[
+                                            Icon(
+                                              icon,
+                                            ),
+                                            const SizedBox(
+                                              width: 10.0,
+                                            ),
+                                          ],
+                                          Text(
+                                            title ?? '',
+                                            style: context.theme.textTheme.displayMedium,
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
 
-                          /// Actions.
-                          if (actions != null)
+                            /// Body.
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.max,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  if (leftAction != null) ...[
-                                    const SizedBox(width: 6.0),
-                                    leftAction!,
-                                    const SizedBox(width: 6.0),
-                                    const Spacer(),
-                                  ],
-                                  ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
-                                ],
+                              padding: contentPadding ?? const EdgeInsets.all(14.0),
+                              child: SizedBox(
+                                width: context.width,
+                                child: bodyText != null
+                                    ? Padding(
+                                        padding: const EdgeInsets.all(12.0),
+                                        child: Text(
+                                          bodyText!,
+                                          style: context.textTheme.displayMedium,
+                                        ),
+                                      )
+                                    : child,
                               ),
                             ),
-                        ],
+
+                            /// Actions.
+                            if (actions != null)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    if (leftAction != null) ...[
+                                      const SizedBox(width: 6.0),
+                                      leftAction!,
+                                      const SizedBox(width: 6.0),
+                                      const Spacer(),
+                                    ],
+                                    ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -1215,7 +1222,8 @@ class SubpagesTopContainer extends StatelessWidget {
   final String subtitle;
   final String thirdLineText;
   final double? height;
-  final double verticalPadding;
+  final double topPadding;
+  final double bottomPadding;
   final Widget imageWidget;
   final List<Track> tracks;
   final QueueSource source;
@@ -1228,7 +1236,8 @@ class SubpagesTopContainer extends StatelessWidget {
     this.height,
     required this.imageWidget,
     required this.tracks,
-    this.verticalPadding = 16.0,
+    this.topPadding = 16.0,
+    this.bottomPadding = 16.0,
     required this.source,
     required this.heroTag,
   });
@@ -1239,7 +1248,7 @@ class SubpagesTopContainer extends StatelessWidget {
     return Container(
       alignment: Alignment.center,
       padding: const EdgeInsets.all(12.0),
-      margin: EdgeInsets.symmetric(vertical: verticalPadding),
+      margin: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
       height: height,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1969,6 +1978,55 @@ class NamidaInkWell extends StatelessWidget {
               )
             : null,
       ),
+    );
+  }
+}
+
+class HistoryJumpToDayIcon extends StatelessWidget {
+  const HistoryJumpToDayIcon({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaIconButton(
+      icon: Broken.calendar,
+      tooltip: Language.inst.JUMP_TO_DAY,
+      padding: const EdgeInsets.only(right: 8.0, left: 2.0),
+      onPressed: () {
+        int dayToScrollTo = 0;
+        NamidaNavigator.inst.navigateDialog(
+          CustomBlurryDialog(
+            scale: 0.9,
+            title: Language.inst.JUMP_TO_DAY,
+            normalTitleStyle: true,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 28.0),
+            actions: [
+              const CancelButton(),
+              ElevatedButton(
+                onPressed: () {
+                  NamidaNavigator.inst.closeDialog();
+                  final days = HistoryController.inst.historyDays.toList();
+                  days.removeWhere((element) => element <= dayToScrollTo);
+                  final itemExtents = Dimensions.inst.allItemsExtentsHistory.toList();
+                  double totalScrollOffset = 0;
+                  days.removeLast();
+                  days.loop((e, index) => totalScrollOffset += itemExtents[index]);
+                  HistoryController.inst.scrollController.jumpTo(totalScrollOffset + 100.0);
+                },
+                child: Text(Language.inst.JUMP),
+              ),
+            ],
+            child: CalendarDatePicker2(
+              onValueChanged: (value) => dayToScrollTo = value.firstOrNull?.millisecondsSinceEpoch.toDaysSinceEpoch() ?? 0,
+              config: CalendarDatePicker2Config(
+                calendarType: CalendarDatePicker2Type.single,
+                firstDate: HistoryController.inst.oldestTrack?.dateAdded.milliSecondsSinceEpoch,
+                lastDate: HistoryController.inst.newestTrack?.dateAdded.milliSecondsSinceEpoch,
+              ),
+              value: const [],
+            ),
+          ),
+        );
+      },
     );
   }
 }
