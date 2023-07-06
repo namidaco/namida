@@ -237,9 +237,11 @@ class PlaylistController {
 
   Future<void> _prepareFavouritesFile() async {
     final file = File(k_PLAYLIST_PATH_FAVOURITES);
+    Playlist fvPl = Playlist(k_PLAYLIST_NAME_FAV, [], currentTimeMS, currentTimeMS, '', [], true);
     await file.readAsJsonAnd((response) async {
-      favouritesPlaylist = Playlist.fromJson(response).obs;
+      fvPl = Playlist.fromJson(response);
     });
+    favouritesPlaylist = fvPl.obs;
   }
 
   Future<bool> _saveFavouritesToStorage() async {

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:external_path/external_path.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
 import 'package:on_audio_edit/on_audio_edit.dart';
@@ -141,6 +142,7 @@ void main() async {
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
   ScrollSearchController.inst.initialize();
+  FlutterLocalNotificationsPlugin().cancelAll();
   runApp(const Namida());
   Folders.inst.onFirstLoad();
 }

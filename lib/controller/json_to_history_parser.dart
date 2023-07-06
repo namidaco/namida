@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,6 +10,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/notification_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -27,21 +29,34 @@ class JsonToHistoryParser {
   final RxBool isLoadingFile = false.obs;
   final Rx<TrackSource> currentParsingSource = TrackSource.local.obs;
 
+  String get parsedProgress => '${parsedHistoryJson.value.formatDecimal(true)} / ${totalJsonToParse.value.formatDecimal(true)}';
+  String get parsedProgressPercentage => '${(_percentage * 100).round()}%';
+  String get addedHistoryJson => addedHistoryJsonToPlaylist.value.formatDecimal(true);
+  double get _percentage {
+    final p = parsedHistoryJson.value / totalJsonToParse.value;
+    return p.isFinite ? p : 0;
+  }
+
   void showParsingProgressDialog() {
     NamidaNavigator.inst.navigateDialog(
       Obx(
-        () => CustomBlurryDialog(
-          normalTitleStyle: true,
-          title: isParsing.value ? Language.inst.EXTRACTING_INFO : Language.inst.DONE,
-          actions: [
-            TextButton(
-              child: Text(Language.inst.CONFIRM),
-              onPressed: () => NamidaNavigator.inst.closeDialog(),
-            )
-          ],
-          bodyText:
-              "${Language.inst.LOADING_FILE}... ${isLoadingFile.value ? '' : Language.inst.DONE}\n\n${parsedHistoryJson.value.formatDecimal(true)} / ${totalJsonToParse.value.formatDecimal(true)} ${Language.inst.PARSED} \n\n${addedHistoryJsonToPlaylist.value.formatDecimal(true)} ${Language.inst.ADDED}",
-        ),
+        () {
+          final title = '${isParsing.value ? Language.inst.EXTRACTING_INFO : Language.inst.DONE} ($parsedProgressPercentage)';
+          final loadingText = '${Language.inst.LOADING_FILE}... ${isLoadingFile.value ? '' : Language.inst.DONE}';
+          final parsedText = '$parsedProgress ${Language.inst.PARSED}';
+          final addedText = '$addedHistoryJson ${Language.inst.ADDED}';
+          return CustomBlurryDialog(
+            normalTitleStyle: true,
+            title: title,
+            actions: [
+              TextButton(
+                child: Text(Language.inst.CONFIRM),
+                onPressed: () => NamidaNavigator.inst.closeDialog(),
+              )
+            ],
+            bodyText: "$loadingText\n\n$parsedText\n\n$addedText",
+          );
+        },
       ),
     );
   }
@@ -52,10 +67,13 @@ class JsonToHistoryParser {
     addedHistoryJsonToPlaylist.value = 0;
   }
 
+  Timer? _notificationTimer;
+
   Future<void> addFileSourceToNamidaHistory(File file, TrackSource source, {bool isMatchingTypeLink = true, bool matchYT = true, bool matchYTMusic = true}) async {
     _resetValues();
     isParsing.value = true;
     isLoadingFile.value = true;
+    showParsingProgressDialog();
 
     // TODO: warning to backup history
 
@@ -67,6 +85,10 @@ class JsonToHistoryParser {
       HistoryController.inst.removeSourcesTracksFromHistory([source]);
     }
     await Future.delayed(Duration.zero);
+    _notificationTimer?.cancel();
+    _notificationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      NotificationService.inst.importHistoryNotification(parsedHistoryJson.value, totalJsonToParse.value);
+    });
 
     final datesAdded = <int>[];
 
@@ -85,6 +107,8 @@ class JsonToHistoryParser {
     HistoryController.inst.sortHistoryTracks(datesAdded);
     HistoryController.inst.saveHistoryToStorage(datesAdded);
     HistoryController.inst.updateMostPlayedPlaylist();
+    _notificationTimer?.cancel();
+    NotificationService.inst.doneImportingHistoryNotification(parsedHistoryJson.value, addedHistoryJsonToPlaylist.value);
   }
 
   /// needs rewrite
@@ -105,12 +129,16 @@ class JsonToHistoryParser {
   Future<List<int>> _parseYTHistoryJsonAndAdd(File file, bool isMatchingTypeLink, bool matchYT, bool matchYTMusic) async {
     _resetValues();
     isParsing.value = true;
-    isLoadingFile.value = true;
     await Future.delayed(const Duration(milliseconds: 300));
     final datesToSave = <int>[];
+    final jsonResponse = await file.readAsJson() as List?;
 
-    await file.readAsJsonAndLoop(
-      (p, index) async {
+    totalJsonToParse.value = jsonResponse?.length ?? 0;
+    isLoadingFile.value = false;
+
+    if (jsonResponse != null) {
+      for (int i = 0; i <= jsonResponse.length - 1; i++) {
+        final p = jsonResponse[i];
         final link = utf8.decode((p['titleUrl']).toString().codeUnits);
         final id = link.length >= 11 ? link.substring(link.length - 11) : link;
         final z = List<Map<String, dynamic>>.from((p['subtitles'] ?? []));
@@ -125,7 +153,7 @@ class JsonToHistoryParser {
           [YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music")],
         );
         final addedDates = _matchYTVHToNamidaHistory(yth, isMatchingTypeLink, matchYT, matchYTMusic);
-        addedDates.addAll(addedDates);
+        datesToSave.addAll(addedDates);
 
         /// extracting and saving to [k_DIR_YOUTUBE_STATS] directory.
         ///  [_addYoutubeSourceFromDirectory] should be called after this.
@@ -148,12 +176,8 @@ class JsonToHistoryParser {
         // await File('$k_DIR_YOUTUBE_STATS$id.txt').writeAsJson(obj);
 
         parsedHistoryJson.value++;
-      },
-      onListReady: (response) async {
-        totalJsonToParse.value = response?.length ?? 0;
-        isLoadingFile.value = false;
-      },
-    );
+      }
+    }
 
     isParsing.value = false;
     return datesToSave;
@@ -202,6 +226,8 @@ class JsonToHistoryParser {
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
   Future<List<int>> _addLastFmSource(File file) async {
     totalJsonToParse.value = file.readAsLinesSync().length;
+    isLoadingFile.value = false;
+
     final stream = file.openRead();
     final lines = stream.transform(utf8.decoder).transform(const LineSplitter());
 

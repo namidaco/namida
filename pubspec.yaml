@@ -55,6 +55,7 @@ dependencies:
     git:
       url: https://github.com/FredJul/receive_sharing_intent
   wakelock: ^0.6.2
+  flutter_local_notifications: ^15.0.1
 
 
   # Path/File Providers

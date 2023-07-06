@@ -276,7 +276,6 @@ class BackupAndRestore extends StatelessWidget {
                                 ElevatedButton(
                                   onPressed: () async {
                                     NamidaNavigator.inst.closeDialog();
-                                    JsonToHistoryParser.inst.showParsingProgressDialog();
                                     await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
                                       File(jsonfile.files.first.path!),
                                       TrackSource.youtube,
@@ -375,9 +374,6 @@ class BackupAndRestore extends StatelessWidget {
                         final csvFiles = await FilePicker.platform.pickFiles(allowedExtensions: ['csv'], type: FileType.custom);
                         final csvFilePath = csvFiles?.files.first.path;
                         if (csvFiles != null && csvFilePath != null) {
-                          JsonToHistoryParser.inst.showParsingProgressDialog();
-
-                          await Future.delayed(const Duration(milliseconds: 300));
                           JsonToHistoryParser.inst.addFileSourceToNamidaHistory(File(csvFilePath), TrackSource.lastfm);
                         }
                       },
