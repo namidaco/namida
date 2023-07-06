@@ -18,7 +18,7 @@ class QueueTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final hero = 'queue_${queue.date}';
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8.0).add(const EdgeInsets.only(bottom: Dimensions.tileBottomMargin + Dimensions.tileAdditionalMargin)),
+      margin: const EdgeInsets.symmetric(horizontal: 8.0).add(const EdgeInsets.only(bottom: Dimensions.tileBottomMargin6)),
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
@@ -32,7 +32,6 @@ class QueueTile extends StatelessWidget {
         bgColor: context.theme.cardColor,
         onTap: () => NamidaOnTaps.inst.onQueueTap(queue),
         onLongPress: () => NamidaDialogs.inst.showQueueDialog(queue.date),
-        padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
         borderRadius: 16.0,
         child: SizedBox(
           height: Dimensions.queueTileItemExtent,

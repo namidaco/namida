@@ -44,7 +44,6 @@ class AlbumTile extends StatelessWidget {
         bgColor: context.theme.cardColor,
         onTap: () => NamidaOnTaps.inst.onAlbumTap(album.album),
         onLongPress: () => NamidaDialogs.inst.showAlbumDialog(name),
-        padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
         child: SizedBox(
           height: Dimensions.inst.albumTileItemExtent,
           child: Row(

@@ -12,9 +12,10 @@ class Dimensions {
   RxList<double> allItemsExtentsHistory = <double>[].obs;
 
   static const tileBottomMargin = 4.0;
-  static const tileAdditionalMargin = 2.0;
-  static const tileVerticalPadding = 4.0;
-  static const totalVerticalDistance = tileBottomMargin + 2 * tileVerticalPadding;
+  static const tileBottomMargin6 = 6.0;
+  static const _tileAdditionalMargin = 4.0;
+  static const _tileVerticalPadding = 4.0;
+  static const totalVerticalDistance = tileBottomMargin + 2 * _tileVerticalPadding;
 
   static const gridHorizontalPadding = 4.0;
 
@@ -26,18 +27,18 @@ class Dimensions {
 
   // -- Artist Tile --
   static const artistThumbnailSize = 64.0;
-  static const artistTileHeight = 64.0;
-  static const artistTileItemExtent = artistTileHeight + totalVerticalDistance;
+  static const _artistTileHeight = 64.0;
+  static const artistTileItemExtent = _artistTileHeight + totalVerticalDistance;
 
   // -- Playlist Tile --
   static const playlistThumbnailSize = 74.0;
-  static const playlistTileHeight = 74.0;
-  static const playlistTileItemExtent = playlistTileHeight + totalVerticalDistance + tileAdditionalMargin;
+  static const _playlistTileHeight = 74.0;
+  static const playlistTileItemExtent = _playlistTileHeight + totalVerticalDistance + 3 * _tileAdditionalMargin;
 
   // -- Queue Tile --
   static const queueThumbnailSize = 64.0;
-  static const queueTileHeight = 68.0;
-  static const queueTileItemExtent = queueTileHeight + totalVerticalDistance + tileAdditionalMargin;
+  static const _queueTileHeight = 72.0;
+  static const queueTileItemExtent = _queueTileHeight + tileBottomMargin6 + 2 * _tileVerticalPadding + _tileAdditionalMargin;
 
   /// {@macro card_dimensions}
   (double, double, double) albumCardDimensions = (0.0, 0.0, 0.0);

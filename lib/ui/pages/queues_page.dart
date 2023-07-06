@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import 'package:get/get.dart';
 
@@ -12,27 +13,32 @@ class QueuesPage extends StatelessWidget {
   const QueuesPage({super.key});
   @override
   Widget build(BuildContext context) {
-    return BackgroundWrapper(
-      child: Obx(
-        () {
-          final queuesKeys = QueueController.inst.queuesMap.value.keys.toList();
-          final queuesLength = queuesKeys.length;
-          return NamidaListView(
-            itemBuilder: (context, i) {
-              final reverseIndex = (queuesKeys.length - 1) - i;
-              final q = queuesKeys[reverseIndex].getQueue()!;
-              return AnimatingTile(
-                key: ValueKey(i),
-                position: i,
-                child: QueueTile(
-                  queue: q,
-                ),
-              );
-            },
-            itemCount: queuesLength,
-            itemExtents: List.filled(queuesLength, Dimensions.queueTileItemExtent),
-          );
-        },
+    return AnimationLimiter(
+      child: BackgroundWrapper(
+        child: CustomScrollView(
+          slivers: [
+            const SliverPadding(padding: EdgeInsets.only(top: Dimensions.tileBottomMargin6)),
+            Obx(
+              () {
+                final queuesKeys = QueueController.inst.queuesMap.value.keys.toList();
+                final queuesLength = queuesKeys.length;
+                return SliverFixedExtentList.builder(
+                  itemCount: queuesLength,
+                  itemExtent: Dimensions.queueTileItemExtent,
+                  itemBuilder: (context, i) {
+                    final reverseIndex = (queuesKeys.length - 1) - i;
+                    final q = queuesKeys[reverseIndex].getQueue()!;
+                    return AnimatingTile(
+                      key: ValueKey(i),
+                      position: i,
+                      child: QueueTile(queue: q),
+                    );
+                  },
+                );
+              },
+            )
+          ],
+        ),
       ),
     );
   }

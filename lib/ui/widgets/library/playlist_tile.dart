@@ -29,7 +29,7 @@ class PlaylistTile extends StatelessWidget {
         borderRadius: 0.0,
         onTap: onTap,
         onLongPress: () => NamidaDialogs.inst.showPlaylistDialog(playlistName),
-        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: Dimensions.tileVerticalPadding),
+        padding: const EdgeInsets.symmetric(horizontal: 4.0),
         child: SizedBox(
           height: Dimensions.playlistTileItemExtent,
           child: Obx(

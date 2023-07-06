@@ -854,7 +854,7 @@ extension RouteUtils on NamidaRoute {
     }
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 400),
       child: finalWidget ?? const NamidaSearchBar(),
     );
   }

@@ -132,9 +132,7 @@ class TrackTile extends StatelessWidget {
                           SelectedTracksController.inst.selectOrUnselect(track, queueSource);
                         }
                       },
-                child: Container(
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
+                child: SizedBox(
                   height: Dimensions.inst.trackTileItemExtent,
                   child: Row(
                     children: [
