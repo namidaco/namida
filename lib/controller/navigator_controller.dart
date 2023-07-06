@@ -12,6 +12,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/packages/inner_drawer.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class NamidaNavigator {
   static NamidaNavigator get inst => _instance;
@@ -63,15 +64,19 @@ class NamidaNavigator {
     );
   }
 
-  void navigateDialog(Widget dialog, {int durationInMs = 400, Future<bool> Function()? onWillPop}) {
+  void navigateDialog(Widget dialog, {int durationInMs = 400}) {
     ScrollSearchController.inst.unfocusKeyboard();
     currentDialogNumber++;
     Get.to(
       () => WillPopScope(
         onWillPop: () async {
+          if (dialog is CustomBlurryDialog) {
+            if (!dialog.tapToDismiss) return false;
+            if (dialog.onDismissing != null) dialog.onDismissing!();
+          }
+
           if (currentDialogNumber > 0) {
             closeDialog();
-            if (onWillPop != null) await onWillPop();
             return false;
           }
 

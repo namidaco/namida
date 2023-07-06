@@ -310,127 +310,120 @@ class CustomBlurryDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      // TODO: doesnt work, since [navigateToDialog] already has OnWillPop.
-      onWillPop: () async {
-        if (onDismissing != null) onDismissing!();
-        return tapToDismiss;
-      },
-      child: NamidaBgBlur(
-        blur: 5.0,
-        enabled: enableBlur,
-        child: Theme(
-          data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
-          child: GestureDetector(
-            onTap: () {
-              if (tapToDismiss) {
-                NamidaNavigator.inst.closeDialog();
-              }
+    return NamidaBgBlur(
+      blur: 5.0,
+      enabled: enableBlur,
+      child: Theme(
+        data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
+        child: GestureDetector(
+          onTap: () {
+            if (tapToDismiss) {
+              NamidaNavigator.inst.closeDialog();
               if (onDismissing != null) onDismissing!();
-            },
-            child: Container(
-              color: Colors.black45,
-              child: Transform.scale(
-                scale: scale,
-                child: Center(
-                  child: SingleChildScrollView(
-                    child: Dialog(
-                      surfaceTintColor: Colors.transparent,
-                      insetPadding: insetPadding,
-                      clipBehavior: Clip.antiAlias,
-                      child: GestureDetector(
-                        onTap: () {},
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            /// Title.
-                            if (titleWidget != null) titleWidget!,
-                            if (titleWidget == null)
-                              normalTitleStyle
-                                  ? Padding(
-                                      padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
-                                      child: Row(
-                                        children: [
-                                          if (icon != null || isWarning) ...[
-                                            Icon(
-                                              isWarning ? Broken.warning_2 : icon,
-                                            ),
-                                            const SizedBox(
-                                              width: 10.0,
-                                            ),
-                                          ],
-                                          Expanded(
-                                            child: Text(
-                                              isWarning ? Language.inst.WARNING : title ?? '',
-                                              style: context.textTheme.displayLarge,
-                                            ),
+            }
+          },
+          child: Container(
+            color: Colors.black45,
+            child: Transform.scale(
+              scale: scale,
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Dialog(
+                    surfaceTintColor: Colors.transparent,
+                    insetPadding: insetPadding,
+                    clipBehavior: Clip.antiAlias,
+                    child: GestureDetector(
+                      onTap: () {},
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          /// Title.
+                          if (titleWidget != null) titleWidget!,
+                          if (titleWidget == null)
+                            normalTitleStyle
+                                ? Padding(
+                                    padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
+                                    child: Row(
+                                      children: [
+                                        if (icon != null || isWarning) ...[
+                                          Icon(
+                                            isWarning ? Broken.warning_2 : icon,
                                           ),
-                                          if (trailingWidgets != null) ...trailingWidgets!
+                                          const SizedBox(
+                                            width: 10.0,
+                                          ),
                                         ],
+                                        Expanded(
+                                          child: Text(
+                                            isWarning ? Language.inst.WARNING : title ?? '',
+                                            style: context.textTheme.displayLarge,
+                                          ),
+                                        ),
+                                        if (trailingWidgets != null) ...trailingWidgets!
+                                      ],
+                                    ),
+                                  )
+                                : Container(
+                                    color: context.theme.cardColor,
+                                    padding: const EdgeInsets.all(16),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        if (icon != null) ...[
+                                          Icon(
+                                            icon,
+                                          ),
+                                          const SizedBox(
+                                            width: 10.0,
+                                          ),
+                                        ],
+                                        Text(
+                                          title ?? '',
+                                          style: context.theme.textTheme.displayMedium,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                          /// Body.
+                          Padding(
+                            padding: contentPadding ?? const EdgeInsets.all(14.0),
+                            child: SizedBox(
+                              width: context.width,
+                              child: bodyText != null
+                                  ? Padding(
+                                      padding: const EdgeInsets.all(12.0),
+                                      child: Text(
+                                        bodyText!,
+                                        style: context.textTheme.displayMedium,
                                       ),
                                     )
-                                  : Container(
-                                      color: context.theme.cardColor,
-                                      padding: const EdgeInsets.all(16),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          if (icon != null) ...[
-                                            Icon(
-                                              icon,
-                                            ),
-                                            const SizedBox(
-                                              width: 10.0,
-                                            ),
-                                          ],
-                                          Text(
-                                            title ?? '',
-                                            style: context.theme.textTheme.displayMedium,
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                  : child,
+                            ),
+                          ),
 
-                            /// Body.
+                          /// Actions.
+                          if (actions != null)
                             Padding(
-                              padding: contentPadding ?? const EdgeInsets.all(14.0),
-                              child: SizedBox(
-                                width: context.width,
-                                child: bodyText != null
-                                    ? Padding(
-                                        padding: const EdgeInsets.all(12.0),
-                                        child: Text(
-                                          bodyText!,
-                                          style: context.textTheme.displayMedium,
-                                        ),
-                                      )
-                                    : child,
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  if (leftAction != null) ...[
+                                    const SizedBox(width: 6.0),
+                                    leftAction!,
+                                    const SizedBox(width: 6.0),
+                                    const Spacer(),
+                                  ],
+                                  ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
+                                ],
                               ),
                             ),
-
-                            /// Actions.
-                            if (actions != null)
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    if (leftAction != null) ...[
-                                      const SizedBox(width: 6.0),
-                                      leftAction!,
-                                      const SizedBox(width: 6.0),
-                                      const Spacer(),
-                                    ],
-                                    ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
+                        ],
                       ),
                     ),
                   ),

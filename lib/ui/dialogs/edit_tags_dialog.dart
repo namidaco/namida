@@ -589,7 +589,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                         Obx(
                           () => CustomBlurryDialog(
                             title: Language.inst.PROGRESS,
-                            tapToDismiss: finishedEditing.value,
+                            tapToDismiss: false,
                             normalTitleStyle: true,
                             actions: [
                               Obx(

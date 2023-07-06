@@ -368,7 +368,7 @@ class IndexerSettings extends StatelessWidget {
     bool trackArtistsSeparatorsBlacklist = false,
     bool trackGenresSeparatorsBlacklist = false,
   }) async {
-    TextEditingController separatorsController = TextEditingController();
+    final TextEditingController separatorsController = TextEditingController();
     final isBlackListDialog = trackArtistsSeparatorsBlacklist || trackGenresSeparatorsBlacklist;
 
     final RxBool updatingLibrary = false.obs;
