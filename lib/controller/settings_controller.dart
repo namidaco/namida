@@ -109,6 +109,7 @@ class SettingsController {
   final RxBool enableBottomNavBar = true.obs;
   final RxBool useYoutubeMiniplayer = false.obs;
   final RxBool playerPlayOnNextPrev = true.obs;
+  final RxBool jumpToFirstTrackAfterFinishingQueue = true.obs;
   final RxBool displayAudioInfoMiniplayer = false.obs;
   final RxBool showUnknownFieldsInTrackInfoDialog = true.obs;
   final RxBool extractFeatArtistFromTitle = true.obs;
@@ -248,6 +249,7 @@ class SettingsController {
       enableBottomNavBar.value = json['enableBottomNavBar'] ?? enableBottomNavBar.value;
       useYoutubeMiniplayer.value = json['useYoutubeMiniplayer'] ?? useYoutubeMiniplayer.value;
       playerPlayOnNextPrev.value = json['playerPlayOnNextPrev'] ?? playerPlayOnNextPrev.value;
+      jumpToFirstTrackAfterFinishingQueue.value = json['jumpToFirstTrackAfterFinishingQueue'] ?? jumpToFirstTrackAfterFinishingQueue.value;
       displayAudioInfoMiniplayer.value = json['displayAudioInfoMiniplayer'] ?? displayAudioInfoMiniplayer.value;
       showUnknownFieldsInTrackInfoDialog.value = json['showUnknownFieldsInTrackInfoDialog'] ?? showUnknownFieldsInTrackInfoDialog.value;
       extractFeatArtistFromTitle.value = json['extractFeatArtistFromTitle'] ?? extractFeatArtistFromTitle.value;
@@ -368,6 +370,7 @@ class SettingsController {
       'enableBottomNavBar': enableBottomNavBar.value,
       'useYoutubeMiniplayer': useYoutubeMiniplayer.value,
       'playerPlayOnNextPrev': playerPlayOnNextPrev.value,
+      'jumpToFirstTrackAfterFinishingQueue': jumpToFirstTrackAfterFinishingQueue.value,
       'displayAudioInfoMiniplayer': displayAudioInfoMiniplayer.value,
       'showUnknownFieldsInTrackInfoDialog': showUnknownFieldsInTrackInfoDialog.value,
       'extractFeatArtistFromTitle': extractFeatArtistFromTitle.value,
@@ -484,6 +487,7 @@ class SettingsController {
     bool? enableBottomNavBar,
     bool? useYoutubeMiniplayer,
     bool? playerPlayOnNextPrev,
+    bool? jumpToFirstTrackAfterFinishingQueue,
     bool? displayAudioInfoMiniplayer,
     bool? showUnknownFieldsInTrackInfoDialog,
     bool? extractFeatArtistFromTitle,
@@ -780,6 +784,9 @@ class SettingsController {
     }
     if (playerPlayOnNextPrev != null) {
       this.playerPlayOnNextPrev.value = playerPlayOnNextPrev;
+    }
+    if (jumpToFirstTrackAfterFinishingQueue != null) {
+      this.jumpToFirstTrackAfterFinishingQueue.value = jumpToFirstTrackAfterFinishingQueue;
     }
     if (displayAudioInfoMiniplayer != null) {
       this.displayAudioInfoMiniplayer.value = displayAudioInfoMiniplayer;

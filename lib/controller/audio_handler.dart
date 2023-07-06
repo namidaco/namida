@@ -73,7 +73,11 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
         /// repeat moods
         final repeat = SettingsController.inst.playerRepeatMode.value;
         if (repeat == RepeatMode.none) {
-          await skipToNext(!isLastTrack);
+          if (SettingsController.inst.jumpToFirstTrackAfterFinishingQueue.value) {
+            await skipToNext(!isLastTrack);
+          } else {
+            await pause();
+          }
         }
         if (repeat == RepeatMode.one) {
           await skipToQueueItem(currentIndex.value);

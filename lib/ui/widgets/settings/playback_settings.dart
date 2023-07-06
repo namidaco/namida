@@ -255,17 +255,6 @@ class PlaybackSettings extends StatelessWidget {
         () => CustomSwitchListTile(
           leading: const StackedIcon(
             baseIcon: Broken.play,
-            secondaryIcon: Broken.record,
-          ),
-          title: Language.inst.PLAY_AFTER_NEXT_PREV,
-          onChanged: (value) => SettingsController.inst.save(playerPlayOnNextPrev: !value),
-          value: SettingsController.inst.playerPlayOnNextPrev.value,
-        ),
-      ),
-      Obx(
-        () => CustomSwitchListTile(
-          leading: const StackedIcon(
-            baseIcon: Broken.play,
             secondaryIcon: Broken.pause,
           ),
           title: Language.inst.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE,
@@ -310,6 +299,25 @@ class PlaybackSettings extends StatelessWidget {
             },
             text: "${SettingsController.inst.playerPauseFadeDurInMilli.value}ms",
           ),
+        ),
+      ),
+      Obx(
+        () => CustomSwitchListTile(
+          leading: const StackedIcon(
+            baseIcon: Broken.play,
+            secondaryIcon: Broken.record,
+          ),
+          title: Language.inst.PLAY_AFTER_NEXT_PREV,
+          onChanged: (value) => SettingsController.inst.save(playerPlayOnNextPrev: !value),
+          value: SettingsController.inst.playerPlayOnNextPrev.value,
+        ),
+      ),
+      Obx(
+        () => CustomSwitchListTile(
+          icon: Broken.rotate_left,
+          title: Language.inst.JUMP_TO_FIRST_TRACK_AFTER_QUEUE_FINISH,
+          onChanged: (value) => SettingsController.inst.save(jumpToFirstTrackAfterFinishingQueue: !value),
+          value: SettingsController.inst.jumpToFirstTrackAfterFinishingQueue.value,
         ),
       ),
       Obx(

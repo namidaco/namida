@@ -103,6 +103,7 @@ class Language {
   String get JUMP => 'Jump';
   String get JUMP_TO_DAY => 'Jump to Day';
   String get PREVIEW => 'Preview';
+  String get JUMP_TO_FIRST_TRACK_AFTER_QUEUE_FINISH => 'Jump to first track after finishing queue';
 
   ///
   String get REMOVE_WHITESPACES => 'Remove Whitespaces';
