@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
-import 'package:namida/class/track.dart';
+import 'package:just_audio/just_audio.dart';
 
+import 'package:namida/class/track.dart';
+import 'package:namida/controller/audio_handler.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -12,7 +14,6 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
@@ -39,6 +40,76 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
 
   bool shouldShowTheField(bool isUnknown) => !isUnknown || (SettingsController.inst.showUnknownFieldsInTrackInfoDialog.value && isUnknown);
 
+  void showPreviewTrackDialog() async {
+    final wasPlaying = Player.inst.isPlaying.value;
+    if (wasPlaying) {
+      Player.inst.pause();
+    }
+
+    final ap = AudioPlayer();
+    await ap.setAudioSource(track.toAudioSource());
+    ap.play();
+
+    NamidaNavigator.inst.navigateDialog(
+      CustomBlurryDialog(
+        onDismissing: () {
+          ap.stop();
+          if (wasPlaying) {
+            Player.inst.play();
+          }
+        },
+        trailingWidgets: [
+          NamidaIconButton(
+            icon: Broken.close_circle,
+            onPressed: () {
+              NamidaNavigator.inst.closeDialog();
+              ap.stop();
+            },
+          ),
+        ],
+        insetPadding: const EdgeInsets.all(24.0),
+        title: Language.inst.PREVIEW,
+        normalTitleStyle: true,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            StreamBuilder(
+              stream: ap.positionStream,
+              builder: (context, snapshot) {
+                final dur = snapshot.data ?? Duration.zero;
+                return Text(dur.label);
+              },
+            ),
+            StreamBuilder(
+              initialData: Duration.zero,
+              stream: ap.positionStream,
+              builder: (context, snapshot) {
+                final dur = snapshot.data ?? Duration.zero;
+                return Slider.adaptive(
+                  value: dur.inMilliseconds.toDouble(),
+                  min: 0,
+                  max: ap.duration?.inMilliseconds.toDouble() ?? 0,
+                  onChanged: (value) => ap.seek(Duration(milliseconds: value.toInt())),
+                );
+              },
+            ),
+            Text((ap.duration ?? Duration.zero).label),
+            StreamBuilder(
+              stream: ap.playingStream,
+              builder: (context, snapshot) {
+                final isPlaying = snapshot.data ?? false;
+                return NamidaIconButton(
+                  icon: isPlaying ? Broken.pause : Broken.play,
+                  onPressed: ap.playing ? ap.pause : ap.play,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   NamidaNavigator.inst.navigateDialog(
     Theme(
       data: theme,
@@ -61,11 +132,10 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
             size: 24,
             color: theme.colorScheme.primary,
           ),
-          // TODO(MSOB7YY): preview only not play
           NamidaIconButton(
             icon: Broken.play,
             iconColor: theme.colorScheme.primary,
-            onPressed: () => Player.inst.playOrPause(0, [track], QueueSource.playerQueue),
+            onPressed: showPreviewTrackDialog,
           ),
         ],
         icon: Broken.info_circle,

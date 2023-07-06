@@ -298,7 +298,7 @@ class CustomBlurryDialog extends StatelessWidget {
     this.bodyText,
     this.isWarning = false,
     this.enableBlur = true,
-    this.insetPadding,
+    this.insetPadding = const EdgeInsets.symmetric(horizontal: 50.0, vertical: 32.0),
     this.scrollable = true,
     this.tapToDismiss = true,
     this.contentPadding,
@@ -336,7 +336,7 @@ class CustomBlurryDialog extends StatelessWidget {
                   child: SingleChildScrollView(
                     child: Dialog(
                       surfaceTintColor: Colors.transparent,
-                      insetPadding: insetPadding ?? const EdgeInsets.symmetric(horizontal: 50, vertical: 32),
+                      insetPadding: insetPadding,
                       clipBehavior: Clip.antiAlias,
                       child: GestureDetector(
                         onTap: () {},

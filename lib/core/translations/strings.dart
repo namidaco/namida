@@ -102,6 +102,7 @@ class Language {
   String get HIGH_MATCHES => 'High matches';
   String get JUMP => 'Jump';
   String get JUMP_TO_DAY => 'Jump to Day';
+  String get PREVIEW => 'Preview';
 
   ///
   String get REMOVE_WHITESPACES => 'Remove Whitespaces';
