@@ -41,7 +41,7 @@ class AlbumTracksPage extends StatelessWidget {
                 : Container(
                     margin: const EdgeInsets.symmetric(horizontal: 12.0),
                     padding: const EdgeInsets.all(3.0),
-                    child: Hero(
+                    child: NamidaHero(
                       tag: 'album_$name',
                       child: ArtworkWidget(
                         track: tracks.trackOfImage,

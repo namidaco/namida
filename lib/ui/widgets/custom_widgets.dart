@@ -1264,7 +1264,7 @@ class SubpagesTopContainer extends StatelessWidget {
                 ),
                 Container(
                   padding: const EdgeInsets.only(left: 14.0),
-                  child: Hero(
+                  child: NamidaHero(
                     tag: '${pauseHero}line1_$heroTag',
                     child: Text(
                       title,
@@ -1279,7 +1279,7 @@ class SubpagesTopContainer extends StatelessWidget {
                 ),
                 Container(
                   padding: const EdgeInsets.only(left: 14.0),
-                  child: Hero(
+                  child: NamidaHero(
                     tag: '${pauseHero}line2_$heroTag',
                     child: Text(
                       subtitle,
@@ -1295,7 +1295,7 @@ class SubpagesTopContainer extends StatelessWidget {
                   ),
                   Container(
                     padding: const EdgeInsets.only(left: 14.0),
-                    child: Hero(
+                    child: NamidaHero(
                       tag: '${pauseHero}line3_$heroTag',
                       child: Text(
                         thirdLineText,
@@ -2027,6 +2027,20 @@ class HistoryJumpToDayIcon extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class NamidaHero extends StatelessWidget {
+  final Object tag;
+  final Widget child;
+  const NamidaHero({super.key, required this.tag, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Hero(
+      tag: tag,
+      child: child,
     );
   }
 }

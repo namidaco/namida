@@ -578,7 +578,7 @@ Future<void> showGeneralPopupDialog(
                             children: [
                               const SizedBox(width: 16.0),
                               if (forceSingleArtwork)
-                                Hero(
+                                NamidaHero(
                                   tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${tracks.first.path}',
                                   child: ArtworkWidget(
                                     track: tracks.trackOfImage,

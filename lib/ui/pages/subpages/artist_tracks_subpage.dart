@@ -39,7 +39,7 @@ class ArtistTracksPage extends StatelessWidget {
                 if (tracks.year != 0) tracks.year.yearFormatted,
               ].join(' - '),
               heroTag: 'artist_$name',
-              imageWidget: Hero(
+              imageWidget: NamidaHero(
                 tag: 'artist_$name',
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 2),

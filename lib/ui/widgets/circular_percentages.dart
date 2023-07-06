@@ -16,7 +16,7 @@ class IndexingPercentage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () => Indexer.inst.isIndexing.value
-          ? Hero(
+          ? NamidaHero(
               tag: 'indexingper',
               child: NamidaCircularPercentage(
                 percentage: allTracksInLibrary.length / Indexer.inst.allAudioFiles.length,
@@ -40,7 +40,7 @@ class ParsingJsonPercentage extends StatelessWidget {
       () => JsonToHistoryParser.inst.isParsing.value && (forceDisplay ? true : source == JsonToHistoryParser.inst.currentParsingSource.value)
           ? GestureDetector(
               onTap: () => JsonToHistoryParser.inst.showParsingProgressDialog(),
-              child: Hero(
+              child: NamidaHero(
                 tag: 'parsingjsonper',
                 child: NamidaCircularPercentage(
                   percentage: JsonToHistoryParser.inst.parsedHistoryJson.value / JsonToHistoryParser.inst.totalJsonToParse.value,

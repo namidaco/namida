@@ -36,7 +36,7 @@ class MultiArtworkCard extends StatelessWidget {
           children: [
             Column(
               children: [
-                Hero(
+                NamidaHero(
                   tag: heroTag,
                   child: MultiArtworks(
                     borderRadius: 12.0,
@@ -56,7 +56,7 @@ class MultiArtworkCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (name != '')
-                          Hero(
+                          NamidaHero(
                             tag: 'line1_$heroTag',
                             child: Text(
                               name.overflow,
@@ -64,7 +64,7 @@ class MultiArtworkCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        Hero(
+                        NamidaHero(
                           tag: 'line2_$heroTag',
                           child: Text(
                             [tracks.displayTrackKeyword, if (tracks.totalDurationInS != 0) tracks.totalDurationFormatted].join(' - '),

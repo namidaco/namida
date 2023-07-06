@@ -35,7 +35,7 @@ class NamidaNavigator {
 
   void onFirstLoad() {
     final initialTab = SettingsController.inst.selectedLibraryTab.value;
-    navigateTo(initialTab.toWidget());
+    navigateTo(initialTab.toWidget(), durationInMs: 0);
     Dimensions.inst.updateDimensions(initialTab);
   }
 
@@ -43,6 +43,7 @@ class NamidaNavigator {
     Widget page, {
     bool nested = true,
     Transition transition = Transition.cupertino,
+    int durationInMs = 500,
   }) async {
     _hideSearchMenuAndUnfocus();
     currentWidgetStack.add(page.toNamidaRoute());
@@ -56,7 +57,7 @@ class NamidaNavigator {
       preventDuplicates: false,
       transition: transition,
       curve: Curves.easeOut,
-      duration: const Duration(milliseconds: 500),
+      duration: Duration(milliseconds: durationInMs),
       opaque: true,
       fullscreenDialog: false,
     );

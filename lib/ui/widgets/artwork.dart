@@ -12,6 +12,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/packages/drop_shadow.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class ArtworkWidget extends StatefulWidget {
   final Track? track;
@@ -398,7 +399,7 @@ class MultiArtworks extends StatelessWidget {
     );
     return disableHero
         ? child
-        : Hero(
+        : NamidaHero(
             tag: heroTag,
             child: child,
           );

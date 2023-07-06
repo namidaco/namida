@@ -119,8 +119,9 @@ class HistoryController {
 
   Future<void> removeFromHistory(int dayOfTrack, int index) async {
     final trs = historyMap.value[dayOfTrack]!;
-    trs.removeAt(trs.length - 1 - index);
+    final removed = trs.removeAt(trs.length - 1 - index);
     Dimensions.inst.calculateAllItemsExtentsInHistory();
+    topTracksMapListens[removed.track]?.remove(removed.dateAdded);
     await saveHistoryToStorage([dayOfTrack]);
   }
 
@@ -131,6 +132,7 @@ class HistoryController {
       totalRemoved += value.removeWhereWithDifference((element) => sources.contains(element.source));
     });
     await saveHistoryToStorage();
+    updateMostPlayedPlaylist();
     return totalRemoved;
   }
 

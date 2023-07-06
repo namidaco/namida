@@ -95,7 +95,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                       color: Colors.black,
                                       child: InteractiveViewer(
                                         maxScale: 5,
-                                        child: Hero(
+                                        child: NamidaHero(
                                           tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}',
                                           child: GestureDetector(
                                             onLongPress: () async {
@@ -143,7 +143,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                       ),
                                     ),
                                   ),
-                                  child: Hero(
+                                  child: NamidaHero(
                                     tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}',
                                     child: ArtworkWidget(
                                       track: track,

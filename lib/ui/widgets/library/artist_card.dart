@@ -35,7 +35,7 @@ class ArtistCard extends StatelessWidget {
         onLongPress: () => NamidaDialogs.inst.showArtistDialog(name),
         child: Column(
           children: [
-            Hero(
+            NamidaHero(
               tag: hero,
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: Dimensions.gridHorizontalPadding),
@@ -62,7 +62,7 @@ class ArtistCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (name != '')
-                      Hero(
+                      NamidaHero(
                         tag: 'line1_$hero',
                         child: Text(
                           name.overflow,

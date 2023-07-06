@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:namida/class/track.dart';
+import 'package:known_extents_list_view_builder/sliver_known_extents_list.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -28,117 +29,131 @@ class HistoryTracksPage extends StatelessWidget {
     final sc = HistoryController.inst.scrollController;
 
     return BackgroundWrapper(
-      child: Obx(
-        () => NamidaListView(
-          scrollController: sc,
-          itemCount: HistoryController.inst.historyDays.length,
-          itemExtents: Dimensions.inst.allItemsExtentsHistory.toList(),
-          header: SubpagesTopContainer(
-            source: QueueSource.history,
-            title: k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
-            subtitle: HistoryController.inst.historyTracksLength.displayTrackKeyword,
-            heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
-            tracks: QueueSource.history.toTracks(),
-            imageWidget: MultiArtworkContainer(
-              heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
-              size: Get.width * 0.35,
-              tracks: QueueSource.history.toTracks(4),
+      child: CustomScrollView(
+        controller: sc,
+        slivers: [
+          Obx(
+            () => SliverToBoxAdapter(
+              child: SubpagesTopContainer(
+                source: QueueSource.history,
+                title: k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
+                subtitle: HistoryController.inst.historyTracksLength.displayTrackKeyword,
+                heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
+                tracks: QueueSource.history.toTracks(),
+                imageWidget: MultiArtworkContainer(
+                  heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
+                  size: Get.width * 0.35,
+                  tracks: QueueSource.history.toTracks(4),
+                ),
+                bottomPadding: 8.0,
+              ),
             ),
-            bottomPadding: 8.0,
           ),
-          itemBuilder: (context, index) {
-            final day = HistoryController.inst.historyDays.toList()[index];
-            final dayInMs = (day * msInDay).round();
-            final tracks = HistoryController.inst.historyMap.value[day] ?? [];
+          Obx(
+            () => SliverKnownExtentsList(
+              key: UniqueKey(),
+              itemExtents: Dimensions.inst.allItemsExtentsHistory.toList(),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final day = HistoryController.inst.historyDays.toList()[index];
+                  final dayInMs = (day * msInDay).round();
+                  final tracks = HistoryController.inst.historyMap.value[day] ?? [];
 
-            return StickyHeaderBuilder(
-              key: ValueKey(index),
-              builder: (context, stuckAmount) {
-                final reverseStuck = 1 - stuckAmount;
-                return Container(
-                  clipBehavior: Clip.antiAlias,
-                  width: context.width,
-                  height: kHistoryDayHeaderHeight,
-                  decoration: BoxDecoration(
-                      color: Color.alphaBlend(context.theme.cardTheme.color!.withAlpha(140), context.theme.scaffoldBackgroundColor),
-                      boxShadow: [
-                        BoxShadow(
-                          offset: Offset(0, 2.0 * reverseStuck),
-                          blurRadius: 4.0,
-                          color: Color.alphaBlend(context.theme.shadowColor.withAlpha(140), context.theme.scaffoldBackgroundColor).withOpacity(reverseStuck.clamp(0.0, 0.4)),
-                        ),
-                      ],
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(6.0.multipliedRadius * reverseStuck),
-                        bottomRight: Radius.circular(6.0.multipliedRadius * reverseStuck),
-                      )),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(12.0),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              left: BorderSide(
-                                color: CurrentColor.inst.color.value,
-                                width: (4.0 * stuckAmount).withMinimum(3.0),
+                  return StickyHeaderBuilder(
+                    key: ValueKey(index),
+                    builder: (context, stuckAmount) {
+                      final reverseStuck = 1 - stuckAmount;
+                      return Container(
+                        clipBehavior: Clip.antiAlias,
+                        width: context.width,
+                        height: kHistoryDayHeaderHeight,
+                        decoration: BoxDecoration(
+                            color: Color.alphaBlend(context.theme.cardTheme.color!.withAlpha(140), context.theme.scaffoldBackgroundColor),
+                            boxShadow: [
+                              BoxShadow(
+                                offset: Offset(0, 2.0 * reverseStuck),
+                                blurRadius: 4.0,
+                                color: Color.alphaBlend(context.theme.shadowColor.withAlpha(140), context.theme.scaffoldBackgroundColor).withOpacity(reverseStuck.clamp(0.0, 0.4)),
+                              ),
+                            ],
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(6.0.multipliedRadius * reverseStuck),
+                              bottomRight: Radius.circular(6.0.multipliedRadius * reverseStuck),
+                            )),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.all(12.0),
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    left: BorderSide(
+                                      color: CurrentColor.inst.color.value,
+                                      width: (4.0 * stuckAmount).withMinimum(3.0),
+                                    ),
+                                  ),
+                                ),
+                                child: Text(
+                                  [dayInMs.dateFormattedOriginal, tracks.length.displayTrackKeyword].join('  •  '),
+                                  style: context.textTheme.displayMedium,
+                                ),
                               ),
                             ),
-                          ),
-                          child: Text(
-                            [dayInMs.dateFormattedOriginal, tracks.length.displayTrackKeyword].join('  •  '),
-                            style: context.textTheme.displayMedium,
-                          ),
+                            NamidaIconButton(
+                              icon: Broken.more,
+                              iconSize: 22.0,
+                              onPressed: () {
+                                showGeneralPopupDialog(
+                                  tracks.toTracks(),
+                                  dayInMs.dateFormattedOriginal,
+                                  tracks.length.displayTrackKeyword,
+                                  QueueSource.history,
+                                  extractColor: false,
+                                );
+                              },
+                            ),
+                            const SizedBox(width: 2.0),
+                          ],
+                        ),
+                      );
+                    },
+                    content: Obx(
+                      () => SizedBox(
+                        height: Dimensions.inst.allItemsExtentsHistory[index],
+                        width: context.width,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.only(bottom: kHistoryDayListBottomPadding, top: kHistoryDayListTopPadding),
+                          primary: false,
+                          itemExtent: Dimensions.inst.trackTileItemExtent,
+                          itemCount: tracks.length,
+                          itemBuilder: (context, i) {
+                            final reverseIndex = (tracks.length - 1) - i;
+                            final tr = tracks[reverseIndex];
+
+                            return TrackTile(
+                              track: tr.track,
+                              trackWithDate: tr,
+                              index: i,
+                              queueSource: QueueSource.history,
+                              bgColor: day == HistoryController.inst.dayOfHighLight.value && reverseIndex == HistoryController.inst.indexToHighlight.value
+                                  ? context.theme.colorScheme.onBackground.withAlpha(40)
+                                  : null,
+                              draggableThumbnail: false,
+                              playlistName: k_PLAYLIST_NAME_HISTORY,
+                              thirdLineText: tr.dateAdded.dateAndClockFormattedOriginal,
+                            );
+                          },
                         ),
                       ),
-                      NamidaIconButton(
-                        icon: Broken.more,
-                        iconSize: 22.0,
-                        onPressed: () {
-                          showGeneralPopupDialog(
-                            tracks.toTracks(),
-                            dayInMs.dateFormattedOriginal,
-                            tracks.length.displayTrackKeyword,
-                            QueueSource.history,
-                            extractColor: false,
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 2.0),
-                    ],
-                  ),
-                );
-              },
-              content: SizedBox(
-                height: Dimensions.inst.allItemsExtentsHistory[index],
-                width: context.width,
-                child: ListView.builder(
-                  padding: const EdgeInsets.only(bottom: kHistoryDayListBottomPadding, top: kHistoryDayListTopPadding),
-                  primary: false,
-                  itemExtent: Dimensions.inst.trackTileItemExtent,
-                  itemCount: tracks.length,
-                  itemBuilder: (context, i) {
-                    final reverseIndex = (tracks.length - 1) - i;
-                    final tr = tracks[reverseIndex];
-
-                    return TrackTile(
-                      track: tr.track,
-                      trackWithDate: tr,
-                      index: i,
-                      queueSource: QueueSource.history,
-                      bgColor: day == HistoryController.inst.dayOfHighLight.value && reverseIndex == HistoryController.inst.indexToHighlight.value
-                          ? context.theme.colorScheme.onBackground.withAlpha(40)
-                          : null,
-                      draggableThumbnail: false,
-                      playlistName: k_PLAYLIST_NAME_HISTORY,
-                      thirdLineText: tr.dateAdded.dateAndClockFormattedOriginal,
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
+                childCount: HistoryController.inst.historyDays.length,
               ),
-            );
-          },
-        ),
+            ),
+          ),
+          const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
+        ],
       ),
     );
   }

@@ -64,7 +64,7 @@ class AlbumCard extends StatelessWidget {
           onLongPress: () => NamidaDialogs.inst.showAlbumDialog(name),
           child: Column(
             children: [
-              Hero(
+              NamidaHero(
                 tag: hero,
                 child: ArtworkWidget(
                   track: album.trackOfImage,
@@ -126,7 +126,7 @@ class AlbumCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (staggered && !compact) SizedBox(height: fontSize * 0.7),
-                          Hero(
+                          NamidaHero(
                             tag: 'line1_$hero',
                             child: Text(
                               album.album.overflow,
@@ -138,7 +138,7 @@ class AlbumCard extends StatelessWidget {
                           if (!SettingsController.inst.albumCardTopRightDate.value || album.albumArtist != '') ...[
                             // if (!compact) const SizedBox(height: 2.0),
                             if (shouldDisplayNormalDate || shouldDisplayAlbumArtist)
-                              Hero(
+                              NamidaHero(
                                 tag: 'line2_$hero',
                                 child: Text(
                                   [
@@ -152,7 +152,7 @@ class AlbumCard extends StatelessWidget {
                               ),
                           ],
                           // if (staggered && !compact) SizedBox(height: fontSize * 0.1),
-                          Hero(
+                          NamidaHero(
                             tag: 'line3_$hero',
                             child: Text(
                               [

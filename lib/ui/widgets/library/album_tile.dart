@@ -53,7 +53,7 @@ class AlbumTile extends StatelessWidget {
               SizedBox(
                 width: albumThumbnailSize,
                 height: albumThumbnailSize,
-                child: Hero(
+                child: NamidaHero(
                   tag: hero,
                   child: ArtworkWidget(
                     thumbnailSize: albumThumbnailSize,
@@ -69,7 +69,7 @@ class AlbumTile extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Hero(
+                    NamidaHero(
                       tag: 'line1_$hero',
                       child: Text(
                         album.album,
@@ -78,7 +78,7 @@ class AlbumTile extends StatelessWidget {
                       ),
                     ),
                     if (album.albumArtist != '')
-                      Hero(
+                      NamidaHero(
                         tag: 'line2_$hero',
                         child: Text(
                           album.albumArtist,
@@ -86,7 +86,7 @@ class AlbumTile extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    Hero(
+                    NamidaHero(
                       tag: 'line3_$hero',
                       child: Text(
                         [

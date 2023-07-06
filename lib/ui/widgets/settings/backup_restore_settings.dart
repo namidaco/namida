@@ -58,8 +58,10 @@ class BackupAndRestore extends StatelessWidget {
                         const CancelButton(),
                         ElevatedButton(
                           onPressed: () {
-                            NamidaNavigator.inst.closeDialog();
-                            BackupController.inst.createBackupFile();
+                            if (SettingsController.inst.backupItemslist.isNotEmpty) {
+                              NamidaNavigator.inst.closeDialog();
+                              BackupController.inst.createBackupFile();
+                            }
                           },
                           child: Text(Language.inst.CREATE_BACKUP),
                         ),

@@ -50,7 +50,7 @@ class PlaylistTile extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Hero(
+                        NamidaHero(
                           tag: 'line1_$hero',
                           child: Text(
                             playlist.name.translatePlaylistName(),
@@ -58,7 +58,7 @@ class PlaylistTile extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Hero(
+                        NamidaHero(
                           tag: 'line2_$hero',
                           child: Text(
                             [tracksRaw.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
@@ -67,7 +67,7 @@ class PlaylistTile extends StatelessWidget {
                           ),
                         ),
                         if (playlist.moods.isNotEmpty)
-                          Hero(
+                          NamidaHero(
                             tag: 'line3_$hero',
                             child: Text(
                               playlist.moods.join(', ').overflow,

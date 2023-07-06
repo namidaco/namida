@@ -32,7 +32,7 @@ class ArtistTile extends StatelessWidget {
           child: Row(
             children: [
               const SizedBox(width: 8.0),
-              Hero(
+              NamidaHero(
                 tag: hero,
                 child: ContainerWithBorder(
                   child: ArtworkWidget(
@@ -51,7 +51,7 @@ class ArtistTile extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Hero(
+                    NamidaHero(
                       tag: 'line1_$hero',
                       child: Text(
                         name,
@@ -59,7 +59,7 @@ class ArtistTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Hero(
+                    NamidaHero(
                       tag: 'line2_$hero',
                       child: Text(
                         [

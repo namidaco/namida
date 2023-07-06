@@ -149,7 +149,7 @@ class TrackTile extends StatelessWidget {
                             child: SizedBox(
                               width: thumbnailSize,
                               height: thumbnailSize,
-                              child: Hero(
+                              child: NamidaHero(
                                 tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
                                 child: ArtworkWidget(
                                   key: UniqueKey(),

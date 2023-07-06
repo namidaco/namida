@@ -23,138 +23,140 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () {
-        return Scaffold(
-          resizeToAvoidBottomInset: false,
-          appBar: PreferredSize(
-            preferredSize: Size(0, 56.0 * (1 - ScrollSearchController.inst.miniplayerHeightPercentage.value * 0.3)),
-            child: AppBar(
-                leading: Obx(
-                  () => NamidaNavigator.inst.currentWidgetStack.length > 1 ? const NamidaBackButton() : const NamidaDrawerButton(),
-                ),
-                titleSpacing: 0,
-                automaticallyImplyLeading: false,
-                title: NamidaNavigator.inst.currentRoute?.toTitle(),
-                actions: NamidaNavigator.inst.currentRoute?.toActions()
-                // [
-                // Hero(
-                //   tag: 'dsfdfds',
-                //   child: NamidaIconButton(
-                //     padding: const EdgeInsets.only(right: 12.0, left: 10.0),
-                //     icon: Broken.ghost,
-                //     onPressed: () async {
-                //       GoogleSignIn googleSignIn = GoogleSignIn(
-                //         scopes: [
-                //           'email',
-                //           'https://www.googleapis.com/auth/youtube',
-                //           'https://www.googleapis.com/auth/youtube.readonly',
-                //           'https://www.googleapis.com/auth/youtube.force-ssl',
-                //         ],
-                //       );
-                //       await googleSignIn.signOut();
-                //       final acc = await googleSignIn.signIn();
-                //       final accessToken = await acc?.authentication.then((value) => value.accessToken);
-                //       final accHeaders = await acc?.authHeaders;
-                //       print('ACCCCCCCCCC ${acc?.displayName ?? 'NULLLLLLL'}');
-                //       print('ACCCCCCCCCC ${accessToken ?? 'NULLLLLLL'}');
-                //       YoutubeController.inst.sussyBaka = accessToken ?? '';
-                //       // final String url = 'https://www.googleapis.com/youtube/v3/channels?access_token=$accessToken&part=snippet&mine=true';
-                //       final String url = 'https://youtube.com/watch?v=o3DHvFyPYRE&bpctr=9999999999&hl=en&access_token=$accessToken';
-                //       http.Response response = await http.get(Uri.parse(url), headers: accHeaders);
-                //       // print('ACCCCCCCCCC ${response.body.replaceAll('\n', ' ')}');
-                //       print('ACCCCCCCCCC ${response.headers.toString()}');
-                //       final cookie = Cookie.fromSetCookieValue(response.headers['set-cookie'].toString());
-                //       print('ACCCCCCCCCC cookie: ${cookie.name}');
-                //       print('ACCCCCCCCCC cookie: ${cookie.value}');
-                //       print('ACCCCCCCCCC cookie: ${cookie.path}');
-                //       YoutubeController.inst.sussyBakaHeader = response.headers;
-                //     },
-                //   ),
-                // ),
-                // ],
-                ),
-          ),
-          body: Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              Transform.scale(
-                scale: 1 - (ScrollSearchController.inst.miniplayerHeightPercentage.value * 0.05),
-                child: WillPopScope(
-                  onWillPop: () async {
-                    await NamidaNavigator.inst.popPage();
-                    return false;
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      appBar: PreferredSize(
+        preferredSize: Size(0, 56.0 * (1 - ScrollSearchController.inst.miniplayerHeightPercentage.value * 0.3)),
+        child: Obx(
+          () => AppBar(
+              leading: NamidaNavigator.inst.currentWidgetStack.length > 1 ? const NamidaBackButton() : const NamidaDrawerButton(),
+              titleSpacing: 0,
+              automaticallyImplyLeading: false,
+              title: NamidaNavigator.inst.currentRoute?.toTitle(),
+              actions: NamidaNavigator.inst.currentRoute?.toActions()
+              // [
+              // NamidaHero(
+              //   tag: 'dsfdfds',
+              //   child: NamidaIconButton(
+              //     padding: const EdgeInsets.only(right: 12.0, left: 10.0),
+              //     icon: Broken.ghost,
+              //     onPressed: () async {
+              //       GoogleSignIn googleSignIn = GoogleSignIn(
+              //         scopes: [
+              //           'email',
+              //           'https://www.googleapis.com/auth/youtube',
+              //           'https://www.googleapis.com/auth/youtube.readonly',
+              //           'https://www.googleapis.com/auth/youtube.force-ssl',
+              //         ],
+              //       );
+              //       await googleSignIn.signOut();
+              //       final acc = await googleSignIn.signIn();
+              //       final accessToken = await acc?.authentication.then((value) => value.accessToken);
+              //       final accHeaders = await acc?.authHeaders;
+              //       print('ACCCCCCCCCC ${acc?.displayName ?? 'NULLLLLLL'}');
+              //       print('ACCCCCCCCCC ${accessToken ?? 'NULLLLLLL'}');
+              //       YoutubeController.inst.sussyBaka = accessToken ?? '';
+              //       // final String url = 'https://www.googleapis.com/youtube/v3/channels?access_token=$accessToken&part=snippet&mine=true';
+              //       final String url = 'https://youtube.com/watch?v=o3DHvFyPYRE&bpctr=9999999999&hl=en&access_token=$accessToken';
+              //       http.Response response = await http.get(Uri.parse(url), headers: accHeaders);
+              //       // print('ACCCCCCCCCC ${response.body.replaceAll('\n', ' ')}');
+              //       print('ACCCCCCCCCC ${response.headers.toString()}');
+              //       final cookie = Cookie.fromSetCookieValue(response.headers['set-cookie'].toString());
+              //       print('ACCCCCCCCCC cookie: ${cookie.name}');
+              //       print('ACCCCCCCCCC cookie: ${cookie.value}');
+              //       print('ACCCCCCCCCC cookie: ${cookie.path}');
+              //       YoutubeController.inst.sussyBakaHeader = response.headers;
+              //     },
+              //   ),
+              // ),
+              // ],
+              ),
+        ),
+      ),
+      body: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          Obx(
+            () => Transform.scale(
+              scale: 1 - (ScrollSearchController.inst.miniplayerHeightPercentage.value * 0.05),
+              child: WillPopScope(
+                onWillPop: () async {
+                  await NamidaNavigator.inst.popPage();
+                  return false;
+                },
+                child: Navigator(
+                  key: NamidaNavigator.inst.navKey,
+                  restorationScopeId: 'namida',
+                  requestFocus: false,
+                  observers: [NamidaNavigator.inst.heroController],
+                  onGenerateRoute: (settings) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      NamidaNavigator.inst.onFirstLoad();
+                    });
+                    return GetPageRoute(page: () => const SizedBox());
                   },
-                  child: Navigator(
-                    key: NamidaNavigator.inst.navKey,
-                    restorationScopeId: 'namida',
-                    requestFocus: false,
-                    observers: [NamidaNavigator.inst.heroController],
-                    onGenerateRoute: (settings) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        NamidaNavigator.inst.onFirstLoad();
-                      });
-                      return GetPageRoute(page: () => const SizedBox());
-                    },
-                  ),
                 ),
               ),
-
-              /// Search Box
-              Positioned.fill(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 400),
-                  child: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? SearchPage() : null,
-                ),
-              ),
-
-              /// Bottom Glow/Shadow
-              Obx(
-                () => AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 600),
-                  child: Player.inst.nowPlayingTrack.value == kDummyTrack
-                      ? const SizedBox(key: Key('emptyglow'))
-                      : Container(
-                          key: const Key('actualglow'),
-                          height: 28.0,
-                          transform: Matrix4.translationValues(0, 8.0, 0),
-                          decoration: BoxDecoration(
-                            boxShadow: [
-                              BoxShadow(
-                                color: context.theme.scaffoldBackgroundColor,
-                                spreadRadius: 4.0,
-                                blurRadius: 8.0,
-                              ),
-                            ],
-                          ),
-                        ),
-                ),
-              )
-            ],
+            ),
           ),
-          bottomNavigationBar: !SettingsController.inst.enableBottomNavBar.value
-              ? null
-              : Transform.translate(
-                  offset: Offset(0, 64.0 * ScrollSearchController.inst.miniplayerHeightPercentage.value),
-                  child: NavigationBar(
-                    animationDuration: const Duration(seconds: 1),
-                    elevation: 22,
-                    labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-                    height: 64.0,
-                    onDestinationSelected: (value) => ScrollSearchController.inst.animatePageController(value.toEnum()),
-                    selectedIndex: SettingsController.inst.selectedLibraryTab.value.toInt(),
-                    destinations: SettingsController.inst.libraryTabs
-                        .map(
-                          (e) => NavigationDestination(
-                            icon: Icon(e.toIcon()),
-                            label: e.toText(),
+
+          /// Search Box
+          Positioned.fill(
+            child: Obx(
+              () => AnimatedSwitcher(
+                duration: const Duration(milliseconds: 400),
+                child: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? SearchPage() : null,
+              ),
+            ),
+          ),
+
+          /// Bottom Glow/Shadow
+          Obx(
+            () => AnimatedSwitcher(
+              duration: const Duration(milliseconds: 600),
+              child: Player.inst.nowPlayingTrack.value == kDummyTrack
+                  ? const SizedBox(key: Key('emptyglow'))
+                  : Container(
+                      key: const Key('actualglow'),
+                      height: 28.0,
+                      transform: Matrix4.translationValues(0, 8.0, 0),
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: context.theme.scaffoldBackgroundColor,
+                            spreadRadius: 4.0,
+                            blurRadius: 8.0,
                           ),
-                        )
-                        .toList(),
-                  ),
+                        ],
+                      ),
+                    ),
+            ),
+          )
+        ],
+      ),
+      bottomNavigationBar: Obx(
+        () => !SettingsController.inst.enableBottomNavBar.value
+            ? const SizedBox()
+            : Transform.translate(
+                offset: Offset(0, 64.0 * ScrollSearchController.inst.miniplayerHeightPercentage.value),
+                child: NavigationBar(
+                  animationDuration: const Duration(seconds: 1),
+                  elevation: 22,
+                  labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+                  height: 64.0,
+                  onDestinationSelected: (value) => ScrollSearchController.inst.animatePageController(value.toEnum()),
+                  selectedIndex: SettingsController.inst.selectedLibraryTab.value.toInt(),
+                  destinations: SettingsController.inst.libraryTabs
+                      .map(
+                        (e) => NavigationDestination(
+                          icon: Icon(e.toIcon()),
+                          label: e.toText(),
+                        ),
+                      )
+                      .toList(),
                 ),
-        );
-      },
+              ),
+      ),
     );
   }
 }

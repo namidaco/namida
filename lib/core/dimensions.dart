@@ -114,9 +114,11 @@ class Dimensions {
 
   void calculateAllItemsExtentsInHistory() {
     final tie = Dimensions.inst.trackTileItemExtent;
-    allItemsExtentsHistory.assignAll(HistoryController.inst.historyMap.value.entries.map(
-      (e) => kHistoryDayHeaderHeightWithPadding + (e.value.length * tie),
-    ));
+    allItemsExtentsHistory
+      ..clear()
+      ..addAll(HistoryController.inst.historyMap.value.entries.map(
+        (e) => kHistoryDayHeaderHeightWithPadding + (e.value.length * tie),
+      ));
   }
 
   /// {@template card_dimensions}

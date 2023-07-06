@@ -50,7 +50,7 @@ class QueueTile extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Hero(
+                  NamidaHero(
                     tag: 'line1_$hero',
                     child: Text(
                       queue.date.dateAndClockFormattedOriginal,
@@ -61,7 +61,7 @@ class QueueTile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 1.0),
-                  Hero(
+                  NamidaHero(
                     tag: 'line2_$hero',
                     child: Text(
                       [queue.name, queue.tracks.displayTrackKeyword].join(' - '),

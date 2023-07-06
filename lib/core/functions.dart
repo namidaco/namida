@@ -90,13 +90,13 @@ class NamidaOnTaps {
   }) async {
     HistoryController.inst.indexToHighlight.value = indexToHighlight;
     HistoryController.inst.dayOfHighLight.value = dayOfHighLight;
-
+    void jump() => HistoryController.inst.scrollController.jumpTo(initialScrollOffset);
     if (NamidaNavigator.inst.currentRoute?.route == RouteType.SUBPAGE_historyTracks) {
       NamidaNavigator.inst.closeAllDialogs();
-      HistoryController.inst.scrollController.jumpTo(initialScrollOffset);
+      jump();
     } else {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        HistoryController.inst.scrollController.jumpTo(initialScrollOffset);
+        jump();
       });
       await NamidaNavigator.inst.navigateTo(
         const HistoryTracksPage(),
