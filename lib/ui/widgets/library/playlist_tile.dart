@@ -32,69 +32,72 @@ class PlaylistTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 4.0),
         child: SizedBox(
           height: Dimensions.playlistTileItemExtent,
-          child: Obx(
-            () {
-              final playlist = PlaylistController.inst.getPlaylist(playlistName);
-              if (playlist == null) return const SizedBox();
-              final tracksRaw = playlist.tracks.toTracks();
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
+            child: Obx(
+              () {
+                final playlist = PlaylistController.inst.getPlaylist(playlistName);
+                if (playlist == null) return const SizedBox();
+                final tracksRaw = playlist.tracks.toTracks();
 
-              return Row(
-                children: [
-                  MultiArtworkContainer(
-                    heroTag: hero,
-                    size: Dimensions.playlistThumbnailSize,
-                    tracks: tracksRaw,
-                  ),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        NamidaHero(
-                          tag: 'line1_$hero',
-                          child: Text(
-                            playlist.name.translatePlaylistName(),
-                            style: context.textTheme.displayMedium,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        NamidaHero(
-                          tag: 'line2_$hero',
-                          child: Text(
-                            [tracksRaw.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
-                            style: context.textTheme.displaySmall?.copyWith(fontSize: 13.7.multipliedFontScale),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (playlist.moods.isNotEmpty)
+                return Row(
+                  children: [
+                    MultiArtworkContainer(
+                      heroTag: hero,
+                      size: Dimensions.playlistThumbnailSize,
+                      tracks: tracksRaw,
+                    ),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           NamidaHero(
-                            tag: 'line3_$hero',
+                            tag: 'line1_$hero',
                             child: Text(
-                              playlist.moods.join(', ').overflow,
-                              style: context.textTheme.displaySmall,
+                              playlist.name.translatePlaylistName(),
+                              style: context.textTheme.displayMedium,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                      ],
+                          NamidaHero(
+                            tag: 'line2_$hero',
+                            child: Text(
+                              [tracksRaw.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
+                              style: context.textTheme.displaySmall?.copyWith(fontSize: 13.7.multipliedFontScale),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (playlist.moods.isNotEmpty)
+                            NamidaHero(
+                              tag: 'line3_$hero',
+                              child: Text(
+                                playlist.moods.join(', ').overflow,
+                                style: context.textTheme.displaySmall,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12.0),
-                  Text(
-                    tracksRaw.totalDurationFormatted,
-                    style: context.textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.w500,
+                    const SizedBox(width: 12.0),
+                    Text(
+                      tracksRaw.totalDurationFormatted,
+                      style: context.textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(width: 2.0),
-                  MoreIcon(
-                    iconSize: 20,
-                    onPressed: () => NamidaDialogs.inst.showPlaylistDialog(playlistName),
-                  ),
-                  const SizedBox(width: 8.0),
-                ],
-              );
-            },
+                    const SizedBox(width: 2.0),
+                    MoreIcon(
+                      iconSize: 20,
+                      onPressed: () => NamidaDialogs.inst.showPlaylistDialog(playlistName),
+                    ),
+                    const SizedBox(width: 8.0),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),

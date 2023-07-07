@@ -14,8 +14,8 @@ class Dimensions {
   static const tileBottomMargin = 4.0;
   static const tileBottomMargin6 = 6.0;
   static const _tileAdditionalMargin = 4.0;
-  static const _tileVerticalPadding = 4.0;
-  static const totalVerticalDistance = tileBottomMargin + 2 * _tileVerticalPadding;
+  static const tileVerticalPadding = 4.0;
+  static const totalVerticalDistance = tileBottomMargin + 2 * tileVerticalPadding;
 
   static const gridHorizontalPadding = 4.0;
 
@@ -38,7 +38,7 @@ class Dimensions {
   // -- Queue Tile --
   static const queueThumbnailSize = 64.0;
   static const _queueTileHeight = 72.0;
-  static const queueTileItemExtent = _queueTileHeight + tileBottomMargin6 + 2 * _tileVerticalPadding + _tileAdditionalMargin;
+  static const queueTileItemExtent = _queueTileHeight + tileBottomMargin6 + 2 * tileVerticalPadding + _tileAdditionalMargin;
 
   /// {@macro card_dimensions}
   (double, double, double) albumCardDimensions = (0.0, 0.0, 0.0);

@@ -38,92 +38,95 @@ class FolderTile extends StatelessWidget {
         onTap: () => NamidaOnTaps.inst.onFolderTap(folder),
         child: SizedBox(
           height: Dimensions.inst.trackTileItemExtent,
-          child: Row(
-            children: [
-              const SizedBox(width: 12.0),
-              Stack(
-                children: [
-                  SizedBox(
-                    width: SettingsController.inst.trackThumbnailSizeinList.value,
-                    height: SettingsController.inst.trackThumbnailSizeinList.value,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Icon(
-                          Broken.folder,
-                          size: (SettingsController.inst.trackThumbnailSizeinList.value / 1.35).clamp(0, SettingsController.inst.trackListTileHeight.value),
-                        ),
-                        Positioned(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: ArtworkWidget(
-                              blur: 0,
-                              borderRadius: 6,
-                              thumbnailSize: (SettingsController.inst.trackThumbnailSizeinList.value / 2.6).clamp(0, SettingsController.inst.trackListTileHeight.value * 0.5),
-                              path: tracks.firstOrNull?.pathToImage,
-                              track: tracks.firstOrNull,
-                              forceSquared: true,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
+            child: Row(
+              children: [
+                const SizedBox(width: 12.0),
+                Stack(
+                  children: [
+                    SizedBox(
+                      width: SettingsController.inst.trackThumbnailSizeinList.value,
+                      height: SettingsController.inst.trackThumbnailSizeinList.value,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Icon(
+                            Broken.folder,
+                            size: (SettingsController.inst.trackThumbnailSizeinList.value / 1.35).clamp(0, SettingsController.inst.trackListTileHeight.value),
+                          ),
+                          Positioned(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: ArtworkWidget(
+                                blur: 0,
+                                borderRadius: 6,
+                                thumbnailSize: (SettingsController.inst.trackThumbnailSizeinList.value / 2.6).clamp(0, SettingsController.inst.trackListTileHeight.value * 0.5),
+                                path: tracks.firstOrNull?.pathToImage,
+                                track: tracks.firstOrNull,
+                                forceSquared: true,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 12.0),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      folder.folderName,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: context.textTheme.displayMedium!,
-                    ),
-                    if (subtitle != null)
+                  ],
+                ),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        subtitle!,
+                        folder.folderName,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        style: context.textTheme.displayMedium!,
+                      ),
+                      if (subtitle != null)
+                        Text(
+                          subtitle!,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: context.textTheme.displaySmall!,
+                        ),
+                      Text(
+                        [
+                          tracks.displayTrackKeyword,
+                          if (dirInside.isNotEmpty) dirInside.length.displayFolderKeyword,
+                        ].join(' - '),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                         style: context.textTheme.displaySmall!,
                       ),
-                    Text(
+                    ],
+                  ),
+                ),
+                const SizedBox(
+                  width: 2.0,
+                ),
+                MoreIcon(
+                  padding: 6.0,
+                  onPressed: () {
+                    showGeneralPopupDialog(
+                      tracks,
+                      folder.folderName,
                       [
                         tracks.displayTrackKeyword,
-                        if (dirInside.isNotEmpty) dirInside.length.displayFolderKeyword,
-                      ].join(' - '),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: context.textTheme.displaySmall!,
-                    ),
-                  ],
+                        tracks.totalDurationFormatted,
+                      ].join(' • '),
+                      QueueSource.folder,
+                      thirdLineText: tracks.totalSizeFormatted,
+                    );
+                  },
                 ),
-              ),
-              const SizedBox(
-                width: 2.0,
-              ),
-              MoreIcon(
-                padding: 6.0,
-                onPressed: () {
-                  showGeneralPopupDialog(
-                    tracks,
-                    folder.folderName,
-                    [
-                      tracks.displayTrackKeyword,
-                      tracks.totalDurationFormatted,
-                    ].join(' • '),
-                    QueueSource.folder,
-                    thirdLineText: tracks.totalSizeFormatted,
-                  );
-                },
-              ),
-              const SizedBox(
-                width: 4.0,
-              ),
-            ],
+                const SizedBox(
+                  width: 4.0,
+                ),
+              ],
+            ),
           ),
         ),
       ),

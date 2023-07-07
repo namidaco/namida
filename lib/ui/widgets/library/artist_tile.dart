@@ -28,63 +28,66 @@ class ArtistTile extends StatelessWidget {
         onLongPress: () => NamidaDialogs.inst.showArtistDialog(name),
         child: SizedBox(
           height: Dimensions.artistTileItemExtent,
-          child: Row(
-            children: [
-              const SizedBox(width: 8.0),
-              NamidaHero(
-                tag: hero,
-                child: ContainerWithBorder(
-                  child: ArtworkWidget(
-                    thumbnailSize: Dimensions.artistThumbnailSize,
-                    track: tracks.trackOfImage,
-                    path: tracks.pathToImage,
-                    borderRadius: 64.0,
-                    forceSquared: true,
-                    blur: 0,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
+            child: Row(
+              children: [
+                const SizedBox(width: 8.0),
+                NamidaHero(
+                  tag: hero,
+                  child: ContainerWithBorder(
+                    child: ArtworkWidget(
+                      thumbnailSize: Dimensions.artistThumbnailSize,
+                      track: tracks.trackOfImage,
+                      path: tracks.pathToImage,
+                      borderRadius: 64.0,
+                      forceSquared: true,
+                      blur: 0,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12.0),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    NamidaHero(
-                      tag: 'line1_$hero',
-                      child: Text(
-                        name,
-                        style: context.textTheme.displayMedium,
-                        overflow: TextOverflow.ellipsis,
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      NamidaHero(
+                        tag: 'line1_$hero',
+                        child: Text(
+                          name,
+                          style: context.textTheme.displayMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                    NamidaHero(
-                      tag: 'line2_$hero',
-                      child: Text(
-                        [
-                          tracks.displayTrackKeyword,
-                          albums.length.displayAlbumKeyword,
-                        ].join(' & '),
-                        style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
-                        overflow: TextOverflow.ellipsis,
+                      NamidaHero(
+                        tag: 'line2_$hero',
+                        child: Text(
+                          [
+                            tracks.displayTrackKeyword,
+                            albums.length.displayAlbumKeyword,
+                          ].join(' & '),
+                          style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Text(
-                tracks.totalDurationFormatted,
-                style: context.textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.w500,
+                Text(
+                  tracks.totalDurationFormatted,
+                  style: context.textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(width: 4.0),
-              MoreIcon(
-                onPressed: () => NamidaDialogs.inst.showArtistDialog(name),
-                padding: 6.0,
-              ),
-            ],
+                const SizedBox(width: 4.0),
+                MoreIcon(
+                  onPressed: () => NamidaDialogs.inst.showArtistDialog(name),
+                  padding: 6.0,
+                ),
+              ],
+            ),
           ),
         ),
       ),

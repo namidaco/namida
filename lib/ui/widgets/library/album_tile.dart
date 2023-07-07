@@ -46,77 +46,80 @@ class AlbumTile extends StatelessWidget {
         onLongPress: () => NamidaDialogs.inst.showAlbumDialog(name),
         child: SizedBox(
           height: Dimensions.inst.albumTileItemExtent,
-          child: Row(
-            children: [
-              const SizedBox(width: 12.0),
-              SizedBox(
-                width: albumThumbnailSize,
-                height: albumThumbnailSize,
-                child: NamidaHero(
-                  tag: hero,
-                  child: ArtworkWidget(
-                    thumbnailSize: albumThumbnailSize,
-                    track: album.trackOfImage,
-                    path: album.pathToImage,
-                    forceSquared: SettingsController.inst.forceSquaredAlbumThumbnail.value,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
+            child: Row(
+              children: [
+                const SizedBox(width: 12.0),
+                SizedBox(
+                  width: albumThumbnailSize,
+                  height: albumThumbnailSize,
+                  child: NamidaHero(
+                    tag: hero,
+                    child: ArtworkWidget(
+                      thumbnailSize: albumThumbnailSize,
+                      track: album.trackOfImage,
+                      path: album.pathToImage,
+                      forceSquared: SettingsController.inst.forceSquaredAlbumThumbnail.value,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12.0),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    NamidaHero(
-                      tag: 'line1_$hero',
-                      child: Text(
-                        album.album,
-                        style: context.textTheme.displayMedium,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (album.albumArtist != '')
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       NamidaHero(
-                        tag: 'line2_$hero',
+                        tag: 'line1_$hero',
                         child: Text(
-                          album.albumArtist,
-                          style: context.textTheme.displaySmall,
+                          album.album,
+                          style: context.textTheme.displayMedium,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    NamidaHero(
-                      tag: 'line3_$hero',
-                      child: Text(
-                        [
-                          album.displayTrackKeyword,
-                          if (finalYear != '') finalYear,
-                        ].join(' • '),
-                        style: context.textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w500,
+                      if (album.albumArtist != '')
+                        NamidaHero(
+                          tag: 'line2_$hero',
+                          child: Text(
+                            album.albumArtist,
+                            style: context.textTheme.displaySmall,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        overflow: TextOverflow.ellipsis,
+                      NamidaHero(
+                        tag: 'line3_$hero',
+                        child: Text(
+                          [
+                            album.displayTrackKeyword,
+                            if (finalYear != '') finalYear,
+                          ].join(' • '),
+                          style: context.textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Text(
-                [
-                  album.totalDurationFormatted,
-                ].join(' - '),
-                style: context.textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.w500,
+                Text(
+                  [
+                    album.totalDurationFormatted,
+                  ].join(' - '),
+                  style: context.textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(width: 4.0),
-              MoreIcon(
-                padding: 6.0,
-                onPressed: () => NamidaDialogs.inst.showAlbumDialog(name),
-              ),
-              const SizedBox(width: 10.0),
-            ],
+                const SizedBox(width: 4.0),
+                MoreIcon(
+                  padding: 6.0,
+                  onPressed: () => NamidaDialogs.inst.showAlbumDialog(name),
+                ),
+                const SizedBox(width: 10.0),
+              ],
+            ),
           ),
         ),
       ),

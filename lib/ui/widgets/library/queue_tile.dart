@@ -35,59 +35,62 @@ class QueueTile extends StatelessWidget {
         borderRadius: 16.0,
         child: SizedBox(
           height: Dimensions.queueTileItemExtent,
-          child: Row(
-            children: [
-              SizedBox(
-                height: Dimensions.queueThumbnailSize,
-                child: MultiArtworkContainer(
-                  heroTag: hero,
-                  size: Dimensions.queueThumbnailSize,
-                  tracks: queue.tracks,
-                ),
-              ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  NamidaHero(
-                    tag: 'line1_$hero',
-                    child: Text(
-                      queue.date.dateAndClockFormattedOriginal,
-                      style: context.textTheme.displayMedium?.copyWith(
-                        fontSize: 14.0.multipliedFontScale,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
+            child: Row(
+              children: [
+                SizedBox(
+                  height: Dimensions.queueThumbnailSize,
+                  child: MultiArtworkContainer(
+                    heroTag: hero,
+                    size: Dimensions.queueThumbnailSize,
+                    tracks: queue.tracks,
                   ),
-                  const SizedBox(height: 1.0),
-                  NamidaHero(
-                    tag: 'line2_$hero',
-                    child: Text(
-                      [queue.name, queue.tracks.displayTrackKeyword].join(' - '),
-                      style: context.textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              Text(
-                queue.tracks.totalDurationFormatted,
-                style: context.textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 12.5.multipliedFontScale,
                 ),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(width: 4.0),
-              MoreIcon(
-                padding: 6.0,
-                onPressed: () => NamidaDialogs.inst.showQueueDialog(queue.date),
-              ),
-              const SizedBox(width: 8.0),
-            ],
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    NamidaHero(
+                      tag: 'line1_$hero',
+                      child: Text(
+                        queue.date.dateAndClockFormattedOriginal,
+                        style: context.textTheme.displayMedium?.copyWith(
+                          fontSize: 14.0.multipliedFontScale,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(height: 1.0),
+                    NamidaHero(
+                      tag: 'line2_$hero',
+                      child: Text(
+                        [queue.name, queue.tracks.displayTrackKeyword].join(' - '),
+                        style: context.textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                Text(
+                  queue.tracks.totalDurationFormatted,
+                  style: context.textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 12.5.multipliedFontScale,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(width: 4.0),
+                MoreIcon(
+                  padding: 6.0,
+                  onPressed: () => NamidaDialogs.inst.showQueueDialog(queue.date),
+                ),
+                const SizedBox(width: 8.0),
+              ],
+            ),
           ),
         ),
       ),
