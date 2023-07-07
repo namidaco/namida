@@ -43,4 +43,18 @@ class Queue {
       'tracks': finalTracks.map((e) => e.path).toList(),
     };
   }
+
+  Queue copyWith({
+    String? name,
+    int? date,
+    bool? isFav,
+    List<Track>? tracks,
+  }) {
+    name ??= this.name;
+    date ??= this.date;
+    isFav ??= this.isFav;
+    tracks ??= this.tracks;
+
+    return Queue(name, date, isFav, tracks);
+  }
 }

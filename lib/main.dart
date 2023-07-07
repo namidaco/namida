@@ -101,11 +101,10 @@ void main() async {
   PlaylistController.inst.prepareAllPlaylistsFile();
   QueueController.inst.prepareAllQueuesFile();
 
-  await QueueController.inst.prepareLatestQueueFile();
   await Player.inst.initializePlayer();
-  await QueueController.inst.putLatestQueue();
+  await QueueController.inst.prepareLatestQueue();
   await Player.inst.prepareTotalListenTime();
-  await CurrentColor.inst.prepareColors();
+  CurrentColor.inst.prepareColors();
 
   /// Clearing files cached by intents
   final cacheDir = await getTemporaryDirectory();

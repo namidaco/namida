@@ -72,8 +72,6 @@ class NamidaOnTaps {
   Future<void> onNormalPlaylistTap(
     String playlistName, {
     bool disableAnimation = false,
-    ScrollController? scrollController,
-    int? indexToHighlight,
   }) async {
     NamidaNavigator.inst.navigateTo(
       NormalPlaylistTracksPage(
@@ -90,7 +88,9 @@ class NamidaOnTaps {
   }) async {
     HistoryController.inst.indexToHighlight.value = indexToHighlight;
     HistoryController.inst.dayOfHighLight.value = dayOfHighLight;
+
     void jump() => HistoryController.inst.scrollController.jumpTo(initialScrollOffset);
+
     if (NamidaNavigator.inst.currentRoute?.route == RouteType.SUBPAGE_historyTracks) {
       NamidaNavigator.inst.closeAllDialogs();
       jump();
@@ -158,7 +158,7 @@ class NamidaOnTaps {
 // Returns a [0-1] scale representing how much similar both are.
 double checkIfQueuesSimilar(List<Track> q1, List<Track> q2, {bool fullyFunctional = false}) {
   if (fullyFunctional) {
-    if (q1.isEmpty || q2.isEmpty) {
+    if (q1.isEmpty && q2.isEmpty) {
       return 1.0;
     }
     final finallength = q1.length > q2.length ? q2.length : q1.length;
@@ -219,37 +219,40 @@ List<Track> getRandomTracks([int? min, int? max]) {
   final int randomNumber = (max - min).getRandomNumberBelow(min);
 
   for (int i = 0; i < randomNumber; i++) {
-    randomList.add(trackslist.toList()[trackslistLength.getRandomNumberBelow()]);
+    randomList.add(trackslist[trackslistLength.getRandomNumberBelow()]);
   }
   return randomList;
 }
 
-List<Track> generateRecommendedTrack(Track track) {
+List<Track> generateRecommendedTrack(Track track, {int maxCount = 20}) {
   final historytracks = HistoryController.inst.historyTracks;
   if (historytracks.isEmpty) {
     return [];
   }
+  const length = 10;
+  final max = historytracks.length;
+  int clamped(int range) => range.clamp(0, max);
 
   final Map<Track, int> numberOfListensMap = {};
-  final max = historytracks.length;
-  const length = 10;
 
-  historytracks.loop((t, i) {
+  for (int i = 0; i <= historytracks.length - 1; i++) {
+    final t = historytracks[i];
     if (t.track == track) {
-      final heatTracks = historytracks.getRange((i - length).clamp(0, max), (i + length).clamp(0, max)).toList();
+      final heatTracks = historytracks.getRange(clamped(i - length), clamped(i + length)).toList();
       heatTracks.loop((e, index) {
         numberOfListensMap.update(e.track, (value) => value + 1, ifAbsent: () => 1);
       });
       // skip length since we already took 10 tracks.
       i += length;
     }
-  });
+  }
 
   numberOfListensMap.remove(track);
 
-  final sortedByValueMap = numberOfListensMap.entries.toList()..sortBy((e) => e.value);
+  final sortedByValueMap = numberOfListensMap.entries.toList();
+  sortedByValueMap.sortByReverse((e) => e.value);
 
-  return sortedByValueMap.take(20).map((e) => e.key).toList();
+  return sortedByValueMap.take(maxCount).map((e) => e.key).toList();
 }
 
 /// if [maxCount == null], it will return all available tracks

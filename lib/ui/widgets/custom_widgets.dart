@@ -2001,7 +2001,6 @@ class HistoryJumpToDayIcon extends StatelessWidget {
                   days.removeWhere((element) => element <= dayToScrollTo);
                   final itemExtents = Dimensions.inst.allItemsExtentsHistory.toList();
                   double totalScrollOffset = 0;
-                  days.removeLast();
                   days.loop((e, index) => totalScrollOffset += itemExtents[index]);
                   HistoryController.inst.scrollController.jumpTo(totalScrollOffset + 100.0);
                 },

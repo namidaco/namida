@@ -161,11 +161,10 @@ extension MSSEUtils on int? {
 }
 
 extension TotalTime on int {
-  /// Converts milliSecondsSinceEpoch to DaysSinceEpoch
-  int toDaysSinceEpoch() {
-    const msinday = 86400000;
-    return (this / msinday).floor();
-  }
+  /// Converts milliSecondsSinceEpoch to DaysSinceEpoch.
+  ///
+  /// Note: using normal way of getting day doesnt give a shit about local time, this one works just fine.
+  int toDaysSinceEpoch() => DateTime.fromMillisecondsSinceEpoch(this).difference(DateTime(1970)).inDays;
 
   String get getTimeFormatted {
     final durInSec = Duration(seconds: this).inSeconds.remainder(60);
@@ -549,6 +548,14 @@ extension MapExtNull<K, E> on Map<K, List<E>?> {
     }
   }
 
+  void insertForce(int index, K key, E item) {
+    if (keyExists(key)) {
+      this[key]!.insert(index, item);
+    } else {
+      this[key] = <E>[item];
+    }
+  }
+
   /// Same as [addNoDuplicates], but initializes new list in case list was null.
   /// i.e: entry doesnt exist in map.
   void addNoDuplicatesForce(K key, E item, {bool preventDuplicates = true}) {
@@ -566,6 +573,10 @@ extension MapExtNull<K, E> on Map<K, List<E>?> {
       this[key] = items.toList();
     }
   }
+}
+
+extension StuffUtils<T> on T {
+  T toIf(T convertTo, T ifValueEquals) => this == ifValueEquals ? convertTo : this;
 }
 
 extension ListieExt<E, Id> on List<E> {
@@ -631,6 +642,9 @@ extension ListieExt<E, Id> on List<E> {
     final q1 = this;
     if (q1.isEmpty && q2.isEmpty) {
       return true;
+    }
+    if (q1.length != q2.length) {
+      return false;
     }
     final finalLength = q1.length > q2.length ? q2.length : q1.length;
 

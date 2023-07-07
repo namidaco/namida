@@ -78,15 +78,12 @@ class QueueController {
     latestQueue
       ..clear()
       ..addAll(tracks);
+    await _saveLatestQueueToStorage();
 
     // updating last queue inside queuesMap.
     final latestQueueInsideMap = queuesMap.value[queuesMap.value.keys.lastOrNull];
     if (latestQueueInsideMap != null) {
-      latestQueueInsideMap.tracks
-        ..clear()
-        ..addAll(tracks);
-      _updateMap(latestQueueInsideMap);
-      await _saveLatestQueueToStorage(latestQueueInsideMap);
+      updateQueue(latestQueueInsideMap, latestQueueInsideMap.copyWith(tracks: latestQueue));
     }
   }
 
@@ -132,26 +129,26 @@ class QueueController {
     }
   }
 
-  ///
-  Future<void> prepareLatestQueueFile() async {
-    await File(k_FILE_PATH_LATEST_QUEUE).readAsJsonAnd((response) async {
-      final lq = Queue.fromJson(response);
-      latestQueue.assignAll(lq.tracks);
-    });
-  }
-
   /// Assigns the last queue to the [Player]
-  Future<void> putLatestQueue() async {
-    if (latestQueue.isEmpty) {
-      return;
-    }
-    final latestTrack = SettingsController.inst.lastPlayedTrackPath.value.toTrackOrNull();
-    if (latestTrack == null) return;
+  Future<void> prepareLatestQueue() async {
+    // reading file.
+    await File(k_FILE_PATH_LATEST_QUEUE).readAsJsonAnd((response) async {
+      response as List?;
+      if (response == null || response.isEmpty) return;
 
-    final ind = latestQueue.indexOf(latestTrack);
+      latestQueue
+        ..clear()
+        ..addAll(response.map((e) => Track(e)));
+    });
+
+    if (latestQueue.isEmpty) return;
+
+    final latestTrack = SettingsController.inst.lastPlayedTrackPath.value.toTrack();
+
+    final index = latestQueue.indexOf(latestTrack).toIf(0, -1);
 
     await Player.inst.playOrPause(
-      ind == -1 ? 0 : ind,
+      index,
       latestQueue.toList(),
       QueueSource.playerQueue,
       startPlaying: false,
@@ -163,8 +160,8 @@ class QueueController {
     await File('$k_DIR_QUEUES${queue.date}.json').writeAsJson(queue.toJson());
   }
 
-  Future<void> _saveLatestQueueToStorage(Queue queue) async {
-    await File(k_FILE_PATH_LATEST_QUEUE).writeAsJson(queue.toJson());
+  Future<void> _saveLatestQueueToStorage() async {
+    await File(k_FILE_PATH_LATEST_QUEUE).writeAsJson(latestQueue.map((e) => e.path).toList());
   }
 
   Future<void> _deleteQueueFromStorage(Queue queue) async {

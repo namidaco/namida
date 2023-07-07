@@ -119,38 +119,41 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                       const SizedBox(height: 6.0),
                       Expanded(
                         child: Obx(
-                          () => NamidaListView(
-                            onReorder: (oldIndex, newIndex) {
-                              if (newIndex > oldIndex) {
-                                newIndex -= 1;
-                              }
-                              final tfOld = SettingsController.inst.tagFieldsToEdit.toList()[oldIndex];
-                              SettingsController.inst.removeFromList(tagFieldsToEdit1: tfOld);
-                              SettingsController.inst.insertInList(newIndex, tagFieldsToEdit1: tfOld);
-                            },
-                            itemBuilder: (context, i) {
-                              final tf = SettingsController.inst.tagFieldsToEdit.toList()[i];
-                              return Padding(
-                                key: ValueKey(i.toString()),
-                                padding: const EdgeInsets.only(top: 8.0),
-                                child: ListTileWithCheckMark(
-                                  active: true,
-                                  title: tf.toText(),
-                                  icon: tf.toIcon(),
-                                  onTap: () {
-                                    if (SettingsController.inst.tagFieldsToEdit.toList().length <= 3) {
-                                      Get.snackbar(Language.inst.MINIMUM_ONE_FIELD, Language.inst.MINIMUM_ONE_FIELD_SUBTITLE);
-                                      return;
-                                    }
-                                    SettingsController.inst.removeFromList(tagFieldsToEdit1: tf);
-                                    subList.add(tf);
-                                  },
-                                ),
-                              );
-                            },
-                            itemCount: SettingsController.inst.tagFieldsToEdit.toList().length,
-                            itemExtents: null,
-                          ),
+                          () {
+                            final tagFields = SettingsController.inst.tagFieldsToEdit.toList();
+                            return NamidaListView(
+                              onReorder: (oldIndex, newIndex) {
+                                if (newIndex > oldIndex) {
+                                  newIndex -= 1;
+                                }
+                                final tfOld = tagFields[oldIndex];
+                                SettingsController.inst.removeFromList(tagFieldsToEdit1: tfOld);
+                                SettingsController.inst.insertInList(newIndex, tagFieldsToEdit1: tfOld);
+                              },
+                              itemBuilder: (context, i) {
+                                final tf = tagFields[i];
+                                return Padding(
+                                  key: ValueKey(i.toString()),
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: ListTileWithCheckMark(
+                                    active: true,
+                                    title: tf.toText(),
+                                    icon: tf.toIcon(),
+                                    onTap: () {
+                                      if (SettingsController.inst.tagFieldsToEdit.toList().length <= 3) {
+                                        Get.snackbar(Language.inst.MINIMUM_ONE_FIELD, Language.inst.MINIMUM_ONE_FIELD_SUBTITLE);
+                                        return;
+                                      }
+                                      SettingsController.inst.removeFromList(tagFieldsToEdit1: tf);
+                                      subList.add(tf);
+                                    },
+                                  ),
+                                );
+                              },
+                              itemCount: SettingsController.inst.tagFieldsToEdit.toList().length,
+                              itemExtents: null,
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(height: 6.0),

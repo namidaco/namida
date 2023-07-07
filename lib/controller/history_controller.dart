@@ -20,16 +20,16 @@ class HistoryController {
   HistoryController._internal();
 
   int get historyTracksLength => historyMap.value.entries.fold(0, (sum, obj) => sum + obj.value.length);
-  List<TrackWithDate> get historyTracks => historyMap.value.entries.fold([], (mainList, newEntry) => [...mainList, ...newEntry.value]);
-  TrackWithDate? get oldestTrack => historyMap.value[historyDays.lastOrNull]?.firstOrNull;
-  TrackWithDate? get newestTrack => historyMap.value[historyDays.firstOrNull]?.lastOrNull;
+  List<TrackWithDate> get historyTracks => historyMap.value.values.fold([], (mainList, newEntry) => mainList..addAll(newEntry));
+  TrackWithDate? get oldestTrack => historyMap.value[historyDays.lastOrNull]?.lastOrNull;
+  TrackWithDate? get newestTrack => historyMap.value[historyDays.firstOrNull]?.firstOrNull;
   Iterable<int> get historyDays => historyMap.value.keys;
 
-  /// History tracks, key = dayInMSSE && value = <TrackWithDate>[]
+  /// History tracks mapped by [daysSinceEpoch].
   ///
   /// Sorted by newest date, i.e. newest list would be the first.
   ///
-  /// for List<TrackWithDate>, the tracks are added to the last index, i.e. newest track will be the last in the list.
+  /// For each List, the tracks are added to the first index, i.e. newest track would be the first.
   final Rx<SplayTreeMap<int, List<TrackWithDate>>> historyMap = SplayTreeMap<int, List<TrackWithDate>>((date1, date2) => date2.compareTo(date1)).obs;
 
   final RxMap<Track, List<int>> topTracksMapListens = <Track, List<int>>{}.obs;
@@ -88,20 +88,20 @@ class HistoryController {
   List<int> addTracksToHistoryOnly(List<TrackWithDate> tracks) {
     final daysToSave = <int>[];
     tracks.loop((e, i) {
-      final trackday = (e.dateAdded / msInDay).floor();
+      final trackday = e.dateAdded.toDaysSinceEpoch();
       daysToSave.add(trackday);
-      historyMap.value.addForce(trackday, e);
+      historyMap.value.insertForce(0, trackday, e);
     });
     Dimensions.inst.calculateAllItemsExtentsInHistory();
 
     return daysToSave;
   }
 
-  /// Sorts each [historyMap]'s value chronologically.
+  /// Sorts each [historyMap]'s value by newest.
   ///
   /// Providing [daysToSort] will sort these entries only.
   void sortHistoryTracks([List<int>? daysToSort]) {
-    void sortTheseTracks(List<TrackWithDate> tracks) => tracks.sortBy((e) => e.dateAdded);
+    void sortTheseTracks(List<TrackWithDate> tracks) => tracks.sortByReverse((e) => e.dateAdded);
 
     if (daysToSort != null) {
       for (int i = 0; i < daysToSort.length; i++) {
@@ -119,10 +119,10 @@ class HistoryController {
 
   Future<void> removeFromHistory(int dayOfTrack, int index) async {
     final trs = historyMap.value[dayOfTrack]!;
-    final removed = trs.removeAt(trs.length - 1 - index);
-    Dimensions.inst.calculateAllItemsExtentsInHistory();
+    final removed = trs.removeAt(index);
     topTracksMapListens[removed.track]?.remove(removed.dateAdded);
     await saveHistoryToStorage([dayOfTrack]);
+    Dimensions.inst.calculateAllItemsExtentsInHistory();
   }
 
   Future<int> removeSourcesTracksFromHistory(List<TrackSource> sources) async {
@@ -133,6 +133,7 @@ class HistoryController {
     });
     await saveHistoryToStorage();
     updateMostPlayedPlaylist();
+    Dimensions.inst.calculateAllItemsExtentsInHistory();
     return totalRemoved;
   }
 
@@ -197,6 +198,11 @@ class HistoryController {
       await File('$k_PLAYLIST_DIR_PATH_HISTORY$key.json').writeAsJson(tracks.map((e) => e.toJson()).toList());
     }
 
+    Future<void> deleteThisDay(int key) async {
+      historyMap.value.remove(key);
+      await File('$k_PLAYLIST_DIR_PATH_HISTORY$key.json').delete();
+    }
+
     if (daysToSave != null) {
       daysToSave.removeDuplicates();
       for (int i = 0; i < daysToSave.length; i++) {
@@ -206,8 +212,11 @@ class HistoryController {
           debugPrint('couldn\'t find [dayToSave] inside [historyMap]');
           continue;
         }
-        // todo: should await or not?
-        await saveThisDay(day, trs);
+        if (trs.isEmpty) {
+          await deleteThisDay(day);
+        } else {
+          await saveThisDay(day, trs);
+        }
       }
     } else {
       historyMap.value.forEach((key, value) async {

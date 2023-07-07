@@ -46,3 +46,4 @@ app.*.map.json
 
 # Specific Files
 .removed_code.dart
+pubspec.lock

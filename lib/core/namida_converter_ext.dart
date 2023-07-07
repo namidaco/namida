@@ -465,7 +465,7 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
     }
     if (this == QueueSource.history) {
       dayOfHistory != null
-          ? addThese(HistoryController.inst.historyMap.value[dayOfHistory]?.toTracks().reversed ?? [])
+          ? addThese(HistoryController.inst.historyMap.value[dayOfHistory]?.toTracks() ?? [])
           : addThese(HistoryController.inst.historyTracks.withLimit(limit).map((e) => e.track));
     }
     if (this == QueueSource.favourites) {

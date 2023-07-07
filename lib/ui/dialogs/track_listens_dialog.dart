@@ -59,8 +59,7 @@ void showTrackListensDialog(Track track, {List<int>? datesOfListen, ThemeData? t
                 });
                 final trackSmallList = HistoryController.inst.historyMap.value[t.toDaysSinceEpoch()]!;
                 final indexOfSmallList = trackSmallList.indexWhere((element) => element.dateAdded == t);
-                final reverseIndexOfSmallList = trackSmallList.length - indexOfSmallList;
-                tracksToScroll += reverseIndexOfSmallList;
+                tracksToScroll += indexOfSmallList;
                 tracksToScroll -= 2;
                 NamidaOnTaps.inst.onHistoryPlaylistTap(
                   indexToHighlight: indexOfSmallList,
