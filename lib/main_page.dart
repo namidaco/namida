@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:known_extents_list_view_builder/known_extents_sliver_reorderable_list.dart';
 
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -243,16 +244,20 @@ class MainPageWrapper extends StatelessWidget {
             children: [
               const HomePage(),
               const MiniPlayerParent(),
-              if (ScrollSearchController.inst.miniplayerHeightPercentage.value != 1.0)
-                Positioned(
-                  bottom: 60 +
-                      60.0 * ScrollSearchController.inst.miniplayerHeightPercentage.value +
-                      (SettingsController.inst.enableBottomNavBar.value ? 0 : 32.0 * (1 - ScrollSearchController.inst.miniplayerHeightPercentageQueue.value)),
-                  child: Opacity(
-                    opacity: 1 - ScrollSearchController.inst.miniplayerHeightPercentage.value,
-                    child: const SelectedTracksPreviewContainer(),
-                  ),
-                ),
+              Obx(
+                () {
+                  final miniHeight = MiniPlayerController.inst.miniplayerHP.value;
+                  final queueHeight = MiniPlayerController.inst.miniplayerQueueHP.value;
+                  if (miniHeight == 1.0) return const SizedBox();
+                  return Positioned(
+                    bottom: 60 + 60.0 * miniHeight + (SettingsController.inst.enableBottomNavBar.value ? 0 : 32.0 * (1 - queueHeight)),
+                    child: Opacity(
+                      opacity: 1 - miniHeight,
+                      child: const SelectedTracksPreviewContainer(),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -289,7 +294,6 @@ class CustomReorderableDelayedDragStartListener extends ReorderableDragStartList
     bool enabled = true,
 
     /// {@macro flutter.widgets.reorderable_list.onReorderStart}
-
     final void Function(PointerDownEvent event)? onDragStart,
 
     /// {@macro flutter.widgets.reorderable_list.onReorderEnd}

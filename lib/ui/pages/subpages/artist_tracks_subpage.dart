@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -74,7 +75,7 @@ class ArtistTracksPage extends StatelessWidget {
                         width: 100.0,
                         margin: const EdgeInsets.only(left: 2.0),
                         child: AlbumCard(
-                          gridCountOverride: 4,
+                          gridCountOverride: Dimensions.albumInsideArtistGridCount,
                           name: albumName,
                           album: albumName.getAlbumTracks(),
                           staggered: false,

@@ -4,9 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/route.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -33,6 +35,17 @@ class NamidaNavigator {
   }
 
   void _hideSearchMenuAndUnfocus() => ScrollSearchController.inst.hideSearchMenu();
+  void _minimizeMiniplayer() => MiniPlayerController.inst.snapToMini();
+
+  /// used when going to artist subpage
+  void _calculateDimensions() => Dimensions.inst.updateDimensions(LibraryTab.albums, gridOverride: Dimensions.albumInsideArtistGridCount);
+
+  void _hideEverything() {
+    _hideSearchMenuAndUnfocus();
+    _minimizeMiniplayer();
+    _calculateDimensions();
+    closeAllDialogs();
+  }
 
   void onFirstLoad() {
     final initialTab = SettingsController.inst.selectedLibraryTab.value;
@@ -46,9 +59,8 @@ class NamidaNavigator {
     Transition transition = Transition.cupertino,
     int durationInMs = 500,
   }) async {
-    _hideSearchMenuAndUnfocus();
+    _hideEverything();
     currentWidgetStack.add(page.toNamidaRoute());
-    closeAllDialogs();
 
     currentRoute?.updateColorScheme();
 
@@ -112,8 +124,7 @@ class NamidaNavigator {
     Transition transition = Transition.cupertino,
     int durationInMs = 500,
   }) async {
-    _hideSearchMenuAndUnfocus();
-    closeAllDialogs();
+    _hideEverything();
 
     currentWidgetStack.removeLast();
     currentWidgetStack.add(page.toNamidaRoute());
@@ -137,8 +148,7 @@ class NamidaNavigator {
     bool nested = true,
     Transition transition = Transition.cupertino,
   }) async {
-    _hideSearchMenuAndUnfocus();
-    closeAllDialogs();
+    _hideEverything();
 
     currentWidgetStack
       ..clear()

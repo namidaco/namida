@@ -871,7 +871,7 @@ Future<void> showGeneralPopupDialog(
                                     onTap: () {
                                       NamidaNavigator.inst.closeDialog();
                                       ScrollSearchController.inst.animatePageController(LibraryTab.folders);
-                                      NamidaOnTaps.inst.onFolderTap(availableFolders.first, false, trackToScrollTo: tracks.first);
+                                      NamidaOnTaps.inst.onFolderTap(availableFolders.first, trackToScrollTo: tracks.first);
                                     },
                                     trailing: IconButton(
                                       tooltip: Language.inst.ADD_MORE_FROM_THIS_FOLDER,

@@ -51,6 +51,7 @@ class Dimensions {
 
   static const albumSearchGridCount = 3;
   static const artistSearchGridCount = 5;
+  static const albumInsideArtistGridCount = 4;
 
   void updateDimensions(LibraryTab tab, {int? gridOverride}) {
     switch (tab) {

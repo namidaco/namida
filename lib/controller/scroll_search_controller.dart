@@ -4,8 +4,8 @@ import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -18,14 +18,8 @@ class ScrollSearchController {
   static final ScrollSearchController _instance = ScrollSearchController._internal();
   ScrollSearchController._internal();
 
-  final RxDouble miniplayerHeightPercentage = 0.0.obs;
-  final RxDouble miniplayerHeightPercentageQueue = 0.0.obs;
-
   final RxBool isGlobalSearchMenuShown = false.obs;
   final TextEditingController searchTextEditingController = Indexer.inst.globalSearchController;
-
-  ScrollController queueScrollController = ScrollController();
-  double get trackTileItemScrollOffsetInQueue => Dimensions.inst.trackTileItemExtent * Player.inst.currentIndex.value - Get.height * 0.3;
 
   final Map<LibraryTab, RxBool> isSearchBoxVisibleMap = <LibraryTab, RxBool>{};
   final Map<LibraryTab, RxBool> isBarVisibleMap = <LibraryTab, RxBool>{};
@@ -42,7 +36,10 @@ class ScrollSearchController {
     hideSearchMenu();
 
     if (w.toNamidaRoute() == NamidaNavigator.inst.currentRoute) {
-      scrollController.animateTo(0.0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOutQuart);
+      if (scrollController.hasClients) {
+        MiniPlayerController.inst.snapToMini();
+        scrollController.animateTo(0.0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOutQuart);
+      }
       return;
     }
 
@@ -72,7 +69,7 @@ class ScrollSearchController {
     scrollController.removeListener(() {});
     scrollController = ScrollController(initialScrollOffset: tab.scrollPosition);
     scrollController.addListener(() {
-      isBarVisibleMap[tab]!.value = scrollController.position.userScrollDirection == ScrollDirection.forward;
+      isBarVisibleMap[tab]?.value = scrollController.position.userScrollDirection == ScrollDirection.forward;
     });
   }
 
@@ -155,16 +152,6 @@ class ScrollSearchController {
     SearchSortController.inst.searchMedia('', libraryTab.toMediaType());
     isSearchBoxVisibleMap[libraryTab]!.value = true;
     _closeTextController(libraryTab);
-  }
-
-  void animateQueueToCurrentTrack() {
-    if (queueScrollController.hasClients) {
-      queueScrollController.animateTo(
-        trackTileItemScrollOffsetInQueue,
-        duration: const Duration(milliseconds: 600),
-        curve: Curves.easeInOutQuart,
-      );
-    }
   }
 }
 

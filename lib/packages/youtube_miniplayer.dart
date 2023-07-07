@@ -13,8 +13,8 @@ import 'package:shimmer/shimmer.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
-import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/youtube_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -42,7 +42,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
     return SafeArea(
       child: Obx(
         () => Transform.translate(
-          offset: Offset(0.0, -64.0 * (1.0 - ScrollSearchController.inst.miniplayerHeightPercentage.value)),
+          offset: Offset(0.0, -64.0 * (1.0 - MiniPlayerController.inst.miniplayerHP.value)),
           child: AnimatedSlide(
             duration: const Duration(milliseconds: 2000),
             offset: Offset(0.0, minioffset.value),
@@ -54,7 +54,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
               maxHeight: Get.height,
               builder: (height, percentage) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  ScrollSearchController.inst.miniplayerHeightPercentage.value = percentage;
+                  MiniPlayerController.inst.miniplayerHP.value = percentage;
                 });
                 final currentTrack = Player.inst.nowPlayingTrack.value;
                 final inversePerc = 1 - percentage;

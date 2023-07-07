@@ -1,24 +1,19 @@
 // This is originally a part of [Tear Music](https://github.com/tearone/tearmusic), edited to fit Namida.
 // Credits goes for the original author @55nknown
 
-import 'dart:io';
-import 'dart:ui';
-
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:animated_background/animated_background.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
-import 'package:wakelock/wakelock.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -28,13 +23,11 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
-import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/packages/youtube_miniplayer.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
@@ -52,425 +45,117 @@ class MiniPlayerParent extends StatefulWidget {
 }
 
 class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerProviderStateMixin {
-  late AnimationController animation;
-
   @override
   void initState() {
     super.initState();
-    animation = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-      upperBound: 2.1,
-      lowerBound: -0.1,
-      value: 0.0,
-    );
-  }
-
-  @override
-  void dispose() {
-    animation.dispose();
-    super.dispose();
+    MiniPlayerController.inst.initialize(this);
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedTheme(
-      duration: const Duration(milliseconds: 600),
-      data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
-      child: Stack(
-        children: [
-          /// MiniPlayer Wallpaper
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: animation,
-              builder: (context, child) {
-                if (animation.value > 0.01) {
-                  return Opacity(
-                    opacity: animation.value.clamp(0.0, 1.0),
-                    child: const Wallpaper(gradient: false, particleOpacity: .3),
-                  );
-                } else {
-                  return const SizedBox();
-                }
-              },
-            ),
-          ),
+    return Stack(
+      children: [
+        // -- MiniPlayer Wallpaper
+        Obx(
+          () {
+            final anim = MiniPlayerController.inst.miniplayerHP.value;
+            return Visibility(
+              visible: anim > 0.01,
+              child: Positioned.fill(
+                child: Opacity(
+                  opacity: MiniPlayerController.inst.miniplayerHP.value,
+                  child: const Wallpaper(gradient: false, particleOpacity: .3),
+                ),
+              ),
+            );
+          },
+        ),
 
-          /// MiniMiniPlayer
-          Obx(
-            () {
-              // to refresh after toggling [enableBottomNavBar]
-              SettingsController.inst.enableBottomNavBar.value;
-              return AnimatedSwitcher(
-                duration: const Duration(milliseconds: 600),
-                child: Player.inst.nowPlayingTrack.value == kDummyTrack
-                    ? const SizedBox(
-                        key: Key('emptyminiplayer'),
-                      )
-                    : SettingsController.inst.useYoutubeMiniplayer.value
-                        ? YoutubeMiniPlayer(key: const Key('actualminiplayer'))
-                        : NamidaMiniPlayer(key: const Key('actualminiplayer'), animation: animation),
-              );
-            },
-          )
-        ],
-      ),
+        // -- MiniPlayers
+        const MiniPlayerSwitchers(),
+      ],
     );
   }
 }
 
-class NamidaMiniPlayer extends StatefulWidget {
-  const NamidaMiniPlayer({Key? key, required this.animation}) : super(key: key);
-
-  final AnimationController animation;
+class MiniPlayerSwitchers extends StatefulWidget {
+  const MiniPlayerSwitchers({super.key});
 
   @override
-  State<NamidaMiniPlayer> createState() => _NamidaMiniPlayerState();
+  State<MiniPlayerSwitchers> createState() => _MiniPlayerSwitchersState();
 }
 
-class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProviderStateMixin {
-  double offset = 0.0;
-  double prevOffset = 0.0;
-  late Size screenSize;
-  late double topInset;
-  late double bottomInset;
-  late double maxOffset;
-  final velocity = VelocityTracker.withKind(PointerDeviceKind.touch);
-  final Cubic bouncingCurve = const Cubic(0.175, 0.885, 0.32, 1.125);
-
-  final headRoom = 50.0;
-  final actuationOffset = SettingsController.inst.enableBottomNavBar.value ? 100 : 60.0; // min distance to snap
-  final deadSpace = SettingsController.inst.enableBottomNavBar.value ? 100 : 60.0; // Distance from bottom to ignore swipes
-
-  /// Horizontal track switching
-  double sOffset = 0.0;
-  double sPrevOffset = 0.0;
-  double stParallax = 1.0;
-  double siParallax = 1.15;
-  final sActuationMulti = 1.5;
-  late double sMaxOffset;
-  late AnimationController sAnim;
-
-  bool bounceUp = false;
-  bool bounceDown = false;
-  RxDouble seekValue = 0.0.obs;
-  bool isPlayPauseButtonHighlighted = false;
-  bool isReorderingQueue = false;
-  ScrollController get scrollController => ScrollSearchController.inst.queueScrollController;
-  Rx<IconData> arrowDirection = Broken.cd.obs;
+class _MiniPlayerSwitchersState extends State<MiniPlayerSwitchers> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    final media = MediaQueryData.fromView(window);
-    topInset = media.padding.top;
-    bottomInset = media.padding.bottom;
-    screenSize = media.size;
-    maxOffset = screenSize.height;
-    sMaxOffset = screenSize.width;
-    sAnim = AnimationController(
-      vsync: this,
-      lowerBound: -1,
-      upperBound: 1,
-      value: 0.0,
-    );
+    MiniPlayerController.inst.initializeSAnim(this);
   }
 
   @override
-  void dispose() {
-    sAnim.dispose();
-    // scrollController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return Obx(
+      () {
+        // to refresh after toggling [enableBottomNavBar]
+        SettingsController.inst.enableBottomNavBar.value;
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 600),
+          child: Player.inst.nowPlayingTrack.value == kDummyTrack
+              ? const SizedBox(
+                  key: Key('emptyminiplayer'),
+                )
+              : SettingsController.inst.useYoutubeMiniplayer.value
+                  ? YoutubeMiniPlayer(key: const Key('actualminiplayer'))
+                  : const NamidaMiniPlayer(key: Key('actualminiplayer')),
+        );
+      },
+    );
   }
+}
 
-  void verticalSnapping() async {
-    final distance = prevOffset - offset;
-    final speed = velocity.getVelocity().pixelsPerSecond.dy;
-    const threshold = 500.0;
-
-    bool shouldSnapToExpanded = false;
-    bool shouldSnapToQueue = false;
-    bool shouldSnapToMini = false;
-
-    // speed threshold is an eyeballed value
-    // used to actuate on fast flicks too
-
-    if (prevOffset > maxOffset) {
-      // Start from queue
-      if (speed > threshold || distance > actuationOffset) {
-        shouldSnapToExpanded = true;
-      } else {
-        shouldSnapToQueue = true;
-      }
-    } else if (prevOffset > maxOffset / 2) {
-      // Start from top
-      if (speed > threshold || distance > actuationOffset) {
-        shouldSnapToMini = true;
-      } else if (-speed > threshold || -distance > actuationOffset) {
-        shouldSnapToQueue = true;
-      } else {
-        shouldSnapToExpanded = true;
-      }
-    } else {
-      // Start from bottom
-      if (-speed > threshold || -distance > actuationOffset) {
-        shouldSnapToExpanded = true;
-      } else {
-        shouldSnapToMini = true;
-      }
-    }
-    if (shouldSnapToExpanded) {
-      snapToExpanded();
-      _toggleWakelockOn();
-    } else {
-      if (true) {
-        _toggleWakelockOff();
-      }
-      if (shouldSnapToMini) snapToMini();
-      if (shouldSnapToQueue) snapToQueue();
-    }
-  }
-
-  void _toggleWakelockOn() {
-    if (SettingsController.inst.wakelockMode.value == WakelockMode.expanded) {
-      Wakelock.enable();
-    }
-    if (SettingsController.inst.wakelockMode.value == WakelockMode.expandedAndVideo && VideoController.inst.shouldShowVideo) {
-      Wakelock.enable();
-    }
-  }
-
-  void _toggleWakelockOff() {
-    Wakelock.disable();
-  }
-
-  void snapToExpanded({bool haptic = true}) {
-    offset = maxOffset;
-    if (prevOffset < maxOffset) bounceUp = true;
-    if (prevOffset > maxOffset) bounceDown = true;
-    snap(haptic: haptic);
-  }
-
-  void snapToMini({bool haptic = true}) {
-    offset = 0;
-    bounceDown = false;
-    snap(haptic: haptic);
-  }
-
-  void updateScrollPositionInQueue() {
-    void updateIcon() {
-      final pixels = scrollController.position.pixels;
-      final sizeInSettings = Dimensions.inst.trackTileItemExtent * Player.inst.currentIndex.value - Get.height * 0.3;
-      if (pixels > sizeInSettings) {
-        arrowDirection.value = Broken.arrow_up_1;
-      }
-      if (pixels < sizeInSettings) {
-        arrowDirection.value = Broken.arrow_down;
-      }
-      if (pixels == sizeInSettings) {
-        arrowDirection.value = Broken.cd;
-      }
-    }
-
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      ScrollSearchController.inst.queueScrollController.jumpTo(ScrollSearchController.inst.trackTileItemScrollOffsetInQueue);
-      updateIcon();
-    });
-
-    scrollController.removeListener(() {});
-    scrollController.addListener(() {
-      updateIcon();
-    });
-  }
-
-  void snapToQueue({bool haptic = true}) async {
-    updateScrollPositionInQueue();
-    offset = maxOffset * 2;
-    bounceUp = false;
-    snap(haptic: haptic);
-  }
-
-  void snap({bool haptic = true}) {
-    _cacheImages();
-    widget.animation
-        .animateTo(
-      offset / maxOffset,
-      curve: bouncingCurve,
-      duration: const Duration(milliseconds: 300),
-    )
-        .then((_) {
-      bounceUp = false;
-    });
-    if (haptic && (prevOffset - offset).abs() > actuationOffset) HapticFeedback.lightImpact();
-  }
-
-  void snapToPrev() async {
-    sOffset = -sMaxOffset;
-
-    await sAnim.animateTo(-1.0, curve: bouncingCurve, duration: const Duration(milliseconds: 300)).then((_) {
-      sOffset = 0;
-      sAnim.animateTo(0.0, duration: Duration.zero);
-    });
-    await Player.inst.previous();
-    if ((sPrevOffset - sOffset).abs() > actuationOffset) HapticFeedback.lightImpact();
-  }
-
-  void snapToCurrent() {
-    sOffset = 0;
-    sAnim.animateTo(0.0, curve: bouncingCurve, duration: const Duration(milliseconds: 300));
-    if ((sPrevOffset - sOffset).abs() > actuationOffset) HapticFeedback.lightImpact();
-  }
-
-  /// prolly doesnt work
-  void _cacheImages() {
-    int refine(int index) => index.clamp(0, Player.inst.currentQueue.length - 1);
-
-    final indplus = refine(Player.inst.currentIndex.value + 1);
-    final indminus = refine(Player.inst.currentIndex.value - 1);
-    precacheImage(FileImage(File(Player.inst.currentQueue[indplus].pathToImage)), context);
-    precacheImage(FileImage(File(Player.inst.currentQueue[indminus].pathToImage)), context);
-  }
-
-  void snapToNext() async {
-    sOffset = sMaxOffset;
-
-    await sAnim.animateTo(1.0, curve: bouncingCurve, duration: const Duration(milliseconds: 300)).then((_) {
-      sOffset = 0;
-      sAnim.animateTo(0.0, duration: Duration.zero);
-    });
-    await Player.inst.next();
-
-    if ((sPrevOffset - sOffset).abs() > actuationOffset) HapticFeedback.lightImpact();
-  }
+class NamidaMiniPlayer extends StatelessWidget {
+  const NamidaMiniPlayer({super.key});
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async {
-        bool val = true;
-        // final isMini = maxOffset == 0;
-        final isExpanded = offset == maxOffset;
-        final isQueue = offset > maxOffset;
-        if (isQueue) {
-          snapToExpanded();
-          val = false;
-        }
-        if (isExpanded) {
-          snapToMini();
-          val = false;
-        }
-
-        return val;
-      },
+      onWillPop: MiniPlayerController.inst.onWillPop,
       child: Listener(
-        onPointerDown: (event) {
-          if (isReorderingQueue) return;
-          if (event.position.dy >= screenSize.height - deadSpace) return;
-
-          velocity.addPosition(event.timeStamp, event.position);
-
-          prevOffset = offset;
-
-          bounceUp = false;
-          bounceDown = false;
-        },
-        onPointerMove: (event) {
-          if (isReorderingQueue) return;
-          if (event.position.dy >= screenSize.height - deadSpace) return;
-
-          velocity.addPosition(event.timeStamp, event.position);
-
-          if (offset <= maxOffset) return;
-          if (scrollController.positions.isNotEmpty && scrollController.positions.first.pixels > 0.0 && offset >= maxOffset * 2) return;
-
-          offset -= event.delta.dy;
-          offset = offset.clamp(-headRoom, maxOffset * 2);
-
-          widget.animation.animateTo(offset / maxOffset, duration: Duration.zero);
-
-          // setState(() => queueScrollable = offset >= maxOffset);
-        },
-        onPointerUp: (event) {
-          if (isReorderingQueue) return;
-          if (offset <= maxOffset || offset >= (maxOffset * 2)) return;
-
-          if (scrollController.positions.isNotEmpty && scrollController.positions.first.pixels > 0.0 && offset >= maxOffset * 2) return;
-          verticalSnapping();
-          // setState(() => queueScrollable = true);
-        },
+        onPointerDown: MiniPlayerController.inst.onPointerDown,
+        onPointerMove: MiniPlayerController.inst.onPointerMove,
+        onPointerUp: MiniPlayerController.inst.onPointerUp,
         child: GestureDetector(
-          /// Tap
-          onTap: () {
-            if (widget.animation.value < (actuationOffset / maxOffset)) {
-              snapToExpanded();
-            }
-          },
-
-          /// Vertical
-          onVerticalDragUpdate: (details) {
-            if (details.globalPosition.dy > screenSize.height - deadSpace) return;
-            if (offset > maxOffset) return;
-
-            offset -= details.primaryDelta ?? 0;
-            offset = offset.clamp(-headRoom, maxOffset * 2 + headRoom / 2);
-
-            widget.animation.animateTo(offset / maxOffset, duration: Duration.zero);
-          },
-          onVerticalDragEnd: (_) => verticalSnapping(),
-
-          /// Horizontal
-          onHorizontalDragStart: (details) {
-            if (offset > maxOffset) return;
-
-            sPrevOffset = sOffset;
-          },
-          onHorizontalDragUpdate: (details) {
-            if (offset > maxOffset) return;
-            if (details.globalPosition.dy > screenSize.height - deadSpace) return;
-
-            sOffset -= details.primaryDelta ?? 0.0;
-            sOffset = sOffset.clamp(-sMaxOffset, sMaxOffset);
-
-            sAnim.animateTo(sOffset / sMaxOffset, duration: Duration.zero);
-          },
-          onHorizontalDragEnd: (details) {
-            if (offset > maxOffset) return;
-
-            final distance = sPrevOffset - sOffset;
-            final speed = velocity.getVelocity().pixelsPerSecond.dx;
-            const threshold = 1000.0;
-
-            // speed threshold is an eyeballed value
-            // used to actuate on fast flicks too
-
-            if (speed > threshold || distance > actuationOffset * sActuationMulti) {
-              snapToPrev();
-            } else if (-speed > threshold || -distance > actuationOffset * sActuationMulti) {
-              snapToNext();
-            } else {
-              snapToCurrent();
-            }
-          },
-
-          // Child
+          onTap: MiniPlayerController.inst.gestureDetectorOnTap,
+          onVerticalDragUpdate: MiniPlayerController.inst.gestureDetectorOnVerticalDragUpdate,
+          onVerticalDragEnd: (_) => MiniPlayerController.inst.verticalSnapping(),
+          onHorizontalDragStart: MiniPlayerController.inst.gestureDetectorOnHorizontalDragStart,
+          onHorizontalDragUpdate: MiniPlayerController.inst.gestureDetectorOnHorizontalDragUpdate,
+          onHorizontalDragEnd: MiniPlayerController.inst.gestureDetectorOnHorizontalDragEnd,
           child: AnimatedBuilder(
-            animation: widget.animation,
+            animation: MiniPlayerController.inst.animation,
             builder: (context, child) {
               final Color onSecondary = context.theme.colorScheme.onSecondaryContainer;
+              final maxOffset = MiniPlayerController.inst.maxOffset;
+              final bounceUp = MiniPlayerController.inst.bounceUp;
+              final bounceDown = MiniPlayerController.inst.bounceDown;
+              final topInset = MiniPlayerController.inst.topInset;
+              final bottomInset = MiniPlayerController.inst.bottomInset;
+              final screenSize = MiniPlayerController.inst.screenSize;
+              final sAnim = MiniPlayerController.inst.sAnim;
+              final sMaxOffset = MiniPlayerController.inst.sMaxOffset;
+              final stParallax = MiniPlayerController.inst.stParallax;
+              final siParallax = MiniPlayerController.inst.siParallax;
 
-              final double p = widget.animation.value;
-              final double cp = p.clamp(0, 1);
+              final double p = MiniPlayerController.inst.animation.value;
+              final double cp = MiniPlayerController.inst.miniplayerHP.value;
               final double ip = 1 - p;
               final double icp = 1 - cp;
 
               final double rp = inverseAboveOne(p);
               final double rcp = rp.clamp(0, 1);
-              // final double rip = 1 - rp;
-              // final double ricp = 1 - rcp;
 
-              final double qp = p.clamp(1.0, 3.0) - 1.0;
+              final double qp = MiniPlayerController.inst.miniplayerQueueHP.value;
               final double qcp = qp.clamp(0.0, 1.0);
-
-              // print(1.0 - (p.clamp(1, 3) - 1));
 
               final double bp = !bounceUp
                   ? !bounceDown
@@ -494,10 +179,6 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
 
               final miniplayerbottomnavheight = SettingsController.inst.enableBottomNavBar.value ? 60.0 : 0.0;
               final double bottomOffset = (-miniplayerbottomnavheight * icp + p.clamp(-1, 0) * -200) - (bottomInset * icp);
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                ScrollSearchController.inst.miniplayerHeightPercentage.value = rcp;
-                ScrollSearchController.inst.miniplayerHeightPercentageQueue.value = qp;
-              });
 
               return Stack(
                 children: [
@@ -615,7 +296,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   IconButton(
-                                    onPressed: () => snapToMini(),
+                                    onPressed: MiniPlayerController.inst.snapToMini,
                                     icon: Icon(Broken.arrow_down_2, color: onSecondary),
                                     iconSize: 22.0,
                                   ),
@@ -624,7 +305,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                       borderRadius: 16.0,
                                       onTap: () {
                                         //todo: remove after exposing to another class.
-                                        snapToMini();
+                                        MiniPlayerController.inst.snapToMini();
                                         NamidaOnTaps.inst.onAlbumTap(Player.inst.nowPlayingTrack.value.album);
                                       },
                                       child: Column(
@@ -742,7 +423,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                     NamidaIconButton(
                                       icon: Broken.previous,
                                       iconSize: 22.0 + 10 * rcp,
-                                      onPressed: snapToPrev,
+                                      onPressed: MiniPlayerController.inst.snapToPrev,
                                     ),
                                     SizedBox(width: 7 * rcp),
                                     SizedBox(
@@ -750,77 +431,71 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                       height: (vp(a: 60.0, b: 80.0, c: rcp) - 8) + 8 * rcp - 8 * icp,
                                       width: (vp(a: 60.0, b: 80.0, c: rcp) - 8) + 8 * rcp - 8 * icp,
                                       child: Center(
-                                        child: GestureDetector(
-                                          onTapDown: (value) {
-                                            setState(() {
-                                              isPlayPauseButtonHighlighted = true;
-                                            });
-                                          },
-                                          onTapUp: (value) {
-                                            setState(() {
-                                              isPlayPauseButtonHighlighted = false;
-                                            });
-                                          },
-                                          onTapCancel: () {
-                                            setState(() {
-                                              isPlayPauseButtonHighlighted = !isPlayPauseButtonHighlighted;
-                                            });
-                                          },
-                                          child: AnimatedScale(
-                                            duration: const Duration(milliseconds: 400),
-                                            scale: isPlayPauseButtonHighlighted ? 0.97 : 1.0,
-                                            child: AnimatedContainer(
-                                              duration: const Duration(milliseconds: 400),
-                                              decoration: BoxDecoration(
-                                                color: isPlayPauseButtonHighlighted
-                                                    ? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(233), Colors.white)
-                                                    : CurrentColor.inst.color.value,
-                                                gradient: LinearGradient(
-                                                  begin: Alignment.topLeft,
-                                                  end: Alignment.bottomRight,
-                                                  colors: [
-                                                    CurrentColor.inst.color.value,
-                                                    Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(200), Colors.grey),
-                                                  ],
-                                                  stops: const [0, 0.7],
-                                                ),
-                                                shape: BoxShape.circle,
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: CurrentColor.inst.color.value.withAlpha(160),
-                                                    blurRadius: 8.0,
-                                                    spreadRadius: isPlayPauseButtonHighlighted ? 3.0 : 1.0,
-                                                    offset: const Offset(0.0, 2.0),
+                                        child: Obx(
+                                          () {
+                                            final isButtonHighlighed = MiniPlayerController.inst.isPlayPauseButtonHighlighted.value;
+                                            return GestureDetector(
+                                              onTapDown: (value) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = true,
+                                              onTapUp: (value) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = false,
+                                              onTapCancel: () =>
+                                                  MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = !MiniPlayerController.inst.isPlayPauseButtonHighlighted.value,
+                                              child: AnimatedScale(
+                                                duration: const Duration(milliseconds: 400),
+                                                scale: isButtonHighlighed ? 0.97 : 1.0,
+                                                child: AnimatedContainer(
+                                                  duration: const Duration(milliseconds: 400),
+                                                  decoration: BoxDecoration(
+                                                    color: isButtonHighlighed
+                                                        ? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(233), Colors.white)
+                                                        : CurrentColor.inst.color.value,
+                                                    gradient: LinearGradient(
+                                                      begin: Alignment.topLeft,
+                                                      end: Alignment.bottomRight,
+                                                      colors: [
+                                                        CurrentColor.inst.color.value,
+                                                        Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(200), Colors.grey),
+                                                      ],
+                                                      stops: const [0, 0.7],
+                                                    ),
+                                                    shape: BoxShape.circle,
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: CurrentColor.inst.color.value.withAlpha(160),
+                                                        blurRadius: 8.0,
+                                                        spreadRadius: isButtonHighlighed ? 3.0 : 1.0,
+                                                        offset: const Offset(0.0, 2.0),
+                                                      ),
+                                                    ],
                                                   ),
-                                                ],
-                                              ),
-                                              child: IconButton(
-                                                highlightColor: Colors.transparent,
-                                                onPressed: () => Player.inst.playOrPause(Player.inst.currentIndex.value, [], QueueSource.playerQueue),
-                                                icon: Padding(
-                                                  padding: EdgeInsets.all(6.0 * cp * rcp),
-                                                  child: Obx(
-                                                    () => AnimatedSwitcher(
-                                                      duration: const Duration(milliseconds: 200),
-                                                      child: Player.inst.isPlaying.value
-                                                          ? Icon(
-                                                              Broken.pause,
-                                                              size: (vp(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp,
-                                                              key: const Key("pauseicon"),
-                                                              color: Colors.white.withAlpha(180),
-                                                            )
-                                                          : Icon(
-                                                              Broken.play,
-                                                              size: (vp(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp,
-                                                              key: const Key("playicon"),
-                                                              color: Colors.white.withAlpha(180),
-                                                            ),
+                                                  child: IconButton(
+                                                    highlightColor: Colors.transparent,
+                                                    onPressed: () => Player.inst.playOrPause(Player.inst.currentIndex.value, [], QueueSource.playerQueue),
+                                                    icon: Padding(
+                                                      padding: EdgeInsets.all(6.0 * cp * rcp),
+                                                      child: Obx(
+                                                        () => AnimatedSwitcher(
+                                                          duration: const Duration(milliseconds: 200),
+                                                          child: Player.inst.isPlaying.value
+                                                              ? Icon(
+                                                                  Broken.pause,
+                                                                  size: (vp(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp,
+                                                                  key: const Key("pauseicon"),
+                                                                  color: Colors.white.withAlpha(180),
+                                                                )
+                                                              : Icon(
+                                                                  Broken.play,
+                                                                  size: (vp(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp,
+                                                                  key: const Key("playicon"),
+                                                                  color: Colors.white.withAlpha(180),
+                                                                ),
+                                                        ),
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
                                               ),
-                                            ),
-                                          ),
+                                            );
+                                          },
                                         ),
                                       ),
                                     ),
@@ -828,7 +503,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                     NamidaIconButton(
                                       icon: Broken.next,
                                       iconSize: 22.0 + 10 * rcp,
-                                      onPressed: snapToNext,
+                                      onPressed: MiniPlayerController.inst.snapToNext,
                                     ),
                                   ],
                                 ),
@@ -1006,7 +681,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                       child: IconButton(
                                         tooltip: Language.inst.QUEUE,
                                         visualDensity: VisualDensity.compact,
-                                        onPressed: () => snapToQueue(),
+                                        onPressed: MiniPlayerController.inst.snapToQueue,
                                         padding: const EdgeInsets.all(2.0),
                                         icon: Icon(
                                           Broken.row_vertical,
@@ -1101,7 +776,8 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                             children: [
                               Obx(
                                 () {
-                                  final position = seekValue.value != 0.0 ? seekValue.value : Player.inst.nowPlayingPosition.value;
+                                  final seekValue = MiniPlayerController.inst.seekValue.value;
+                                  final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPosition.value;
                                   final dur = Player.inst.nowPlayingTrack.value.duration;
                                   final percentage = (position / dur).clamp(0.0, dur.toDouble());
                                   return Padding(
@@ -1140,13 +816,13 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                     child: Slider(
                                                       value: percentage,
                                                       onChanged: (double newValue) {
-                                                        seekValue.value = newValue;
+                                                        MiniPlayerController.inst.seekValue.value = newValue;
                                                       },
                                                       min: 0.0,
                                                       max: dur.toDouble(),
                                                       onChangeEnd: (newValue) {
                                                         Player.inst.seek(Duration(milliseconds: newValue.toInt()));
-                                                        seekValue.value = 0.0;
+                                                        MiniPlayerController.inst.seekValue.value = 0.0;
                                                       },
                                                     ),
                                                   ),
@@ -1182,18 +858,18 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                   Obx(
                                     () => NamidaListView(
                                       itemExtents: Player.inst.currentQueue.toTrackItemExtents(),
-                                      scrollController: scrollController,
+                                      scrollController: MiniPlayerController.inst.queueScrollController,
                                       padding: EdgeInsets.only(bottom: 56.0 + SelectedTracksController.inst.bottomPadding.value),
-                                      onReorderStart: (index) => isReorderingQueue = true,
-                                      onReorderEnd: (index) => isReorderingQueue = false,
+                                      onReorderStart: (index) => MiniPlayerController.inst.isReorderingQueue = true,
+                                      onReorderEnd: (index) => MiniPlayerController.inst.isReorderingQueue = false,
                                       onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
                                       itemCount: Player.inst.currentQueue.length,
                                       itemBuilder: (context, i) {
                                         final track = Player.inst.currentQueue[i];
                                         return GestureDetector(
-                                          key: Key("$i"),
-                                          onHorizontalDragStart: (details) => isReorderingQueue = true,
-                                          onHorizontalDragEnd: (details) => isReorderingQueue = false,
+                                          key: Key("$i${track.path}"),
+                                          onHorizontalDragStart: (details) => MiniPlayerController.inst.isReorderingQueue = true,
+                                          onHorizontalDragEnd: (details) => MiniPlayerController.inst.isReorderingQueue = false,
                                           child: AnimatedOpacity(
                                             duration: const Duration(milliseconds: 300),
                                             opacity: i < Player.inst.currentIndex.value ? 0.7 : 1.0,
@@ -1209,8 +885,8 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                 displayRightDragHandler: true,
                                                 draggableThumbnail: true,
                                                 queueSource: QueueSource.playerQueue,
-                                                onDragStart: (event) => isReorderingQueue = true,
-                                                onDragEnd: (event) => isReorderingQueue = false,
+                                                onDragStart: (event) => MiniPlayerController.inst.isReorderingQueue = true,
+                                                onDragEnd: (event) => MiniPlayerController.inst.isReorderingQueue = false,
                                               ),
                                             ),
                                           ),
@@ -1317,6 +993,18 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                                                   ),
                                                                 ),
                                                               );
+                                                            },
+                                                          ),
+                                                          CustomListTile(
+                                                            title: 'fffff',
+                                                            icon: Broken.activity,
+                                                            onTap: () {
+                                                              final tracks = generateTracksFromSameEra(Player.inst.nowPlayingTrack.value.year);
+                                                              if (tracks.isEmpty) {
+                                                                Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES);
+                                                                return;
+                                                              }
+                                                              Player.inst.addToQueue(tracks);
                                                             },
                                                           ),
                                                           CustomListTile(
@@ -1524,8 +1212,8 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> with TickerProvider
                                             ),
                                             const SizedBox(width: 6.0),
                                             ElevatedButton(
-                                              onPressed: () => ScrollSearchController.inst.animateQueueToCurrentTrack(),
-                                              child: Obx(() => Icon(arrowDirection.value)),
+                                              onPressed: MiniPlayerController.inst.animateQueueToCurrentTrack,
+                                              child: Obx(() => Icon(MiniPlayerController.inst.arrowIcon.value)),
                                             ),
                                             const SizedBox(width: 6.0),
                                             ElevatedButton.icon(

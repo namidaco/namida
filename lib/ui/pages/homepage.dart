@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -26,9 +27,10 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: PreferredSize(
-        preferredSize: Size(0, 56.0 * (1 - ScrollSearchController.inst.miniplayerHeightPercentage.value * 0.3)),
+        preferredSize: const Size(0, 56.0),
         child: Obx(
           () => AppBar(
+              toolbarHeight: 56.0 * (1 - MiniPlayerController.inst.miniplayerHP.value * 0.3),
               leading: NamidaNavigator.inst.currentWidgetStack.length > 1 ? const NamidaBackButton() : const NamidaDrawerButton(),
               titleSpacing: 0,
               automaticallyImplyLeading: false,
@@ -78,7 +80,7 @@ class HomePage extends StatelessWidget {
         children: [
           Obx(
             () => Transform.scale(
-              scale: 1 - (ScrollSearchController.inst.miniplayerHeightPercentage.value * 0.05),
+              scale: 1 - (MiniPlayerController.inst.miniplayerHP.value * 0.05),
               child: WillPopScope(
                 onWillPop: () async {
                   await NamidaNavigator.inst.popPage();
@@ -138,7 +140,7 @@ class HomePage extends StatelessWidget {
         () => !SettingsController.inst.enableBottomNavBar.value
             ? const SizedBox()
             : Transform.translate(
-                offset: Offset(0, 64.0 * ScrollSearchController.inst.miniplayerHeightPercentage.value),
+                offset: Offset(0, 64.0 * MiniPlayerController.inst.miniplayerHP.value),
                 child: NavigationBar(
                   animationDuration: const Duration(seconds: 1),
                   elevation: 22,

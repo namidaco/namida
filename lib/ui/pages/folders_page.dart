@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -18,9 +19,8 @@ import 'package:namida/ui/widgets/library/folder_tile.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class FoldersPage extends StatelessWidget {
-  FoldersPage({super.key});
+  const FoldersPage({super.key});
 
-  final ScrollController _scrollController = Folders.inst.scrollController;
   Widget get iconWidget => Obx(
         () => SizedBox(
           height: double.infinity,
@@ -33,6 +33,7 @@ class FoldersPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ScrollController scrollController = LibraryTab.folders.scrollController;
     final highlighedColor = context.theme.colorScheme.onBackground.withAlpha(40);
     return WillPopScope(
       onWillPop: () async {
@@ -81,10 +82,10 @@ class FoldersPage extends StatelessWidget {
                           ),
                           Expanded(
                             child: CupertinoScrollbar(
-                              controller: _scrollController,
+                              controller: scrollController,
                               child: Obx(
                                 () => CustomScrollView(
-                                  controller: _scrollController,
+                                  controller: scrollController,
                                   slivers: [
                                     if (Folders.inst.isHome.value)
                                       SliverFixedExtentList.builder(
@@ -94,7 +95,6 @@ class FoldersPage extends StatelessWidget {
                                           final p = kStoragePaths.elementAt(i);
                                           return FolderTile(
                                             folder: Folder(p),
-                                            isMainStoragePath: true,
                                             dummyTracks:
                                                 Indexer.inst.mainMapFolders.entries.where((element) => element.key.path.startsWith(p)).expand((element) => element.value).toList(),
                                           );
@@ -149,10 +149,10 @@ class FoldersPage extends StatelessWidget {
                           ),
                           Expanded(
                             child: CupertinoScrollbar(
-                              controller: _scrollController,
+                              controller: scrollController,
                               child: Obx(
                                 () => CustomScrollView(
-                                  controller: _scrollController,
+                                  controller: scrollController,
                                   slivers: [
                                     if (!Folders.inst.isInside.value)
                                       SliverFixedExtentList.builder(
@@ -202,7 +202,7 @@ class FoldersPage extends StatelessWidget {
                         child: NamidaIconButton(
                           padding: const EdgeInsets.all(7.0),
                           onPressed: () {
-                            _scrollController.animateTo(Dimensions.inst.trackTileItemExtent * (Folders.inst.indexToScrollTo.value! + Folders.inst.currentFolderslist.length - 2),
+                            scrollController.animateTo(Dimensions.inst.trackTileItemExtent * (Folders.inst.indexToScrollTo.value! + Folders.inst.currentFolderslist.length - 2),
                                 duration: const Duration(milliseconds: 400), curve: Curves.bounceInOut);
                           },
                           icon: Broken.arrow_circle_down,

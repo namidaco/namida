@@ -27,7 +27,7 @@ class MultiArtworkContainer extends StatelessWidget {
         borderRadius: BorderRadius.circular(18.0.multipliedRadius),
         boxShadow: [
           BoxShadow(
-            color: context.theme.shadowColor,
+            color: context.theme.shadowColor.withAlpha(180),
             blurRadius: 8,
             offset: const Offset(0, 2.0),
           )

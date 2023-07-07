@@ -81,7 +81,7 @@ extension LibraryTabUtils on LibraryTab {
       return PlaylistsPage(countPerRow: gridCount ?? SettingsController.inst.playlistGridCount.value, animateTiles: animateTiles);
     }
     if (this == LibraryTab.folders) {
-      return FoldersPage();
+      return const FoldersPage();
     }
     return const SizedBox();
   }

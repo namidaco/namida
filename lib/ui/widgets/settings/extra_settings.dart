@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
@@ -37,7 +38,10 @@ class ExtrasSettings extends StatelessWidget {
               title: Language.inst.ENABLE_BOTTOM_NAV_BAR,
               subtitle: Language.inst.ENABLE_BOTTOM_NAV_BAR_SUBTITLE,
               value: SettingsController.inst.enableBottomNavBar.value,
-              onChanged: (p0) => SettingsController.inst.save(enableBottomNavBar: !p0),
+              onChanged: (p0) {
+                SettingsController.inst.save(enableBottomNavBar: !p0);
+                MiniPlayerController.inst.updateBottomNavBarRelatedDimensions(!p0);
+              },
             ),
           ),
           Obx(

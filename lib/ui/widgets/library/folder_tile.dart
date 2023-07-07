@@ -17,13 +17,11 @@ import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 class FolderTile extends StatelessWidget {
   final Folder folder;
   final List<Track>? dummyTracks;
-  final bool isMainStoragePath;
   final String? subtitle;
 
   const FolderTile({
     super.key,
     required this.folder,
-    this.isMainStoragePath = false,
     this.dummyTracks,
     this.subtitle,
   });
@@ -37,7 +35,7 @@ class FolderTile extends StatelessWidget {
       child: NamidaInkWell(
         bgColor: context.theme.cardColor,
         borderRadius: 0.0,
-        onTap: () => NamidaOnTaps.inst.onFolderTap(folder, isMainStoragePath),
+        onTap: () => NamidaOnTaps.inst.onFolderTap(folder),
         child: SizedBox(
           height: Dimensions.inst.trackTileItemExtent,
           child: Row(

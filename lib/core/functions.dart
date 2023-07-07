@@ -108,8 +108,8 @@ class NamidaOnTaps {
     NamidaNavigator.inst.navigateTo(const MostPlayedTracksPage());
   }
 
-  Future<void> onFolderTap(Folder folder, bool isMainStoragePath, {Track? trackToScrollTo}) async {
-    Folders.inst.stepIn(folder, isMainStoragePath: isMainStoragePath, trackToScrollTo: trackToScrollTo);
+  Future<void> onFolderTap(Folder folder, {Track? trackToScrollTo}) async {
+    Folders.inst.stepIn(folder, trackToScrollTo: trackToScrollTo);
   }
 
   Future<void> onQueueTap(Queue queue) async {
