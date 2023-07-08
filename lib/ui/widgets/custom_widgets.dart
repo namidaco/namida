@@ -519,8 +519,8 @@ class SmallListTile extends StatelessWidget {
     this.compact = true,
     this.subtitle,
     this.color,
-    this.padding,
-    this.titleGap = 14.0,
+    this.padding = const EdgeInsets.only(left: 16.0, right: 12.0),
+    this.titleGap,
     this.borderRadius = 0.0,
     this.leading,
   });
@@ -660,11 +660,12 @@ class NamidaExpansionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTileTheme(
-      horizontalTitleGap: 14.0,
+      horizontalTitleGap: 12.0,
+      dense: true,
       child: ExpansionTile(
         initiallyExpanded: initiallyExpanded,
         expandedAlignment: Alignment.centerLeft,
-        tilePadding: const EdgeInsets.only(left: 16.0, right: 8.0),
+        tilePadding: const EdgeInsets.only(left: 16.0, right: 12.0),
         leading: leading ??
             Icon(
               icon,

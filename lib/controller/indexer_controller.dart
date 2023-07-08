@@ -576,19 +576,33 @@ class Indexer {
     return allPaths;
   }
 
-  Future<void> updateImageSizeInStorage([File? newImgFile]) async {
+  Future<void> updateImageSizeInStorage([File? newImgFile, bool decreaseStats = false]) async {
     if (newImgFile != null) {
-      artworksInStorage.value++;
-      artworksSizeInStorage.value += await newImgFile.stat().then((value) => value.size);
+      final size = await newImgFile.stat().then((value) => value.size);
+      if (decreaseStats) {
+        artworksInStorage.value--;
+        artworksSizeInStorage.value -= size;
+      } else {
+        artworksInStorage.value++;
+        artworksSizeInStorage.value += size;
+      }
+
       return;
     }
     await _updateDirectoryStats(k_DIR_ARTWORKS, artworksInStorage, artworksSizeInStorage);
   }
 
-  Future<void> updateWaveformSizeInStorage([File? newWaveFile]) async {
+  Future<void> updateWaveformSizeInStorage([File? newWaveFile, bool decreaseStats = false]) async {
     if (newWaveFile != null) {
-      waveformsInStorage.value++;
-      waveformsSizeInStorage.value += await newWaveFile.stat().then((value) => value.size);
+      final size = await newWaveFile.stat().then((value) => value.size);
+      if (decreaseStats) {
+        waveformsInStorage.value--;
+        waveformsInStorage.value -= size;
+      } else {
+        waveformsInStorage.value++;
+        waveformsInStorage.value += size;
+      }
+
       return;
     }
     await _updateDirectoryStats(k_DIR_WAVEFORMS, waveformsInStorage, waveformsSizeInStorage);
@@ -602,10 +616,17 @@ class Indexer {
     await _updateDirectoryStats(k_DIR_PALETTES, colorPalettesInStorage, null);
   }
 
-  Future<void> updateVideosSizeInStorage([File? newVideoFile]) async {
+  Future<void> updateVideosSizeInStorage([File? newVideoFile, bool decreaseStats = false]) async {
     if (newVideoFile != null) {
-      videosInStorage.value++;
-      videosSizeInStorage.value += await newVideoFile.stat().then((value) => value.size);
+      final size = await newVideoFile.stat().then((value) => value.size);
+      if (decreaseStats) {
+        videosInStorage.value--;
+        videosInStorage.value -= size;
+      } else {
+        videosInStorage.value++;
+        videosInStorage.value += size;
+      }
+
       return;
     }
     await _updateDirectoryStats(k_DIR_VIDEOS_CACHE, videosInStorage, videosSizeInStorage);

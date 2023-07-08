@@ -21,11 +21,14 @@ class EditDeleteController {
   Future<void> deleteCachedVideos(List<Track> tracks) async {
     final idsToDelete = tracks.map((e) => e.youtubeID).toList();
     await for (final v in Directory(k_DIR_VIDEOS_CACHE).list()) {
-      await idsToDelete.loopFuture((id, index) async {
-        if (v.path.getFilename.startsWith(id)) {
-          await v.delete();
-        }
-      });
+      if (v is File) {
+        await idsToDelete.loopFuture((id, index) async {
+          if (v.path.getFilename.startsWith(id)) {
+            await Indexer.inst.updateVideosSizeInStorage(v, true);
+            await v.delete();
+          }
+        });
+      }
     }
 
     VideoController.inst.resetEverything();
@@ -34,7 +37,9 @@ class EditDeleteController {
 
   Future<void> deleteWaveFormData(List<Track> tracks) async {
     await tracks.loopFuture((track, index) async {
-      await File("$k_DIR_WAVEFORMS${track.filename}.wave").delete();
+      final file = File("$k_DIR_WAVEFORMS${track.filename}.wave");
+      await Indexer.inst.updateWaveformSizeInStorage(file, true);
+      await file.delete();
     });
   }
 
@@ -46,7 +51,9 @@ class EditDeleteController {
 
   Future<void> deleteArtwork(List<Track> tracks) async {
     await tracks.loopFuture((track, index) async {
-      await File("$k_DIR_ARTWORKS${track.filename}.png").delete();
+      final file = File("$k_DIR_ARTWORKS${track.filename}.png");
+      await Indexer.inst.updateImageSizeInStorage(file, true);
+      await file.delete();
     });
 
     await deleteExtractedColor(tracks);
