@@ -174,6 +174,9 @@ class Language {
   String get NEW_TRACKS_ADD => 'Add Tracks';
   String get NEW_TRACKS_RECOMMENDED => 'Recommended';
   String get NEW_TRACKS_RECOMMENDED_SUBTITLE => 'Generate tracks you usually listened to with _CURRENT_TRACK_';
+  String get NEW_TRACKS_SIMILARR_RELEASE_DATE => 'Similar Release Date';
+  String get NEW_TRACKS_SIMILARR_RELEASE_DATE_SUBTITLE => 'Generate tracks that were released around the same time as _CURRENT_TRACK_';
+  String get NEW_TRACKS_UNKNOWN_YEAR => 'Track has unknown year';
   String get NEW_TRACKS_RANDOM => 'Random';
   String get NEW_TRACKS_RANDOM_SUBTITLE => 'Pick up random tracks from your library';
   String get NO_TRACKS_IN_HISTORY => 'You don\'t have enough tracks in history.';

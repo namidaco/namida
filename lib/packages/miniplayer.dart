@@ -998,18 +998,6 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                             },
                                                           ),
                                                           CustomListTile(
-                                                            title: 'fffff',
-                                                            icon: Broken.activity,
-                                                            onTap: () {
-                                                              final tracks = generateTracksFromSameEra(Player.inst.nowPlayingTrack.value.year);
-                                                              if (tracks.isEmpty) {
-                                                                Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES);
-                                                                return;
-                                                              }
-                                                              Player.inst.addToQueue(tracks);
-                                                            },
-                                                          ),
-                                                          CustomListTile(
                                                             title: Language.inst.NEW_TRACKS_MOODS,
                                                             subtitle: Language.inst.NEW_TRACKS_MOODS_SUBTITLE,
                                                             icon: Broken.emoji_happy,
@@ -1184,12 +1172,36 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                               );
                                                             },
                                                           ),
+                                                          const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 4.0)),
+                                                          CustomListTile(
+                                                            title: Language.inst.NEW_TRACKS_SIMILARR_RELEASE_DATE,
+                                                            subtitle: Language.inst.NEW_TRACKS_SIMILARR_RELEASE_DATE_SUBTITLE.replaceFirst(
+                                                              '_CURRENT_TRACK_',
+                                                              Player.inst.nowPlayingTrack.value.title.addDQuotation(),
+                                                            ),
+                                                            icon: Broken.calendar_1,
+                                                            onTap: () {
+                                                              final currentTrack = Player.inst.nowPlayingTrack.value;
+                                                              final year = currentTrack.year;
+                                                              if (year == 0) {
+                                                                Get.snackbar(Language.inst.ERROR, Language.inst.NEW_TRACKS_UNKNOWN_YEAR);
+                                                                return;
+                                                              }
+                                                              final tracks = generateTracksFromSameEra(year, currentTrack: currentTrack);
+                                                              if (tracks.isEmpty) {
+                                                                Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES);
+                                                                return;
+                                                              }
+                                                              Player.inst.addToQueue(tracks);
+                                                              NamidaNavigator.inst.closeDialog();
+                                                            },
+                                                          ),
                                                           Obx(
                                                             () => CustomListTile(
                                                               title: Language.inst.NEW_TRACKS_RECOMMENDED,
                                                               subtitle: Language.inst.NEW_TRACKS_RECOMMENDED_SUBTITLE.replaceFirst(
                                                                 '_CURRENT_TRACK_',
-                                                                '"${Player.inst.nowPlayingTrack.value.title}"',
+                                                                Player.inst.nowPlayingTrack.value.title.addDQuotation(),
                                                               ),
                                                               icon: Broken.bezier,
                                                               maxSubtitleLines: 22,

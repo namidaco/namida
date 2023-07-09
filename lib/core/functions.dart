@@ -281,6 +281,54 @@ List<Track> generateTracksFromHistoryDates(DateTime? oldestDate, DateTime? newes
   }
 }
 
+/// [daysRange] means taking n days before [yearTimeStamp] & n days after [yearTimeStamp].
+///
+/// For best results, track should have the year tag in [yyyyMMdd] format (or any parseable format),
+/// Having a [yyyy] year tag will generate from the same year which is quite a wide range.
+List<Track> generateTracksFromSameEra(int yearTimeStamp, {int daysRange = 30, int maxCount = 30, Track? currentTrack}) {
+  final tracksAvailable = <Track>[];
+
+  // -- [yyyy] year format.
+  if (yearTimeStamp.toString().length == 4) {
+    allTracksInLibrary.loop((e, index) {
+      if (e.year != 0) {
+        // -- if the track also has [yyyy]
+        if (e.year.toString().length == 4) {
+          if (e.year == yearTimeStamp) {
+            tracksAvailable.add(e);
+          }
+
+          // -- if the track has parseable format
+        } else {
+          final dt = DateTime.tryParse(e.year.toString());
+          if (dt != null && dt.year == yearTimeStamp) {
+            tracksAvailable.add(e);
+          }
+        }
+      }
+    });
+
+    // -- parseable year format.
+  } else {
+    final dateParsed = DateTime.tryParse(yearTimeStamp.toString());
+    if (dateParsed == null) return [];
+
+    allTracksInLibrary.loop((e, index) {
+      if (e.year != 0) {
+        final dt = DateTime.tryParse(e.year.toString());
+        if (dt != null && (dt.difference(dateParsed).inDays).abs() <= daysRange) {
+          tracksAvailable.add(e);
+        }
+      }
+    });
+  }
+  tracksAvailable.remove(currentTrack);
+
+  return tracksAvailable
+    ..shuffle()
+    ..take(maxCount);
+}
+
 List<Track> generateTracksFromMoods(List<String> moods, [int maxCount = 20]) {
   final finalTracks = <Track>[];
 
