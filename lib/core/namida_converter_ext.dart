@@ -862,18 +862,17 @@ extension RouteUtils on NamidaRoute {
   List<Widget> toActions() {
     Widget getMoreIcon(void Function()? onPressed) {
       return NamidaIconButton(
+        horizontalPadding: 6.0,
         icon: Broken.more_2,
-        padding: const EdgeInsets.only(right: 14, left: 4.0),
         onPressed: onPressed,
       );
     }
 
     Widget getAnimatedCrossFade({required Widget child, required bool shouldShow}) {
-      final notSettings = this is! SettingsPage && this is! SettingsSubPage;
       return AnimatedCrossFade(
         firstChild: child,
         secondChild: const SizedBox(),
-        crossFadeState: notSettings && shouldShow ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+        crossFadeState: shouldShow ? CrossFadeState.showFirst : CrossFadeState.showSecond,
         duration: const Duration(milliseconds: 500),
         reverseDuration: const Duration(milliseconds: 500),
         sizeCurve: Curves.easeOut,
@@ -882,11 +881,24 @@ extension RouteUtils on NamidaRoute {
       );
     }
 
-    final shouldHideInitialActions = route == RouteType.PAGE_stats || route == RouteType.SETTINGS_page || route == RouteType.SETTINGS_subpage;
+    final shouldShowInitialActions = route != RouteType.PAGE_stats && route != RouteType.SETTINGS_page && route != RouteType.SETTINGS_subpage;
+    final shouldShowJsonParse = route != RouteType.SETTINGS_page && route != RouteType.SETTINGS_subpage;
+
+    final queue = route == RouteType.SUBPAGE_queueTracks ? name.getQueue() : null;
+
     return <Widget>[
-      getAnimatedCrossFade(child: const NamidaStatsIcon(), shouldShow: !shouldHideInitialActions),
-      getAnimatedCrossFade(child: const ParsingJsonPercentage(size: 30.0), shouldShow: route != RouteType.SETTINGS_page && route != RouteType.SETTINGS_subpage),
-      getAnimatedCrossFade(child: const NamidaSettingsButton(), shouldShow: !shouldHideInitialActions),
+      getAnimatedCrossFade(child: const NamidaStatsIcon(), shouldShow: shouldShowInitialActions),
+      getAnimatedCrossFade(child: const ParsingJsonPercentage(size: 30.0), shouldShow: shouldShowJsonParse),
+      getAnimatedCrossFade(child: const NamidaSettingsButton(), shouldShow: shouldShowInitialActions),
+
+      getAnimatedCrossFade(
+        child: NamidaRawLikeButton(
+          padding: const EdgeInsets.symmetric(horizontal: 3.0),
+          isLiked: queue?.isFav,
+          onTap: (isLiked) async => await QueueController.inst.toggleFavButton(queue!),
+        ),
+        shouldShow: queue != null,
+      ),
 
       getAnimatedCrossFade(
         child: getMoreIcon(() {
@@ -917,7 +929,7 @@ extension RouteUtils on NamidaRoute {
             return NamidaIconButton(
               tooltip: reorderable ? Language.inst.DISABLE_REORDERING : Language.inst.ENABLE_REORDERING,
               icon: reorderable ? Broken.forward_item : Broken.lock_1,
-              padding: const EdgeInsets.only(right: 14, left: 4.0),
+              horizontalPadding: 6.0,
               onPressed: () => PlaylistController.inst.canReorderTracks.value = !PlaylistController.inst.canReorderTracks.value,
             );
           },
@@ -930,6 +942,8 @@ extension RouteUtils on NamidaRoute {
         }),
         shouldShow: route == RouteType.SUBPAGE_playlistTracks || route == RouteType.SUBPAGE_historyTracks || route == RouteType.SUBPAGE_mostPlayedTracks,
       ),
+
+      const SizedBox(width: 4.0),
     ];
   }
 
@@ -977,7 +991,7 @@ extension TracksFromMaps on String {
     return albums;
   }
 
-  Queue? getQueue() => QueueController.inst.queuesMap.value[int.parse(this)];
+  Queue? getQueue() => QueueController.inst.queuesMap.value[int.tryParse(this)];
 }
 
 extension QueueFromMap on int {

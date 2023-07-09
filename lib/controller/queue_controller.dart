@@ -67,6 +67,12 @@ class QueueController {
   //   queues.loop((q) => removeQueue(q));
   // }
 
+  Future<void> toggleFavButton(Queue queue) async {
+    queue.isFav = !queue.isFav;
+    _updateMap(queue);
+    await _saveQueueToStorage(queue);
+  }
+
   Future<void> updateQueue(Queue oldQueue, Queue newQueue) async {
     _updateMap(newQueue, oldQueue.date);
     await _saveQueueToStorage(newQueue);

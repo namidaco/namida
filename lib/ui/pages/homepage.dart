@@ -169,7 +169,7 @@ class NamidaStatsIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NamidaIconButton(
-      padding: const EdgeInsets.only(right: 12.0, left: 10.0),
+      horizontalPadding: 6.0,
       icon: Broken.chart_21,
       onPressed: () {
         NamidaNavigator.inst.navigateTo(
@@ -215,7 +215,7 @@ class NamidaSettingsButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NamidaIconButton(
-      padding: const EdgeInsets.only(right: 12.0, left: 6.0),
+      horizontalPadding: 6.0,
       icon: Broken.setting_2,
       onPressed: () => NamidaNavigator.inst.navigateTo(const SettingsPage()),
     );

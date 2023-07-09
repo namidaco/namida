@@ -91,6 +91,7 @@ class NamidaDialogs {
     );
   }
 
+  /// Supports all playlists, (History, Most Played, Favourites & others).
   Future<void> showPlaylistDialog(String playlistName) async {
     if (playlistName == k_PLAYLIST_NAME_HISTORY) {
       final trs = HistoryController.inst.historyTracks.toTracks();

@@ -6,7 +6,7 @@ import 'package:namida/core/functions.dart';
 class Queue {
   late final String name;
   late final int date;
-  late final bool isFav;
+  late bool isFav;
   late final List<Track> tracks;
 
   Queue(

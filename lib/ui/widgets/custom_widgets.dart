@@ -1023,16 +1023,28 @@ class NamidaWheelSlider extends StatelessWidget {
   }
 }
 
-class NamidaLikeButton extends StatelessWidget {
-  final Track? track;
+class NamidaRawLikeButton extends StatelessWidget {
   final double size;
   final Color? color;
-  const NamidaLikeButton({super.key, required this.track, this.size = 30.0, this.color});
+  final bool? isLiked;
+  final EdgeInsetsGeometry padding;
+  final Future<void> Function(bool isLiked) onTap;
+
+  const NamidaRawLikeButton({
+    super.key,
+    this.size = 24.0,
+    this.color,
+    required this.isLiked,
+    required this.onTap,
+    this.padding = EdgeInsets.zero,
+  });
 
   @override
   Widget build(BuildContext context) {
     return LikeButton(
       size: size,
+      padding: padding,
+      likeCountPadding: EdgeInsets.zero,
       bubblesColor: BubblesColor(
         dotPrimaryColor: context.theme.colorScheme.primary,
         dotSecondaryColor: context.theme.colorScheme.primaryContainer,
@@ -1041,11 +1053,9 @@ class NamidaLikeButton extends StatelessWidget {
         start: context.theme.colorScheme.tertiary,
         end: context.theme.colorScheme.tertiary,
       ),
-      isLiked: track?.isFavourite,
+      isLiked: isLiked,
       onTap: (isLiked) async {
-        if (track != null) {
-          PlaylistController.inst.favouriteButtonOnPressed(track!);
-        }
+        onTap(isLiked);
         return !isLiked;
       },
       likeBuilder: (value) => value
@@ -1056,9 +1066,30 @@ class NamidaLikeButton extends StatelessWidget {
             )
           : Icon(
               Broken.heart,
-              color: color ?? context.theme.colorScheme.onSecondaryContainer,
+              color: color ?? context.theme.colorScheme.secondary,
               size: size,
             ),
+    );
+  }
+}
+
+class NamidaLikeButton extends StatelessWidget {
+  final Track? track;
+  final double size;
+  final Color? color;
+  const NamidaLikeButton({super.key, required this.track, this.size = 30.0, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaRawLikeButton(
+      size: 22.0,
+      color: color,
+      isLiked: track?.isFavourite,
+      onTap: (isLiked) async {
+        if (track != null) {
+          PlaylistController.inst.favouriteButtonOnPressed(track!);
+        }
+      },
     );
   }
 }
