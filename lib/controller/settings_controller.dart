@@ -109,6 +109,7 @@ class SettingsController {
   final RxBool enableBottomNavBar = true.obs;
   final RxBool useYoutubeMiniplayer = false.obs;
   final RxBool playerPlayOnNextPrev = true.obs;
+  final RxBool playerSkipSilenceEnabled = false.obs;
   final RxBool jumpToFirstTrackAfterFinishingQueue = true.obs;
   final RxBool displayAudioInfoMiniplayer = false.obs;
   final RxBool showUnknownFieldsInTrackInfoDialog = true.obs;
@@ -249,6 +250,7 @@ class SettingsController {
       enableBottomNavBar.value = json['enableBottomNavBar'] ?? enableBottomNavBar.value;
       useYoutubeMiniplayer.value = json['useYoutubeMiniplayer'] ?? useYoutubeMiniplayer.value;
       playerPlayOnNextPrev.value = json['playerPlayOnNextPrev'] ?? playerPlayOnNextPrev.value;
+      playerSkipSilenceEnabled.value = json['playerSkipSilenceEnabled'] ?? playerSkipSilenceEnabled.value;
       jumpToFirstTrackAfterFinishingQueue.value = json['jumpToFirstTrackAfterFinishingQueue'] ?? jumpToFirstTrackAfterFinishingQueue.value;
       displayAudioInfoMiniplayer.value = json['displayAudioInfoMiniplayer'] ?? displayAudioInfoMiniplayer.value;
       showUnknownFieldsInTrackInfoDialog.value = json['showUnknownFieldsInTrackInfoDialog'] ?? showUnknownFieldsInTrackInfoDialog.value;
@@ -370,6 +372,7 @@ class SettingsController {
       'enableBottomNavBar': enableBottomNavBar.value,
       'useYoutubeMiniplayer': useYoutubeMiniplayer.value,
       'playerPlayOnNextPrev': playerPlayOnNextPrev.value,
+      'playerSkipSilenceEnabled': playerSkipSilenceEnabled.value,
       'jumpToFirstTrackAfterFinishingQueue': jumpToFirstTrackAfterFinishingQueue.value,
       'displayAudioInfoMiniplayer': displayAudioInfoMiniplayer.value,
       'showUnknownFieldsInTrackInfoDialog': showUnknownFieldsInTrackInfoDialog.value,
@@ -487,6 +490,7 @@ class SettingsController {
     bool? enableBottomNavBar,
     bool? useYoutubeMiniplayer,
     bool? playerPlayOnNextPrev,
+    bool? playerSkipSilenceEnabled,
     bool? jumpToFirstTrackAfterFinishingQueue,
     bool? displayAudioInfoMiniplayer,
     bool? showUnknownFieldsInTrackInfoDialog,
@@ -784,6 +788,9 @@ class SettingsController {
     }
     if (playerPlayOnNextPrev != null) {
       this.playerPlayOnNextPrev.value = playerPlayOnNextPrev;
+    }
+    if (playerSkipSilenceEnabled != null) {
+      this.playerSkipSilenceEnabled.value = playerSkipSilenceEnabled;
     }
     if (jumpToFirstTrackAfterFinishingQueue != null) {
       this.jumpToFirstTrackAfterFinishingQueue.value = jumpToFirstTrackAfterFinishingQueue;

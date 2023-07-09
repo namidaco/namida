@@ -73,6 +73,7 @@ class Language {
   String get EXTRACT_FEAT_ARTIST => 'Extract feat. artists from title';
   String get EXTRACT_FEAT_ARTIST_SUBTITLE => 'Extracts (feat. X) and (ft. X) artists, as a new artist entry.';
   String get PICK_FROM_STORAGE => 'Pick from storage';
+  String get SKIP_SILENCE => 'Skip Silence';
 
   String get IMPORT_YOUTUBE_HISTORY_GUIDE =>
       '1. Go to _TAKEOUT_LINK_\n\n2. Deselect All and select youtube only.\n\n3. Press "Multiple Formats" and beside "History" choose "JSON".\n\n4. Press "All Youtube data included", Deselect All and choose history only.\n\n5. Create Export, Download & Unzip.\n\n6. Choose "watch-history.json" from the next screen.';

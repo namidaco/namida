@@ -146,6 +146,8 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     totalListenedTimeInSec.value = listenTime ?? 0;
   }
 
+  Future<void> setSkipSilenceEnabled(bool enabled) async => await _player.setSkipSilenceEnabled(enabled);
+
   //
   // Video Methods
   Future<void> updateVideoPlayingState() async {

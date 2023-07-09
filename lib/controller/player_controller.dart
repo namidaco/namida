@@ -49,6 +49,7 @@ class Player {
         androidNotificationOngoing: true,
       ),
     );
+    await setSkipSilenceEnabled(SettingsController.inst.playerSkipSilenceEnabled.value);
   }
 
   // Future<void> closePlayerNotification() async {
@@ -67,6 +68,10 @@ class Player {
 
   void updateMediaItemForce() {
     _audioHandler?.updateCurrentMediaItem(null, true);
+  }
+
+  Future<void> setSkipSilenceEnabled(bool enabled) async {
+    await _audioHandler?.setSkipSilenceEnabled(enabled);
   }
 
   void resetSleepAfterTimer() {

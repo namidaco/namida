@@ -254,6 +254,21 @@ class PlaybackSettings extends StatelessWidget {
       Obx(
         () => CustomSwitchListTile(
           leading: const StackedIcon(
+            baseIcon: Broken.wind,
+            secondaryIcon: Broken.forward,
+          ),
+          title: Language.inst.SKIP_SILENCE,
+          onChanged: (value) async {
+            final willBeTrue = !value;
+            SettingsController.inst.save(playerSkipSilenceEnabled: willBeTrue);
+            await Player.inst.setSkipSilenceEnabled(willBeTrue);
+          },
+          value: SettingsController.inst.playerSkipSilenceEnabled.value,
+        ),
+      ),
+      Obx(
+        () => CustomSwitchListTile(
+          leading: const StackedIcon(
             baseIcon: Broken.play,
             secondaryIcon: Broken.pause,
           ),
