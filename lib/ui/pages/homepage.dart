@@ -140,7 +140,7 @@ class HomePage extends StatelessWidget {
         () => !SettingsController.inst.enableBottomNavBar.value
             ? const SizedBox()
             : Transform.translate(
-                offset: Offset(0, 64.0 * MiniPlayerController.inst.miniplayerHP.value),
+                offset: Offset(0, kBottomNavigationBarHeight * MiniPlayerController.inst.miniplayerHP.value),
                 child: NavigationBar(
                   animationDuration: const Duration(seconds: 1),
                   elevation: 22,

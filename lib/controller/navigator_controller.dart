@@ -76,10 +76,10 @@ class NamidaNavigator {
     );
   }
 
-  void navigateDialog(Widget dialog, {int durationInMs = 400}) {
+  Future<void> navigateDialog(Widget dialog, {int durationInMs = 400}) async {
     ScrollSearchController.inst.unfocusKeyboard();
     currentDialogNumber++;
-    Get.to(
+    await Get.to(
       () => WillPopScope(
         onWillPop: () async {
           if (dialog is CustomBlurryDialog) {
@@ -171,12 +171,12 @@ class NamidaNavigator {
       return;
     }
 
-    // try popping, if at the root route, show _doubleTapToExit().
-    final didPop = await navKey?.currentState?.maybePop() ?? false;
-    if (!didPop) await _doubleTapToExit();
-
+    // pop only if not in root, otherwise show _doubleTapToExit().
     if (currentWidgetStack.length > 1) {
       currentWidgetStack.removeLast();
+      navKey?.currentState?.pop();
+    } else {
+      await _doubleTapToExit();
     }
     currentRoute?.updateColorScheme();
     _hideSearchMenuAndUnfocus();

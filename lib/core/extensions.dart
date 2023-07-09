@@ -32,6 +32,9 @@ extension DurationLabel on Duration {
 }
 
 extension StringUtils on String {
+  String addQuotation() => "'$this'";
+  String addDQuotation() => '"$this"';
+
   String get overflow => this != '' ? characters.replaceAll(Characters(''), Characters('\u{200B}')).toString() : '';
 
   String formatPath() {
@@ -121,11 +124,11 @@ extension TracksUtils on List<Track> {
     return this[indexOfImage];
   }
 
-  int get indexOfImage => length - 1;
+  int get indexOfImage => 0;
 
   Track get firstTrackWithImage {
     if (isEmpty) return kDummyTrack;
-    return this[length - 1];
+    return this[indexOfImage];
   }
 
   String get album {
@@ -295,7 +298,6 @@ extension PLNAME on String {
 
 extension TRACKPLAYMODE on TrackPlayMode {
   void toggleSetting() {
-    final index = TrackPlayMode.values.indexOf(this);
     if (SettingsController.inst.trackPlayMode.value.index + 1 == TrackPlayMode.values.length) {
       SettingsController.inst.save(trackPlayMode: TrackPlayMode.values[0]);
     } else {
@@ -334,7 +336,6 @@ extension TRACKPLAYMODE on TrackPlayMode {
 
 extension PlayerRepeatModeUtils on RepeatMode {
   void toggleSetting() {
-    final index = RepeatMode.values.indexOf(this);
     if (SettingsController.inst.playerRepeatMode.value.index + 1 == RepeatMode.values.length) {
       SettingsController.inst.save(playerRepeatMode: RepeatMode.values[0]);
     } else {
@@ -398,7 +399,6 @@ extension TagFieldsUtils on TagField {
 
 extension WAKELOCKMODETEXT on WakelockMode {
   void toggleSetting() {
-    final index = WakelockMode.values.indexOf(this);
     if (SettingsController.inst.wakelockMode.value.index + 1 == WakelockMode.values.length) {
       SettingsController.inst.save(wakelockMode: WakelockMode.values[0]);
     } else {
@@ -627,8 +627,24 @@ extension ListieExt<E, Id> on List<E> {
   E? getEnum(String? string) => firstWhereOrNull((element) => element.toString().split('.').last == string);
   void insertSafe(int index, E object) => insert(index.clamp(0, length), object);
   void insertAllSafe(int index, Iterable<E> objects) => insertAll(index.clamp(0, length), objects);
+
   void sortBy(Comparable Function(E e) key) => sort((a, b) => key(a).compareTo(key(b)));
   void sortByReverse(Comparable Function(E e) key) => sort((a, b) => key(b).compareTo(key(a)));
+
+  void sortByAlt(Comparable Function(E e) key, Comparable Function(E e) alternative) => sort((a, b) {
+        final compare = key(a).compareTo(key(b));
+        if (compare == 0) {
+          return alternative(a).compareTo(alternative(b));
+        }
+        return compare;
+      });
+  void sortByReverseAlt(Comparable Function(E e) key, Comparable Function(E e) alternative) => sort((a, b) {
+        final compare = key(b).compareTo(key(a));
+        if (compare == 0) {
+          return alternative(b).compareTo(alternative(a));
+        }
+        return compare;
+      });
 
   /// returns number of items removed.
   int removeWhereWithDifference(bool Function(E element) test) {

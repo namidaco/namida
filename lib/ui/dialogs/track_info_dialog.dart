@@ -58,53 +58,47 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
             Player.inst.play();
           }
         },
-        trailingWidgets: [
-          NamidaIconButton(
-            icon: Broken.close_circle,
-            onPressed: () {
-              NamidaNavigator.inst.closeDialog();
-              ap.stop();
-            },
-          ),
-        ],
         insetPadding: const EdgeInsets.all(24.0),
         title: Language.inst.PREVIEW,
         normalTitleStyle: true,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            StreamBuilder(
-              stream: ap.positionStream,
-              builder: (context, snapshot) {
-                final dur = snapshot.data ?? Duration.zero;
-                return Text(dur.label);
-              },
-            ),
-            StreamBuilder(
-              initialData: Duration.zero,
-              stream: ap.positionStream,
-              builder: (context, snapshot) {
-                final dur = snapshot.data ?? Duration.zero;
-                return Slider.adaptive(
-                  value: dur.inMilliseconds.toDouble(),
-                  min: 0,
-                  max: ap.duration?.inMilliseconds.toDouble() ?? 0,
-                  onChanged: (value) => ap.seek(Duration(milliseconds: value.toInt())),
-                );
-              },
-            ),
-            Text((ap.duration ?? Duration.zero).label),
-            StreamBuilder(
-              stream: ap.playingStream,
-              builder: (context, snapshot) {
-                final isPlaying = snapshot.data ?? false;
-                return NamidaIconButton(
-                  icon: isPlaying ? Broken.pause : Broken.play,
-                  onPressed: ap.playing ? ap.pause : ap.play,
-                );
-              },
-            ),
-          ],
+        child: Theme(
+          data: theme,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              StreamBuilder(
+                stream: ap.positionStream,
+                builder: (context, snapshot) {
+                  final dur = snapshot.data ?? Duration.zero;
+                  return Text(dur.label);
+                },
+              ),
+              StreamBuilder(
+                initialData: Duration.zero,
+                stream: ap.positionStream,
+                builder: (context, snapshot) {
+                  final dur = snapshot.data ?? Duration.zero;
+                  return Slider.adaptive(
+                    value: dur.inMilliseconds.toDouble(),
+                    min: 0,
+                    max: ap.duration?.inMilliseconds.toDouble() ?? 0,
+                    onChanged: (value) => ap.seek(Duration(milliseconds: value.toInt())),
+                  );
+                },
+              ),
+              Text((ap.duration ?? Duration.zero).label),
+              StreamBuilder(
+                stream: ap.playingStream,
+                builder: (context, snapshot) {
+                  final isPlaying = snapshot.data ?? false;
+                  return NamidaIconButton(
+                    icon: isPlaying ? Broken.pause : Broken.play,
+                    onPressed: ap.playing ? ap.pause : ap.play,
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

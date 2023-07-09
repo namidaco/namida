@@ -23,6 +23,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -154,8 +155,8 @@ class NamidaMiniPlayer extends StatelessWidget {
               final double rp = inverseAboveOne(p);
               final double rcp = rp.clamp(0, 1);
 
-              final double qp = MiniPlayerController.inst.miniplayerQueueHP.value;
-              final double qcp = qp.clamp(0.0, 1.0);
+              final double qp = p.clamp(1.0, 3.0) - 1.0;
+              final double qcp = MiniPlayerController.inst.miniplayerQueueHP.value;
 
               final double bp = !bounceUp
                   ? !bounceDown
@@ -896,6 +897,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                   ),
                                   Container(
                                     width: context.width,
+                                    height: kQueueBottomRowHeight,
                                     decoration: BoxDecoration(
                                       color: context.theme.scaffoldBackgroundColor,
                                       borderRadius: BorderRadius.vertical(

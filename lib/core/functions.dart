@@ -302,8 +302,7 @@ List<Track> generateTracksFromMoods(List<String> moods, [int maxCount = 20]) {
   });
   return finalTracks
     ..shuffle()
-    ..take(maxCount)
-    ..toList();
+    ..take(maxCount);
 }
 
 List<Track> generateTracksFromRatings(

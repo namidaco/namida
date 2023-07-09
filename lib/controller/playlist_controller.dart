@@ -106,7 +106,7 @@ class PlaylistController {
     if (playlist == null) return false;
 
     final newPlaylist = playlist.copyWith(name: newName, modifiedDate: currentTimeMS);
-    _updateMap(newPlaylist);
+    _updateMap(newPlaylist, playlistName);
 
     return (await _savePlaylistToStorage(newPlaylist));
   }
@@ -226,7 +226,7 @@ class PlaylistController {
       });
     }
 
-    /// Sorting since [await for] doesnt maintain order
+    /// Sorting since [dir.list()]] doesnt maintain order
     _sortPlaylists();
   }
 
@@ -272,7 +272,7 @@ class PlaylistController {
 
   void _removeFromMap(Playlist playlist) {
     playlistsMap.remove(playlist.name);
-    _sortPlaylists();
+    playlistsMap.refresh();
   }
 
   void _sortPlaylists() => SearchSortController.inst.sortMedia(MediaType.playlist);

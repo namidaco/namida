@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
-import 'package:namida/controller/queue_controller.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -17,6 +16,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -239,8 +239,12 @@ Future<void> showGeneralPopupDialog(
             ElevatedButton(
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
-                  await PlaylistController.inst.renamePlaylist(playlistName!, controller.text);
-                  NamidaNavigator.inst.closeDialog();
+                  final didRename = await PlaylistController.inst.renamePlaylist(playlistName!, controller.text);
+                  if (didRename) {
+                    NamidaNavigator.inst.closeDialog();
+                  } else {
+                    Get.snackbar(Language.inst.ERROR, Language.inst.COULDNT_RENAME_PLAYLIST);
+                  }
                 }
               },
               child: Text(Language.inst.SAVE),

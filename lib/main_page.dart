@@ -10,6 +10,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/youtube_controller.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -248,11 +249,17 @@ class MainPageWrapper extends StatelessWidget {
                 () {
                   final miniHeight = MiniPlayerController.inst.miniplayerHP.value;
                   final queueHeight = MiniPlayerController.inst.miniplayerQueueHP.value;
-                  if (miniHeight == 1.0) return const SizedBox();
-                  return Positioned(
-                    bottom: 60 + 60.0 * miniHeight + (SettingsController.inst.enableBottomNavBar.value ? 0 : 32.0 * (1 - queueHeight)),
+                  if (miniHeight == 1.0 && queueHeight == 0.0) return const SizedBox();
+
+                  final navHeight = (SettingsController.inst.enableBottomNavBar.value ? kBottomNavigationBarHeight : -4.0) - 10.0;
+                  final isInQueue = queueHeight > 0.0;
+                  final initH = isInQueue ? kQueueBottomRowHeight : kBottomPadding;
+
+                  return AnimatedPositioned(
+                    duration: const Duration(milliseconds: 100),
+                    bottom: initH + (navHeight * (1 - queueHeight)),
                     child: Opacity(
-                      opacity: 1 - miniHeight,
+                      opacity: isInQueue ? queueHeight : 1.0 - miniHeight,
                       child: const SelectedTracksPreviewContainer(),
                     ),
                   );

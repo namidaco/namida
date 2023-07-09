@@ -51,7 +51,7 @@ class MiniPlayerController {
       animation.addListener(() {
         final p = animation.value;
         miniplayerHP.value = p.clamp(0.0, 1.0);
-        miniplayerQueueHP.value = p.clamp(1.0, 3.0) - 1.0;
+        miniplayerQueueHP.value = (p.clamp(1.0, 3.0) - 1.0).clamp(0.0, 1.0);
       });
     });
   }

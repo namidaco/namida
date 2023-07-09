@@ -87,36 +87,89 @@ class Indexer {
     mainMapGenres.value.clear();
     mainMapFolders.clear();
 
-    _addTheseTracksToAlbumGenreArtistEtc(tracksInfoList);
+    // --- Sorting All Sublists ---
+    tracksInfoList.loop((tr, i) {
+      final trExt = tr.toTrackExt();
+
+      // -- Assigning Albums
+      mainMapAlbums.value.addForce(trExt.album, tr);
+
+      // -- Assigning Artists
+      trExt.artistsList.loop((artist, i) {
+        mainMapArtists.value.addForce(artist, tr);
+      });
+
+      // -- Assigning Genres
+      trExt.genresList.loop((genre, i) {
+        mainMapGenres.value.addForce(genre, tr);
+      });
+
+      // -- Assigning Folders
+      mainMapFolders.addForce(tr.folder, tr);
+    });
+
+    mainMapAlbums.value.updateAll((key, value) => value..sortByAlt((e) => e.year, (e) => e.title));
+    mainMapArtists.value.updateAll((key, value) => value..sortByAlt((e) => e.year, (e) => e.title));
+    mainMapGenres.value.updateAll((key, value) => value..sortByAlt((e) => e.year, (e) => e.title));
+    mainMapFolders.updateAll((key, value) => value..sortBy((e) => e.filename.toLowerCase()));
 
     _sortAll();
   }
 
-  void _sortAll() {
-    SearchSortController.inst.sortAll();
-  }
+  void _sortAll() => SearchSortController.inst.sortAll();
 
-  void _addTheseTracksToAlbumGenreArtistEtc(List<Track> tracks, {bool preventDuplicates = false}) {
-    // TODO sort after adding
+  void _addTheseTracksToAlbumGenreArtistEtc(List<Track> tracks) {
+    final List<String> addedAlbums = [];
+    final List<String> addedArtists = [];
+    final List<String> addedGenres = [];
+    final List<Folder> addedFolders = [];
+
     tracks.loop((tr, i) {
       final trExt = tr.toTrackExt();
 
-      /// Assigning Albums
-      mainMapAlbums.value.addNoDuplicatesForce(trExt.album, tr, preventDuplicates: preventDuplicates);
+      // -- Assigning Albums
+      mainMapAlbums.value.addNoDuplicatesForce(trExt.album, tr);
 
-      /// Assigning Artists
+      // -- Assigning Artists
       trExt.artistsList.loop((artist, i) {
-        mainMapArtists.value.addNoDuplicatesForce(artist, tr, preventDuplicates: preventDuplicates);
+        mainMapArtists.value.addNoDuplicatesForce(artist, tr);
       });
 
-      /// Assigning Genres
+      // -- Assigning Genres
       trExt.genresList.loop((genre, i) {
-        mainMapGenres.value.addNoDuplicatesForce(genre, tr, preventDuplicates: preventDuplicates);
+        mainMapGenres.value.addNoDuplicatesForce(genre, tr);
       });
 
-      /// Assigning Folders
-      mainMapFolders.addNoDuplicatesForce(tr.folder, tr, preventDuplicates: preventDuplicates);
+      // -- Assigning Folders
+      mainMapFolders.addNoDuplicatesForce(tr.folder, tr);
+
+      // --- Adding media that was affected
+      addedAlbums.add(trExt.album);
+      addedArtists.addAll(trExt.artistsList);
+      addedGenres.addAll(trExt.artistsList);
+      addedFolders.add(tr.folder);
     });
+
+    addedAlbums
+      ..removeDuplicates()
+      ..loop((e, index) {
+        mainMapAlbums.value[e]?.sortByAlt((e) => e.year, (e) => e.title);
+      });
+    addedArtists
+      ..removeDuplicates()
+      ..loop((e, index) {
+        mainMapArtists.value[e]?.sortByAlt((e) => e.year, (e) => e.title);
+      });
+    addedGenres
+      ..removeDuplicates()
+      ..loop((e, index) {
+        mainMapGenres.value[e]?.sortByAlt((e) => e.year, (e) => e.title);
+      });
+    addedFolders
+      ..removeDuplicates()
+      ..loop((e, index) {
+        mainMapFolders[e]?.sortBy((e) => e.filename.toLowerCase());
+      });
 
     _sortAll();
   }
@@ -156,7 +209,7 @@ class Indexer {
       });
     }
     final newtracks = paths.map((e) => e.toTrackOrNull());
-    _addTheseTracksToAlbumGenreArtistEtc(newtracks.whereType<Track>().toList(), preventDuplicates: true);
+    _addTheseTracksToAlbumGenreArtistEtc(newtracks.whereType<Track>().toList());
   }
 
   Future<List<Track>> convertPathToTrack(List<String> tracksPath) async {
@@ -176,7 +229,7 @@ class Indexer {
       await pathsToExtract.loopFuture((tp, index) async {
         final t = tp.toTrackOrNull();
         if (t != null) {
-          _addTheseTracksToAlbumGenreArtistEtc([t], preventDuplicates: true);
+          _addTheseTracksToAlbumGenreArtistEtc([t]);
           _sortAll();
           final trako = tp.toTrackOrNull();
           if (trako != null) finalTracks.add(trako);
@@ -279,9 +332,9 @@ class Indexer {
             finalGenre ?? k_UNKNOWN_TRACK_GENRE,
             genres,
             finalComposer ?? k_UNKNOWN_TRACK_COMPOSER,
-            getIntFromString(trackInfo.track) ?? 0,
+            trackInfo.track ?? 0,
             duration ?? 0,
-            getIntFromString(trackInfo.year) ?? 0,
+            trackInfo.year ?? 0,
             fileStat.size,
             //TODO(MSOB7YY): REMOVE CREATION DATE
             fileStat.accessed.millisecondsSinceEpoch,
@@ -292,7 +345,7 @@ class Indexer {
             trackInfo.sampleRate ?? 0,
             trackInfo.format ?? '',
             trackInfo.channels ?? '',
-            getIntFromString(trackInfo.discNo) ?? 0,
+            trackInfo.discNo ?? 0,
             trackInfo.language ?? '',
             trackInfo.lyrics ?? '',
           );
