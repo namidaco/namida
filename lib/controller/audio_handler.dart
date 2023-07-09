@@ -54,10 +54,6 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
       playbackState.add(_transformEvent(event));
     });
 
-    _player.playbackEventStream.listen((event) {
-      QueueController.inst.updateLatestQueue(currentQueue.toList());
-    });
-
     _player.processingStateStream.listen((state) async {
       if (state == ProcessingState.completed) {
         /// Sleep timer after n tracks

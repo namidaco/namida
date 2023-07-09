@@ -49,6 +49,7 @@ class Player {
         androidNotificationOngoing: true,
       ),
     );
+    prepareTotalListenTime();
     await setSkipSilenceEnabled(SettingsController.inst.playerSkipSilenceEnabled.value);
   }
 
@@ -238,8 +239,9 @@ class Player {
     }
 
     if (!dontAddQueue) {
-      QueueController.inst.addNewQueue(source, tracks: finalQueue.toList());
+      QueueController.inst.addNewQueue(source, tracks: finalQueue);
     }
+    QueueController.inst.updateLatestQueue(finalQueue);
     currentQueue.assignAll(finalQueue);
 
     await _audioHandler?.setAudioSource(index, startPlaying: startPlaying, dateAdded: dateAdded);

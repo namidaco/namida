@@ -81,8 +81,6 @@ void main() async {
   kDirectoriesPaths.add('${paths[0]}/Download/');
   k_DIR_APP_INTERNAL_STORAGE = "${paths[0]}/Namida";
 
-  VideoController.inst.initialize();
-
   await SettingsController.inst.prepareSettingsFile();
   await Indexer.inst.prepareTracksFile();
 
@@ -92,7 +90,7 @@ void main() async {
   Indexer.inst.updateColorPalettesSizeInStorage();
   Indexer.inst.updateVideosSizeInStorage();
 
-  VideoController.inst.getVideoFiles();
+  VideoController.inst.initialize();
 
   FlutterNativeSplash.remove();
 
@@ -103,20 +101,15 @@ void main() async {
 
   await Player.inst.initializePlayer();
   await QueueController.inst.prepareLatestQueue();
-  await Player.inst.prepareTotalListenTime();
   CurrentColor.inst.prepareColors();
 
   /// Clearing files cached by intents
-  final cacheDir = await getTemporaryDirectory();
-  await for (final cf in cacheDir.list()) {
-    if (cf is File) {
-      cf.tryDeleting();
-    }
-  }
+  _clearIntentCachedFiles();
 
-  void shouldErrorPlayingFileSnackbar() {
+  void showErrorPlayingFileSnackbar({String? error}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Get.snackbar(Language.inst.ERROR, Language.inst.COULDNT_PLAY_FILE);
+      final errorMessage = error != null ? '($error)' : '';
+      Get.snackbar(Language.inst.ERROR, '${Language.inst.COULDNT_PLAY_FILE} $errorMessage');
     });
   }
 
@@ -125,17 +118,16 @@ void main() async {
   if (intentfiles.isNotEmpty) {
     final playedsuccessfully = await playExternalFiles(intentfiles.map((e) => e.path).toList());
     if (!playedsuccessfully) {
-      shouldErrorPlayingFileSnackbar();
+      showErrorPlayingFileSnackbar();
     }
   }
 
   /// Listening to Android Shared Intents.
   /// Opening multiple files sometimes crashes the app.
-  ReceiveSharingIntent.getMediaStream().listen((event) async {
-    await playExternalFiles(event.map((e) => e.path).toList());
-  }, onError: (err) {
-    shouldErrorPlayingFileSnackbar();
-  });
+  ReceiveSharingIntent.getMediaStream().listen(
+    (event) async => await playExternalFiles(event.map((e) => e.path).toList()),
+    onError: (err) => showErrorPlayingFileSnackbar(error: err.toString()),
+  );
 
   /// should be removed soon when fullscreen video is available.
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
@@ -144,6 +136,15 @@ void main() async {
   FlutterLocalNotificationsPlugin().cancelAll();
   runApp(const Namida());
   Folders.inst.onFirstLoad();
+}
+
+Future<void> _clearIntentCachedFiles() async {
+  final cacheDir = await getTemporaryDirectory();
+  await for (final cf in cacheDir.list()) {
+    if (cf is File) {
+      cf.tryDeleting();
+    }
+  }
 }
 
 /// returns [true] if played successfully.

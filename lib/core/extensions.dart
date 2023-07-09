@@ -3,7 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -272,8 +272,8 @@ extension FileSizeFormat on int {
     const decimals = 2;
     if (this <= 0) return "0 B";
     const suffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-    final i = (log(this) / log(1024)).floor();
-    return '${(this / pow(1024, i)).toStringAsFixed(decimals)} ${suffixes[i]}';
+    final i = (math.log(this) / math.log(1024)).floor();
+    return '${(this / math.pow(1024, i)).toStringAsFixed(decimals)} ${suffixes[i]}';
   }
 }
 
@@ -509,7 +509,7 @@ extension FileUtils<R> on File {
   /// Automatically creates the file if it doesnt exist
   ///
   /// Has a built-in try-catch that returns [File] if wrote successfully, or [null] if failed.
-  Future<File?> writeAsJson(Object? object, {Object? Function(Object? nonEncodable)? toEncodable}) async {
+  Future<File?> writeAsJson(Object? object) async {
     try {
       await create(recursive: true);
       const encoder = JsonEncoder.withIndent("  ");
@@ -535,7 +535,7 @@ extension NumberUtils<E extends num> on E {
 
 extension IntUtils on int {
   int getRandomNumberBelow([int minimum = 0]) {
-    return minimum + (Random().nextInt(this));
+    return minimum + (math.Random().nextInt(this));
   }
 }
 

@@ -48,6 +48,7 @@ class VideoController {
         await updateLocalVidPath(Player.inst.nowPlayingTrack.value);
       }
     });
+    getVideoFiles();
   }
 
   /// Always assigns to [VideoController.inst.youtubeLink] and [VideoController.inst.youtubeVideoId]
