@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' hide Playlist;
 
@@ -10,6 +11,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -39,6 +41,7 @@ import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 import 'package:namida/ui/pages/tracks_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/stats.dart';
 
 extension LibraryTabToEnum on int {
   LibraryTab toEnum() => SettingsController.inst.libraryTabs.toList().elementAt(this);
@@ -887,9 +890,32 @@ extension RouteUtils on NamidaRoute {
     final queue = route == RouteType.SUBPAGE_queueTracks ? name.getQueue() : null;
 
     return <Widget>[
-      getAnimatedCrossFade(child: const NamidaStatsIcon(), shouldShow: shouldShowInitialActions),
+      // -- Stats Icon
+      getAnimatedCrossFade(
+          child: NamidaAppBarIcon(
+            icon: Broken.chart_21,
+            onPressed: () {
+              NamidaNavigator.inst.navigateTo(
+                SettingsSubPage(
+                  title: Language.inst.STATS,
+                  child: const StatsSection(),
+                ),
+              );
+            },
+          ),
+          shouldShow: shouldShowInitialActions),
+
+      // -- Parsing Json Icon
       getAnimatedCrossFade(child: const ParsingJsonPercentage(size: 30.0), shouldShow: shouldShowJsonParse),
-      getAnimatedCrossFade(child: const NamidaSettingsButton(), shouldShow: shouldShowInitialActions),
+
+      // -- Settings Icon
+      getAnimatedCrossFade(
+        child: NamidaAppBarIcon(
+          icon: Broken.setting_2,
+          onPressed: () => NamidaNavigator.inst.navigateTo(const SettingsPage()),
+        ),
+        shouldShow: shouldShowInitialActions,
+      ),
 
       getAnimatedCrossFade(
         child: NamidaRawLikeButton(

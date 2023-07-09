@@ -1148,6 +1148,29 @@ class _NamidaIconButtonState extends State<NamidaIconButton> {
   }
 }
 
+class NamidaAppBarIcon extends StatelessWidget {
+  final IconData icon;
+  final void Function()? onPressed;
+  final String? tooltip;
+
+  const NamidaAppBarIcon({
+    super.key,
+    required this.icon,
+    this.onPressed,
+    this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaIconButton(
+      horizontalPadding: 6.0,
+      icon: icon,
+      onPressed: onPressed,
+      tooltip: tooltip,
+    );
+  }
+}
+
 class NamidaPartyContainer extends StatelessWidget {
   final double spreadRadiusMultiplier;
   final double? width;

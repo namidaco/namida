@@ -15,9 +15,7 @@ import 'package:namida/packages/searchbar_animation.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/pages/search_page.dart';
-import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/stats.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -30,49 +28,21 @@ class HomePage extends StatelessWidget {
         preferredSize: const Size(0, 56.0),
         child: Obx(
           () => AppBar(
-              toolbarHeight: 56.0 * (1 - MiniPlayerController.inst.miniplayerHP.value * 0.3),
-              leading: NamidaNavigator.inst.currentWidgetStack.length > 1 ? const NamidaBackButton() : const NamidaDrawerButton(),
-              titleSpacing: 0,
-              automaticallyImplyLeading: false,
-              title: NamidaNavigator.inst.currentRoute?.toTitle(),
-              actions: NamidaNavigator.inst.currentRoute?.toActions()
-              // [
-              // NamidaHero(
-              //   tag: 'dsfdfds',
-              //   child: NamidaIconButton(
-              //     padding: const EdgeInsets.only(right: 12.0, left: 10.0),
-              //     icon: Broken.ghost,
-              //     onPressed: () async {
-              //       GoogleSignIn googleSignIn = GoogleSignIn(
-              //         scopes: [
-              //           'email',
-              //           'https://www.googleapis.com/auth/youtube',
-              //           'https://www.googleapis.com/auth/youtube.readonly',
-              //           'https://www.googleapis.com/auth/youtube.force-ssl',
-              //         ],
-              //       );
-              //       await googleSignIn.signOut();
-              //       final acc = await googleSignIn.signIn();
-              //       final accessToken = await acc?.authentication.then((value) => value.accessToken);
-              //       final accHeaders = await acc?.authHeaders;
-              //       print('ACCCCCCCCCC ${acc?.displayName ?? 'NULLLLLLL'}');
-              //       print('ACCCCCCCCCC ${accessToken ?? 'NULLLLLLL'}');
-              //       YoutubeController.inst.sussyBaka = accessToken ?? '';
-              //       // final String url = 'https://www.googleapis.com/youtube/v3/channels?access_token=$accessToken&part=snippet&mine=true';
-              //       final String url = 'https://youtube.com/watch?v=o3DHvFyPYRE&bpctr=9999999999&hl=en&access_token=$accessToken';
-              //       http.Response response = await http.get(Uri.parse(url), headers: accHeaders);
-              //       // print('ACCCCCCCCCC ${response.body.replaceAll('\n', ' ')}');
-              //       print('ACCCCCCCCCC ${response.headers.toString()}');
-              //       final cookie = Cookie.fromSetCookieValue(response.headers['set-cookie'].toString());
-              //       print('ACCCCCCCCCC cookie: ${cookie.name}');
-              //       print('ACCCCCCCCCC cookie: ${cookie.value}');
-              //       print('ACCCCCCCCCC cookie: ${cookie.path}');
-              //       YoutubeController.inst.sussyBakaHeader = response.headers;
-              //     },
-              //   ),
-              // ),
-              // ],
-              ),
+            toolbarHeight: 56.0 * (1 - MiniPlayerController.inst.miniplayerHP.value * 0.3),
+            leading: NamidaNavigator.inst.currentWidgetStack.length > 1
+                ? NamidaAppBarIcon(
+                    icon: Broken.arrow_left_2,
+                    onPressed: NamidaNavigator.inst.popPage,
+                  )
+                : NamidaAppBarIcon(
+                    icon: Broken.menu_1,
+                    onPressed: NamidaNavigator.inst.toggleDrawer,
+                  ),
+            titleSpacing: 0,
+            automaticallyImplyLeading: false,
+            title: NamidaNavigator.inst.currentRoute?.toTitle(),
+            actions: NamidaNavigator.inst.currentRoute?.toActions(),
+          ),
         ),
       ),
       body: Stack(
@@ -159,65 +129,6 @@ class HomePage extends StatelessWidget {
                 ),
               ),
       ),
-    );
-  }
-}
-
-class NamidaStatsIcon extends StatelessWidget {
-  const NamidaStatsIcon({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return NamidaIconButton(
-      horizontalPadding: 6.0,
-      icon: Broken.chart_21,
-      onPressed: () {
-        NamidaNavigator.inst.navigateTo(
-          SettingsSubPage(
-            title: Language.inst.STATS,
-            child: const StatsSection(),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class NamidaBackButton extends StatelessWidget {
-  const NamidaBackButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return NamidaIconButton(
-      key: const ValueKey('arrowleft'),
-      icon: Broken.arrow_left_2,
-      onPressed: () => NamidaNavigator.inst.popPage(),
-    );
-  }
-}
-
-class NamidaDrawerButton extends StatelessWidget {
-  const NamidaDrawerButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return NamidaIconButton(
-      key: const ValueKey('drawericon'),
-      icon: Broken.menu_1,
-      onPressed: () => NamidaNavigator.inst.toggleDrawer(),
-    );
-  }
-}
-
-class NamidaSettingsButton extends StatelessWidget {
-  const NamidaSettingsButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return NamidaIconButton(
-      horizontalPadding: 6.0,
-      icon: Broken.setting_2,
-      onPressed: () => NamidaNavigator.inst.navigateTo(const SettingsPage()),
     );
   }
 }
