@@ -42,7 +42,7 @@ class MultiArtworkCard extends StatelessWidget {
                     borderRadius: 12.0,
                     heroTag: heroTag,
                     disableHero: true,
-                    paths: tracks.map((e) => e.pathToImage).toList(),
+                    paths: tracks.mapped((e) => e.pathToImage),
                     thumbnailSize: thumbnailSize,
                     iconSize: 92.0 - 14 * gridCount,
                   ),

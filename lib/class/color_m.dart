@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:namida/core/extensions.dart';
 
 class NamidaColor {
   Color? used;
@@ -15,14 +16,14 @@ class NamidaColor {
   NamidaColor.fromJson(Map<String, dynamic> json) {
     used = json['used'] != null ? Color(json['used']) : null;
     mix = Color(json['mix'] ?? 0);
-    palette = List<Color>.from(List<int>.from(json['palette'] ?? []).map((e) => Color(e)));
+    palette = List<Color>.from(List<int>.from(json['palette'] ?? []).mapped((e) => Color(e)));
   }
 
   Map<String, dynamic> toJson() {
     return {
       'used': used?.value,
       'mix': mix.value,
-      'palette': palette.map((e) => e.value).toList(),
+      'palette': palette.mapped((e) => e.value),
     };
   }
 }

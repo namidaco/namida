@@ -77,7 +77,7 @@ void main() async {
 
   final paths = await ExternalPath.getExternalStorageDirectories();
   kStoragePaths.assignAll(paths);
-  kDirectoriesPaths.assignAll(paths.map((path) => "$path/${ExternalPath.DIRECTORY_MUSIC}").toSet());
+  kDirectoriesPaths.assignAll(paths.mappedUniqued((path) => "$path/${ExternalPath.DIRECTORY_MUSIC}"));
   kDirectoriesPaths.add('${paths[0]}/Download/');
   k_DIR_APP_INTERNAL_STORAGE = "${paths[0]}/Namida";
 
@@ -116,7 +116,7 @@ void main() async {
   /// Recieving Initial Android Shared Intent.
   final intentfiles = await ReceiveSharingIntent.getInitialMedia();
   if (intentfiles.isNotEmpty) {
-    final playedsuccessfully = await playExternalFiles(intentfiles.map((e) => e.path));
+    final playedsuccessfully = await playExternalFiles(intentfiles.mapped((e) => e.path));
     if (!playedsuccessfully) {
       showErrorPlayingFileSnackbar();
     }
@@ -125,7 +125,7 @@ void main() async {
   /// Listening to Android Shared Intents.
   /// Opening multiple files sometimes crashes the app.
   ReceiveSharingIntent.getMediaStream().listen(
-    (event) async => await playExternalFiles(event.map((e) => e.path)),
+    (event) async => await playExternalFiles(event.mapped((e) => e.path)),
     onError: (err) => showErrorPlayingFileSnackbar(error: err.toString()),
   );
 

@@ -43,7 +43,7 @@ class PlaylistController {
 
     final pl = Playlist(
       name,
-      tracks.map((e) => TrackWithDate(currentTimeMS, e, TrackSource.local)).toList(),
+      tracks.mapped((e) => TrackWithDate(currentTimeMS, e, TrackSource.local)),
       creationDate,
       currentTimeMS,
       comment,
@@ -133,7 +133,7 @@ class PlaylistController {
   }
 
   void addTracksToPlaylist(Playlist playlist, List<Track> tracks, {TrackSource source = TrackSource.local}) async {
-    final newtracks = tracks.map((e) => TrackWithDate(currentTimeMS, e, source)).toList();
+    final newtracks = tracks.mapped((e) => TrackWithDate(currentTimeMS, e, source));
     playlist.tracks.addAll(newtracks);
     _updateMap(playlist);
 

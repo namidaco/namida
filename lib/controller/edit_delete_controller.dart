@@ -19,7 +19,7 @@ class EditDeleteController {
   EditDeleteController._internal();
 
   Future<void> deleteCachedVideos(List<Track> tracks) async {
-    final idsToDelete = tracks.map((e) => e.youtubeID).toList();
+    final idsToDelete = tracks.mapped((e) => e.youtubeID);
     await for (final v in Directory(k_DIR_VIDEOS_CACHE).list()) {
       if (v is File) {
         await idsToDelete.loopFuture((id, index) async {

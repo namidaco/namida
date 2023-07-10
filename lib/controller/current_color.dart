@@ -165,7 +165,7 @@ class CurrentColor {
     }
 
     final finalpalette = await extractColorsFromImage(pathToImage);
-    final intpalette = finalpalette.palette.map((e) => e.value).toList();
+    final intpalette = finalpalette.palette.mapped((e) => e.value);
     return mixIntColors(intpalette);
   }
 

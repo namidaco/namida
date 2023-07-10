@@ -48,7 +48,7 @@ class NamidaDialogs {
 
   Future<void> showAlbumDialog(String albumName) async {
     final tracks = albumName.getAlbumTracks();
-    final artists = tracks.map((e) => e.artistsList).expand((list) => list).toSet();
+    final artists = tracks.mappedUniquedList((e) => e.artistsList);
     await showGeneralPopupDialog(
       tracks,
       tracks.album.overflow,
@@ -64,13 +64,13 @@ class NamidaDialogs {
 
   Future<void> showArtistDialog(String name) async {
     final tracks = name.getArtistTracks();
-    final albums = tracks.map((e) => e.album);
+    final albums = tracks.mappedUniqued((e) => e.album);
     await showGeneralPopupDialog(
       tracks,
       name.overflow,
       "${tracks.displayTrackKeyword} & ${albums.length.displayAlbumKeyword}",
       QueueSource.artist,
-      thirdLineText: albums.toSet().take(5).join(', ').overflow,
+      thirdLineText: albums.take(5).join(', ').overflow,
       forceSquared: true,
       forceSingleArtwork: true,
       heroTag: 'artist_$name',

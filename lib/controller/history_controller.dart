@@ -195,7 +195,7 @@ class HistoryController {
 
   Future<void> saveHistoryToStorage([List<int>? daysToSave]) async {
     Future<void> saveThisDay(int key, List<TrackWithDate> tracks) async {
-      await File('$k_PLAYLIST_DIR_PATH_HISTORY$key.json').writeAsJson(tracks.map((e) => e.toJson()).toList());
+      await File('$k_PLAYLIST_DIR_PATH_HISTORY$key.json').writeAsJson(tracks.mapped((e) => e.toJson()));
     }
 
     Future<void> deleteThisDay(int key) async {
@@ -231,7 +231,7 @@ class HistoryController {
       if (f is File) {
         await f.readAsJsonAnd((response) async {
           final dayOfTrack = int.parse(f.path.getFilenameWOExt);
-          final listTracks = (response as List?)?.map((e) => TrackWithDate.fromJson(e)) ?? [];
+          final listTracks = (response as List?)?.mapped((e) => TrackWithDate.fromJson(e)) ?? [];
           historyMap.value[dayOfTrack] = List<TrackWithDate>.from(listTracks);
         });
         await Future.delayed(Duration.zero);

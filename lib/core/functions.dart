@@ -274,10 +274,7 @@ List<Track> generateTracksFromHistoryDates(DateTime? oldestDate, DateTime? newes
   if (maxCount == null) {
     return tracksAvailable;
   } else {
-    return tracksAvailable
-      ..shuffle()
-      ..take(maxCount)
-      ..toList();
+    return _addTheseTracksFromMedia(tracksAvailable, maxCount: maxCount, removeTracksInQueue: false);
   }
 }
 
@@ -324,33 +321,28 @@ List<Track> generateTracksFromSameEra(int yearTimeStamp, {int daysRange = 30, in
   }
   tracksAvailable.remove(currentTrack);
 
-  return tracksAvailable
-    ..shuffle()
-    ..take(maxCount);
+  return _addTheseTracksFromMedia(tracksAvailable, maxCount: maxCount, removeTracksInQueue: false);
 }
 
-List<Track> generateTracksFromMoods(List<String> moods, [int maxCount = 20]) {
+List<Track> generateTracksFromMoods(Iterable<String> moods, [int maxCount = 20]) {
   final finalTracks = <Track>[];
+  final moodsSet = moods.toSet();
 
   /// Generating from Playlists.
-  finalTracks.addAll(
-    PlaylistController.inst.playlistsMap.entries
-        .where(
-          (pl) => pl.value.moods.any((e) => moods.contains(e)),
-        )
-        .expand((pl) => pl.value.tracks.map((e) => e.track))
-        .toList(),
+  final matchingPlEntries = PlaylistController.inst.playlistsMap.entries.where(
+    (plEntry) => plEntry.value.moods.any((e) => moodsSet.contains(e)),
   );
+  final playlistsTracks = matchingPlEntries.expand((pl) => pl.value.tracks.toTracks());
+  finalTracks.addAll(playlistsTracks);
 
   /// Generating from all Tracks.
   Indexer.inst.trackStatsMap.forEach((key, value) {
-    if (value.moods.toSet().intersection(moods.toSet()).isNotEmpty) {
+    if (value.moods.any((element) => moodsSet.contains(element))) {
       finalTracks.add(key);
     }
   });
-  return finalTracks
-    ..shuffle()
-    ..take(maxCount);
+
+  return _addTheseTracksFromMedia(finalTracks, maxCount: maxCount, removeTracksInQueue: false);
 }
 
 List<Track> generateTracksFromRatings(
@@ -384,9 +376,11 @@ List<Track> generateTracksFromFolder(Folder folder) {
   return _addTheseTracksFromMedia(folder.tracks);
 }
 
-List<Track> _addTheseTracksFromMedia(Iterable<Track> tracks, [int maxCount = 10]) {
+List<Track> _addTheseTracksFromMedia(Iterable<Track> tracks, {int maxCount = 10, bool removeTracksInQueue = true}) {
   final trs = List<Track>.from(tracks);
   trs.shuffle();
-  trs.removeWhere((element) => Player.inst.currentQueue.contains(element));
+  if (removeTracksInQueue) {
+    trs.removeWhere((element) => Player.inst.currentQueue.contains(element));
+  }
   return trs.take(maxCount).toList();
 }

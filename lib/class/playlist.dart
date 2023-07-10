@@ -1,5 +1,6 @@
 import 'package:namida/class/track.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/extensions.dart';
 
 class Playlist {
   late String name;
@@ -22,7 +23,7 @@ class Playlist {
 
   Playlist.fromJson(Map<String, dynamic> json) {
     name = json['name'] ?? '';
-    tracks = List<TrackWithDate>.from((json['tracks'] as List? ?? []).map((track) => TrackWithDate.fromJson(track)));
+    tracks = List<TrackWithDate>.from((json['tracks'] as List? ?? []).mapped((track) => TrackWithDate.fromJson(track)));
     creationDate = json['creationDate'] ?? currentTimeMS;
     modifiedDate = json['modifiedDate'] ?? currentTimeMS;
     comment = json['comment'] ?? '';
@@ -33,7 +34,7 @@ class Playlist {
   Map<String, dynamic> toJson() {
     return {
       'name': name,
-      'tracks': tracks.map((track) => track.toJson()).toList(),
+      'tracks': tracks.mapped((track) => track.toJson()),
       'creationDate': creationDate,
       'modifiedDate': modifiedDate,
       'comment': comment,

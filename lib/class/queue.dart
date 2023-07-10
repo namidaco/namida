@@ -19,7 +19,7 @@ class Queue {
 
   /// Converts empty queue to AllTracksList.
   Queue.fromJson(Map<String, dynamic> json) {
-    final res = (json['tracks'] as List? ?? []).map((e) => (e as String).toTrack());
+    final res = (json['tracks'] as List? ?? []).mapped((e) => (e as String).toTrack());
     final finalTracks = <Track>[];
     if (res.isEmpty) {
       finalTracks.addAll(allTracksInLibrary);
@@ -40,7 +40,7 @@ class Queue {
       'source': source.convertToString,
       'date': date,
       'isFav': isFav,
-      'tracks': finalTracks.map((e) => e.path).toList(),
+      'tracks': finalTracks.mapped((e) => e.path),
     };
   }
 

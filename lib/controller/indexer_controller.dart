@@ -199,7 +199,7 @@ class Indexer {
   }
 
   Future<void> updateTracks(List<Track> tracks, {bool updateArtwork = false}) async {
-    final paths = tracks.map((e) => e.path).toSet();
+    final paths = tracks.mapped((e) => e.path).toSet();
     await fetchAllSongsAndWriteToFile(audioFiles: {}, deletedPaths: paths, forceReIndex: false);
     await fetchAllSongsAndWriteToFile(audioFiles: paths, deletedPaths: {}, forceReIndex: false);
 

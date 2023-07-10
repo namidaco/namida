@@ -86,7 +86,7 @@ class YoutubeController {
     final videocommentfile = File('$k_DIR_YT_METADATA_COMMENTS${video.id}.txt');
 
     NamidaCommentsList? newcomm;
-    final finalcomm = _commentlistclient.value?.map((p0) => p0).toList() ?? <Comment>[];
+    final finalcomm = _commentlistclient.value?.mapped((p0) => p0) ?? <Comment>[];
 
     /// Comments from cache
     if (!forceReload && await videocommentfile.existsAndValid()) {

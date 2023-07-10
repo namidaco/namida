@@ -71,9 +71,9 @@ Future<void> showGeneralPopupDialog(
   final trackToExtractColorFrom = forceSingleArtwork ? tracks[tracks.indexOfImage] : tracks.first;
   final colorDelightened = extractColor ? await CurrentColor.inst.getTrackDelightnedColor(trackToExtractColorFrom) : CurrentColor.inst.color.value;
 
-  final List<String> availableAlbums = tracks.map((e) => e.toTrackExt().album).toSet().toList();
-  final List<String> availableArtists = tracks.map((e) => e.toTrackExt().artistsList).expand((list) => list).toSet().toList();
-  final List<Folder> availableFolders = tracks.map((e) => e.folder).toSet().toList();
+  final List<String> availableAlbums = tracks.mappedUniqued((e) => e.toTrackExt().album);
+  final List<String> availableArtists = tracks.mappedUniquedList((e) => e.toTrackExt().artistsList);
+  final List<Folder> availableFolders = tracks.mappedUniqued((e) => e.folder);
 
   RxInt numberOfRepeats = 1.obs;
   RxBool isLoadingFilesToShare = false.obs;
@@ -136,7 +136,7 @@ Future<void> showGeneralPopupDialog(
                 }
               });
 
-              saveFunction(moodsFinal.toSet().toList());
+              saveFunction(moodsFinal.uniqued());
 
               NamidaNavigator.inst.closeDialog();
             },
@@ -172,7 +172,7 @@ Future<void> showGeneralPopupDialog(
     if (pl == null) return;
     setMoodsOrTags(
       pl.moods,
-      (moodsFinal) => PlaylistController.inst.updatePropertyInPlaylist(playlistName, moods: moodsFinal.toSet().toList()),
+      (moodsFinal) => PlaylistController.inst.updatePropertyInPlaylist(playlistName, moods: moodsFinal.uniqued()),
     );
   }
 
@@ -348,7 +348,7 @@ Future<void> showGeneralPopupDialog(
       return;
     }
 
-    final paths = files.map((e) => e.path).toList();
+    final paths = files.mapped((e) => e.path);
     paths.sortBy((e) => e);
 
     final highMatchesFiles = getHighMatcheFilesFromFilename(paths, tracks.first.path.getFilename);
@@ -886,7 +886,7 @@ Future<void> showGeneralPopupDialog(
                                   trailing: Obx(() => isLoadingFilesToShare.value ? const LoadingIndicator() : const SizedBox()),
                                   onTap: () async {
                                     isLoadingFilesToShare.value = true;
-                                    await Share.shareXFiles(tracksExisting.map((e) => XFile(e.path)).toList());
+                                    await Share.shareXFiles(tracksExisting.mapped((e) => XFile(e.path)));
                                     isLoadingFilesToShare.value = false;
                                     NamidaNavigator.inst.closeDialog();
                                   },

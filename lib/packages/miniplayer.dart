@@ -1027,7 +1027,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                                     const CancelButton(),
                                                                     ElevatedButton(
                                                                       onPressed: () {
-                                                                        Player.inst.addToQueue(generateTracksFromMoods(selectedmoods.toList()));
+                                                                        Player.inst.addToQueue(generateTracksFromMoods(selectedmoods));
                                                                         NamidaNavigator.inst.closeDialog();
                                                                       },
                                                                       child: Text(Language.inst.GENERATE),

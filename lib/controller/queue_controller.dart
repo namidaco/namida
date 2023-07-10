@@ -161,7 +161,7 @@ class QueueController {
   }
 
   Future<void> _saveLatestQueueToStorage(List<Track> tracks) async {
-    await File(k_FILE_PATH_LATEST_QUEUE).writeAsJson(tracks.map((e) => e.path).toList());
+    await File(k_FILE_PATH_LATEST_QUEUE).writeAsJson(tracks.mapped((e) => e.path));
   }
 
   Future<void> _deleteQueueFromStorage(Queue queue) async {

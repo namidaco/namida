@@ -680,10 +680,33 @@ extension ListieExt<E, Id> on List<E> {
     return lengthBefore - lengthAfter;
   }
 
-  List<E> uniqued(Id Function(E element)? id) {
+  List<E> uniqued([Id Function(E element)? id]) {
     final uniquedSet = <dynamic>{};
     final list = List<E>.from(this);
     list.retainWhere((e) => uniquedSet.add(id != null ? id(e) : e));
+    return list;
+  }
+
+  List<T> mapped<T>(T Function(E e) toElement) {
+    final list = <T>[];
+    loop((el, index) {
+      list.add(toElement(el));
+    });
+    return list;
+  }
+
+  List<T> mappedUniqued<T>(T Function(E e) toElement) {
+    final list = mapped(toElement);
+    list.removeDuplicates();
+    return list;
+  }
+
+  List<T> mappedUniquedList<T>(Iterable<T> Function(E e) toElement) {
+    final list = <T>[];
+    loop((el, index) {
+      list.addAll(toElement(el));
+    });
+    list.removeDuplicates();
     return list;
   }
 

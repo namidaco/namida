@@ -1,3 +1,4 @@
+import 'package:namida/core/extensions.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 /// used for stats.
@@ -21,7 +22,7 @@ class YoutubeVideoHistory {
     title = json['title'] ?? '';
     channel = json['channel'] ?? '';
     channelUrl = json['channelUrl'] ?? '';
-    watches = List<YTWatch>.from((json['watches'] as List? ?? []).map((e) => YTWatch.fromJson(e)));
+    watches = List<YTWatch>.from((json['watches'] as List? ?? []).mapped((e) => YTWatch.fromJson(e)));
   }
 
   Map<String, dynamic> toJson() {
@@ -91,13 +92,13 @@ class NamidaCommentsList {
   );
 
   NamidaCommentsList.fromJson(Map<String, dynamic> json) {
-    comments = List<Comment>.from((List<Map<String, dynamic>>.from((json['comments']))).map((e) => e.commentFromJson()).toList());
+    comments = List<Comment>.from((List<Map<String, dynamic>>.from((json['comments']))).mapped((e) => e.commentFromJson()));
     totalLength = json['totalLength'] ?? 0;
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['comments'] = comments.map((c) => c.toJson()).toList();
+    data['comments'] = comments.mapped((c) => c.toJson());
     data['totalLength'] = totalLength;
 
     return data;
@@ -118,7 +119,7 @@ extension VideoUtilsToJson on Video {
     data['description'] = description;
     data['duration'] = duration?.inMilliseconds ?? 0;
     data['thumbnails'] = id.toString();
-    data['keywords'] = keywords.map((e) => e).toList();
+    data['keywords'] = keywords.mapped((e) => e);
     data['engagement'] = engagement.toJson();
     data['isLive'] = isLive;
 
