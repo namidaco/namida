@@ -28,6 +28,21 @@ class QueueController {
     int? date,
     List<Track> tracks = const <Track>[],
   }) async {
+    /// If there are more than 2000 tracks.
+    if (tracks.length > 2000) {
+      debugPrint("UWAH QUEUE DEKKA");
+      return;
+    }
+
+    date ??= currentTimeMS;
+
+    if (_isLoadingQueues) {
+      // after queues full load, [addNewQueue] will be called to add Queues inside [_queuesToAddAfterAllQueuesLoad].
+      _queuesToAddAfterAllQueuesLoad.add(Queue(source, date, false, tracks));
+      debugPrint("$this: Queue adding suspended until queues full load");
+      return;
+    }
+
     // -- Prevents saving [allTracks] source over and over.
     final latestQueue = latestQueueInMap;
     if (latestQueue != null) {
@@ -36,13 +51,7 @@ class QueueController {
       }
     }
 
-    /// If there are more than 2000 tracks.
-    if (tracks.length > 2000) {
-      debugPrint("UWAH QUEUE DEKKA");
-      return;
-    }
-
-    final q = Queue(source, currentTimeMS, false, tracks);
+    final q = Queue(source, date, false, tracks);
     _updateMap(q);
     debugPrint("Added New Queue");
     await _saveQueueToStorage(q);
@@ -130,6 +139,15 @@ class QueueController {
         _updateMap(q);
       });
     }
+    _isLoadingQueues = false;
+    // Adding queues that were rejected by [addNewQueue] since Queues wasn't fully loaded.
+    if (_queuesToAddAfterAllQueuesLoad.isNotEmpty) {
+      await _queuesToAddAfterAllQueuesLoad.loopFuture(
+        (q, index) async => await addNewQueue(source: q.source, date: q.date, tracks: q.tracks),
+      );
+      debugPrint("$this: Added ${_queuesToAddAfterAllQueuesLoad.length} queue that were suspended");
+      _queuesToAddAfterAllQueuesLoad.clear();
+    }
   }
 
   /// Assigns the last queue to the [Player]
@@ -167,4 +185,8 @@ class QueueController {
   Future<void> _deleteQueueFromStorage(Queue queue) async {
     await File('$k_DIR_QUEUES${queue.date}.json').delete();
   }
+
+  /// Used to add Queues that were rejected by [addNewQueue] after full loading of queues.
+  final List<Queue> _queuesToAddAfterAllQueuesLoad = <Queue>[];
+  bool _isLoadingQueues = true;
 }

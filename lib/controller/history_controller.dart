@@ -242,6 +242,7 @@ class HistoryController {
     // Adding tracks that were rejected by [addToHistory] since history wasn't fully loaded.
     if (_tracksToAddAfterHistoryLoad.isNotEmpty) {
       await addTracksToHistory(_tracksToAddAfterHistoryLoad);
+      _tracksToAddAfterHistoryLoad.clear();
     }
     Dimensions.inst.calculateAllItemsExtentsInHistory();
     updateMostPlayedPlaylist();
