@@ -36,7 +36,7 @@ class AlbumTracksPage extends StatelessWidget {
                 ? MultiArtworkContainer(
                     size: Get.width * 0.35,
                     heroTag: 'album_$name',
-                    tracks: [tracks.firstTrackWithImage],
+                    paths: [tracks.pathToImage],
                   )
                 : Container(
                     margin: const EdgeInsets.symmetric(horizontal: 12.0),

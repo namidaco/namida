@@ -595,7 +595,7 @@ Future<void> showGeneralPopupDialog(
                                 MultiArtworkContainer(
                                   heroTag: heroTag ?? 'edittags_artwork',
                                   size: 60,
-                                  tracks: tracks,
+                                  paths: tracks.toImagePaths(),
                                   margin: EdgeInsets.zero,
                                 ),
                               const SizedBox(width: 12.0),

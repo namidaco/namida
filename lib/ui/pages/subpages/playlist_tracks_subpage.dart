@@ -43,7 +43,7 @@ class HistoryTracksPage extends StatelessWidget {
                 imageWidget: MultiArtworkContainer(
                   heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
                   size: Get.width * 0.35,
-                  tracks: QueueSource.history.toTracks(4),
+                  paths: QueueSource.history.toTracks(4).toImagePaths(),
                 ),
                 bottomPadding: 8.0,
               ),
@@ -182,7 +182,7 @@ class MostPlayedTracksPage extends StatelessWidget {
               imageWidget: MultiArtworkContainer(
                 heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
                 size: Get.width * 0.35,
-                tracks: tracks.withLimit(4).toList(),
+                paths: tracks.toImagePaths(),
               ),
               tracks: tracks,
             ),
@@ -253,7 +253,7 @@ class NormalPlaylistTracksPage extends StatelessWidget {
               imageWidget: MultiArtworkContainer(
                 heroTag: 'playlist_${playlist.name}',
                 size: Get.width * 0.35,
-                tracks: tracks,
+                paths: tracks.toImagePaths(),
               ),
               tracks: tracks,
             ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
-import 'package:namida/class/track.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 
@@ -10,10 +9,10 @@ class MultiArtworkContainer extends StatelessWidget {
   final double size;
   final Widget? child;
   final Widget? onTopWidget;
-  final List<Track>? tracks;
+  final List<String>? paths;
   final EdgeInsetsGeometry? margin;
   final String heroTag;
-  const MultiArtworkContainer({super.key, required this.size, this.child, this.margin, this.tracks, this.onTopWidget, required this.heroTag});
+  const MultiArtworkContainer({super.key, required this.size, this.child, this.margin, this.paths, this.onTopWidget, required this.heroTag});
 
   @override
   Widget build(BuildContext context) {
@@ -37,10 +36,10 @@ class MultiArtworkContainer extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.0.multipliedRadius),
         child: Stack(
           children: [
-            if (tracks != null)
+            if (paths != null)
               MultiArtworks(
                 heroTag: heroTag,
-                paths: tracks!.mapped((e) => e.pathToImage),
+                paths: paths!,
                 thumbnailSize: size - 6.0,
               ),
             if (child != null) child!,

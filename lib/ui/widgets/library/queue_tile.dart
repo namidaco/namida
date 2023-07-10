@@ -45,7 +45,7 @@ class QueueTile extends StatelessWidget {
                   child: MultiArtworkContainer(
                     heroTag: hero,
                     size: Dimensions.queueThumbnailSize,
-                    tracks: queue.tracks,
+                    paths: queue.tracks.toImagePaths(),
                   ),
                 ),
                 Column(
