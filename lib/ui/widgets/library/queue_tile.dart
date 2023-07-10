@@ -6,6 +6,7 @@ import 'package:namida/class/queue.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
@@ -65,7 +66,7 @@ class QueueTile extends StatelessWidget {
                     NamidaHero(
                       tag: 'line2_$hero',
                       child: Text(
-                        [queue.name, queue.tracks.displayTrackKeyword].join(' - '),
+                        [queue.source.toText(), queue.tracks.displayTrackKeyword].join(' - '),
                         style: context.textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.w500,
                         ),

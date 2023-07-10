@@ -94,10 +94,7 @@ class ExtrasSettings extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 12.0),
-                        ...SettingsController.inst.libraryTabs
-                            .asMap()
-                            .entries
-                            .map(
+                        ...SettingsController.inst.libraryTabs.asMap().entries.map(
                               (e) => Obx(
                                 () => Container(
                                   margin: const EdgeInsets.all(4.0),
@@ -115,8 +112,7 @@ class ExtrasSettings extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                            )
-                            .toList(),
+                            ),
                       ],
                     ),
                   ),
@@ -197,10 +193,7 @@ class ExtrasSettings extends StatelessWidget {
                             ),
                             const NamidaContainerDivider(height: 4.0),
                             const SizedBox(height: 8.0),
-                            ...subList
-                                .asMap()
-                                .entries
-                                .map(
+                            ...subList.asMap().entries.map(
                                   (e) => Column(
                                     key: UniqueKey(),
                                     children: [
@@ -213,8 +206,7 @@ class ExtrasSettings extends StatelessWidget {
                                       const SizedBox(height: 8.0),
                                     ],
                                   ),
-                                )
-                                .toList(),
+                                ),
                           ],
                         );
                       },

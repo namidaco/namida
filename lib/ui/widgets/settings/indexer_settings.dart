@@ -261,48 +261,50 @@ class IndexerSettings extends StatelessWidget {
                   const Icon(Broken.arrow_down_2),
                 ],
               ),
-              children: SettingsController.inst.directoriesToScan
-                  .map((e) => ListTile(
-                        title: Text(
-                          e,
-                          style: context.textTheme.displayMedium,
-                        ),
-                        trailing: TextButton(
-                          onPressed: () {
-                            if (SettingsController.inst.directoriesToScan.length == 1) {
-                              Get.snackbar(
-                                Language.inst.MINIMUM_ONE_FOLDER,
-                                Language.inst.MINIMUM_ONE_FOLDER_SUBTITLE,
-                                duration: const Duration(seconds: 4),
-                              );
-                            } else {
-                              NamidaNavigator.inst.navigateDialog(
-                                CustomBlurryDialog(
-                                  normalTitleStyle: true,
-                                  title: Language.inst.WARNING,
-                                  icon: Broken.warning_2,
-                                  actions: [
-                                    const CancelButton(),
-                                    ElevatedButton(
-                                        onPressed: () {
-                                          SettingsController.inst.removeFromList(directoriesToScan1: e);
-                                          NamidaNavigator.inst.closeDialog();
-                                          _showRefreshPromptDialog();
-                                        },
-                                        child: Text(Language.inst.REMOVE)),
-                                  ],
-                                  child: Text(
-                                    "${Language.inst.REMOVE} \"$e\"?",
-                                    style: context.textTheme.displayMedium,
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                          child: Text(Language.inst.REMOVE.toUpperCase()),
-                        ),
-                      ))
-                  .toList(),
+              children: [
+                ...SettingsController.inst.directoriesToScan.map(
+                  (e) => ListTile(
+                    title: Text(
+                      e,
+                      style: context.textTheme.displayMedium,
+                    ),
+                    trailing: TextButton(
+                      onPressed: () {
+                        if (SettingsController.inst.directoriesToScan.length == 1) {
+                          Get.snackbar(
+                            Language.inst.MINIMUM_ONE_FOLDER,
+                            Language.inst.MINIMUM_ONE_FOLDER_SUBTITLE,
+                            duration: const Duration(seconds: 4),
+                          );
+                        } else {
+                          NamidaNavigator.inst.navigateDialog(
+                            CustomBlurryDialog(
+                              normalTitleStyle: true,
+                              title: Language.inst.WARNING,
+                              icon: Broken.warning_2,
+                              actions: [
+                                const CancelButton(),
+                                ElevatedButton(
+                                    onPressed: () {
+                                      SettingsController.inst.removeFromList(directoriesToScan1: e);
+                                      NamidaNavigator.inst.closeDialog();
+                                      _showRefreshPromptDialog();
+                                    },
+                                    child: Text(Language.inst.REMOVE)),
+                              ],
+                              child: Text(
+                                "${Language.inst.REMOVE} \"$e\"?",
+                                style: context.textTheme.displayMedium,
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      child: Text(Language.inst.REMOVE.toUpperCase()),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Obx(
@@ -331,26 +333,29 @@ class IndexerSettings extends StatelessWidget {
               children: SettingsController.inst.directoriesToExclude.isEmpty
                   ? [
                       ListTile(
-                          title: Text(
-                        Language.inst.NO_EXCLUDED_FOLDERS,
-                        style: context.textTheme.displayMedium,
-                      ))
+                        title: Text(
+                          Language.inst.NO_EXCLUDED_FOLDERS,
+                          style: context.textTheme.displayMedium,
+                        ),
+                      ),
                     ]
-                  : SettingsController.inst.directoriesToExclude
-                      .map((e) => ListTile(
-                            title: Text(
-                              e,
-                              style: context.textTheme.displayMedium,
-                            ),
-                            trailing: TextButton(
-                              onPressed: () {
-                                SettingsController.inst.removeFromList(directoriesToExclude1: e);
-                                _showRefreshPromptDialog();
-                              },
-                              child: Text(Language.inst.REMOVE.toUpperCase()),
-                            ),
-                          ))
-                      .toList(),
+                  : [
+                      ...SettingsController.inst.directoriesToExclude.map(
+                        (e) => ListTile(
+                          title: Text(
+                            e,
+                            style: context.textTheme.displayMedium,
+                          ),
+                          trailing: TextButton(
+                            onPressed: () {
+                              SettingsController.inst.removeFromList(directoriesToExclude1: e);
+                              _showRefreshPromptDialog();
+                            },
+                            child: Text(Language.inst.REMOVE.toUpperCase()),
+                          ),
+                        ),
+                      ),
+                    ],
             ),
           ),
         ],
@@ -449,47 +454,47 @@ class IndexerSettings extends StatelessWidget {
             ),
             Obx(
               () => Wrap(
-                children: itemsList
-                    .map(
-                      (e) => Container(
-                        margin: const EdgeInsets.all(4.0),
-                        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
-                        decoration: BoxDecoration(
-                          color: Get.theme.cardTheme.color,
-                          borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-                        ),
-                        child: InkWell(
-                          onTap: () {
-                            if (trackArtistsSeparators) {
-                              stg.removeFromList(trackArtistsSeparator: e);
-                            }
-                            if (trackGenresSeparators) {
-                              stg.removeFromList(trackGenresSeparator: e);
-                            }
-                            if (trackArtistsSeparatorsBlacklist) {
-                              stg.removeFromList(trackArtistsSeparatorsBlacklist1: e);
-                            }
-                            if (trackGenresSeparatorsBlacklist) {
-                              stg.removeFromList(trackGenresSeparatorsBlacklist1: e);
-                            }
-                          },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(e),
-                              const SizedBox(
-                                width: 6.0,
-                              ),
-                              const Icon(
-                                Broken.close_circle,
-                                size: 18.0,
-                              )
-                            ],
-                          ),
+                children: [
+                  ...itemsList.map(
+                    (e) => Container(
+                      margin: const EdgeInsets.all(4.0),
+                      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
+                      decoration: BoxDecoration(
+                        color: Get.theme.cardTheme.color,
+                        borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+                      ),
+                      child: InkWell(
+                        onTap: () {
+                          if (trackArtistsSeparators) {
+                            stg.removeFromList(trackArtistsSeparator: e);
+                          }
+                          if (trackGenresSeparators) {
+                            stg.removeFromList(trackGenresSeparator: e);
+                          }
+                          if (trackArtistsSeparatorsBlacklist) {
+                            stg.removeFromList(trackArtistsSeparatorsBlacklist1: e);
+                          }
+                          if (trackGenresSeparatorsBlacklist) {
+                            stg.removeFromList(trackGenresSeparatorsBlacklist1: e);
+                          }
+                        },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(e),
+                            const SizedBox(
+                              width: 6.0,
+                            ),
+                            const Icon(
+                              Broken.close_circle,
+                              size: 18.0,
+                            )
+                          ],
                         ),
                       ),
-                    )
-                    .toList(),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(

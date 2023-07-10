@@ -116,7 +116,7 @@ void main() async {
   /// Recieving Initial Android Shared Intent.
   final intentfiles = await ReceiveSharingIntent.getInitialMedia();
   if (intentfiles.isNotEmpty) {
-    final playedsuccessfully = await playExternalFiles(intentfiles.map((e) => e.path).toList());
+    final playedsuccessfully = await playExternalFiles(intentfiles.map((e) => e.path));
     if (!playedsuccessfully) {
       showErrorPlayingFileSnackbar();
     }
@@ -125,7 +125,7 @@ void main() async {
   /// Listening to Android Shared Intents.
   /// Opening multiple files sometimes crashes the app.
   ReceiveSharingIntent.getMediaStream().listen(
-    (event) async => await playExternalFiles(event.map((e) => e.path).toList()),
+    (event) async => await playExternalFiles(event.map((e) => e.path)),
     onError: (err) => showErrorPlayingFileSnackbar(error: err.toString()),
   );
 
@@ -148,7 +148,7 @@ Future<void> _clearIntentCachedFiles() async {
 }
 
 /// returns [true] if played successfully.
-Future<bool> playExternalFiles(List<String> paths) async {
+Future<bool> playExternalFiles(Iterable<String> paths) async {
   final trs = await Indexer.inst.convertPathToTrack(paths);
   if (trs.isNotEmpty) {
     await Player.inst.playOrPause(0, trs, QueueSource.externalFile);

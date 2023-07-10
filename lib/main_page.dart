@@ -63,20 +63,18 @@ class MainPageWrapper extends StatelessWidget {
                       children: [
                         const NamidaLogoContainer(),
                         const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
-                        ...LibraryTab.values
-                            .map(
-                              (e) => NamidaDrawerListTile(
-                                enabled: SettingsController.inst.selectedLibraryTab.value == e,
-                                title: e.toText(),
-                                icon: e.toIcon(),
-                                onTap: () async {
-                                  ScrollSearchController.inst.animatePageController(e);
-                                  await Future.delayed(const Duration(milliseconds: 100));
-                                  toggleDrawer();
-                                },
-                              ),
-                            )
-                            .toList(),
+                        ...LibraryTab.values.map(
+                          (e) => NamidaDrawerListTile(
+                            enabled: SettingsController.inst.selectedLibraryTab.value == e,
+                            title: e.toText(),
+                            icon: e.toIcon(),
+                            onTap: () async {
+                              ScrollSearchController.inst.animatePageController(e);
+                              await Future.delayed(const Duration(milliseconds: 100));
+                              toggleDrawer();
+                            },
+                          ),
+                        ),
                         NamidaDrawerListTile(
                           enabled: false,
                           title: Language.inst.QUEUES,

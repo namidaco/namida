@@ -38,7 +38,7 @@ class YoutubePage extends StatelessWidget {
             body: Obx(
               () {
                 VideoSearchList? searchList = YoutubeController.inst.currentSearchList.value;
-                YoutubeController.inst.searchChannels.toList();
+                YoutubeController.inst.searchChannels;
                 final List<Video?> l = [];
                 if (searchList == null || searchList.isEmpty) {
                   l.addAll(List.filled(20, null));

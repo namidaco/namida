@@ -320,18 +320,16 @@ Future<void> showGeneralPopupDialog(
           style: Get.textTheme.displayMedium,
         ),
         const SizedBox(height: 8.0),
-        ...highMatchesFiles
-            .map(
-              (e) => SmallListTile(
-                borderRadius: 12.0,
-                title: showFullPath ? e : e.getFilename,
-                subtitle: File(e).statSync().size.fileSizeFormatted,
-                onTap: () => updatePathDialog(e),
-                color: colorDelightened,
-                icon: Broken.medal_star,
-              ),
-            )
-            .toList(),
+        ...highMatchesFiles.map(
+          (e) => SmallListTile(
+            borderRadius: 12.0,
+            title: showFullPath ? e : e.getFilename,
+            subtitle: File(e).statSync().size.fileSizeFormatted,
+            onTap: () => updatePathDialog(e),
+            color: colorDelightened,
+            icon: Broken.medal_star,
+          ),
+        ),
         const SizedBox(height: 8.0),
         const NamidaContainerDivider(),
         const SizedBox(height: 8.0),
@@ -782,19 +780,17 @@ Future<void> showGeneralPopupDialog(
                                       Wrap(
                                         alignment: WrapAlignment.start,
                                         children: [
-                                          ...availableAlbums
-                                              .map(
-                                                (e) => Padding(
-                                                  padding: const EdgeInsets.all(2.0),
-                                                  child: NamidaInkWell(
-                                                      onTap: () => NamidaOnTaps.inst.onAlbumTap(e),
-                                                      child: Text(
-                                                        "$e  ",
-                                                        style: Get.textTheme.displaySmall?.copyWith(decoration: TextDecoration.underline),
-                                                      )),
-                                                ),
-                                              )
-                                              .toList(),
+                                          ...availableAlbums.map(
+                                            (e) => Padding(
+                                              padding: const EdgeInsets.all(2.0),
+                                              child: NamidaInkWell(
+                                                  onTap: () => NamidaOnTaps.inst.onAlbumTap(e),
+                                                  child: Text(
+                                                    "$e  ",
+                                                    style: Get.textTheme.displaySmall?.copyWith(decoration: TextDecoration.underline),
+                                                  )),
+                                            ),
+                                          ),
                                         ],
                                       )
                                     ],
@@ -842,23 +838,21 @@ Future<void> showGeneralPopupDialog(
                                       Wrap(
                                         alignment: WrapAlignment.start,
                                         children: [
-                                          ...availableArtists
-                                              .map(
-                                                (e) => Padding(
-                                                  padding: const EdgeInsets.all(2.0),
-                                                  child: NamidaInkWell(
-                                                    onTap: () => NamidaOnTaps.inst.onArtistTap(e),
-                                                    child: Text(
-                                                      "$e  ",
-                                                      style: Get.textTheme.displaySmall?.copyWith(
-                                                        decoration: TextDecoration.underline,
-                                                        color: Color.alphaBlend(colorDelightened.withAlpha(40), Get.textTheme.displayMedium!.color!),
-                                                      ),
-                                                    ),
+                                          ...availableArtists.map(
+                                            (e) => Padding(
+                                              padding: const EdgeInsets.all(2.0),
+                                              child: NamidaInkWell(
+                                                onTap: () => NamidaOnTaps.inst.onArtistTap(e),
+                                                child: Text(
+                                                  "$e  ",
+                                                  style: Get.textTheme.displaySmall?.copyWith(
+                                                    decoration: TextDecoration.underline,
+                                                    color: Color.alphaBlend(colorDelightened.withAlpha(40), Get.textTheme.displayMedium!.color!),
                                                   ),
                                                 ),
-                                              )
-                                              .toList(),
+                                              ),
+                                            ),
+                                          ),
                                         ],
                                       )
                                     ],

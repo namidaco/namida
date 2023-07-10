@@ -44,7 +44,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/stats.dart';
 
 extension LibraryTabToEnum on int {
-  LibraryTab toEnum() => SettingsController.inst.libraryTabs.toList().elementAt(this);
+  LibraryTab toEnum() => SettingsController.inst.libraryTabs.elementAt(this);
 }
 
 extension LibraryTabUtils on LibraryTab {
@@ -65,7 +65,7 @@ extension LibraryTabUtils on LibraryTab {
     }
   }
 
-  int toInt() => SettingsController.inst.libraryTabs.toList().indexOf(this);
+  int toInt() => SettingsController.inst.libraryTabs.indexOf(this);
 
   Widget toWidget([int? gridCount, bool animateTiles = true]) {
     if (this == LibraryTab.albums) {
@@ -442,7 +442,7 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
     final trs = <Track>[];
     void addThese(Iterable<Track> tracks) => trs.addAll(tracks.withLimit(limit));
     if (this == QueueSource.allTracks) {
-      addThese(SearchSortController.inst.trackSearchList.toList());
+      addThese(SearchSortController.inst.trackSearchList);
     }
     // onMediaTap should have handled it already.
     if (this == QueueSource.album) {
@@ -461,7 +461,7 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
       addThese(SelectedTracksController.inst.currentAllTracks);
     }
     if (this == QueueSource.search) {
-      addThese(SearchSortController.inst.trackSearchTemp.toList());
+      addThese(SearchSortController.inst.trackSearchTemp);
     }
     if (this == QueueSource.mostPlayed) {
       addThese(HistoryController.inst.mostPlayedTracks);
@@ -475,13 +475,13 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
       addThese(PlaylistController.inst.favouritesPlaylist.value.tracks.toTracks());
     }
     if (this == QueueSource.playerQueue) {
-      addThese(Player.inst.currentQueue.toList());
+      addThese(Player.inst.currentQueue);
     }
     if (this == QueueSource.queuePage) {
       addThese(SelectedTracksController.inst.currentAllTracks);
     }
     if (this == QueueSource.selectedTracks) {
-      addThese(SelectedTracksController.inst.selectedTracks.toList());
+      addThese(SelectedTracksController.inst.selectedTracks);
     }
 
     return trs;
@@ -952,10 +952,9 @@ extension RouteUtils on NamidaRoute {
         child: Obx(
           () {
             final reorderable = PlaylistController.inst.canReorderTracks.value;
-            return NamidaIconButton(
+            return NamidaAppBarIcon(
               tooltip: reorderable ? Language.inst.DISABLE_REORDERING : Language.inst.ENABLE_REORDERING,
               icon: reorderable ? Broken.forward_item : Broken.lock_1,
-              horizontalPadding: 6.0,
               onPressed: () => PlaylistController.inst.canReorderTracks.value = !PlaylistController.inst.canReorderTracks.value,
             );
           },
@@ -969,7 +968,7 @@ extension RouteUtils on NamidaRoute {
         shouldShow: route == RouteType.SUBPAGE_playlistTracks || route == RouteType.SUBPAGE_historyTracks || route == RouteType.SUBPAGE_mostPlayedTracks,
       ),
 
-      const SizedBox(width: 4.0),
+      const SizedBox(width: 8.0),
     ];
   }
 

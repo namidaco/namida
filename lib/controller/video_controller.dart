@@ -250,8 +250,8 @@ class VideoController {
     } else {
       await videoFile.create();
       final allVideosPaths = <String>{};
-      final dirToScan = SettingsController.inst.directoriesToScan.toList();
-      final dirToExclude = SettingsController.inst.directoriesToExclude.toList();
+      final dirToScan = SettingsController.inst.directoriesToScan;
+      final dirToExclude = SettingsController.inst.directoriesToExclude;
 
       for (final path in dirToScan) {
         final dir = Directory(path);

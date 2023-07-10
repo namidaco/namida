@@ -179,7 +179,7 @@ class SearchSortController {
       return;
     }
     // TODO(MSOB7YY): expose in settings
-    final psf = SettingsController.inst.playlistSearchFilter.toList();
+    final psf = SettingsController.inst.playlistSearchFilter;
     final sTitle = psf.contains('name');
     final sCreationDate = psf.contains('creationDate');
     final sModifiedDate = psf.contains('modifiedDate');

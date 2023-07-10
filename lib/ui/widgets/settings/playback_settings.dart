@@ -151,9 +151,7 @@ class PlaybackSettings extends StatelessWidget {
           icon: Broken.story,
           trailingText: SettingsController.inst.youtubeVideoQualities.first,
           onTap: () {
-            bool isEnabled(String val) {
-              return SettingsController.inst.youtubeVideoQualities.toList().contains(val);
-            }
+            bool isEnabled(String val) => SettingsController.inst.youtubeVideoQualities.contains(val);
 
             void tileOnTap(String val, int index) {
               if (isEnabled(val)) {
@@ -167,7 +165,7 @@ class PlaybackSettings extends StatelessWidget {
               }
               // sorts and saves dec
               SettingsController.inst.youtubeVideoQualities.sortByReverse((e) => kStockVideoQualities.indexOf(e));
-              SettingsController.inst.save(youtubeVideoQualities: SettingsController.inst.youtubeVideoQualities.toList());
+              SettingsController.inst.save(youtubeVideoQualities: SettingsController.inst.youtubeVideoQualities);
             }
 
             NamidaNavigator.inst.navigateDialog(
@@ -200,10 +198,7 @@ class PlaybackSettings extends StatelessWidget {
                           const SizedBox(
                             height: 18.0,
                           ),
-                          ...kStockVideoQualities
-                              .asMap()
-                              .entries
-                              .map(
+                          ...kStockVideoQualities.asMap().entries.map(
                                 (e) => Column(
                                   children: [
                                     const SizedBox(
@@ -217,8 +212,7 @@ class PlaybackSettings extends StatelessWidget {
                                     ),
                                   ],
                                 ),
-                              )
-                              .toList(),
+                              ),
                         ],
                       ),
                     ),

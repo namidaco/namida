@@ -49,20 +49,20 @@ class TracksPage extends StatelessWidget {
               leftWidgets: [
                 NamidaIconButton(
                   icon: Broken.shuffle,
-                  onPressed: () => Player.inst.playOrPause(0, SearchSortController.inst.trackSearchList.toList(), QueueSource.allTracks, shuffle: true),
+                  onPressed: () => Player.inst.playOrPause(0, SearchSortController.inst.trackSearchList, QueueSource.allTracks, shuffle: true),
                   iconSize: 18.0,
                   horizontalPadding: 0,
                 ),
                 const SizedBox(width: 12.0),
                 NamidaIconButton(
                   icon: Broken.play,
-                  onPressed: () => Player.inst.playOrPause(0, SearchSortController.inst.trackSearchList.toList(), QueueSource.allTracks),
+                  onPressed: () => Player.inst.playOrPause(0, SearchSortController.inst.trackSearchList, QueueSource.allTracks),
                   iconSize: 18.0,
                   horizontalPadding: 0,
                 ),
                 const SizedBox(width: 12.0),
               ],
-              leftText: SearchSortController.inst.trackSearchList.toList().displayTrackKeyword,
+              leftText: SearchSortController.inst.trackSearchList.displayTrackKeyword,
               onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.tracks),
               onCloseButtonPressed: () {
                 ScrollSearchController.inst.clearSearchTextField(LibraryTab.tracks);

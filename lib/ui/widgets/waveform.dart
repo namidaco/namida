@@ -33,7 +33,7 @@ class WaveformComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final downscaledList = WaveformController.inst.changeListSize(WaveformController.inst.curentWaveform.toList(), SettingsController.inst.waveformTotalBars.value);
+    final downscaledList = WaveformController.inst.changeListSize(WaveformController.inst.curentWaveform, SettingsController.inst.waveformTotalBars.value);
 
     return Container(
       width: boxMaxWidth ?? Get.width,
@@ -45,20 +45,20 @@ class WaveformComponent extends StatelessWidget {
         () => Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           mainAxisSize: MainAxisSize.max,
-          children: downscaledList
-              .map(
-                (e) => AnimatedContainer(
-                  duration: Duration(milliseconds: durationInMilliseconds),
-                  height: (e * 100).clamp(3.0, 200.0),
-                  width: Get.width / downscaledList.length * 0.45,
-                  curve: curve,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(5.0.multipliedRadius),
-                    color: color ?? CurrentColor.inst.color.value,
-                  ),
+          children: [
+            ...downscaledList.map(
+              (e) => AnimatedContainer(
+                duration: Duration(milliseconds: durationInMilliseconds),
+                height: (e * 100).clamp(3.0, 200.0),
+                width: Get.width / downscaledList.length * 0.45,
+                curve: curve,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5.0.multipliedRadius),
+                  color: color ?? CurrentColor.inst.color.value,
                 ),
-              )
-              .toList(),
+              ),
+            ),
+          ],
         ),
       ),
     );

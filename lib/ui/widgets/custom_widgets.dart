@@ -1219,44 +1219,44 @@ class NamidaPartyContainer extends StatelessWidget {
             final secondHalf = CurrentColor.inst.paletteSecondHalf;
             return height != null
                 ? Row(
-                    children: firstHalf
-                        .map(
-                          (e) => AnimatedContainer(
-                            duration: const Duration(milliseconds: 400),
-                            height: height,
-                            width: width ?? context.width / firstHalf.length,
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: e.withAlpha(150),
-                                  spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
-                                  blurRadius: 10 + (200 * finalScale),
-                                ),
-                              ],
-                            ),
+                    children: [
+                      ...firstHalf.map(
+                        (e) => AnimatedContainer(
+                          duration: const Duration(milliseconds: 400),
+                          height: height,
+                          width: width ?? context.width / firstHalf.length,
+                          decoration: BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: e.withAlpha(150),
+                                spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
+                                blurRadius: 10 + (200 * finalScale),
+                              ),
+                            ],
                           ),
-                        )
-                        .toList(),
+                        ),
+                      ),
+                    ],
                   )
                 : Column(
-                    children: secondHalf
-                        .map(
-                          (e) => AnimatedContainer(
-                            duration: const Duration(milliseconds: 400),
-                            height: height ?? context.height / secondHalf.length,
-                            width: width,
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: e.withAlpha(150),
-                                  spreadRadius: 140 * finalScale * spreadRadiusMultiplier,
-                                  blurRadius: 10 + (200 * finalScale),
-                                ),
-                              ],
-                            ),
+                    children: [
+                      ...secondHalf.map(
+                        (e) => AnimatedContainer(
+                          duration: const Duration(milliseconds: 400),
+                          height: height ?? context.height / secondHalf.length,
+                          width: width,
+                          decoration: BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: e.withAlpha(150),
+                                spreadRadius: 140 * finalScale * spreadRadiusMultiplier,
+                                blurRadius: 10 + (200 * finalScale),
+                              ),
+                            ],
                           ),
-                        )
-                        .toList(),
+                        ),
+                      ),
+                    ],
                   );
           },
         ),
@@ -2035,10 +2035,9 @@ class HistoryJumpToDayIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NamidaIconButton(
+    return NamidaAppBarIcon(
       icon: Broken.calendar,
       tooltip: Language.inst.JUMP_TO_DAY,
-      padding: const EdgeInsets.only(right: 8.0, left: 2.0),
       onPressed: () {
         int dayToScrollTo = 0;
         NamidaNavigator.inst.navigateDialog(
@@ -2054,7 +2053,7 @@ class HistoryJumpToDayIcon extends StatelessWidget {
                   NamidaNavigator.inst.closeDialog();
                   final days = HistoryController.inst.historyDays.toList();
                   days.removeWhere((element) => element <= dayToScrollTo);
-                  final itemExtents = Dimensions.inst.allItemsExtentsHistory.toList();
+                  final itemExtents = Dimensions.inst.allItemsExtentsHistory;
                   double totalScrollOffset = 0;
                   days.loop((e, index) => totalScrollOffset += itemExtents[index]);
                   HistoryController.inst.scrollController.jumpTo(totalScrollOffset + 100.0);

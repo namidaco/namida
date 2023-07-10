@@ -118,8 +118,8 @@ class CurrentColor {
     }
 
     final result = await PaletteGenerator.fromImageProvider(FileImage(File(pathofimage)));
-    final pcolors = result.colors.toList();
-    nc = NamidaColor(null, generateDelightnedColorFromPalette(pcolors).withAlpha(colorAlpha), pcolors);
+    final pcolors = result.colors;
+    nc = NamidaColor(null, generateDelightnedColorFromPalette(pcolors).withAlpha(colorAlpha), pcolors.toList());
 
     await paletteFile.writeAsJson(nc.toJson());
     Indexer.inst.updateColorPalettesSizeInStorage(paletteFile);
@@ -151,11 +151,11 @@ class CurrentColor {
     return generateDelightnedColorFromPalette(nc.palette).withAlpha(Get.isDarkMode ? 200 : 120);
   }
 
-  Color generateDelightnedColorFromPalette(List<Color> palette) {
+  Color generateDelightnedColorFromPalette(Iterable<Color> palette) {
     if (palette.isEmpty) {
       return playerStaticColor;
     }
-    return mixIntColors(palette.map((e) => e.value).toList());
+    return mixIntColors(palette.map((e) => e.value));
   }
 
   /// Returns [playerStaticColor] if [pathToImage] doesnt exist.
@@ -169,12 +169,12 @@ class CurrentColor {
     return mixIntColors(intpalette);
   }
 
-  Color mixIntColors(List<int> colors) {
+  Color mixIntColors(Iterable<int> colors) {
     int red = 0;
     int green = 0;
     int blue = 0;
 
-    for (int color in colors) {
+    for (final color in colors) {
       red += (color >> 16) & 0xFF;
       green += (color >> 8) & 0xFF;
       blue += color & 0xFF;

@@ -124,7 +124,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
 class SelectedTracksRow extends StatelessWidget {
   const SelectedTracksRow({super.key});
 
-  List<Track> get selectedTracks => SelectedTracksController.inst.selectedTracks.toList();
+  RxList<Track> get selectedTracks => SelectedTracksController.inst.selectedTracks;
 
   @override
   Widget build(BuildContext context) {

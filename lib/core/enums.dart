@@ -93,8 +93,8 @@ enum TrackSearchFilter {
 }
 
 enum LibraryTab {
-  tracks,
   albums,
+  tracks,
   artists,
   genres,
   playlists,
@@ -138,6 +138,7 @@ enum QueueSource {
   favourites,
   selectedTracks,
   externalFile,
+  others,
 }
 
 enum TagField {

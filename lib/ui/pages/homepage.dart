@@ -118,14 +118,14 @@ class HomePage extends StatelessWidget {
                   height: 64.0,
                   onDestinationSelected: (value) => ScrollSearchController.inst.animatePageController(value.toEnum()),
                   selectedIndex: SettingsController.inst.selectedLibraryTab.value.toInt(),
-                  destinations: SettingsController.inst.libraryTabs
-                      .map(
-                        (e) => NavigationDestination(
-                          icon: Icon(e.toIcon()),
-                          label: e.toText(),
-                        ),
-                      )
-                      .toList(),
+                  destinations: [
+                    ...SettingsController.inst.libraryTabs.map(
+                      (e) => NavigationDestination(
+                        icon: Icon(e.toIcon()),
+                        label: e.toText(),
+                      ),
+                    ),
+                  ],
                 ),
               ),
       ),

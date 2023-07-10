@@ -43,7 +43,7 @@ class BackupController {
     List<File> filesOnly = [];
     List<Directory> dirsOnly = [];
 
-    await SettingsController.inst.backupItemslist.toList().loopFuture((f, index) async {
+    await SettingsController.inst.backupItemslist.loopFuture((f, index) async {
       if (await FileSystemEntity.type(f) == FileSystemEntityType.file) {
         filesOnly.add(File(f));
       }

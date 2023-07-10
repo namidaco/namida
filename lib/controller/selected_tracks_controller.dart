@@ -17,7 +17,7 @@ class SelectedTracksController {
 
   List<Track> get currentAllTracks {
     if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
-      return SearchSortController.inst.trackSearchTemp.toList();
+      return SearchSortController.inst.trackSearchTemp;
     }
     return NamidaNavigator.inst.currentRoute?.tracksInside ?? [];
   }

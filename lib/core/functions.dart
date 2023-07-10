@@ -172,7 +172,7 @@ double checkIfQueuesSimilar(List<Track> q1, List<Track> q2, {bool fullyFunctiona
 }
 
 bool checkIfQueueSameAsCurrent(List<Track> queue) {
-  return checkIfQueuesSimilar(queue, Player.inst.currentQueue.toList()) == 1.0;
+  return checkIfQueuesSimilar(queue, Player.inst.currentQueue) == 1.0;
 }
 
 bool checkIfQueueSameAsAllTracks(List<Track> queue) {

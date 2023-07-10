@@ -69,7 +69,7 @@ class ScrollSearchController {
     scrollController.removeListener(() {});
     scrollController = ScrollController(initialScrollOffset: tab.scrollPosition);
     scrollController.addListener(() {
-      isBarVisibleMap[tab]?.value = scrollController.position.userScrollDirection == ScrollDirection.forward;
+      isBarVisibleMap[tab]?.value = scrollController.positions.lastOrNull?.userScrollDirection == ScrollDirection.forward;
     });
   }
 

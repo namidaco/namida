@@ -153,17 +153,17 @@ class ToggleThemeModeContainer extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 1.2),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: ThemeMode.values
-                      .map(
-                        (e) => NamidaInkWell(
-                          onTap: () => onThemeChangeTap(e),
-                          child: Icon(
-                            e.toIcon(),
-                            color: currentTheme == e ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.background.withAlpha(180),
-                          ),
+                  children: [
+                    ...ThemeMode.values.map(
+                      (e) => NamidaInkWell(
+                        onTap: () => onThemeChangeTap(e),
+                        child: Icon(
+                          e.toIcon(),
+                          color: currentTheme == e ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.background.withAlpha(180),
                         ),
-                      )
-                      .toList(),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

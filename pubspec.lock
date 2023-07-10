@@ -37,8 +37,8 @@ packages:
     dependency: "direct main"
     description:
       path: audio_service
-      ref: HEAD
-      resolved-ref: e9df8bb84f40edd4b1d5b073c14a2d30bd5addf4
+      ref: d10c315539bc9dcd468ba13a31bbdbb5c3f77f5b
+      resolved-ref: d10c315539bc9dcd468ba13a31bbdbb5c3f77f5b
       url: "https://github.com/MSOB7YY/audio_service"
     source: git
     version: "0.18.9"
@@ -194,14 +194,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
-  cupertino_icons:
-    dependency: transitive
-    description:
-      name: cupertino_icons
-      sha256: e35129dc44c9118cee2a5603506d823bab99c68393879edb440e0090d07586be
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.5"
   dbus:
     dependency: transitive
     description:
@@ -392,14 +384,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.2"
-  flutter_sticky_header:
-    dependency: "direct main"
-    description:
-      name: flutter_sticky_header
-      sha256: "017f398fbb45a589e01491861ca20eb6570a763fd9f3888165a978e11248c709"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.6.5"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -672,10 +656,10 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: e3d76dfef0e7b3aa1e723050aa300ce3afb71c9c
-      url: "https://github.com/MSOB7YY/on_audio_edit_dart3"
+      resolved-ref: "8b860ad668c45966fe89d93d738e1d0fde6f97d2"
+      url: "https://github.com/MSOB7YY/on_audio_edit"
     source: git
-    version: "1.0.0+1"
+    version: "1.5.1"
   on_audio_query:
     dependency: "direct main"
     description:
@@ -946,14 +930,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.1"
-  sliver_tools:
-    dependency: "direct main"
-    description:
-      name: sliver_tools
-      sha256: ccdc502098a8bfa07b3ec582c282620031481300035584e1bb3aca296a505e8c
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.10"
   source_span:
     dependency: transitive
     description:
@@ -1138,14 +1114,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.7"
-  value_layout_builder:
-    dependency: transitive
-    description:
-      name: value_layout_builder
-      sha256: "98202ec1807e94ac72725b7f0d15027afde513c55c69ff3f41bcfccb950831bc"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.3.1"
   vector_math:
     dependency: transitive
     description:

@@ -153,8 +153,8 @@ class WaveformController {
     }
   }
 
-  List<double> _increaseListToMax(List<double> list) {
+  Iterable<double> _increaseListToMax(List<double> list) {
     final max = list.reduce((a, b) => a > b ? a : b);
-    return list.map((value) => value / max / 2.0).toList();
+    return list.map((value) => value / max / 2.0);
   }
 }

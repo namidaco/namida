@@ -74,6 +74,7 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/audio_service
       path: audio_service/
+      ref: d10c315539bc9dcd468ba13a31bbdbb5c3f77f5b
   audio_waveforms: ^1.0.3
 
   # Video Playback

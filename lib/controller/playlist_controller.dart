@@ -25,7 +25,7 @@ class PlaylistController {
 
   final RxMap<String, Playlist> playlistsMap = <String, Playlist>{}.obs;
 
-  late final Rx<Playlist> favouritesPlaylist;
+  final Rx<Playlist> favouritesPlaylist = Playlist(k_PLAYLIST_NAME_FAV, [], currentTimeMS, currentTimeMS, '', [], true).obs;
 
   final RxBool canReorderTracks = false.obs;
 
@@ -237,11 +237,9 @@ class PlaylistController {
 
   Future<void> _prepareFavouritesFile() async {
     final file = File(k_PLAYLIST_PATH_FAVOURITES);
-    Playlist fvPl = Playlist(k_PLAYLIST_NAME_FAV, [], currentTimeMS, currentTimeMS, '', [], true);
     await file.readAsJsonAnd((response) async {
-      fvPl = Playlist.fromJson(response);
+      favouritesPlaylist.value = Playlist.fromJson(response);
     });
-    favouritesPlaylist = fvPl.obs;
   }
 
   Future<bool> _saveFavouritesToStorage() async {

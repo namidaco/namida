@@ -11,8 +11,6 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/functions.dart';
-import 'package:namida/core/namida_converter_ext.dart';
 
 class QueueController {
   static QueueController get inst => _instance;
@@ -22,27 +20,31 @@ class QueueController {
   /// holds all queues mapped & sorted by [date] chronologically.
   final Rx<SplayTreeMap<int, Queue>> queuesMap = SplayTreeMap<int, Queue>((date1, date2) => date1.compareTo(date2)).obs;
 
+  Queue? get latestQueueInMap => queuesMap.value[queuesMap.value.keys.lastOrNull];
+
   /// doesnt save queues with more than 2000 tracks.
-  void addNewQueue(
-    QueueSource source, {
+  Future<void> addNewQueue({
+    required QueueSource source,
     int? date,
     List<Track> tracks = const <Track>[],
   }) async {
-    /// if there are more than 2000 tracks.
+    // -- Prevents saving [allTracks] source over and over.
+    final latestQueue = latestQueueInMap;
+    if (latestQueue != null) {
+      if (source == QueueSource.allTracks && latestQueue.source == QueueSource.allTracks) {
+        await removeQueue(latestQueue);
+      }
+    }
+
+    /// If there are more than 2000 tracks.
     if (tracks.length > 2000) {
       debugPrint("UWAH QUEUE DEKKA");
       return;
     }
 
-    /// if the queue is the same, it will skip instead of saving the same queue.
-    if (checkIfQueueSameAsCurrent(tracks)) {
-      debugPrint("Didnt Save Queue: Similar as Current");
-      return;
-    }
-    printInfo(info: "Added New Queue");
-    date ??= DateTime.now().millisecondsSinceEpoch;
-    final q = Queue(source.toText(), date, false, tracks);
+    final q = Queue(source, currentTimeMS, false, tracks);
     _updateMap(q);
+    debugPrint("Added New Queue");
     await _saveQueueToStorage(q);
   }
 
@@ -82,7 +84,7 @@ class QueueController {
     await _saveLatestQueueToStorage(tracks);
 
     // updating last queue inside queuesMap.
-    final latestQueueInsideMap = queuesMap.value[queuesMap.value.keys.lastOrNull];
+    final latestQueueInsideMap = latestQueueInMap;
     if (latestQueueInsideMap != null) {
       updateQueue(latestQueueInsideMap, latestQueueInsideMap.copyWith(tracks: tracks));
     }
@@ -147,10 +149,10 @@ class QueueController {
 
     await Player.inst.playOrPause(
       index,
-      latestQueue.toList(),
+      latestQueue,
       QueueSource.playerQueue,
       startPlaying: false,
-      dontAddQueue: true,
+      addAsNewQueue: false,
     );
   }
 

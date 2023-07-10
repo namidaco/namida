@@ -18,7 +18,7 @@ class TrackWithDate {
   );
 
   TrackWithDate.fromJson(Map<String, dynamic> json) {
-    dateAdded = json['dateAdded'] ?? DateTime.now().millisecondsSinceEpoch;
+    dateAdded = json['dateAdded'] ?? currentTimeMS;
     track = (json['track'] as String).toTrack();
     source = TrackSource.values.getEnum(json['source']) ?? TrackSource.local;
   }

@@ -58,7 +58,8 @@ const k_PLAYLIST_NAME_HISTORY = '_HISTORY_';
 const k_PLAYLIST_NAME_MOST_PLAYED = '_MOST_PLAYED_';
 const k_PLAYLIST_NAME_AUTO_GENERATED = '_AUTO_GENERATED_';
 
-List<Track> get allTracksInLibrary => Indexer.inst.tracksInfoList.toList();
+List<Track> get allTracksInLibrary => Indexer.inst.tracksInfoList;
+
 bool get shouldAlbumBeSquared =>
     (SettingsController.inst.albumGridCount.value > 1 && !SettingsController.inst.useAlbumStaggeredGridView.value) ||
     (SettingsController.inst.albumGridCount.value == 1 && SettingsController.inst.forceSquaredAlbumThumbnail.value);

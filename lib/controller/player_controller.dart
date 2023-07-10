@@ -46,11 +46,12 @@ class Player {
         androidNotificationChannelName: 'Namida',
         androidNotificationChannelDescription: 'Namida Media Notification',
         androidNotificationIcon: 'drawable/ic_stat_musicnote',
-        androidNotificationOngoing: true,
+        androidNotificationOngoing: false,
+        androidStopForegroundOnPause: false,
       ),
     );
     prepareTotalListenTime();
-    await setSkipSilenceEnabled(SettingsController.inst.playerSkipSilenceEnabled.value);
+    setSkipSilenceEnabled(SettingsController.inst.playerSkipSilenceEnabled.value);
   }
 
   // Future<void> closePlayerNotification() async {
@@ -194,7 +195,7 @@ class Player {
     QueueSource source, {
     bool shuffle = false,
     bool startPlaying = true,
-    bool dontAddQueue = false,
+    bool addAsNewQueue = true,
     int? dateAdded,
   }) async {
     List<Track> finalQueue = <Track>[];
@@ -238,10 +239,12 @@ class Player {
       index = 0;
     }
 
-    if (!dontAddQueue) {
-      QueueController.inst.addNewQueue(source, tracks: finalQueue);
+    /// if the queue is the same, it will skip instead of saving the same queue.
+    if (addAsNewQueue && !isQueueSame) {
+      QueueController.inst.addNewQueue(source: source, tracks: finalQueue);
+      QueueController.inst.updateLatestQueue(finalQueue);
     }
-    QueueController.inst.updateLatestQueue(finalQueue);
+
     currentQueue.assignAll(finalQueue);
 
     await _audioHandler?.setAudioSource(index, startPlaying: startPlaying, dateAdded: dateAdded);

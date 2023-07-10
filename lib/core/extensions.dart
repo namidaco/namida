@@ -314,8 +314,7 @@ extension TRACKPLAYMODE on TrackPlayMode {
       queue = [trackPre];
     }
     if (this == TrackPlayMode.searchResults) {
-      queue = searchQueue ??
-          (SearchSortController.inst.trackSearchTemp.isNotEmpty ? SearchSortController.inst.trackSearchTemp.toList() : SearchSortController.inst.trackSearchList.toList());
+      queue = searchQueue ?? (SearchSortController.inst.trackSearchTemp.isNotEmpty ? SearchSortController.inst.trackSearchTemp : SearchSortController.inst.trackSearchList);
     }
     if (this == TrackPlayMode.trackAlbum) {
       queue = track.album.getAlbumTracks();

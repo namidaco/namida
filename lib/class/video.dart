@@ -21,7 +21,7 @@ class YoutubeVideoHistory {
     title = json['title'] ?? '';
     channel = json['channel'] ?? '';
     channelUrl = json['channelUrl'] ?? '';
-    watches = List<YTWatch>.from((json['watches'] as List? ?? []).map((e) => YTWatch.fromJson(e)).toList());
+    watches = List<YTWatch>.from((json['watches'] as List? ?? []).map((e) => YTWatch.fromJson(e)));
   }
 
   Map<String, dynamic> toJson() {

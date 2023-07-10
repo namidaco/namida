@@ -116,7 +116,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                       Expanded(
                         child: Obx(
                           () {
-                            final tagFields = SettingsController.inst.tagFieldsToEdit.toList();
+                            final tagFields = SettingsController.inst.tagFieldsToEdit;
                             return NamidaListView(
                               onReorder: (oldIndex, newIndex) {
                                 if (newIndex > oldIndex) {
@@ -136,7 +136,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                                     title: tf.toText(),
                                     icon: tf.toIcon(),
                                     onTap: () {
-                                      if (SettingsController.inst.tagFieldsToEdit.toList().length <= 3) {
+                                      if (SettingsController.inst.tagFieldsToEdit.length <= 3) {
                                         Get.snackbar(Language.inst.MINIMUM_ONE_FIELD, Language.inst.MINIMUM_ONE_FIELD_SUBTITLE);
                                         return;
                                       }
@@ -146,7 +146,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                                   ),
                                 );
                               },
-                              itemCount: SettingsController.inst.tagFieldsToEdit.toList().length,
+                              itemCount: SettingsController.inst.tagFieldsToEdit.length,
                               itemExtents: null,
                             );
                           },
@@ -289,7 +289,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
       ],
       child: Obx(
         () {
-          SettingsController.inst.tagFieldsToEdit.toList();
+          SettingsController.inst.tagFieldsToEdit;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -339,7 +339,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              ...SettingsController.inst.tagFieldsToEdit.toList().take(2).map(
+                              ...SettingsController.inst.tagFieldsToEdit.take(2).map(
                                     (e) => Padding(
                                       padding: const EdgeInsets.only(top: 10.0),
                                       child: getTagTextField(e),
@@ -351,7 +351,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                       ],
                     ),
                     const SizedBox(height: 8.0),
-                    ...SettingsController.inst.tagFieldsToEdit.toList().sublist(2).map(
+                    ...SettingsController.inst.tagFieldsToEdit.sublist(2).map(
                           (e) => Padding(
                             padding: const EdgeInsets.only(top: 12.0),
                             child: getTagTextField(e),
@@ -790,12 +790,12 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                         const SizedBox(
                           height: 8.0,
                         ),
-                        ...availableTagsToEdit.toList().map(
-                              (e) => Padding(
-                                padding: const EdgeInsets.only(top: 10.0),
-                                child: getTagTextField(e),
-                              ),
-                            ),
+                        ...availableTagsToEdit.map(
+                          (e) => Padding(
+                            padding: const EdgeInsets.only(top: 10.0),
+                            child: getTagTextField(e),
+                          ),
+                        ),
                         const SizedBox(
                           height: 12.0,
                         ),

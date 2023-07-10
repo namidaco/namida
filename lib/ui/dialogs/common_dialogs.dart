@@ -64,7 +64,7 @@ class NamidaDialogs {
 
   Future<void> showArtistDialog(String name) async {
     final tracks = name.getArtistTracks();
-    final albums = tracks.map((e) => e.album).toList();
+    final albums = tracks.map((e) => e.album);
     await showGeneralPopupDialog(
       tracks,
       name.overflow,

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:audio_service/audio_service.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+
+import 'package:audio_service/audio_service.dart';
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -22,7 +24,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 
-class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHandler {
+class NamidaAudioVideoHandler extends BaseAudioHandler {
   final _player = AudioPlayer();
 
   final Player namidaPlayer;
@@ -171,50 +173,41 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
     final tr = currentQueue.elementAt(index);
     nowPlayingTrack.value = tr;
     currentIndex.value = index;
+    updateCurrentMediaItem(tr);
 
     CurrentColor.inst.updatePlayerColorFromTrack(tr, index, dateAdded: dateAdded);
     VideoController.inst.updateLocalVidPath(tr);
     updateVideoPlayingState();
-    updateCurrentMediaItem(tr);
 
-    /// Te whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture] don't get detected.
+    /// The whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture] don't get detected.
     try {
-      /// option 1:
-      if (startPlaying && !isPlaying.value) {
-        _player.play();
-      }
-      final dur = await _player.setAudioSource(tr.toAudioSource(), preload: preload);
+      final dur = await _player.setAudioSource(tr.toAudioSource());
       if (tr.duration == 0) tr.duration = dur?.inMilliseconds ?? 0;
-      _player.pause();
-      await tryRestoringLastPosition(tr);
-
-      if (startPlaying) {
-        _player.play();
-        setVolume(SettingsController.inst.playerVolume.value);
-      }
-
-      /// option 2:
-      // await _player.setAudioSource(tr.toAudioSource(), preload: preload);
-      // await tryRestoringLastPosition(tr);
-      // if (startPlaying) {
-      //   _player.play();
-      //   setVolume(SettingsController.inst.playerVolume.value);
-      // }
-
-      startSleepAfterMinCount(tr);
-      WaveformController.inst.generateWaveform(tr);
-      HistoryController.inst.startCounterToAListen(nowPlayingTrack.value);
-      increaseListenTime(tr);
-      SettingsController.inst.save(lastPlayedTrackPath: tr.path);
-      Lyrics.inst.updateLyrics(tr);
-      tryResettingLatestInsertedIndex();
     } catch (e) {
-      /// if track doesnt exist
       SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
         NamidaDialogs.inst.showTrackDialog(tr, isFromPlayerQueue: true, errorPlayingTrack: true);
       });
+      debugPrint(e.toString());
       return;
     }
+
+    await Future.wait([
+      _player.pause(),
+      tryRestoringLastPosition(tr),
+    ]);
+
+    if (startPlaying) {
+      _player.play();
+      setVolume(SettingsController.inst.playerVolume.value);
+    }
+
+    startSleepAfterMinCount(tr);
+    WaveformController.inst.generateWaveform(tr);
+    HistoryController.inst.startCounterToAListen(nowPlayingTrack.value);
+    increaseListenTime(tr);
+    SettingsController.inst.save(lastPlayedTrackPath: tr.path);
+    Lyrics.inst.updateLyrics(tr);
+    tryResettingLatestInsertedIndex();
   }
 
   Future<void> updateTrackLastPosition(Track trackPre, int lastPosition) async {
@@ -430,7 +423,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with SeekHandler, QueueHa
   Future<void> afterQueueChange() async {
     tryResettingLatestInsertedIndex();
     updateCurrentMediaItem();
-    await QueueController.inst.updateLatestQueue(currentQueue.toList());
+    await QueueController.inst.updateLatestQueue(currentQueue);
   }
 
   void tryResettingLatestInsertedIndex() {
@@ -579,8 +572,8 @@ extension MediaItemToAudioSource on MediaItem {
   AudioSource get toAudioSource => AudioSource.uri(Uri.parse(id));
 }
 
-extension MediaItemsListToAudioSources on List<MediaItem> {
-  List<AudioSource> get toAudioSources => map((e) => e.toAudioSource).toList();
+extension MediaItemsListToAudioSources on Iterable<MediaItem> {
+  Iterable<AudioSource> get toAudioSources => map((e) => e.toAudioSource);
 }
 
 extension TrackToAudioSourceMediaItem on Track {
@@ -609,8 +602,8 @@ extension TrackToAudioSourceMediaItem on Track {
 }
 
 extension TracksListToAudioSourcesMediaItems on List<Track> {
-  List<AudioSource> toAudioSources() => map((e) => e.toAudioSource()).toList();
-  List<MediaItem> toMediaItems() => map((e) => e.toMediaItem()).toList();
+  Iterable<AudioSource> toAudioSources() => map((e) => e.toAudioSource());
+  Iterable<MediaItem> toMediaItems() => map((e) => e.toMediaItem());
   ConcatenatingAudioSource get toConcatenatingAudioSource => ConcatenatingAudioSource(
         useLazyPreparation: true,
         shuffleOrder: DefaultShuffleOrder(),

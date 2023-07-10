@@ -99,18 +99,18 @@ class CustomizationSettings extends StatelessWidget {
                               controller: scrollController,
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
-                                children: kDefaultDateTimeStrings.entries
-                                    .map(
-                                      (e) => SmallListTile(
-                                        title: e.value,
-                                        active: stg.dateTimeFormat.value == e.key,
-                                        onTap: () {
-                                          stg.save(dateTimeFormat: e.key);
-                                          NamidaNavigator.inst.closeDialog();
-                                        },
-                                      ),
-                                    )
-                                    .toList(),
+                                children: [
+                                  ...kDefaultDateTimeStrings.entries.map(
+                                    (e) => SmallListTile(
+                                      title: e.value,
+                                      active: stg.dateTimeFormat.value == e.key,
+                                      onTap: () {
+                                        stg.save(dateTimeFormat: e.key);
+                                        NamidaNavigator.inst.closeDialog();
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                             Positioned(

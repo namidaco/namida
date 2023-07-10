@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:namida/core/enums.dart';
 import 'package:on_audio_edit/on_audio_edit.dart' as audioedit;
 import 'package:on_audio_query/on_audio_query.dart';
 
@@ -212,9 +213,10 @@ class Indexer {
     _addTheseTracksToAlbumGenreArtistEtc(newtracks.whereType<Track>().toList());
   }
 
-  Future<List<Track>> convertPathToTrack(List<String> tracksPath) async {
+  Future<List<Track>> convertPathToTrack(Iterable<String> tracksPathPre) async {
     final List<Track> finalTracks = <Track>[];
     final List<String> pathsToExtract = <String>[];
+    final tracksPath = tracksPathPre.toList();
     tracksPath.loop((tp, index) {
       final trako = tp.toTrackOrNull();
       if (trako != null) {
@@ -308,8 +310,6 @@ class Indexer {
           /// Split Genres
           final genres = splitGenre(trackInfo.genre);
 
-          int? getIntFromString(String? text) => int.tryParse((text ?? '').cleanUpForComparison);
-
           final finalTitle = trackInfo.title;
           final finalArtist = trackInfo.artist;
           final finalAlbum = trackInfo.album;
@@ -352,6 +352,7 @@ class Indexer {
           final tr = trExt.toTrack();
           allTracksMappedByPath[tr] = trExt;
           tracksInfoList.add(tr);
+          SearchSortController.inst.trackSearchList.add(tr);
 
           debugPrint(tracksInfoList.length.toString());
 
@@ -422,6 +423,7 @@ class Indexer {
         duplicatedTracksLength.value = removedNumber;
       }
     }
+    SearchSortController.inst.sortMedia(MediaType.track);
 
     if (forceReIndex) _afterIndexing();
 
@@ -482,7 +484,7 @@ class Indexer {
     debugPrint("Tracks Info List Length From File: ${tracksInfoList.length}");
   }
 
-  List<String> splitBySeparators(String? string, Iterable<String> separators, String fallback, List<String> blacklist) {
+  List<String> splitBySeparators(String? string, Iterable<String> separators, String fallback, Iterable<String> blacklist) {
     final List<String> finalStrings = <String>[];
     final List<String> pre = string?.trim().multiSplit(separators, blacklist) ?? [fallback];
     pre.loop((e, index) {
@@ -499,9 +501,9 @@ class Indexer {
 
     final artistsOrg = splitBySeparators(
       originalArtist,
-      SettingsController.inst.trackArtistsSeparators.toList(),
+      SettingsController.inst.trackArtistsSeparators,
       k_UNKNOWN_TRACK_ARTIST,
-      SettingsController.inst.trackArtistsSeparatorsBlacklist.toList(),
+      SettingsController.inst.trackArtistsSeparatorsBlacklist,
     );
     allArtists.addAll(artistsOrg);
 
@@ -512,9 +514,9 @@ class Indexer {
         allArtists.addAll(
           splitBySeparators(
             extractedFeatArtists,
-            SettingsController.inst.trackArtistsSeparators.toList(),
+            SettingsController.inst.trackArtistsSeparators,
             '',
-            SettingsController.inst.trackArtistsSeparatorsBlacklist.toList(),
+            SettingsController.inst.trackArtistsSeparatorsBlacklist,
           ),
         );
       }
@@ -525,9 +527,9 @@ class Indexer {
   List<String> splitGenre(String? originalGenre) {
     return splitBySeparators(
       originalGenre,
-      SettingsController.inst.trackGenresSeparators.toList(),
+      SettingsController.inst.trackGenresSeparators,
       k_UNKNOWN_TRACK_GENRE,
-      SettingsController.inst.trackGenresSeparatorsBlacklist.toList(),
+      SettingsController.inst.trackGenresSeparatorsBlacklist,
     );
   }
 
@@ -567,7 +569,7 @@ class Indexer {
     final allPaths = <String>{};
     final allAvailableDirectories = <Directory, bool>{};
 
-    await SettingsController.inst.directoriesToScan.toList().loopFuture((dirPath, index) async {
+    await SettingsController.inst.directoriesToScan.loopFuture((dirPath, index) async {
       final directory = Directory(dirPath);
 
       if (await directory.exists()) {
@@ -613,7 +615,7 @@ class Indexer {
           }
 
           // Skips if the file is included in one of the excluded folders.
-          if (SettingsController.inst.directoriesToExclude.toList().any((exc) => file.path.startsWith(exc))) {
+          if (SettingsController.inst.directoriesToExclude.any((exc) => file.path.startsWith(exc))) {
             continue;
           }
           allPaths.add(file.path);

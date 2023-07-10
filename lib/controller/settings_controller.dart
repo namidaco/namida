@@ -169,8 +169,7 @@ class SettingsController {
       staticLibraryTab.value = LibraryTab.values.getEnum(json['staticLibraryTab']) ?? staticLibraryTab.value;
       autoLibraryTab.value = json['autoLibraryTab'] ?? autoLibraryTab.value;
       final libraryListFromStorage = List<String>.from(json['libraryTabs'] ?? []);
-      libraryTabs.value =
-          libraryListFromStorage.isNotEmpty ? List<LibraryTab>.from(libraryListFromStorage.map((e) => LibraryTab.values.getEnum(e)).toList()) : libraryTabs.toList();
+      libraryTabs.value = libraryListFromStorage.isNotEmpty ? List<LibraryTab>.from(libraryListFromStorage.map((e) => LibraryTab.values.getEnum(e))) : libraryTabs;
 
       searchResultsPlayMode.value = json['searchResultsPlayMode'] ?? searchResultsPlayMode.value;
       borderRadiusMultiplier.value = json['borderRadiusMultiplier'] ?? borderRadiusMultiplier.value;
@@ -197,10 +196,10 @@ class SettingsController {
       hourFormat12.value = json['hourFormat12'] ?? hourFormat12.value;
       dateTimeFormat.value = json['dateTimeFormat'] ?? dateTimeFormat.value;
 
-      trackArtistsSeparators.value = List<String>.from(json['trackArtistsSeparators'] ?? trackArtistsSeparators.toList());
-      trackGenresSeparators.value = List<String>.from(json['trackGenresSeparators'] ?? trackGenresSeparators.toList());
-      trackArtistsSeparatorsBlacklist.value = List<String>.from(json['trackArtistsSeparatorsBlacklist'] ?? trackArtistsSeparatorsBlacklist.toList());
-      trackGenresSeparatorsBlacklist.value = List<String>.from(json['trackGenresSeparatorsBlacklist'] ?? trackGenresSeparatorsBlacklist.toList());
+      trackArtistsSeparators.value = List<String>.from(json['trackArtistsSeparators'] ?? trackArtistsSeparators);
+      trackGenresSeparators.value = List<String>.from(json['trackGenresSeparators'] ?? trackGenresSeparators);
+      trackArtistsSeparatorsBlacklist.value = List<String>.from(json['trackArtistsSeparatorsBlacklist'] ?? trackArtistsSeparatorsBlacklist);
+      trackGenresSeparatorsBlacklist.value = List<String>.from(json['trackGenresSeparatorsBlacklist'] ?? trackGenresSeparatorsBlacklist);
       tracksSort.value = SortType.values.getEnum(json['tracksSort']) ?? tracksSort.value;
       tracksSortReversed.value = json['tracksSortReversed'] ?? tracksSortReversed.value;
       albumSort.value = GroupSortType.values.getEnum(json['albumSort']) ?? albumSort.value;
@@ -214,20 +213,20 @@ class SettingsController {
       indexMinDurationInSec.value = json['indexMinDurationInSec'] ?? indexMinDurationInSec.value;
       indexMinFileSizeInB.value = json['indexMinFileSizeInB'] ?? indexMinFileSizeInB.value;
 
-      trackSearchFilter.value = List<String>.from(json['trackSearchFilter'] ?? trackSearchFilter.toList());
-      playlistSearchFilter.value = List<String>.from(json['playlistSearchFilter'] ?? playlistSearchFilter.toList());
-      directoriesToScan.value = List<String>.from(json['directoriesToScan'] ?? directoriesToScan.toList());
-      directoriesToExclude.value = List<String>.from(json['directoriesToExclude'] ?? directoriesToExclude.toList());
+      trackSearchFilter.value = List<String>.from(json['trackSearchFilter'] ?? trackSearchFilter);
+      playlistSearchFilter.value = List<String>.from(json['playlistSearchFilter'] ?? playlistSearchFilter);
+      directoriesToScan.value = List<String>.from(json['directoriesToScan'] ?? directoriesToScan);
+      directoriesToExclude.value = List<String>.from(json['directoriesToExclude'] ?? directoriesToExclude);
       preventDuplicatedTracks.value = json['preventDuplicatedTracks'] ?? preventDuplicatedTracks.value;
       respectNoMedia.value = json['respectNoMedia'] ?? respectNoMedia.value;
       defaultBackupLocation.value = json['defaultBackupLocation'] ?? defaultBackupLocation.value;
       defaultFolderStartupLocation.value = json['defaultFolderStartupLocation'] ?? defaultFolderStartupLocation.value;
       enableFoldersHierarchy.value = json['enableFoldersHierarchy'] ?? enableFoldersHierarchy.value;
-      backupItemslist.value = List<String>.from(json['backupItemslist'] ?? backupItemslist.toList());
+      backupItemslist.value = List<String>.from(json['backupItemslist'] ?? backupItemslist);
       enableVideoPlayback.value = json['enableVideoPlayback'] ?? enableVideoPlayback.value;
       enableLyrics.value = json['enableLyrics'] ?? enableLyrics.value;
       videoPlaybackSource.value = json['videoPlaybackSource'] ?? videoPlaybackSource.value;
-      youtubeVideoQualities.value = List<String>.from(json['youtubeVideoQualities'] ?? youtubeVideoQualities.toList());
+      youtubeVideoQualities.value = List<String>.from(json['youtubeVideoQualities'] ?? youtubeVideoQualities);
 
       animatingThumbnailIntensity.value = json['animatingThumbnailIntensity'] ?? animatingThumbnailIntensity.value;
       animatingThumbnailInversed.value = json['animatingThumbnailInversed'] ?? animatingThumbnailInversed.value;
@@ -257,7 +256,7 @@ class SettingsController {
       extractFeatArtistFromTitle.value = json['extractFeatArtistFromTitle'] ?? extractFeatArtistFromTitle.value;
 
       final listFromStorage = List<String>.from(json['tagFieldsToEdit'] ?? []);
-      tagFieldsToEdit.value = listFromStorage.isNotEmpty ? List<TagField>.from(listFromStorage.map((e) => TagField.values.getEnum(e)).toList()) : tagFieldsToEdit.toList();
+      tagFieldsToEdit.value = listFromStorage.isNotEmpty ? List<TagField>.from(listFromStorage.map((e) => TagField.values.getEnum(e))) : tagFieldsToEdit;
 
       wakelockMode.value = WakelockMode.values.getEnum(json['wakelockMode']) ?? wakelockMode.value;
 

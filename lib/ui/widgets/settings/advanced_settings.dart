@@ -83,24 +83,26 @@ class AdvancedSettings extends StatelessWidget {
                     )
                   ],
                   child: Column(
-                    children: TrackSource.values.map((e) {
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 10.0),
-                        child: Obx(
-                          () => ListTileWithCheckMark(
-                            active: isActive(e),
-                            title: e.convertToString,
-                            onTap: () {
-                              if (isActive(e)) {
-                                sourcesToDelete.remove(e);
-                              } else {
-                                sourcesToDelete.add(e);
-                              }
-                            },
+                    children: [
+                      ...TrackSource.values.map((e) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 10.0),
+                          child: Obx(
+                            () => ListTileWithCheckMark(
+                              active: isActive(e),
+                              title: e.convertToString,
+                              onTap: () {
+                                if (isActive(e)) {
+                                  sourcesToDelete.remove(e);
+                                } else {
+                                  sourcesToDelete.add(e);
+                                }
+                              },
+                            ),
                           ),
-                        ),
-                      );
-                    }).toList(),
+                        );
+                      }),
+                    ],
                   ),
                 ),
               );

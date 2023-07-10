@@ -54,7 +54,7 @@ class HistoryTracksPage extends StatelessWidget {
               final days = HistoryController.inst.historyDays.toList();
               return SliverKnownExtentsList(
                 key: UniqueKey(),
-                itemExtents: Dimensions.inst.allItemsExtentsHistory.toList(),
+                itemExtents: Dimensions.inst.allItemsExtentsHistory,
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final day = days[index];
