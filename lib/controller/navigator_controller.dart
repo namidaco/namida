@@ -115,7 +115,7 @@ class NamidaNavigator {
     final theme = AppThemes.inst.getAppTheme(colorScheme, null, lighterDialogColor);
 
     await Get.to(
-      WillPopScope(
+      () => WillPopScope(
         onWillPop: onWillPop,
         child: GestureDetector(
           onTap: onWillPop,

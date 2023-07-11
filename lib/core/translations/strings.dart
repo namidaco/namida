@@ -20,6 +20,8 @@ class Language {
   String get A_MOMENT => 'a moment';
   String get A_MINUTE => 'a minute';
   String get MINUTES => 'minutes';
+  String get DAY => 'Day';
+  String get DAYS => 'Days';
   String get COMMENTS => 'Comments';
   String get LIKE => 'Like';
   String get DISLIKE => 'Dislike';
@@ -184,6 +186,7 @@ class Language {
   String get NO_ENOUGH_TRACKS => 'You don\'t have much tracks..';
   String get GENERATE_FROM_DATES => 'Time Range';
   String get GENERATE_FROM_DATES_SUBTITLE => 'Generate tracks you listened to in a time range';
+  String get NO_TRACKS_FOUND => 'No tracks were found';
   String get NO_TRACKS_FOUND_BETWEEN_DATES => 'This timerange doesn\'t have any tracks.';
   String get NO_TRACKS_FOUND_IN_DIRECTORY => 'No tracks found in this directory';
   String get NEW_TRACKS_MOODS => 'Mood';

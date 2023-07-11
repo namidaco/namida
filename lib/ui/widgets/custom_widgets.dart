@@ -26,6 +26,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
@@ -272,6 +273,7 @@ class CustomBlurryDialog extends StatelessWidget {
   final IconData? icon;
   final String? title;
   final Widget? titleWidget;
+  final Widget? titleWidgetInPadding;
   final List<Widget>? trailingWidgets;
   final Widget? child;
   final List<Widget>? actions;
@@ -288,6 +290,8 @@ class CustomBlurryDialog extends StatelessWidget {
     this.child,
     this.trailingWidgets,
     this.title,
+    this.titleWidget,
+    this.titleWidgetInPadding,
     this.actions,
     this.icon,
     this.normalTitleStyle = false,
@@ -297,7 +301,6 @@ class CustomBlurryDialog extends StatelessWidget {
     this.scrollable = true,
     this.contentPadding,
     this.leftAction,
-    this.titleWidget,
   });
 
   @override
@@ -317,7 +320,15 @@ class CustomBlurryDialog extends StatelessWidget {
               children: [
                 /// Title.
                 if (titleWidget != null) titleWidget!,
-                if (titleWidget == null)
+                if (titleWidgetInPadding != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: titleWidgetInPadding,
+                    ),
+                  ),
+                if (titleWidget == null && titleWidgetInPadding == null)
                   normalTitleStyle
                       ? Padding(
                           padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
@@ -2005,38 +2016,22 @@ class HistoryJumpToDayIcon extends StatelessWidget {
       icon: Broken.calendar,
       tooltip: Language.inst.JUMP_TO_DAY,
       onPressed: () {
-        int dayToScrollTo = 0;
-        NamidaNavigator.inst.navigateDialog(
-          scale: 0.9,
-          dialog: CustomBlurryDialog(
-            title: Language.inst.JUMP_TO_DAY,
-            normalTitleStyle: true,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 28.0),
-            actions: [
-              const CancelButton(),
-              ElevatedButton(
-                onPressed: () {
-                  NamidaNavigator.inst.closeDialog();
-                  final days = HistoryController.inst.historyDays.toList();
-                  days.removeWhere((element) => element <= dayToScrollTo);
-                  final itemExtents = Dimensions.inst.allItemsExtentsHistory;
-                  double totalScrollOffset = 0;
-                  days.loop((e, index) => totalScrollOffset += itemExtents[index]);
-                  HistoryController.inst.scrollController.jumpTo(totalScrollOffset + 100.0);
-                },
-                child: Text(Language.inst.JUMP),
-              ),
-            ],
-            child: CalendarDatePicker2(
-              onValueChanged: (value) => dayToScrollTo = value.firstOrNull?.millisecondsSinceEpoch.toDaysSinceEpoch() ?? 0,
-              config: CalendarDatePicker2Config(
-                calendarType: CalendarDatePicker2Type.single,
-                firstDate: HistoryController.inst.oldestTrack?.dateAdded.milliSecondsSinceEpoch,
-                lastDate: HistoryController.inst.newestTrack?.dateAdded.milliSecondsSinceEpoch,
-              ),
-              value: const [],
-            ),
-          ),
+        showCalendarDialog(
+          title: Language.inst.JUMP_TO_DAY,
+          buttonText: Language.inst.JUMP,
+          calendarType: CalendarDatePicker2Type.single,
+          firstDate: HistoryController.inst.oldestTrack?.dateAdded.milliSecondsSinceEpoch,
+          lastDate: HistoryController.inst.newestTrack?.dateAdded.milliSecondsSinceEpoch,
+          onGenerate: (dates) {
+            NamidaNavigator.inst.closeDialog();
+            final dayToScrollTo = dates.firstOrNull?.millisecondsSinceEpoch.toDaysSinceEpoch() ?? 0;
+            final days = HistoryController.inst.historyDays.toList();
+            days.removeWhere((element) => element <= dayToScrollTo);
+            final itemExtents = Dimensions.inst.allItemsExtentsHistory;
+            double totalScrollOffset = 0;
+            days.loop((e, index) => totalScrollOffset += itemExtents[index]);
+            HistoryController.inst.scrollController.jumpTo(totalScrollOffset + 100.0);
+          },
         );
       },
     );

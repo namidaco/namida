@@ -9,7 +9,6 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/functions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 
 class SearchSortController {
@@ -91,15 +90,15 @@ class SearchSortController {
 
     tracksInfoList.loop((tr, index) {
       final item = tr.toTrackExt();
-      final lctext = textCleanedForSearch(text);
+      final lctext = _textCleanedForSearch(text);
 
-      if ((sTitle && textCleanedForSearch(item.title).contains(lctext)) ||
-          (sAlbum && textCleanedForSearch(item.album).contains(lctext)) ||
-          (sAlbumArtist && textCleanedForSearch(item.albumArtist).contains(lctext)) ||
-          (sArtist && item.artistsList.any((element) => textCleanedForSearch(element).contains(lctext))) ||
-          (sGenre && item.genresList.any((element) => textCleanedForSearch(element).contains(lctext))) ||
-          (sComposer && textCleanedForSearch(item.composer).contains(lctext)) ||
-          (sYear && textCleanedForSearch(item.year.toString()).contains(lctext))) {
+      if ((sTitle && _textCleanedForSearch(item.title).contains(lctext)) ||
+          (sAlbum && _textCleanedForSearch(item.album).contains(lctext)) ||
+          (sAlbumArtist && _textCleanedForSearch(item.albumArtist).contains(lctext)) ||
+          (sArtist && item.artistsList.any((element) => _textCleanedForSearch(element).contains(lctext))) ||
+          (sGenre && item.genresList.any((element) => _textCleanedForSearch(element).contains(lctext))) ||
+          (sComposer && _textCleanedForSearch(item.composer).contains(lctext)) ||
+          (sYear && _textCleanedForSearch(item.year.toString()).contains(lctext))) {
         finalList.add(tr);
       }
     });
@@ -119,7 +118,7 @@ class SearchSortController {
       }
       return;
     }
-    final results = mainMapAlbums.value.keys.where((albumName) => textCleanedForSearch(albumName).contains(textCleanedForSearch(text)));
+    final results = mainMapAlbums.value.keys.where((albumName) => _textCleanedForSearch(albumName).contains(_textCleanedForSearch(text)));
 
     if (temp) {
       albumSearchTemp
@@ -144,7 +143,7 @@ class SearchSortController {
       }
       return;
     }
-    final results = mainMapArtists.value.keys.where((artistName) => textCleanedForSearch(artistName).contains(textCleanedForSearch(text)));
+    final results = mainMapArtists.value.keys.where((artistName) => _textCleanedForSearch(artistName).contains(_textCleanedForSearch(text)));
 
     if (temp) {
       artistSearchTemp
@@ -163,7 +162,7 @@ class SearchSortController {
       genreSearchList.assignAll(mainMapGenres.value.keys);
       return;
     }
-    final results = mainMapGenres.value.keys.where((genreName) => textCleanedForSearch(genreName).contains(textCleanedForSearch(text)));
+    final results = mainMapGenres.value.keys.where((genreName) => _textCleanedForSearch(genreName).contains(_textCleanedForSearch(text)));
 
     genreSearchList
       ..clear()
@@ -191,15 +190,15 @@ class SearchSortController {
       final playlistName = e.key;
       final item = e.value;
 
-      final lctext = textCleanedForSearch(text);
+      final lctext = _textCleanedForSearch(text);
       final dateCreatedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.creationDate));
       final dateModifiedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.modifiedDate));
 
-      return (sTitle && textCleanedForSearch(playlistName.translatePlaylistName()).contains(lctext)) ||
-          (sCreationDate && textCleanedForSearch(dateCreatedFormatted.toString()).contains(lctext)) ||
-          (sModifiedDate && textCleanedForSearch(dateModifiedFormatted.toString()).contains(lctext)) ||
-          (sComment && textCleanedForSearch(item.comment).contains(lctext)) ||
-          (sMoods && item.moods.any((element) => textCleanedForSearch(element).contains(lctext)));
+      return (sTitle && _textCleanedForSearch(playlistName.translatePlaylistName()).contains(lctext)) ||
+          (sCreationDate && _textCleanedForSearch(dateCreatedFormatted.toString()).contains(lctext)) ||
+          (sModifiedDate && _textCleanedForSearch(dateModifiedFormatted.toString()).contains(lctext)) ||
+          (sComment && _textCleanedForSearch(item.comment).contains(lctext)) ||
+          (sMoods && item.moods.any((element) => _textCleanedForSearch(element).contains(lctext)));
     });
     playlistSearchList.addAll(results.map((e) => e.key));
   }
@@ -482,5 +481,9 @@ class SearchSortController {
     SettingsController.inst.save(playlistSort: sortBy, playlistSortReversed: reverse);
 
     _searchPlaylists(LibraryTab.playlists.textSearchController?.text ?? '');
+  }
+
+  String _textCleanedForSearch(String textToClean) {
+    return SettingsController.inst.enableSearchCleanup.value ? textToClean.cleanUpForComparison : textToClean.toLowerCase();
   }
 }

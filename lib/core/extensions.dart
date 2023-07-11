@@ -11,12 +11,13 @@ import 'package:flutter/material.dart';
 
 import 'package:collection/collection.dart';
 import 'package:intl/intl.dart';
-import 'package:namida/controller/search_sort_controller.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -193,6 +194,7 @@ extension DisplayKeywords on int {
   }
 
   String get displayTrackKeyword => displayKeyword(Language.inst.TRACK, Language.inst.TRACKS);
+  String get displayDayKeyword => displayKeyword(Language.inst.DAY, Language.inst.DAYS);
   String get displayAlbumKeyword => displayKeyword(Language.inst.ALBUM, Language.inst.ALBUMS);
   String get displayArtistKeyword => displayKeyword(Language.inst.ARTIST, Language.inst.ARTISTS);
   String get displayGenreKeyword => displayKeyword(Language.inst.GENRE, Language.inst.GENRES);
@@ -814,6 +816,18 @@ extension MapUtils<K, V> on Map<K, V> {
   ///
   /// [containsKey] : Certain but not instant, O(keys.length).
   bool keyExists(K key) => this[key] != null;
+}
+
+extension CloseDialogIfTrue on bool {
+  /// Closes dialog if [this == true].
+  ///
+  /// This is mainly created for [addToQueue] Function inside Player Class,
+  /// where it should close the dialog only if there were tracks added.
+  void closeDialog([int count = 1]) {
+    if (this) {
+      NamidaNavigator.inst.closeDialog(count);
+    }
+  }
 }
 
 extension PrintFunction on dynamic {

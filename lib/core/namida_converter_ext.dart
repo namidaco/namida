@@ -886,8 +886,7 @@ extension RouteUtils on NamidaRoute {
 
   List<Widget> toActions() {
     Widget getMoreIcon(void Function()? onPressed) {
-      return NamidaIconButton(
-        horizontalPadding: 6.0,
+      return NamidaAppBarIcon(
         icon: Broken.more_2,
         onPressed: onPressed,
       );

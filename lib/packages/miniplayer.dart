@@ -4,12 +4,12 @@
 import 'package:flutter/material.dart';
 
 import 'package:animated_background/animated_background.dart';
-import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
@@ -106,7 +106,7 @@ class _MiniPlayerSwitchersState extends State<MiniPlayerSwitchers> with SingleTi
                   key: Key('emptyminiplayer'),
                 )
               : SettingsController.inst.useYoutubeMiniplayer.value
-                  ? YoutubeMiniPlayer(key: const Key('actualminiplayer'))
+                  ? YoutubeMiniPlayer(key: const Key('ytminiplayer'))
                   : const NamidaMiniPlayer(key: Key('actualminiplayer')),
         );
       },
@@ -867,21 +867,22 @@ class NamidaMiniPlayer extends StatelessWidget {
                                       itemCount: Player.inst.currentQueue.length,
                                       itemBuilder: (context, i) {
                                         final track = Player.inst.currentQueue[i];
+                                        final key = "$i${track.path}";
                                         return GestureDetector(
-                                          key: Key("$i${track.path}"),
+                                          key: Key('GD_$key'),
                                           onHorizontalDragStart: (details) => MiniPlayerController.inst.isReorderingQueue = true,
                                           onHorizontalDragEnd: (details) => MiniPlayerController.inst.isReorderingQueue = false,
                                           child: AnimatedOpacity(
                                             duration: const Duration(milliseconds: 300),
                                             opacity: i < Player.inst.currentIndex.value ? 0.7 : 1.0,
                                             child: FadeDismissible(
-                                              key: Key("Diss_$i${track.path}"),
+                                              key: Key("Diss_$key"),
                                               onDismissed: (direction) {
                                                 Player.inst.removeFromQueue(i);
                                               },
                                               child: TrackTile(
                                                 index: i,
-                                                key: ValueKey(i.toString()),
+                                                key: Key('tile_$key'),
                                                 track: track,
                                                 displayRightDragHandler: true,
                                                 draggableThumbnail: true,
@@ -941,13 +942,8 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                             icon: Broken.format_circle,
                                                             maxSubtitleLines: 22,
                                                             onTap: () {
-                                                              NamidaNavigator.inst.closeDialog();
-                                                              final rt = getRandomTracks(8, 11);
-                                                              if (rt.isEmpty) {
-                                                                Get.snackbar(Language.inst.ERROR, Language.inst.NO_ENOUGH_TRACKS);
-                                                                return;
-                                                              }
-                                                              Player.inst.addToQueue(rt);
+                                                              final rt = NamidaGenerator.inst.getRandomTracks(8, 11);
+                                                              Player.inst.addToQueue(rt, emptyTracksMessage: Language.inst.NO_ENOUGH_TRACKS).closeDialog();
                                                             },
                                                           ),
                                                           CustomListTile(
@@ -962,38 +958,20 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                                 Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_IN_HISTORY);
                                                                 return;
                                                               }
-                                                              List<DateTime?> dates = [];
-                                                              NamidaNavigator.inst.navigateDialog(
-                                                                scale: 0.9,
-                                                                dialog: CustomBlurryDialog(
-                                                                  title: Language.inst.GENERATE_FROM_DATES,
-                                                                  normalTitleStyle: true,
-                                                                  insetPadding: const EdgeInsets.symmetric(horizontal: 28.0),
-                                                                  actions: [
-                                                                    const CancelButton(),
-                                                                    ElevatedButton(
-                                                                      onPressed: () {
-                                                                        final tracks = generateTracksFromHistoryDates(dates.firstOrNull, dates.lastOrNull);
-                                                                        if (tracks.isEmpty) {
-                                                                          Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES);
-                                                                          return;
-                                                                        }
-                                                                        Player.inst.addToQueue(tracks);
-                                                                        NamidaNavigator.inst.closeDialog();
-                                                                      },
-                                                                      child: Text(Language.inst.GENERATE),
-                                                                    ),
-                                                                  ],
-                                                                  child: CalendarDatePicker2(
-                                                                    onValueChanged: (value) => dates.assignAll(value),
-                                                                    config: CalendarDatePicker2Config(
-                                                                      calendarType: CalendarDatePicker2Type.range,
-                                                                      firstDate: HistoryController.inst.oldestTrack?.dateAdded.milliSecondsSinceEpoch,
-                                                                      lastDate: HistoryController.inst.newestTrack?.dateAdded.milliSecondsSinceEpoch,
-                                                                    ),
-                                                                    value: const [],
-                                                                  ),
-                                                                ),
+                                                              showCalendarDialog(
+                                                                title: Language.inst.GENERATE_FROM_DATES,
+                                                                buttonText: Language.inst.GENERATE,
+                                                                firstDate: HistoryController.inst.oldestTrack?.dateAdded.milliSecondsSinceEpoch,
+                                                                lastDate: HistoryController.inst.newestTrack?.dateAdded.milliSecondsSinceEpoch,
+                                                                onGenerate: (dates) {
+                                                                  final tracks = NamidaGenerator.inst.generateTracksFromHistoryDates(dates.firstOrNull, dates.lastOrNull);
+                                                                  Player.inst
+                                                                      .addToQueue(
+                                                                        tracks,
+                                                                        emptyTracksMessage: Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES,
+                                                                      )
+                                                                      .closeDialog();
+                                                                },
                                                               );
                                                             },
                                                           ),
@@ -1027,7 +1005,8 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                                     const CancelButton(),
                                                                     ElevatedButton(
                                                                       onPressed: () {
-                                                                        Player.inst.addToQueue(generateTracksFromMoods(selectedmoods));
+                                                                        final genTracks = NamidaGenerator.inst.generateTracksFromMoods(selectedmoods);
+                                                                        Player.inst.addToQueue(genTracks);
                                                                         NamidaNavigator.inst.closeDialog();
                                                                       },
                                                                       child: Text(Language.inst.GENERATE),
@@ -1090,7 +1069,11 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                                           Get.snackbar(Language.inst.ERROR, Language.inst.MIN_VALUE_CANT_BE_MORE_THAN_MAX);
                                                                           return;
                                                                         }
-                                                                        final tracks = generateTracksFromRatings(minRating.value, maxRating.value, maxNumberOfTracks.value);
+                                                                        final tracks = NamidaGenerator.inst.generateTracksFromRatings(
+                                                                          minRating.value,
+                                                                          maxRating.value,
+                                                                          maxNumberOfTracks.value,
+                                                                        );
                                                                         Player.inst.addToQueue(tracks);
                                                                         NamidaNavigator.inst.closeDialog();
                                                                       },
@@ -1187,13 +1170,8 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                                 Get.snackbar(Language.inst.ERROR, Language.inst.NEW_TRACKS_UNKNOWN_YEAR);
                                                                 return;
                                                               }
-                                                              final tracks = generateTracksFromSameEra(year, currentTrack: currentTrack);
-                                                              if (tracks.isEmpty) {
-                                                                Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES);
-                                                                return;
-                                                              }
-                                                              Player.inst.addToQueue(tracks);
-                                                              NamidaNavigator.inst.closeDialog();
+                                                              final tracks = NamidaGenerator.inst.generateTracksFromSameEra(year, currentTrack: currentTrack);
+                                                              Player.inst.addToQueue(tracks, emptyTracksMessage: Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES).closeDialog();
                                                             },
                                                           ),
                                                           Obx(
@@ -1206,13 +1184,11 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                               icon: Broken.bezier,
                                                               maxSubtitleLines: 22,
                                                               onTap: () {
-                                                                NamidaNavigator.inst.closeDialog();
-                                                                final gentracks = generateRecommendedTrack(Player.inst.nowPlayingTrack.value);
-                                                                if (gentracks.isEmpty) {
-                                                                  Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_IN_HISTORY);
-                                                                  return;
-                                                                }
-                                                                Player.inst.addToQueue(gentracks, insertNext: true);
+                                                                final gentracks = NamidaGenerator.inst.generateRecommendedTrack(Player.inst.nowPlayingTrack.value);
+
+                                                                Player.inst
+                                                                    .addToQueue(gentracks, insertNext: true, emptyTracksMessage: Language.inst.NO_TRACKS_IN_HISTORY)
+                                                                    .closeDialog();
                                                               },
                                                             ),
                                                           ),

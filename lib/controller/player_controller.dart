@@ -107,12 +107,18 @@ class Player {
     _audioHandler?.removeDuplicatesFromQueue();
   }
 
-  void addToQueue(
+  /// returns true if tracks aren't empty.
+  bool addToQueue(
     List<Track> tracks, {
     bool insertNext = false,
     bool insertAfterLatest = false,
     bool showSnackBar = true,
+    String? emptyTracksMessage,
   }) {
+    if (showSnackBar && tracks.isEmpty) {
+      Get.snackbar(Language.inst.NOTE, emptyTracksMessage ?? Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES);
+      return false;
+    }
     _audioHandler?.addToQueue(
       tracks,
       insertNext: insertNext,
@@ -122,6 +128,7 @@ class Player {
       final addins = insertNext ? Language.inst.INSERTED : Language.inst.ADDED;
       Get.snackbar(Language.inst.NOTE, '${addins.capitalizeFirst} ${tracks.displayTrackKeyword}');
     }
+    return true;
   }
 
   void insertInQueue(List<Track> tracks, int index) {

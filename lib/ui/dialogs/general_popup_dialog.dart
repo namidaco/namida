@@ -12,6 +12,7 @@ import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
+import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -350,7 +351,7 @@ Future<void> showGeneralPopupDialog(
     final paths = files.mapped((e) => e.path);
     paths.sortBy((e) => e);
 
-    final highMatchesFiles = getHighMatcheFilesFromFilename(paths, tracks.first.path.getFilename);
+    final highMatchesFiles = NamidaGenerator.inst.getHighMatcheFilesFromFilename(paths, tracks.first.path.getFilename);
 
     /// Searching
     final txtc = TextEditingController();
@@ -690,7 +691,7 @@ Future<void> showGeneralPopupDialog(
                             }
 
                             /// firstly checks if a file exists in current library
-                            final firstHighMatchesFiles = getHighMatcheFilesFromFilename(Indexer.inst.allAudioFiles, tracks.first.path.getFilename);
+                            final firstHighMatchesFiles = NamidaGenerator.inst.getHighMatcheFilesFromFilename(Indexer.inst.allAudioFiles, tracks.first.path.getFilename);
                             if (firstHighMatchesFiles.isNotEmpty) {
                               NamidaNavigator.inst.navigateDialog(
                                 dialog: CustomBlurryDialog(
@@ -750,7 +751,7 @@ Future<void> showGeneralPopupDialog(
                             tooltip: Language.inst.ADD_MORE_FROM_THIS_ALBUM,
                             onPressed: () {
                               NamidaNavigator.inst.closeDialog();
-                              Player.inst.addToQueue(generateTracksFromAlbum(availableAlbums.first), insertNext: true);
+                              Player.inst.addToQueue(NamidaGenerator.inst.generateTracksFromAlbum(availableAlbums.first), insertNext: true);
                             },
                             icon: const Icon(Broken.add),
                           ),
@@ -804,7 +805,7 @@ Future<void> showGeneralPopupDialog(
                           icon: Broken.microphone,
                           onTap: () {
                             NamidaNavigator.inst.closeDialog();
-                            Player.inst.addToQueue(generateTracksFromArtist(artistToAddFrom), insertNext: true);
+                            Player.inst.addToQueue(NamidaGenerator.inst.generateTracksFromArtist(artistToAddFrom), insertNext: true);
                           },
                           trailing: IgnorePointer(
                             child: IconButton(
@@ -823,7 +824,7 @@ Future<void> showGeneralPopupDialog(
                           onTap: () => NamidaOnTaps.inst.onArtistTap(availableArtists.first),
                           trailing: IconButton(
                             tooltip: Language.inst.ADD_MORE_FROM_THIS_ARTIST,
-                            onPressed: () => Player.inst.addToQueue(generateTracksFromArtist(availableArtists.first), insertNext: true),
+                            onPressed: () => Player.inst.addToQueue(NamidaGenerator.inst.generateTracksFromArtist(availableArtists.first), insertNext: true),
                             icon: const Icon(Broken.add),
                           ),
                         ),
@@ -874,7 +875,7 @@ Future<void> showGeneralPopupDialog(
                           },
                           trailing: IconButton(
                             tooltip: Language.inst.ADD_MORE_FROM_THIS_FOLDER,
-                            onPressed: () => Player.inst.addToQueue(generateTracksFromFolder(availableFolders.first), insertNext: true),
+                            onPressed: () => Player.inst.addToQueue(NamidaGenerator.inst.generateTracksFromFolder(availableFolders.first), insertNext: true),
                             icon: const Icon(Broken.add),
                           ),
                         ),

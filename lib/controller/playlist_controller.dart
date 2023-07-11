@@ -5,13 +5,13 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/strings.dart';
 
 class PlaylistController {
@@ -185,7 +185,7 @@ class PlaylistController {
 
   /// Returns number of generated tracks.
   int generateRandomPlaylist() {
-    final rt = getRandomTracks();
+    final rt = NamidaGenerator.inst.getRandomTracks();
     if (rt.isEmpty) return 0;
 
     final l = playlistsMap.keys.where((name) => name.startsWith(k_PLAYLIST_NAME_AUTO_GENERATED)).length;
