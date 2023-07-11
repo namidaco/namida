@@ -16,9 +16,14 @@ import 'package:namida/ui/widgets/library/album_card.dart';
 class ArtistTracksPage extends StatelessWidget {
   final String name;
   final List<Track> tracks;
-  final Color colorScheme;
   final Set<String> albums;
-  const ArtistTracksPage({super.key, required this.name, required this.colorScheme, required this.tracks, required this.albums});
+
+  const ArtistTracksPage({
+    super.key,
+    required this.name,
+    required this.tracks,
+    required this.albums,
+  });
 
   @override
   Widget build(BuildContext context) {

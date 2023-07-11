@@ -19,6 +19,8 @@ class ExpandableBox extends StatelessWidget {
   final CustomTextFiled textField;
   final ChangeGridCountWidget? gridWidget;
   final List<Widget>? leftWidgets;
+  final bool enableHero;
+
   const ExpandableBox({
     super.key,
     required this.isBarVisible,
@@ -31,77 +33,82 @@ class ExpandableBox extends StatelessWidget {
     required this.textField,
     this.gridWidget,
     this.leftWidgets,
+    required this.enableHero,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        AnimatedOpacity(
-          opacity: isBarVisible ? 1 : 0,
-          duration: const Duration(milliseconds: 400),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 400),
-            height: isBarVisible ? 48.0 : 0.0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(width: 18.0),
-                Row(
-                  children: [
-                    if (leftWidgets != null) ...leftWidgets!,
-                    Text(
-                      leftText,
-                      style: context.textTheme.displayMedium,
-                    ),
-                    if (displayloadingIndicator) ...[const SizedBox(width: 8.0), const LoadingIndicator()]
-                  ],
-                ),
-                const Spacer(),
-                if (gridWidget != null) gridWidget!,
-                // Sort By Menu
-                const SizedBox(width: 4.0),
-                sortByMenuWidget,
-                const SizedBox(width: 12.0),
-                SmallIconButton(
-                  icon: Broken.filter_search,
-                  onTap: onFilterIconTap,
-                ),
-                const SizedBox(width: 12.0),
-              ],
-            ),
-          ),
-        ),
-        AnimatedOpacity(
-          opacity: showSearchBox ? 1 : 0,
-          duration: const Duration(milliseconds: 400),
-          child: AnimatedSize(
+    return NamidaHero(
+      enabled: enableHero,
+      tag: 'ExpandableBox',
+      child: Column(
+        children: [
+          AnimatedOpacity(
+            opacity: isBarVisible ? 1 : 0,
             duration: const Duration(milliseconds: 400),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 400),
-              height: showSearchBox ? 58.0 : 0,
+              height: isBarVisible ? 48.0 : 0.0,
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const SizedBox(width: 12.0),
-                  Expanded(child: textField),
-                  const SizedBox(width: 12.0),
-                  NamidaIconButton(
-                    onPressed: () {
-                      onCloseButtonPressed();
-                      ScrollSearchController.inst.unfocusKeyboard();
-                    },
-                    icon: Broken.close_circle,
+                  const SizedBox(width: 18.0),
+                  Row(
+                    children: [
+                      if (leftWidgets != null) ...leftWidgets!,
+                      Text(
+                        leftText,
+                        style: context.textTheme.displayMedium,
+                      ),
+                      if (displayloadingIndicator) ...[const SizedBox(width: 8.0), const LoadingIndicator()]
+                    ],
                   ),
-                  const SizedBox(width: 8.0),
+                  const Spacer(),
+                  if (gridWidget != null) gridWidget!,
+                  // Sort By Menu
+                  const SizedBox(width: 4.0),
+                  sortByMenuWidget,
+                  const SizedBox(width: 12.0),
+                  SmallIconButton(
+                    icon: Broken.filter_search,
+                    onTap: onFilterIconTap,
+                  ),
+                  const SizedBox(width: 12.0),
                 ],
               ),
             ),
           ),
-        ),
-        if (showSearchBox) const SizedBox(height: 8.0)
-      ],
+          AnimatedOpacity(
+            opacity: showSearchBox ? 1 : 0,
+            duration: const Duration(milliseconds: 400),
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 400),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 400),
+                height: showSearchBox ? 58.0 : 0,
+                child: Row(
+                  children: [
+                    const SizedBox(width: 12.0),
+                    Expanded(child: textField),
+                    const SizedBox(width: 12.0),
+                    NamidaIconButton(
+                      onPressed: () {
+                        onCloseButtonPressed();
+                        ScrollSearchController.inst.unfocusKeyboard();
+                      },
+                      icon: Broken.close_circle,
+                    ),
+                    const SizedBox(width: 8.0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (showSearchBox) const SizedBox(height: 8.0)
+        ],
+      ),
     );
   }
 }

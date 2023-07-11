@@ -37,9 +37,16 @@ class JsonToHistoryParser {
     return p.isFinite ? p : 0;
   }
 
+  bool _isShowingParsingMenu = false;
+
+  void _hideParsingDialog() => _isShowingParsingMenu = false;
+
   void showParsingProgressDialog() {
+    if (_isShowingParsingMenu) return;
+
+    _isShowingParsingMenu = true;
     NamidaNavigator.inst.navigateDialog(
-      Obx(
+      dialog: Obx(
         () {
           final title = '${isParsing.value ? Language.inst.EXTRACTING_INFO : Language.inst.DONE} ($parsedProgressPercentage)';
           final loadingText = '${Language.inst.LOADING_FILE}... ${isLoadingFile.value ? '' : Language.inst.DONE}';
@@ -51,13 +58,17 @@ class JsonToHistoryParser {
             actions: [
               TextButton(
                 child: Text(Language.inst.CONFIRM),
-                onPressed: () => NamidaNavigator.inst.closeDialog(),
+                onPressed: () {
+                  _hideParsingDialog();
+                  NamidaNavigator.inst.closeDialog();
+                },
               )
             ],
             bodyText: "$loadingText\n\n$parsedText\n\n$addedText",
           );
         },
       ),
+      onDismissing: _hideParsingDialog,
     );
   }
 

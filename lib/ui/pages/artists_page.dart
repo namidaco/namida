@@ -22,7 +22,15 @@ class ArtistsPage extends StatelessWidget {
   final List<String>? artists;
   final int countPerRow;
   final bool animateTiles;
-  const ArtistsPage({super.key, this.artists, required this.countPerRow, this.animateTiles = true});
+  final bool enableHero;
+
+  const ArtistsPage({
+    super.key,
+    this.artists,
+    required this.countPerRow,
+    this.animateTiles = true,
+    required this.enableHero,
+  });
 
   bool get _shouldAnimate => animateTiles && LibraryTab.artists.shouldAnimateTiles;
 
@@ -39,6 +47,7 @@ class ArtistsPage extends StatelessWidget {
             () => Column(
               children: [
                 ExpandableBox(
+                  enableHero: enableHero,
                   gridWidget: ChangeGridCountWidget(
                     currentCount: SettingsController.inst.artistGridCount.value,
                     onTap: () {

@@ -23,8 +23,15 @@ class AlbumsPage extends StatelessWidget {
   final List<String>? albums;
   final int countPerRow;
   final bool animateTiles;
+  final bool enableHero;
 
-  const AlbumsPage({super.key, this.albums, required this.countPerRow, this.animateTiles = true});
+  const AlbumsPage({
+    super.key,
+    this.albums,
+    required this.countPerRow,
+    this.animateTiles = true,
+    this.enableHero = true,
+  });
 
   bool get _shouldAnimate => animateTiles && LibraryTab.albums.shouldAnimateTiles;
 
@@ -41,6 +48,7 @@ class AlbumsPage extends StatelessWidget {
             children: [
               Obx(
                 () => ExpandableBox(
+                  enableHero: enableHero,
                   gridWidget: ChangeGridCountWidget(
                     currentCount: countPerRow,
                     forStaggered: SettingsController.inst.useAlbumStaggeredGridView.value,

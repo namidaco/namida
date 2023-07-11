@@ -530,7 +530,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                               child: TextButton(
                                 onLongPress: () {
                                   ScrollSearchController.inst.unfocusKeyboard();
-                                  NamidaNavigator.inst.navigateDialog(const Dialog(child: PlaybackSettings(isInDialog: true)));
+                                  NamidaNavigator.inst.navigateDialog(dialog: const Dialog(child: PlaybackSettings(isInDialog: true)));
                                 },
                                 onPressed: () async {
                                   VideoController.inst.updateYTLink(Player.inst.nowPlayingTrack.value);
@@ -930,7 +930,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                               child: ElevatedButton(
                                                 onPressed: () {
                                                   NamidaNavigator.inst.navigateDialog(
-                                                    CustomBlurryDialog(
+                                                    dialog: CustomBlurryDialog(
                                                       normalTitleStyle: true,
                                                       title: Language.inst.NEW_TRACKS_ADD,
                                                       child: Column(
@@ -964,8 +964,8 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                               }
                                                               List<DateTime?> dates = [];
                                                               NamidaNavigator.inst.navigateDialog(
-                                                                CustomBlurryDialog(
-                                                                  scale: 0.9,
+                                                                scale: 0.9,
+                                                                dialog: CustomBlurryDialog(
                                                                   title: Language.inst.GENERATE_FROM_DATES,
                                                                   normalTitleStyle: true,
                                                                   insetPadding: const EdgeInsets.symmetric(horizontal: 28.0),
@@ -1019,7 +1019,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                               }
                                                               final RxSet<String> selectedmoods = <String>{}.obs;
                                                               NamidaNavigator.inst.navigateDialog(
-                                                                CustomBlurryDialog(
+                                                                dialog: CustomBlurryDialog(
                                                                   normalTitleStyle: true,
                                                                   insetPadding: const EdgeInsets.symmetric(horizontal: 48.0),
                                                                   title: Language.inst.MOODS,
@@ -1079,7 +1079,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                               final RxInt maxRating = 100.obs;
                                                               final RxInt maxNumberOfTracks = 40.obs;
                                                               NamidaNavigator.inst.navigateDialog(
-                                                                CustomBlurryDialog(
+                                                                dialog: CustomBlurryDialog(
                                                                   normalTitleStyle: true,
                                                                   title: Language.inst.NEW_TRACKS_RATINGS,
                                                                   actions: [

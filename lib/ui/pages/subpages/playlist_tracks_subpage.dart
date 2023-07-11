@@ -202,7 +202,7 @@ class MostPlayedTracksPage extends StatelessWidget {
                   track: tracks[i],
                   queueSource: QueueSource.mostPlayed,
                   playlistName: k_PLAYLIST_NAME_MOST_PLAYED,
-                  onRightAreaTap: () => showTrackListensDialog(track, datesOfListen: listens, enableBlur: true),
+                  onRightAreaTap: () => showTrackListensDialog(track, datesOfListen: listens),
                   trailingWidget: Container(
                     padding: const EdgeInsets.all(6.0),
                     decoration: BoxDecoration(

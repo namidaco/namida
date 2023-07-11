@@ -249,6 +249,7 @@ class Indexer {
   }) async {
     if (forceReIndex) {
       tracksInfoList.clear();
+      SearchSortController.inst.sortMedia(MediaType.track);
       audioFiles = await getAudioFiles();
     }
 

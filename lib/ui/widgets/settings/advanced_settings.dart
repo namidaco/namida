@@ -69,7 +69,7 @@ class AdvancedSettings extends StatelessWidget {
               bool isActive(TrackSource e) => sourcesToDelete.contains(e);
 
               NamidaNavigator.inst.navigateDialog(
-                CustomBlurryDialog(
+                dialog: CustomBlurryDialog(
                   title: Language.inst.CHOOSE,
                   actions: [
                     const CancelButton(),
@@ -83,6 +83,7 @@ class AdvancedSettings extends StatelessWidget {
                     )
                   ],
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ...TrackSource.values.map((e) {
                         return Padding(
@@ -102,6 +103,13 @@ class AdvancedSettings extends StatelessWidget {
                           ),
                         );
                       }),
+                      const SizedBox(height: 8.0),
+                      TextButton.icon(
+                        // onPressed: _pickDatesRangeDialog,
+                        onPressed: () {},
+                        icon: const Icon(Broken.calendar_1),
+                        label: const Text('Between Dates'),
+                      ),
                     ],
                   ),
                 ),
@@ -118,7 +126,7 @@ class AdvancedSettings extends StatelessWidget {
               trailingText: Indexer.inst.artworksSizeInStorage.value.fileSizeFormatted,
               onTap: () {
                 NamidaNavigator.inst.navigateDialog(
-                  CustomBlurryDialog(
+                  dialog: CustomBlurryDialog(
                     isWarning: true,
                     normalTitleStyle: true,
                     bodyText: Language.inst.CLEAR_IMAGE_CACHE_WARNING,
@@ -147,7 +155,7 @@ class AdvancedSettings extends StatelessWidget {
               trailingText: Indexer.inst.waveformsSizeInStorage.value.fileSizeFormatted,
               onTap: () {
                 NamidaNavigator.inst.navigateDialog(
-                  CustomBlurryDialog(
+                  dialog: CustomBlurryDialog(
                     isWarning: true,
                     normalTitleStyle: true,
                     title: Language.inst.CLEAR_WAVEFORM_DATA,
@@ -182,7 +190,7 @@ class AdvancedSettings extends StatelessWidget {
 
                 /// First Dialog
                 NamidaNavigator.inst.navigateDialog(
-                  CustomBlurryDialog(
+                  dialog: CustomBlurryDialog(
                     isWarning: true,
                     normalTitleStyle: true,
                     bodyText: "${_getVideoSubtitleText(allvideo)}\n${Language.inst.CLEAR_VIDEO_CACHE_NOTE}",
@@ -223,7 +231,7 @@ class AdvancedSettings extends StatelessWidget {
   _showChooseVideosToDeleteDialog(List<FileSystemEntity> videoFiles) {
     RxList<FileSystemEntity> videosToDelete = <FileSystemEntity>[].obs;
     NamidaNavigator.inst.navigateDialog(
-      CustomBlurryDialog(
+      dialog: CustomBlurryDialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
         contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
         isWarning: true,
@@ -239,7 +247,7 @@ class AdvancedSettings extends StatelessWidget {
                 return;
               }
               NamidaNavigator.inst.navigateDialog(
-                CustomBlurryDialog(
+                dialog: CustomBlurryDialog(
                   isWarning: true,
                   normalTitleStyle: true,
                   actions: [

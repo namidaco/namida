@@ -62,7 +62,7 @@ class ThemeSetting extends StatelessWidget {
                   backgroundColor: playerStaticColor,
                 ),
                 onTap: () => NamidaNavigator.inst.navigateDialog(
-                  CustomBlurryDialog(
+                  dialog: CustomBlurryDialog(
                     actions: [
                       IconButton(
                         icon: const Icon(Broken.refresh),

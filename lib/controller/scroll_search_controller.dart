@@ -49,14 +49,13 @@ class ScrollSearchController {
     _updateScrollPositions(SettingsController.inst.selectedLibraryTab.value, tab);
     SettingsController.inst.save(selectedLibraryTab: tab);
     NamidaNavigator.inst.navigateOffAll(w, transition: transition);
-    Dimensions.inst.updateDimensions(tab);
   }
 
   int animateChangingGridSize(LibraryTab tab, int currentGridCount, {int minimum = 1, int maximum = 4, bool animateTiles = true}) {
     final n = currentGridCount;
     final nToSave = n < maximum ? n + 1 : minimum;
     _updateScrollPositions(tab, tab);
-    NamidaNavigator.inst.navigateOff(tab.toWidget(nToSave, false), durationInMs: 500);
+    NamidaNavigator.inst.navigateOff(tab.toWidget(nToSave, false, true), durationInMs: 500);
     Dimensions.inst.updateDimensions(tab, gridOverride: nToSave);
     return nToSave;
   }

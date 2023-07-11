@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -11,7 +10,6 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
-import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -40,7 +38,7 @@ class TrackTileCustomization extends StatelessWidget {
               stg.save(forceSquaredTrackThumbnail: !value);
               if (!value && stg.trackThumbnailSizeinList.toInt() != stg.trackListTileHeight.toInt()) {
                 NamidaNavigator.inst.navigateDialog(
-                  CustomBlurryDialog(
+                  dialog: CustomBlurryDialog(
                     normalTitleStyle: true,
                     isWarning: true,
                     bodyText: Language.inst.FORCE_SQUARED_THUMBNAIL_NOTE,
@@ -298,35 +296,29 @@ class TrackTileCustomization extends StatelessWidget {
 
   _showTrackItemsDialog(TrackTilePosition p, TrackTileItem rowItemInSetting) {
     NamidaNavigator.inst.navigateDialog(
-      NamidaBgBlur(
-        blur: 5.0,
-        child: Theme(
-          data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !Get.isDarkMode),
-          child: CustomBlurryDialog(
-            title: Language.inst.CHOOSE,
-            normalTitleStyle: true,
-            insetPadding: const EdgeInsets.all(64.0),
-            child: SizedBox(
-              height: Get.height * 0.5,
-              width: Get.width,
-              child: NamidaListView(
-                padding: EdgeInsets.zero,
-                itemBuilder: (context, i) {
-                  final trItem = TrackTileItem.values[i];
-                  return SmallListTile(
-                    key: ValueKey(i),
-                    title: trItem.toText(),
-                    onTap: () {
-                      SettingsController.inst.updateTrackItemList(p, trItem);
-                      NamidaNavigator.inst.closeDialog();
-                    },
-                    active: rowItemInSetting == trItem,
-                  );
+      dialog: CustomBlurryDialog(
+        title: Language.inst.CHOOSE,
+        normalTitleStyle: true,
+        insetPadding: const EdgeInsets.all(64.0),
+        child: SizedBox(
+          height: Get.height * 0.5,
+          width: Get.width,
+          child: NamidaListView(
+            padding: EdgeInsets.zero,
+            itemBuilder: (context, i) {
+              final trItem = TrackTileItem.values[i];
+              return SmallListTile(
+                key: ValueKey(i),
+                title: trItem.toText(),
+                onTap: () {
+                  SettingsController.inst.updateTrackItemList(p, trItem);
+                  NamidaNavigator.inst.closeDialog();
                 },
-                itemCount: TrackTileItem.values.length,
-                itemExtents: null,
-              ),
-            ),
+                active: rowItemInSetting == trItem,
+              );
+            },
+            itemCount: TrackTileItem.values.length,
+            itemExtents: null,
           ),
         ),
       ),

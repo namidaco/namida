@@ -28,27 +28,33 @@ import 'package:namida/ui/widgets/library/multi_artwork_card.dart';
 import 'package:namida/ui/widgets/library/playlist_tile.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 
+/// By Default, sending tracks to add (i.e: addToPlaylistDialog) will:
+/// 1. Hide Default Playlists.
+/// 2. Hide Grid Widget.
+/// 3. Disable bottom padding.
+/// 4. Disable Scroll Controller.
 class PlaylistsPage extends StatelessWidget {
   final List<Track>? tracksToAdd;
-  final bool displayTopRow;
-  final bool disableBottomPadding;
   final int countPerRow;
   final bool animateTiles;
+  final bool enableHero;
 
   const PlaylistsPage({
     super.key,
     this.tracksToAdd,
-    this.displayTopRow = true,
-    this.disableBottomPadding = false,
     required this.countPerRow,
     this.animateTiles = true,
+    required this.enableHero,
   });
 
   bool get _shouldAnimate => animateTiles && LibraryTab.playlists.shouldAnimateTiles;
 
   @override
   Widget build(BuildContext context) {
-    final scrollController = LibraryTab.playlists.scrollController;
+    final isInsideDialog = tracksToAdd != null;
+    final scrollController = isInsideDialog ? null : LibraryTab.playlists.scrollController;
+    final defaultCardHorizontalPadding = context.width * 0.045;
+    final defaultCardHorizontalPaddingCenter = context.width * 0.035;
 
     return BackgroundWrapper(
       child: CupertinoScrollbar(
@@ -58,13 +64,16 @@ class PlaylistsPage extends StatelessWidget {
             children: [
               Obx(
                 () => ExpandableBox(
-                  gridWidget: ChangeGridCountWidget(
-                    currentCount: SettingsController.inst.playlistGridCount.value,
-                    onTap: () {
-                      final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.playlists, countPerRow);
-                      SettingsController.inst.save(playlistGridCount: newCount);
-                    },
-                  ),
+                  enableHero: enableHero,
+                  gridWidget: isInsideDialog
+                      ? null
+                      : ChangeGridCountWidget(
+                          currentCount: SettingsController.inst.playlistGridCount.value,
+                          onTap: () {
+                            final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.playlists, countPerRow);
+                            SettingsController.inst.save(playlistGridCount: newCount);
+                          },
+                        ),
                   isBarVisible: LibraryTab.playlists.isBarVisible,
                   showSearchBox: LibraryTab.playlists.isSearchBoxVisible,
                   leftText: SearchSortController.inst.playlistSearchList.length.displayPlaylistKeyword,
@@ -88,98 +97,128 @@ class PlaylistsPage extends StatelessWidget {
                   () => CustomScrollView(
                     controller: scrollController,
                     slivers: [
-                      if (displayTopRow)
+                      if (!isInsideDialog)
                         SliverToBoxAdapter(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                const SizedBox(
-                                  width: 12.0,
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    PlaylistController.inst.playlistsMap.length.displayPlaylistKeyword,
-                                    style: context.textTheme.displayLarge,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+                          child: NamidaHero(
+                            tag: 'PlaylistPage_TopRow',
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  const SizedBox(
+                                    width: 12.0,
                                   ),
-                                ),
-                                const FittedBox(
-                                  child: GeneratePlaylistButton(),
-                                ),
-                                const SizedBox(
-                                  width: 8.0,
-                                ),
-                                const FittedBox(
-                                  child: CreatePlaylistButton(),
-                                ),
-                                const SizedBox(
-                                  width: 8.0,
-                                ),
-                              ],
+                                  Expanded(
+                                    child: Text(
+                                      PlaylistController.inst.playlistsMap.length.displayPlaylistKeyword,
+                                      style: context.textTheme.displayLarge,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const FittedBox(
+                                    child: GeneratePlaylistButton(),
+                                  ),
+                                  const SizedBox(
+                                    width: 8.0,
+                                  ),
+                                  const FittedBox(
+                                    child: CreatePlaylistButton(),
+                                  ),
+                                  const SizedBox(
+                                    width: 8.0,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       const SliverPadding(padding: EdgeInsets.only(top: 6.0)),
 
                       /// Default Playlists.
-                      if (displayTopRow)
+                      if (!isInsideDialog)
                         SliverToBoxAdapter(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Column(
-                                children: [
-                                  Obx(
-                                    () => DefaultPlaylistCard(
-                                      width: context.width / 2.4,
-                                      colorScheme: Colors.grey,
-                                      icon: Broken.refresh,
-                                      title: Language.inst.HISTORY,
-                                      text: HistoryController.inst.historyTracksLength.toString(),
-                                      onTap: () => NamidaOnTaps.inst.onHistoryPlaylistTap(),
+                          child: SizedBox(
+                            width: context.width,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(height: defaultCardHorizontalPadding * 0.5),
+                                Row(
+                                  children: [
+                                    SizedBox(width: defaultCardHorizontalPadding),
+                                    Expanded(
+                                      child: Obx(
+                                        () => NamidaHero(
+                                          tag: 'DPC_history',
+                                          child: DefaultPlaylistCard(
+                                            colorScheme: Colors.grey,
+                                            icon: Broken.refresh,
+                                            title: Language.inst.HISTORY,
+                                            text: HistoryController.inst.historyTracksLength.toString(),
+                                            onTap: () => NamidaOnTaps.inst.onHistoryPlaylistTap(),
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  Obx(
-                                    () => DefaultPlaylistCard(
-                                      width: context.width / 2.4,
-                                      colorScheme: Colors.red,
-                                      icon: Broken.heart,
-                                      title: Language.inst.FAVOURITES,
-                                      text: PlaylistController.inst.favouritesPlaylist.value.tracks.length.toString(),
-                                      onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(k_PLAYLIST_NAME_FAV),
+                                    SizedBox(width: defaultCardHorizontalPaddingCenter),
+                                    Expanded(
+                                      child: Obx(
+                                        () => NamidaHero(
+                                          tag: 'DPC_mostplayed',
+                                          child: DefaultPlaylistCard(
+                                            colorScheme: Colors.green,
+                                            icon: Broken.award,
+                                            title: Language.inst.MOST_PLAYED,
+                                            text: HistoryController.inst.topTracksMapListens.length.toString(),
+                                            onTap: () => NamidaOnTaps.inst.onMostPlayedPlaylistTap(),
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(width: 12.0),
-                              Column(
-                                children: [
-                                  Obx(
-                                    () => DefaultPlaylistCard(
-                                      width: context.width / 2.4,
-                                      colorScheme: Colors.green,
-                                      icon: Broken.award,
-                                      title: Language.inst.MOST_PLAYED,
-                                      text: HistoryController.inst.topTracksMapListens.length.toString(),
-                                      onTap: () => NamidaOnTaps.inst.onMostPlayedPlaylistTap(),
+                                    SizedBox(width: defaultCardHorizontalPadding),
+                                  ],
+                                ),
+                                SizedBox(height: defaultCardHorizontalPaddingCenter),
+                                Row(
+                                  children: [
+                                    SizedBox(width: defaultCardHorizontalPadding),
+                                    Expanded(
+                                      child: Obx(
+                                        () => NamidaHero(
+                                          tag: 'DPC_favs',
+                                          child: DefaultPlaylistCard(
+                                            colorScheme: Colors.red,
+                                            icon: Broken.heart,
+                                            title: Language.inst.FAVOURITES,
+                                            text: PlaylistController.inst.favouritesPlaylist.value.tracks.length.toString(),
+                                            onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(k_PLAYLIST_NAME_FAV),
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  Obx(
-                                    () => DefaultPlaylistCard(
-                                      width: context.width / 2.4,
-                                      colorScheme: Colors.blue,
-                                      icon: Broken.driver,
-                                      title: Language.inst.QUEUES,
-                                      text: QueueController.inst.queuesMap.value.length.toString(),
-                                      onTap: () => NamidaNavigator.inst.navigateTo(const QueuesPage()),
+                                    SizedBox(width: defaultCardHorizontalPaddingCenter),
+                                    Expanded(
+                                      child: Obx(
+                                        () => NamidaHero(
+                                          tag: 'DPC_queues',
+                                          child: DefaultPlaylistCard(
+                                            colorScheme: Colors.blue,
+                                            icon: Broken.driver,
+                                            title: Language.inst.QUEUES,
+                                            text: QueueController.inst.queuesMap.value.length.toString(),
+                                            onTap: () => NamidaNavigator.inst.navigateTo(const QueuesPage()),
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                    SizedBox(width: defaultCardHorizontalPadding),
+                                  ],
+                                ),
+                                SizedBox(height: defaultCardHorizontalPadding * 0.5),
+                              ],
+                            ),
                           ),
                         ),
                       const SliverPadding(padding: EdgeInsets.only(top: 10.0)),
@@ -228,7 +267,7 @@ class PlaylistsPage extends StatelessWidget {
                             );
                           },
                         ),
-                      if (!disableBottomPadding)
+                      if (!isInsideDialog)
                         const SliverPadding(
                           padding: EdgeInsets.only(bottom: kBottomPadding),
                         )

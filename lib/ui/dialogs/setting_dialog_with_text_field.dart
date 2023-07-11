@@ -60,7 +60,7 @@ void showSettingDialogWithTextField({
   }
 
   NamidaNavigator.inst.navigateDialog(
-    Form(
+    dialog: Form(
       key: formKey,
       child: CustomBlurryDialog(
         title: title,

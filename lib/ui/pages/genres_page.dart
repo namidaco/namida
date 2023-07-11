@@ -22,7 +22,14 @@ import 'package:namida/ui/widgets/sort_by_button.dart';
 class GenresPage extends StatelessWidget {
   final int countPerRow;
   final bool animateTiles;
-  const GenresPage({super.key, required this.countPerRow, this.animateTiles = true});
+  final bool enableHero;
+
+  const GenresPage({
+    super.key,
+    required this.countPerRow,
+    this.animateTiles = true,
+    required this.enableHero,
+  });
 
   bool get _shouldAnimate => animateTiles && LibraryTab.genres.shouldAnimateTiles;
 
@@ -38,6 +45,7 @@ class GenresPage extends StatelessWidget {
             () => Column(
               children: [
                 ExpandableBox(
+                  enableHero: enableHero,
                   gridWidget: ChangeGridCountWidget(
                     currentCount: SettingsController.inst.genreGridCount.value,
                     onTap: () {

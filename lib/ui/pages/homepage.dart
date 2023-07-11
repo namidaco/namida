@@ -202,6 +202,7 @@ class ArtistSearchResultsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ArtistsPage(
+      enableHero: false,
       artists: SearchSortController.inst.artistSearchTemp,
       countPerRow: SettingsController.inst.artistGridCount.value,
     );

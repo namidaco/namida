@@ -44,7 +44,7 @@ class PlaybackSettings extends StatelessWidget {
             }
 
             NamidaNavigator.inst.navigateDialog(
-              CustomBlurryDialog(
+              dialog: CustomBlurryDialog(
                 title: Language.inst.VIDEO_PLAYBACK_SOURCE,
                 actions: [
                   IconButton(
@@ -169,7 +169,7 @@ class PlaybackSettings extends StatelessWidget {
             }
 
             NamidaNavigator.inst.navigateDialog(
-              CustomBlurryDialog(
+              dialog: CustomBlurryDialog(
                 title: Language.inst.VIDEO_QUALITY,
                 actions: [
                   // IconButton(
@@ -385,7 +385,7 @@ class PlaybackSettings extends StatelessWidget {
           icon: Broken.timer,
           title: Language.inst.MIN_VALUE_TO_COUNT_TRACK_LISTEN,
           onTap: () => NamidaNavigator.inst.navigateDialog(
-            CustomBlurryDialog(
+            dialog: CustomBlurryDialog(
               title: Language.inst.CHOOSE,
               child: Column(
                 children: [

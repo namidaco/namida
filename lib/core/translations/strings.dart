@@ -202,7 +202,6 @@ class Language {
   String get DONT_RESTORE_POSITION => 'Don\'t restore';
 
   /// Main
-  String get EXIT_APP => 'Exit';
   String get EXIT_APP_SUBTITLE => 'Tap again to exit';
   String get PERMISSION_UPDATE => 'Permission Update';
   String get STORAGE_PERMISSION_DENIED => 'Permission Denied';

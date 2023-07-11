@@ -10,7 +10,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 void showTrackClearDialog(List<Track> tracks) {
   final isSingle = tracks.length == 1;
   NamidaNavigator.inst.navigateDialog(
-    CustomBlurryDialog(
+    dialog: CustomBlurryDialog(
       normalTitleStyle: true,
       icon: Broken.trash,
       title: isSingle ? Language.inst.CLEAR_TRACK_ITEM : Language.inst.CLEAR_TRACK_ITEM_MULTIPLE.replaceFirst('_NUMBER_', tracks.length.toString()),

@@ -73,6 +73,7 @@ class TrackTile extends StatelessWidget {
           comingFromQueue: comingFromQueue,
           trackWithDate: trackWithDate,
         );
+
     void triggerTrackInfoDialog() => showTrackInfoDialog(track, true, comingFromQueue: comingFromQueue, index: index);
 
     final willSleepAfterThis = queueSource == QueueSource.playerQueue && Player.inst.isSleepingTrack(index);

@@ -127,7 +127,7 @@ class NamidaDialogs {
     // -- Delete Empty Playlists --
     if (playlist.tracks.isEmpty) {
       NamidaNavigator.inst.navigateDialog(
-        CustomBlurryDialog(
+        dialog: CustomBlurryDialog(
           title: Language.inst.WARNING,
           bodyText: '${Language.inst.DELETE_PLAYLIST}: "${playlist.name}"?',
           actions: [

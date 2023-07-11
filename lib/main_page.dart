@@ -37,7 +37,7 @@ class MainPageWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () => AnimatedTheme(
-        duration: const Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 300),
         data: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme.value, !context.isDarkMode),
         child: InnerDrawer(
           key: NamidaNavigator.inst.innerDrawerKey,
@@ -117,7 +117,7 @@ class MainPageWrapper extends StatelessWidget {
                     final RxInt minutes = Player.inst.sleepAfterMin.value.obs;
                     final RxInt tracks = Player.inst.sleepAfterTracks.value.obs;
                     NamidaNavigator.inst.navigateDialog(
-                      CustomBlurryDialog(
+                      dialog: CustomBlurryDialog(
                         title: Language.inst.SLEEP_AFTER,
                         icon: Broken.timer_1,
                         normalTitleStyle: true,

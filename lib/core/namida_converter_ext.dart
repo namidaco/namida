@@ -67,26 +67,48 @@ extension LibraryTabUtils on LibraryTab {
 
   int toInt() => SettingsController.inst.libraryTabs.indexOf(this);
 
-  Widget toWidget([int? gridCount, bool animateTiles = true]) {
-    if (this == LibraryTab.albums) {
-      return AlbumsPage(countPerRow: gridCount ?? SettingsController.inst.albumGridCount.value, animateTiles: animateTiles);
+  Widget toWidget([int? gridCount, bool animateTiles = true, bool enableHero = true]) {
+    Widget page = const SizedBox();
+    switch (this) {
+      case LibraryTab.tracks:
+        page = const TracksPage();
+        break;
+      case LibraryTab.albums:
+        page = AlbumsPage(
+          countPerRow: gridCount ?? SettingsController.inst.albumGridCount.value,
+          animateTiles: animateTiles,
+          enableHero: enableHero,
+        );
+        break;
+      case LibraryTab.artists:
+        page = ArtistsPage(
+          countPerRow: gridCount ?? SettingsController.inst.artistGridCount.value,
+          animateTiles: animateTiles,
+          enableHero: enableHero,
+        );
+        break;
+      case LibraryTab.genres:
+        page = GenresPage(
+          countPerRow: gridCount ?? SettingsController.inst.genreGridCount.value,
+          animateTiles: animateTiles,
+          enableHero: enableHero,
+        );
+        break;
+      case LibraryTab.playlists:
+        page = PlaylistsPage(
+          countPerRow: gridCount ?? SettingsController.inst.playlistGridCount.value,
+          animateTiles: animateTiles,
+          enableHero: enableHero,
+        );
+        break;
+      case LibraryTab.folders:
+        page = const FoldersPage();
+        break;
+      default:
+        null;
     }
-    if (this == LibraryTab.tracks) {
-      return const TracksPage();
-    }
-    if (this == LibraryTab.artists) {
-      return ArtistsPage(countPerRow: gridCount ?? SettingsController.inst.artistGridCount.value, animateTiles: animateTiles);
-    }
-    if (this == LibraryTab.genres) {
-      return GenresPage(countPerRow: gridCount ?? SettingsController.inst.genreGridCount.value, animateTiles: animateTiles);
-    }
-    if (this == LibraryTab.playlists) {
-      return PlaylistsPage(countPerRow: gridCount ?? SettingsController.inst.playlistGridCount.value, animateTiles: animateTiles);
-    }
-    if (this == LibraryTab.folders) {
-      return const FoldersPage();
-    }
-    return const SizedBox();
+
+    return page;
   }
 
   IconData toIcon() {

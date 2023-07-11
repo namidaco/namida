@@ -14,8 +14,12 @@ import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 class AlbumTracksPage extends StatelessWidget {
   final String name;
   final List<Track> tracks;
-  final Color colorScheme;
-  const AlbumTracksPage({super.key, required this.name, required this.tracks, required this.colorScheme});
+
+  const AlbumTracksPage({
+    super.key,
+    required this.name,
+    required this.tracks,
+  });
 
   @override
   Widget build(BuildContext context) {

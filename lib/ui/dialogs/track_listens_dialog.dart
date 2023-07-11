@@ -9,25 +9,25 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
-import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-void showTrackListensDialog(Track track, {List<int>? datesOfListen, ThemeData? theme, bool enableBlur = false}) async {
+void showTrackListensDialog(Track track, {List<int>? datesOfListen, Color? colorScheme}) async {
   datesOfListen ??= HistoryController.inst.topTracksMapListens[track] ?? [];
-  theme ??= AppThemes.inst.getAppTheme(await CurrentColor.inst.getTrackDelightnedColor(track), !Get.isDarkMode);
+  final color = colorScheme ?? await CurrentColor.inst.getTrackDelightnedColor(track);
 
   if (datesOfListen.isEmpty) return;
   datesOfListen.sortByReverse((e) => e);
 
   NamidaNavigator.inst.navigateDialog(
-    CustomBlurryDialog(
+    colorScheme: color,
+    lighterDialogColor: false,
+    dialogBuilder: (theme) => CustomBlurryDialog(
       normalTitleStyle: true,
       title: Language.inst.TOTAL_LISTENS,
-      enableBlur: enableBlur,
       trailingWidgets: [
         Text(
-          '${datesOfListen.length}',
+          '${datesOfListen!.length}',
           style: Get.textTheme.displaySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
         ),
       ],
@@ -46,7 +46,7 @@ void showTrackListensDialog(Track track, {List<int>? datesOfListen, ThemeData? t
                   padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 1.0),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                    color: theme?.cardColor,
+                    color: theme.cardColor,
                   ),
                   child: Text((datesOfListen.length - i).toString())),
               onTap: () async {

@@ -39,7 +39,7 @@ class MiniplayerCustomization extends StatelessWidget {
                   SettingsController.inst.save(enablePartyModeInMiniplayer: true);
                 } else {
                   NamidaNavigator.inst.navigateDialog(
-                    CustomBlurryDialog(
+                    dialog: CustomBlurryDialog(
                       normalTitleStyle: true,
                       title: 'uwu',
                       actions: [
@@ -63,7 +63,7 @@ class MiniplayerCustomization extends StatelessWidget {
                             onTap: () {
                               NamidaNavigator.inst.closeDialog();
                               NamidaNavigator.inst.navigateDialog(
-                                CustomBlurryDialog(
+                                dialog: CustomBlurryDialog(
                                   normalTitleStyle: true,
                                   title: '!!',
                                   bodyText: "EH? YOU DON'T WANT TO SUPPORT?",
@@ -76,7 +76,7 @@ class MiniplayerCustomization extends StatelessWidget {
                                       onPressed: () {
                                         NamidaNavigator.inst.closeDialog();
                                         NamidaNavigator.inst.navigateDialog(
-                                          CustomBlurryDialog(
+                                          dialog: CustomBlurryDialog(
                                             title: 'kechi',
                                             bodyText: 'hidoii ಥ_ಥ here use it as much as u can, dw im not upset or anything ^^, or am i?',
                                             actions: [

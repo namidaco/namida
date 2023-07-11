@@ -70,7 +70,7 @@ class ExtrasSettings extends StatelessWidget {
               title: Language.inst.DEFAULT_LIBRARY_TAB,
               trailingText: SettingsController.inst.autoLibraryTab.value ? Language.inst.AUTO : SettingsController.inst.selectedLibraryTab.value.toText(),
               onTap: () => NamidaNavigator.inst.navigateDialog(
-                CustomBlurryDialog(
+                dialog: CustomBlurryDialog(
                   title: Language.inst.DEFAULT_LIBRARY_TAB,
                   actions: [
                     ElevatedButton(
@@ -127,7 +127,7 @@ class ExtrasSettings extends StatelessWidget {
                 title: Language.inst.LIBRARY_TABS,
                 trailingText: "${SettingsController.inst.libraryTabs.length}",
                 onTap: () => NamidaNavigator.inst.navigateDialog(
-                  CustomBlurryDialog(
+                  dialog: CustomBlurryDialog(
                     title: Language.inst.LIBRARY_TABS,
                     actions: [
                       ElevatedButton(
@@ -222,7 +222,7 @@ class ExtrasSettings extends StatelessWidget {
               title: Language.inst.FILTER_TRACKS_BY,
               trailingText: "${SettingsController.inst.trackSearchFilter.length}",
               onTap: () => NamidaNavigator.inst.navigateDialog(
-                Obx(
+                dialog: Obx(
                   () {
                     return CustomBlurryDialog(
                       title: Language.inst.FILTER_TRACKS_BY,
@@ -339,7 +339,7 @@ class ExtrasSettings extends StatelessWidget {
             onTap: () async {
               if (WaveformController.inst.generatingAllWaveforms.value) {
                 NamidaNavigator.inst.navigateDialog(
-                  CustomBlurryDialog(
+                  dialog: CustomBlurryDialog(
                     title: Language.inst.NOTE,
                     bodyText: Language.inst.FORCE_STOP_WAVEFORM_GENERATION,
                     actions: [
@@ -356,7 +356,7 @@ class ExtrasSettings extends StatelessWidget {
                 );
               } else {
                 NamidaNavigator.inst.navigateDialog(
-                  CustomBlurryDialog(
+                  dialog: CustomBlurryDialog(
                     title: Language.inst.NOTE,
                     bodyText: Language.inst.GENERATE_ALL_WAVEFORM_DATA_SUBTITLE
                         .replaceFirst('_WAVEFORM_CURRENT_LENGTH_', '${Indexer.inst.waveformsInStorage.value}')
@@ -390,7 +390,7 @@ class ExtrasSettings extends StatelessWidget {
             onTap: () async {
               if (CurrentColor.inst.generatingAllColorPalettes.value) {
                 NamidaNavigator.inst.navigateDialog(
-                  CustomBlurryDialog(
+                  dialog: CustomBlurryDialog(
                     title: Language.inst.NOTE,
                     bodyText: Language.inst.FORCE_STOP_COLOR_PALETTE_GENERATION,
                     actions: [
@@ -407,7 +407,7 @@ class ExtrasSettings extends StatelessWidget {
                 );
               } else {
                 NamidaNavigator.inst.navigateDialog(
-                  CustomBlurryDialog(
+                  dialog: CustomBlurryDialog(
                     title: Language.inst.NOTE,
                     bodyText: Language.inst.EXTRACT_ALL_COLOR_PALETTES_SUBTITLE
                         .replaceFirst('_REMAINING_COLOR_PALETTES_', '${allTracksInLibrary.length - Indexer.inst.colorPalettesInStorage.value}'),

@@ -30,7 +30,7 @@ class IndexerSettings extends StatelessWidget {
       return;
     }
     NamidaNavigator.inst.navigateDialog(
-      CustomBlurryDialog(
+      dialog: CustomBlurryDialog(
         title: Language.inst.NOTE,
         bodyText: Language.inst.PROMPT_INDEXING_REFRESH.replaceFirst('_NEW_FILES_', newPathsLength.toString()).replaceFirst(
               '_DELETED_FILES_',
@@ -213,7 +213,7 @@ class IndexerSettings extends StatelessWidget {
             subtitle: Language.inst.RE_INDEX_SUBTITLE,
             onTap: () async {
               NamidaNavigator.inst.navigateDialog(
-                CustomBlurryDialog(
+                dialog: CustomBlurryDialog(
                   normalTitleStyle: true,
                   isWarning: true,
                   actions: [
@@ -278,7 +278,7 @@ class IndexerSettings extends StatelessWidget {
                           );
                         } else {
                           NamidaNavigator.inst.navigateDialog(
-                            CustomBlurryDialog(
+                            dialog: CustomBlurryDialog(
                               normalTitleStyle: true,
                               title: Language.inst.WARNING,
                               icon: Broken.warning_2,
@@ -379,15 +379,15 @@ class IndexerSettings extends StatelessWidget {
     final RxBool updatingLibrary = false.obs;
 
     NamidaNavigator.inst.navigateDialog(
+      onDismissing: isBlackListDialog
+          ? null
+          : () async {
+              updatingLibrary.value = true;
+              await Indexer.inst.prepareTracksFile();
+            },
       durationInMs: 200,
-      CustomBlurryDialog(
+      dialog: CustomBlurryDialog(
         title: title,
-        onDismissing: isBlackListDialog
-            ? null
-            : () async {
-                updatingLibrary.value = true;
-                await Indexer.inst.prepareTracksFile();
-              },
         actions: [
           if (!isBlackListDialog)
             ElevatedButton(

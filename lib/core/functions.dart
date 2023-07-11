@@ -5,16 +5,17 @@ import 'package:namida/class/folder.dart';
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -34,27 +35,24 @@ class NamidaOnTaps {
     final tracks = tracksPre ?? name.getArtistTracks();
 
     final albums = name.getArtistAlbums();
-    final color = await CurrentColor.inst.getTrackDelightnedColor(tracks[tracks.indexOfImage]);
 
     NamidaNavigator.inst.navigateTo(
       ArtistTracksPage(
         name: name,
-        colorScheme: color,
         tracks: tracks,
         albums: albums,
       ),
     );
+    Dimensions.inst.updateDimensions(LibraryTab.albums, gridOverride: Dimensions.albumInsideArtistGridCount);
   }
 
   Future<void> onAlbumTap(String album) async {
     ScrollSearchController.inst.isGlobalSearchMenuShown.value = false;
     final tracks = album.getAlbumTracks();
-    final color = await CurrentColor.inst.getTrackDelightnedColor(tracks[tracks.indexOfImage]);
 
     NamidaNavigator.inst.navigateTo(
       AlbumTracksPage(
         name: album,
-        colorScheme: color,
         tracks: tracks,
       ),
     );
@@ -93,6 +91,7 @@ class NamidaOnTaps {
 
     if (NamidaNavigator.inst.currentRoute?.route == RouteType.SUBPAGE_historyTracks) {
       NamidaNavigator.inst.closeAllDialogs();
+      MiniPlayerController.inst.snapToMini();
       jump();
     } else {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {

@@ -239,169 +239,176 @@ class MultiArtworks extends StatelessWidget {
   final Object heroTag;
   final bool disableHero;
   final double iconSize;
-  const MultiArtworks(
-      {super.key, required this.paths, required this.thumbnailSize, this.bgcolor, this.borderRadius = 8.0, required this.heroTag, this.disableHero = false, this.iconSize = 29.0});
+
+  const MultiArtworks({
+    super.key,
+    required this.paths,
+    required this.thumbnailSize,
+    this.bgcolor,
+    this.borderRadius = 8.0,
+    required this.heroTag,
+    this.disableHero = false,
+    this.iconSize = 29.0,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final child = Container(
-      height: thumbnailSize,
-      width: thumbnailSize,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(borderRadius.multipliedRadius)),
-      child: paths.isEmpty
-          ? ArtworkWidget(
-              key: UniqueKey(),
-              thumbnailSize: thumbnailSize,
-              track: allTracksInLibrary.firstOrNull,
-              path: allTracksInLibrary.firstOrNull?.pathToImage,
-              forceSquared: true,
-              blur: 0,
-              forceDummyArtwork: true,
-              bgcolor: bgcolor,
-              borderRadius: borderRadius,
-              iconSize: iconSize,
-            )
-          : paths.length == 1
-              ? ArtworkWidget(
-                  key: UniqueKey(),
-                  thumbnailSize: thumbnailSize,
-                  path: paths.elementAt(0),
-                  track: null,
-                  forceSquared: true,
-                  blur: 0,
-                  borderRadius: 0,
-                  compressed: false,
-                )
-              : paths.length == 2
-                  ? Row(
-                      children: [
-                        ArtworkWidget(
-                          key: UniqueKey(),
-                          track: null,
-                          thumbnailSize: thumbnailSize / 2,
-                          height: thumbnailSize,
-                          path: paths.elementAt(0),
-                          forceSquared: true,
-                          blur: 0,
-                          borderRadius: 0,
-                          iconSize: iconSize - 2.0,
-                        ),
-                        ArtworkWidget(
-                          key: UniqueKey(),
-                          track: null,
-                          thumbnailSize: thumbnailSize / 2,
-                          height: thumbnailSize,
-                          path: paths.elementAt(1),
-                          forceSquared: true,
-                          blur: 0,
-                          borderRadius: 0,
-                          iconSize: iconSize - 2.0,
-                        ),
-                      ],
-                    )
-                  : paths.length == 3
-                      ? Row(
-                          children: [
-                            Column(
-                              children: [
-                                ArtworkWidget(
-                                  key: UniqueKey(),
-                                  track: null,
-                                  thumbnailSize: thumbnailSize / 2,
-                                  path: paths.elementAt(0),
-                                  forceSquared: true,
-                                  blur: 0,
-                                  borderRadius: 0,
-                                  iconSize: iconSize - 2.0,
-                                ),
-                                ArtworkWidget(
-                                  key: UniqueKey(),
-                                  track: null,
-                                  thumbnailSize: thumbnailSize / 2,
-                                  path: paths.elementAt(1),
-                                  forceSquared: true,
-                                  blur: 0,
-                                  borderRadius: 0,
-                                  iconSize: iconSize - 2.0,
-                                ),
-                              ],
-                            ),
-                            Column(
-                              children: [
-                                ArtworkWidget(
-                                  key: UniqueKey(),
-                                  track: null,
-                                  thumbnailSize: thumbnailSize / 2,
-                                  path: paths.elementAt(2),
-                                  forceSquared: true,
-                                  blur: 0,
-                                  borderRadius: 0,
-                                  height: thumbnailSize,
-                                  iconSize: iconSize,
-                                ),
-                              ],
-                            ),
-                          ],
-                        )
-                      : Column(
-                          children: [
-                            Row(
-                              children: [
-                                ArtworkWidget(
-                                  key: UniqueKey(),
-                                  track: null,
-                                  thumbnailSize: thumbnailSize / 2,
-                                  path: paths.elementAt(0),
-                                  forceSquared: true,
-                                  blur: 0,
-                                  borderRadius: 0,
-                                  iconSize: iconSize - 3.0,
-                                ),
-                                ArtworkWidget(
-                                  key: UniqueKey(),
-                                  track: null,
-                                  thumbnailSize: thumbnailSize / 2,
-                                  path: paths.elementAt(1),
-                                  forceSquared: true,
-                                  blur: 0,
-                                  borderRadius: 0,
-                                  iconSize: iconSize - 3.0,
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                ArtworkWidget(
-                                  key: UniqueKey(),
-                                  track: null,
-                                  thumbnailSize: thumbnailSize / 2,
-                                  path: paths.elementAt(2),
-                                  forceSquared: true,
-                                  blur: 0,
-                                  borderRadius: 0,
-                                  iconSize: iconSize - 3.0,
-                                ),
-                                ArtworkWidget(
-                                  key: UniqueKey(),
-                                  track: null,
-                                  thumbnailSize: thumbnailSize / 2,
-                                  path: paths.elementAt(3),
-                                  forceSquared: true,
-                                  blur: 0,
-                                  borderRadius: 0,
-                                  iconSize: iconSize - 3.0,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+    return NamidaHero(
+      tag: heroTag,
+      enabled: !disableHero,
+      child: Container(
+        height: thumbnailSize,
+        width: thumbnailSize,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(borderRadius.multipliedRadius)),
+        child: paths.isEmpty
+            ? ArtworkWidget(
+                key: UniqueKey(),
+                thumbnailSize: thumbnailSize,
+                track: allTracksInLibrary.firstOrNull,
+                path: allTracksInLibrary.firstOrNull?.pathToImage,
+                forceSquared: true,
+                blur: 0,
+                forceDummyArtwork: true,
+                bgcolor: bgcolor,
+                borderRadius: borderRadius,
+                iconSize: iconSize,
+              )
+            : paths.length == 1
+                ? ArtworkWidget(
+                    key: UniqueKey(),
+                    thumbnailSize: thumbnailSize,
+                    path: paths.elementAt(0),
+                    track: null,
+                    forceSquared: true,
+                    blur: 0,
+                    borderRadius: 0,
+                    compressed: false,
+                  )
+                : paths.length == 2
+                    ? Row(
+                        children: [
+                          ArtworkWidget(
+                            key: UniqueKey(),
+                            track: null,
+                            thumbnailSize: thumbnailSize / 2,
+                            height: thumbnailSize,
+                            path: paths.elementAt(0),
+                            forceSquared: true,
+                            blur: 0,
+                            borderRadius: 0,
+                            iconSize: iconSize - 2.0,
+                          ),
+                          ArtworkWidget(
+                            key: UniqueKey(),
+                            track: null,
+                            thumbnailSize: thumbnailSize / 2,
+                            height: thumbnailSize,
+                            path: paths.elementAt(1),
+                            forceSquared: true,
+                            blur: 0,
+                            borderRadius: 0,
+                            iconSize: iconSize - 2.0,
+                          ),
+                        ],
+                      )
+                    : paths.length == 3
+                        ? Row(
+                            children: [
+                              Column(
+                                children: [
+                                  ArtworkWidget(
+                                    key: UniqueKey(),
+                                    track: null,
+                                    thumbnailSize: thumbnailSize / 2,
+                                    path: paths.elementAt(0),
+                                    forceSquared: true,
+                                    blur: 0,
+                                    borderRadius: 0,
+                                    iconSize: iconSize - 2.0,
+                                  ),
+                                  ArtworkWidget(
+                                    key: UniqueKey(),
+                                    track: null,
+                                    thumbnailSize: thumbnailSize / 2,
+                                    path: paths.elementAt(1),
+                                    forceSquared: true,
+                                    blur: 0,
+                                    borderRadius: 0,
+                                    iconSize: iconSize - 2.0,
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                children: [
+                                  ArtworkWidget(
+                                    key: UniqueKey(),
+                                    track: null,
+                                    thumbnailSize: thumbnailSize / 2,
+                                    path: paths.elementAt(2),
+                                    forceSquared: true,
+                                    blur: 0,
+                                    borderRadius: 0,
+                                    height: thumbnailSize,
+                                    iconSize: iconSize,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          )
+                        : Column(
+                            children: [
+                              Row(
+                                children: [
+                                  ArtworkWidget(
+                                    key: UniqueKey(),
+                                    track: null,
+                                    thumbnailSize: thumbnailSize / 2,
+                                    path: paths.elementAt(0),
+                                    forceSquared: true,
+                                    blur: 0,
+                                    borderRadius: 0,
+                                    iconSize: iconSize - 3.0,
+                                  ),
+                                  ArtworkWidget(
+                                    key: UniqueKey(),
+                                    track: null,
+                                    thumbnailSize: thumbnailSize / 2,
+                                    path: paths.elementAt(1),
+                                    forceSquared: true,
+                                    blur: 0,
+                                    borderRadius: 0,
+                                    iconSize: iconSize - 3.0,
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  ArtworkWidget(
+                                    key: UniqueKey(),
+                                    track: null,
+                                    thumbnailSize: thumbnailSize / 2,
+                                    path: paths.elementAt(2),
+                                    forceSquared: true,
+                                    blur: 0,
+                                    borderRadius: 0,
+                                    iconSize: iconSize - 3.0,
+                                  ),
+                                  ArtworkWidget(
+                                    key: UniqueKey(),
+                                    track: null,
+                                    thumbnailSize: thumbnailSize / 2,
+                                    path: paths.elementAt(3),
+                                    forceSquared: true,
+                                    blur: 0,
+                                    borderRadius: 0,
+                                    iconSize: iconSize - 3.0,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+      ),
     );
-    return disableHero
-        ? child
-        : NamidaHero(
-            tag: heroTag,
-            child: child,
-          );
   }
 }

@@ -43,6 +43,7 @@ class TracksPage extends StatelessWidget {
           },
           widgetsInColumn: [
             ExpandableBox(
+              enableHero: false,
               isBarVisible: LibraryTab.tracks.isBarVisible,
               showSearchBox: LibraryTab.tracks.isSearchBoxVisible,
               displayloadingIndicator: Indexer.inst.isIndexing.value,

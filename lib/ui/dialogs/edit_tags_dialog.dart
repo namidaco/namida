@@ -86,8 +86,8 @@ Future<void> showEditTrackTagsDialog(Track track) async {
   }
 
   NamidaNavigator.inst.navigateDialog(
-    CustomBlurryDialog(
-      scale: 0.94,
+    scale: 0.94,
+    dialog: CustomBlurryDialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
       normalTitleStyle: true,
       scrollable: false,
@@ -101,8 +101,8 @@ Future<void> showEditTrackTagsDialog(Track track) async {
             subList.removeWhere((element) => SettingsController.inst.tagFieldsToEdit.contains(element));
 
             NamidaNavigator.inst.navigateDialog(
-              CustomBlurryDialog(
-                scale: 0.94,
+              scale: 0.94,
+              dialog: CustomBlurryDialog(
                 title: Language.inst.TAG_FIELDS,
                 child: SizedBox(
                   width: Get.width,
@@ -508,8 +508,8 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
   }
 
   NamidaNavigator.inst.navigateDialog(
-    CustomBlurryDialog(
-      scale: 0.94,
+    scale: 0.94,
+    dialog: CustomBlurryDialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
       normalTitleStyle: true,
       scrollable: false,
@@ -519,7 +519,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
         ElevatedButton.icon(
           onPressed: () {
             NamidaNavigator.inst.navigateDialog(
-              CustomBlurryDialog(
+              dialog: CustomBlurryDialog(
                 insetPadding: const EdgeInsets.all(42.0),
                 contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
                 isWarning: true,
@@ -557,10 +557,10 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                       final RxString updatingLibrary = '?'.obs;
 
                       NamidaNavigator.inst.navigateDialog(
-                        Obx(
+                        tapToDismiss: false,
+                        dialog: Obx(
                           () => CustomBlurryDialog(
                             title: Language.inst.PROGRESS,
-                            tapToDismiss: false,
                             normalTitleStyle: true,
                             actions: [
                               Obx(
@@ -667,7 +667,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                 child: ElevatedButton(
                   onPressed: () {
                     NamidaNavigator.inst.navigateDialog(
-                      CustomBlurryDialog(
+                      dialog: CustomBlurryDialog(
                         insetPadding: const EdgeInsets.all(42.0),
                         contentPadding: EdgeInsets.zero,
                         child: toBeEditedTracksColumn,
@@ -743,7 +743,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                                     child: ElevatedButton(
                                       onPressed: () {
                                         NamidaNavigator.inst.navigateDialog(
-                                          CustomBlurryDialog(
+                                          dialog: CustomBlurryDialog(
                                             insetPadding: const EdgeInsets.all(42.0),
                                             contentPadding: EdgeInsets.zero,
                                             child: toBeEditedTracksColumn,
@@ -973,7 +973,7 @@ Future<void> requestSAFpermission() async {
   }
 
   await NamidaNavigator.inst.navigateDialog(
-    CustomBlurryDialog(
+    dialog: CustomBlurryDialog(
       title: Language.inst.NOTE,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

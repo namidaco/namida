@@ -27,7 +27,6 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/pages/settings_page.dart';
@@ -280,13 +279,10 @@ class CustomBlurryDialog extends StatelessWidget {
   final bool normalTitleStyle;
   final String? bodyText;
   final bool isWarning;
-  final bool enableBlur;
   final bool scrollable;
-  final bool tapToDismiss;
   final EdgeInsets? insetPadding;
   final EdgeInsetsGeometry? contentPadding;
-  final void Function()? onDismissing;
-  final double scale;
+
   const CustomBlurryDialog({
     super.key,
     this.child,
@@ -297,138 +293,114 @@ class CustomBlurryDialog extends StatelessWidget {
     this.normalTitleStyle = false,
     this.bodyText,
     this.isWarning = false,
-    this.enableBlur = true,
     this.insetPadding = const EdgeInsets.symmetric(horizontal: 50.0, vertical: 32.0),
     this.scrollable = true,
-    this.tapToDismiss = true,
     this.contentPadding,
-    this.onDismissing,
     this.leftAction,
     this.titleWidget,
-    this.scale = 0.96,
   });
 
   @override
   Widget build(BuildContext context) {
-    return NamidaBgBlur(
-      blur: 5.0,
-      enabled: enableBlur,
-      child: Theme(
-        data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
-        child: GestureDetector(
-          onTap: () {
-            if (tapToDismiss) {
-              NamidaNavigator.inst.closeDialog();
-              if (onDismissing != null) onDismissing!();
-            }
-          },
-          child: Container(
-            color: Colors.black45,
-            child: Transform.scale(
-              scale: scale,
-              child: Center(
-                child: SingleChildScrollView(
-                  child: Dialog(
-                    surfaceTintColor: Colors.transparent,
-                    insetPadding: insetPadding,
-                    clipBehavior: Clip.antiAlias,
-                    child: GestureDetector(
-                      onTap: () {},
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          /// Title.
-                          if (titleWidget != null) titleWidget!,
-                          if (titleWidget == null)
-                            normalTitleStyle
-                                ? Padding(
-                                    padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
-                                    child: Row(
-                                      children: [
-                                        if (icon != null || isWarning) ...[
-                                          Icon(
-                                            isWarning ? Broken.warning_2 : icon,
-                                          ),
-                                          const SizedBox(
-                                            width: 10.0,
-                                          ),
-                                        ],
-                                        Expanded(
-                                          child: Text(
-                                            isWarning ? Language.inst.WARNING : title ?? '',
-                                            style: context.textTheme.displayLarge,
-                                          ),
-                                        ),
-                                        if (trailingWidgets != null) ...trailingWidgets!
-                                      ],
-                                    ),
-                                  )
-                                : Container(
-                                    color: context.theme.cardColor,
-                                    padding: const EdgeInsets.all(16),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        if (icon != null) ...[
-                                          Icon(
-                                            icon,
-                                          ),
-                                          const SizedBox(
-                                            width: 10.0,
-                                          ),
-                                        ],
-                                        Text(
-                                          title ?? '',
-                                          style: context.theme.textTheme.displayMedium,
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                          /// Body.
-                          Padding(
-                            padding: contentPadding ?? const EdgeInsets.all(14.0),
-                            child: SizedBox(
-                              width: context.width,
-                              child: bodyText != null
-                                  ? Padding(
-                                      padding: const EdgeInsets.all(12.0),
-                                      child: Text(
-                                        bodyText!,
-                                        style: context.textTheme.displayMedium,
-                                      ),
-                                    )
-                                  : child,
-                            ),
-                          ),
-
-                          /// Actions.
-                          if (actions != null)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.max,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  if (leftAction != null) ...[
-                                    const SizedBox(width: 6.0),
-                                    leftAction!,
-                                    const SizedBox(width: 6.0),
-                                    const Spacer(),
-                                  ],
-                                  ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
-                                ],
+    return Center(
+      child: SingleChildScrollView(
+        child: Dialog(
+          backgroundColor: context.theme.dialogBackgroundColor,
+          surfaceTintColor: Colors.transparent,
+          insetPadding: insetPadding,
+          clipBehavior: Clip.antiAlias,
+          child: GestureDetector(
+            onTap: () {},
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                /// Title.
+                if (titleWidget != null) titleWidget!,
+                if (titleWidget == null)
+                  normalTitleStyle
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
+                          child: Row(
+                            children: [
+                              if (icon != null || isWarning) ...[
+                                Icon(
+                                  isWarning ? Broken.warning_2 : icon,
+                                ),
+                                const SizedBox(
+                                  width: 10.0,
+                                ),
+                              ],
+                              Expanded(
+                                child: Text(
+                                  isWarning ? Language.inst.WARNING : title ?? '',
+                                  style: context.textTheme.displayLarge,
+                                ),
                               ),
+                              if (trailingWidgets != null) ...trailingWidgets!
+                            ],
+                          ),
+                        )
+                      : Container(
+                          color: context.theme.cardTheme.color,
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (icon != null) ...[
+                                Icon(
+                                  icon,
+                                ),
+                                const SizedBox(
+                                  width: 10.0,
+                                ),
+                              ],
+                              Text(
+                                title ?? '',
+                                style: context.theme.textTheme.displayMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+
+                /// Body.
+                Padding(
+                  padding: contentPadding ?? const EdgeInsets.all(14.0),
+                  child: SizedBox(
+                    width: context.width,
+                    child: bodyText != null
+                        ? Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Text(
+                              bodyText!,
+                              style: context.textTheme.displayMedium,
                             ),
-                        ],
-                      ),
-                    ),
+                          )
+                        : child,
                   ),
                 ),
-              ),
+
+                /// Actions.
+                if (actions != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        if (leftAction != null) ...[
+                          const SizedBox(width: 6.0),
+                          leftAction!,
+                          const SizedBox(width: 6.0),
+                          const Spacer(),
+                        ],
+                        ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
+                      ],
+                    ),
+                  ),
+              ],
             ),
           ),
         ),
@@ -1477,7 +1449,7 @@ class NamidaDrawerListTile extends StatelessWidget {
     return Padding(
       padding: margin,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 200),
         alignment: Alignment.center,
         width: width,
         decoration: BoxDecoration(
@@ -1724,39 +1696,33 @@ class DefaultPlaylistCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      margin: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0),
-      decoration: BoxDecoration(
-        color: Color.alphaBlend(colorScheme.withAlpha(10), context.theme.cardColor),
-        borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-      ),
-      child: NamidaInkWell(
-        onTap: onTap,
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: colorScheme.withAlpha(200),
+    return NamidaInkWell(
+      borderRadius: 12.0,
+      bgColor: Color.alphaBlend(colorScheme.withAlpha(10), context.theme.cardColor),
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: colorScheme.withAlpha(200),
+          ),
+          const SizedBox(width: 10.0),
+          Expanded(
+            child: Text(
+              title.overflow,
+              style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(10), context.textTheme.displayMedium!.color!)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(width: 10.0),
-            Expanded(
-              child: Text(
-                title.overflow,
-                style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(10), context.textTheme.displayMedium!.color!)),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 6.0),
-            Text(
-              text,
-              style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(30), context.textTheme.displayMedium!.color!)),
-            ),
-            const SizedBox(width: 2.0),
-          ],
-        ),
+          ),
+          const SizedBox(width: 6.0),
+          Text(
+            text,
+            style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(30), context.textTheme.displayMedium!.color!)),
+          ),
+          const SizedBox(width: 2.0),
+        ],
       ),
     );
   }
@@ -2041,8 +2007,8 @@ class HistoryJumpToDayIcon extends StatelessWidget {
       onPressed: () {
         int dayToScrollTo = 0;
         NamidaNavigator.inst.navigateDialog(
-          CustomBlurryDialog(
-            scale: 0.9,
+          scale: 0.9,
+          dialog: CustomBlurryDialog(
             title: Language.inst.JUMP_TO_DAY,
             normalTitleStyle: true,
             insetPadding: const EdgeInsets.symmetric(horizontal: 28.0),
@@ -2080,13 +2046,16 @@ class HistoryJumpToDayIcon extends StatelessWidget {
 class NamidaHero extends StatelessWidget {
   final Object tag;
   final Widget child;
-  const NamidaHero({super.key, required this.tag, required this.child});
+  final bool enabled;
+  const NamidaHero({super.key, required this.tag, required this.child, this.enabled = true});
 
   @override
   Widget build(BuildContext context) {
-    return Hero(
-      tag: tag,
-      child: child,
-    );
+    return enabled
+        ? Hero(
+            tag: tag,
+            child: child,
+          )
+        : child;
   }
 }

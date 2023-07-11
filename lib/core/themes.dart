@@ -10,9 +10,10 @@ class AppThemes {
   static final AppThemes _instance = AppThemes._internal();
   AppThemes._internal();
 
-  ThemeData getAppTheme([Color? color, bool? light]) {
+  ThemeData getAppTheme([Color? color, bool? light, bool lighterDialog = true]) {
     color ??= CurrentColor.inst.color.value;
     light ??= Get.theme.brightness == Brightness.light;
+
     final cardTheme = CardTheme(
       elevation: 12.0,
       color: Color.alphaBlend(
@@ -23,10 +24,12 @@ class AppThemes {
         borderRadius: BorderRadius.circular(14.0),
       ),
     );
+
     final cardColor = Color.alphaBlend(
       color.withAlpha(35),
       light ? const Color.fromARGB(255, 255, 255, 255) : const Color.fromARGB(255, 35, 35, 35),
     );
+
     return ThemeData(
       brightness: light ? Brightness.light : Brightness.dark,
       useMaterial3: true,
@@ -55,10 +58,16 @@ class AppThemes {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: light ? Color.alphaBlend(color.withAlpha(25), Colors.white) : null,
+          backgroundColor: light ? Color.alphaBlend(color.withAlpha(30), Colors.white) : null,
         ),
       ),
-      dialogBackgroundColor: light ? Color.alphaBlend(color.withAlpha(40), Colors.white) : Color.alphaBlend(color.withAlpha(20), const Color.fromARGB(255, 12, 12, 12)),
+      dialogBackgroundColor: lighterDialog
+          ? light
+              ? Color.alphaBlend(color.withAlpha(50), Colors.white)
+              : Color.alphaBlend(color.withAlpha(20), const Color.fromARGB(255, 12, 12, 12))
+          : light
+              ? Color.alphaBlend(color.withAlpha(20), Colors.white)
+              : Color.alphaBlend(color.withAlpha(12), const Color.fromARGB(255, 10, 10, 10)),
       focusColor: light ? const Color.fromARGB(200, 190, 190, 190) : const Color.fromARGB(150, 80, 80, 80),
       dialogTheme: DialogTheme(surfaceTintColor: Colors.transparent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0.multipliedRadius))),
       listTileTheme: ListTileThemeData(

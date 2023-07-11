@@ -56,7 +56,7 @@ class AlbumTileCustomization extends StatelessWidget {
               stg.save(forceSquaredAlbumThumbnail: !p0);
               if (!p0 && stg.albumThumbnailSizeinList.toInt() != stg.albumListTileHeight.toInt()) {
                 NamidaNavigator.inst.navigateDialog(
-                  CustomBlurryDialog(
+                  dialog: CustomBlurryDialog(
                     normalTitleStyle: true,
                     isWarning: true,
                     bodyText: Language.inst.FORCE_SQUARED_THUMBNAIL_NOTE,

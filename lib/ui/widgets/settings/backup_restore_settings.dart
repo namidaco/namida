@@ -51,7 +51,7 @@ class BackupAndRestore extends StatelessWidget {
                 bool isActive(String item) => SettingsController.inst.backupItemslist.contains(item);
 
                 NamidaNavigator.inst.navigateDialog(
-                  Obx(
+                  dialog: Obx(
                     () => CustomBlurryDialog(
                       title: Language.inst.CREATE_BACKUP,
                       actions: [
@@ -185,7 +185,7 @@ class BackupAndRestore extends StatelessWidget {
               trailing: BackupController.inst.isRestoringBackup.value ? const LoadingIndicator() : null,
               onTap: () async {
                 NamidaNavigator.inst.navigateDialog(
-                  CustomBlurryDialog(
+                  dialog: CustomBlurryDialog(
                     normalTitleStyle: true,
                     title: Language.inst.RESTORE_BACKUP,
                     child: SingleChildScrollView(
@@ -259,7 +259,7 @@ class BackupAndRestore extends StatelessWidget {
                 return;
               }
               NamidaNavigator.inst.navigateDialog(
-                CustomBlurryDialog(
+                dialog: CustomBlurryDialog(
                   title: Language.inst.GUIDE,
                   actions: [
                     ElevatedButton(
@@ -272,7 +272,7 @@ class BackupAndRestore extends StatelessWidget {
                           final RxBool matchYT = true.obs;
                           final RxBool matchYTMusic = true.obs;
                           NamidaNavigator.inst.navigateDialog(
-                            CustomBlurryDialog(
+                            dialog: CustomBlurryDialog(
                               title: Language.inst.CONFIGURE,
                               actions: [
                                 ElevatedButton(
@@ -367,7 +367,7 @@ class BackupAndRestore extends StatelessWidget {
                 return;
               }
               NamidaNavigator.inst.navigateDialog(
-                CustomBlurryDialog(
+                dialog: CustomBlurryDialog(
                   title: Language.inst.GUIDE,
                   actions: [
                     ElevatedButton(
