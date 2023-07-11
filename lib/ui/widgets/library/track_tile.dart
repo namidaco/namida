@@ -122,7 +122,6 @@ class TrackTile extends StatelessWidget {
                             dateAdded: trackWithDate?.dateAdded,
                           );
                         }
-                        debugPrint(track.path);
                       }
                     },
                 onLongPress: onTap != null

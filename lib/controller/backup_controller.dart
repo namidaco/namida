@@ -1,7 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_archive/flutter_archive.dart';
 import 'package:get/get.dart';
@@ -74,7 +72,7 @@ class BackupController {
         }
       });
     } catch (e) {
-      debugPrint(e.toString());
+      printy(e, isError: true);
     }
     Get.snackbar(Language.inst.CREATED_BACKUP_SUCCESSFULLY, Language.inst.CREATED_BACKUP_SUCCESSFULLY_SUB);
     isCreatingBackup.value = false;

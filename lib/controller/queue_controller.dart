@@ -1,7 +1,6 @@
 import 'dart:collection';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/queue.dart';
@@ -30,7 +29,7 @@ class QueueController {
   }) async {
     /// If there are more than 2000 tracks.
     if (tracks.length > 2000) {
-      debugPrint("UWAH QUEUE DEKKA");
+      printy("UWAH QUEUE DEKKA", isError: true);
       return;
     }
 
@@ -39,7 +38,7 @@ class QueueController {
     if (_isLoadingQueues) {
       // after queues full load, [addNewQueue] will be called to add Queues inside [_queuesToAddAfterAllQueuesLoad].
       _queuesToAddAfterAllQueuesLoad.add(Queue(source, date, false, tracks));
-      debugPrint("$this: Queue adding suspended until queues full load");
+      printy("Queue adding suspended until queues full load");
       return;
     }
 
@@ -53,7 +52,7 @@ class QueueController {
 
     final q = Queue(source, date, false, tracks);
     _updateMap(q);
-    debugPrint("Added New Queue");
+    printy("Added New Queue");
     await _saveQueueToStorage(q);
   }
 
@@ -145,7 +144,7 @@ class QueueController {
       await _queuesToAddAfterAllQueuesLoad.loopFuture(
         (q, index) async => await addNewQueue(source: q.source, date: q.date, tracks: q.tracks),
       );
-      debugPrint("$this: Added ${_queuesToAddAfterAllQueuesLoad.length} queue that were suspended");
+      printy("Added ${_queuesToAddAfterAllQueuesLoad.length} queue that were suspended");
       _queuesToAddAfterAllQueuesLoad.clear();
     }
   }

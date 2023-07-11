@@ -44,7 +44,7 @@ class WaveformController {
           _updateScaleMap(dList);
         });
       } catch (e) {
-        printInfo(info: e.toString());
+        printy(e, isError: true);
       }
     }
     // If Waveform file does NOT exist in storage
@@ -70,7 +70,7 @@ class WaveformController {
           await waveFile.delete();
           await generateWaveform(track);
         }
-        printError(info: e.toString());
+        printy(e, isError: true);
       }
 
       if (track == Player.inst.nowPlayingTrack.value) {

@@ -110,11 +110,11 @@ class CurrentColor {
     try {
       nc = NamidaColor.fromJson(await paletteFile.readAsJson());
       _updateInColorMap(pathofimage.getFilenameWOExt, nc);
-      debugPrint("COLORRRR READ FROM FILE");
+      printy("Color Read From File");
       return nc;
     } catch (e) {
       await paletteFile.deleteIfExists();
-      debugPrint(e.toString());
+      printy(e, isError: true);
     }
 
     final result = await PaletteGenerator.fromImageProvider(FileImage(File(pathofimage)));
@@ -123,7 +123,7 @@ class CurrentColor {
 
     await paletteFile.writeAsJson(nc.toJson());
     Indexer.inst.updateColorPalettesSizeInStorage(paletteFile);
-    debugPrint("COLORRRRR EXTRACTED");
+    printy("Color Extracted From Image");
 
     _updateInColorMap(pathofimage.getFilenameWOExt, nc);
     return nc;

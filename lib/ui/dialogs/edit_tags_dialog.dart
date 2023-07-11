@@ -272,7 +272,7 @@ Future<void> showEditTrackTagsDialog(Track track) async {
                     },
                     artworkPath: currentImagePath.value,
                   );
-                  debugPrint(didUpdate.toString());
+                  printo('Did Update Metadata: $didUpdate', isError: !didUpdate);
 
                   if (!didUpdate) {
                     Get.snackbar(Language.inst.METADATA_EDIT_FAILED, Language.inst.METADATA_EDIT_FAILED_SUBTITLE);
@@ -599,7 +599,9 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                           artworkPath: currentImagePath.value,
                           updateTracks: false,
                         );
-                        debugPrint(didUpdate.toString());
+
+                        printo('Did Update Metadata: $didUpdate', isError: !didUpdate);
+
                         if (didUpdate) {
                           successfullEdits.value++;
                         } else {
@@ -941,7 +943,7 @@ Future<bool> editTrackMetadata(
         openFilePicker: false,
       );
     } catch (e) {
-      debugPrint(e.toString());
+      printo(e, isError: true);
     }
   }
   if (kSdkVersion >= 30) {

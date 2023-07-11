@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
-
 import 'package:get/get.dart';
 
 import 'package:namida/class/playlist.dart';
@@ -99,7 +97,7 @@ class PlaylistController {
     try {
       await File('$k_DIR_PLAYLISTS/$playlistName.json').rename('$k_DIR_PLAYLISTS/$newName.json');
     } catch (e) {
-      debugPrint(e.toString());
+      printy(e, isError: true);
       return false;
     }
     final playlist = getPlaylist(playlistName);

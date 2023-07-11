@@ -104,7 +104,7 @@ class SearchSortController {
       }
     });
 
-    printInfo(info: "Tracks Found: ${trackSearchList.length}");
+    printy("Search Tracks Found: ${finalList.length}");
   }
 
   void _searchAlbums(String text, {bool temp = false}) {

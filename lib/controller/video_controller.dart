@@ -157,7 +157,7 @@ class VideoController {
         await playAndInitializeVideo(vf, track);
         await vidcontroller?.setVolume(0.0);
         videoCurrentQuality.value = Language.inst.LOCAL;
-        printInfo(info: 'RETURNED AFTER LOCAL');
+        printy('RETURNED AFTER LOCAL');
         return;
       }
     });
@@ -175,7 +175,7 @@ class VideoController {
           final s = await f.stat();
           videoTotalSize.value = s.size;
           videoCurrentQuality.value = f.path.split('_').last.split('.').first;
-          printInfo(info: 'RETURNED AFTER VIDEO CACHE');
+          printy('RETURNED AFTER VIDEO CACHE');
           return;
         }
       }
@@ -187,11 +187,11 @@ class VideoController {
 
       /// return if no internet
       if (await connectivity.checkConnectivity() == ConnectivityResult.none) {
-        printInfo(info: 'NO INTERNET');
+        printy('NO INTERNET', isError: true);
         return;
       }
       await playAndInitializeVideo(await downloadYoutubeVideo(youtubeVideoId.value, track), track);
-      printInfo(info: 'RETURNED AFTER DOWNLOAD');
+      printy('RETURNED AFTER DOWNLOAD');
     }
   }
 
@@ -216,7 +216,7 @@ class VideoController {
 
       /// video info
       // final info = await VideoCompress.getMediaInfo(path);
-      // print("VVVVVVV ${info.toJson()}");
+      // printy(info.toJson());
     }
   }
 
@@ -245,7 +245,7 @@ class VideoController {
         final txt = List<String>.from(await videoFile.readAsJson());
         videoFilesPathList.assignAll(txt);
       } catch (e) {
-        printInfo(info: e.toString());
+        printy(e, isError: true);
       }
     } else {
       await videoFile.create();
@@ -270,13 +270,13 @@ class VideoController {
                 }
               }
             } catch (e) {
-              printError(info: e.toString());
+              printy(e, isError: true);
               continue;
             }
           }
         }
         videoFilesPathList.assignAll(allVideosPaths.toList());
-        printInfo(info: allVideosPaths.toString());
+        printy('Video Paths: $allVideosPaths');
       }
       final listAsString = videoFilesPathList.map((path) => '"$path"').join(', ');
       await videoFile.writeAsString("[$listAsString]");

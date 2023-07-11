@@ -136,9 +136,7 @@ class NamidaClient extends http.BaseClient {
       request.headers.addAll({'Authorization': 'Bearer ${YoutubeController.inst.sussyBaka}'});
     }
 
-    // printInfo(info: 'ACCCCCCCCCC NamidaClient: ${YoutubeController.inst.sussyBaka}');
-    printInfo(info: 'ACCCCCCCCCC Header NamidaClient: ${request.headers}');
-    // printInfo(info: 'ACCCCCCCCCC NamidaClient: $request');
+    printy('NamidaClient Header: ${request.headers}');
     return _client.send(request);
   }
 

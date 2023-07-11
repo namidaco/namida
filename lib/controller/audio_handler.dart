@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'package:audio_service/audio_service.dart';
-import 'package:get/get.dart';
+import 'package:get/get_rx/src/rx_types/rx_types.dart';
+import 'package:get/get_utils/src/extensions/num_extensions.dart';
 import 'package:just_audio/just_audio.dart';
 
 import 'package:namida/class/track.dart';
@@ -187,7 +187,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
       SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
         NamidaDialogs.inst.showTrackDialog(tr, isFromPlayerQueue: true, errorPlayingTrack: true);
       });
-      debugPrint(e.toString());
+      printy(e, isError: true);
       return;
     }
 
@@ -280,7 +280,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
     _playFadeTimer = null;
     _playFadeTimer = Timer.periodic(Duration(milliseconds: interval), (timer) {
       vol += 1 / steps;
-      printInfo(info: "Fade Volume Play: ${vol.toString()}");
+      printy("Fade Volume Play: ${vol.toString()}");
       setVolume(vol);
       if (vol >= SettingsController.inst.playerVolume.value || wantToPause) {
         timer.cancel();
@@ -298,7 +298,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
     _pauseFadeTimer = null;
     _pauseFadeTimer = Timer.periodic(Duration(milliseconds: interval), (timer) {
       vol -= 1 / steps;
-      printInfo(info: "Fade Volume Pause ${vol.toString()}");
+      printy("Fade Volume Pause ${vol.toString()}");
       setVolume(vol);
       if (vol <= 0.0) {
         timer.cancel();

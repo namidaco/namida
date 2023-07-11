@@ -36,7 +36,6 @@ class SelectedTracksController {
       selectedTracks.add(track);
     }
     bottomPadding.value = selectedTracks.isEmpty ? 0.0 : 102.0;
-    printInfo(info: "length: ${selectedTracks.length}");
   }
 
   void reorderTracks(int oldIndex, int newIndex) {

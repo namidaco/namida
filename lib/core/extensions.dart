@@ -2,9 +2,11 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as dev;
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:collection/collection.dart';
@@ -427,7 +429,7 @@ extension FileUtils<R> on File {
         return true;
       }
     } catch (e) {
-      debugPrint(e.toString());
+      printy(e, isError: true);
       return false;
     }
     return false;
@@ -438,7 +440,7 @@ extension FileUtils<R> on File {
       await delete();
       return true;
     } catch (e) {
-      debugPrint(e.toString());
+      printy(e, isError: true);
       return false;
     }
   }
@@ -463,7 +465,7 @@ extension FileUtils<R> on File {
       if (content.isEmpty) return null;
       return jsonDecode(content);
     } catch (e) {
-      debugPrint(e.toString());
+      printy(e, isError: true);
       if (onError != null) onError();
       return null;
     }
@@ -483,7 +485,7 @@ extension FileUtils<R> on File {
       return true;
     } catch (e) {
       if (onError != null) onError();
-      debugPrint(e.toString());
+      printy(e, isError: true);
       return false;
     }
   }
@@ -516,7 +518,7 @@ extension FileUtils<R> on File {
       const encoder = JsonEncoder.withIndent("  ");
       return (await writeAsString(encoder.convert(object)));
     } catch (e) {
-      debugPrint('$e');
+      printy(e, isError: true);
       return null;
     }
   }
@@ -812,4 +814,23 @@ extension MapUtils<K, V> on Map<K, V> {
   ///
   /// [containsKey] : Certain but not instant, O(keys.length).
   bool keyExists(K key) => this[key] != null;
+}
+
+extension PrintFunction on dynamic {
+  void printy(dynamic message, {bool isError = false, bool dumpshit = false}) {
+    printo(message, isError: isError, classScope: this, dumpshit: dumpshit);
+  }
+}
+
+/// logs the message only in Debug mode.
+void printo(dynamic message, {bool isError = false, dynamic classScope, bool dumpshit = false}) {
+  if (kDebugMode) {
+    final className = classScope ?? '';
+    final isClassNameLong = className.toString().split('').length > 50;
+    final msgWithClass = "[$className]: ${isClassNameLong ? '\n' : ''} $message";
+    final infoMsg = isError ? '' : 'Info: $msgWithClass';
+    final errorMsg = isError ? 'Error: $msgWithClass' : '';
+    final color = dumpshit ? '\x1B[37m' : '';
+    dev.log('$color$infoMsg', error: errorMsg, name: 'Namida');
+  }
 }

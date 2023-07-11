@@ -102,7 +102,7 @@ class NamidaNavigator {
       opaque: false,
       fullscreenDialog: true,
     );
-    debugPrint("Current Dialogs: $currentDialogNumber");
+    _printDialogs();
   }
 
   Future<void> closeDialog([int count = 1]) async {
@@ -110,13 +110,15 @@ class NamidaNavigator {
     final closeCount = count.withMaximum(currentDialogNumber);
     currentDialogNumber -= closeCount;
     Get.close(closeCount);
-    debugPrint("Current Dialogs: $currentDialogNumber");
+    _printDialogs();
   }
 
   Future<void> closeAllDialogs() async {
     closeDialog(currentDialogNumber);
-    debugPrint("Current Dialogs: $currentDialogNumber");
+    _printDialogs();
   }
+
+  void _printDialogs() => printy("Current Dialogs: $currentDialogNumber");
 
   Future<void> navigateOff(
     Widget page, {

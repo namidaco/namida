@@ -1,7 +1,6 @@
 import 'dart:collection';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -249,13 +248,12 @@ class Indexer {
     bool bypassAllChecks = false,
   }) async {
     if (forceReIndex) {
-      debugPrint(tracksInfoList.length.toString());
       tracksInfoList.clear();
       audioFiles = await getAudioFiles();
     }
 
-    debugPrint("New Audio Files: ${audioFiles.length}");
-    debugPrint("Deleted Audio Files: ${deletedPaths.length}");
+    printy("New Audio Files: ${audioFiles.length}");
+    printy("Deleted Audio Files: ${deletedPaths.length}");
 
     filteredForSizeDurationTracks.value = 0;
     duplicatedTracksLength.value = 0;
@@ -270,7 +268,7 @@ class Indexer {
 
       Set<String> listOfCurrentFileNames = <String>{};
       for (final trackPath in audioFiles) {
-        printInfo(info: trackPath);
+        printy(trackPath);
         try {
           /// skip duplicated tracks according to filename
           if (SettingsController.inst.preventDuplicatedTracks.value) {
@@ -291,7 +289,7 @@ class Indexer {
               await ap.setFilePath(trackPath);
               duration = ap.duration?.inMilliseconds;
             } catch (e) {
-              debugPrint(e.toString());
+              printy(e, isError: true);
             }
           }
 
@@ -354,11 +352,11 @@ class Indexer {
           tracksInfoList.add(tr);
           SearchSortController.inst.trackSearchList.add(tr);
 
-          debugPrint(tracksInfoList.length.toString());
+          printy("tracksInfoList length: ${tracksInfoList.length}");
 
           extractOneArtwork(trackPath, bytes: trackInfo.firstArtwork);
         } catch (e) {
-          printError(info: e.toString());
+          printy(e, isError: true);
 
           /// adding dummy track that couldnt be read by [onAudioEdit]
           final file = File(trackPath);
@@ -401,7 +399,7 @@ class Indexer {
         }
         listOfCurrentFileNames.add(trackPath.getFilename);
       }
-      debugPrint('Extracted All Metadata');
+      printy('Extracted All Metadata');
     }
 
     if (audioFiles.isNotEmpty) {
@@ -427,7 +425,7 @@ class Indexer {
 
     if (forceReIndex) _afterIndexing();
 
-    printInfo(info: "FINAL: ${tracksInfoList.length}");
+    printy("FINAL: ${tracksInfoList.length}");
 
     await _saveTrackFileToStorage();
 
@@ -481,7 +479,7 @@ class Indexer {
       allTracksMappedByPath[track] = trExt;
     });
 
-    debugPrint("Tracks Info List Length From File: ${tracksInfoList.length}");
+    printy("All Tracks Length From File: ${tracksInfoList.length}");
   }
 
   List<String> splitBySeparators(String? string, Iterable<String> separators, String fallback, Iterable<String> blacklist) {
@@ -627,7 +625,7 @@ class Indexer {
       ..clear()
       ..addAll(allPaths);
 
-    debugPrint(allPaths.length.toString());
+    printy("Paths Found: ${allPaths.length}");
     return allPaths;
   }
 

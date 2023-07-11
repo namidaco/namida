@@ -43,7 +43,7 @@ class HistoryController {
   /// Starts counting seconds listened, counter only increases when [isPlaying] is true.
   /// When the user seeks backwards by percentage >= 20%, a new counter starts.
   void startCounterToAListen(Track track) {
-    debugPrint("Started a new counter");
+    printy("Started a new counter");
 
     int currentListenedSeconds = 0;
 
@@ -56,7 +56,7 @@ class HistoryController {
     _historyTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       final per = currentListenedSeconds / trDurInSec * 100;
 
-      debugPrint("Current percentage $per");
+      printy("Current percentage $per", dumpshit: true);
       if (Player.inst.isPlaying.value) {
         currentListenedSeconds++;
       }
@@ -209,7 +209,7 @@ class HistoryController {
         final day = daysToSave[i];
         final trs = historyMap.value[day];
         if (trs == null) {
-          debugPrint('couldn\'t find [dayToSave] inside [historyMap]');
+          printy('couldn\'t find [dayToSave] inside [historyMap]', isError: true);
           continue;
         }
         if (trs.isEmpty) {

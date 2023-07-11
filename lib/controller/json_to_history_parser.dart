@@ -278,7 +278,7 @@ class JsonToHistoryParser {
           addedHistoryJsonToPlaylist.value++;
         }
       } catch (e) {
-        debugPrint(e.toString());
+        printy(e, isError: true);
         continue;
       }
     }

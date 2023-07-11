@@ -272,7 +272,7 @@ class SettingsController {
 
       ///
     } catch (e) {
-      printError(info: e.toString());
+      printy(e, isError: true);
       await file.delete();
     }
   }
@@ -390,7 +390,7 @@ class SettingsController {
     };
     await file.writeAsJson(res);
 
-    debugPrint("Setting File Write");
+    printy("Setting File Write");
 
     if (justSaveWithoutWaiting) {
       _canWriteSettings = true;

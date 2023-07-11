@@ -180,9 +180,9 @@ Future<void> resetSAFPermision() async {
   final didReset = await OnAudioEdit().resetComplexPermission();
   if (didReset) {
     Get.snackbar(Language.inst.PERMISSION_UPDATE, Language.inst.RESET_SAF_PERMISSION_RESET_SUCCESS);
-    debugPrint('Reset SAF Successully');
+    printo('Reset SAF Successully');
   } else {
-    debugPrint('Reset SAF Failure');
+    printo('Reset SAF Failure', isError: true);
   }
 }
 
