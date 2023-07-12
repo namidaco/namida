@@ -219,71 +219,65 @@ Future<void> showEditTrackTagsDialog(Track track) async {
       ),
       actions: [
         Obx(
-          () => IgnorePointer(
-            ignoring: !canEditTags.value,
-            child: AnimatedOpacity(
-              opacity: canEditTags.value ? 1.0 : 0.6,
-              duration: const Duration(milliseconds: 300),
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  if (trimWhiteSpaces.value) {
-                    editedTags.updateAll((key, value) => value.trim());
+          () => NamidaButton(
+            enabled: canEditTags.value,
+            icon: Broken.pen_add,
+            text: Language.inst.SAVE,
+            onPressed: () async {
+              if (trimWhiteSpaces.value) {
+                editedTags.updateAll((key, value) => value.trim());
+              }
+
+              /// converting int-based empty fields to 0
+              /// this prevents crash resulted from assigning empty string to int.
+              /// TODO(MSOB7YY): fix, if the value is 0, it doesnt get updated
+              void fixEmptyInts(List<TagField> fields) {
+                fields.loop((field, index) {
+                  if (editedTags[field] != null && editedTags[field] == '') {
+                    editedTags[field] = 0;
                   }
+                });
+              }
 
-                  /// converting int-based empty fields to 0
-                  /// this prevents crash resulted from assigning empty string to int.
-                  /// TODO(MSOB7YY): fix, if the value is 0, it doesnt get updated
-                  void fixEmptyInts(List<TagField> fields) {
-                    fields.loop((field, index) {
-                      if (editedTags[field] != null && editedTags[field] == '') {
-                        editedTags[field] = 0;
-                      }
-                    });
-                  }
+              fixEmptyInts([
+                TagField.trackNumber,
+                TagField.discNumber,
+                TagField.trackTotal,
+                TagField.discTotal,
+              ]);
 
-                  fixEmptyInts([
-                    TagField.trackNumber,
-                    TagField.discNumber,
-                    TagField.trackTotal,
-                    TagField.discTotal,
-                  ]);
-
-                  final didUpdate = await editTrackMetadata(
-                    track,
-                    tags: {
-                      if (editedTags.keyExists(TagField.title)) TagType.TITLE: editedTags[TagField.title],
-                      if (editedTags.keyExists(TagField.album)) TagType.ALBUM: editedTags[TagField.album],
-                      if (editedTags.keyExists(TagField.artist)) TagType.ARTIST: editedTags[TagField.artist],
-                      if (editedTags.keyExists(TagField.albumArtist)) TagType.ALBUM_ARTIST: editedTags[TagField.albumArtist],
-                      if (editedTags.keyExists(TagField.composer)) TagType.COMPOSER: editedTags[TagField.composer],
-                      if (editedTags.keyExists(TagField.genre)) TagType.GENRE: editedTags[TagField.genre],
-                      if (editedTags.keyExists(TagField.trackNumber)) TagType.TRACK: editedTags[TagField.trackNumber],
-                      if (editedTags.keyExists(TagField.discNumber)) TagType.DISC_NO: editedTags[TagField.discNumber],
-                      if (editedTags.keyExists(TagField.year)) TagType.YEAR: editedTags[TagField.year],
-                      if (editedTags.keyExists(TagField.comment)) TagType.COMMENT: editedTags[TagField.comment],
-                      if (editedTags.keyExists(TagField.lyrics)) TagType.LYRICS: editedTags[TagField.lyrics],
-                      if (editedTags.keyExists(TagField.remixer)) TagType.REMIXER: editedTags[TagField.remixer],
-                      if (editedTags.keyExists(TagField.trackTotal)) TagType.TRACK_TOTAL: editedTags[TagField.trackTotal],
-                      if (editedTags.keyExists(TagField.discTotal)) TagType.DISC_TOTAL: editedTags[TagField.discTotal],
-                      if (editedTags.keyExists(TagField.lyricist)) TagType.LYRICIST: editedTags[TagField.lyricist],
-                      if (editedTags.keyExists(TagField.language)) TagType.LANGUAGE: editedTags[TagField.language],
-                      if (editedTags.keyExists(TagField.recordLabel)) TagType.RECORD_LABEL: editedTags[TagField.recordLabel],
-                      if (editedTags.keyExists(TagField.country)) TagType.COUNTRY: editedTags[TagField.country],
-                    },
-                    artworkPath: currentImagePath.value,
-                  );
-                  printo('Did Update Metadata: $didUpdate', isError: !didUpdate);
-
-                  if (!didUpdate) {
-                    Get.snackbar(Language.inst.METADATA_EDIT_FAILED, Language.inst.METADATA_EDIT_FAILED_SUBTITLE);
-                  }
-
-                  NamidaNavigator.inst.closeDialog();
+              final didUpdate = await editTrackMetadata(
+                track,
+                tags: {
+                  if (editedTags.keyExists(TagField.title)) TagType.TITLE: editedTags[TagField.title],
+                  if (editedTags.keyExists(TagField.album)) TagType.ALBUM: editedTags[TagField.album],
+                  if (editedTags.keyExists(TagField.artist)) TagType.ARTIST: editedTags[TagField.artist],
+                  if (editedTags.keyExists(TagField.albumArtist)) TagType.ALBUM_ARTIST: editedTags[TagField.albumArtist],
+                  if (editedTags.keyExists(TagField.composer)) TagType.COMPOSER: editedTags[TagField.composer],
+                  if (editedTags.keyExists(TagField.genre)) TagType.GENRE: editedTags[TagField.genre],
+                  if (editedTags.keyExists(TagField.trackNumber)) TagType.TRACK: editedTags[TagField.trackNumber],
+                  if (editedTags.keyExists(TagField.discNumber)) TagType.DISC_NO: editedTags[TagField.discNumber],
+                  if (editedTags.keyExists(TagField.year)) TagType.YEAR: editedTags[TagField.year],
+                  if (editedTags.keyExists(TagField.comment)) TagType.COMMENT: editedTags[TagField.comment],
+                  if (editedTags.keyExists(TagField.lyrics)) TagType.LYRICS: editedTags[TagField.lyrics],
+                  if (editedTags.keyExists(TagField.remixer)) TagType.REMIXER: editedTags[TagField.remixer],
+                  if (editedTags.keyExists(TagField.trackTotal)) TagType.TRACK_TOTAL: editedTags[TagField.trackTotal],
+                  if (editedTags.keyExists(TagField.discTotal)) TagType.DISC_TOTAL: editedTags[TagField.discTotal],
+                  if (editedTags.keyExists(TagField.lyricist)) TagType.LYRICIST: editedTags[TagField.lyricist],
+                  if (editedTags.keyExists(TagField.language)) TagType.LANGUAGE: editedTags[TagField.language],
+                  if (editedTags.keyExists(TagField.recordLabel)) TagType.RECORD_LABEL: editedTags[TagField.recordLabel],
+                  if (editedTags.keyExists(TagField.country)) TagType.COUNTRY: editedTags[TagField.country],
                 },
-                icon: const Icon(Broken.pen_add),
-                label: Text(Language.inst.SAVE),
-              ),
-            ),
+                artworkPath: currentImagePath.value,
+              );
+              printo('Did Update Metadata: $didUpdate', isError: !didUpdate);
+
+              if (!didUpdate) {
+                Get.snackbar(Language.inst.METADATA_EDIT_FAILED, Language.inst.METADATA_EDIT_FAILED_SUBTITLE);
+              }
+
+              NamidaNavigator.inst.closeDialog();
+            },
           ),
         )
       ],
@@ -516,7 +510,9 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
       icon: Broken.edit,
       title: Language.inst.EDIT_TAGS,
       actions: [
-        ElevatedButton.icon(
+        NamidaButton(
+          icon: Broken.pen_add,
+          text: Language.inst.SAVE,
           onPressed: () {
             NamidaNavigator.inst.navigateDialog(
               dialog: CustomBlurryDialog(
@@ -525,11 +521,12 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                 isWarning: true,
                 normalTitleStyle: true,
                 actions: [
-                  ElevatedButton(
+                  NamidaButton(
+                    text: Language.inst.CANCEL,
                     onPressed: () => NamidaNavigator.inst.closeDialog(2),
-                    child: Text(Language.inst.CANCEL),
                   ),
-                  ElevatedButton(
+                  NamidaButton(
+                    text: Language.inst.CONFIRM,
                     onPressed: () async {
                       if (trimWhiteSpaces.value) {
                         editedTags.updateAll((key, value) => value.trim());
@@ -564,16 +561,10 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                             normalTitleStyle: true,
                             actions: [
                               Obx(
-                                () => AnimatedOpacity(
-                                  duration: const Duration(milliseconds: 300),
-                                  opacity: finishedEditing.value ? 1.0 : 0.5,
-                                  child: IgnorePointer(
-                                    ignoring: !finishedEditing.value,
-                                    child: ElevatedButton(
-                                      onPressed: () => NamidaNavigator.inst.closeDialog(2),
-                                      child: Text(Language.inst.DONE),
-                                    ),
-                                  ),
+                                () => NamidaButton(
+                                  enabled: finishedEditing.value,
+                                  text: Language.inst.DONE,
+                                  onPressed: () => NamidaNavigator.inst.closeDialog(2),
                                 ),
                               )
                             ],
@@ -619,15 +610,12 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                       updatingLibrary.value = '✓';
                       finishedEditing.value = true;
                     },
-                    child: Text(Language.inst.CONFIRM),
                   ),
                 ],
                 child: toBeEditedTracksColumn,
               ),
             );
           },
-          icon: const Icon(Broken.pen_add),
-          label: Text(Language.inst.SAVE),
         )
       ],
       leftAction: NamidaInkWell(
@@ -664,7 +652,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
         () => tracks.isEmpty
             ? SizedBox(
                 width: Get.width * 0.6,
-                child: ElevatedButton(
+                child: NamidaButton(
                   onPressed: () {
                     NamidaNavigator.inst.navigateDialog(
                       dialog: CustomBlurryDialog(
@@ -674,11 +662,8 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                       ),
                     );
                   },
-                  child: Obx(
-                    () => Text(
-                      tracks.displayTrackKeyword,
-                      textAlign: TextAlign.center,
-                    ),
+                  textWidget: Obx(
+                    () => Text(tracks.displayTrackKeyword),
                   ),
                 ),
               )
@@ -740,7 +725,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                                   ),
                                   SizedBox(
                                     width: Get.width,
-                                    child: ElevatedButton(
+                                    child: NamidaButton(
                                       onPressed: () {
                                         NamidaNavigator.inst.navigateDialog(
                                           dialog: CustomBlurryDialog(
@@ -750,11 +735,8 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                                           ),
                                         );
                                       },
-                                      child: Obx(
-                                        () => Text(
-                                          tracks.displayTrackKeyword,
-                                          textAlign: TextAlign.center,
-                                        ),
+                                      textWidget: Obx(
+                                        () => Text(tracks.displayTrackKeyword),
                                       ),
                                     ),
                                   ),
@@ -763,7 +745,8 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                                   ),
                                   SizedBox(
                                     width: Get.width,
-                                    child: ElevatedButton(
+                                    child: NamidaButton(
+                                      text: Language.inst.EDIT_ARTWORK,
                                       onPressed: () async {
                                         final pickedFile = await FilePicker.platform.pickFiles(type: FileType.image);
                                         final path = pickedFile?.files.first.path ?? '';
@@ -772,13 +755,6 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                                           currentImagePath.value = copiedImage.path;
                                         }
                                       },
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text(
-                                          Language.inst.EDIT_ARTWORK,
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
                                     ),
                                   ),
                                 ],

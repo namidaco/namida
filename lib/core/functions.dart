@@ -206,16 +206,10 @@ Future<void> showCalendarDialog({
       actions: [
         const CancelButton(),
         Obx(
-          () => AnimatedOpacity(
-            duration: const Duration(milliseconds: 200),
-            opacity: canGenerate.value ? 1.0 : 0.5,
-            child: IgnorePointer(
-              ignoring: !canGenerate.value,
-              child: ElevatedButton(
-                onPressed: () => onGenerate(dates),
-                child: Text(buttonText),
-              ),
-            ),
+          () => NamidaButton(
+            enabled: canGenerate.value,
+            onPressed: () => onGenerate(dates),
+            text: buttonText,
           ),
         ),
       ],

@@ -38,16 +38,33 @@ class IndexerSettings extends StatelessWidget {
             ),
         actions: [
           const CancelButton(),
-          ElevatedButton(
+          NamidaButton(
+            text: Language.inst.REFRESH,
             onPressed: () async {
               NamidaNavigator.inst.closeDialog();
               await Future.delayed(const Duration(milliseconds: 300));
               await Indexer.inst.refreshLibraryAndCheckForDiff(currentFiles: currentFiles);
             },
-            child: Text(Language.inst.REFRESH),
           ),
         ],
       ),
+    );
+  }
+
+  Widget addFolderButton(void Function(String dirPath) onSuccessChoose) {
+    return NamidaButton(
+      icon: Broken.folder_add,
+      text: Language.inst.ADD,
+      onPressed: () async {
+        final path = await FilePicker.platform.getDirectoryPath();
+        if (path == null) {
+          Get.snackbar(Language.inst.NOTE, Language.inst.NO_FOLDER_CHOSEN);
+          return;
+        }
+
+        onSuccessChoose(path);
+        _showRefreshPromptDialog();
+      },
     );
   }
 
@@ -218,14 +235,15 @@ class IndexerSettings extends StatelessWidget {
                   isWarning: true,
                   actions: [
                     const CancelButton(),
-                    ElevatedButton(
-                        onPressed: () async {
-                          NamidaNavigator.inst.closeDialog();
-                          Future.delayed(const Duration(milliseconds: 500), () {
-                            Indexer.inst.refreshLibraryAndCheckForDiff(forceReIndex: true);
-                          });
-                        },
-                        child: Text(Language.inst.RE_INDEX)),
+                    NamidaButton(
+                      text: Language.inst.RE_INDEX,
+                      onPressed: () async {
+                        NamidaNavigator.inst.closeDialog();
+                        Future.delayed(const Duration(milliseconds: 500), () {
+                          Indexer.inst.refreshLibraryAndCheckForDiff(forceReIndex: true);
+                        });
+                      },
+                    ),
                   ],
                   bodyText: Language.inst.RE_INDEX_WARNING,
                 ),
@@ -246,17 +264,9 @@ class IndexerSettings extends StatelessWidget {
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  AddFolderButton(
-                    onPressed: () async {
-                      final path = await FilePicker.platform.getDirectoryPath();
-                      if (path != null) {
-                        SettingsController.inst.save(directoriesToScan: [path]);
-                        _showRefreshPromptDialog();
-                      } else {
-                        Get.snackbar(Language.inst.NOTE, Language.inst.NO_FOLDER_CHOSEN);
-                      }
-                    },
-                  ),
+                  addFolderButton((dirPath) {
+                    SettingsController.inst.save(directoriesToScan: [dirPath]);
+                  }),
                   const SizedBox(width: 8.0),
                   const Icon(Broken.arrow_down_2),
                 ],
@@ -284,13 +294,14 @@ class IndexerSettings extends StatelessWidget {
                               icon: Broken.warning_2,
                               actions: [
                                 const CancelButton(),
-                                ElevatedButton(
-                                    onPressed: () {
-                                      SettingsController.inst.removeFromList(directoriesToScan1: e);
-                                      NamidaNavigator.inst.closeDialog();
-                                      _showRefreshPromptDialog();
-                                    },
-                                    child: Text(Language.inst.REMOVE)),
+                                NamidaButton(
+                                  text: Language.inst.REMOVE,
+                                  onPressed: () {
+                                    SettingsController.inst.removeFromList(directoriesToScan1: e);
+                                    NamidaNavigator.inst.closeDialog();
+                                    _showRefreshPromptDialog();
+                                  },
+                                ),
                               ],
                               child: Text(
                                 "${Language.inst.REMOVE} \"$e\"?",
@@ -315,17 +326,9 @@ class IndexerSettings extends StatelessWidget {
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  AddFolderButton(
-                    onPressed: () async {
-                      final path = await FilePicker.platform.getDirectoryPath();
-                      if (path != null) {
-                        SettingsController.inst.save(directoriesToExclude: [path]);
-                        _showRefreshPromptDialog();
-                      } else {
-                        Get.snackbar(Language.inst.NOTE, Language.inst.NO_FOLDER_CHOSEN);
-                      }
-                    },
-                  ),
+                  addFolderButton((dirPath) {
+                    SettingsController.inst.save(directoriesToExclude: [dirPath]);
+                  }),
                   const SizedBox(width: 8.0),
                   const Icon(Broken.arrow_down_2),
                 ],
@@ -390,7 +393,13 @@ class IndexerSettings extends StatelessWidget {
         title: title,
         actions: [
           if (!isBlackListDialog)
-            ElevatedButton(
+            NamidaButton(
+              textWidget: Obx(() {
+                final blLength =
+                    trackArtistsSeparators ? SettingsController.inst.trackArtistsSeparatorsBlacklist.length : SettingsController.inst.trackGenresSeparatorsBlacklist.length;
+                final t = blLength == 0 ? '' : ' ($blLength)';
+                return Text('${Language.inst.BLACKLIST}$t');
+              }),
               onPressed: () {
                 if (trackArtistsSeparators) {
                   _showSeparatorSymbolsDialog(
@@ -407,18 +416,13 @@ class IndexerSettings extends StatelessWidget {
                   );
                 }
               },
-              child: Obx(() {
-                final blLength =
-                    trackArtistsSeparators ? SettingsController.inst.trackArtistsSeparatorsBlacklist.length : SettingsController.inst.trackGenresSeparatorsBlacklist.length;
-                final t = blLength == 0 ? '' : ' ($blLength)';
-                return Text('${Language.inst.BLACKLIST}$t');
-              }),
             ),
           if (isBlackListDialog) const CancelButton(),
           Obx(
             () => updatingLibrary.value
                 ? const LoadingIndicator()
-                : ElevatedButton(
+                : NamidaButton(
+                    text: Language.inst.ADD,
                     onPressed: () {
                       if (separatorsController.text.isNotEmpty) {
                         if (trackArtistsSeparators) {
@@ -438,7 +442,6 @@ class IndexerSettings extends StatelessWidget {
                         Get.snackbar(Language.inst.EMPTY_VALUE, Language.inst.ENTER_SYMBOL, forwardAnimationCurve: Curves.fastLinearToSlowEaseIn);
                       }
                     },
-                    child: Text(Language.inst.ADD),
                   ),
           ),
         ],

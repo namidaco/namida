@@ -906,313 +906,9 @@ class NamidaMiniPlayer extends StatelessWidget {
                                       ),
                                     ),
                                     child: Padding(
-                                      padding: const EdgeInsets.all(4.0).add(EdgeInsets.only(left: context.width * 0.22)),
+                                      padding: const EdgeInsets.all(4.0),
                                       child: FittedBox(
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.end,
-                                          children: [
-                                            const SizedBox(width: 6.0),
-                                            Tooltip(
-                                              message: Language.inst.REMOVE_DUPLICATES,
-                                              child: ElevatedButton(
-                                                onPressed: () {
-                                                  final qlBefore = Player.inst.currentQueue.length;
-                                                  Player.inst.removeDuplicatesFromQueue();
-                                                  final qlAfter = Player.inst.currentQueue.length;
-                                                  final difference = qlBefore - qlAfter;
-                                                  Get.snackbar(Language.inst.NOTE, "${Language.inst.REMOVED} ${difference.displayTrackKeyword}");
-                                                },
-                                                child: const Icon(Broken.trash),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 6.0),
-                                            Tooltip(
-                                              message: Language.inst.NEW_TRACKS_ADD,
-                                              child: ElevatedButton(
-                                                onPressed: () {
-                                                  NamidaNavigator.inst.navigateDialog(
-                                                    dialog: CustomBlurryDialog(
-                                                      normalTitleStyle: true,
-                                                      title: Language.inst.NEW_TRACKS_ADD,
-                                                      child: Column(
-                                                        children: [
-                                                          CustomListTile(
-                                                            title: Language.inst.NEW_TRACKS_RANDOM,
-                                                            subtitle: Language.inst.NEW_TRACKS_RANDOM_SUBTITLE,
-                                                            icon: Broken.format_circle,
-                                                            maxSubtitleLines: 22,
-                                                            onTap: () {
-                                                              final rt = NamidaGenerator.inst.getRandomTracks(8, 11);
-                                                              Player.inst.addToQueue(rt, emptyTracksMessage: Language.inst.NO_ENOUGH_TRACKS).closeDialog();
-                                                            },
-                                                          ),
-                                                          CustomListTile(
-                                                            title: Language.inst.GENERATE_FROM_DATES,
-                                                            subtitle: Language.inst.GENERATE_FROM_DATES_SUBTITLE,
-                                                            icon: Broken.calendar,
-                                                            maxSubtitleLines: 22,
-                                                            onTap: () {
-                                                              NamidaNavigator.inst.closeDialog();
-                                                              final historyTracks = HistoryController.inst.historyTracks;
-                                                              if (historyTracks.isEmpty) {
-                                                                Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_IN_HISTORY);
-                                                                return;
-                                                              }
-                                                              showCalendarDialog(
-                                                                title: Language.inst.GENERATE_FROM_DATES,
-                                                                buttonText: Language.inst.GENERATE,
-                                                                useHistoryDates: true,
-                                                                onGenerate: (dates) {
-                                                                  final tracks = NamidaGenerator.inst.generateTracksFromHistoryDates(dates.firstOrNull, dates.lastOrNull);
-                                                                  Player.inst
-                                                                      .addToQueue(
-                                                                        tracks,
-                                                                        emptyTracksMessage: Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES,
-                                                                      )
-                                                                      .closeDialog();
-                                                                },
-                                                              );
-                                                            },
-                                                          ),
-                                                          CustomListTile(
-                                                            title: Language.inst.NEW_TRACKS_MOODS,
-                                                            subtitle: Language.inst.NEW_TRACKS_MOODS_SUBTITLE,
-                                                            icon: Broken.emoji_happy,
-                                                            maxSubtitleLines: 22,
-                                                            onTap: () {
-                                                              NamidaNavigator.inst.closeDialog();
-
-                                                              final moods = <String>[];
-
-                                                              // moods from playlists.
-                                                              final allAvailableMoodsPlaylists =
-                                                                  PlaylistController.inst.playlistsMap.entries.expand((element) => element.value.moods).toSet();
-                                                              moods.addAll(allAvailableMoodsPlaylists);
-                                                              // moods from tracks.
-                                                              Indexer.inst.trackStatsMap.forEach((key, value) => moods.addAll(value.moods));
-                                                              if (moods.isEmpty) {
-                                                                Get.snackbar(Language.inst.ERROR, Language.inst.NO_MOODS_AVAILABLE);
-                                                                return;
-                                                              }
-                                                              final RxSet<String> selectedmoods = <String>{}.obs;
-                                                              NamidaNavigator.inst.navigateDialog(
-                                                                dialog: CustomBlurryDialog(
-                                                                  normalTitleStyle: true,
-                                                                  insetPadding: const EdgeInsets.symmetric(horizontal: 48.0),
-                                                                  title: Language.inst.MOODS,
-                                                                  actions: [
-                                                                    const CancelButton(),
-                                                                    ElevatedButton(
-                                                                      onPressed: () {
-                                                                        final genTracks = NamidaGenerator.inst.generateTracksFromMoods(selectedmoods);
-                                                                        Player.inst.addToQueue(genTracks);
-                                                                        NamidaNavigator.inst.closeDialog();
-                                                                      },
-                                                                      child: Text(Language.inst.GENERATE),
-                                                                    ),
-                                                                  ],
-                                                                  child: SizedBox(
-                                                                    height: context.height * 0.4,
-                                                                    width: context.width,
-                                                                    child: NamidaListView(
-                                                                      itemCount: moods.length,
-                                                                      itemExtents: null,
-                                                                      itemBuilder: (context, i) {
-                                                                        final e = moods[i];
-                                                                        return Column(
-                                                                          key: ValueKey(i),
-                                                                          children: [
-                                                                            const SizedBox(height: 12.0),
-                                                                            Obx(
-                                                                              () => ListTileWithCheckMark(
-                                                                                title: e,
-                                                                                active: selectedmoods.contains(e),
-                                                                                onTap: () {
-                                                                                  if (selectedmoods.contains(e)) {
-                                                                                    selectedmoods.remove(e);
-                                                                                  } else {
-                                                                                    selectedmoods.add(e);
-                                                                                  }
-                                                                                },
-                                                                              ),
-                                                                            ),
-                                                                          ],
-                                                                        );
-                                                                      },
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              );
-                                                            },
-                                                          ),
-                                                          CustomListTile(
-                                                            title: Language.inst.NEW_TRACKS_RATINGS,
-                                                            subtitle: Language.inst.NEW_TRACKS_RATINGS_SUBTITLE,
-                                                            icon: Broken.happyemoji,
-                                                            maxSubtitleLines: 22,
-                                                            onTap: () {
-                                                              NamidaNavigator.inst.closeDialog();
-
-                                                              final RxInt minRating = 80.obs;
-                                                              final RxInt maxRating = 100.obs;
-                                                              final RxInt maxNumberOfTracks = 40.obs;
-                                                              NamidaNavigator.inst.navigateDialog(
-                                                                dialog: CustomBlurryDialog(
-                                                                  normalTitleStyle: true,
-                                                                  title: Language.inst.NEW_TRACKS_RATINGS,
-                                                                  actions: [
-                                                                    const CancelButton(),
-                                                                    ElevatedButton(
-                                                                      onPressed: () {
-                                                                        if (minRating.value > maxRating.value) {
-                                                                          Get.snackbar(Language.inst.ERROR, Language.inst.MIN_VALUE_CANT_BE_MORE_THAN_MAX);
-                                                                          return;
-                                                                        }
-                                                                        final tracks = NamidaGenerator.inst.generateTracksFromRatings(
-                                                                          minRating.value,
-                                                                          maxRating.value,
-                                                                          maxNumberOfTracks.value,
-                                                                        );
-                                                                        Player.inst.addToQueue(tracks);
-                                                                        NamidaNavigator.inst.closeDialog();
-                                                                      },
-                                                                      child: Text(Language.inst.GENERATE),
-                                                                    ),
-                                                                  ],
-                                                                  child: Column(
-                                                                    children: [
-                                                                      Row(
-                                                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                                        children: [
-                                                                          Column(
-                                                                            children: [
-                                                                              Text(Language.inst.MINIMUM),
-                                                                              const SizedBox(height: 24.0),
-                                                                              NamidaWheelSlider(
-                                                                                totalCount: 100,
-                                                                                initValue: minRating.value,
-                                                                                itemSize: 1,
-                                                                                squeeze: 0.3,
-                                                                                onValueChanged: (val) {
-                                                                                  minRating.value = val;
-                                                                                },
-                                                                              ),
-                                                                              const SizedBox(height: 2.0),
-                                                                              Obx(
-                                                                                () => Text(
-                                                                                  '${minRating.value}%',
-                                                                                  style: context.textTheme.displaySmall,
-                                                                                ),
-                                                                              )
-                                                                            ],
-                                                                          ),
-                                                                          Column(
-                                                                            children: [
-                                                                              Text(Language.inst.MAXIMUM),
-                                                                              const SizedBox(height: 24.0),
-                                                                              NamidaWheelSlider(
-                                                                                totalCount: 100,
-                                                                                initValue: maxRating.value,
-                                                                                itemSize: 1,
-                                                                                squeeze: 0.3,
-                                                                                onValueChanged: (val) {
-                                                                                  maxRating.value = val;
-                                                                                },
-                                                                              ),
-                                                                              const SizedBox(height: 2.0),
-                                                                              Obx(
-                                                                                () => Text(
-                                                                                  '${maxRating.value}%',
-                                                                                  style: context.textTheme.displaySmall,
-                                                                                ),
-                                                                              ),
-                                                                            ],
-                                                                          )
-                                                                        ],
-                                                                      ),
-                                                                      const SizedBox(height: 24.0),
-                                                                      Text(Language.inst.NUMBER_OF_TRACKS),
-                                                                      NamidaWheelSlider(
-                                                                        totalCount: 100,
-                                                                        initValue: maxNumberOfTracks.value,
-                                                                        itemSize: 1,
-                                                                        squeeze: 0.3,
-                                                                        onValueChanged: (val) {
-                                                                          maxNumberOfTracks.value = val;
-                                                                        },
-                                                                      ),
-                                                                      const SizedBox(height: 2.0),
-                                                                      Obx(
-                                                                        () => Text(
-                                                                          maxNumberOfTracks.value == 0 ? Language.inst.UNLIMITED : '${maxNumberOfTracks.value}',
-                                                                          style: context.textTheme.displaySmall,
-                                                                        ),
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                ),
-                                                              );
-                                                            },
-                                                          ),
-                                                          const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 4.0)),
-                                                          CustomListTile(
-                                                            title: Language.inst.NEW_TRACKS_SIMILARR_RELEASE_DATE,
-                                                            subtitle: Language.inst.NEW_TRACKS_SIMILARR_RELEASE_DATE_SUBTITLE.replaceFirst(
-                                                              '_CURRENT_TRACK_',
-                                                              Player.inst.nowPlayingTrack.value.title.addDQuotation(),
-                                                            ),
-                                                            icon: Broken.calendar_1,
-                                                            onTap: () {
-                                                              final currentTrack = Player.inst.nowPlayingTrack.value;
-                                                              final year = currentTrack.year;
-                                                              if (year == 0) {
-                                                                Get.snackbar(Language.inst.ERROR, Language.inst.NEW_TRACKS_UNKNOWN_YEAR);
-                                                                return;
-                                                              }
-                                                              final tracks = NamidaGenerator.inst.generateTracksFromSameEra(year, currentTrack: currentTrack);
-                                                              Player.inst.addToQueue(tracks, emptyTracksMessage: Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES).closeDialog();
-                                                            },
-                                                          ),
-                                                          Obx(
-                                                            () => CustomListTile(
-                                                              title: Language.inst.NEW_TRACKS_RECOMMENDED,
-                                                              subtitle: Language.inst.NEW_TRACKS_RECOMMENDED_SUBTITLE.replaceFirst(
-                                                                '_CURRENT_TRACK_',
-                                                                Player.inst.nowPlayingTrack.value.title.addDQuotation(),
-                                                              ),
-                                                              icon: Broken.bezier,
-                                                              maxSubtitleLines: 22,
-                                                              onTap: () {
-                                                                final gentracks = NamidaGenerator.inst.generateRecommendedTrack(Player.inst.nowPlayingTrack.value);
-
-                                                                Player.inst
-                                                                    .addToQueue(gentracks, insertNext: true, emptyTracksMessage: Language.inst.NO_TRACKS_IN_HISTORY)
-                                                                    .closeDialog();
-                                                              },
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                                child: const Icon(Broken.add_circle),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 6.0),
-                                            ElevatedButton(
-                                              onPressed: MiniPlayerController.inst.animateQueueToCurrentTrack,
-                                              child: Obx(() => Icon(MiniPlayerController.inst.arrowIcon.value)),
-                                            ),
-                                            const SizedBox(width: 6.0),
-                                            ElevatedButton.icon(
-                                              onPressed: () => Player.inst.shuffleNextTracks(),
-                                              label: Text(Language.inst.SHUFFLE),
-                                              icon: const Icon(Broken.shuffle),
-                                            ),
-                                            const SizedBox(width: 8.0),
-                                          ],
-                                        ),
+                                        child: _queueUtilsRow(context),
                                       ),
                                     ),
                                   ),
@@ -1229,6 +925,314 @@ class NamidaMiniPlayer extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _queueUtilsRow(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        SizedBox(width: context.width * 0.23),
+        const SizedBox(width: 6.0),
+        NamidaButton(
+          tooltip: Language.inst.REMOVE_DUPLICATES,
+          icon: Broken.trash,
+          onPressed: () {
+            final qlBefore = Player.inst.currentQueue.length;
+            Player.inst.removeDuplicatesFromQueue();
+            final qlAfter = Player.inst.currentQueue.length;
+            final difference = qlBefore - qlAfter;
+            Get.snackbar(Language.inst.NOTE, "${Language.inst.REMOVED} ${difference.displayTrackKeyword}");
+          },
+        ),
+        const SizedBox(width: 6.0),
+        _addTracksButton(context),
+        const SizedBox(width: 6.0),
+        Obx(
+          () => NamidaButton(
+            onPressed: MiniPlayerController.inst.animateQueueToCurrentTrack,
+            icon: MiniPlayerController.inst.arrowIcon.value,
+          ),
+        ),
+        const SizedBox(width: 6.0),
+        NamidaButton(
+          text: Language.inst.SHUFFLE,
+          icon: Broken.shuffle,
+          onPressed: Player.inst.shuffleNextTracks,
+        ),
+        const SizedBox(width: 8.0),
+      ],
+    );
+  }
+
+  Widget _addTracksButton(BuildContext context) {
+    return NamidaButton(
+      tooltip: Language.inst.NEW_TRACKS_ADD,
+      icon: Broken.add_circle,
+      onPressed: () {
+        NamidaNavigator.inst.navigateDialog(
+          dialog: CustomBlurryDialog(
+            normalTitleStyle: true,
+            title: Language.inst.NEW_TRACKS_ADD,
+            child: Column(
+              children: [
+                CustomListTile(
+                  title: Language.inst.NEW_TRACKS_RANDOM,
+                  subtitle: Language.inst.NEW_TRACKS_RANDOM_SUBTITLE,
+                  icon: Broken.format_circle,
+                  maxSubtitleLines: 22,
+                  onTap: () {
+                    final rt = NamidaGenerator.inst.getRandomTracks(8, 11);
+                    Player.inst.addToQueue(rt, emptyTracksMessage: Language.inst.NO_ENOUGH_TRACKS).closeDialog();
+                  },
+                ),
+                CustomListTile(
+                  title: Language.inst.GENERATE_FROM_DATES,
+                  subtitle: Language.inst.GENERATE_FROM_DATES_SUBTITLE,
+                  icon: Broken.calendar,
+                  maxSubtitleLines: 22,
+                  onTap: () {
+                    NamidaNavigator.inst.closeDialog();
+                    final historyTracks = HistoryController.inst.historyTracks;
+                    if (historyTracks.isEmpty) {
+                      Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_IN_HISTORY);
+                      return;
+                    }
+                    showCalendarDialog(
+                      title: Language.inst.GENERATE_FROM_DATES,
+                      buttonText: Language.inst.GENERATE,
+                      useHistoryDates: true,
+                      onGenerate: (dates) {
+                        final tracks = NamidaGenerator.inst.generateTracksFromHistoryDates(dates.firstOrNull, dates.lastOrNull);
+                        Player.inst
+                            .addToQueue(
+                              tracks,
+                              emptyTracksMessage: Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES,
+                            )
+                            .closeDialog();
+                      },
+                    );
+                  },
+                ),
+                CustomListTile(
+                  title: Language.inst.NEW_TRACKS_MOODS,
+                  subtitle: Language.inst.NEW_TRACKS_MOODS_SUBTITLE,
+                  icon: Broken.emoji_happy,
+                  maxSubtitleLines: 22,
+                  onTap: () {
+                    NamidaNavigator.inst.closeDialog();
+
+                    final moods = <String>[];
+
+                    // moods from playlists.
+                    final allAvailableMoodsPlaylists = PlaylistController.inst.playlistsMap.entries.expand((element) => element.value.moods).toSet();
+                    moods.addAll(allAvailableMoodsPlaylists);
+                    // moods from tracks.
+                    Indexer.inst.trackStatsMap.forEach((key, value) => moods.addAll(value.moods));
+                    if (moods.isEmpty) {
+                      Get.snackbar(Language.inst.ERROR, Language.inst.NO_MOODS_AVAILABLE);
+                      return;
+                    }
+                    final RxSet<String> selectedmoods = <String>{}.obs;
+                    NamidaNavigator.inst.navigateDialog(
+                      dialog: CustomBlurryDialog(
+                        normalTitleStyle: true,
+                        insetPadding: const EdgeInsets.symmetric(horizontal: 48.0),
+                        title: Language.inst.MOODS,
+                        actions: [
+                          const CancelButton(),
+                          NamidaButton(
+                            text: Language.inst.GENERATE,
+                            onPressed: () {
+                              final genTracks = NamidaGenerator.inst.generateTracksFromMoods(selectedmoods);
+                              Player.inst.addToQueue(genTracks);
+                              NamidaNavigator.inst.closeDialog();
+                            },
+                          ),
+                        ],
+                        child: SizedBox(
+                          height: context.height * 0.4,
+                          width: context.width,
+                          child: NamidaListView(
+                            itemCount: moods.length,
+                            itemExtents: null,
+                            itemBuilder: (context, i) {
+                              final e = moods[i];
+                              return Column(
+                                key: ValueKey(i),
+                                children: [
+                                  const SizedBox(height: 12.0),
+                                  Obx(
+                                    () => ListTileWithCheckMark(
+                                      title: e,
+                                      active: selectedmoods.contains(e),
+                                      onTap: () {
+                                        if (selectedmoods.contains(e)) {
+                                          selectedmoods.remove(e);
+                                        } else {
+                                          selectedmoods.add(e);
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                CustomListTile(
+                  title: Language.inst.NEW_TRACKS_RATINGS,
+                  subtitle: Language.inst.NEW_TRACKS_RATINGS_SUBTITLE,
+                  icon: Broken.happyemoji,
+                  maxSubtitleLines: 22,
+                  onTap: () {
+                    NamidaNavigator.inst.closeDialog();
+
+                    final RxInt minRating = 80.obs;
+                    final RxInt maxRating = 100.obs;
+                    final RxInt maxNumberOfTracks = 40.obs;
+                    NamidaNavigator.inst.navigateDialog(
+                      dialog: CustomBlurryDialog(
+                        normalTitleStyle: true,
+                        title: Language.inst.NEW_TRACKS_RATINGS,
+                        actions: [
+                          const CancelButton(),
+                          NamidaButton(
+                            text: Language.inst.GENERATE,
+                            onPressed: () {
+                              if (minRating.value > maxRating.value) {
+                                Get.snackbar(Language.inst.ERROR, Language.inst.MIN_VALUE_CANT_BE_MORE_THAN_MAX);
+                                return;
+                              }
+                              final tracks = NamidaGenerator.inst.generateTracksFromRatings(
+                                minRating.value,
+                                maxRating.value,
+                                maxNumberOfTracks.value,
+                              );
+                              Player.inst.addToQueue(tracks);
+                              NamidaNavigator.inst.closeDialog();
+                            },
+                          ),
+                        ],
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Column(
+                                  children: [
+                                    Text(Language.inst.MINIMUM),
+                                    const SizedBox(height: 24.0),
+                                    NamidaWheelSlider(
+                                      totalCount: 100,
+                                      initValue: minRating.value,
+                                      itemSize: 1,
+                                      squeeze: 0.3,
+                                      onValueChanged: (val) {
+                                        minRating.value = val;
+                                      },
+                                    ),
+                                    const SizedBox(height: 2.0),
+                                    Obx(
+                                      () => Text(
+                                        '${minRating.value}%',
+                                        style: context.textTheme.displaySmall,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                Column(
+                                  children: [
+                                    Text(Language.inst.MAXIMUM),
+                                    const SizedBox(height: 24.0),
+                                    NamidaWheelSlider(
+                                      totalCount: 100,
+                                      initValue: maxRating.value,
+                                      itemSize: 1,
+                                      squeeze: 0.3,
+                                      onValueChanged: (val) {
+                                        maxRating.value = val;
+                                      },
+                                    ),
+                                    const SizedBox(height: 2.0),
+                                    Obx(
+                                      () => Text(
+                                        '${maxRating.value}%',
+                                        style: context.textTheme.displaySmall,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              ],
+                            ),
+                            const SizedBox(height: 24.0),
+                            Text(Language.inst.NUMBER_OF_TRACKS),
+                            NamidaWheelSlider(
+                              totalCount: 100,
+                              initValue: maxNumberOfTracks.value,
+                              itemSize: 1,
+                              squeeze: 0.3,
+                              onValueChanged: (val) {
+                                maxNumberOfTracks.value = val;
+                              },
+                            ),
+                            const SizedBox(height: 2.0),
+                            Obx(
+                              () => Text(
+                                maxNumberOfTracks.value == 0 ? Language.inst.UNLIMITED : '${maxNumberOfTracks.value}',
+                                style: context.textTheme.displaySmall,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 4.0)),
+                CustomListTile(
+                  title: Language.inst.NEW_TRACKS_SIMILARR_RELEASE_DATE,
+                  subtitle: Language.inst.NEW_TRACKS_SIMILARR_RELEASE_DATE_SUBTITLE.replaceFirst(
+                    '_CURRENT_TRACK_',
+                    Player.inst.nowPlayingTrack.value.title.addDQuotation(),
+                  ),
+                  icon: Broken.calendar_1,
+                  onTap: () {
+                    final currentTrack = Player.inst.nowPlayingTrack.value;
+                    final year = currentTrack.year;
+                    if (year == 0) {
+                      Get.snackbar(Language.inst.ERROR, Language.inst.NEW_TRACKS_UNKNOWN_YEAR);
+                      return;
+                    }
+                    final tracks = NamidaGenerator.inst.generateTracksFromSameEra(year, currentTrack: currentTrack);
+                    Player.inst.addToQueue(tracks, emptyTracksMessage: Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES).closeDialog();
+                  },
+                ),
+                Obx(
+                  () => CustomListTile(
+                    title: Language.inst.NEW_TRACKS_RECOMMENDED,
+                    subtitle: Language.inst.NEW_TRACKS_RECOMMENDED_SUBTITLE.replaceFirst(
+                      '_CURRENT_TRACK_',
+                      Player.inst.nowPlayingTrack.value.title.addDQuotation(),
+                    ),
+                    icon: Broken.bezier,
+                    maxSubtitleLines: 22,
+                    onTap: () {
+                      final gentracks = NamidaGenerator.inst.generateRecommendedTrack(Player.inst.nowPlayingTrack.value);
+
+                      Player.inst.addToQueue(gentracks, insertNext: true, emptyTracksMessage: Language.inst.NO_TRACKS_IN_HISTORY).closeDialog();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -1313,7 +1317,10 @@ class TrackInfo extends StatelessWidget {
                           opacity: opacity,
                           child: Transform.translate(
                             offset: Offset(-100 * (1.0 - cp), 0.0),
-                            child: NamidaLikeButton(track: trackPre),
+                            child: NamidaLikeButton(
+                              track: trackPre,
+                              size: 32.0,
+                            ),
                           ),
                         ),
                       ],

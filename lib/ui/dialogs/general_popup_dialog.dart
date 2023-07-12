@@ -126,7 +126,8 @@ Future<void> showGeneralPopupDialog(
         title: title,
         actions: [
           const CancelButton(),
-          ElevatedButton(
+          NamidaButton(
+            text: Language.inst.SAVE,
             onPressed: () async {
               List<String> moodsPre = controller.text.split(',');
               List<String> moodsFinal = [];
@@ -140,7 +141,6 @@ Future<void> showGeneralPopupDialog(
 
               NamidaNavigator.inst.closeDialog();
             },
-            child: Text(Language.inst.SAVE),
           ),
         ],
         child: Column(
@@ -204,13 +204,13 @@ Future<void> showGeneralPopupDialog(
         title: Language.inst.SET_RATING,
         actions: [
           const CancelButton(),
-          ElevatedButton(
+          NamidaButton(
+            text: Language.inst.SAVE,
             onPressed: () async {
               NamidaNavigator.inst.closeDialog();
               final val = int.tryParse(c.text) ?? 0;
               stats.value = await Indexer.inst.updateTrackStats(tracks.first, rating: val);
             },
-            child: Text(Language.inst.SAVE),
           ),
         ],
         child: CustomTagTextField(
@@ -236,7 +236,8 @@ Future<void> showGeneralPopupDialog(
           title: Language.inst.RENAME_PLAYLIST,
           actions: [
             const CancelButton(),
-            ElevatedButton(
+            NamidaButton(
+              text: Language.inst.SAVE,
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   final didRename = await PlaylistController.inst.renamePlaylist(playlistName!, controller.text);
@@ -247,7 +248,6 @@ Future<void> showGeneralPopupDialog(
                   }
                 }
               },
-              child: Text(Language.inst.SAVE),
             ),
           ],
           child: Column(
@@ -299,12 +299,12 @@ Future<void> showGeneralPopupDialog(
         bodyText: Language.inst.TRACK_PATH_OLD_NEW.replaceFirst('_OLD_NAME_', tracks.first.filenameWOExt).replaceFirst('_NEW_NAME_', newPath.getFilenameWOExt),
         actions: [
           const CancelButton(),
-          ElevatedButton(
+          NamidaButton(
+            text: Language.inst.CONFIRM,
             onPressed: () {
               NamidaNavigator.inst.closeDialog(2);
               EditDeleteController.inst.updateTrackPathInEveryPartOfNamida(tracks.first, newPath);
             },
-            child: Text(Language.inst.CONFIRM),
           )
         ],
       ),
@@ -364,12 +364,12 @@ Future<void> showGeneralPopupDialog(
         title: Language.inst.CHOOSE,
         actions: [
           const CancelButton(),
-          ElevatedButton(
+          NamidaButton(
+            text: Language.inst.PICK_FROM_STORAGE,
             onPressed: () {
               NamidaNavigator.inst.closeDialog();
               pickDirectoryToUpdateTrack();
             },
-            child: Text(Language.inst.PICK_FROM_STORAGE),
           ),
         ],
         child: SizedBox(
@@ -442,14 +442,14 @@ Future<void> showGeneralPopupDialog(
           title: Language.inst.SET_YOUTUBE_LINK,
           actions: [
             const CancelButton(),
-            ElevatedButton(
+            NamidaButton(
+              text: Language.inst.SAVE,
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   editTrackMetadata(tracks.first, insertComment: controller.text);
                   NamidaNavigator.inst.closeDialog();
                 }
               },
-              child: Text(Language.inst.SAVE),
             ),
           ],
           child: CustomTagTextField(
@@ -698,12 +698,12 @@ Future<void> showGeneralPopupDialog(
                                   title: Language.inst.CHOOSE,
                                   actions: [
                                     const CancelButton(),
-                                    ElevatedButton(
+                                    NamidaButton(
+                                      text: Language.inst.PICK_FROM_STORAGE,
                                       onPressed: () {
                                         NamidaNavigator.inst.closeDialog();
                                         pickDirectoryToUpdateTrack();
                                       },
-                                      child: Text(Language.inst.PICK_FROM_STORAGE),
                                     ),
                                   ],
                                   child: highMatchesWidget(firstHighMatchesFiles, showFullPath: true),

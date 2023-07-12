@@ -125,15 +125,17 @@ class MainPageWrapper extends StatelessWidget {
                           const CancelButton(),
                           Obx(
                             () => Player.inst.enableSleepAfterMins.value || Player.inst.enableSleepAfterTracks.value
-                                ? ElevatedButton.icon(
+                                ? NamidaButton(
+                                    icon: Broken.timer_pause,
+                                    text: Language.inst.STOP,
                                     onPressed: () {
                                       Player.inst.resetSleepAfterTimer();
                                       NamidaNavigator.inst.closeDialog();
                                     },
-                                    icon: const Icon(Broken.timer_pause),
-                                    label: Text(Language.inst.STOP),
                                   )
-                                : ElevatedButton.icon(
+                                : NamidaButton(
+                                    icon: Broken.timer_start,
+                                    text: Language.inst.START,
                                     onPressed: () {
                                       if (minutes.value > 0 || tracks.value > 0) {
                                         Player.inst.enableSleepAfterMins.value = minutes.value > 0;
@@ -143,8 +145,6 @@ class MainPageWrapper extends StatelessWidget {
                                       }
                                       NamidaNavigator.inst.closeDialog();
                                     },
-                                    icon: const Icon(Broken.timer_start),
-                                    label: Text(Language.inst.START),
                                   ),
                           ),
                         ],

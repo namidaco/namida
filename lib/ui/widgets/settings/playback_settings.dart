@@ -51,9 +51,9 @@ class PlaybackSettings extends StatelessWidget {
                     onPressed: () => tileOnTap(0),
                     icon: const Icon(Broken.refresh),
                   ),
-                  ElevatedButton(
-                    onPressed: () => NamidaNavigator.inst.closeDialog(),
-                    child: Text(Language.inst.DONE),
+                  NamidaButton(
+                    text: Language.inst.DONE,
+                    onPressed: NamidaNavigator.inst.closeDialog,
                   ),
                 ],
                 child: SizedBox(
@@ -176,9 +176,9 @@ class PlaybackSettings extends StatelessWidget {
                   //   onPressed: () => tileOnTap(0),
                   //   icon: const Icon(Broken.refresh),
                   // ),
-                  ElevatedButton(
-                    onPressed: () => NamidaNavigator.inst.closeDialog(),
-                    child: Text(Language.inst.DONE),
+                  NamidaButton(
+                    text: Language.inst.DONE,
+                    onPressed: NamidaNavigator.inst.closeDialog,
                   ),
                 ],
                 child: SizedBox(

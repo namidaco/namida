@@ -186,7 +186,6 @@ class MostPlayedTracksPage extends StatelessWidget {
               ),
               tracks: tracks,
             ),
-            buildDefaultDragHandles: false,
             padding: const EdgeInsets.only(bottom: kBottomPadding),
             itemCount: HistoryController.inst.topTracksMapListens.length,
             itemBuilder: (context, i) {
@@ -240,7 +239,6 @@ class NormalPlaylistTracksPage extends StatelessWidget {
 
           final tracksWithDate = playlist.tracks;
           final tracks = tracksWithDate.toTracks();
-          final reorderable = PlaylistController.inst.canReorderTracks.value;
 
           return NamidaTracksList(
             queueSource: playlist.toQueueSource(),
@@ -257,30 +255,35 @@ class NormalPlaylistTracksPage extends StatelessWidget {
               ),
               tracks: tracks,
             ),
-            buildDefaultDragHandles: reorderable,
             padding: const EdgeInsets.only(bottom: kBottomPadding),
             onReorder: (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
             queueLength: playlist.tracks.length,
             itemBuilder: (context, i) {
               final trackWithDate = tracksWithDate[i];
-              final w = FadeDismissible(
-                key: Key("Diss_$i${trackWithDate.track.path}"),
-                direction: reorderable ? DismissDirection.horizontal : DismissDirection.none,
-                onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTrackFromPlaylist(playlist.name, i, trackWithDate),
-                child: Stack(
-                  alignment: Alignment.centerLeft,
-                  children: [
-                    TrackTile(
-                      index: i,
-                      track: trackWithDate.track,
-                      trackWithDate: trackWithDate,
-                      playlistName: playlist.name,
-                      queueSource: playlist.toQueueSource(),
-                      draggableThumbnail: reorderable,
+              final w = Obx(
+                () {
+                  final reorderable = PlaylistController.inst.canReorderTracks.value;
+                  return FadeDismissible(
+                    key: Key("Diss_$i${trackWithDate.track.path}"),
+                    direction: reorderable ? DismissDirection.horizontal : DismissDirection.none,
+                    onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTrackFromPlaylist(playlist.name, i, trackWithDate),
+                    child: Stack(
+                      alignment: Alignment.centerLeft,
+                      children: [
+                        TrackTile(
+                          index: i,
+                          track: trackWithDate.track,
+                          trackWithDate: trackWithDate,
+                          playlistName: playlist.name,
+                          queueSource: playlist.toQueueSource(),
+                          draggableThumbnail: reorderable,
+                          selectable: !PlaylistController.inst.canReorderTracks.value,
+                        ),
+                        Obx(() => ThreeLineSmallContainers(enabled: PlaylistController.inst.canReorderTracks.value)),
+                      ],
                     ),
-                    ThreeLineSmallContainers(enabled: reorderable),
-                  ],
-                ),
+                  );
+                },
               );
               if (disableAnimation) return w;
               return AnimatingTile(key: ValueKey(i), position: i, child: w);

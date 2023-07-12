@@ -44,12 +44,12 @@ class TrackTileCustomization extends StatelessWidget {
                     bodyText: Language.inst.FORCE_SQUARED_THUMBNAIL_NOTE,
                     actions: [
                       const CancelButton(),
-                      ElevatedButton(
+                      NamidaButton(
+                        text: Language.inst.CONFIRM,
                         onPressed: () {
                           stg.save(trackThumbnailSizeinList: stg.trackListTileHeight.value);
                           NamidaNavigator.inst.closeDialog();
                         },
-                        child: Text(Language.inst.CONFIRM),
                       ),
                     ],
                   ),

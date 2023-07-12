@@ -32,6 +32,9 @@ class TrackTile extends StatelessWidget {
   final String? playlistName;
   final String thirdLineText;
   final bool displayIndex;
+
+  /// Disable if you want to have priority to hold & reorder instead of selecting.
+  final bool selectable;
   final QueueSource queueSource;
   final void Function(PointerDownEvent event)? onDragStart;
   final void Function(PointerUpEvent event)? onDragEnd;
@@ -50,6 +53,7 @@ class TrackTile extends StatelessWidget {
     required this.index,
     this.thirdLineText = '',
     this.displayIndex = false,
+    this.selectable = true,
     this.onDragStart,
     this.onDragEnd,
     required this.queueSource,
@@ -125,7 +129,7 @@ class TrackTile extends StatelessWidget {
                         }
                       }
                     },
-                onLongPress: onTap != null
+                onLongPress: !selectable || onTap != null
                     ? null
                     : () {
                         if (!isInSelectedTracksPreview) {

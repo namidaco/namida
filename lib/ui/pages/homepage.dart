@@ -156,25 +156,23 @@ class NamidaSearchBar extends StatelessWidget {
       cursorColour: context.theme.colorScheme.onBackground,
       buttonBorderColour: Colors.black45,
       cursorRadius: const Radius.circular(12.0),
-      buttonWidget: IgnorePointer(
+      buttonWidget: const IgnorePointer(
         child: NamidaIconButton(
           icon: Broken.search_normal,
-          onPressed: () {},
         ),
       ),
-      secondaryButtonWidget: IgnorePointer(
+      secondaryButtonWidget: const IgnorePointer(
         child: NamidaIconButton(
           icon: Broken.search_status_1,
-          onPressed: () {},
         ),
       ),
       trailingWidget: NamidaIconButton(
         icon: Broken.close_circle,
         padding: EdgeInsets.zero,
         iconSize: 22,
-        onPressed: () => ScrollSearchController.inst.resetSearch(),
+        onPressed: ScrollSearchController.inst.resetSearch,
       ),
-      onTap: () => ScrollSearchController.inst.showSearchMenu(),
+      onTap: ScrollSearchController.inst.showSearchMenu,
       onPressButton: (isOpen) {
         ScrollSearchController.inst.showSearchMenu(isOpen);
         ScrollSearchController.inst.resetSearch();

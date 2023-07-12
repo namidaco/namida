@@ -42,11 +42,7 @@ class MiniplayerCustomization extends StatelessWidget {
                     dialog: CustomBlurryDialog(
                       normalTitleStyle: true,
                       title: 'uwu',
-                      actions: [
-                        NamidaSupportButton(
-                          onPressed: () => NamidaNavigator.inst.closeDialog(),
-                        ),
-                      ],
+                      actions: const [NamidaSupportButton()],
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -68,11 +64,9 @@ class MiniplayerCustomization extends StatelessWidget {
                                   title: '!!',
                                   bodyText: "EH? YOU DON'T WANT TO SUPPORT?",
                                   actions: [
-                                    NamidaSupportButton(
-                                      title: Language.inst.YES,
-                                      onPressed: () => NamidaNavigator.inst.closeDialog(),
-                                    ),
-                                    ElevatedButton(
+                                    NamidaSupportButton(title: Language.inst.YES),
+                                    NamidaButton(
+                                      text: Language.inst.NO,
                                       onPressed: () {
                                         NamidaNavigator.inst.closeDialog();
                                         NamidaNavigator.inst.navigateDialog(
@@ -80,15 +74,15 @@ class MiniplayerCustomization extends StatelessWidget {
                                             title: 'kechi',
                                             bodyText: 'hidoii ಥ_ಥ here use it as much as u can, dw im not upset or anything ^^, or am i?',
                                             actions: [
-                                              ElevatedButton(
-                                                child: Text(Language.inst.UNLOCK.toUpperCase()),
+                                              NamidaButton(
+                                                text: Language.inst.UNLOCK.toUpperCase(),
                                                 onPressed: () {
                                                   NamidaNavigator.inst.closeDialog();
                                                   SettingsController.inst.save(enablePartyModeInMiniplayer: true);
                                                 },
                                               ),
-                                              ElevatedButton(
-                                                child: Text(Language.inst.SUPPORT.toUpperCase()),
+                                              NamidaButton(
+                                                text: Language.inst.SUPPORT.toUpperCase(),
                                                 onPressed: () {
                                                   NamidaNavigator.inst.closeDialog();
                                                   launchUrlString(k_NAMIDA_SUPPORT_LINK);
@@ -98,7 +92,6 @@ class MiniplayerCustomization extends StatelessWidget {
                                           ),
                                         );
                                       },
-                                      child: Text(Language.inst.NO),
                                     ),
                                   ],
                                 ),

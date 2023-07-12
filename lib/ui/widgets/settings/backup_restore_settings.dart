@@ -68,14 +68,14 @@ class BackupAndRestore extends StatelessWidget {
                     title: Language.inst.CREATE_BACKUP,
                     actions: [
                       const CancelButton(),
-                      ElevatedButton(
+                      NamidaButton(
+                        text: Language.inst.CREATE_BACKUP,
                         onPressed: () {
                           if (SettingsController.inst.backupItemslist.isNotEmpty) {
                             NamidaNavigator.inst.closeDialog();
                             BackupController.inst.createBackupFile();
                           }
                         },
-                        child: Text(Language.inst.CREATE_BACKUP),
                       ),
                     ],
                     child: SizedBox(
@@ -278,7 +278,8 @@ class BackupAndRestore extends StatelessWidget {
                 dialog: CustomBlurryDialog(
                   title: Language.inst.GUIDE,
                   actions: [
-                    ElevatedButton(
+                    NamidaButton(
+                      text: Language.inst.CONFIRM,
                       onPressed: () async {
                         NamidaNavigator.inst.closeDialog();
                         final jsonfile = await FilePicker.platform.pickFiles(allowedExtensions: ['json'], type: FileType.custom);
@@ -293,7 +294,8 @@ class BackupAndRestore extends StatelessWidget {
                             dialog: CustomBlurryDialog(
                               title: Language.inst.CONFIGURE,
                               actions: [
-                                ElevatedButton(
+                                NamidaButton(
+                                  text: Language.inst.CONFIRM,
                                   onPressed: () async {
                                     NamidaNavigator.inst.closeDialog();
                                     await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
@@ -306,7 +308,6 @@ class BackupAndRestore extends StatelessWidget {
                                       newestDate: newestDate,
                                     );
                                   },
-                                  child: Text(Language.inst.CONFIRM),
                                 )
                               ],
                               child: Obx(
@@ -360,7 +361,6 @@ class BackupAndRestore extends StatelessWidget {
                           );
                         }
                       },
-                      child: Text(Language.inst.CONFIRM),
                     ),
                   ],
                   child: NamidaSelectableAutoLinkText(
@@ -401,7 +401,8 @@ class BackupAndRestore extends StatelessWidget {
                 dialog: CustomBlurryDialog(
                   title: Language.inst.GUIDE,
                   actions: [
-                    ElevatedButton(
+                    NamidaButton(
+                      text: Language.inst.CONFIRM,
                       onPressed: () async {
                         NamidaNavigator.inst.closeDialog();
                         final csvFiles = await FilePicker.platform.pickFiles(allowedExtensions: ['csv'], type: FileType.custom);
@@ -415,7 +416,8 @@ class BackupAndRestore extends StatelessWidget {
                               title: Language.inst.CHOOSE,
                               actions: [
                                 const CancelButton(),
-                                ElevatedButton(
+                                NamidaButton(
+                                  textWidget: Obx(() => Text(oldestDate.value != null ? Language.inst.IMPORT_TIME_RANGE : Language.inst.IMPORT_ALL)),
                                   onPressed: () async {
                                     NamidaNavigator.inst.closeDialog();
                                     await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
@@ -425,7 +427,6 @@ class BackupAndRestore extends StatelessWidget {
                                       newestDate: newestDate,
                                     );
                                   },
-                                  child: Obx(() => Text(oldestDate.value != null ? Language.inst.IMPORT_TIME_RANGE : Language.inst.IMPORT_ALL)),
                                 )
                               ],
                               child: Column(
@@ -451,7 +452,6 @@ class BackupAndRestore extends StatelessWidget {
                           );
                         }
                       },
-                      child: Text(Language.inst.CONFIRM),
                     ),
                   ],
                   child: NamidaSelectableAutoLinkText(

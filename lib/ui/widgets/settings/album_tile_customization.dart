@@ -62,12 +62,12 @@ class AlbumTileCustomization extends StatelessWidget {
                     bodyText: Language.inst.FORCE_SQUARED_THUMBNAIL_NOTE,
                     actions: [
                       const CancelButton(),
-                      ElevatedButton(
+                      NamidaButton(
+                        text: Language.inst.CONFIRM,
                         onPressed: () {
                           stg.save(albumThumbnailSizeinList: stg.albumListTileHeight.value);
                           NamidaNavigator.inst.closeDialog();
                         },
-                        child: Text(Language.inst.CONFIRM),
                       ),
                     ],
                   ),

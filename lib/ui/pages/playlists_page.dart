@@ -106,9 +106,7 @@ class PlaylistsPage extends StatelessWidget {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  const SizedBox(
-                                    width: 12.0,
-                                  ),
+                                  const SizedBox(width: 12.0),
                                   Expanded(
                                     child: Text(
                                       PlaylistController.inst.playlistsMap.length.displayPlaylistKeyword,
@@ -120,15 +118,11 @@ class PlaylistsPage extends StatelessWidget {
                                   const FittedBox(
                                     child: GeneratePlaylistButton(),
                                   ),
-                                  const SizedBox(
-                                    width: 8.0,
-                                  ),
+                                  const SizedBox(width: 8.0),
                                   const FittedBox(
                                     child: CreatePlaylistButton(),
                                   ),
-                                  const SizedBox(
-                                    width: 8.0,
-                                  ),
+                                  const SizedBox(width: 8.0),
                                 ],
                               ),
                             ),
@@ -149,10 +143,10 @@ class PlaylistsPage extends StatelessWidget {
                                   children: [
                                     SizedBox(width: defaultCardHorizontalPadding),
                                     Expanded(
-                                      child: Obx(
-                                        () => NamidaHero(
-                                          tag: 'DPC_history',
-                                          child: DefaultPlaylistCard(
+                                      child: NamidaHero(
+                                        tag: 'DPC_history',
+                                        child: Obx(
+                                          () => DefaultPlaylistCard(
                                             colorScheme: Colors.grey,
                                             icon: Broken.refresh,
                                             title: Language.inst.HISTORY,
@@ -164,10 +158,10 @@ class PlaylistsPage extends StatelessWidget {
                                     ),
                                     SizedBox(width: defaultCardHorizontalPaddingCenter),
                                     Expanded(
-                                      child: Obx(
-                                        () => NamidaHero(
-                                          tag: 'DPC_mostplayed',
-                                          child: DefaultPlaylistCard(
+                                      child: NamidaHero(
+                                        tag: 'DPC_mostplayed',
+                                        child: Obx(
+                                          () => DefaultPlaylistCard(
                                             colorScheme: Colors.green,
                                             icon: Broken.award,
                                             title: Language.inst.MOST_PLAYED,
@@ -185,10 +179,10 @@ class PlaylistsPage extends StatelessWidget {
                                   children: [
                                     SizedBox(width: defaultCardHorizontalPadding),
                                     Expanded(
-                                      child: Obx(
-                                        () => NamidaHero(
-                                          tag: 'DPC_favs',
-                                          child: DefaultPlaylistCard(
+                                      child: NamidaHero(
+                                        tag: 'DPC_favs',
+                                        child: Obx(
+                                          () => DefaultPlaylistCard(
                                             colorScheme: Colors.red,
                                             icon: Broken.heart,
                                             title: Language.inst.FAVOURITES,
@@ -200,10 +194,10 @@ class PlaylistsPage extends StatelessWidget {
                                     ),
                                     SizedBox(width: defaultCardHorizontalPaddingCenter),
                                     Expanded(
-                                      child: Obx(
-                                        () => NamidaHero(
-                                          tag: 'DPC_queues',
-                                          child: DefaultPlaylistCard(
+                                      child: NamidaHero(
+                                        tag: 'DPC_queues',
+                                        child: Obx(
+                                          () => DefaultPlaylistCard(
                                             colorScheme: Colors.blue,
                                             icon: Broken.driver,
                                             title: Language.inst.QUEUES,

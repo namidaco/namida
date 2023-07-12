@@ -72,9 +72,9 @@ class ThemeSetting extends StatelessWidget {
                           NamidaNavigator.inst.closeDialog();
                         },
                       ),
-                      ElevatedButton(
-                        onPressed: () => NamidaNavigator.inst.closeDialog(),
-                        child: Text(Language.inst.DONE),
+                      NamidaButton(
+                        text: Language.inst.DONE,
+                        onPressed: NamidaNavigator.inst.closeDialog,
                       ),
                     ],
                     child: ColorPicker(

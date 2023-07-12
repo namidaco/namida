@@ -132,12 +132,12 @@ class NamidaDialogs {
           bodyText: '${Language.inst.DELETE_PLAYLIST}: "${playlist.name}"?',
           actions: [
             const CancelButton(),
-            ElevatedButton(
+            NamidaButton(
+              text: Language.inst.DELETE.toUpperCase(),
               onPressed: () {
                 PlaylistController.inst.removePlaylist(playlist);
                 NamidaNavigator.inst.closeDialog();
               },
-              child: Text(Language.inst.DELETE.toUpperCase()),
             )
           ],
         ),

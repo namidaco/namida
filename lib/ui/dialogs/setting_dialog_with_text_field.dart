@@ -112,47 +112,48 @@ void showSettingDialogWithTextField({
               icon: const Icon(Broken.refresh),
             ),
           const CancelButton(),
-          ElevatedButton(
-              onPressed: () {
-                if (formKey.currentState!.validate()) {
-                  if (trackThumbnailSizeinList) {
-                    stg.save(trackThumbnailSizeinList: double.parse(controller.text));
-                  }
-                  if (trackListTileHeight) {
-                    stg.save(trackListTileHeight: double.parse(controller.text));
-                    Dimensions.inst.updateTrackTileDimensions();
-                  }
-                  if (albumThumbnailSizeinList) {
-                    stg.save(albumThumbnailSizeinList: double.parse(controller.text));
-                  }
-                  if (albumListTileHeight) {
-                    stg.save(albumListTileHeight: double.parse(controller.text));
-                    Dimensions.inst.updateAlbumTileDimensions();
-                  }
-
-                  if (nowPlayingImageContainerHeight) {
-                    stg.save(nowPlayingImageContainerHeight: double.parse(controller.text));
-                  }
-                  if (borderRadiusMultiplier) {
-                    stg.save(borderRadiusMultiplier: double.parse(controller.text));
-                  }
-                  if (fontScaleFactor) {
-                    stg.save(fontScaleFactor: double.parse(controller.text) / 100);
-                  }
-                  if (dateTimeFormat) {
-                    stg.save(dateTimeFormat: controller.text);
-                  }
-                  if (trackTileSeparator) {
-                    stg.save(trackTileSeparator: controller.text);
-                  }
-                  if (addNewPlaylist) {
-                    PlaylistController.inst.addNewPlaylist(controller.text);
-                  }
-
-                  NamidaNavigator.inst.closeDialog();
+          NamidaButton(
+            text: Language.inst.SAVE,
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                if (trackThumbnailSizeinList) {
+                  stg.save(trackThumbnailSizeinList: double.parse(controller.text));
                 }
-              },
-              child: Text(Language.inst.SAVE))
+                if (trackListTileHeight) {
+                  stg.save(trackListTileHeight: double.parse(controller.text));
+                  Dimensions.inst.updateTrackTileDimensions();
+                }
+                if (albumThumbnailSizeinList) {
+                  stg.save(albumThumbnailSizeinList: double.parse(controller.text));
+                }
+                if (albumListTileHeight) {
+                  stg.save(albumListTileHeight: double.parse(controller.text));
+                  Dimensions.inst.updateAlbumTileDimensions();
+                }
+
+                if (nowPlayingImageContainerHeight) {
+                  stg.save(nowPlayingImageContainerHeight: double.parse(controller.text));
+                }
+                if (borderRadiusMultiplier) {
+                  stg.save(borderRadiusMultiplier: double.parse(controller.text));
+                }
+                if (fontScaleFactor) {
+                  stg.save(fontScaleFactor: double.parse(controller.text) / 100);
+                }
+                if (dateTimeFormat) {
+                  stg.save(dateTimeFormat: controller.text);
+                }
+                if (trackTileSeparator) {
+                  stg.save(trackTileSeparator: controller.text);
+                }
+                if (addNewPlaylist) {
+                  PlaylistController.inst.addNewPlaylist(controller.text);
+                }
+
+                NamidaNavigator.inst.closeDialog();
+              }
+            },
+          ),
         ],
         child: Stack(
           alignment: Alignment.bottomCenter,

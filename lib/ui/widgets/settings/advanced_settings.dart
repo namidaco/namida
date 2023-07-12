@@ -118,7 +118,8 @@ class AdvancedSettings extends StatelessWidget {
                   title: Language.inst.CHOOSE,
                   actions: [
                     const CancelButton(),
-                    ElevatedButton(
+                    NamidaButton(
+                      text: Language.inst.REMOVE,
                       onPressed: () async {
                         final removedNum = await HistoryController.inst.removeSourcesTracksFromHistory(
                           sourcesToDelete,
@@ -128,7 +129,6 @@ class AdvancedSettings extends StatelessWidget {
                         NamidaNavigator.inst.closeDialog();
                         Get.snackbar(Language.inst.NOTE, "${Language.inst.REMOVED} ${removedNum.displayTrackKeyword}");
                       },
-                      child: Text(Language.inst.REMOVE),
                     )
                   ],
                   child: Obx(
@@ -206,12 +206,12 @@ class AdvancedSettings extends StatelessWidget {
                     bodyText: Language.inst.CLEAR_IMAGE_CACHE_WARNING,
                     actions: [
                       const CancelButton(),
-                      ElevatedButton(
+                      NamidaButton(
+                        text: Language.inst.CLEAR.toUpperCase(),
                         onPressed: () async {
                           NamidaNavigator.inst.closeDialog();
                           await Indexer.inst.clearImageCache();
                         },
-                        child: Text(Language.inst.CLEAR.toUpperCase()),
                       ),
                     ],
                   ),
@@ -236,12 +236,12 @@ class AdvancedSettings extends StatelessWidget {
                     bodyText: Language.inst.CLEAR_WAVEFORM_DATA_WARNING,
                     actions: [
                       const CancelButton(),
-                      ElevatedButton(
+                      NamidaButton(
+                        text: Language.inst.CLEAR.toUpperCase(),
                         onPressed: () {
                           NamidaNavigator.inst.closeDialog();
                           Indexer.inst.clearWaveformData();
                         },
-                        child: Text(Language.inst.CLEAR.toUpperCase()),
                       ),
                     ],
                   ),
@@ -270,20 +270,20 @@ class AdvancedSettings extends StatelessWidget {
                     bodyText: "${_getVideoSubtitleText(allvideo)}\n${Language.inst.CLEAR_VIDEO_CACHE_NOTE}",
                     actions: [
                       /// Pressing Choose
-                      ElevatedButton(
+                      NamidaButton(
+                        text: Language.inst.CHOOSE,
                         onPressed: () {
                           NamidaNavigator.inst.closeDialog();
                           _showChooseVideosToDeleteDialog(allvideo);
                         },
-                        child: Text(Language.inst.CHOOSE),
                       ),
                       const CancelButton(),
-                      ElevatedButton(
+                      NamidaButton(
+                        text: Language.inst.CLEAR.toUpperCase(),
                         onPressed: () async {
                           NamidaNavigator.inst.closeDialog();
                           await Indexer.inst.clearVideoCache();
                         },
-                        child: Text(Language.inst.CLEAR.toUpperCase()),
                       ),
                     ],
                   ),
@@ -315,7 +315,8 @@ class AdvancedSettings extends StatelessWidget {
           const CancelButton(),
 
           /// Clear after choosing
-          ElevatedButton(
+          NamidaButton(
+            text: Language.inst.CLEAR.toUpperCase(),
             onPressed: () async {
               if (videosToDelete.isEmpty) {
                 return;
@@ -328,19 +329,18 @@ class AdvancedSettings extends StatelessWidget {
                     const CancelButton(),
 
                     /// final clear confirm
-                    ElevatedButton(
+                    NamidaButton(
+                      text: Language.inst.CLEAR.toUpperCase(),
                       onPressed: () async {
                         NamidaNavigator.inst.closeDialog(2);
                         await Indexer.inst.clearVideoCache(videosToDelete);
                       },
-                      child: Text(Language.inst.CLEAR.toUpperCase()),
                     ),
                   ],
                   bodyText: _getVideoSubtitleText(videosToDelete),
                 ),
               );
             },
-            child: Text(Language.inst.CLEAR.toUpperCase()),
           ),
         ],
         child: CupertinoScrollbar(

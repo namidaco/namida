@@ -73,9 +73,9 @@ class ExtrasSettings extends StatelessWidget {
                 dialog: CustomBlurryDialog(
                   title: Language.inst.DEFAULT_LIBRARY_TAB,
                   actions: [
-                    ElevatedButton(
-                      onPressed: () => NamidaNavigator.inst.closeDialog(),
-                      child: Text(Language.inst.DONE),
+                    NamidaButton(
+                      text: Language.inst.DONE,
+                      onPressed: NamidaNavigator.inst.closeDialog,
                     ),
                   ],
                   child: SizedBox(
@@ -130,9 +130,9 @@ class ExtrasSettings extends StatelessWidget {
                   dialog: CustomBlurryDialog(
                     title: Language.inst.LIBRARY_TABS,
                     actions: [
-                      ElevatedButton(
-                        onPressed: () => NamidaNavigator.inst.closeDialog(),
-                        child: Text(Language.inst.DONE),
+                      NamidaButton(
+                        text: Language.inst.DONE,
+                        onPressed: NamidaNavigator.inst.closeDialog,
                       ),
                     ],
                     child: Obx(
@@ -244,9 +244,9 @@ class ExtrasSettings extends StatelessWidget {
                             SettingsController.inst.save(trackSearchFilter: ['title', 'artist', 'album']);
                           },
                         ),
-                        ElevatedButton(
-                          onPressed: () => NamidaNavigator.inst.closeDialog(),
-                          child: Text(Language.inst.SAVE),
+                        NamidaButton(
+                          text: Language.inst.SAVE,
+                          onPressed: NamidaNavigator.inst.closeDialog,
                         ),
                       ],
                       child: SingleChildScrollView(
@@ -344,12 +344,12 @@ class ExtrasSettings extends StatelessWidget {
                     bodyText: Language.inst.FORCE_STOP_WAVEFORM_GENERATION,
                     actions: [
                       const CancelButton(),
-                      ElevatedButton(
+                      NamidaButton(
+                        text: Language.inst.STOP,
                         onPressed: () {
                           WaveformController.inst.generatingAllWaveforms.value = false;
                           NamidaNavigator.inst.closeDialog();
                         },
-                        child: Text(Language.inst.STOP),
                       ),
                     ],
                   ),
@@ -363,12 +363,12 @@ class ExtrasSettings extends StatelessWidget {
                         .replaceFirst('_WAVEFORM_TOTAL_LENGTH_', '${allTracksInLibrary.length}'),
                     actions: [
                       const CancelButton(),
-                      ElevatedButton(
+                      NamidaButton(
+                        text: Language.inst.GENERATE,
                         onPressed: () {
                           WaveformController.inst.generateAllWaveforms();
                           NamidaNavigator.inst.closeDialog();
                         },
-                        child: Text(Language.inst.GENERATE),
                       ),
                     ],
                   ),
@@ -395,12 +395,12 @@ class ExtrasSettings extends StatelessWidget {
                     bodyText: Language.inst.FORCE_STOP_COLOR_PALETTE_GENERATION,
                     actions: [
                       const CancelButton(),
-                      ElevatedButton(
+                      NamidaButton(
+                        text: Language.inst.STOP,
                         onPressed: () {
                           CurrentColor.inst.stopGeneratingColorPalettes();
                           NamidaNavigator.inst.closeDialog();
                         },
-                        child: Text(Language.inst.STOP),
                       ),
                     ],
                   ),
@@ -413,12 +413,12 @@ class ExtrasSettings extends StatelessWidget {
                         .replaceFirst('_REMAINING_COLOR_PALETTES_', '${allTracksInLibrary.length - Indexer.inst.colorPalettesInStorage.value}'),
                     actions: [
                       const CancelButton(),
-                      ElevatedButton(
+                      NamidaButton(
+                        text: Language.inst.EXTRACT,
                         onPressed: () {
                           CurrentColor.inst.generateAllColorPalettes();
                           NamidaNavigator.inst.closeDialog();
                         },
-                        child: Text(Language.inst.EXTRACT),
                       ),
                     ],
                   ),

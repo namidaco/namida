@@ -1,8 +1,8 @@
 import 'dart:ui';
 
-import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
 
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:checkmark/checkmark.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -231,15 +231,13 @@ class CustomListTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 )
               : null,
-          // ignore: prefer_if_null_operators
-          trailing: trailingRaw != null
-              ? trailingRaw
-              : trailingText != null
+          trailing: trailingRaw ??
+              (trailingText != null
                   ? Text(
                       trailingText!,
                       style: context.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
                     )
-                  : FittedBox(child: trailing),
+                  : FittedBox(child: trailing)),
         ),
       ),
     );
@@ -424,20 +422,98 @@ class CustomBlurryDialog extends StatelessWidget {
   }
 }
 
-class AddFolderButton extends StatelessWidget {
-  final void Function()? onPressed;
-  const AddFolderButton({super.key, this.onPressed});
+class NamidaButton extends StatelessWidget {
+  final IconData? icon;
+  final double? iconSize;
+  final String? text;
+  final Widget? textWidget;
+
+  /// will be used if the icon only is sent.
+  final String tooltip;
+  final void Function() onPressed;
+  final bool minimumSize;
+  final bool? enabled;
+
+  const NamidaButton({
+    super.key,
+    this.icon,
+    this.iconSize,
+    this.text,
+    this.textWidget,
+    this.tooltip = '',
+    required this.onPressed,
+    this.minimumSize = false,
+    this.enabled,
+  });
+
+  Widget _getWidget(Widget child) {
+    return enabled == null
+        ? child
+        : IgnorePointer(
+            ignoring: !enabled!,
+            child: AnimatedOpacity(
+              opacity: enabled! ? 1.0 : 0.6,
+              duration: const Duration(milliseconds: 250),
+              child: child,
+            ),
+          );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton.icon(
-      icon: const Icon(
-        Broken.folder_add,
-        size: 18,
-      ),
-      label: Text(Language.inst.ADD),
-      onPressed: onPressed,
-    );
+    final iconChild = Icon(icon, size: iconSize);
+    final textChild = Text(text ?? '');
+    final onTap = onPressed;
+    final style = minimumSize
+        ? ElevatedButton.styleFrom(
+            fixedSize: const Size(0.0, 0.0),
+            padding: EdgeInsets.zero,
+          )
+        : null;
+
+    if (textWidget != null) {
+      return _getWidget(
+        ElevatedButton(
+          style: style,
+          onPressed: onTap,
+          child: textWidget,
+        ),
+      );
+    }
+    // -- icon X && text ✓
+    if (icon == null && text != null) {
+      return _getWidget(
+        ElevatedButton(
+          style: style,
+          onPressed: onTap,
+          child: textChild,
+        ),
+      );
+    }
+    // -- icon ✓ && text X
+    if (icon != null && text == null) {
+      return Tooltip(
+        message: tooltip,
+        child: _getWidget(
+          ElevatedButton(
+            style: style,
+            onPressed: onTap,
+            child: iconChild,
+          ),
+        ),
+      );
+    }
+    // -- icon ✓ && text ✓
+    if (icon != null && text != null) {
+      return _getWidget(
+        ElevatedButton.icon(
+          onPressed: onTap,
+          icon: iconChild,
+          label: textChild,
+        ),
+      );
+    }
+    throw Exception('icon or text must be provided');
   }
 }
 
@@ -691,13 +767,13 @@ class CreatePlaylistButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton.icon(
+    return NamidaButton(
+      icon: Broken.add,
+      text: Language.inst.CREATE,
       onPressed: () => showSettingDialogWithTextField(
         title: Language.inst.CREATE_NEW_PLAYLIST,
         addNewPlaylist: true,
       ),
-      icon: const Icon(Broken.add),
-      label: Text(Language.inst.CREATE),
     );
   }
 }
@@ -707,15 +783,15 @@ class GeneratePlaylistButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton.icon(
+    return NamidaButton(
+      icon: Broken.shuffle,
+      text: Language.inst.RANDOM,
       onPressed: () {
         final numbers = PlaylistController.inst.generateRandomPlaylist();
         if (numbers == 0) {
           Get.snackbar(Language.inst.ERROR, Language.inst.NO_ENOUGH_TRACKS);
         }
       },
-      icon: const Icon(Broken.shuffle),
-      label: Text(Language.inst.RANDOM),
     );
   }
 }
@@ -1096,7 +1172,7 @@ class NamidaIconButton extends StatefulWidget {
     this.horizontalPadding = 10.0,
     this.verticalPadding = 0.0,
     required this.icon,
-    required this.onPressed,
+    this.onPressed,
     this.iconSize,
     this.iconColor,
     this.tooltip,
@@ -1290,93 +1366,101 @@ class SubpagesTopContainer extends StatelessWidget {
         children: [
           imageWidget,
           Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(
-                  height: 18.0,
-                ),
-                Container(
-                  padding: const EdgeInsets.only(left: 14.0),
-                  child: NamidaHero(
-                    tag: '${pauseHero}line1_$heroTag',
-                    child: Text(
-                      title,
-                      style: context.textTheme.displayLarge,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 2.0,
-                ),
-                Container(
-                  padding: const EdgeInsets.only(left: 14.0),
-                  child: NamidaHero(
-                    tag: '${pauseHero}line2_$heroTag',
-                    child: Text(
-                      subtitle,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
-                    ),
-                  ),
-                ),
-                if (thirdLineText != '') ...[
-                  const SizedBox(
-                    height: 2.0,
-                  ),
-                  Container(
-                    padding: const EdgeInsets.only(left: 14.0),
-                    child: NamidaHero(
-                      tag: '${pauseHero}line3_$heroTag',
-                      child: Text(
-                        thirdLineText,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Transform.scale(
+                  scale: (constraints.maxWidth * 0.005).withMaximum(1.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(
+                        height: 18.0,
                       ),
-                    ),
-                  ),
-                ],
-                const SizedBox(
-                  height: 18.0,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    const SizedBox(width: 6.0),
-                    ElevatedButton(
-                      onPressed: () => Player.inst.playOrPause(
-                        0,
-                        tracks,
-                        source,
-                        shuffle: true,
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        fixedSize: const Size(0.0, 0.0),
-                        padding: EdgeInsets.zero,
-                      ),
-                      child: const Icon(Broken.shuffle),
-                    ),
-                    const SizedBox(width: 6.0),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => Player.inst.addToQueue(tracks),
-                        icon: const StackedIcon(baseIcon: Broken.play, secondaryIcon: Broken.add_circle),
-                        label: FittedBox(child: Text(Language.inst.PLAY_LAST)),
-                        style: ElevatedButton.styleFrom(
-                          fixedSize: const Size(0.0, 0.0),
-                          padding: EdgeInsets.zero,
+                      Container(
+                        padding: const EdgeInsets.only(left: 14.0),
+                        child: NamidaHero(
+                          tag: '${pauseHero}line1_$heroTag',
+                          child: Text(
+                            title,
+                            style: context.textTheme.displayLarge,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 6.0),
-                  ],
-                )
-              ],
+                      const SizedBox(
+                        height: 2.0,
+                      ),
+                      Container(
+                        padding: const EdgeInsets.only(left: 14.0),
+                        child: NamidaHero(
+                          tag: '${pauseHero}line2_$heroTag',
+                          child: Text(
+                            subtitle,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
+                          ),
+                        ),
+                      ),
+                      if (thirdLineText != '') ...[
+                        const SizedBox(
+                          height: 2.0,
+                        ),
+                        Container(
+                          padding: const EdgeInsets.only(left: 14.0),
+                          child: NamidaHero(
+                            tag: '${pauseHero}line3_$heroTag',
+                            child: Text(
+                              thirdLineText,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(
+                        height: 18.0,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          const SizedBox(width: 6.0),
+                          NamidaButton(
+                            minimumSize: true,
+                            icon: Broken.shuffle,
+                            onPressed: () => Player.inst.playOrPause(
+                              0,
+                              tracks,
+                              source,
+                              shuffle: true,
+                            ),
+                          ),
+                          const SizedBox(width: 6.0),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => Player.inst.addToQueue(tracks),
+                              icon: const StackedIcon(baseIcon: Broken.play, secondaryIcon: Broken.add_circle),
+                              label: Text(
+                                Language.inst.PLAY_LAST,
+                                style: TextStyle(fontSize: (constraints.maxWidth * 0.08).withMaximum(13.0).multipliedFontScale),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                fixedSize: const Size(0.0, 0.0),
+                                padding: EdgeInsets.zero,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6.0),
+                        ],
+                      )
+                    ],
+                  ),
+                );
+              },
             ),
           ),
           // TODO: widget for most played music [CalendarSelectDay(), DateType(day, week, month, year, custom)]
@@ -1877,7 +1961,7 @@ class NamidaTracksList extends StatelessWidget {
   final EdgeInsetsGeometry? paddingAfterHeader;
   final ScrollController? scrollController;
   final EdgeInsets? padding;
-  final bool? buildDefaultDragHandles;
+  final bool isTrackSelectable;
   final ScrollPhysics? physics;
   final QueueSource queueSource;
   final bool displayIndex;
@@ -1894,7 +1978,7 @@ class NamidaTracksList extends StatelessWidget {
     this.scrollController,
     this.padding = const EdgeInsets.only(bottom: kBottomPadding),
     required this.queueLength,
-    this.buildDefaultDragHandles,
+    this.isTrackSelectable = false,
     this.physics,
     required this.queueSource,
     this.displayIndex = false,
@@ -1911,7 +1995,6 @@ class NamidaTracksList extends StatelessWidget {
       itemCount: queueLength,
       itemExtents: List<double>.filled(queueLength, Dimensions.inst.trackTileItemExtent),
       padding: padding,
-      buildDefaultDragHandles: buildDefaultDragHandles ?? onReorder != null,
       physics: physics,
       itemBuilder: itemBuilder ??
           (context, i) {
@@ -1925,6 +2008,7 @@ class NamidaTracksList extends StatelessWidget {
                   index: i,
                   track: track,
                   draggableThumbnail: onReorder != null,
+                  selectable: isTrackSelectable,
                   queueSource: queueSource,
                   displayIndex: displayIndex,
                 ),
@@ -1938,19 +2022,18 @@ class NamidaTracksList extends StatelessWidget {
 
 class NamidaSupportButton extends StatelessWidget {
   final String? title;
-  final VoidCallback? onPressed;
-  const NamidaSupportButton({super.key, this.title, this.onPressed});
+  final bool closeDialog;
+  const NamidaSupportButton({super.key, this.title, this.closeDialog = true});
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton.icon(
+    return NamidaButton(
+      icon: Broken.heart,
+      text: title ?? Language.inst.SUPPORT,
       onPressed: () {
-        if (onPressed != null) onPressed!();
-
+        closeDialog.closeDialog();
         launchUrlString(k_NAMIDA_SUPPORT_LINK);
       },
-      icon: const Icon(Broken.heart),
-      label: Text(title ?? Language.inst.SUPPORT),
     );
   }
 }
