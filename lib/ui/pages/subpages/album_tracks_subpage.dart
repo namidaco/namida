@@ -29,7 +29,7 @@ class AlbumTracksPage extends StatelessWidget {
           queueSource: QueueSource.album,
           queueLength: tracks.length,
           queue: tracks,
-          displayIndex: SettingsController.inst.displayTrackNumberinAlbumPage.value,
+          displayTrackNumber: SettingsController.inst.displayTrackNumberinAlbumPage.value,
           header: SubpagesTopContainer(
             title: name,
             source: QueueSource.album,

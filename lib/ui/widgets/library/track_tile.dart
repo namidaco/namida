@@ -31,7 +31,7 @@ class TrackTile extends StatelessWidget {
   final void Function()? onTap;
   final String? playlistName;
   final String thirdLineText;
-  final bool displayIndex;
+  final bool displayTrackNumber;
 
   /// Disable if you want to have priority to hold & reorder instead of selecting.
   final bool selectable;
@@ -52,7 +52,7 @@ class TrackTile extends StatelessWidget {
     this.playlistName,
     required this.index,
     this.thirdLineText = '',
-    this.displayIndex = false,
+    this.displayTrackNumber = false,
     this.selectable = true,
     this.onDragStart,
     this.onDragEnd,
@@ -163,7 +163,7 @@ class TrackTile extends StatelessWidget {
                                     forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
                                     useTrackTileCacheHeight: true,
                                     onTopWidgets: [
-                                      if (displayIndex)
+                                      if (displayTrackNumber)
                                         Positioned(
                                           bottom: 0,
                                           right: 0,
@@ -171,7 +171,7 @@ class TrackTile extends StatelessWidget {
                                             padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
                                             borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
                                             child: Text(
-                                              (index + 1).toString(),
+                                              (track.trackNo).toString(),
                                               style: context.textTheme.displaySmall,
                                             ),
                                           ),

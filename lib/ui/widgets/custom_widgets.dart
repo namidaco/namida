@@ -1964,7 +1964,7 @@ class NamidaTracksList extends StatelessWidget {
   final bool isTrackSelectable;
   final ScrollPhysics? physics;
   final QueueSource queueSource;
-  final bool displayIndex;
+  final bool displayTrackNumber;
   final bool shouldAnimate;
   const NamidaTracksList({
     super.key,
@@ -1981,7 +1981,7 @@ class NamidaTracksList extends StatelessWidget {
     this.isTrackSelectable = false,
     this.physics,
     required this.queueSource,
-    this.displayIndex = false,
+    this.displayTrackNumber = false,
     this.shouldAnimate = true,
   });
 
@@ -2010,7 +2010,7 @@ class NamidaTracksList extends StatelessWidget {
                   draggableThumbnail: onReorder != null,
                   selectable: isTrackSelectable,
                   queueSource: queueSource,
-                  displayIndex: displayIndex,
+                  displayTrackNumber: displayTrackNumber,
                 ),
               );
             }
