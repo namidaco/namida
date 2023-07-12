@@ -160,19 +160,35 @@ Future<void> showCalendarDialog({
   CalendarDatePicker2Type calendarType = CalendarDatePicker2Type.range,
   DateTime? firstDate,
   DateTime? lastDate,
+  required bool useHistoryDates,
   void Function(List<DateTime> dates)? onChanged,
   required void Function(List<DateTime> dates) onGenerate,
 }) async {
   final dates = <DateTime>[];
 
   final RxInt daysNumber = 0.obs;
+  final RxBool canGenerate = false.obs;
+
   void calculateDaysNumber() {
-    if (calendarType == CalendarDatePicker2Type.range) {
+    if (canGenerate.value) {
       if (dates.length == 2) {
-        daysNumber.value = dates[0].difference(dates[1]).inDays.abs();
-      } else {
-        daysNumber.value = 0;
+        daysNumber.value = dates[0].difference(dates[1]).inDays.abs() + 1;
       }
+    } else {
+      daysNumber.value = 0;
+    }
+  }
+
+  void reEvaluateCanGenerate() {
+    switch (calendarType) {
+      case CalendarDatePicker2Type.range:
+        canGenerate.value = dates.length == 2;
+      case CalendarDatePicker2Type.single:
+        canGenerate.value = dates.length == 1;
+      case CalendarDatePicker2Type.multi:
+        canGenerate.value = true;
+      default:
+        null;
     }
   }
 
@@ -189,9 +205,18 @@ Future<void> showCalendarDialog({
       insetPadding: const EdgeInsets.symmetric(horizontal: 28.0),
       actions: [
         const CancelButton(),
-        ElevatedButton(
-          onPressed: () => onGenerate(dates),
-          child: Text(buttonText),
+        Obx(
+          () => AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: canGenerate.value ? 1.0 : 0.5,
+            child: IgnorePointer(
+              ignoring: !canGenerate.value,
+              child: ElevatedButton(
+                onPressed: () => onGenerate(dates),
+                child: Text(buttonText),
+              ),
+            ),
+          ),
         ),
       ],
       child: CalendarDatePicker2(
@@ -203,12 +228,13 @@ Future<void> showCalendarDialog({
 
           if (onChanged != null) onChanged(dts);
 
+          reEvaluateCanGenerate();
           calculateDaysNumber();
         },
         config: CalendarDatePicker2Config(
           calendarType: calendarType,
-          firstDate: firstDate,
-          lastDate: lastDate,
+          firstDate: useHistoryDates ? HistoryController.inst.oldestTrack?.dateAdded.milliSecondsSinceEpoch : firstDate,
+          lastDate: useHistoryDates ? HistoryController.inst.newestTrack?.dateAdded.milliSecondsSinceEpoch : lastDate,
         ),
         value: const [],
       ),

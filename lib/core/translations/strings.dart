@@ -108,6 +108,7 @@ class Language {
   String get PREVIEW => 'Preview';
   String get JUMP_TO_FIRST_TRACK_AFTER_QUEUE_FINISH => 'Jump to first track after finishing queue';
   String get COULDNT_RENAME_PLAYLIST => 'Could\'nt rename playlist';
+  String get BETWEEN_DATES => 'Between Dates';
 
   ///
   String get REMOVE_WHITESPACES => 'Remove Whitespaces';
@@ -244,6 +245,7 @@ class Language {
   /// Stats
   String get STATS => 'Statistics';
   String get STATS_SUBTITLE => 'Here are some info about your library';
+  String get TOTAL_TRACKS => 'Total Tracks';
   String get TOTAL_TRACKS_DURATION => 'Total Tracks Duration';
   String get TOTAL_LISTEN_TIME => 'Total Listen Time';
 
@@ -424,6 +426,9 @@ class Language {
   String get SHARE => 'Share';
   String get SEARCH => 'Search';
   String get CONFIRM => 'Confirm';
+  String get IMPORT_ALL => 'Import all';
+  String get IMPORT_TIME_RANGE => 'Import time range';
+  String get IMPORT_TIME_RANGE_PROMPT => 'Would you like to import only between time range?';
   String get CANCEL => 'Cancel';
   String get OF => 'of';
   String get OR => 'or';

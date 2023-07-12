@@ -961,8 +961,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                               showCalendarDialog(
                                                                 title: Language.inst.GENERATE_FROM_DATES,
                                                                 buttonText: Language.inst.GENERATE,
-                                                                firstDate: HistoryController.inst.oldestTrack?.dateAdded.milliSecondsSinceEpoch,
-                                                                lastDate: HistoryController.inst.newestTrack?.dateAdded.milliSecondsSinceEpoch,
+                                                                useHistoryDates: true,
                                                                 onGenerate: (dates) {
                                                                   final tracks = NamidaGenerator.inst.generateTracksFromHistoryDates(dates.firstOrNull, dates.lastOrNull);
                                                                   Player.inst

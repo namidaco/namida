@@ -68,6 +68,51 @@ class AdvancedSettings extends StatelessWidget {
               final RxList<TrackSource> sourcesToDelete = <TrackSource>[].obs;
               bool isActive(TrackSource e) => sourcesToDelete.contains(e);
 
+              final RxMap<TrackSource, int> sourcesMap = <TrackSource, int>{}.obs;
+              void resetSourcesMap() {
+                TrackSource.values.loop((e, index) {
+                  sourcesMap[e] = 0;
+                });
+              }
+
+              final RxInt totalTracksToBeRemoved = 0.obs;
+
+              final RxInt totalTracksBetweenDates = 0.obs;
+
+              void calculateTotalTracks(DateTime? oldest, DateTime? newest) {
+                final sussyDays = HistoryController.inst.historyDays.toList();
+                final isBetweenDays = oldest != null && newest != null;
+                if (isBetweenDays) {
+                  final oldestDay = oldest.millisecondsSinceEpoch.toDaysSinceEpoch();
+                  final newestDay = newest.millisecondsSinceEpoch.toDaysSinceEpoch();
+
+                  sussyDays.retainWhere((element) => element >= oldestDay && element <= newestDay);
+                  printy(sussyDays);
+                }
+                resetSourcesMap();
+                sussyDays.loop((d, index) {
+                  final tracks = HistoryController.inst.historyMap.value[d] ?? [];
+                  tracks.loop((twd, index) {
+                    sourcesMap.update(twd.source, (value) => value + 1, ifAbsent: () => 1);
+                  });
+                });
+                if (isBetweenDays) {
+                  totalTracksBetweenDates.value = sourcesMap.values.reduce((value, element) => value + element);
+                }
+                if (sourcesToDelete.isNotEmpty) {
+                  totalTracksToBeRemoved.value = 0;
+                  sourcesToDelete.loop((e, index) {
+                    totalTracksToBeRemoved.value += sourcesMap[e] ?? 0;
+                  });
+                }
+              }
+
+              // -- filling each source with its tracks number.
+              calculateTotalTracks(null, null);
+
+              DateTime? oldestDate;
+              DateTime? newestDate;
+
               NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
                   title: Language.inst.CHOOSE,
@@ -75,42 +120,71 @@ class AdvancedSettings extends StatelessWidget {
                     const CancelButton(),
                     ElevatedButton(
                       onPressed: () async {
-                        final removedNum = await HistoryController.inst.removeSourcesTracksFromHistory(sourcesToDelete);
-                        Get.snackbar(Language.inst.NOTE, "${Language.inst.REMOVED} ${removedNum.displayTrackKeyword}");
+                        final removedNum = await HistoryController.inst.removeSourcesTracksFromHistory(
+                          sourcesToDelete,
+                          oldestDate: oldestDate,
+                          newestDate: newestDate,
+                        );
                         NamidaNavigator.inst.closeDialog();
+                        Get.snackbar(Language.inst.NOTE, "${Language.inst.REMOVED} ${removedNum.displayTrackKeyword}");
                       },
                       child: Text(Language.inst.REMOVE),
                     )
                   ],
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ...TrackSource.values.map((e) {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 10.0),
-                          child: Obx(
-                            () => ListTileWithCheckMark(
-                              active: isActive(e),
-                              title: e.convertToString,
-                              onTap: () {
-                                if (isActive(e)) {
-                                  sourcesToDelete.remove(e);
-                                } else {
-                                  sourcesToDelete.add(e);
-                                }
-                              },
-                            ),
-                          ),
-                        );
-                      }),
-                      const SizedBox(height: 8.0),
-                      TextButton.icon(
-                        // onPressed: _pickDatesRangeDialog,
-                        onPressed: () {},
-                        icon: const Icon(Broken.calendar_1),
-                        label: const Text('Between Dates'),
-                      ),
-                    ],
+                  child: Obx(
+                    () => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 12.0),
+                        Row(
+                          children: [
+                            const SizedBox(width: 8.0),
+                            const Icon(Broken.warning_2),
+                            const SizedBox(width: 8.0),
+                            Obx(() => Text(
+                                  '${Language.inst.TOTAL_TRACKS}: ${totalTracksToBeRemoved.value}',
+                                  style: context.textTheme.displayMedium,
+                                )),
+                          ],
+                        ),
+                        const SizedBox(height: 12.0),
+                        ...sourcesMap.entries.map(
+                          (e) {
+                            final source = e.key;
+                            final count = e.value;
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 10.0),
+                              child: Obx(
+                                () => ListTileWithCheckMark(
+                                  active: isActive(source),
+                                  title: '${source.convertToString} (${count.formatDecimal()})',
+                                  onTap: () {
+                                    if (isActive(source)) {
+                                      sourcesToDelete.remove(source);
+                                      totalTracksToBeRemoved.value -= count;
+                                    } else {
+                                      sourcesToDelete.add(source);
+                                      totalTracksToBeRemoved.value += count;
+                                    }
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 12.0),
+                        BetweenDatesTextButton(
+                          useHistoryDates: true,
+                          onConfirm: (dates) {
+                            oldestDate = dates.firstOrNull;
+                            newestDate = dates.lastOrNull;
+                            calculateTotalTracks(oldestDate, newestDate);
+                            NamidaNavigator.inst.closeDialog();
+                          },
+                          tracksLength: totalTracksBetweenDates.value,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );

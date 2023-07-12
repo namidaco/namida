@@ -125,13 +125,48 @@ class HistoryController {
     Dimensions.inst.calculateAllItemsExtentsInHistory();
   }
 
-  Future<int> removeSourcesTracksFromHistory(List<TrackSource> sources) async {
+  Future<int> removeSourcesTracksFromHistory(List<TrackSource> sources, {DateTime? oldestDate, DateTime? newestDate, bool andSave = true}) async {
     if (sources.isEmpty) return 0;
+
     int totalRemoved = 0;
-    historyMap.value.forEach((key, value) {
-      totalRemoved += value.removeWhereWithDifference((element) => sources.contains(element.source));
-    });
-    await saveHistoryToStorage();
+
+    Future<void> saveHistory([List<int>? daysToSave]) async {
+      if (andSave) {
+        await saveHistoryToStorage(daysToSave);
+      }
+    }
+
+    // -- remove all sources (i.e all history)
+    if (oldestDate == null && newestDate == null && sources.isEqualTo(TrackSource.values)) {
+      totalRemoved = historyTracksLength;
+      historyMap.value.clear();
+      await saveHistory();
+    } else {
+      final daysToRemoveFrom = historyDays.toList();
+
+      final oldestDay = oldestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
+      final newestDay = newestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
+
+      if (oldestDay != null && newestDay == null) {
+        daysToRemoveFrom.retainWhere((day) => day >= oldestDay);
+      }
+      if (oldestDay == null && newestDay != null) {
+        daysToRemoveFrom.retainWhere((day) => day <= newestDay);
+      }
+
+      if (oldestDay != null && newestDay != null) {
+        daysToRemoveFrom.retainWhere((day) => day >= oldestDay && day <= newestDay);
+      }
+
+      // -- will loop the whole days.
+      /* if (oldestDay == null && newestDay == null) {} */
+
+      daysToRemoveFrom.loop((d, index) {
+        totalRemoved += historyMap.value[d]?.removeWhereWithDifference((twd) => sources.contains(twd.source)) ?? 0;
+      });
+      await saveHistory(daysToRemoveFrom);
+    }
+
     updateMostPlayedPlaylist();
     Dimensions.inst.calculateAllItemsExtentsInHistory();
     return totalRemoved;
@@ -210,6 +245,7 @@ class HistoryController {
         final trs = historyMap.value[day];
         if (trs == null) {
           printy('couldn\'t find [dayToSave] inside [historyMap]', isError: true);
+          await deleteThisDay(day);
           continue;
         }
         if (trs.isEmpty) {
@@ -253,4 +289,5 @@ class HistoryController {
   /// This is an extremely rare case, would happen only if history loading took more than 20s. (min seconds to count a listen)
   final List<TrackWithDate> _tracksToAddAfterHistoryLoad = <TrackWithDate>[];
   bool _isLoadingHistory = true;
+  bool get isLoadingHistory => _isLoadingHistory;
 }

@@ -164,6 +164,7 @@ class CustomListTile extends StatelessWidget {
   final bool enabled;
   final bool largeTitle;
   final int maxSubtitleLines;
+  final Widget? trailingRaw;
   const CustomListTile({
     Key? key,
     required this.title,
@@ -178,6 +179,7 @@ class CustomListTile extends StatelessWidget {
     this.enabled = true,
     this.largeTitle = false,
     this.maxSubtitleLines = 4,
+    this.trailingRaw,
   }) : super(key: key);
 
   @override
@@ -229,16 +231,15 @@ class CustomListTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 )
               : null,
-          trailing: trailingText != null
-              ? Text(
-                  trailingText!,
-                  style: context.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
-                )
-              : trailing != null
-                  ? FittedBox(
-                      child: trailing!,
+          // ignore: prefer_if_null_operators
+          trailing: trailingRaw != null
+              ? trailingRaw
+              : trailingText != null
+                  ? Text(
+                      trailingText!,
+                      style: context.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
                     )
-                  : null,
+                  : FittedBox(child: trailing),
         ),
       ),
     );
@@ -314,104 +315,107 @@ class CustomBlurryDialog extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           child: GestureDetector(
             onTap: () {},
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                /// Title.
-                if (titleWidget != null) titleWidget!,
-                if (titleWidgetInPadding != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: titleWidgetInPadding,
+            child: Container(
+              color: Colors.transparent,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  /// Title.
+                  if (titleWidget != null) titleWidget!,
+                  if (titleWidgetInPadding != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: titleWidgetInPadding,
+                      ),
                     ),
-                  ),
-                if (titleWidget == null && titleWidgetInPadding == null)
-                  normalTitleStyle
-                      ? Padding(
-                          padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
-                          child: Row(
-                            children: [
-                              if (icon != null || isWarning) ...[
-                                Icon(
-                                  isWarning ? Broken.warning_2 : icon,
-                                ),
-                                const SizedBox(
-                                  width: 10.0,
-                                ),
-                              ],
-                              Expanded(
-                                child: Text(
-                                  isWarning ? Language.inst.WARNING : title ?? '',
-                                  style: context.textTheme.displayLarge,
-                                ),
-                              ),
-                              if (trailingWidgets != null) ...trailingWidgets!
-                            ],
-                          ),
-                        )
-                      : Container(
-                          color: context.theme.cardTheme.color,
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (icon != null) ...[
-                                Icon(
-                                  icon,
-                                ),
-                                const SizedBox(
-                                  width: 10.0,
-                                ),
-                              ],
-                              Text(
-                                title ?? '',
-                                style: context.theme.textTheme.displayMedium,
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-
-                /// Body.
-                Padding(
-                  padding: contentPadding ?? const EdgeInsets.all(14.0),
-                  child: SizedBox(
-                    width: context.width,
-                    child: bodyText != null
+                  if (titleWidget == null && titleWidgetInPadding == null)
+                    normalTitleStyle
                         ? Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Text(
-                              bodyText!,
-                              style: context.textTheme.displayMedium,
+                            padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
+                            child: Row(
+                              children: [
+                                if (icon != null || isWarning) ...[
+                                  Icon(
+                                    isWarning ? Broken.warning_2 : icon,
+                                  ),
+                                  const SizedBox(
+                                    width: 10.0,
+                                  ),
+                                ],
+                                Expanded(
+                                  child: Text(
+                                    isWarning ? Language.inst.WARNING : title ?? '',
+                                    style: context.textTheme.displayLarge,
+                                  ),
+                                ),
+                                if (trailingWidgets != null) ...trailingWidgets!
+                              ],
                             ),
                           )
-                        : child,
-                  ),
-                ),
+                        : Container(
+                            color: context.theme.cardTheme.color,
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (icon != null) ...[
+                                  Icon(
+                                    icon,
+                                  ),
+                                  const SizedBox(
+                                    width: 10.0,
+                                  ),
+                                ],
+                                Text(
+                                  title ?? '',
+                                  style: context.theme.textTheme.displayMedium,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
 
-                /// Actions.
-                if (actions != null)
+                  /// Body.
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        if (leftAction != null) ...[
-                          const SizedBox(width: 6.0),
-                          leftAction!,
-                          const SizedBox(width: 6.0),
-                          const Spacer(),
-                        ],
-                        ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
-                      ],
+                    padding: contentPadding ?? const EdgeInsets.all(14.0),
+                    child: SizedBox(
+                      width: context.width,
+                      child: bodyText != null
+                          ? Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Text(
+                                bodyText!,
+                                style: context.textTheme.displayMedium,
+                              ),
+                            )
+                          : child,
                     ),
                   ),
-              ],
+
+                  /// Actions.
+                  if (actions != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if (leftAction != null) ...[
+                            const SizedBox(width: 6.0),
+                            leftAction!,
+                            const SizedBox(width: 6.0),
+                            const Spacer(),
+                          ],
+                          ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -2020,8 +2024,7 @@ class HistoryJumpToDayIcon extends StatelessWidget {
           title: Language.inst.JUMP_TO_DAY,
           buttonText: Language.inst.JUMP,
           calendarType: CalendarDatePicker2Type.single,
-          firstDate: HistoryController.inst.oldestTrack?.dateAdded.milliSecondsSinceEpoch,
-          lastDate: HistoryController.inst.newestTrack?.dateAdded.milliSecondsSinceEpoch,
+          useHistoryDates: true,
           onGenerate: (dates) {
             NamidaNavigator.inst.closeDialog();
             final dayToScrollTo = dates.firstOrNull?.millisecondsSinceEpoch.toDaysSinceEpoch() ?? 0;
@@ -2036,6 +2039,90 @@ class HistoryJumpToDayIcon extends StatelessWidget {
       },
     );
   }
+}
+
+class BetweenDatesTextButton extends StatefulWidget {
+  final bool useHistoryDates;
+  final void Function(List<DateTime> dates) onConfirm;
+  final bool maxToday;
+  final int tracksLength;
+
+  const BetweenDatesTextButton({
+    super.key,
+    required this.useHistoryDates,
+    required this.onConfirm,
+    this.maxToday = false,
+    this.tracksLength = 0,
+  });
+
+  @override
+  State<BetweenDatesTextButton> createState() => _BetweenDatesTextButtonState();
+}
+
+class _BetweenDatesTextButtonState extends State<BetweenDatesTextButton> {
+  DateTime? oldestDate;
+  DateTime? newestDate;
+
+  @override
+  Widget build(BuildContext context) {
+    final textWidget = Text(Language.inst.BETWEEN_DATES);
+
+    return TextButton.icon(
+      onPressed: () {
+        showCalendarDialog(
+          useHistoryDates: widget.useHistoryDates,
+          lastDate: widget.maxToday ? DateTime.now() : null,
+          title: Language.inst.BETWEEN_DATES,
+          buttonText: Language.inst.CONFIRM,
+          onGenerate: (dates) {
+            oldestDate = dates.firstOrNull;
+            newestDate = dates.lastOrNull;
+            widget.onConfirm(dates);
+            setState(() {});
+          },
+        );
+      },
+      icon: const Icon(Broken.calendar_1),
+      label: oldestDate == null || newestDate == null
+          ? textWidget
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    textWidget,
+                    const SizedBox(width: 6.0),
+                    if (widget.tracksLength != 0)
+                      Text(
+                        "(${widget.tracksLength.displayTrackKeyword})",
+                        style: context.textTheme.displaySmall,
+                      ),
+                  ],
+                ),
+                Text(
+                  "${oldestDate?.millisecondsSinceEpoch.dateFormattedOriginal} → ${newestDate?.millisecondsSinceEpoch.dateFormattedOriginal}",
+                  style: context.textTheme.displaySmall,
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+/// Obx(() => showIf.value ? child : const SizedBox());
+class ObxShow extends StatelessWidget {
+  final RxBool showIf;
+  final Widget child;
+
+  const ObxShow({
+    super.key,
+    required this.showIf,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) => Obx(() => showIf.value ? child : const SizedBox());
 }
 
 class NamidaHero extends StatelessWidget {
