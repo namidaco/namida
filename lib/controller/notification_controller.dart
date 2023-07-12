@@ -47,7 +47,7 @@ class NotificationService {
     _createNotification(
       id: _historyImportID,
       title: 'Done importing history',
-      body: '${totalParsed.formatDecimal(true)} parsed, ${totalAdded.formatDecimal(true)} added',
+      body: '${totalParsed.formatDecimal()} parsed, ${totalAdded.formatDecimal()} added',
       channelName: _historyImportChannelName,
       channelDescription: _historyImportChannelDescription,
       subText: '100% ✓',
@@ -107,7 +107,7 @@ class NotificationService {
     _flutterLocalNotificationsPlugin.show(
       id,
       title,
-      '${progress.formatDecimal(true)} / ${maxProgress.formatDecimal(true)}',
+      '${progress.formatDecimal()} / ${maxProgress.formatDecimal()}',
       NotificationDetails(
         android: AndroidNotificationDetails(
           '$id',

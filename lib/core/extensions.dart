@@ -395,7 +395,8 @@ extension YTLinkToID on String {
 }
 
 extension FORMATNUMBER on int? {
-  String formatDecimal([bool full = false]) => (full ? NumberFormat('#,###,###') : NumberFormat.compact()).format(this);
+  String formatDecimalShort([bool full = false]) => (full ? NumberFormat('#,###,###') : NumberFormat.compact()).format(this);
+  String formatDecimal() => NumberFormat('#,###,###').format(this);
 }
 
 extension TagFieldsUtils on TagField {

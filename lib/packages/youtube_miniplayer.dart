@@ -214,7 +214,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                         )
                                                       : Text(
                                                           [
-                                                            ytvideo.video.engagement.viewCount.formatDecimal(isTitleExpanded.value),
+                                                            ytvideo.video.engagement.viewCount.formatDecimalShort(isTitleExpanded.value),
                                                             ytvideo.video.uploadDate?.millisecondsSinceEpoch.dateFormatted,
                                                             if (ytvideo.video.uploadDate != null)
                                                               '(${timeago.format(ytvideo.video.uploadDate!, locale: 'en_short')} ${Language.inst.AGO})'
