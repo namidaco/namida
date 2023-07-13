@@ -13,13 +13,33 @@ class SelectedTracksController {
   static final SelectedTracksController _instance = SelectedTracksController._internal();
   SelectedTracksController._internal();
 
-  final RxList<Track> selectedTracks = <Track>[].obs;
+  List<Track> get selectedTracks {
+    return _tracksOrTwdList.mapped((t) {
+      if (t is TrackWithDate) {
+        return t.track;
+      }
+      return t as Track;
+    });
+  }
+
+  List<TrackWithDate> get selectedTracksWithDates {
+    return _tracksOrTwdList.whereType<TrackWithDate>().toList();
+  }
+
+  final Map<Track, String> selectedPlaylistsNames = <Track, String>{};
+
+  final RxList<Object> _tracksOrTwdList = <Object>[].obs;
 
   List<Track> get currentAllTracks {
     if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
       return SearchSortController.inst.trackSearchTemp;
     }
+
     return NamidaNavigator.inst.currentRoute?.tracksInside ?? [];
+  }
+
+  List<TrackWithDate>? get currentAllTracksWithDate {
+    return NamidaNavigator.inst.currentRoute?.tracksWithDateInside;
   }
 
   final RxBool isMenuMinimized = true.obs;
@@ -29,41 +49,72 @@ class SelectedTracksController {
 
   final RxDouble bottomPadding = 0.0.obs;
 
-  void selectOrUnselect(Track track, QueueSource queueSource) {
-    if (selectedTracks.contains(track)) {
-      selectedTracks.remove(track);
+  bool isTrackSelected(Track tr, TrackWithDate? twd) => _tracksOrTwdList.contains(twd) || _tracksOrTwdList.contains(tr);
+
+  void selectOrUnselect(Track track, QueueSource queueSource, TrackWithDate? twd, String? playlistName) {
+    playlistName ??= '';
+    final trToAdd = twd ?? track;
+    final gonnaRemoveTrack = isTrackSelected(track, twd);
+    if (gonnaRemoveTrack) {
+      _tracksOrTwdList.remove(trToAdd);
     } else {
-      selectedTracks.add(track);
+      _tracksOrTwdList.add(trToAdd);
     }
-    bottomPadding.value = selectedTracks.isEmpty ? 0.0 : 102.0;
+    // -- updating playlists
+
+    if (gonnaRemoveTrack) {
+      selectedPlaylistsNames.remove(track);
+    } else {
+      selectedPlaylistsNames[track] = playlistName;
+    }
+    // -------------
+
+    bottomPadding.value = _tracksOrTwdList.isEmpty ? 0.0 : 102.0;
   }
 
   void reorderTracks(int oldIndex, int newIndex) {
     if (newIndex > oldIndex) {
       newIndex -= 1;
     }
-    final item = selectedTracks.removeAt(oldIndex);
+    final item = _tracksOrTwdList.removeAt(oldIndex);
 
-    selectedTracks.insertSafe(newIndex, item);
+    _tracksOrTwdList.insertSafe(newIndex, item);
   }
 
   void removeTrack(int index) {
-    selectedTracks.removeAt(index);
+    _tracksOrTwdList.removeAt(index);
   }
 
   void clearEverything() {
-    selectedTracks.clear();
+    _tracksOrTwdList.clear();
+    selectedPlaylistsNames.clear();
     isMenuMinimized.value = true;
     didInsertTracks.value = false;
     bottomPadding.value = 0.0;
   }
 
   void selectAllTracks() {
-    selectedTracks.addAll(currentAllTracks);
-    selectedTracks.removeDuplicates((element) => element.path);
+    _tracksOrTwdList.addAll(currentAllTracksWithDate ?? currentAllTracks);
+    _tracksOrTwdList.removeDuplicates((element) {
+      if (element is TrackWithDate) {
+        return element.track.path;
+      }
+      return (element as Track).path;
+    });
+
+    // -- Adding playlist name if the current route is referring to a playlist
+    final cr = NamidaNavigator.inst.currentRoute;
+    if (cr?.route != null) {
+      if (cr!.route == RouteType.SUBPAGE_playlistTracks || cr.route == RouteType.SUBPAGE_historyTracks) {
+        cr.tracksInside.loop((e, index) {
+          selectedPlaylistsNames[e] = cr.name;
+        });
+      }
+    }
+    // ----------
   }
 
   void replaceThisTrack(Track oldTrack, Track newTrack) {
-    selectedTracks.replaceItem(oldTrack, newTrack);
+    _tracksOrTwdList.replaceItem(oldTrack, newTrack);
   }
 }

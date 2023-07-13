@@ -1,7 +1,5 @@
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart' hide ReorderableDragStartListener;
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:known_extents_list_view_builder/known_extents_sliver_reorderable_list.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -251,7 +249,7 @@ class MainPageWrapper extends StatelessWidget {
 
                   final navHeight = (SettingsController.inst.enableBottomNavBar.value ? kBottomNavigationBarHeight : -4.0) - 10.0;
                   final isInQueue = queueHeight > 0.0;
-                  final initH = isInQueue ? kQueueBottomRowHeight : kBottomPadding;
+                  final initH = isInQueue ? kQueueBottomRowHeight : 12.0 + (miniHeight * 24.0);
 
                   return AnimatedPositioned(
                     duration: const Duration(milliseconds: 100),
@@ -268,51 +266,5 @@ class MainPageWrapper extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class ScrollBehaviorModified extends ScrollBehavior {
-  const ScrollBehaviorModified();
-  @override
-  ScrollPhysics getScrollPhysics(BuildContext context) {
-    switch (getPlatform(context)) {
-      case TargetPlatform.iOS:
-      case TargetPlatform.macOS:
-      case TargetPlatform.android:
-        return const BouncingScrollPhysics();
-      case TargetPlatform.fuchsia:
-      case TargetPlatform.linux:
-      case TargetPlatform.windows:
-        return const ClampingScrollPhysics();
-    }
-  }
-}
-
-class CustomReorderableDelayedDragStartListener extends ReorderableDragStartListener {
-  final Duration delay;
-
-  const CustomReorderableDelayedDragStartListener({
-    this.delay = const Duration(milliseconds: 20),
-    Key? key,
-    required Widget child,
-    required int index,
-    bool enabled = true,
-
-    /// {@macro flutter.widgets.reorderable_list.onReorderStart}
-    final void Function(PointerDownEvent event)? onDragStart,
-
-    /// {@macro flutter.widgets.reorderable_list.onReorderEnd}
-    final void Function(PointerUpEvent event)? onDragEnd,
-  }) : super(
-          key: key,
-          child: child,
-          index: index,
-          onDragStart: onDragStart,
-          onDragEnd: onDragEnd,
-        );
-
-  @override
-  MultiDragGestureRecognizer createRecognizer() {
-    return DelayedMultiDragGestureRecognizer(delay: delay, debugOwner: this);
   }
 }

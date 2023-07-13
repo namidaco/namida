@@ -60,7 +60,7 @@ class PlaylistController {
     await _savePlaylistToStorage(playlist);
   }
 
-  void removePlaylist(Playlist playlist) async {
+  Future<void> removePlaylist(Playlist playlist) async {
     // navigate back in case the current route is this playlist
     final lastPage = NamidaNavigator.inst.currentRoute;
     if (lastPage?.route == RouteType.SUBPAGE_playlistTracks) {
@@ -69,6 +69,8 @@ class PlaylistController {
       }
     }
     _removeFromMap(playlist);
+    // resorting to rebuild ui without the playlist.
+    SearchSortController.inst.sortMedia(MediaType.playlist);
 
     await _deletePlaylistFromStorage(playlist);
   }
@@ -145,8 +147,27 @@ class PlaylistController {
     await _savePlaylistToStorage(playlist);
   }
 
-  Future<void> removeTrackFromPlaylist(Playlist playlist, int index) async {
-    playlist.tracks.removeAt(index);
+  Future<void> insertTracksInPlaylistWithEachIndex(Playlist playlist, Map<TrackWithDate, int> twdAndIndexes) async {
+    final entries = twdAndIndexes.entries.toList();
+    // // reverse looping won't be a good choice
+    // // supposing inserting at index 28 while the first loop will deal with only 25 elements
+    // // the solution is to loop accendingly and increasing indexes after each insertion
+    entries.sortBy((e) => e.value);
+    // int heyThoseIndexesIncreased = 0;
+    entries.loop((trEntry, _) {
+      final tr = trEntry.key;
+      final index = trEntry.value /* + heyThoseIndexesIncreased */;
+      playlist.tracks.insertSafe(index, tr);
+      // heyThoseIndexesIncreased++;
+    });
+    _updateMap(playlist);
+    await _savePlaylistToStorage(playlist);
+  }
+
+  Future<void> removeTracksFromPlaylist(Playlist playlist, List<int> indexes) async {
+    // sort & reverse loop to maintain correct index
+    indexes.sort();
+    indexes.reverseLoop((e, index) => playlist.tracks.removeAt(e));
     _updateMap(playlist);
     await _savePlaylistToStorage(playlist);
   }

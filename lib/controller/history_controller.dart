@@ -117,11 +117,22 @@ class HistoryController {
     });
   }
 
-  Future<void> removeFromHistory(int dayOfTrack, int index) async {
-    final trs = historyMap.value[dayOfTrack]!;
-    final removed = trs.removeAt(index);
-    topTracksMapListens[removed.track]?.remove(removed.dateAdded);
-    await saveHistoryToStorage([dayOfTrack]);
+  Future<void> removeTracksFromHistory(List<TrackWithDate> tracksWithDates) async {
+    final dayAndTracksToDeleteMap = <int, List<TrackWithDate>>{};
+    tracksWithDates.loop((twd, index) {
+      dayAndTracksToDeleteMap.addForce(twd.dateAdded.toDaysSinceEpoch(), twd);
+    });
+    final days = dayAndTracksToDeleteMap.keys.toList();
+    days.loop((d, index) {
+      final tracksInMap = historyMap.value[d] ?? [];
+      final tracksToDelete = dayAndTracksToDeleteMap[d] ?? [];
+      tracksToDelete.loop((ttd, index) {
+        tracksInMap.remove(ttd);
+        topTracksMapListens[ttd.track]?.remove(ttd.dateAdded);
+      });
+    });
+
+    await saveHistoryToStorage(days);
     Dimensions.inst.calculateAllItemsExtentsInHistory();
   }
 
@@ -220,9 +231,9 @@ class HistoryController {
         tempMap.addForce(t.track, t.dateAdded);
       });
 
-      tempMap.forEach((key, value) {
-        value.sortBy((e) => e);
-      });
+      for (final entry in tempMap.values) {
+        entry.sort();
+      }
 
       sortAndUpdateMap(tempMap, mapToUpdate: topTracksMapListens);
     }

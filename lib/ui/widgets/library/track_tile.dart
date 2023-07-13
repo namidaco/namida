@@ -14,7 +14,6 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
-import 'package:namida/main_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
@@ -36,8 +35,6 @@ class TrackTile extends StatelessWidget {
   /// Disable if you want to have priority to hold & reorder instead of selecting.
   final bool selectable;
   final QueueSource queueSource;
-  final void Function(PointerDownEvent event)? onDragStart;
-  final void Function(PointerUpEvent event)? onDragEnd;
   final void Function()? onRightAreaTap;
 
   const TrackTile({
@@ -54,31 +51,33 @@ class TrackTile extends StatelessWidget {
     this.thirdLineText = '',
     this.displayTrackNumber = false,
     this.selectable = true,
-    this.onDragStart,
-    this.onDragEnd,
     required this.queueSource,
     this.onRightAreaTap,
   });
 
+  bool get isFromQueue => queueSource == QueueSource.playerQueue;
+
+  void _triggerTrackDialog() => NamidaDialogs.inst.showTrackDialog(
+        track,
+        playlistName: playlistName,
+        index: index,
+        comingFromQueue: isFromQueue,
+        trackWithDate: trackWithDate,
+      );
+
+  void _triggerTrackInfoDialog() => showTrackInfoDialog(track, true, comingFromQueue: isFromQueue, index: index);
+
+  void _selectTrack() => SelectedTracksController.inst.selectOrUnselect(track, queueSource, trackWithDate, playlistName);
+
   @override
   Widget build(BuildContext context) {
-    final comingFromQueue = queueSource == QueueSource.playerQueue;
+    final comingFromQueue = isFromQueue;
     final canHaveDuplicates = comingFromQueue ||
         queueSource == QueueSource.playlist ||
         queueSource == QueueSource.queuePage ||
         queueSource == QueueSource.playerQueue ||
         queueSource == QueueSource.history;
     final isInSelectedTracksPreview = queueSource == QueueSource.selectedTracks;
-
-    void triggerTrackDialog() => NamidaDialogs.inst.showTrackDialog(
-          track,
-          playlistName: playlistName,
-          index: index,
-          comingFromQueue: comingFromQueue,
-          trackWithDate: trackWithDate,
-        );
-
-    void triggerTrackInfoDialog() => showTrackInfoDialog(track, true, comingFromQueue: comingFromQueue, index: index);
 
     final willSleepAfterThis = queueSource == QueueSource.playerQueue && Player.inst.isSleepingTrack(index);
 
@@ -90,7 +89,7 @@ class TrackTile extends StatelessWidget {
             final TrackItem tritem = SettingsController.inst.trackItem.value;
             final double thumbnailSize = SettingsController.inst.trackThumbnailSizeinList.value;
             final double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
-            final bool isTrackSelected = SelectedTracksController.inst.selectedTracks.contains(track);
+            final bool isTrackSelected = SelectedTracksController.inst.isTrackSelected(track, trackWithDate);
             final bool isTrackSamePath = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
             final bool isRightHistoryList =
                 trackWithDate != null && queueSource == QueueSource.history ? trackWithDate!.dateAdded == CurrentColor.inst.currentPlayingTrackDateAdded.value : true;
@@ -110,7 +109,7 @@ class TrackTile extends StatelessWidget {
                 onTap: onTap ??
                     () async {
                       if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
-                        SelectedTracksController.inst.selectOrUnselect(track, queueSource);
+                        _selectTrack();
                       } else {
                         if (queueSource == QueueSource.search) {
                           ScrollSearchController.inst.unfocusKeyboard();
@@ -133,7 +132,7 @@ class TrackTile extends StatelessWidget {
                     ? null
                     : () {
                         if (!isInSelectedTracksPreview) {
-                          SelectedTracksController.inst.selectOrUnselect(track, queueSource);
+                          _selectTrack();
                         }
                       },
                 child: SizedBox(
@@ -198,11 +197,10 @@ class TrackTile extends StatelessWidget {
                               ),
                             ),
                             if (draggableThumbnail)
-                              CustomReorderableDelayedDragStartListener(
+                              NamidaReordererableListener(
+                                durationMs: 80,
+                                isInQueue: queueSource == QueueSource.playerQueue,
                                 index: index,
-                                delay: const Duration(milliseconds: 80),
-                                onDragStart: onDragStart,
-                                onDragEnd: onDragEnd,
                                 child: Container(
                                   color: Colors.transparent,
                                   height: trackTileHeight,
@@ -295,10 +293,10 @@ class TrackTile extends StatelessWidget {
                           ),
                         if (displayRightDragHandler) ...[
                           const SizedBox(width: 8.0),
-                          CustomReorderableDelayedDragStartListener(
+                          NamidaReordererableListener(
+                            durationMs: 20,
+                            isInQueue: queueSource == QueueSource.playerQueue,
                             index: index,
-                            onDragStart: onDragStart,
-                            onDragEnd: onDragEnd,
                             child: FittedBox(
                               child: Icon(
                                 Broken.menu_1,
@@ -311,8 +309,8 @@ class TrackTile extends StatelessWidget {
                         MoreIcon(
                           padding: 6.0,
                           iconColor: textColor?.withAlpha(160),
-                          onPressed: triggerTrackDialog,
-                          onLongPress: triggerTrackInfoDialog,
+                          onPressed: _triggerTrackDialog,
+                          onLongPress: _triggerTrackInfoDialog,
                         ),
                         if (trailingWidget == null) const SizedBox(width: 4.0),
                         if (trailingWidget != null) ...[
@@ -328,8 +326,8 @@ class TrackTile extends StatelessWidget {
           },
         ),
         GestureDetector(
-          onTap: onRightAreaTap ?? triggerTrackDialog,
-          onLongPress: triggerTrackInfoDialog,
+          onTap: onRightAreaTap ?? _triggerTrackDialog,
+          onLongPress: _triggerTrackInfoDialog,
           child: Container(
             width: 36.0,
             color: Colors.transparent,

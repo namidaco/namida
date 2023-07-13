@@ -11,6 +11,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
@@ -61,30 +62,37 @@ class ThemeSetting extends StatelessWidget {
                   minRadius: 12,
                   backgroundColor: playerStaticColor,
                 ),
-                onTap: () => NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    actions: [
-                      IconButton(
-                        icon: const Icon(Broken.refresh),
-                        tooltip: Language.inst.RESTORE_DEFAULTS,
-                        onPressed: () {
-                          _updateColor(kMainColor);
-                          NamidaNavigator.inst.closeDialog();
-                        },
+                onTap: () {
+                  NamidaNavigator.inst.navigateDialog(
+                    dialog: Obx(
+                      () => Theme(
+                        data: AppThemes.inst.getAppTheme(),
+                        child: CustomBlurryDialog(
+                          actions: [
+                            IconButton(
+                              icon: const Icon(Broken.refresh),
+                              tooltip: Language.inst.RESTORE_DEFAULTS,
+                              onPressed: () {
+                                _updateColor(kMainColor);
+                                NamidaNavigator.inst.closeDialog();
+                              },
+                            ),
+                            NamidaButton(
+                              text: Language.inst.DONE,
+                              onPressed: NamidaNavigator.inst.closeDialog,
+                            ),
+                          ],
+                          child: ColorPicker(
+                            pickerColor: playerStaticColor,
+                            onColorChanged: (value) {
+                              _updateColor(value);
+                            },
+                          ),
+                        ),
                       ),
-                      NamidaButton(
-                        text: Language.inst.DONE,
-                        onPressed: NamidaNavigator.inst.closeDialog,
-                      ),
-                    ],
-                    child: ColorPicker(
-                      pickerColor: playerStaticColor,
-                      onColorChanged: (value) {
-                        _updateColor(value);
-                      },
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
           ],
@@ -105,10 +113,12 @@ class ToggleThemeModeContainer extends StatelessWidget {
   final double blurRadius;
   const ToggleThemeModeContainer({super.key, this.width, this.blurRadius = 6.0});
 
-  onThemeChangeTap(ThemeMode themeMode) {
+  void onThemeChangeTap(ThemeMode themeMode) async {
     SettingsController.inst.save(themeMode: themeMode);
     Get.changeThemeMode(themeMode);
     CurrentColor.inst.updateThemeAndRefresh();
+    await Future.delayed(const Duration(milliseconds: 300));
+    CurrentColor.inst.updatePlayerColorFromTrack(Player.inst.nowPlayingTrack.value, Player.inst.currentIndex.value);
   }
 
   @override

@@ -58,6 +58,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
         }
       },
       dialogBuilder: (theme) => CustomBlurryDialog(
+        theme: theme,
         insetPadding: const EdgeInsets.all(24.0),
         title: Language.inst.PREVIEW,
         normalTitleStyle: true,
@@ -105,6 +106,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
     colorScheme: color,
     lighterDialogColor: false,
     dialogBuilder: (theme) => CustomBlurryDialog(
+      theme: theme,
       insetPadding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 86.0),
       normalTitleStyle: true,
       title: Language.inst.TRACK_INFO,
@@ -152,7 +154,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                               onTap: () => NamidaNavigator.inst.navigateDialog(
                                 scale: 1.0,
                                 blackBg: true,
-                                dialogBuilder: (theme) => InteractiveViewer(
+                                dialog: InteractiveViewer(
                                   maxScale: 5,
                                   child: NamidaHero(
                                     tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}',

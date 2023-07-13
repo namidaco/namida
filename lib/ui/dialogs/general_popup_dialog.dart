@@ -42,7 +42,7 @@ Future<void> showGeneralPopupDialog(
   QueueSource source, {
   void Function()? onTopBarTap,
   String? playlistName,
-  TrackWithDate? trackWithDate,
+  List<TrackWithDate> tracksWithDates = const <TrackWithDate>[],
   Queue? queue,
   int? index,
   String thirdLineText = '',
@@ -80,8 +80,8 @@ Future<void> showGeneralPopupDialog(
 
   final iconColor = Color.alphaBlend(colorDelightened.withAlpha(120), Get.textTheme.displayMedium!.color!);
 
-  bool shoulShowPlaylistUtils() => trackWithDate == null && playlistName != null && !PlaylistController.inst.isOneOfDefaultPlaylists(playlistName);
-  bool shoulShowRemoveFromPlaylist() => trackWithDate != null && index != null && playlistName != null && playlistName != k_PLAYLIST_NAME_MOST_PLAYED;
+  bool shoulShowPlaylistUtils() => tracksWithDates.length > 1 && playlistName != null && !PlaylistController.inst.isOneOfDefaultPlaylists(playlistName);
+  bool shoulShowRemoveFromPlaylist() => tracksWithDates.isNotEmpty && playlistName != null && playlistName != k_PLAYLIST_NAME_MOST_PLAYED;
 
   Widget bigIcon(IconData icon, String tooltipMessage, void Function()? onTap, {String subtitle = '', Widget? iconWidget}) {
     return NamidaInkWell(
@@ -269,7 +269,7 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  void deletePlaylist() {
+  Future<void> deletePlaylist() async {
     // function button won't be visible if playlistName == null.
     if (!shoulShowPlaylistUtils()) return;
 
@@ -277,13 +277,13 @@ Future<void> showGeneralPopupDialog(
     final pl = PlaylistController.inst.getPlaylist(playlistName!);
     if (pl == null) return;
 
-    PlaylistController.inst.removePlaylist(pl);
+    await PlaylistController.inst.removePlaylist(pl);
     Get.snackbar(
       Language.inst.UNDO_CHANGES,
       Language.inst.UNDO_CHANGES_DELETED_PLAYLIST,
       mainButton: TextButton(
-        onPressed: () {
-          PlaylistController.inst.reAddPlaylist(pl, pl.modifiedDate);
+        onPressed: () async {
+          await PlaylistController.inst.reAddPlaylist(pl, pl.modifiedDate);
           Get.closeAllSnackbars();
         },
         child: Text(Language.inst.UNDO),
@@ -502,9 +502,9 @@ Future<void> showGeneralPopupDialog(
           title: Language.inst.REMOVE_FROM_PLAYLIST,
           subtitle: playlistName!.translatePlaylistName(),
           icon: Broken.box_remove,
-          onTap: () {
-            NamidaOnTaps.inst.onRemoveTrackFromPlaylist(playlistName, index!, trackWithDate!);
+          onTap: () async {
             NamidaNavigator.inst.closeDialog();
+            await NamidaOnTaps.inst.onRemoveTracksFromPlaylist(playlistName, tracksWithDates);
           },
         )
       : null;
@@ -552,14 +552,13 @@ Future<void> showGeneralPopupDialog(
 
   NamidaNavigator.inst.navigateDialog(
     colorScheme: colorDelightened,
-    lighterDialogColor: true,
+    lighterDialogColor: false,
     durationInMs: 400,
     scale: 0.92,
-    dialog: Dialog(
+    dialogBuilder: (theme) => Dialog(
+      backgroundColor: theme.dialogBackgroundColor,
       insetPadding: const EdgeInsets.symmetric(horizontal: 34.0, vertical: 24.0),
       clipBehavior: Clip.antiAlias,
-      surfaceTintColor: Colors.transparent,
-      backgroundColor: Color.alphaBlend(colorDelightened.withAlpha(10), Get.theme.dialogBackgroundColor),
       child: SingleChildScrollView(
         child: Column(
           children: [
@@ -581,7 +580,7 @@ Future<void> showGeneralPopupDialog(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const SizedBox(width: 16.0),
-                    if (forceSingleArtwork)
+                    if (forceSingleArtwork!)
                       NamidaHero(
                         tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${tracks.first.path}',
                         child: ArtworkWidget(
@@ -1007,13 +1006,13 @@ Future<void> showGeneralPopupDialog(
                           ),
                         ),
 
-                      if (playlistUtilsRow != null) playlistUtilsRow,
-
                       if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,
+
+                      if (playlistUtilsRow != null) playlistUtilsRow,
 
                       /// Track Utils
                       /// todo: support for multiple tracks editing
-                      if (isSingle && (playlistName == null || trackWithDate != null))
+                      if (isSingle && (playlistName == null || tracksWithDates.firstOrNull != null))
                         Row(
                           children: [
                             const SizedBox(width: 24.0),

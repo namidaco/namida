@@ -111,7 +111,8 @@ class HistoryTracksPage extends StatelessWidget {
                                     dayInMs.dateFormattedOriginal,
                                     tracks.length.displayTrackKeyword,
                                     QueueSource.history,
-                                    extractColor: false,
+                                    tracksWithDates: tracks,
+                                    playlistName: k_PLAYLIST_NAME_HISTORY,
                                   );
                                 },
                               ),
@@ -240,8 +241,9 @@ class NormalPlaylistTracksPage extends StatelessWidget {
           final tracksWithDate = playlist.tracks;
           final tracks = tracksWithDate.toTracks();
 
-          return NamidaTracksList(
-            queueSource: playlist.toQueueSource(),
+          return NamidaListView(
+            itemCount: tracks.length,
+            itemExtents: tracks.toTrackItemExtents(),
             header: SubpagesTopContainer(
               source: playlist.toQueueSource(),
               title: playlist.name.translatePlaylistName(),
@@ -257,7 +259,6 @@ class NormalPlaylistTracksPage extends StatelessWidget {
             ),
             padding: const EdgeInsets.only(bottom: kBottomPadding),
             onReorder: (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
-            queueLength: playlist.tracks.length,
             itemBuilder: (context, i) {
               final trackWithDate = tracksWithDate[i];
               final w = Obx(
@@ -266,7 +267,7 @@ class NormalPlaylistTracksPage extends StatelessWidget {
                   return FadeDismissible(
                     key: Key("Diss_$i${trackWithDate.track.path}"),
                     direction: reorderable ? DismissDirection.horizontal : DismissDirection.none,
-                    onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTrackFromPlaylist(playlist.name, i, trackWithDate),
+                    onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTracksFromPlaylist(playlist.name, [trackWithDate]),
                     child: Stack(
                       alignment: Alignment.centerLeft,
                       children: [
@@ -285,7 +286,7 @@ class NormalPlaylistTracksPage extends StatelessWidget {
                   );
                 },
               );
-              if (disableAnimation) return w;
+              if (disableAnimation) return SizedBox(key: Key(i.toString()), child: w);
               return AnimatingTile(key: ValueKey(i), position: i, child: w);
             },
           );

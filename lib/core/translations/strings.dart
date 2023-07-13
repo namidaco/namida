@@ -468,6 +468,7 @@ class Language {
   String get ENABLE_FADE_EFFECT_ON_PLAY_PAUSE => 'Enable Fade Effect on Play/Pause';
 
   /// Advanced Settings
+  String get ADVANCED => 'Advanced';
   String get ADVANCED_SETTINGS => 'Advanced';
   String get ADVANCED_SETTINGS_SUBTITLE => 'Advanced Settings, don\'t touch';
   String get CLEAR_IMAGE_CACHE => 'Clear Image cache';

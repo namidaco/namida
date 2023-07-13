@@ -29,7 +29,7 @@ class NamidaGenerator {
   }
 
   List<Track> getRandomTracks([int? min, int? max]) {
-    final List<Track> randomList = [];
+    final Set<Track> randomList = {};
     final trackslist = allTracksInLibrary;
     final trackslistLength = trackslist.length;
 
@@ -48,10 +48,10 @@ class NamidaGenerator {
     // number of resulting tracks.
     final int randomNumber = (max - min).getRandomNumberBelow(min);
 
-    for (int i = 0; i < randomNumber; i++) {
+    for (int i = 0; i <= randomNumber; i++) {
       randomList.add(trackslist[trackslistLength.getRandomNumberBelow()]);
     }
-    return randomList;
+    return randomList.toList();
   }
 
   List<Track> generateRecommendedTrack(Track track, {int maxCount = 20}) {

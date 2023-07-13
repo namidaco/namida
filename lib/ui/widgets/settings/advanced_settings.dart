@@ -139,7 +139,7 @@ class AdvancedSettings extends StatelessWidget {
                         Row(
                           children: [
                             const SizedBox(width: 8.0),
-                            const Icon(Broken.warning_2),
+                            const Icon(Broken.danger),
                             const SizedBox(width: 8.0),
                             Obx(() => Text(
                                   '${Language.inst.TOTAL_TRACKS}: ${totalTracksToBeRemoved.value}',

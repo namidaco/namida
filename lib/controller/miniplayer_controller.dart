@@ -26,16 +26,16 @@ class MiniPlayerController {
   final RxDouble miniplayerQueueHP = 0.0.obs;
 
   /// Used to temporarily hold the seek value.
-  RxDouble seekValue = 0.0.obs;
+  final RxDouble seekValue = 0.0.obs;
 
   /// Indicates that play/pause button is currently pressed.
-  RxBool isPlayPauseButtonHighlighted = false.obs;
+  final RxBool isPlayPauseButtonHighlighted = false.obs;
 
   /// Prevents Listener while reorderding or dismissing items inside queue.
   bool isReorderingQueue = false;
 
   /// Icon that represents the direction of the current track
-  Rx<IconData> arrowIcon = Broken.cd.obs;
+  final Rx<IconData> arrowIcon = Broken.cd.obs;
 
   final ScrollController queueScrollController = ScrollController();
 
@@ -112,13 +112,15 @@ class MiniPlayerController {
 
   void animateQueueToCurrentTrack({bool jump = false}) {
     if (queueScrollController.hasClients) {
-      double trackTileItemScrollOffsetInQueue() => Dimensions.inst.trackTileItemExtent * Player.inst.currentIndex.value - screenSize.height * 0.3;
-
+      final trackTileItemScrollOffsetInQueue = Dimensions.inst.trackTileItemExtent * Player.inst.currentIndex.value - screenSize.height * 0.3;
+      if (queueScrollController.positions.lastOrNull?.pixels == trackTileItemScrollOffsetInQueue) {
+        return;
+      }
       if (jump) {
-        queueScrollController.jumpTo(trackTileItemScrollOffsetInQueue());
+        queueScrollController.jumpTo(trackTileItemScrollOffsetInQueue);
       } else {
         queueScrollController.animateTo(
-          trackTileItemScrollOffsetInQueue(),
+          trackTileItemScrollOffsetInQueue,
           duration: const Duration(milliseconds: 600),
           curve: Curves.easeInOutQuart,
         );
@@ -173,7 +175,6 @@ class MiniPlayerController {
   }
 
   void onPointerUp(PointerUpEvent event) {
-    if (isReorderingQueue) return;
     if (_offset <= maxOffset || _offset >= (maxOffset * 2)) return;
 
     if (_isInsideQueue()) return;
@@ -187,6 +188,7 @@ class MiniPlayerController {
   }
 
   void gestureDetectorOnVerticalDragUpdate(DragUpdateDetails details) {
+    if (isReorderingQueue) return;
     if (details.globalPosition.dy > screenSize.height - _deadSpace) return;
     if (_offset > maxOffset) return;
 
@@ -266,6 +268,9 @@ class MiniPlayerController {
         shouldSnapToMini = true;
       }
     }
+
+    queueScrollController.removeListener(() {});
+
     if (shouldSnapToExpanded) {
       snapToExpanded();
       _toggleWakelockOn();
@@ -319,44 +324,36 @@ class MiniPlayerController {
       }
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      animateQueueToCurrentTrack(jump: true);
-      updateIcon();
-    });
-
-    queueScrollController.removeListener(() {});
+    animateQueueToCurrentTrack(jump: true);
+    updateIcon();
     queueScrollController.addListener(() {
       updateIcon();
     });
   }
 
-  void snapToQueue({bool haptic = true}) async {
-    _updateScrollPositionInQueue();
+  Future<void> snapToQueue({bool haptic = true}) async {
     _offset = maxOffset * 2;
     bounceUp = false;
-    _snap(haptic: haptic);
+    await _snap(haptic: haptic);
+    _updateScrollPositionInQueue();
   }
 
-  void _snap({bool haptic = true}) {
-    animation
-        .animateTo(
+  Future<void> _snap({bool haptic = true}) async {
+    await animation.animateTo(
       _offset / maxOffset,
       curve: _bouncingCurve,
       duration: const Duration(milliseconds: 300),
-    )
-        .then((_) {
-      bounceUp = false;
-    });
+    );
+    bounceUp = false;
     if (haptic && (_prevOffset - _offset).abs() > _actuationOffset) HapticFeedback.lightImpact();
   }
 
-  void snapToPrev() async {
+  Future<void> snapToPrev() async {
     _sOffset = -sMaxOffset;
 
-    await sAnim.animateTo(-1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300)).then((_) {
-      _sOffset = 0;
-      sAnim.animateTo(0.0, duration: Duration.zero);
-    });
+    await sAnim.animateTo(-1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
+    _sOffset = 0;
+    await sAnim.animateTo(0.0, duration: Duration.zero);
     await Player.inst.previous();
     if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) HapticFeedback.lightImpact();
   }
@@ -367,13 +364,12 @@ class MiniPlayerController {
     if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) HapticFeedback.lightImpact();
   }
 
-  void snapToNext() async {
+  Future<void> snapToNext() async {
     _sOffset = sMaxOffset;
 
-    await sAnim.animateTo(1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300)).then((_) {
-      _sOffset = 0;
-      sAnim.animateTo(0.0, duration: Duration.zero);
-    });
+    await sAnim.animateTo(1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
+    _sOffset = 0;
+    await sAnim.animateTo(0.0, duration: Duration.zero);
     await Player.inst.next();
 
     if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) HapticFeedback.lightImpact();

@@ -23,6 +23,7 @@ void showTrackListensDialog(Track track, {List<int>? datesOfListen, Color? color
     colorScheme: color,
     lighterDialogColor: false,
     dialogBuilder: (theme) => CustomBlurryDialog(
+      theme: theme,
       normalTitleStyle: true,
       title: Language.inst.TOTAL_LISTENS,
       trailingWidgets: [

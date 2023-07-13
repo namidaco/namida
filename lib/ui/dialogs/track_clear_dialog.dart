@@ -7,10 +7,11 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-void showTrackClearDialog(List<Track> tracks) {
+void showTrackClearDialog(List<Track> tracks, Color colorScheme) {
   final isSingle = tracks.length == 1;
   NamidaNavigator.inst.navigateDialog(
-    dialog: CustomBlurryDialog(
+    dialogBuilder: (theme) => CustomBlurryDialog(
+      theme: theme,
       normalTitleStyle: true,
       icon: Broken.trash,
       title: isSingle ? Language.inst.CLEAR_TRACK_ITEM : Language.inst.CLEAR_TRACK_ITEM_MULTIPLE.replaceFirst('_NUMBER_', tracks.length.toString()),
@@ -18,6 +19,7 @@ void showTrackClearDialog(List<Track> tracks) {
         children: [
           if (tracks.hasVideoCached)
             CustomListTile(
+              passedColor: colorScheme,
               title: isSingle ? Language.inst.VIDEO_CACHE_FILE : Language.inst.VIDEO_CACHE_FILES,
               icon: Broken.video,
               onTap: () async {
@@ -27,6 +29,7 @@ void showTrackClearDialog(List<Track> tracks) {
             ),
           if (tracks.hasWaveformCached)
             CustomListTile(
+              passedColor: colorScheme,
               title: isSingle ? Language.inst.WAVEFORM_DATA : Language.inst.WAVEFORMS_DATA,
               icon: Broken.sound,
               onTap: () async {
@@ -36,6 +39,7 @@ void showTrackClearDialog(List<Track> tracks) {
             ),
           if (tracks.hasLyricsCached)
             CustomListTile(
+              passedColor: colorScheme,
               title: Language.inst.LYRICS,
               icon: Broken.document,
               onTap: () async {
@@ -45,6 +49,7 @@ void showTrackClearDialog(List<Track> tracks) {
             ),
           if (tracks.hasArtworkCached)
             CustomListTile(
+              passedColor: colorScheme,
               title: isSingle ? Language.inst.ARTWORK : Language.inst.ARTWORKS,
               icon: Broken.image,
               onTap: () async {

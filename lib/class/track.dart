@@ -30,14 +30,24 @@ class TrackWithDate {
       'source': source.convertToString,
     };
   }
+
+  @override
+  bool operator ==(other) {
+    if (other is! TrackWithDate) {
+      return false;
+    }
+    return dateAdded == other.dateAdded && source == other.source && track == other.track;
+  }
+
+  @override
+  int get hashCode => "$track$source$dateAdded".hashCode;
+
+  @override
+  String toString() => "track: ${track.toString()}, source: $source, dateAdded: $dateAdded";
 }
 
 extension TWDUtils on List<TrackWithDate> {
-  List<Track> toTracks() {
-    final list = <Track>[];
-    loop((e, index) => list.add(e.track));
-    return list;
-  }
+  List<Track> toTracks() => mapped((e) => e.track);
 }
 
 class TrackStats {

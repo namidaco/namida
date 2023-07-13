@@ -107,19 +107,18 @@ class PlaylistsPage extends StatelessWidget {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   const SizedBox(width: 12.0),
-                                  Expanded(
-                                    child: Text(
-                                      PlaylistController.inst.playlistsMap.length.displayPlaylistKeyword,
-                                      style: context.textTheme.displayLarge,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+                                  Text(
+                                    PlaylistController.inst.playlistsMap.length.displayPlaylistKeyword,
+                                    style: context.textTheme.displayLarge,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  const FittedBox(
+                                  const SizedBox(width: 12.0),
+                                  const Expanded(
                                     child: GeneratePlaylistButton(),
                                   ),
                                   const SizedBox(width: 8.0),
-                                  const FittedBox(
+                                  const Expanded(
                                     child: CreatePlaylistButton(),
                                   ),
                                   const SizedBox(width: 8.0),
@@ -150,7 +149,7 @@ class PlaylistsPage extends StatelessWidget {
                                             colorScheme: Colors.grey,
                                             icon: Broken.refresh,
                                             title: Language.inst.HISTORY,
-                                            text: HistoryController.inst.historyTracksLength.toString(),
+                                            text: HistoryController.inst.historyTracksLength.formatDecimal(),
                                             onTap: () => NamidaOnTaps.inst.onHistoryPlaylistTap(),
                                           ),
                                         ),
@@ -165,7 +164,7 @@ class PlaylistsPage extends StatelessWidget {
                                             colorScheme: Colors.green,
                                             icon: Broken.award,
                                             title: Language.inst.MOST_PLAYED,
-                                            text: HistoryController.inst.topTracksMapListens.length.toString(),
+                                            text: HistoryController.inst.topTracksMapListens.length.formatDecimal(),
                                             onTap: () => NamidaOnTaps.inst.onMostPlayedPlaylistTap(),
                                           ),
                                         ),
@@ -186,7 +185,7 @@ class PlaylistsPage extends StatelessWidget {
                                             colorScheme: Colors.red,
                                             icon: Broken.heart,
                                             title: Language.inst.FAVOURITES,
-                                            text: PlaylistController.inst.favouritesPlaylist.value.tracks.length.toString(),
+                                            text: PlaylistController.inst.favouritesPlaylist.value.tracks.length.formatDecimal(),
                                             onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(k_PLAYLIST_NAME_FAV),
                                           ),
                                         ),
@@ -201,7 +200,7 @@ class PlaylistsPage extends StatelessWidget {
                                             colorScheme: Colors.blue,
                                             icon: Broken.driver,
                                             title: Language.inst.QUEUES,
-                                            text: QueueController.inst.queuesMap.value.length.toString(),
+                                            text: QueueController.inst.queuesMap.value.length.formatDecimal(),
                                             onTap: () => NamidaNavigator.inst.navigateTo(const QueuesPage()),
                                           ),
                                         ),

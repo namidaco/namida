@@ -44,7 +44,12 @@ void showAddToPlaylistDialog(List<Track> tracks) {
           overflow: TextOverflow.ellipsis,
         ),
       ),
-      actions: const [CreatePlaylistButton()],
+      actions: const [
+        SizedBox(
+          width: 128.0,
+          child: CreatePlaylistButton(),
+        ),
+      ],
       child: SizedBox(
         height: Get.height * 0.7,
         width: Get.width,

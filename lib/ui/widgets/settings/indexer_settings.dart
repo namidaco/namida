@@ -290,8 +290,7 @@ class IndexerSettings extends StatelessWidget {
                           NamidaNavigator.inst.navigateDialog(
                             dialog: CustomBlurryDialog(
                               normalTitleStyle: true,
-                              title: Language.inst.WARNING,
-                              icon: Broken.warning_2,
+                              isWarning: true,
                               actions: [
                                 const CancelButton(),
                                 NamidaButton(
@@ -303,10 +302,7 @@ class IndexerSettings extends StatelessWidget {
                                   },
                                 ),
                               ],
-                              child: Text(
-                                "${Language.inst.REMOVE} \"$e\"?",
-                                style: context.textTheme.displayMedium,
-                              ),
+                              bodyText: "${Language.inst.REMOVE} \"$e\"?",
                             ),
                           );
                         }

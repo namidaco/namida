@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/folder.dart';
-import 'package:namida/class/playlist.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/folders_controller.dart';
@@ -117,40 +116,51 @@ class NamidaOnTaps {
     );
   }
 
-  void onRemoveTrackFromPlaylist(String name, int index, TrackWithDate trackWithDate) {
-    final bool isHistory = name == k_PLAYLIST_NAME_HISTORY;
-    Playlist? playlist;
-    if (isHistory) {
-      final day = trackWithDate.dateAdded.toDaysSinceEpoch();
-      HistoryController.inst.removeFromHistory(day, index);
-    } else {
-      playlist = PlaylistController.inst.getPlaylist(name);
-      if (playlist == null) return;
-      trackWithDate = playlist.tracks.elementAt(index);
-      PlaylistController.inst.removeTrackFromPlaylist(playlist, index);
+  Future<void> onRemoveTracksFromPlaylist(String name, List<TrackWithDate> tracksWithDates) async {
+    void snackyy({required void Function() whatDoYouWant}) {
+      Get.snackbar(
+        Language.inst.UNDO_CHANGES,
+        Language.inst.UNDO_CHANGES_DELETED_TRACK,
+        mainButton: TextButton(
+          onPressed: () {
+            Get.closeAllSnackbars();
+            whatDoYouWant();
+          },
+          child: Text(Language.inst.UNDO),
+        ),
+      );
     }
 
-    Get.snackbar(
-      Language.inst.UNDO_CHANGES,
-      Language.inst.UNDO_CHANGES_DELETED_TRACK,
-      mainButton: TextButton(
-        onPressed: () {
-          if (isHistory) {
-            HistoryController.inst.addTracksToHistory([trackWithDate]);
-            HistoryController.inst.sortHistoryTracks([trackWithDate.dateAdded.toDaysSinceEpoch()]);
-          } else {
-            PlaylistController.inst.insertTracksInPlaylist(
-              playlist!,
-              [trackWithDate],
-              index,
-            );
-          }
+    final bool isHistory = name == k_PLAYLIST_NAME_HISTORY;
 
-          Get.closeAllSnackbars();
+    if (isHistory) {
+      final tempList = List<TrackWithDate>.from(tracksWithDates);
+      await HistoryController.inst.removeTracksFromHistory(tracksWithDates);
+      snackyy(
+        whatDoYouWant: () async {
+          await HistoryController.inst.addTracksToHistory(tempList);
+          HistoryController.inst.sortHistoryTracks(tempList.mapped((e) => e.dateAdded.toDaysSinceEpoch()));
         },
-        child: Text(Language.inst.UNDO),
-      ),
-    );
+      );
+    } else {
+      final playlist = PlaylistController.inst.getPlaylist(name);
+      if (playlist == null) return;
+
+      final Map<TrackWithDate, int> twdAndIndexes = {};
+      tracksWithDates.loop((twd, index) {
+        twdAndIndexes[twd] = playlist.tracks.indexOf(twd);
+      });
+
+      await PlaylistController.inst.removeTracksFromPlaylist(playlist, twdAndIndexes.values.toList());
+      snackyy(
+        whatDoYouWant: () async {
+          PlaylistController.inst.insertTracksInPlaylistWithEachIndex(
+            playlist,
+            twdAndIndexes,
+          );
+        },
+      );
+    }
   }
 }
 

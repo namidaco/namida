@@ -63,11 +63,11 @@ class AppThemes {
       ),
       dialogBackgroundColor: lighterDialog
           ? light
-              ? Color.alphaBlend(color.withAlpha(50), Colors.white)
+              ? Color.alphaBlend(color.withAlpha(60), Colors.white)
               : Color.alphaBlend(color.withAlpha(20), const Color.fromARGB(255, 12, 12, 12))
           : light
-              ? Color.alphaBlend(color.withAlpha(20), Colors.white)
-              : Color.alphaBlend(color.withAlpha(12), const Color.fromARGB(255, 10, 10, 10)),
+              ? Color.alphaBlend(color.withAlpha(35), Colors.white)
+              : Color.alphaBlend(color.withAlpha(12), const Color.fromARGB(255, 16, 16, 16)),
       focusColor: light ? const Color.fromARGB(200, 190, 190, 190) : const Color.fromARGB(150, 80, 80, 80),
       dialogTheme: DialogTheme(surfaceTintColor: Colors.transparent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0.multipliedRadius))),
       listTileTheme: ListTileThemeData(

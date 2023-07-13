@@ -122,6 +122,7 @@ class NamidaMiniPlayer extends StatelessWidget {
     return WillPopScope(
       onWillPop: MiniPlayerController.inst.onWillPop,
       child: Listener(
+        behavior: HitTestBehavior.translucent,
         onPointerDown: MiniPlayerController.inst.onPointerDown,
         onPointerMove: MiniPlayerController.inst.onPointerMove,
         onPointerUp: MiniPlayerController.inst.onPointerUp,
@@ -868,28 +869,21 @@ class NamidaMiniPlayer extends StatelessWidget {
                                       itemBuilder: (context, i) {
                                         final track = Player.inst.currentQueue[i];
                                         final key = "$i${track.path}";
-                                        return GestureDetector(
+                                        return AnimatedOpacity(
                                           key: Key('GD_$key'),
-                                          onHorizontalDragStart: (details) => MiniPlayerController.inst.isReorderingQueue = true,
-                                          onHorizontalDragEnd: (details) => MiniPlayerController.inst.isReorderingQueue = false,
-                                          child: AnimatedOpacity(
-                                            duration: const Duration(milliseconds: 300),
-                                            opacity: i < Player.inst.currentIndex.value ? 0.7 : 1.0,
-                                            child: FadeDismissible(
-                                              key: Key("Diss_$key"),
-                                              onDismissed: (direction) {
-                                                Player.inst.removeFromQueue(i);
-                                              },
-                                              child: TrackTile(
-                                                index: i,
-                                                key: Key('tile_$key'),
-                                                track: track,
-                                                displayRightDragHandler: true,
-                                                draggableThumbnail: true,
-                                                queueSource: QueueSource.playerQueue,
-                                                onDragStart: (event) => MiniPlayerController.inst.isReorderingQueue = true,
-                                                onDragEnd: (event) => MiniPlayerController.inst.isReorderingQueue = false,
-                                              ),
+                                          duration: const Duration(milliseconds: 300),
+                                          opacity: i < Player.inst.currentIndex.value ? 0.7 : 1.0,
+                                          child: FadeDismissible(
+                                            key: Key("Diss_$key"),
+                                            onDismissed: (direction) => Player.inst.removeFromQueue(i),
+                                            onUpdate: (detailts) => MiniPlayerController.inst.isReorderingQueue = detailts.progress != 0.0,
+                                            child: TrackTile(
+                                              index: i,
+                                              key: Key('tile_$key'),
+                                              track: track,
+                                              displayRightDragHandler: true,
+                                              draggableThumbnail: true,
+                                              queueSource: QueueSource.playerQueue,
                                             ),
                                           ),
                                         );

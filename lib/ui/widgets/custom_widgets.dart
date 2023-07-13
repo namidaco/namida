@@ -1,6 +1,7 @@
 import 'dart:ui';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart' hide ReorderableDragStartListener;
 
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:checkmark/checkmark.dart';
@@ -8,6 +9,7 @@ import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 import 'package:known_extents_list_view_builder/known_extents_reorderable_list_view_builder.dart';
+import 'package:known_extents_list_view_builder/known_extents_sliver_reorderable_list.dart';
 import 'package:like_button/like_button.dart';
 import 'package:selectable_autolink_text/selectable_autolink_text.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
@@ -17,6 +19,7 @@ import 'package:wheel_slider/wheel_slider.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -32,6 +35,63 @@ import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+
+class CustomReorderableDelayedDragStartListener extends ReorderableDragStartListener {
+  final Duration delay;
+
+  const CustomReorderableDelayedDragStartListener({
+    this.delay = const Duration(milliseconds: 20),
+    Key? key,
+    required Widget child,
+    required int index,
+    PointerDownEventListener? onDragStart,
+    PointerUpEventListener? onDragEnd,
+  }) : super(
+          key: key,
+          child: child,
+          index: index,
+          onDragStart: onDragStart,
+          onDragEnd: onDragEnd,
+        );
+
+  @override
+  MultiDragGestureRecognizer createRecognizer() {
+    return DelayedMultiDragGestureRecognizer(delay: delay, debugOwner: this);
+  }
+}
+
+class NamidaReordererableListener extends StatelessWidget {
+  /// Will disable miniplayer listener when dragging.
+  final bool isInQueue;
+  final int index;
+  final int durationMs;
+  final Widget child;
+
+  const NamidaReordererableListener({
+    super.key,
+    required this.isInQueue,
+    required this.index,
+    this.durationMs = 50,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomReorderableDelayedDragStartListener(
+      onDragStart: (event) {
+        if (isInQueue) {
+          MiniPlayerController.inst.isReorderingQueue = true;
+        }
+      },
+      onDragEnd: (event) {
+        MiniPlayerController.inst.isReorderingQueue = false;
+      },
+      index: index,
+      delay: const Duration(milliseconds: 80),
+      child: child,
+    );
+  }
+}
 
 class CustomSwitch extends StatelessWidget {
   final bool active;
@@ -184,6 +244,7 @@ class CustomListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconColor = Color.alphaBlend((passedColor ?? CurrentColor.inst.color.value).withAlpha(100), context.theme.colorScheme.onBackground);
     return Theme(
       data: context.theme.copyWith(
         splashColor: Colors.transparent,
@@ -208,12 +269,12 @@ class CustomListTile extends StatelessWidget {
                           quarterTurns: rotateIcon!,
                           child: Icon(
                             icon,
-                            color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(100), context.theme.colorScheme.onBackground),
+                            color: iconColor,
                           ),
                         )
                       : Icon(
                           icon,
-                          color: passedColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(100), context.theme.colorScheme.onBackground),
+                          color: iconColor,
                         ),
                 )
               : leading,
@@ -283,6 +344,7 @@ class CustomBlurryDialog extends StatelessWidget {
   final bool scrollable;
   final EdgeInsets? insetPadding;
   final EdgeInsetsGeometry? contentPadding;
+  final ThemeData? theme;
 
   const CustomBlurryDialog({
     super.key,
@@ -300,14 +362,16 @@ class CustomBlurryDialog extends StatelessWidget {
     this.scrollable = true,
     this.contentPadding,
     this.leftAction,
+    this.theme,
   });
 
   @override
   Widget build(BuildContext context) {
+    final ctxth = theme ?? context.theme;
     return Center(
       child: SingleChildScrollView(
         child: Dialog(
-          backgroundColor: context.theme.dialogBackgroundColor,
+          backgroundColor: ctxth.dialogBackgroundColor,
           surfaceTintColor: Colors.transparent,
           insetPadding: insetPadding,
           clipBehavior: Clip.antiAlias,
@@ -346,7 +410,7 @@ class CustomBlurryDialog extends StatelessWidget {
                                 Expanded(
                                   child: Text(
                                     isWarning ? Language.inst.WARNING : title ?? '',
-                                    style: context.textTheme.displayLarge,
+                                    style: ctxth.textTheme.displayLarge,
                                   ),
                                 ),
                                 if (trailingWidgets != null) ...trailingWidgets!
@@ -354,7 +418,7 @@ class CustomBlurryDialog extends StatelessWidget {
                             ),
                           )
                         : Container(
-                            color: context.theme.cardTheme.color,
+                            color: ctxth.cardTheme.color,
                             padding: const EdgeInsets.all(16),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -369,7 +433,7 @@ class CustomBlurryDialog extends StatelessWidget {
                                 ],
                                 Text(
                                   title ?? '',
-                                  style: context.theme.textTheme.displayMedium,
+                                  style: ctxth.textTheme.displayMedium,
                                   textAlign: TextAlign.center,
                                 ),
                               ],
@@ -386,7 +450,7 @@ class CustomBlurryDialog extends StatelessWidget {
                               padding: const EdgeInsets.all(12.0),
                               child: Text(
                                 bodyText!,
-                                style: context.textTheme.displayMedium,
+                                style: ctxth.textTheme.displayMedium,
                               ),
                             )
                           : child,
@@ -462,11 +526,15 @@ class NamidaButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconChild = Icon(icon, size: iconSize);
-    final textChild = Text(text ?? '');
+    final textChild = Text(
+      text ?? '',
+      softWrap: false,
+      overflow: TextOverflow.ellipsis,
+    );
     final onTap = onPressed;
     final style = minimumSize
         ? ElevatedButton.styleFrom(
-            fixedSize: const Size(0.0, 0.0),
+            minimumSize: const Size(32.0, 38.0),
             padding: EdgeInsets.zero,
           )
         : null;
@@ -507,6 +575,7 @@ class NamidaButton extends StatelessWidget {
     if (icon != null && text != null) {
       return _getWidget(
         ElevatedButton.icon(
+          style: style,
           onPressed: onTap,
           icon: iconChild,
           label: textChild,
@@ -1145,7 +1214,7 @@ class NamidaLikeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NamidaRawLikeButton(
-      size: 22.0,
+      size: size,
       color: color,
       isLiked: track?.isFavourite,
       onTap: (isLiked) async {
@@ -1446,7 +1515,9 @@ class SubpagesTopContainer extends StatelessWidget {
                               icon: const StackedIcon(baseIcon: Broken.play, secondaryIcon: Broken.add_circle),
                               label: Text(
                                 Language.inst.PLAY_LAST,
-                                style: TextStyle(fontSize: (constraints.maxWidth * 0.08).withMaximum(13.0).multipliedFontScale),
+                                softWrap: false,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: (constraints.maxWidth * 0.1).clamp(10.0, 14.0).multipliedFontScale),
                               ),
                               style: ElevatedButton.styleFrom(
                                 fixedSize: const Size(0.0, 0.0),
@@ -1715,13 +1786,15 @@ class NamidaContainerDivider extends StatelessWidget {
 
 class FadeDismissible extends StatelessWidget {
   final Widget child;
-  final void Function(DismissDirection)? onDismissed;
+  final void Function(DismissDirection onDismissed)? onDismissed;
+  final void Function(DismissUpdateDetails detailts)? onUpdate;
   final DismissDirection direction;
 
   FadeDismissible({
     super.key,
     required this.child,
     this.onDismissed,
+    this.onUpdate,
     this.direction = DismissDirection.horizontal,
   });
 
@@ -1734,6 +1807,7 @@ class FadeDismissible extends StatelessWidget {
       onDismissed: onDismissed,
       onUpdate: (details) {
         opacity.value = 1 - details.progress;
+        if (onUpdate != null) onUpdate!(details);
       },
       direction: direction,
       child: Obx(
@@ -1954,7 +2028,6 @@ class NamidaTracksList extends StatelessWidget {
   final List<Track>? queue;
   final int queueLength;
   final Widget Function(BuildContext context, int i)? itemBuilder;
-  final void Function(int oldIndex, int newIndex)? onReorder;
   final Widget? header;
   final Widget? footer;
   final List<Widget>? widgetsInColumn;
@@ -1970,7 +2043,6 @@ class NamidaTracksList extends StatelessWidget {
     super.key,
     this.queue,
     this.itemBuilder,
-    this.onReorder,
     this.header,
     this.footer,
     this.widgetsInColumn,
@@ -1988,7 +2060,6 @@ class NamidaTracksList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NamidaListView(
-      onReorder: onReorder,
       header: header,
       widgetsInColumn: widgetsInColumn,
       scrollController: scrollController,
@@ -2007,7 +2078,7 @@ class NamidaTracksList extends StatelessWidget {
                 child: TrackTile(
                   index: i,
                   track: track,
-                  draggableThumbnail: onReorder != null,
+                  draggableThumbnail: false,
                   selectable: isTrackSelectable,
                   queueSource: queueSource,
                   displayTrackNumber: displayTrackNumber,

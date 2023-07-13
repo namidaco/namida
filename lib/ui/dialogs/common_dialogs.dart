@@ -36,7 +36,7 @@ class NamidaDialogs {
       QueueSource.selectedTracks,
       thirdLineText: trExt.album.overflow,
       forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
-      trackWithDate: trackWithDate,
+      tracksWithDates: trackWithDate == null ? [] : [trackWithDate],
       playlistName: playlistName,
       index: index,
       comingFromQueue: comingFromQueue,
@@ -94,7 +94,8 @@ class NamidaDialogs {
   /// Supports all playlists, (History, Most Played, Favourites & others).
   Future<void> showPlaylistDialog(String playlistName) async {
     if (playlistName == k_PLAYLIST_NAME_HISTORY) {
-      final trs = HistoryController.inst.historyTracks.toTracks();
+      final twds = HistoryController.inst.historyTracks;
+      final trs = twds.toTracks();
       await showGeneralPopupDialog(
         trs,
         k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
@@ -102,6 +103,7 @@ class NamidaDialogs {
         QueueSource.history,
         thirdLineText: HistoryController.inst.newestTrack?.dateAdded.dateAndClockFormattedOriginal ?? '',
         playlistName: k_PLAYLIST_NAME_HISTORY,
+        tracksWithDates: twds,
         extractColor: false,
         heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
       );
@@ -151,6 +153,7 @@ class NamidaDialogs {
         playlist.toQueueSource(),
         thirdLineText: playlist.moods.join(', ').overflow,
         playlistName: playlist.name,
+        tracksWithDates: playlist.tracks,
         extractColor: false,
         heroTag: 'playlist_${playlist.name}',
       );

@@ -8,6 +8,7 @@ import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -86,9 +87,9 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                         child: Container(
                                           clipBehavior: Clip.antiAlias,
                                           decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-                                          child: NamidaTracksList(
-                                            queueSource: QueueSource.selectedTracks,
-                                            queueLength: stc.selectedTracks.length,
+                                          child: NamidaListView(
+                                            itemExtents: stc.selectedTracks.toTrackItemExtents(),
+                                            itemCount: stc.selectedTracks.length,
                                             onReorder: (oldIndex, newIndex) => stc.reorderTracks(oldIndex, newIndex),
                                             padding: EdgeInsets.zero,
                                             itemBuilder: (context, i) {
@@ -96,6 +97,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                                 key: ValueKey(stc.selectedTracks[i]),
                                                 onDismissed: (direction) => stc.removeTrack(i),
                                                 child: TrackTile(
+                                                  key: Key('$i${stc.selectedTracks[i].path}'),
                                                   index: i,
                                                   track: stc.selectedTracks[i],
                                                   displayRightDragHandler: true,
@@ -124,7 +126,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
 class SelectedTracksRow extends StatelessWidget {
   const SelectedTracksRow({super.key});
 
-  RxList<Track> get selectedTracks => SelectedTracksController.inst.selectedTracks;
+  List<Track> get selectedTracks => SelectedTracksController.inst.selectedTracks;
 
   @override
   Widget build(BuildContext context) {
@@ -189,6 +191,8 @@ class SelectedTracksRow extends StatelessWidget {
           visualDensity: VisualDensity.compact,
           onPressed: () {
             final tracks = selectedTracks;
+            final selectedPl = SelectedTracksController.inst.selectedPlaylistsNames.values.toList();
+            selectedPl.removeDuplicates();
             showGeneralPopupDialog(
               tracks,
               tracks.displayTrackKeyword,
@@ -204,6 +208,8 @@ class SelectedTracksRow extends StatelessWidget {
                       final maxLet = 20 - tracks.length.clamp(0, 17);
                       return '${title.substring(0, (title.length > maxLet ? maxLet : title.length))}..';
                     }).join(', '),
+              tracksWithDates: SelectedTracksController.inst.selectedTracksWithDates,
+              playlistName: selectedPl.length == 1 ? selectedPl.first : null,
             );
           },
           tooltip: Language.inst.MORE,
