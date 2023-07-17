@@ -214,14 +214,14 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
     final track = trackPre.toTrackExt();
 
     /// Saves a starting position in case the remaining was less than 30 seconds.
-    final remaining = track.duration - lastPosition;
+    final remaining = (track.duration * 1000) - lastPosition;
     final positionToSave = remaining <= 30000 ? 0 : lastPosition;
 
     await Indexer.inst.updateTrackStats(trackPre, lastPositionInMs: positionToSave);
   }
 
   Future<void> tryRestoringLastPosition(Track trackPre) async {
-    final minValueInSet = Duration(minutes: SettingsController.inst.minTrackDurationToRestoreLastPosInMinutes.value).inMilliseconds;
+    final minValueInSet = SettingsController.inst.minTrackDurationToRestoreLastPosInMinutes.value * 60;
     final track = trackPre.toTrackExt();
     if (minValueInSet > 0) {
       final lastPos = track.stats.lastPositionInMs;
@@ -595,7 +595,7 @@ extension TrackToAudioSourceMediaItem on Track {
       artist: track.originalArtist,
       album: track.hasUnknownAlbum ? '' : track.album,
       genre: track.genresList.take(3).join(', '),
-      duration: Duration(milliseconds: track.duration),
+      duration: Duration(seconds: track.duration),
       artUri: Uri.file(File(pathToImage).existsSync() ? pathToImage : k_FILE_PATH_NAMIDA_LOGO),
     );
   }

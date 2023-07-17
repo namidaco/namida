@@ -30,7 +30,7 @@ class WaveformController {
   Future<void> generateWaveform(Track track) async {
     final wavePath = "$k_DIR_WAVEFORMS${track.filename}.wave";
     final waveFile = File(wavePath);
-    final numberOfScales = _getlistSize(track.duration);
+    final numberOfScales = _getlistSize(track.duration * 1000);
 
     // If Waveform file exists in storage
     if (await waveFile.existsAndValid()) {

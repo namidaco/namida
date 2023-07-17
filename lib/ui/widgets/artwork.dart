@@ -114,7 +114,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
     _stockWidget = Container(
       width: widget.width ?? widget.thumbnailSize,
       height: widget.height ?? widget.thumbnailSize,
-      key: const ValueKey("empty"),
+      key: const Key("empty"),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: widget.bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),

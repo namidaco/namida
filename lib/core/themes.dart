@@ -40,7 +40,10 @@ class AppThemes {
       splashFactory: InkRipple.splashFactory,
       highlightColor: light ? Colors.black.withAlpha(10) : Colors.white.withAlpha(10),
       disabledColor: light ? const Color.fromARGB(0, 160, 160, 160) : const Color.fromARGB(200, 60, 60, 60),
+      applyElevationOverlayColor: false,
       appBarTheme: AppBarTheme(
+        elevation: 0,
+        scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         backgroundColor: light ? Color.alphaBlend(color.withAlpha(25), Colors.white) : null,
         actionsIconTheme: IconThemeData(

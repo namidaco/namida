@@ -349,7 +349,7 @@ String _getChoosenTrackTileItem(TrackTileItem trackItem, Track trackPre) {
     if (trackItem == TrackTileItem.album) track.album.overflow,
     if (trackItem == TrackTileItem.albumArtist) track.albumArtist.overflow,
     if (trackItem == TrackTileItem.genres) track.genresList.take(4).join(', ').overflow,
-    if (trackItem == TrackTileItem.duration) track.duration.milliseconds.label,
+    if (trackItem == TrackTileItem.duration) track.duration.secondsLabel,
     if (trackItem == TrackTileItem.year) track.year.yearFormatted,
     if (trackItem == TrackTileItem.trackNumber) track.trackNo,
     if (trackItem == TrackTileItem.discNumber) track.discNo,

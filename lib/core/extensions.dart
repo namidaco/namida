@@ -24,14 +24,19 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/strings.dart';
 
-extension DurationLabel on Duration {
-  String get label {
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
-    final String twoDigitMinutes = "${twoDigits(inMinutes.remainder(60))}:";
-    final String twoDigitSeconds = twoDigits(inSeconds.remainder(60));
-    final String durinHour = inHours > 0 ? "${twoDigits(inHours)}:" : '';
-    return "$durinHour$twoDigitMinutes$twoDigitSeconds";
+extension SecondsLabel on int {
+  String get secondsLabel {
+    if (this == 0) {
+      return "00:00";
+    }
+    String heyPad(int n) => n.toString().padLeft(2, "0");
+    final minutes = this ~/ 60;
+    final seconds = this % 60;
+    final durinHour = this >= 3600 ? "${heyPad(this ~/ 3600)}:" : '';
+    return "$durinHour${heyPad(minutes)}:${heyPad(seconds)}";
   }
+
+  String get milliSecondsLabel => (this ~/ 1000).secondsLabel;
 }
 
 extension StringUtils on String {

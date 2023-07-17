@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:dismissible_page/dismissible_page.dart';
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:photo_view/photo_view.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/audio_handler.dart';
@@ -69,7 +73,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
               stream: ap.positionStream,
               builder: (context, snapshot) {
                 final dur = snapshot.data ?? Duration.zero;
-                return Text(dur.label);
+                return Text(dur.inSeconds.secondsLabel);
               },
             ),
             StreamBuilder(
@@ -85,7 +89,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                 );
               },
             ),
-            Text((ap.duration ?? Duration.zero).label),
+            Text(((ap.duration?.inSeconds ?? 0).secondsLabel)),
             StreamBuilder(
               stream: ap.playingStream,
               builder: (context, snapshot) {
@@ -102,6 +106,17 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
     );
   }
 
+  final artwork = NamidaHero(
+    tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}',
+    child: ArtworkWidget(
+      track: track,
+      path: trackExt.pathToImage,
+      thumbnailSize: 120,
+      forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+      useTrackTileCacheHeight: true,
+      compressed: false,
+    ),
+  );
   NamidaNavigator.inst.navigateDialog(
     colorScheme: color,
     lighterDialogColor: false,
@@ -153,67 +168,55 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                             GestureDetector(
                               onTap: () => NamidaNavigator.inst.navigateDialog(
                                 scale: 1.0,
-                                blackBg: true,
-                                dialog: InteractiveViewer(
-                                  maxScale: 5,
-                                  child: NamidaHero(
-                                    tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}',
-                                    child: GestureDetector(
-                                      onLongPress: () async {
-                                        final saveDirPath = await EditDeleteController.inst.saveArtworkToStorage(track);
-                                        String title = Language.inst.COPIED_ARTWORK;
-                                        String subtitle = '${Language.inst.SAVED_IN} $saveDirPath';
-                                        Color snackColor = CurrentColor.inst.color.value;
+                                dialog: GestureDetector(
+                                  onLongPress: () async {
+                                    final saveDirPath = await EditDeleteController.inst.saveArtworkToStorage(track);
+                                    String title = Language.inst.COPIED_ARTWORK;
+                                    String subtitle = '${Language.inst.SAVED_IN} $saveDirPath';
+                                    Color snackColor = CurrentColor.inst.color.value;
 
-                                        if (saveDirPath == null) {
-                                          title = Language.inst.ERROR;
-                                          subtitle = Language.inst.COULDNT_SAVE_IMAGE;
-                                          snackColor = Colors.red;
-                                        }
-                                        Get.snackbar(
-                                          title,
-                                          subtitle,
-                                          snackPosition: SnackPosition.BOTTOM,
-                                          snackStyle: SnackStyle.FLOATING,
-                                          animationDuration: const Duration(milliseconds: 300),
-                                          duration: const Duration(seconds: 2),
-                                          leftBarIndicatorColor: snackColor,
-                                          margin: const EdgeInsets.all(0.0),
-                                          titleText: Text(
-                                            title,
-                                            style: theme.textTheme.displayMedium,
-                                          ),
-                                          messageText: Text(
-                                            subtitle,
-                                            style: theme.textTheme.displaySmall,
-                                          ),
-                                          borderRadius: 0,
-                                        );
-                                      },
-                                      child: ArtworkWidget(
-                                        track: track,
-                                        path: trackExt.pathToImage,
-                                        thumbnailSize: Get.width,
-                                        compressed: false,
-                                        borderRadius: 0,
-                                        blur: 0,
-                                        useTrackTileCacheHeight: true,
+                                    if (saveDirPath == null) {
+                                      title = Language.inst.ERROR;
+                                      subtitle = Language.inst.COULDNT_SAVE_IMAGE;
+                                      snackColor = Colors.red;
+                                    }
+                                    Get.snackbar(
+                                      title,
+                                      subtitle,
+                                      snackPosition: SnackPosition.BOTTOM,
+                                      snackStyle: SnackStyle.FLOATING,
+                                      animationDuration: const Duration(milliseconds: 300),
+                                      duration: const Duration(seconds: 2),
+                                      leftBarIndicatorColor: snackColor,
+                                      margin: const EdgeInsets.all(0.0),
+                                      titleText: Text(
+                                        title,
+                                        style: theme.textTheme.displayMedium?.copyWith(color: Colors.white70),
+                                      ),
+                                      messageText: Text(
+                                        subtitle,
+                                        style: theme.textTheme.displaySmall?.copyWith(color: Colors.white60),
+                                      ),
+                                      borderRadius: 0,
+                                    );
+                                  },
+                                  child: DismissiblePage(
+                                    dragSensitivity: 0.2,
+                                    onDismissed: NamidaNavigator.inst.closeDialog,
+                                    child: PhotoView(
+                                      heroAttributes: PhotoViewHeroAttributes(tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}'),
+                                      gaplessPlayback: true,
+                                      tightMode: true,
+                                      loadingBuilder: (context, event) => artwork,
+                                      backgroundDecoration: const BoxDecoration(color: Colors.transparent),
+                                      imageProvider: FileImage(
+                                        File(trackExt.pathToImage),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
-                              child: NamidaHero(
-                                tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}',
-                                child: ArtworkWidget(
-                                  track: track,
-                                  path: trackExt.pathToImage,
-                                  thumbnailSize: 120,
-                                  forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
-                                  useTrackTileCacheHeight: true,
-                                  compressed: false,
-                                ),
-                              ),
+                              child: artwork,
                             ),
                             const SizedBox(width: 10.0),
                             Expanded(
@@ -313,7 +316,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                       if (shouldShowTheField(trackExt.duration == 0))
                         TrackInfoListTile(
                           title: Language.inst.DURATION,
-                          value: trackExt.duration.milliseconds.label,
+                          value: trackExt.duration.secondsLabel,
                           icon: Broken.clock,
                         ),
 

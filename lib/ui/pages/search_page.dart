@@ -34,7 +34,7 @@ class SearchPage extends StatelessWidget {
           duration: const Duration(milliseconds: 400),
           child: !SearchSortController.inst.isSearching.value
               ? Container(
-                  key: const ValueKey('emptysearch'),
+                  key: const Key('emptysearch'),
                   padding: const EdgeInsets.all(64.0).add(const EdgeInsets.only(bottom: 64.0)),
                   width: context.width,
                   height: context.height,
@@ -54,7 +54,7 @@ class SearchPage extends StatelessWidget {
                   ),
                 )
               : AnimationLimiter(
-                  key: const ValueKey('fullsearch'),
+                  key: const Key('fullsearch'),
                   child: CupertinoScrollbar(
                     controller: _scrollController,
                     child: CustomScrollView(

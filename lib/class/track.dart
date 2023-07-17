@@ -124,6 +124,8 @@ class TrackExtended {
   late final List<String> genresList;
   late final String composer;
   late final int trackNo;
+
+  /// track's duration in seconds.
   late int duration;
   late final int year;
   late final int size;
@@ -297,7 +299,7 @@ extension TrackUtils on Track {
   String get audioInfoFormatted {
     final trExt = toTrackExt();
     return [
-      Duration(milliseconds: trExt.duration).label,
+      trExt.duration.secondsLabel,
       trExt.size.fileSizeFormatted,
       "${trExt.bitrate} kps",
       "${trExt.sampleRate} hz",
