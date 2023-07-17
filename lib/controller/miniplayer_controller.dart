@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
@@ -166,7 +167,8 @@ class MiniPlayerController {
     _velocity.addPosition(event.timeStamp, event.position);
 
     if (_offset <= maxOffset) return;
-    if (_isInsideQueue()) return;
+    // a rough estimation of the top bar when inside queue.
+    if (_isInsideQueue() && event.position.dy > screenSize.height * 0.15) return;
 
     _offset -= event.delta.dy;
     _offset = _offset.clamp(-_headRoom, maxOffset * 2);
@@ -334,8 +336,14 @@ class MiniPlayerController {
   Future<void> snapToQueue({bool haptic = true}) async {
     _offset = maxOffset * 2;
     bounceUp = false;
+    // updating scroll before snapping makes a nice effect.
+    SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+      // prevents scrolling when user is already inside queue, like failed snapping to expanded.
+      if (!_isInsideQueue()) {
+        _updateScrollPositionInQueue();
+      }
+    });
     await _snap(haptic: haptic);
-    _updateScrollPositionInQueue();
   }
 
   Future<void> _snap({bool haptic = true}) async {
@@ -350,11 +358,11 @@ class MiniPlayerController {
 
   Future<void> snapToPrev() async {
     _sOffset = -sMaxOffset;
-
     await sAnim.animateTo(-1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
+    await Player.inst.previous();
     _sOffset = 0;
     await sAnim.animateTo(0.0, duration: Duration.zero);
-    await Player.inst.previous();
+
     if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) HapticFeedback.lightImpact();
   }
 
@@ -366,11 +374,10 @@ class MiniPlayerController {
 
   Future<void> snapToNext() async {
     _sOffset = sMaxOffset;
-
     await sAnim.animateTo(1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
+    await Player.inst.next();
     _sOffset = 0;
     await sAnim.animateTo(0.0, duration: Duration.zero);
-    await Player.inst.next();
 
     if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) HapticFeedback.lightImpact();
   }
