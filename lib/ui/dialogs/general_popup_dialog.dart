@@ -28,7 +28,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
-import 'package:namida/ui/dialogs/track_clear_dialog.dart';
+import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -446,7 +446,7 @@ Future<void> showGeneralPopupDialog(
               text: Language.inst.SAVE,
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
-                  editTrackMetadata(tracks.first, insertComment: controller.text);
+                  editTrackMetadata(track: tracks.first, insertComment: controller.text);
                   NamidaNavigator.inst.closeDialog();
                 }
               },
@@ -484,16 +484,17 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  final Widget? clearStuffListTile = tracks.hasAnythingCached
-      ? SmallListTile(
-          color: colorDelightened,
-          compact: true,
-          title: Language.inst.CLEAR,
-          subtitle: Language.inst.CHOOSE_WHAT_TO_CLEAR,
-          icon: Broken.trash,
-          onTap: () => showTrackClearDialog(tracks),
-        )
-      : null;
+  final advancedStuffListTile = SmallListTile(
+    color: colorDelightened,
+    compact: false,
+    title: Language.inst.ADVANCED,
+    icon: Broken.code_circle,
+    onTap: () => showTrackAdvancedDialog(
+      tracksPre: tracks,
+      tracksWithDates: tracksWithDates,
+      colorScheme: colorDelightened,
+    ),
+  );
 
   final Widget? removeFromPlaylistListTile = shoulShowRemoveFromPlaylist()
       ? SmallListTile(
@@ -725,7 +726,7 @@ Future<void> showGeneralPopupDialog(
                             },
                           ),
                       ],
-                      if (clearStuffListTile != null) clearStuffListTile,
+                      advancedStuffListTile,
                       if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,
                       if (playlistUtilsRow != null) playlistUtilsRow,
                       if (removeQueueTile != null) removeQueueTile,
@@ -952,13 +953,14 @@ Future<void> showGeneralPopupDialog(
                         onTap: () {
                           NamidaNavigator.inst.closeDialog();
                           if (isSingle) {
-                            showEditTrackTagsDialog(tracks.first);
+                            showEditTrackTagsDialog(tracks.first, colorDelightened);
                           } else {
                             editMultipleTracksTags(tracks);
                           }
                         },
                       ),
-                      if (clearStuffListTile != null) clearStuffListTile,
+                      // --- Advanced dialog
+                      advancedStuffListTile,
 
                       if (removeQueueTile != null) removeQueueTile,
 
