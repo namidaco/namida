@@ -76,6 +76,9 @@ class Language {
   String get EXTRACT_FEAT_ARTIST_SUBTITLE => 'Extracts (feat. X) and (ft. X) artists, as a new artist entry.';
   String get PICK_FROM_STORAGE => 'Pick from storage';
   String get SKIP_SILENCE => 'Skip Silence';
+  String get FAILED_EDITS => 'Failed Edits';
+  String get CHECK_LIST => 'Check List';
+  String get EMPTY_NON_MEANINGFUL_TAG_FIELDS => 'you have fields with empty/non-meaningful values, make sure you really want to edit them';
 
   String get IMPORT_YOUTUBE_HISTORY_GUIDE =>
       '1. Go to _TAKEOUT_LINK_\n\n2. Deselect All and select youtube only.\n\n3. Press "Multiple Formats" and beside "History" choose "JSON".\n\n4. Press "All Youtube data included", Deselect All and choose history only.\n\n5. Create Export, Download & Unzip.\n\n6. Choose "watch-history.json" from the next screen.';
@@ -126,7 +129,7 @@ class Language {
   String get WAVEFORMS_DATA => 'Waveforms data';
   String get CLEAR_TRACK_ITEM => 'Clear Track\'s';
   String get CLEAR_TRACK_ITEM_MULTIPLE => 'Clear _NUMBER_ Tracks\'';
-  String get MULTIPLE_TRACKS_TAGS_EDIT_NOTE => 'You are about to edit these tracks,\nEmpty fields remains untouched.';
+  String get MULTIPLE_TRACKS_TAGS_EDIT_NOTE => 'You are about to edit these tracks,\nUnchanged fields remains untouched.';
   String get DELETE => 'Delete';
   String get DELETE_PLAYLIST => 'Delete Playlist';
   String get RENAME_PLAYLIST => 'Rename Playlist';
@@ -210,8 +213,7 @@ class Language {
   String get PERMISSION_UPDATE => 'Permission Update';
   String get STORAGE_PERMISSION_DENIED => 'Permission Denied';
   String get STORAGE_PERMISSION_DENIED_SUBTITLE => 'Please allow access to be able to perform this action';
-  String get CHOOSE_BACKUP_LOCATION_TO_EDIT_METADATA => 'In the next screen, please choose your backup location "_BACKUP_LOCATION_" in order to edit metadata';
-  String get CHOOSE_BACKUP_LOCATION_TO_EDIT_METADATA_NOTE => 'In case you didn\'t, please go to settings and reset SAF Permission';
+  String get METADATA_READ_FAILED => 'Failed to read metadata';
   String get METADATA_EDIT_FAILED => 'Failed to edit metadata';
   String get METADATA_EDIT_FAILED_SUBTITLE => 'Consider resetting SAF permission in the settings';
 
@@ -407,9 +409,6 @@ class Language {
   String get GENERATE_ALL_WAVEFORM_DATA_SUBTITLE =>
       'You currently have _WAVEFORM_CURRENT_LENGTH_ waveforms generated out of _WAVEFORM_TOTAL_LENGTH_.\n\nThis is a heavy process and generating for all tracks at once will take quite a while, proceed?';
   String get FORCE_STOP_WAVEFORM_GENERATION => 'Force stop generating waveforms? you can still continue it later';
-  String get RESET_SAF_PERMISSION => 'Reset SAF Permission';
-  String get RESET_SAF_PERMISSION_SUBTITLE => 'Use it only in case tag editing is not working';
-  String get RESET_SAF_PERMISSION_RESET_SUCCESS => 'SAF Permission has been reset successfully';
   String get CLEAR_VIDEO_CACHE => 'Clear Video Cache';
   String get CLEAR_VIDEO_CACHE_SUBTITLE => 'Delete _CURRENT_VIDEOS_COUNT_ Videos Representing _TOTAL_SIZE_?';
   String get CLEAR_VIDEO_CACHE_NOTE => 'You can choose what to delete.';

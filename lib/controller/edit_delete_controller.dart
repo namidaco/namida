@@ -72,24 +72,14 @@ class EditDeleteController {
     }
     final saveDirPath = SettingsController.inst.defaultBackupLocation.value;
     final newPath = "$saveDirPath${Platform.pathSeparator}${track.filenameWOExt}.png";
-    final imgFile = File(track.pathToImage);
-
-    try {
-      // try coping
-      await imgFile.copy(newPath);
-      return saveDirPath;
-    } catch (e) {
-      imgFile.tryDeleting();
-
-      // try extracting artwork
+    final imgFile = await Indexer.inst.extractOneArtwork(track.path);
+    if (imgFile != null) {
       try {
-        final img = await Indexer.inst.extractOneArtwork(track.path);
-        if (img != null) {
-          final newImgFile = await File(newPath).create();
-          await newImgFile.writeAsBytes(img);
-          return saveDirPath;
-        }
+        // try copying
+        await imgFile.copy(newPath);
+        return saveDirPath;
       } catch (e) {
+        printy(e, isError: true);
         return null;
       }
     }

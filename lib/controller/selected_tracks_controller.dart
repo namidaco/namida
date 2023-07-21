@@ -28,7 +28,7 @@ class SelectedTracksController {
 
   final Map<Track, String> selectedPlaylistsNames = <Track, String>{};
 
-  final RxList<Object> _tracksOrTwdList = <Object>[].obs;
+  final RxList<Selectable> _tracksOrTwdList = <Selectable>[].obs;
 
   List<Track> get currentAllTracks {
     if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {

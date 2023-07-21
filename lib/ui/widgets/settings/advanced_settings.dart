@@ -22,8 +22,6 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
-import 'package:namida/main.dart';
-
 class AdvancedSettings extends StatelessWidget {
   const AdvancedSettings({super.key});
 
@@ -38,12 +36,6 @@ class AdvancedSettings extends StatelessWidget {
       // icon: Broken.danger,
       child: Column(
         children: [
-          CustomListTile(
-            icon: Broken.code_circle,
-            title: Language.inst.RESET_SAF_PERMISSION,
-            subtitle: Language.inst.RESET_SAF_PERMISSION_SUBTITLE,
-            onTap: () async => await resetSAFPermision(),
-          ),
           Obx(
             () => CustomListTile(
               leading: const StackedIcon(

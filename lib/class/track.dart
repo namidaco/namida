@@ -1,12 +1,14 @@
 import 'dart:io';
 
+import 'package:faudiotagger/models/tag.dart';
+
 import 'package:namida/class/folder.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
-class TrackWithDate {
+class TrackWithDate extends Selectable {
   late final int dateAdded;
   late final Track track;
   late final TrackSource source;
@@ -95,7 +97,11 @@ class TrackStats {
   String toString() => '${track.toString()}, rating: $rating, tags: $tags, moods: $moods, lastPositionInMs: $lastPositionInMs';
 }
 
-class Track {
+abstract class Selectable {
+  const Selectable();
+}
+
+class Track extends Selectable {
   final String path;
   const Track(this.path);
 
@@ -141,31 +147,31 @@ class TrackExtended {
   late final String language;
   late final String lyrics;
 
-  TrackExtended(
-    this.title,
-    this.originalArtist,
-    this.artistsList,
-    this.album,
-    this.albumArtist,
-    this.originalGenre,
-    this.genresList,
-    this.composer,
-    this.trackNo,
-    this.duration,
-    this.year,
-    this.size,
-    this.dateAdded,
-    this.dateModified,
-    this.path,
-    this.comment,
-    this.bitrate,
-    this.sampleRate,
-    this.format,
-    this.channels,
-    this.discNo,
-    this.language,
-    this.lyrics,
-  );
+  TrackExtended({
+    required this.title,
+    required this.originalArtist,
+    required this.artistsList,
+    required this.album,
+    required this.albumArtist,
+    required this.originalGenre,
+    required this.genresList,
+    required this.composer,
+    required this.trackNo,
+    required this.duration,
+    required this.year,
+    required this.size,
+    required this.dateAdded,
+    required this.dateModified,
+    required this.path,
+    required this.comment,
+    required this.bitrate,
+    required this.sampleRate,
+    required this.format,
+    required this.channels,
+    required this.discNo,
+    required this.language,
+    required this.lyrics,
+  });
 
   TrackExtended.fromJson(Map<String, dynamic> json) {
     title = json['title'] ?? '';
@@ -249,6 +255,94 @@ extension TrackExtUtils on TrackExtended {
   String get pathToImage => "$k_DIR_ARTWORKS$filename.png";
 
   TrackStats get stats => Indexer.inst.trackStatsMap[toTrack()] ?? TrackStats(kDummyTrack, 0, [], [], 0);
+
+  TrackExtended copyWithTag({
+    required Tag tag,
+    int? dateModified,
+    String? path,
+  }) {
+    return TrackExtended(
+      title: tag.title ?? title,
+      originalArtist: tag.artist ?? originalArtist,
+      artistsList: tag.artist != null ? [tag.artist!] : artistsList,
+      album: tag.album ?? album,
+      albumArtist: tag.albumArtist ?? albumArtist,
+      originalGenre: tag.genre ?? originalGenre,
+      genresList: tag.genre != null ? [tag.genre!] : genresList,
+      composer: tag.composer ?? composer,
+      trackNo: tag.trackNumber.getIntValue() ?? trackNo,
+      year: tag.year.getIntValue() ?? year,
+      dateModified: dateModified ?? this.dateModified,
+      path: path ?? this.path,
+      comment: tag.comment ?? comment,
+      discNo: tag.discNumber.getIntValue() ?? discNo,
+      language: tag.language ?? language,
+      lyrics: tag.lyrics ?? lyrics,
+
+      // -- uneditable fields
+      bitrate: bitrate,
+      channels: channels,
+      dateAdded: dateAdded,
+      duration: duration,
+      format: format,
+      sampleRate: sampleRate,
+      size: size,
+    );
+  }
+
+  TrackExtended copyWith({
+    String? title,
+    String? originalArtist,
+    List<String>? artistsList,
+    String? album,
+    String? albumArtist,
+    String? originalGenre,
+    List<String>? genresList,
+    String? composer,
+    int? trackNo,
+
+    /// track's duration in seconds.
+    int? duration,
+    int? year,
+    int? size,
+    int? dateAdded,
+    int? dateModified,
+    String? path,
+    String? comment,
+    int? bitrate,
+    int? sampleRate,
+    String? format,
+    String? channels,
+    int? discNo,
+    String? language,
+    String? lyrics,
+  }) {
+    return TrackExtended(
+      title: title ?? this.title,
+      originalArtist: originalArtist ?? this.originalArtist,
+      artistsList: artistsList ?? this.artistsList,
+      album: album ?? this.album,
+      albumArtist: albumArtist ?? this.albumArtist,
+      originalGenre: originalGenre ?? this.originalGenre,
+      genresList: genresList ?? this.genresList,
+      composer: composer ?? this.composer,
+      trackNo: trackNo ?? this.trackNo,
+      duration: duration ?? this.duration,
+      year: year ?? this.year,
+      size: size ?? this.size,
+      dateAdded: dateAdded ?? this.dateAdded,
+      dateModified: dateModified ?? this.dateModified,
+      path: path ?? this.path,
+      comment: comment ?? this.comment,
+      bitrate: bitrate ?? this.bitrate,
+      sampleRate: sampleRate ?? this.sampleRate,
+      format: format ?? this.format,
+      channels: channels ?? this.channels,
+      discNo: discNo ?? this.discNo,
+      language: language ?? this.language,
+      lyrics: lyrics ?? this.lyrics,
+    );
+  }
 }
 
 extension TrackUtils on Track {

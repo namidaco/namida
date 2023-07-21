@@ -10,7 +10,6 @@ import 'package:external_path/external_path.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
-import 'package:on_audio_edit/on_audio_edit.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
@@ -171,19 +170,6 @@ Future<bool> requestManageStoragePermission() async {
     return false;
   }
   return true;
-}
-
-Future<void> resetSAFPermision() async {
-  if (kSdkVersion < 30) {
-    return;
-  }
-  final didReset = await OnAudioEdit().resetComplexPermission();
-  if (didReset) {
-    Get.snackbar(Language.inst.PERMISSION_UPDATE, Language.inst.RESET_SAF_PERMISSION_RESET_SUCCESS);
-    printo('Reset SAF Successully');
-  } else {
-    printo('Reset SAF Failure', isError: true);
-  }
 }
 
 class Namida extends StatelessWidget {

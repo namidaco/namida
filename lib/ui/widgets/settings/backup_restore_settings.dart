@@ -15,7 +15,6 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/strings.dart';
-import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -237,10 +236,6 @@ class BackupAndRestore extends StatelessWidget {
               onTap: () async {
                 final path = await FilePicker.platform.getDirectoryPath();
 
-                /// resets SAF in case folder was changed
-                if (path != SettingsController.inst.defaultBackupLocation.value) {
-                  await resetSAFPermision();
-                }
                 if (path != null) {
                   SettingsController.inst.save(defaultBackupLocation: path);
                 }

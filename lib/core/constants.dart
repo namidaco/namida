@@ -147,6 +147,31 @@ const List<String> kVideoFilesExtensions = [
   'mpeg4'
 ];
 const kDummyTrack = Track('');
+final kDummyExtendedTrack = TrackExtended(
+  title: "",
+  originalArtist: "",
+  artistsList: [],
+  album: "",
+  albumArtist: "",
+  originalGenre: "",
+  genresList: [],
+  composer: "",
+  trackNo: 0,
+  duration: 0,
+  year: 0,
+  size: 0,
+  dateAdded: 0,
+  dateModified: 0,
+  path: "",
+  comment: "",
+  bitrate: 0,
+  sampleRate: 0,
+  format: "",
+  channels: "",
+  discNo: 0,
+  language: "",
+  lyrics: "",
+);
 
 // Unknown Fields
 const k_UNKNOWN_TRACK_TITLE = '';

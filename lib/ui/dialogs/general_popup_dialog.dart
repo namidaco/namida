@@ -432,7 +432,7 @@ Future<void> showGeneralPopupDialog(
   void setYoutubeLink() {
     NamidaNavigator.inst.closeDialog();
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-    TextEditingController controller = TextEditingController();
+    final TextEditingController controller = TextEditingController();
     final ytlink = tracks.first.youtubeLink;
     controller.text = ytlink;
     NamidaNavigator.inst.navigateDialog(
@@ -446,7 +446,13 @@ Future<void> showGeneralPopupDialog(
               text: Language.inst.SAVE,
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
-                  editTrackMetadata(track: tracks.first, insertComment: controller.text);
+                  await updateTracksMetadata(
+                    tagger: null,
+                    tracks: [tracks.first],
+                    editedTags: {},
+                    commentToInsert: controller.text,
+                    trimWhiteSpaces: false,
+                  );
                   NamidaNavigator.inst.closeDialog();
                 }
               },

@@ -39,6 +39,17 @@ extension SecondsLabel on int {
   String get milliSecondsLabel => (this ~/ 1000).secondsLabel;
 }
 
+extension StringUtilsNull on String? {
+  int? getIntValue() {
+    final value = this;
+    if (value == null) return null;
+    int? res;
+    res = int.tryParse(value);
+    res ??= int.tryParse(value.cleanUpForComparison);
+    return res;
+  }
+}
+
 extension StringUtils on String {
   String addQuotation() => "'$this'";
   String addDQuotation() => '"$this"';
@@ -97,14 +108,7 @@ extension TracksUtils on List<Track> {
     return size.fileSizeFormatted;
   }
 
-  int get totalDurationInS {
-    int totalFinalDurationInMs = 0;
-    loop((t, index) {
-      totalFinalDurationInMs += t.duration;
-    });
-
-    return totalFinalDurationInMs ~/ 1000;
-  }
+  int get totalDurationInS => fold(0, (previousValue, element) => previousValue + element.duration);
 
   String get totalDurationFormatted {
     return totalDurationInS.getTimeFormatted;
@@ -180,16 +184,21 @@ extension TotalTime on int {
   int toDaysSinceEpoch() => DateTime.fromMillisecondsSinceEpoch(this).difference(DateTime(1970)).inDays;
 
   String get getTimeFormatted {
-    final durInSec = Duration(seconds: this).inSeconds.remainder(60);
+    final totalSeconds = this;
+    final durInSec = totalSeconds % 60;
 
-    if (Duration(seconds: this).inSeconds < 60) {
-      return '${Duration(seconds: this).inSeconds}s';
+    if (totalSeconds < 60) {
+      return '${totalSeconds}s';
     }
 
-    final durInMin = Duration(seconds: this).inMinutes.remainder(60);
+    final totalMinutes = totalSeconds ~/ 60;
+    final durInMin = totalMinutes % 60;
     final finalDurInMin = durInSec > 30 ? durInMin + 1 : durInMin;
-    final durInHour = Duration(seconds: this).inHours;
-    return "${durInHour == 0 ? "" : "${durInHour}h "}${durInMin == 0 ? "" : "${finalDurInMin}min"}";
+    final totalHours = totalMinutes ~/ 60;
+
+    final hoursText = totalHours == 0 ? "" : "${totalHours}h ";
+    final minsText = durInMin == 0 ? "" : "${finalDurInMin}min";
+    return "$hoursText$minsText";
   }
 }
 
@@ -355,37 +364,13 @@ extension PlayerRepeatModeUtils on RepeatMode {
 }
 
 extension ConvertPathToTrack on String {
+  Future<Track> toTrackOrExtract() async => toTrackOrNull() ?? await Indexer.inst.extractOneTrack(trackPath: this).then((value) => value!.toTrack());
   Track toTrack() => Track(this);
   Track? toTrackOrNull() => Indexer.inst.allTracksMappedByPath[toTrack()] == null ? null : toTrack();
   TrackExtended? toTrackExtOrNull() => Indexer.inst.allTracksMappedByPath[Track(this)];
 
   TrackExtended toTrackExt() {
-    return toTrackExtOrNull() ??
-        TrackExtended(
-          getFilenameWOExt,
-          '',
-          [],
-          '',
-          '',
-          '',
-          [],
-          '',
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          this,
-          '',
-          0,
-          0,
-          '',
-          '',
-          0,
-          '',
-          '',
-        );
+    return toTrackExtOrNull() ?? kDummyExtendedTrack.copyWith(title: getFilenameWOExt, path: this);
   }
 }
 
