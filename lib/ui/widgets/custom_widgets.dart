@@ -245,61 +245,55 @@ class CustomListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconColor = Color.alphaBlend((passedColor ?? CurrentColor.inst.color.value).withAlpha(100), context.theme.colorScheme.onBackground);
-    return Theme(
-      data: context.theme.copyWith(
-        splashColor: Colors.transparent,
-        highlightColor: context.isDarkMode ? Colors.white.withAlpha(12) : Colors.black.withAlpha(40),
-      ),
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 400),
-        opacity: enabled ? 1.0 : 0.5,
-        child: ListTile(
-          enabled: enabled,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0.multipliedRadius),
-          ),
-          onTap: onTap,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
-          minVerticalPadding: 8.0,
-          leading: icon != null
-              ? SizedBox(
-                  height: double.infinity,
-                  child: rotateIcon != null
-                      ? RotatedBox(
-                          quarterTurns: rotateIcon!,
-                          child: Icon(
-                            icon,
-                            color: iconColor,
-                          ),
-                        )
-                      : Icon(
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 400),
+      opacity: enabled ? 1.0 : 0.5,
+      child: ListTile(
+        enabled: enabled,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0.multipliedRadius),
+        ),
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+        minVerticalPadding: 8.0,
+        leading: icon != null
+            ? SizedBox(
+                height: double.infinity,
+                child: rotateIcon != null
+                    ? RotatedBox(
+                        quarterTurns: rotateIcon!,
+                        child: Icon(
                           icon,
                           color: iconColor,
                         ),
-                )
-              : leading,
-          title: Text(
-            title,
-            style: largeTitle ? context.theme.textTheme.displayLarge : context.theme.textTheme.displayMedium,
-            maxLines: subtitle != null ? 1 : 3,
-            overflow: TextOverflow.ellipsis,
-          ),
-          subtitle: subtitle != null
-              ? Text(
-                  subtitle!,
-                  style: context.theme.textTheme.displaySmall,
-                  maxLines: maxSubtitleLines,
-                  overflow: TextOverflow.ellipsis,
-                )
-              : null,
-          trailing: trailingRaw ??
-              (trailingText != null
-                  ? Text(
-                      trailingText!,
-                      style: context.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
-                    )
-                  : FittedBox(child: trailing)),
+                      )
+                    : Icon(
+                        icon,
+                        color: iconColor,
+                      ),
+              )
+            : leading,
+        title: Text(
+          title,
+          style: largeTitle ? context.theme.textTheme.displayLarge : context.theme.textTheme.displayMedium,
+          maxLines: subtitle != null ? 1 : 3,
+          overflow: TextOverflow.ellipsis,
         ),
+        subtitle: subtitle != null
+            ? Text(
+                subtitle!,
+                style: context.theme.textTheme.displaySmall,
+                maxLines: maxSubtitleLines,
+                overflow: TextOverflow.ellipsis,
+              )
+            : null,
+        trailing: trailingRaw ??
+            (trailingText != null
+                ? Text(
+                    trailingText!,
+                    style: context.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
+                  )
+                : FittedBox(child: trailing)),
       ),
     );
   }

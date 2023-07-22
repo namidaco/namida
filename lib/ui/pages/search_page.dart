@@ -75,13 +75,11 @@ class SearchPage extends StatelessWidget {
                               onPressed: () => NamidaNavigator.inst.navigateTo(const AlbumSearchResultsPage()),
                             ),
                           ),
-                          const SliverPadding(
-                            padding: EdgeInsets.only(bottom: 12.0),
-                          ),
                           SliverToBoxAdapter(
                             child: SizedBox(
-                              height: 170,
+                              height: 170.0 + 24.0,
                               child: ListView.builder(
+                                padding: const EdgeInsets.symmetric(vertical: 12.0),
                                 scrollDirection: Axis.horizontal,
                                 itemExtent: 132.0,
                                 itemCount: SearchSortController.inst.albumSearchTemp.length,
@@ -100,9 +98,6 @@ class SearchPage extends StatelessWidget {
                                 },
                               ),
                             ),
-                          ),
-                          const SliverPadding(
-                            padding: EdgeInsets.only(top: 12.0),
                           ),
                         ],
 

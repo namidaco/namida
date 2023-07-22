@@ -430,7 +430,6 @@ Future<void> showGeneralPopupDialog(
   }
 
   void setYoutubeLink() {
-    NamidaNavigator.inst.closeDialog();
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
     final TextEditingController controller = TextEditingController();
     final ytlink = tracks.first.youtubeLink;
@@ -440,6 +439,7 @@ Future<void> showGeneralPopupDialog(
         key: formKey,
         child: CustomBlurryDialog(
           title: Language.inst.SET_YOUTUBE_LINK,
+          contentPadding: const EdgeInsets.all(12.0).add(const EdgeInsets.only(top: 12.0)),
           actions: [
             const CancelButton(),
             NamidaButton(

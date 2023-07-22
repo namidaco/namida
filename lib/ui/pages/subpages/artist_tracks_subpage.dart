@@ -69,8 +69,9 @@ class ArtistTracksPage extends StatelessWidget {
               initiallyExpanded: true,
               children: [
                 SizedBox(
-                  height: 130,
+                  height: 130.0 + 28.0,
                   child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 14.0),
                     scrollDirection: Axis.horizontal,
                     itemExtent: 100.0,
                     itemCount: albums.length,
@@ -90,7 +91,6 @@ class ArtistTracksPage extends StatelessWidget {
                     },
                   ),
                 ),
-                const SizedBox(height: 12.0),
               ],
             ),
           ],
