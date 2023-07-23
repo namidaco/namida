@@ -178,7 +178,7 @@ class SelectedTracksRow extends StatelessWidget {
           ),
         ),
         IconButton(
-          onPressed: () => editMultipleTracksTags(selectedTracks),
+          onPressed: () => showEditTracksTagsDialog(selectedTracks, null),
           tooltip: Language.inst.EDIT_TAGS,
           icon: const Icon(Broken.edit),
         ),

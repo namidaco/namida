@@ -9,9 +9,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -30,7 +32,66 @@ import 'package:namida/main.dart';
 /// - Android 13 (API 33): Internal ✓, External ✓
 ///
 /// TODO: Implement [Android <= 9] SD Card Editing Using SAF (Storage Access Framework).
-Future<void> showEditTrackTagsDialog(Track track, Color colorScheme) async {
+Future<void> showEditTracksTagsDialog(List<Track> tracks, Color? colorScheme) async {
+  if (tracks.length == 1) {
+    colorScheme ??= await CurrentColor.inst.getTrackDelightnedColor(tracks.first);
+    _editSingleTrackTagsDialog(tracks.first, colorScheme);
+  } else {
+    _editMultipleTracksTags(tracks);
+  }
+}
+
+Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) async {
+  final singleTrack = tracks.first;
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final TextEditingController controller = TextEditingController();
+  final ytlink = singleTrack.youtubeLink;
+  controller.text = ytlink;
+  NamidaNavigator.inst.navigateDialog(
+    dialog: Form(
+      key: formKey,
+      child: CustomBlurryDialog(
+        title: Language.inst.SET_YOUTUBE_LINK,
+        contentPadding: const EdgeInsets.all(12.0).add(const EdgeInsets.only(top: 12.0)),
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            text: Language.inst.SAVE,
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                await _updateTracksMetadata(
+                  tagger: null,
+                  tracks: [singleTrack],
+                  editedTags: {},
+                  commentToInsert: controller.text,
+                  trimWhiteSpaces: false,
+                );
+                NamidaNavigator.inst.closeDialog();
+              }
+            },
+          ),
+        ],
+        child: CustomTagTextField(
+          controller: controller,
+          hintText: ytlink.overflow,
+          labelText: Language.inst.LINK,
+          keyboardType: TextInputType.url,
+          validator: (value) {
+            if (value!.isEmpty) {
+              return Language.inst.PLEASE_ENTER_A_NAME;
+            }
+            if ((kYoutubeRegex.firstMatch(value) ?? '') == '') {
+              return Language.inst.PLEASE_ENTER_A_LINK_SUBTITLE;
+            }
+            return null;
+          },
+        ),
+      ),
+    ),
+  );
+}
+
+Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
   if (!await requestManageStoragePermission()) {
     return;
   }
@@ -230,7 +291,7 @@ Future<void> showEditTrackTagsDialog(Track track, Color colorScheme) async {
             icon: Broken.pen_add,
             text: Language.inst.SAVE,
             onPressed: () async {
-              await updateTracksMetadata(
+              await _updateTracksMetadata(
                 tagger: tagger,
                 tracks: [track],
                 editedTags: editedTags,
@@ -380,7 +441,7 @@ Future<void> showEditTrackTagsDialog(Track track, Color colorScheme) async {
   );
 }
 
-Future<void> updateTracksMetadata({
+Future<void> _updateTracksMetadata({
   required FAudioTagger? tagger,
   required List<Track> tracks,
   required Map<TagField, String> editedTags,
@@ -448,7 +509,7 @@ Future<void> updateTracksMetadata({
   );
 }
 
-Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
+Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
   if (!await requestManageStoragePermission()) {
     return;
   }
@@ -674,7 +735,7 @@ Future<void> editMultipleTracksTags(List<Track> tracksPre) async {
                           ),
                         ),
                       );
-                      await updateTracksMetadata(
+                      await _updateTracksMetadata(
                         tagger: null,
                         tracks: tracks,
                         editedTags: editedTags,

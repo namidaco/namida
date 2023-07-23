@@ -64,8 +64,8 @@ Future<void> showGeneralPopupDialog(
     if (existingTrack != null) tracksExisting.add(existingTrack);
   });
 
-  forceSingleArtwork ??= tracks.length == 1;
   final isSingle = tracks.length == 1;
+  forceSingleArtwork ??= isSingle;
   final doesTracksExist = !errorPlayingTrack && tracksExisting.isNotEmpty;
 
   final trackToExtractColorFrom = forceSingleArtwork ? tracks[tracks.indexOfImage] : tracks.first;
@@ -423,55 +423,6 @@ Future<void> showGeneralPopupDialog(
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void setYoutubeLink() {
-    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-    final TextEditingController controller = TextEditingController();
-    final ytlink = tracks.first.youtubeLink;
-    controller.text = ytlink;
-    NamidaNavigator.inst.navigateDialog(
-      dialog: Form(
-        key: formKey,
-        child: CustomBlurryDialog(
-          title: Language.inst.SET_YOUTUBE_LINK,
-          contentPadding: const EdgeInsets.all(12.0).add(const EdgeInsets.only(top: 12.0)),
-          actions: [
-            const CancelButton(),
-            NamidaButton(
-              text: Language.inst.SAVE,
-              onPressed: () async {
-                if (formKey.currentState!.validate()) {
-                  await updateTracksMetadata(
-                    tagger: null,
-                    tracks: [tracks.first],
-                    editedTags: {},
-                    commentToInsert: controller.text,
-                    trimWhiteSpaces: false,
-                  );
-                  NamidaNavigator.inst.closeDialog();
-                }
-              },
-            ),
-          ],
-          child: CustomTagTextField(
-            controller: controller,
-            hintText: ytlink.overflow,
-            labelText: Language.inst.LINK,
-            keyboardType: TextInputType.url,
-            validator: (value) {
-              if (value!.isEmpty) {
-                return Language.inst.PLEASE_ENTER_A_NAME;
-              }
-              if ((kYoutubeRegex.firstMatch(value) ?? '') == '') {
-                return Language.inst.PLEASE_ENTER_A_LINK_SUBTITLE;
-              }
-              return null;
-            },
           ),
         ),
       ),
@@ -958,11 +909,7 @@ Future<void> showGeneralPopupDialog(
                         icon: Broken.edit,
                         onTap: () {
                           NamidaNavigator.inst.closeDialog();
-                          if (isSingle) {
-                            showEditTrackTagsDialog(tracks.first, colorDelightened);
-                          } else {
-                            editMultipleTracksTags(tracks);
-                          }
+                          showEditTracksTagsDialog(tracks, colorDelightened);
                         },
                       ),
                       // --- Advanced dialog
@@ -1044,7 +991,7 @@ Future<void> showGeneralPopupDialog(
                                 child: bigIcon(
                                   Broken.edit_2,
                                   Language.inst.SET_YOUTUBE_LINK,
-                                  setYoutubeLink,
+                                  () => showSetYTLinkCommentDialog(tracks, colorDelightened),
                                   iconWidget: StackedIcon(
                                     baseIcon: Broken.edit_2,
                                     secondaryIcon: Broken.video_square,
