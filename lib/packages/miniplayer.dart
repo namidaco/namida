@@ -867,19 +867,24 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                 width: Get.width - horizontalPadding / 2,
                                                 child: LayoutBuilder(
                                                   builder: (context, constraints) {
+                                                    void onSeekDragUpdate(double deltax) {
+                                                      final percentageSwiped = deltax / constraints.maxWidth;
+                                                      final newSeek = percentageSwiped * currentDurationInMS;
+                                                      MiniPlayerController.inst.seekValue.value = newSeek;
+                                                    }
+
+                                                    void onSeekEnd() {
+                                                      Player.inst.seek(Duration(milliseconds: MiniPlayerController.inst.seekValue.value.toInt()));
+                                                      MiniPlayerController.inst.seekValue.value = 0.0;
+                                                    }
+
                                                     return GestureDetector(
                                                       child: WaveformComponent(
                                                         color: context.theme.colorScheme.onBackground.withAlpha(110),
                                                       ),
-                                                      onHorizontalDragUpdate: (details) {
-                                                        final percentageSwiped = details.localPosition.dx / constraints.maxWidth;
-                                                        final newSeek = percentageSwiped * currentDurationInMS;
-                                                        MiniPlayerController.inst.seekValue.value = newSeek;
-                                                      },
-                                                      onHorizontalDragEnd: (details) {
-                                                        Player.inst.seek(Duration(milliseconds: MiniPlayerController.inst.seekValue.value.toInt()));
-                                                        MiniPlayerController.inst.seekValue.value = 0.0;
-                                                      },
+                                                      onTapDown: (details) => onSeekDragUpdate(details.localPosition.dx),
+                                                      onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx),
+                                                      onHorizontalDragEnd: (details) => onSeekEnd(),
                                                     );
                                                   },
                                                 ),
