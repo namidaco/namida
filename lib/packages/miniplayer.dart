@@ -251,7 +251,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                       /// Smol progress bar
                                       Obx(
                                         () {
-                                          final w = Player.inst.nowPlayingPosition.value / currentTrack.duration;
+                                          final w = Player.inst.nowPlayingPosition.value / currentDurationInMS;
                                           return Container(
                                             height: 2 * (1 - cp),
                                             width: w > 0 ? ((Get.width * w) * 0.9) : 0,

@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -447,6 +448,7 @@ class Indexer {
   }
 
   Future<void> _sortAndSaveTracks() async {
+    Player.inst.nowPlayingTrack.refresh();
     SearchSortController.inst.searchAll(ScrollSearchController.inst.searchTextEditingController.text);
     SearchSortController.inst.sortMedia(MediaType.track);
     await _saveTrackFileToStorage();

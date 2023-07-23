@@ -187,7 +187,7 @@ class Player {
     int? newSeconds = seconds;
     if (newSeconds == null) {
       if (SettingsController.inst.isSeekDurationPercentage.value) {
-        final sFromP = nowPlayingTrack.value.duration / 1000 * (SettingsController.inst.seekDurationInPercentage.value / 100);
+        final sFromP = nowPlayingTrack.value.duration * (SettingsController.inst.seekDurationInPercentage.value / 100);
         newSeconds = sFromP.toInt();
       } else {
         newSeconds = SettingsController.inst.seekDurationInSeconds.value;

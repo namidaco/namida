@@ -182,7 +182,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
     /// The whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture] don't get detected.
     try {
       final dur = await _player.setAudioSource(tr.toAudioSource());
-      if (tr.duration == 0) tr.duration = dur?.inMilliseconds ?? 0;
+      if (tr.duration == 0) tr.duration = dur?.inSeconds ?? 0;
     } catch (e) {
       SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
         NamidaDialogs.inst.showTrackDialog(tr, isFromPlayerQueue: true, errorPlayingTrack: true);
@@ -190,7 +190,6 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
       printy(e, isError: true);
       return;
     }
-
     await Future.wait([
       _player.pause(),
       tryRestoringLastPosition(tr),
