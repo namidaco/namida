@@ -5,12 +5,10 @@ import 'package:shimmer/shimmer.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
-import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/youtube_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/strings.dart';
 import 'package:namida/packages/youtube_miniplayer.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -22,54 +20,48 @@ class YoutubePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BackgroundWrapper(
-      child: Obx(
-        () => AnimatedTheme(
-          duration: const Duration(milliseconds: 400),
-          data: AppThemes.inst.getAppTheme(CurrentColor.inst.color.value, !context.isDarkMode),
-          child: Scaffold(
-            backgroundColor: context.theme.scaffoldBackgroundColor,
-            appBar: AppBar(
-              leading: NamidaIconButton(
-                icon: Broken.arrow_left_2,
-                onPressed: () => NamidaNavigator.inst.popPage(),
-              ),
-              title: Text(Language.inst.YOUTUBE),
-            ),
-            body: Obx(
-              () {
-                VideoSearchList? searchList = YoutubeController.inst.currentSearchList.value;
-                YoutubeController.inst.searchChannels;
-                final List<Video?> l = [];
-                if (searchList == null || searchList.isEmpty) {
-                  l.addAll(List.filled(20, null));
-                } else {
-                  l.addAll(searchList);
+      child: Scaffold(
+        backgroundColor: context.theme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          leading: NamidaIconButton(
+            icon: Broken.arrow_left_2,
+            onPressed: () => NamidaNavigator.inst.popPage(),
+          ),
+          title: Text(Language.inst.YOUTUBE),
+        ),
+        body: Obx(
+          () {
+            VideoSearchList? searchList = YoutubeController.inst.currentSearchList.value;
+            YoutubeController.inst.searchChannels;
+            final List<Video?> l = [];
+            if (searchList == null || searchList.isEmpty) {
+              l.addAll(List.filled(20, null));
+            } else {
+              l.addAll(searchList);
+            }
+            return NamidaListView(
+              itemBuilder: (context, i) {
+                if (searchList == null) {
+                  return YoutubeVideoCard(
+                    index: i,
+                    key: ValueKey(i),
+                    video: null,
+                    searchChannel: null,
+                  );
                 }
-                return NamidaListView(
-                  itemBuilder: (context, i) {
-                    if (searchList == null) {
-                      return YoutubeVideoCard(
-                        index: i,
-                        key: ValueKey(i),
-                        video: null,
-                        searchChannel: null,
-                      );
-                    }
-                    final v = searchList[i];
-                    final searchChannel = YoutubeController.inst.searchChannels.firstWhereOrNull((element) => element.id.value == v.channelId.value);
-                    return YoutubeVideoCard(
-                      index: i,
-                      key: ValueKey(i),
-                      video: v,
-                      searchChannel: searchChannel,
-                    );
-                  },
-                  itemCount: l.length,
-                  itemExtents: null,
+                final v = searchList[i];
+                final searchChannel = YoutubeController.inst.searchChannels.firstWhereOrNull((element) => element.id.value == v.channelId.value);
+                return YoutubeVideoCard(
+                  index: i,
+                  key: ValueKey(i),
+                  video: v,
+                  searchChannel: searchChannel,
                 );
               },
-            ),
-          ),
+              itemCount: l.length,
+              itemExtents: null,
+            );
+          },
         ),
       ),
     );

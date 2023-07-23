@@ -69,7 +69,7 @@ Future<void> showGeneralPopupDialog(
   final doesTracksExist = !errorPlayingTrack && tracksExisting.isNotEmpty;
 
   final trackToExtractColorFrom = forceSingleArtwork ? tracks[tracks.indexOfImage] : tracks.first;
-  final colorDelightened = extractColor ? await CurrentColor.inst.getTrackDelightnedColor(trackToExtractColorFrom) : CurrentColor.inst.color.value;
+  final colorDelightened = extractColor ? await CurrentColor.inst.getTrackDelightnedColor(trackToExtractColorFrom) : CurrentColor.inst.color;
 
   final List<String> availableAlbums = tracks.mappedUniqued((e) => e.toTrackExt().album);
   final List<String> availableArtists = tracks.mappedUniquedList((e) => e.toTrackExt().artistsList);

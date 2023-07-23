@@ -91,7 +91,7 @@ class HistoryTracksPage extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     border: Border(
                                       left: BorderSide(
-                                        color: CurrentColor.inst.color.value,
+                                        color: CurrentColor.inst.color,
                                         width: (4.0 * stuckAmount).withMinimum(3.0),
                                       ),
                                     ),

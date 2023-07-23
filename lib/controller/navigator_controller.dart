@@ -233,7 +233,7 @@ class NamidaNavigator {
     if (now.difference(_currentBackPressTime) > const Duration(seconds: 3)) {
       _currentBackPressTime = now;
 
-      final tcolor = Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(50), Get.textTheme.displayMedium!.color!);
+      final tcolor = Color.alphaBlend(CurrentColor.inst.color.withAlpha(50), Get.textTheme.displayMedium!.color!);
       Get.showSnackbar(
         GetSnackBar(
           messageText: Text(

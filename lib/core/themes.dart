@@ -11,7 +11,7 @@ class AppThemes {
   AppThemes._internal();
 
   ThemeData getAppTheme([Color? color, bool? light, bool lighterDialog = true]) {
-    color ??= CurrentColor.inst.color.value;
+    color ??= CurrentColor.inst.color;
     light ??= Get.theme.brightness == Brightness.light;
 
     final cardTheme = CardTheme(

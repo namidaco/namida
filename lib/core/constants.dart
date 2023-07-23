@@ -183,4 +183,4 @@ const k_UNKNOWN_TRACK_COMPOSER = 'Unknown Composer';
 
 int get currentTimeMS => DateTime.now().millisecondsSinceEpoch;
 
-const msInDay = 8.64e7;
+const kThemeAnimationDurationMS = 350;

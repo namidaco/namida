@@ -122,7 +122,7 @@ class CustomSwitch extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: width / 10),
       decoration: BoxDecoration(
         color: (active
-            ? bgColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.background).withAlpha(140)
+            ? bgColor ?? Color.alphaBlend(CurrentColor.inst.color.withAlpha(180), context.theme.colorScheme.background).withAlpha(140)
             // : context.theme.scaffoldBackgroundColor.withAlpha(34)
             : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(60), context.theme.disabledColor)),
         borderRadius: BorderRadius.circular(30.0.multipliedRadius),
@@ -131,7 +131,7 @@ class CustomSwitch extends StatelessWidget {
             offset: const Offset(0, 2),
             blurRadius: active ? 8 : 2,
             spreadRadius: 0,
-            color: (shadowColor ?? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.background)).withOpacity(active ? 0.8 : 0.3),
+            color: (shadowColor ?? Color.alphaBlend(CurrentColor.inst.color.withAlpha(180), context.theme.colorScheme.background)).withOpacity(active ? 0.8 : 0.3),
           ),
         ],
       ),
@@ -244,7 +244,7 @@ class CustomListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = Color.alphaBlend((passedColor ?? CurrentColor.inst.color.value).withAlpha(100), context.theme.colorScheme.onBackground);
+    final iconColor = Color.alphaBlend((passedColor ?? CurrentColor.inst.color).withAlpha(100), context.theme.colorScheme.onBackground);
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 400),
       opacity: enabled ? 1.0 : 0.5,
@@ -1325,7 +1325,7 @@ class NamidaPartyContainer extends StatelessWidget {
               decoration: BoxDecoration(
                 boxShadow: [
                   BoxShadow(
-                    color: CurrentColor.inst.color.value.withAlpha(150),
+                    color: CurrentColor.inst.color.withAlpha(150),
                     spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
                     blurRadius: 10 + (200 * finalScale),
                   ),
@@ -1492,14 +1492,17 @@ class SubpagesTopContainer extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           const SizedBox(width: 6.0),
-                          NamidaButton(
-                            minimumSize: true,
-                            icon: Broken.shuffle,
-                            onPressed: () => Player.inst.playOrPause(
-                              0,
-                              tracks,
-                              source,
-                              shuffle: true,
+                          SizedBox(
+                            width: constraints.maxWidth * 0.3,
+                            child: NamidaButton(
+                              minimumSize: true,
+                              icon: Broken.shuffle,
+                              onPressed: () => Player.inst.playOrPause(
+                                0,
+                                tracks,
+                                source,
+                                shuffle: true,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 6.0),
@@ -1617,12 +1620,12 @@ class NamidaDrawerListTile extends StatelessWidget {
         alignment: Alignment.center,
         width: width,
         decoration: BoxDecoration(
-          color: enabled ? CurrentColor.inst.color.value : context.theme.cardColor,
+          color: enabled ? CurrentColor.inst.color : context.theme.cardColor,
           borderRadius: BorderRadius.circular(8.0.multipliedRadius),
           boxShadow: enabled
               ? [
                   BoxShadow(
-                    color: CurrentColor.inst.color.value.withAlpha(100),
+                    color: CurrentColor.inst.color.withAlpha(100),
                     spreadRadius: 0.2,
                     blurRadius: 8.0,
                     offset: const Offset(0.0, 4.0),
@@ -2122,6 +2125,7 @@ class NamidaInkWell extends StatelessWidget {
   final VoidCallback? onLongPress;
   final double borderRadius;
   final EdgeInsetsGeometry padding;
+  final Decoration decoration;
   final Widget? child;
 
   /// Setting this to [true] will force the [borderRadius] to be [0.0].
@@ -2133,6 +2137,7 @@ class NamidaInkWell extends StatelessWidget {
     this.onLongPress,
     this.borderRadius = 12.0,
     this.padding = EdgeInsets.zero,
+    this.decoration = const BoxDecoration(),
     this.child,
     this.transparentHighlight = false,
   });
@@ -2148,12 +2153,15 @@ class NamidaInkWell extends StatelessWidget {
         highlightColor: transparentHighlight ? Colors.transparent : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor),
         onTap: onTap,
         onLongPress: onLongPress,
-        child: child != null
-            ? Padding(
-                padding: padding,
-                child: child,
-              )
-            : null,
+        child: DecoratedBox(
+          decoration: decoration,
+          child: child != null
+              ? Padding(
+                  padding: padding,
+                  child: child,
+                )
+              : null,
+        ),
       ),
     );
   }

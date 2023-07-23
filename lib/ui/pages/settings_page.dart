@@ -32,8 +32,8 @@ class SettingsPage extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  context.theme.appBarTheme.backgroundColor ?? CurrentColor.inst.color.value.withAlpha(context.isDarkMode ? 0 : 25),
-                  CurrentColor.inst.color.value.withAlpha(context.isDarkMode ? 40 : 60),
+                  context.theme.appBarTheme.backgroundColor ?? CurrentColor.inst.color.withAlpha(context.isDarkMode ? 0 : 25),
+                  CurrentColor.inst.color.withAlpha(context.isDarkMode ? 40 : 60),
                 ],
               ),
             ),
@@ -74,8 +74,8 @@ class SettingsSubPage extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  context.theme.appBarTheme.backgroundColor ?? CurrentColor.inst.color.value.withAlpha(context.isDarkMode ? 0 : 25),
-                  CurrentColor.inst.color.value.withAlpha(context.isDarkMode ? 40 : 60),
+                  context.theme.appBarTheme.backgroundColor ?? CurrentColor.inst.color.withAlpha(context.isDarkMode ? 0 : 25),
+                  CurrentColor.inst.color.withAlpha(context.isDarkMode ? 40 : 60),
                 ],
               ),
             ),

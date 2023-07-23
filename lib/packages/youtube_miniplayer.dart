@@ -78,7 +78,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                             Container(
                               margin: EdgeInsets.symmetric(vertical: finalpadding),
                               decoration: BoxDecoration(
-                                color: CurrentColor.inst.color.value,
+                                color: CurrentColor.inst.color,
                                 borderRadius: BorderRadius.circular(finalbr),
                               ),
                               child: ArtworkWidget(
@@ -185,9 +185,9 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                               expandedAlignment: Alignment.centerLeft,
                                               expandedCrossAxisAlignment: CrossAxisAlignment.start,
                                               tilePadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                                              textColor: Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(40), context.theme.colorScheme.onBackground),
+                                              textColor: Color.alphaBlend(CurrentColor.inst.color.withAlpha(40), context.theme.colorScheme.onBackground),
                                               collapsedTextColor: context.theme.colorScheme.onBackground,
-                                              iconColor: Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(40), context.theme.colorScheme.onBackground),
+                                              iconColor: Color.alphaBlend(CurrentColor.inst.color.withAlpha(40), context.theme.colorScheme.onBackground),
                                               collapsedIconColor: context.theme.colorScheme.onBackground,
                                               childrenPadding: const EdgeInsets.all(18.0),
                                               onExpansionChanged: (value) => isTitleExpanded.value = value,

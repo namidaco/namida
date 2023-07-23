@@ -24,7 +24,7 @@ class CurrentColor {
   Color get color => namidaColor.value.color;
   List<Color> get palette => namidaColor.value.palette;
 
-  Rx<NamidaColor> namidaColor = NamidaColor(
+  final Rx<NamidaColor> namidaColor = NamidaColor(
     used: playerStaticColor,
     mix: playerStaticColor,
     palette: [playerStaticColor],
@@ -45,7 +45,7 @@ class CurrentColor {
 
   final RxBool generatingAllColorPalettes = false.obs;
 
-  Map<String, NamidaColor> colorsMap = {};
+  final Map<String, NamidaColor> colorsMap = {};
 
   Timer? _colorsSwitchTimer;
 
@@ -71,20 +71,31 @@ class CurrentColor {
     });
   }
 
+  void updateColorAfterThemeModeChange() {
+    final nc = namidaColor.value;
+    namidaColor.value = NamidaColor(
+      used: nc.color.withAlpha(colorAlpha),
+      mix: nc.mix,
+      palette: nc.palette,
+    );
+  }
+
   void updateCurrentColorSchemeOfSubPages([Color? color, bool customAlpha = true]) async {
     final colorWithAlpha = customAlpha ? color?.withAlpha(colorAlpha) : color;
     _colorSchemeOfSubPages.value = colorWithAlpha;
-    updateThemeAndRefresh();
   }
 
   Future<void> updatePlayerColorFromTrack(Track track, int index, {int? dateAdded}) async {
     if (SettingsController.inst.autoColor.value) {
       await setPlayerColor(track);
-      updateThemeAndRefresh();
     }
     currentPlayingTrackPath.value = track.path;
     currentPlayingIndex.value = index;
     currentPlayingTrackDateAdded.value = dateAdded;
+  }
+
+  Future<void> setPlayerColor(Track track) async {
+    namidaColor.value = await getTrackColors(track);
   }
 
   void updatePlayerColorFromColor(Color color, [bool customAlpha = true]) async {
@@ -94,15 +105,14 @@ class CurrentColor {
       mix: colorWithAlpha,
       palette: [colorWithAlpha],
     );
-    updateThemeAndRefresh();
   }
 
-  Future<void> setPlayerColor(Track track) async {
-    namidaColor.value = await getTrackColors(track);
-  }
-
-  Future<NamidaColor> getTrackColors(Track track) async {
-    final nc = colorsMap[track.path.getFilename] ?? await extractColorsFromImage(track.pathToImage);
+  Future<NamidaColor> getTrackColors(Track track, {bool fallbackToPlayerStaticColor = true}) async {
+    final nc = colorsMap[track.path.getFilename] ??
+        await extractColorsFromImage(
+          track.pathToImage,
+          fallbackToPlayerStaticColor: fallbackToPlayerStaticColor,
+        );
     return NamidaColor(
       used: nc.color.withAlpha(colorAlpha),
       mix: nc.mix,
@@ -110,14 +120,15 @@ class CurrentColor {
     );
   }
 
-  Future<NamidaColor> extractColorsFromImage(String pathofimage) async {
+  Future<NamidaColor> extractColorsFromImage(String pathofimage, {bool fallbackToPlayerStaticColor = true}) async {
     final paletteFile = File("$k_DIR_PALETTES${pathofimage.getFilenameWOExt}.palette");
 
     if (!await File(pathofimage).exists()) {
+      final c = fallbackToPlayerStaticColor ? playerStaticColor : currentColorScheme;
       return NamidaColor(
-        used: playerStaticColor,
-        mix: playerStaticColor,
-        palette: [playerStaticColor],
+        used: c,
+        mix: c,
+        palette: [c],
       );
     }
 
@@ -166,8 +177,8 @@ class CurrentColor {
   void stopGeneratingColorPalettes() => generatingAllColorPalettes.value = false;
 
   /// Equivalent to calling [getTrackColors] and [generateDelightnedColorFromPalette].
-  Future<Color> getTrackDelightnedColor(Track track) async {
-    final nc = await getTrackColors(track);
+  Future<Color> getTrackDelightnedColor(Track track, {bool fallbackToPlayerStaticColor = false}) async {
+    final nc = await getTrackColors(track, fallbackToPlayerStaticColor: fallbackToPlayerStaticColor);
     return generateDelightnedColorFromPalette(nc.palette).withAlpha(Get.isDarkMode ? 200 : 120);
   }
 
@@ -189,7 +200,7 @@ class CurrentColor {
     return mixIntColors(intpalette);
   }
 
-  Color mixIntColors(Iterable<int> colors) {
+  Color mixIntColors(Iterable<int> colors, {bool decreaseLightness = true}) {
     int red = 0;
     int green = 0;
     int blue = 0;
@@ -204,9 +215,14 @@ class CurrentColor {
     green ~/= colors.length;
     blue ~/= colors.length;
 
-    final hslColor = HSLColor.fromColor(Color.fromARGB(255, red, green, blue));
-    final modifiedColor = hslColor.withLightness(0.4).toColor();
-    return modifiedColor;
+    final color = Color.fromARGB(255, red, green, blue);
+    if (decreaseLightness) {
+      final hslColor = HSLColor.fromColor(color);
+      final modifiedColor = hslColor.withLightness(0.4).toColor();
+      return modifiedColor;
+    } else {
+      return color;
+    }
   }
 
   Color? delightnedColor(Color? color) {
@@ -223,8 +239,6 @@ class CurrentColor {
     colorDelightened = hslColor.toColor();
     return colorDelightened;
   }
-
-  void updateThemeAndRefresh() {}
 
   Future<void> prepareColors() async {
     await for (final f in Directory(k_DIR_PALETTES).list()) {

@@ -233,15 +233,15 @@ class NamidaMiniPlayer extends StatelessWidget {
                                       Container(
                                         clipBehavior: Clip.antiAlias,
                                         decoration: BoxDecoration(
-                                          color: CurrentColor.inst.color.value,
+                                          color: CurrentColor.inst.color,
                                           borderRadius: borderRadius,
                                           gradient: LinearGradient(
                                             begin: Alignment.topCenter,
                                             end: Alignment.bottomCenter,
                                             colors: [
-                                              Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(100), CurrentColor.inst.color.value)
+                                              Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(100), CurrentColor.inst.color)
                                                   .withOpacity(_velpy(a: .38, b: .28, c: icp)),
-                                              Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.color.value)
+                                              Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.color)
                                                   .withOpacity(_velpy(a: .1, b: .22, c: icp)),
                                             ],
                                           ),
@@ -257,9 +257,9 @@ class NamidaMiniPlayer extends StatelessWidget {
                                             width: w > 0 ? ((Get.width * w) * 0.9) : 0,
                                             margin: const EdgeInsets.symmetric(horizontal: 16.0),
                                             decoration: BoxDecoration(
-                                              color: CurrentColor.inst.color.value,
+                                              color: CurrentColor.inst.color,
                                               borderRadius: BorderRadius.circular(50),
-                                              //  color: Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.color.value)
+                                              //  color: Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.color)
                                               //   .withOpacity(_velpy(a: .3, b: .22, c: icp)),
                                             ),
                                           );
@@ -462,22 +462,21 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                     child: AnimatedContainer(
                                                       duration: const Duration(milliseconds: 400),
                                                       decoration: BoxDecoration(
-                                                        color: isButtonHighlighed
-                                                            ? Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(233), Colors.white)
-                                                            : CurrentColor.inst.color.value,
+                                                        color:
+                                                            isButtonHighlighed ? Color.alphaBlend(CurrentColor.inst.color.withAlpha(233), Colors.white) : CurrentColor.inst.color,
                                                         gradient: LinearGradient(
                                                           begin: Alignment.topLeft,
                                                           end: Alignment.bottomRight,
                                                           colors: [
-                                                            CurrentColor.inst.color.value,
-                                                            Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(200), Colors.grey),
+                                                            CurrentColor.inst.color,
+                                                            Color.alphaBlend(CurrentColor.inst.color.withAlpha(200), Colors.grey),
                                                           ],
                                                           stops: const [0, 0.7],
                                                         ),
                                                         shape: BoxShape.circle,
                                                         boxShadow: [
                                                           BoxShadow(
-                                                            color: CurrentColor.inst.color.value.withAlpha(160),
+                                                            color: CurrentColor.inst.color.withAlpha(160),
                                                             blurRadius: 8.0,
                                                             spreadRadius: isButtonHighlighed ? 3.0 : 1.0,
                                                             offset: const Offset(0.0, 2.0),
@@ -856,8 +855,8 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                   tileMode: TileMode.decal,
                                                   stops: [0.0, percentage, percentage + 0.005, 1.0],
                                                   colors: [
-                                                    Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(220), context.theme.colorScheme.onBackground).withAlpha(255),
-                                                    Color.alphaBlend(CurrentColor.inst.color.value.withAlpha(180), context.theme.colorScheme.onBackground).withAlpha(255),
+                                                    Color.alphaBlend(CurrentColor.inst.color.withAlpha(220), context.theme.colorScheme.onBackground).withAlpha(255),
+                                                    Color.alphaBlend(CurrentColor.inst.color.withAlpha(180), context.theme.colorScheme.onBackground).withAlpha(255),
                                                     Colors.transparent,
                                                     Colors.transparent,
                                                   ],
@@ -874,7 +873,8 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                     }
 
                                                     void onSeekEnd() {
-                                                      Player.inst.seek(Duration(milliseconds: MiniPlayerController.inst.seekValue.value.toInt()));
+                                                      final ms = MiniPlayerController.inst.seekValue.value.toInt();
+                                                      Player.inst.seek(Duration(milliseconds: ms));
                                                       MiniPlayerController.inst.seekValue.value = 0.0;
                                                     }
 
@@ -882,7 +882,10 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                       child: WaveformComponent(
                                                         color: context.theme.colorScheme.onBackground.withAlpha(110),
                                                       ),
-                                                      onTapDown: (details) => onSeekDragUpdate(details.localPosition.dx),
+                                                      onTapDown: (details) {
+                                                        onSeekDragUpdate(details.localPosition.dx);
+                                                        onSeekEnd();
+                                                      },
                                                       onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx),
                                                       onHorizontalDragEnd: (details) => onSeekEnd(),
                                                     );

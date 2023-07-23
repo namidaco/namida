@@ -177,17 +177,20 @@ class Namida extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Namida',
-      theme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme.value, true),
-      darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme.value, false),
-      themeMode: SettingsController.inst.themeMode.value,
-      translations: MyTranslation(),
-      builder: (context, widget) {
-        return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
-      },
-      home: const MainPageWrapper(),
+    return Obx(
+      () => GetMaterialApp(
+        themeAnimationDuration: const Duration(milliseconds: kThemeAnimationDurationMS),
+        debugShowCheckedModeBanner: false,
+        title: 'Namida',
+        restorationScopeId: 'Namida',
+        theme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, true),
+        darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, false),
+        themeMode: SettingsController.inst.themeMode.value,
+        builder: (context, widget) {
+          return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
+        },
+        home: const MainPageWrapper(),
+      ),
     );
   }
 }

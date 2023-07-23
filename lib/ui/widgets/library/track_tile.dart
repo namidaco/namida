@@ -104,7 +104,7 @@ class TrackTile extends StatelessWidget {
                 bgColor: bgColor ??
                     Color.alphaBlend(
                       isTrackSelected & !isInSelectedTracksPreview ? context.theme.focusColor : Colors.transparent,
-                      isTrackCurrentlyPlaying ? CurrentColor.inst.color.value : context.theme.cardTheme.color!,
+                      isTrackCurrentlyPlaying ? CurrentColor.inst.color : context.theme.cardTheme.color!,
                     ),
                 onTap: onTap ??
                     () async {

@@ -173,7 +173,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                     final saveDirPath = await EditDeleteController.inst.saveArtworkToStorage(track);
                                     String title = Language.inst.COPIED_ARTWORK;
                                     String subtitle = '${Language.inst.SAVED_IN} $saveDirPath';
-                                    Color snackColor = CurrentColor.inst.color.value;
+                                    Color snackColor = CurrentColor.inst.color;
 
                                     if (saveDirPath == null) {
                                       title = Language.inst.ERROR;
@@ -422,7 +422,7 @@ class TrackInfoListTile extends StatelessWidget {
       snackStyle: SnackStyle.FLOATING,
       animationDuration: const Duration(milliseconds: 300),
       duration: const Duration(seconds: 2),
-      leftBarIndicatorColor: CurrentColor.inst.color.value,
+      leftBarIndicatorColor: CurrentColor.inst.color,
       margin: const EdgeInsets.all(0.0),
       titleText: Text(
         'Copied $title',

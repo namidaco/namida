@@ -47,8 +47,6 @@ class ThemeSetting extends StatelessWidget {
                   } else {
                     await CurrentColor.inst.setPlayerColor(Player.inst.nowPlayingTrack.value);
                   }
-
-                  CurrentColor.inst.updateThemeAndRefresh();
                 },
               ),
             ),
@@ -104,7 +102,6 @@ class ThemeSetting extends StatelessWidget {
   void _updateColor(Color color) {
     SettingsController.inst.save(staticColor: color.value);
     CurrentColor.inst.updatePlayerColorFromColor(color, false);
-    CurrentColor.inst.updateThemeAndRefresh();
   }
 }
 
@@ -115,15 +112,13 @@ class ToggleThemeModeContainer extends StatelessWidget {
 
   void onThemeChangeTap(ThemeMode themeMode) async {
     SettingsController.inst.save(themeMode: themeMode);
-    Get.changeThemeMode(themeMode);
-    CurrentColor.inst.updateThemeAndRefresh();
-    await Future.delayed(const Duration(milliseconds: 300));
-    CurrentColor.inst.updatePlayerColorFromTrack(Player.inst.nowPlayingTrack.value, Player.inst.currentIndex.value);
+    await Future.delayed(const Duration(milliseconds: kThemeAnimationDurationMS));
+    CurrentColor.inst.updateColorAfterThemeModeChange();
   }
 
   @override
   Widget build(BuildContext context) {
-    final double containerWidth = width ?? Get.width / 2.8;
+    final double containerWidth = width ?? context.width / 2.8;
     return Obx(
       () {
         final currentTheme = SettingsController.inst.themeMode.value;

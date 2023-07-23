@@ -88,13 +88,10 @@ class AlbumCard extends StatelessWidget {
                         ),
                       ),
                     Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        margin: EdgeInsets.all(4.0 + sizeAlternative),
+                      bottom: 2.0 + sizeAlternative,
+                      right: 2.0 + sizeAlternative,
+                      child: NamidaInkWell(
                         decoration: BoxDecoration(
-                          color: context.theme.cardColor,
-                          borderRadius: BorderRadius.circular(10.0.multipliedRadius),
                           boxShadow: [
                             BoxShadow(
                               offset: const Offset(0.0, 2.0),
@@ -102,13 +99,11 @@ class AlbumCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        child: NamidaInkWell(
-                          borderRadius: 10.0,
-                          bgColor: context.theme.cardColor,
-                          onTap: () => Player.inst.playOrPause(0, album, QueueSource.album),
-                          padding: EdgeInsets.all(2.5 + sizeAlternative),
-                          child: Icon(Broken.play, size: 12.5 + 2.0 * sizeAlternative),
-                        ),
+                        borderRadius: 10.0,
+                        bgColor: context.theme.cardColor,
+                        onTap: () => Player.inst.playOrPause(0, album, QueueSource.album),
+                        padding: EdgeInsets.all(2.5 + sizeAlternative),
+                        child: Icon(Broken.play, size: 12.5 + 2.0 * sizeAlternative),
                       ),
                     )
                   ],
