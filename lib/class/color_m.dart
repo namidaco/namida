@@ -2,21 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:namida/core/extensions.dart';
 
 class NamidaColor {
-  Color? used;
-  late final Color mix;
-  late final List<Color> palette;
+  final Color? used;
+  final Color mix;
+  final List<Color> palette;
 
   Color get color => used ?? mix;
 
-  NamidaColor(
-    this.used,
-    this.mix,
-    this.palette,
-  );
-  NamidaColor.fromJson(Map<String, dynamic> json) {
-    used = json['used'] != null ? Color(json['used']) : null;
-    mix = Color(json['mix'] ?? 0);
-    palette = List<Color>.from(List<int>.from(json['palette'] ?? []).mapped((e) => Color(e)));
+  const NamidaColor({
+    required this.used,
+    required this.mix,
+    required this.palette,
+  });
+
+  factory NamidaColor.fromJson(Map<String, dynamic> json) {
+    return NamidaColor(
+      used: json['used'] != null ? Color(json['used']) : null,
+      mix: Color(json['mix'] ?? 0),
+      palette: List<Color>.from(List<int>.from(json['palette'] ?? []).map((e) => Color(e))),
+    );
   }
 
   Map<String, dynamic> toJson() {

@@ -3,26 +3,28 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 /// used for stats.
 class YoutubeVideoHistory {
-  late final String id;
-  late final String title;
-  late final String channel;
-  late final String channelUrl;
-  late final List<YTWatch> watches;
+  final String id;
+  final String title;
+  final String channel;
+  final String channelUrl;
+  final List<YTWatch> watches;
 
-  YoutubeVideoHistory(
-    this.id,
-    this.title,
-    this.channel,
-    this.channelUrl,
-    this.watches,
-  );
+  const YoutubeVideoHistory({
+    required this.id,
+    required this.title,
+    required this.channel,
+    required this.channelUrl,
+    required this.watches,
+  });
 
-  YoutubeVideoHistory.fromJson(Map<String, dynamic> json) {
-    id = json['id'] ?? '';
-    title = json['title'] ?? '';
-    channel = json['channel'] ?? '';
-    channelUrl = json['channelUrl'] ?? '';
-    watches = List<YTWatch>.from((json['watches'] as List? ?? []).mapped((e) => YTWatch.fromJson(e)));
+  factory YoutubeVideoHistory.fromJson(Map<String, dynamic> json) {
+    return YoutubeVideoHistory(
+      id: json['id'] ?? '',
+      title: json['title'] ?? '',
+      channel: json['channel'] ?? '',
+      channelUrl: json['channelUrl'] ?? '',
+      watches: List<YTWatch>.from((json['watches'] as List? ?? []).map((e) => YTWatch.fromJson(e))),
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -37,17 +39,19 @@ class YoutubeVideoHistory {
 }
 
 class YTWatch {
-  late final int date;
-  late final bool isYTMusic;
+  final int date;
+  final bool isYTMusic;
 
-  YTWatch(
-    this.date,
-    this.isYTMusic,
-  );
+  const YTWatch({
+    required this.date,
+    required this.isYTMusic,
+  });
 
-  YTWatch.fromJson(Map<String, dynamic> json) {
-    date = json['date'] ?? 0;
-    isYTMusic = json['isYTMusic'] ?? false;
+  factory YTWatch.fromJson(Map<String, dynamic> json) {
+    return YTWatch(
+      date: json['date'] ?? 0,
+      isYTMusic: json['isYTMusic'] ?? false,
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -60,17 +64,19 @@ class YTWatch {
 
 /// Video retrieved from Youtube Client.
 class YTLVideo {
-  late final Video video;
-  late final Channel channel;
+  final Video video;
+  final Channel channel;
 
-  YTLVideo(
-    this.video,
-    this.channel,
-  );
+  const YTLVideo({
+    required this.video,
+    required this.channel,
+  });
 
-  YTLVideo.fromJson(Map<String, dynamic> json) {
-    video = (json['video'] as Map<String, dynamic>).videoFromJson();
-    channel = (json['channel'] as Map<String, dynamic>).channelFromJson();
+  factory YTLVideo.fromJson(Map<String, dynamic> json) {
+    return YTLVideo(
+      video: (json['video'] as Map<String, dynamic>).videoFromJson(),
+      channel: (json['channel'] as Map<String, dynamic>).channelFromJson(),
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -83,17 +89,19 @@ class YTLVideo {
 }
 
 class NamidaCommentsList {
-  List<Comment> comments = [];
-  int totalLength = 0;
+  final List<Comment> comments;
+  final int totalLength;
 
-  NamidaCommentsList(
-    this.comments,
-    this.totalLength,
-  );
+  const NamidaCommentsList({
+    this.comments = const <Comment>[],
+    this.totalLength = 0,
+  });
 
-  NamidaCommentsList.fromJson(Map<String, dynamic> json) {
-    comments = List<Comment>.from((List<Map<String, dynamic>>.from((json['comments']))).mapped((e) => e.commentFromJson()));
-    totalLength = json['totalLength'] ?? 0;
+  factory NamidaCommentsList.fromJson(Map<String, dynamic> json) {
+    return NamidaCommentsList(
+      comments: List<Comment>.from((List<Map<String, dynamic>>.from((json['comments']))).map((e) => e.commentFromJson())),
+      totalLength: json['totalLength'] ?? 0,
+    );
   }
 
   Map<String, dynamic> toJson() {

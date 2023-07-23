@@ -3,32 +3,34 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
 class Playlist {
-  late String name;
-  late final List<TrackWithDate> tracks;
-  late final int creationDate;
-  late final int modifiedDate;
-  late final String comment;
-  late final List<String> moods;
-  late final bool isFav;
+  final String name;
+  final List<TrackWithDate> tracks;
+  final int creationDate;
+  final int modifiedDate;
+  final String comment;
+  final List<String> moods;
+  final bool isFav;
 
-  Playlist(
-    this.name,
-    this.tracks,
-    this.creationDate,
-    this.modifiedDate,
-    this.comment,
-    this.moods,
-    this.isFav,
-  );
+  const Playlist({
+    required this.name,
+    required this.tracks,
+    required this.creationDate,
+    required this.modifiedDate,
+    required this.comment,
+    required this.moods,
+    required this.isFav,
+  });
 
-  Playlist.fromJson(Map<String, dynamic> json) {
-    name = json['name'] ?? '';
-    tracks = List<TrackWithDate>.from((json['tracks'] as List? ?? []).mapped((track) => TrackWithDate.fromJson(track)));
-    creationDate = json['creationDate'] ?? currentTimeMS;
-    modifiedDate = json['modifiedDate'] ?? currentTimeMS;
-    comment = json['comment'] ?? '';
-    moods = List<String>.from(json['moods'] ?? []);
-    isFav = json['isFav'] ?? false;
+  factory Playlist.fromJson(Map<String, dynamic> json) {
+    return Playlist(
+      name: json['name'] ?? '',
+      tracks: List<TrackWithDate>.from((json['tracks'] as List? ?? []).map((track) => TrackWithDate.fromJson(track))),
+      creationDate: json['creationDate'] ?? currentTimeMS,
+      modifiedDate: json['modifiedDate'] ?? currentTimeMS,
+      comment: json['comment'] ?? '',
+      moods: List<String>.from(json['moods'] ?? []),
+      isFav: json['isFav'] ?? false,
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -59,6 +61,14 @@ class Playlist {
     comment ??= this.comment;
     moods ??= this.moods;
     isFav ??= this.isFav;
-    return Playlist(name, tracks, creationDate, modifiedDate, comment, moods, isFav);
+    return Playlist(
+      name: name,
+      tracks: tracks,
+      creationDate: creationDate,
+      modifiedDate: modifiedDate,
+      comment: comment,
+      moods: moods,
+      isFav: isFav,
+    );
   }
 }

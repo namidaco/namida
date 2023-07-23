@@ -1,24 +1,25 @@
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 
 class Queue {
-  late final QueueSource source;
-  late final int date;
-  late bool isFav;
-  late final List<Track> tracks;
+  final QueueSource source;
+  final int date;
+  final bool isFav;
+  final List<Track> tracks;
 
-  Queue(
-    this.source,
-    this.date,
-    this.isFav,
-    this.tracks,
-  );
+  const Queue({
+    required this.source,
+    required this.date,
+    required this.isFav,
+    required this.tracks,
+  });
 
   /// Converts empty queue to AllTracksList.
-  Queue.fromJson(Map<String, dynamic> json) {
+  factory Queue.fromJson(Map<String, dynamic> json) {
     final res = (json['tracks'] as List? ?? []).mapped((e) => (e as String).toTrack());
     final finalTracks = <Track>[];
     if (res.isEmpty) {
@@ -26,10 +27,12 @@ class Queue {
     } else {
       finalTracks.addAll(res);
     }
-    source = QueueSource.values.getEnum(json['source'] ?? '') ?? QueueSource.others;
-    date = json['date'] ?? currentTimeMS;
-    isFav = json['isFav'] ?? false;
-    tracks = finalTracks;
+    return Queue(
+      source: QueueSource.values.getEnum(json['source'] ?? '') ?? QueueSource.others,
+      date: json['date'] ?? currentTimeMS,
+      isFav: json['isFav'] ?? false,
+      tracks: finalTracks,
+    );
   }
 
   /// Saves an empty queue in case its the same as the AllTracksList.
@@ -55,6 +58,20 @@ class Queue {
     isFav ??= this.isFav;
     tracks ??= this.tracks;
 
-    return Queue(source, date, isFav, tracks);
+    return Queue(
+      source: source,
+      date: date,
+      isFav: isFav,
+      tracks: tracks,
+    );
+  }
+}
+
+extension QueueUtils on Queue {
+  set isFavQueue(bool value) {
+    final q = QueueController.inst.queuesMap.value[date];
+    if (q != null) {
+      QueueController.inst.queuesMap.value[date] = q.copyWith(isFav: value);
+    }
   }
 }

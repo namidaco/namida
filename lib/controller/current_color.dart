@@ -21,12 +21,16 @@ class CurrentColor {
   static final CurrentColor _instance = CurrentColor._internal();
   CurrentColor._internal();
 
-  Rx<Color> get color => namidaColor.value.color.obs;
-  RxList<Color> get palette => namidaColor.value.palette.obs;
+  Color get color => namidaColor.value.color;
+  List<Color> get palette => namidaColor.value.palette;
 
-  Rx<NamidaColor> namidaColor = NamidaColor(playerStaticColor, playerStaticColor, [playerStaticColor]).obs;
+  Rx<NamidaColor> namidaColor = NamidaColor(
+    used: playerStaticColor,
+    mix: playerStaticColor,
+    palette: [playerStaticColor],
+  ).obs;
 
-  Rx<Color> get currentColorScheme => (_colorSchemeOfSubPages.value ?? color.value).obs;
+  Color get currentColorScheme => _colorSchemeOfSubPages.value ?? color;
   final Rxn<Color> _colorSchemeOfSubPages = Rxn<Color>();
 
   RxList<Color> paletteFirstHalf = <Color>[].obs;
@@ -85,7 +89,11 @@ class CurrentColor {
 
   void updatePlayerColorFromColor(Color color, [bool customAlpha = true]) async {
     final colorWithAlpha = customAlpha ? color.withAlpha(colorAlpha) : color;
-    namidaColor.value = NamidaColor(colorWithAlpha, colorWithAlpha, [colorWithAlpha]);
+    namidaColor.value = NamidaColor(
+      used: colorWithAlpha,
+      mix: colorWithAlpha,
+      palette: [colorWithAlpha],
+    );
     updateThemeAndRefresh();
   }
 
@@ -95,14 +103,22 @@ class CurrentColor {
 
   Future<NamidaColor> getTrackColors(Track track) async {
     final nc = colorsMap[track.path.getFilename] ?? await extractColorsFromImage(track.pathToImage);
-    return NamidaColor(nc.color.withAlpha(colorAlpha), nc.mix, nc.palette);
+    return NamidaColor(
+      used: nc.color.withAlpha(colorAlpha),
+      mix: nc.mix,
+      palette: nc.palette,
+    );
   }
 
   Future<NamidaColor> extractColorsFromImage(String pathofimage) async {
     final paletteFile = File("$k_DIR_PALETTES${pathofimage.getFilenameWOExt}.palette");
 
     if (!await File(pathofimage).exists()) {
-      return NamidaColor(playerStaticColor, playerStaticColor, [playerStaticColor]);
+      return NamidaColor(
+        used: playerStaticColor,
+        mix: playerStaticColor,
+        palette: [playerStaticColor],
+      );
     }
 
     NamidaColor? nc;
@@ -119,7 +135,11 @@ class CurrentColor {
 
     final result = await PaletteGenerator.fromImageProvider(FileImage(File(pathofimage)));
     final pcolors = result.colors;
-    nc = NamidaColor(null, generateDelightnedColorFromPalette(pcolors).withAlpha(colorAlpha), pcolors.toList());
+    nc = NamidaColor(
+      used: null,
+      mix: generateDelightnedColorFromPalette(pcolors).withAlpha(colorAlpha),
+      palette: pcolors.toList(),
+    );
 
     await paletteFile.writeAsJson(nc.toJson());
     Indexer.inst.updateColorPalettesSizeInStorage(paletteFile);

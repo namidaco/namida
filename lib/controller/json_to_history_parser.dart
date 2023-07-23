@@ -215,11 +215,16 @@ class JsonToHistoryParser {
         /// matching in real time, each object.
         await Future.delayed(Duration.zero);
         final yth = YoutubeVideoHistory(
-          id,
-          (p['title'] as String).replaceFirst('Watched ', ''),
-          z.isNotEmpty ? z.first['name'] : '',
-          z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
-          [YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music")],
+          id: id,
+          title: (p['title'] as String).replaceFirst('Watched ', ''),
+          channel: z.isNotEmpty ? z.first['name'] : '',
+          channelUrl: z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
+          watches: [
+            YTWatch(
+              date: DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch,
+              isYTMusic: p['header'] == "YouTube Music",
+            )
+          ],
         );
         final addedDates = _matchYTVHToNamidaHistory(
           vh: yth,
@@ -308,7 +313,11 @@ class JsonToHistoryParser {
         // -- if the type is youtube, but the user dont want yt.
         if (!d.isYTMusic && !matchYT) continue;
 
-        tracksToAdd.add(TrackWithDate(d.date, tr, d.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube));
+        tracksToAdd.add(TrackWithDate(
+          dateAdded: d.date,
+          track: tr,
+          source: d.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
+        ));
         addedHistoryJsonToPlaylist.value++;
       }
     }
@@ -381,7 +390,11 @@ class JsonToHistoryParser {
           },
         );
         if (tr != null) {
-          tracksToAdd.add(TrackWithDate(date, tr, TrackSource.lastfm));
+          tracksToAdd.add(TrackWithDate(
+            dateAdded: date,
+            track: tr,
+            source: TrackSource.lastfm,
+          ));
           addedHistoryJsonToPlaylist.value++;
         }
       } catch (e) {

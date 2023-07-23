@@ -63,7 +63,11 @@ class HistoryController {
 
       if (!per.isNaN && (currentListenedSeconds >= sec || per.toInt() >= perSett)) {
         timer.cancel();
-        final newTrackWithDate = TrackWithDate(currentTimeMS, track, TrackSource.local);
+        final newTrackWithDate = TrackWithDate(
+          dateAdded: currentTimeMS,
+          track: track,
+          source: TrackSource.local,
+        );
         addTracksToHistory([newTrackWithDate]);
         return;
       }
@@ -190,7 +194,11 @@ class HistoryController {
       final trs = entry.value;
       trs.replaceWhere(
         (e) => e.track == oldTrack,
-        (old) => TrackWithDate(old.dateAdded, newTrack, old.source),
+        (old) => TrackWithDate(
+          dateAdded: old.dateAdded,
+          track: newTrack,
+          source: old.source,
+        ),
         onMatch: () => daysToSave.add(day),
       );
     });

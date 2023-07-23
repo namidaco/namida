@@ -9,20 +9,22 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
 class TrackWithDate extends Selectable {
-  late final int dateAdded;
-  late final Track track;
-  late final TrackSource source;
+  final int dateAdded;
+  final Track track;
+  final TrackSource source;
 
-  TrackWithDate(
-    this.dateAdded,
-    this.track,
-    this.source,
-  );
+  TrackWithDate({
+    required this.dateAdded,
+    required this.track,
+    required this.source,
+  });
 
-  TrackWithDate.fromJson(Map<String, dynamic> json) {
-    dateAdded = json['dateAdded'] ?? currentTimeMS;
-    track = (json['track'] as String).toTrack();
-    source = TrackSource.values.getEnum(json['source']) ?? TrackSource.local;
+  factory TrackWithDate.fromJson(Map<String, dynamic> json) {
+    return TrackWithDate(
+      dateAdded: json['dateAdded'] ?? currentTimeMS,
+      track: (json['track'] as String).toTrack(),
+      source: TrackSource.values.getEnum(json['source']) ?? TrackSource.local,
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -35,10 +37,10 @@ class TrackWithDate extends Selectable {
 
   @override
   bool operator ==(other) {
-    if (other is! TrackWithDate) {
-      return false;
+    if (other is TrackWithDate) {
+      return dateAdded == other.dateAdded && source == other.source && track == other.track;
     }
-    return dateAdded == other.dateAdded && source == other.source && track == other.track;
+    return false;
   }
 
   @override
@@ -107,10 +109,10 @@ class Track extends Selectable {
 
   @override
   bool operator ==(other) {
-    if (other is! Track) {
-      return false;
+    if (other is Track) {
+      return path == other.path;
     }
-    return path == other.path;
+    return false;
   }
 
   @override
@@ -121,33 +123,33 @@ class Track extends Selectable {
 }
 
 class TrackExtended {
-  late final String title;
-  late final String originalArtist;
-  late final List<String> artistsList;
-  late final String album;
-  late final String albumArtist;
-  late final String originalGenre;
-  late final List<String> genresList;
-  late final String composer;
-  late final int trackNo;
+  final String title;
+  final String originalArtist;
+  final List<String> artistsList;
+  final String album;
+  final String albumArtist;
+  final String originalGenre;
+  final List<String> genresList;
+  final String composer;
+  final int trackNo;
 
   /// track's duration in seconds.
-  late int duration;
-  late final int year;
-  late final int size;
-  late final int dateAdded;
-  late final int dateModified;
-  late final String path;
-  late final String comment;
-  late final int bitrate;
-  late final int sampleRate;
-  late final String format;
-  late final String channels;
-  late final int discNo;
-  late final String language;
-  late final String lyrics;
+  final int duration;
+  final int year;
+  final int size;
+  final int dateAdded;
+  final int dateModified;
+  final String path;
+  final String comment;
+  final int bitrate;
+  final int sampleRate;
+  final String format;
+  final String channels;
+  final int discNo;
+  final String language;
+  final String lyrics;
 
-  TrackExtended({
+  const TrackExtended({
     required this.title,
     required this.originalArtist,
     required this.artistsList,
@@ -173,30 +175,32 @@ class TrackExtended {
     required this.lyrics,
   });
 
-  TrackExtended.fromJson(Map<String, dynamic> json) {
-    title = json['title'] ?? '';
-    originalArtist = json['originalArtist'] ?? '';
-    artistsList = Indexer.inst.splitArtist(json['title'], json['originalArtist']);
-    album = json['album'] ?? '';
-    albumArtist = json['albumArtist'] ?? '';
-    originalGenre = json['originalGenre'] ?? '';
-    genresList = Indexer.inst.splitGenre(json['originalGenre']);
-    composer = json['composer'] ?? '';
-    trackNo = json['trackNo'] ?? 0;
-    duration = json['duration'] ?? 0;
-    year = json['year'] ?? 0;
-    size = json['size'] ?? 0;
-    dateAdded = json['dateAdded'] ?? 0;
-    dateModified = json['dateModified'] ?? 0;
-    path = json['path'] ?? '';
-    comment = json['comment'] ?? '';
-    bitrate = json['bitrate'] ?? 0;
-    sampleRate = json['sampleRate'] ?? 0;
-    format = json['format'] ?? '';
-    channels = json['channels'] ?? '';
-    discNo = json['discNo'] ?? 0;
-    language = json['language'] ?? '';
-    lyrics = json['lyrics'] ?? '';
+  factory TrackExtended.fromJson(Map<String, dynamic> json) {
+    return TrackExtended(
+      title: json['title'] ?? '',
+      originalArtist: json['originalArtist'] ?? '',
+      artistsList: Indexer.inst.splitArtist(json['title'], json['originalArtist']),
+      album: json['album'] ?? '',
+      albumArtist: json['albumArtist'] ?? '',
+      originalGenre: json['originalGenre'] ?? '',
+      genresList: Indexer.inst.splitGenre(json['originalGenre']),
+      composer: json['composer'] ?? '',
+      trackNo: json['trackNo'] ?? 0,
+      duration: json['duration'] ?? 0,
+      year: json['year'] ?? 0,
+      size: json['size'] ?? 0,
+      dateAdded: json['dateAdded'] ?? 0,
+      dateModified: json['dateModified'] ?? 0,
+      path: json['path'] ?? '',
+      comment: json['comment'] ?? '',
+      bitrate: json['bitrate'] ?? 0,
+      sampleRate: json['sampleRate'] ?? 0,
+      format: json['format'] ?? '',
+      channels: json['channels'] ?? '',
+      discNo: json['discNo'] ?? 0,
+      language: json['language'] ?? '',
+      lyrics: json['lyrics'] ?? '',
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -227,10 +231,10 @@ class TrackExtended {
 
   @override
   bool operator ==(other) {
-    if (other is! Track) {
-      return false;
+    if (other is Track) {
+      return path == other.path;
     }
-    return path == other.path;
+    return false;
   }
 
   @override
@@ -349,7 +353,12 @@ extension TrackUtils on Track {
   TrackExtended toTrackExt() => path.toTrackExt();
   TrackExtended? toTrackExtOrNull() => path.toTrackExtOrNull();
 
-  set duration(int value) => Indexer.inst.allTracksMappedByPath[this]?.duration = value;
+  set duration(int value) {
+    final trx = Indexer.inst.allTracksMappedByPath[this];
+    if (trx != null) {
+      Indexer.inst.allTracksMappedByPath[this] = trx.copyWith(duration: value);
+    }
+  }
 
   String get title => toTrackExt().title;
   String get originalArtist => toTrackExt().originalArtist;

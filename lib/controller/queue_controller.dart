@@ -37,7 +37,7 @@ class QueueController {
 
     if (_isLoadingQueues) {
       // after queues full load, [addNewQueue] will be called to add Queues inside [_queuesToAddAfterAllQueuesLoad].
-      _queuesToAddAfterAllQueuesLoad.add(Queue(source, date, false, tracks));
+      _queuesToAddAfterAllQueuesLoad.add(Queue(source: source, date: date, isFav: false, tracks: tracks));
       printy("Queue adding suspended until queues full load");
       return;
     }
@@ -50,7 +50,7 @@ class QueueController {
       }
     }
 
-    final q = Queue(source, date, false, tracks);
+    final q = Queue(source: source, date: date, isFav: false, tracks: tracks);
     _updateMap(q);
     printy("Added New Queue");
     await _saveQueueToStorage(q);
@@ -78,7 +78,7 @@ class QueueController {
   // }
 
   Future<void> toggleFavButton(Queue queue) async {
-    queue.isFav = !queue.isFav;
+    queue.isFavQueue = !queue.isFav;
     _updateMap(queue);
     await _saveQueueToStorage(queue);
   }

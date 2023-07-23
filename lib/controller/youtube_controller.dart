@@ -68,7 +68,7 @@ class YoutubeController {
       final ytexp = YoutubeExplode(YoutubeHttpClient(NamidaClient()));
       final video = await ytexp.videos.get(id);
       final channel = await ytexp.channels.get(video.channelId);
-      final ytlvideo = YTLVideo(video, channel);
+      final ytlvideo = YTLVideo(video: video, channel: channel);
       currentYoutubeMetadata.value = ytlvideo;
       final file = await videometafile.create();
       await file.writeAsJson(ytlvideo.toJson());
@@ -107,7 +107,10 @@ class YoutubeController {
       }
 
       if (_commentlistclient.value != null) {
-        newcomm = NamidaCommentsList(finalcomm, _commentlistclient.value?.totalLength ?? 0);
+        newcomm = NamidaCommentsList(
+          comments: finalcomm,
+          totalLength: _commentlistclient.value?.totalLength ?? 0,
+        );
         final file = await videocommentfile.create();
         await file.writeAsJson(newcomm.toJson());
       }

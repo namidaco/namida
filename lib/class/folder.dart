@@ -8,14 +8,14 @@ import 'package:namida/core/extensions.dart';
 class Folder {
   final String path;
 
-  Folder(this.path);
+  const Folder(this.path);
 
   @override
   bool operator ==(other) {
-    if (other is! Folder) {
-      return false;
+    if (other is Folder) {
+      return path == other.path;
     }
-    return path == other.path;
+    return false;
   }
 
   @override

@@ -23,7 +23,15 @@ class PlaylistController {
 
   final RxMap<String, Playlist> playlistsMap = <String, Playlist>{}.obs;
 
-  final Rx<Playlist> favouritesPlaylist = Playlist(k_PLAYLIST_NAME_FAV, [], currentTimeMS, currentTimeMS, '', [], true).obs;
+  final Rx<Playlist> favouritesPlaylist = Playlist(
+    name: k_PLAYLIST_NAME_FAV,
+    tracks: [],
+    creationDate: currentTimeMS,
+    modifiedDate: currentTimeMS,
+    comment: '',
+    moods: [],
+    isFav: true,
+  ).obs;
 
   final RxBool canReorderTracks = false.obs;
 
@@ -40,13 +48,17 @@ class PlaylistController {
     creationDate ??= currentTimeMS;
 
     final pl = Playlist(
-      name,
-      tracks.mapped((e) => TrackWithDate(currentTimeMS, e, TrackSource.local)),
-      creationDate,
-      currentTimeMS,
-      comment,
-      moods,
-      false,
+      name: name,
+      tracks: tracks.mapped((e) => TrackWithDate(
+            dateAdded: currentTimeMS,
+            track: e,
+            source: TrackSource.local,
+          )),
+      creationDate: creationDate,
+      modifiedDate: currentTimeMS,
+      comment: comment,
+      moods: moods,
+      isFav: false,
     );
     _updateMap(pl);
 
@@ -133,7 +145,11 @@ class PlaylistController {
   }
 
   void addTracksToPlaylist(Playlist playlist, List<Track> tracks, {TrackSource source = TrackSource.local}) async {
-    final newtracks = tracks.mapped((e) => TrackWithDate(currentTimeMS, e, source));
+    final newtracks = tracks.mapped((e) => TrackWithDate(
+          dateAdded: currentTimeMS,
+          track: e,
+          source: source,
+        ));
     playlist.tracks.addAll(newtracks);
     _updateMap(playlist);
 
@@ -179,7 +195,11 @@ class PlaylistController {
       final p = entry.value;
       p.tracks.replaceWhere(
         (e) => e.track == oldTrack,
-        (old) => TrackWithDate(old.dateAdded, newTrack, old.source),
+        (old) => TrackWithDate(
+          dateAdded: old.dateAdded,
+          track: newTrack,
+          source: old.source,
+        ),
         onMatch: () => playlistsToSave.add(p),
       );
     });
@@ -191,7 +211,11 @@ class PlaylistController {
     // -- favourite
     favouritesPlaylist.value.tracks.replaceSingleWhere(
       (e) => e.track == oldTrack,
-      (old) => TrackWithDate(old.dateAdded, newTrack, old.source),
+      (old) => TrackWithDate(
+        dateAdded: old.dateAdded,
+        track: newTrack,
+        source: old.source,
+      ),
     );
     await _saveFavouritesToStorage();
   }
@@ -220,12 +244,22 @@ class PlaylistController {
 
     final trfv = fvPlaylist.tracks.firstWhereOrNull((element) => element.track == track);
     if (trfv == null) {
-      fvPlaylist.tracks.add(TrackWithDate(currentTimeMS, track, TrackSource.local));
+      fvPlaylist.tracks.add(TrackWithDate(
+        dateAdded: currentTimeMS,
+        track: track,
+        source: TrackSource.local,
+      ));
     } else {
       final index = fvPlaylist.tracks.indexOf(trfv);
       fvPlaylist.tracks.removeAt(index);
       if (updatedTrack != null) {
-        fvPlaylist.tracks.insert(index, TrackWithDate(trfv.dateAdded, updatedTrack, trfv.source));
+        fvPlaylist.tracks.insert(
+            index,
+            TrackWithDate(
+              dateAdded: trfv.dateAdded,
+              track: updatedTrack,
+              source: trfv.source,
+            ));
       }
     }
 
