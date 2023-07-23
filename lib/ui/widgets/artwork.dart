@@ -72,8 +72,6 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
   late Widget _stockWidget;
   double? _realWidthAndHeight;
   Widget? _finalWidget;
-  Track? _lastTrack;
-  double? _lastBorderRadius;
 
   Widget getImagePathWidget() {
     return Image.file(
@@ -108,9 +106,6 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
   }
 
   void fillWidgets() {
-    _lastTrack = widget.track;
-    _lastBorderRadius = widget.borderRadius;
-
     _stockWidget = Container(
       width: widget.width ?? widget.thumbnailSize,
       height: widget.height ?? widget.thumbnailSize,
@@ -224,7 +219,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (_finalWidget == null || widget.track != _lastTrack || widget.borderRadius != _lastBorderRadius) {
+    if (_finalWidget == null) {
       fillWidgets();
     }
     return _finalWidget ?? _stockWidget;

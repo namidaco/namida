@@ -145,8 +145,9 @@ class NamidaMiniPlayer extends StatelessWidget {
           onHorizontalDragEnd: MiniPlayerController.inst.gestureDetectorOnHorizontalDragEnd,
           child: Obx(
             () {
-              final indminus = refine(Player.inst.currentIndex.value - 1);
-              final indplus = refine(Player.inst.currentIndex.value + 1);
+              final currentIndex = Player.inst.currentIndex.value;
+              final indminus = refine(currentIndex - 1);
+              final indplus = refine(currentIndex + 1);
               final prevTrack = Player.inst.currentQueue[indminus];
               final currentTrack = Player.inst.nowPlayingTrack.value;
               final nextTrack = Player.inst.currentQueue[indplus];
@@ -329,7 +330,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               Text(
-                                                "${Player.inst.currentIndex.value + 1}/${Player.inst.currentQueue.length}",
+                                                "${currentIndex + 1}/${Player.inst.currentQueue.length}",
                                                 style: TextStyle(
                                                   color: onSecondary.withOpacity(.8),
                                                   fontSize: 12.0.multipliedFontScale,
@@ -485,7 +486,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                       ),
                                                       child: IconButton(
                                                         highlightColor: Colors.transparent,
-                                                        onPressed: () => Player.inst.playOrPause(Player.inst.currentIndex.value, [], QueueSource.playerQueue),
+                                                        onPressed: () => Player.inst.playOrPause(currentIndex, [], QueueSource.playerQueue),
                                                         icon: Padding(
                                                           padding: EdgeInsets.all(6.0 * cp * rcp),
                                                           child: Obx(
@@ -773,7 +774,6 @@ class NamidaMiniPlayer extends StatelessWidget {
                               //       bottomOffset: bottomOffset,
                               //       maxOffset: maxOffset,
                               //       child: _TrackImage(
-                              //         key: Key(prevTrack.pathToImage),
                               //         track: prevTrack,
                               //         cp: cp,
                               //       ),
@@ -811,7 +811,6 @@ class NamidaMiniPlayer extends StatelessWidget {
                               //       bottomOffset: bottomOffset,
                               //       maxOffset: maxOffset,
                               //       child: _TrackImage(
-                              //         key: Key(nextTrack.pathToImage),
                               //         track: nextTrack,
                               //         cp: cp,
                               //       ),
@@ -846,6 +845,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                         child: Stack(
                                           children: [
                                             WaveformComponent(
+                                              key: Key("$currentTrack$currentIndex"),
                                               color: context.theme.colorScheme.onBackground.withAlpha(40),
                                             ),
                                             ShaderMask(
@@ -879,15 +879,15 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                     }
 
                                                     return GestureDetector(
-                                                      child: WaveformComponent(
-                                                        color: context.theme.colorScheme.onBackground.withAlpha(110),
-                                                      ),
-                                                      onTapDown: (details) {
-                                                        onSeekDragUpdate(details.localPosition.dx);
-                                                        onSeekEnd();
-                                                      },
+                                                      onTapDown: (details) => onSeekDragUpdate(details.localPosition.dx),
+                                                      onTapUp: (details) => onSeekEnd(),
+                                                      onTapCancel: () => MiniPlayerController.inst.seekValue.value = 0.0,
                                                       onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx),
                                                       onHorizontalDragEnd: (details) => onSeekEnd(),
+                                                      child: WaveformComponent(
+                                                        key: Key("$currentTrack$currentIndex"),
+                                                        color: context.theme.colorScheme.onBackground.withAlpha(110),
+                                                      ),
                                                     );
                                                   },
                                                 ),
@@ -933,7 +933,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                             return AnimatedOpacity(
                                               key: Key('GD_$key'),
                                               duration: const Duration(milliseconds: 300),
-                                              opacity: i < Player.inst.currentIndex.value ? 0.7 : 1.0,
+                                              opacity: i < currentIndex ? 0.7 : 1.0,
                                               child: FadeDismissible(
                                                 key: Key("Diss_$key"),
                                                 onDismissed: (direction) => Player.inst.removeFromQueue(i),
@@ -1455,6 +1455,7 @@ class _TrackImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ArtworkWidget(
+      key: Key("${track.path}$cp"),
       path: track.pathToImage,
       track: track,
       thumbnailSize: Get.width,
