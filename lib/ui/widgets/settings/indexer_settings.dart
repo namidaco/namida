@@ -22,6 +22,7 @@ class IndexerSettings extends StatelessWidget {
   SettingsController get stg => SettingsController.inst;
 
   Future<void> _showRefreshPromptDialog() async {
+    RefreshLibraryIcon.controller.repeat();
     final currentFiles = await Indexer.inst.getAudioFiles();
     final newPathsLength = Indexer.inst.getNewFoundPaths(currentFiles).length;
     final deletedPathLength = Indexer.inst.getDeletedPaths(currentFiles).length;
@@ -49,6 +50,8 @@ class IndexerSettings extends StatelessWidget {
         ],
       ),
     );
+    await RefreshLibraryIcon.controller.fling(velocity: 0.6);
+    RefreshLibraryIcon.controller.stop();
   }
 
   Widget addFolderButton(void Function(String dirPath) onSuccessChoose) {
@@ -251,7 +254,7 @@ class IndexerSettings extends StatelessWidget {
             },
           ),
           CustomListTile(
-            icon: Broken.refresh_2,
+            leading: const RefreshLibraryIcon(),
             title: Language.inst.REFRESH_LIBRARY,
             subtitle: Language.inst.REFRESH_LIBRARY_SUBTITLE,
             onTap: () => _showRefreshPromptDialog(),
@@ -516,6 +519,42 @@ class IndexerSettings extends StatelessWidget {
             )
           ],
         ),
+      ),
+    );
+  }
+}
+
+class RefreshLibraryIcon extends StatefulWidget {
+  const RefreshLibraryIcon({Key? key}) : super(key: key);
+  static late final AnimationController controller;
+
+  @override
+  State<RefreshLibraryIcon> createState() => _RefreshLibraryIconState();
+}
+
+class _RefreshLibraryIconState extends State<RefreshLibraryIcon> with TickerProviderStateMixin {
+  final turnsTween = Tween<double>(begin: 0.0, end: 1.0);
+  @override
+  void initState() {
+    super.initState();
+    RefreshLibraryIcon.controller = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    RefreshLibraryIcon.controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RotationTransition(
+      turns: turnsTween.animate(RefreshLibraryIcon.controller),
+      child: const Icon(
+        Broken.refresh_2,
       ),
     );
   }
