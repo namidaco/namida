@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:io';
 
+import 'package:faudiotagger/models/faudiomodel.dart';
 import 'package:flutter/services.dart';
 
 import 'package:faudiotagger/faudiotagger.dart';
@@ -248,46 +249,65 @@ class Indexer {
 
     late TrackExtended finalTrackExtended;
 
+    FAudioModel? trackInfo;
     try {
-      final trackInfo = await faudiotagger.readAllData(path: trackPath);
-      final duration = trackInfo?.length ?? 0;
+      trackInfo = await faudiotagger.readAllData(path: trackPath);
+    } catch (e) {
+      printy(e, isError: true);
+    }
+    if (trackInfo != null) {
+      final duration = trackInfo.length ?? 0;
       if (minDur != 0 && duration < minDur) {
         if (onMinDurTrigger != null) onMinDurTrigger();
         return null;
       }
 
       // -- Split Artists
-      final artists = splitArtist(trackInfo?.title, trackInfo?.artist);
+      final artists = splitArtist(trackInfo.title, trackInfo.artist);
 
       // -- Split Genres
-      final genres = splitGenre(trackInfo?.genre);
+      final genres = splitGenre(trackInfo.genre);
 
       finalTrackExtended = initialTrack.copyWith(
-        title: trackInfo?.title?.trim(),
-        originalArtist: trackInfo?.artist?.trim(),
+        title: trackInfo.title?.trim(),
+        originalArtist: trackInfo.artist?.trim(),
         artistsList: artists,
-        album: trackInfo?.album?.trim(),
-        albumArtist: trackInfo?.albumArtist?.trim(),
-        originalGenre: trackInfo?.genre?.trim(),
+        album: trackInfo.album?.trim(),
+        albumArtist: trackInfo.albumArtist?.trim(),
+        originalGenre: trackInfo.genre?.trim(),
         genresList: genres,
-        composer: trackInfo?.composer?.trim(),
-        trackNo: trackInfo?.trackNumber.getIntValue(),
+        composer: trackInfo.composer?.trim(),
+        trackNo: trackInfo.trackNumber.getIntValue(),
         duration: duration,
-        year: trackInfo?.year.getIntValue(),
-        comment: trackInfo?.comment,
-        bitrate: trackInfo?.bitRate,
-        sampleRate: trackInfo?.sampleRate,
-        format: trackInfo?.format,
-        channels: trackInfo?.channels,
-        discNo: trackInfo?.discNumber.getIntValue(),
-        language: trackInfo?.language,
-        lyrics: trackInfo?.lyrics,
+        year: trackInfo.year.getIntValue(),
+        comment: trackInfo.comment,
+        bitrate: trackInfo.bitRate,
+        sampleRate: trackInfo.sampleRate,
+        format: trackInfo.format,
+        channels: trackInfo.channels,
+        discNo: trackInfo.discNumber.getIntValue(),
+        language: trackInfo.language,
+        lyrics: trackInfo.lyrics,
       );
 
-      extractOneArtwork(trackPath, bytes: trackInfo?.firstArtwork, forceReExtract: deleteOldArtwork);
-    } catch (e) {
-      printy(e, isError: true);
+      // ----- if the title || artist weren't found in the tag fields
+      final isTitleEmpty = finalTrackExtended.title == k_UNKNOWN_TRACK_TITLE;
+      final isArtistEmpty = finalTrackExtended.originalArtist == k_UNKNOWN_TRACK_ARTIST;
+      if (isTitleEmpty || isArtistEmpty) {
+        final extractedName = getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
+        final newTitle = isTitleEmpty ? extractedName.$1 : null;
+        final newArtists = isArtistEmpty ? [extractedName.$2] : null;
+        finalTrackExtended = finalTrackExtended.copyWith(
+          title: newTitle,
+          originalArtist: newArtists?.first,
+          artistsList: newArtists,
+        );
+      }
+      // ------------------------------------------------------------
 
+      extractOneArtwork(trackPath, bytes: trackInfo.firstArtwork, forceReExtract: deleteOldArtwork);
+    } else {
+      // --- Adding dummy track with info extracted from filename.
       final titleAndArtist = getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
       final title = titleAndArtist.$1;
       final artist = titleAndArtist.$2;
