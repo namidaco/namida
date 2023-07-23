@@ -243,21 +243,21 @@ class SearchSortController {
 
     switch (sortBy) {
       case SortType.title:
-        sortThis((e) => e.title);
+        sortThis((e) => e.title.toLowerCase());
       case SortType.album:
-        sortThis((e) => e.album);
+        sortThis((e) => e.album.toLowerCase());
         break;
       case SortType.albumArtist:
-        sortThis((e) => e.albumArtist);
+        sortThis((e) => e.albumArtist.toLowerCase());
         break;
       case SortType.year:
         sortThis((e) => e.year);
         break;
       case SortType.artistsList:
-        sortThis((e) => e.artistsList.join());
+        sortThis((e) => e.artistsList.join().toLowerCase());
         break;
       case SortType.genresList:
-        sortThis((e) => e.genresList.join());
+        sortThis((e) => e.genresList.join().toLowerCase());
         break;
       case SortType.dateAdded:
         sortThis((e) => e.dateAdded);
@@ -308,19 +308,19 @@ class SearchSortController {
 
     switch (sortBy) {
       case GroupSortType.album:
-        sortThis((e) => e.key);
+        sortThis((e) => e.key.toLowerCase());
         break;
       case GroupSortType.albumArtist:
-        sortThis((e) => e.value.albumArtist);
+        sortThis((e) => e.value.albumArtist.toLowerCase());
         break;
       case GroupSortType.year:
         sortThis((e) => e.value.year);
         break;
       case GroupSortType.artistsList:
-        sortThis((e) => e.value.first.artistsList.join());
+        sortThis((e) => e.value.first.artistsList.join().toLowerCase());
         break;
       case GroupSortType.composer:
-        sortThis((e) => e.value.composer);
+        sortThis((e) => e.value.composer.toLowerCase());
         break;
       case GroupSortType.dateModified:
         sortThis((e) => e.value.first.dateModified);
@@ -355,22 +355,22 @@ class SearchSortController {
 
     switch (sortBy) {
       case GroupSortType.album:
-        sortThis((e) => e.value.album);
+        sortThis((e) => e.value.album.toLowerCase());
         break;
       case GroupSortType.albumArtist:
-        sortThis((e) => e.value.albumArtist);
+        sortThis((e) => e.value.albumArtist.toLowerCase());
         break;
       case GroupSortType.year:
         sortThis((e) => e.value.year);
         break;
       case GroupSortType.artistsList:
-        sortThis((e) => e.key);
+        sortThis((e) => e.key.toLowerCase());
         break;
       case GroupSortType.genresList:
-        sortThis((e) => e.value[0].genresList.join());
+        sortThis((e) => e.value[0].genresList.join().toLowerCase());
         break;
       case GroupSortType.composer:
-        sortThis((e) => e.value.composer);
+        sortThis((e) => e.value.composer.toLowerCase());
         break;
       case GroupSortType.dateModified:
         sortThis((e) => e.value[0].dateModified);
@@ -406,22 +406,22 @@ class SearchSortController {
 
     switch (sortBy) {
       case GroupSortType.album:
-        sortThis((e) => e.value.album);
+        sortThis((e) => e.value.album.toLowerCase());
         break;
       case GroupSortType.albumArtist:
-        sortThis((e) => e.value.albumArtist);
+        sortThis((e) => e.value.albumArtist.toLowerCase());
         break;
       case GroupSortType.year:
         sortThis((e) => e.value.year);
         break;
       case GroupSortType.artistsList:
-        sortThis((e) => e.value[0].artistsList.join());
+        sortThis((e) => e.value[0].artistsList.join().toLowerCase());
         break;
       case GroupSortType.genresList:
-        sortThis((e) => e.value[0].genresList.join());
+        sortThis((e) => e.value[0].genresList.join().toLowerCase());
         break;
       case GroupSortType.composer:
-        sortThis((e) => e.value.composer);
+        sortThis((e) => e.value.composer.toLowerCase());
         break;
       case GroupSortType.dateModified:
         sortThis((e) => e.value[0].dateModified);
@@ -455,7 +455,7 @@ class SearchSortController {
 
     switch (sortBy) {
       case GroupSortType.title:
-        sortThis((p) => p.key.translatePlaylistName());
+        sortThis((p) => p.key.translatePlaylistName().toLowerCase());
         break;
       case GroupSortType.creationDate:
         sortThis((p) => p.value.creationDate);
