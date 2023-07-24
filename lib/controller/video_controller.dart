@@ -14,7 +14,7 @@ import 'package:namida/controller/youtube_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
-import 'package:namida/core/translations/strings.dart';
+import 'package:namida/core/translations/language.dart';
 
 class VideoController {
   static VideoController get inst => _instance;

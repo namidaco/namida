@@ -14,7 +14,7 @@ import 'package:namida/controller/notification_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/translations/strings.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class JsonToHistoryParser {

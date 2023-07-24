@@ -13,7 +13,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
-import 'package:namida/core/translations/strings.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/inner_drawer.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -26,7 +26,7 @@ class NamidaNavigator {
 
   final RxList<NamidaRoute> currentWidgetStack = <NamidaRoute>[].obs;
   NamidaRoute? get currentRoute => currentWidgetStack.lastOrNull;
-  int currentDialogNumber = 0;
+  int _currentDialogNumber = 0;
 
   final GlobalKey<InnerDrawerState> innerDrawerKey = GlobalKey<InnerDrawerState>();
   final heroController = HeroController();
@@ -98,13 +98,13 @@ class NamidaNavigator {
     if (rootNav == null) return;
 
     ScrollSearchController.inst.unfocusKeyboard();
-    currentDialogNumber++;
+    _currentDialogNumber++;
 
     Future<bool> onWillPop() async {
       if (!tapToDismiss) return false;
       if (onDismissing != null) onDismissing();
 
-      if (currentDialogNumber > 0) {
+      if (_currentDialogNumber > 0) {
         closeDialog();
         return false;
       }
@@ -121,7 +121,7 @@ class NamidaNavigator {
           onTap: onWillPop,
           child: NamidaBgBlur(
             blur: 5.0,
-            enabled: currentDialogNumber == 1,
+            enabled: _currentDialogNumber == 1,
             child: Container(
               color: Colors.black.withOpacity(blackBg ? 1.0 : 0.45),
               child: Transform.scale(
@@ -146,19 +146,19 @@ class NamidaNavigator {
   }
 
   Future<void> closeDialog([int count = 1]) async {
-    if (currentDialogNumber == 0) return;
-    final closeCount = count.withMaximum(currentDialogNumber);
-    currentDialogNumber -= closeCount;
+    if (_currentDialogNumber == 0) return;
+    final closeCount = count.withMaximum(_currentDialogNumber);
+    _currentDialogNumber -= closeCount;
     Get.close(closeCount);
     _printDialogs();
   }
 
   Future<void> closeAllDialogs() async {
-    closeDialog(currentDialogNumber);
+    closeDialog(_currentDialogNumber);
     _printDialogs();
   }
 
-  void _printDialogs() => printy("Current Dialogs: $currentDialogNumber");
+  void _printDialogs() => printy("Current Dialogs: $_currentDialogNumber");
 
   Future<void> navigateOff(
     Widget page, {

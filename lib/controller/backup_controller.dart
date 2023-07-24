@@ -10,7 +10,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/translations/strings.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/main.dart';
 
 class BackupController {

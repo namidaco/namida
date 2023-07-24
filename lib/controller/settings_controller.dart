@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
+import 'package:namida/class/lang.dart';
 import 'package:namida/class/trackitem.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -14,6 +15,7 @@ class SettingsController {
   static final SettingsController _instance = SettingsController._internal();
   SettingsController._internal();
 
+  final Rx<NamidaLanguage> selectedLanguage = kDefaultLang.obs;
   final Rx<ThemeMode> themeMode = ThemeMode.system.obs;
   final RxBool autoColor = true.obs;
   final RxInt staticColor = kMainColor.value.obs;
@@ -160,6 +162,7 @@ class SettingsController {
       if (json == null) return;
 
       /// Assigning Values
+      selectedLanguage.value = NamidaLanguage.fromJson(json['selectedLanguage']);
       themeMode.value = ThemeMode.values.getEnum(json['themeMode']) ?? themeMode.value;
       autoColor.value = json['autoColor'] ?? autoColor.value;
       staticColor.value = json['staticColor'] ?? staticColor.value;
@@ -289,6 +292,7 @@ class SettingsController {
 
     final file = File(k_FILE_PATH_SETTINGS);
     final res = {
+      'selectedLanguage': selectedLanguage.toJson(),
       'themeMode': themeMode.value.convertToString,
       'autoColor': autoColor.value,
       'staticColor': staticColor.value,
@@ -403,6 +407,7 @@ class SettingsController {
 
   /// Saves a value to the key, if [List] or [Set], then it will add to it.
   void save({
+    NamidaLanguage? selectedLanguage,
     ThemeMode? themeMode,
     bool? autoColor,
     int? staticColor,
@@ -500,6 +505,9 @@ class SettingsController {
     TrackPlayMode? trackPlayMode,
     bool? didSupportNamida,
   }) {
+    if (selectedLanguage != null) {
+      this.selectedLanguage.value = selectedLanguage;
+    }
     if (themeMode != null) {
       this.themeMode.value = themeMode;
     }

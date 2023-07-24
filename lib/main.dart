@@ -26,9 +26,7 @@ import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/themes.dart';
-import 'package:namida/core/translations/strings.dart';
-import 'package:namida/core/translations/translations.dart';
+import 'package:namida/core/translations/language.dart';
 
 import 'package:namida/main_page.dart';
 
@@ -82,6 +80,7 @@ void main() async {
 
   await SettingsController.inst.prepareSettingsFile();
   await Indexer.inst.prepareTracksFile();
+  await Language.initialize(lang: SettingsController.inst.selectedLanguage.value);
 
   /// updates values on startup
   Indexer.inst.updateImageSizeInStorage();

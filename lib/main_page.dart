@@ -12,7 +12,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
-import 'package:namida/core/translations/strings.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/inner_drawer.dart';
 import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/ui/pages/homepage.dart';

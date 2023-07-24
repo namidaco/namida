@@ -9,7 +9,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/translations/strings.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
@@ -526,7 +526,7 @@ class IndexerSettings extends StatelessWidget {
 
 class RefreshLibraryIcon extends StatefulWidget {
   const RefreshLibraryIcon({Key? key}) : super(key: key);
-  static late final AnimationController controller;
+  static late AnimationController controller;
 
   @override
   State<RefreshLibraryIcon> createState() => _RefreshLibraryIconState();

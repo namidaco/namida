@@ -1,3 +1,4 @@
 {
     "dart.lineLength": 180,
+    "java.configuration.updateBuildConfiguration": "interactive",
 }

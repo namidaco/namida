@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+import 'package:namida/class/lang.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -146,6 +147,13 @@ const List<String> kVideoFilesExtensions = [
   'mpeg2',
   'mpeg4'
 ];
+
+const kDefaultLang = NamidaLanguage(
+  code: "en_US",
+  name: "English",
+  country: "United States",
+);
+
 const kDummyTrack = Track('');
 final kDummyExtendedTrack = TrackExtended(
   title: "",

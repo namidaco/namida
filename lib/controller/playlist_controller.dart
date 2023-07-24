@@ -12,7 +12,7 @@ import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/translations/strings.dart';
+import 'package:namida/core/translations/language.dart';
 
 class PlaylistController {
   static PlaylistController get inst => _instance;

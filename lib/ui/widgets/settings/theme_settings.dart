@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/class/lang.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -12,7 +13,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
-import 'package:namida/core/translations/strings.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
@@ -75,17 +76,76 @@ class ThemeSetting extends StatelessWidget {
                                 NamidaNavigator.inst.closeDialog();
                               },
                             ),
-                            NamidaButton(
-                              text: Language.inst.DONE,
-                              onPressed: NamidaNavigator.inst.closeDialog,
-                            ),
-                          ],
-                          child: ColorPicker(
-                            pickerColor: playerStaticColor,
-                            onColorChanged: (value) {
-                              _updateColor(value);
-                            },
-                          ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            Obx(
+              () => CustomListTile(
+                icon: Broken.language_square,
+                title: Language.inst.LANGUAGE,
+                subtitle: Language.inst.currentLanguage.name,
+                onTap: () {
+                  final Rx<NamidaLanguage> selectedLang = Language.inst.currentLanguage.obs;
+                  NamidaNavigator.inst.navigateDialog(
+                    dialog: CustomBlurryDialog(
+                      title: Language.inst.LANGUAGE,
+                      normalTitleStyle: true,
+                      actions: [
+                        const CancelButton(),
+                        NamidaButton(
+                          onPressed: () async => (await Language.inst.update(lang: selectedLang.value)).closeDialog(),
+                          text: Language.inst.CONFIRM,
+                        )
+                      ],
+                      child: SizedBox(
+                        height: (Language.availableLanguages.length * context.height * 0.08).withMaximum(context.height * 0.5),
+                        width: context.width,
+                        child: NamidaListView(
+                          padding: EdgeInsets.zero,
+                          itemExtents: null,
+                          itemCount: Language.availableLanguages.length,
+                          itemBuilder: (context, i) {
+                            final e = Language.availableLanguages[i];
+                            return Padding(
+                              key: Key(i.toString()),
+                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Obx(
+                                () => ListTileWithCheckMark(
+                                  leading: Container(
+                                    padding: const EdgeInsets.all(4.0),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        width: 1.5,
+                                        color: context.theme.colorScheme.onBackground.withAlpha(100),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      e.name[0],
+                                      style: const TextStyle(fontSize: 13.0),
+                                    ),
+                                  ),
+                                  titleWidget: RichText(
+                                    text: TextSpan(
+                                      text: e.name,
+                                      style: context.textTheme.displayMedium,
+                                      children: [
+                                        TextSpan(
+                                          text: " (${e.country})",
+                                          style: context.textTheme.displaySmall,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  active: e == selectedLang.value,
+                                  onTap: () => selectedLang.value = e,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
