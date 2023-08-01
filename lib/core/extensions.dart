@@ -97,9 +97,20 @@ extension Iterables<E> on Iterable<E> {
       );
 }
 
-extension TracksUtils on List<Track> {
-  List<String> toImagePaths([int? limit = 4]) => withLimit(limit).toList().mapped((e) => e.pathToImage);
+extension TracksSelectableUtils on List<Selectable> {
+  String get displayTrackKeyword => length.displayTrackKeyword;
 
+  List<String> toImagePaths([int? limit = 4]) => withLimit(limit).map((e) => e.track.pathToImage).toList();
+}
+
+extension TracksWithDatesUtils on List<TrackWithDate> {
+  int get totalDurationInS => fold(0, (previousValue, element) => previousValue + element.track.duration);
+  String get totalDurationFormatted {
+    return totalDurationInS.getTimeFormatted;
+  }
+}
+
+extension TracksUtils on List<Track> {
   String get totalSizeFormatted {
     int size = 0;
     loop((t, index) {
@@ -112,10 +123,6 @@ extension TracksUtils on List<Track> {
 
   String get totalDurationFormatted {
     return totalDurationInS.getTimeFormatted;
-  }
-
-  String get displayTrackKeyword {
-    return '$length ${length == 1 ? Language.inst.TRACK : Language.inst.TRACKS}';
   }
 
   int get year {

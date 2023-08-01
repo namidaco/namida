@@ -101,6 +101,34 @@ class TrackStats {
 
 abstract class Selectable {
   const Selectable();
+
+  @override
+  bool operator ==(other) {
+    if (other is Selectable) {
+      return track == other.track;
+    }
+    return false;
+  }
+
+  @override
+  int get hashCode => track.hashCode;
+}
+
+extension SelectableUtils on Selectable {
+  Track get track {
+    final tortwd = this;
+    return tortwd is TrackWithDate ? tortwd.track : tortwd as Track;
+  }
+
+  TrackWithDate? get trackWithDate {
+    final tortwd = this;
+    return tortwd is TrackWithDate ? tortwd : null;
+  }
+}
+
+extension SelectableListUtils on Iterable<Selectable> {
+  Iterable<Track> get tracks => whereType<Track>();
+  Iterable<TrackWithDate> get tracksWithDates => whereType<TrackWithDate>();
 }
 
 class Track extends Selectable {
@@ -246,8 +274,8 @@ extension TrackExtUtils on TrackExtended {
   bool get hasUnknownTitle => title == k_UNKNOWN_TRACK_TITLE;
   bool get hasUnknownAlbum => album == k_UNKNOWN_TRACK_ALBUM;
   bool get hasUnknownAlbumArtist => albumArtist == k_UNKNOWN_TRACK_ALBUMARTIST;
-  bool get hasUnknownArtist => artistsList.firstOrNull == k_UNKNOWN_TRACK_ARTIST;
-  bool get hasUnknownGenre => genresList.firstOrNull == k_UNKNOWN_TRACK_GENRE;
+  bool get hasUnknownArtist => artistsList.isEmpty || artistsList.firstOrNull == k_UNKNOWN_TRACK_ARTIST;
+  bool get hasUnknownGenre => genresList.isEmpty || genresList.firstOrNull == k_UNKNOWN_TRACK_GENRE;
   bool get hasUnknownComposer => composer == k_UNKNOWN_TRACK_COMPOSER;
 
   String get filename => path.getFilename;

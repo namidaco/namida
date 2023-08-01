@@ -168,7 +168,7 @@ class SearchPage extends StatelessWidget {
                                 position: i,
                                 child: TrackTile(
                                   index: i,
-                                  track: track,
+                                  trackOrTwd: track,
                                   queueSource: QueueSource.search,
                                 ),
                               );

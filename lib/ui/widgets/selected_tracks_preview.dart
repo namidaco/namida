@@ -97,9 +97,9 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                                 key: ValueKey(stc.selectedTracks[i]),
                                                 onDismissed: (direction) => stc.removeTrack(i),
                                                 child: TrackTile(
-                                                  key: Key('$i${stc.selectedTracks[i].path}'),
+                                                  key: Key('$i${stc.selectedTracks[i].track.path}'),
                                                   index: i,
-                                                  track: stc.selectedTracks[i],
+                                                  trackOrTwd: stc.selectedTracks[i],
                                                   displayRightDragHandler: true,
                                                   queueSource: QueueSource.selectedTracks,
                                                 ),
@@ -126,7 +126,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
 class SelectedTracksRow extends StatelessWidget {
   const SelectedTracksRow({super.key});
 
-  List<Track> get selectedTracks => SelectedTracksController.inst.selectedTracks;
+  List<Track> get selectedTracks => SelectedTracksController.inst.selectedTracks.tracks.toList();
 
   @override
   Widget build(BuildContext context) {
@@ -150,7 +150,7 @@ class SelectedTracksRow extends StatelessWidget {
                 ),
                 if (!SelectedTracksController.inst.isMenuMinimized.value)
                   Text(
-                    SelectedTracksController.inst.selectedTracks.totalDurationFormatted,
+                    selectedTracks.totalDurationFormatted,
                     style: context.theme.textTheme.displayMedium,
                   )
               ],
@@ -208,7 +208,7 @@ class SelectedTracksRow extends StatelessWidget {
                       final maxLet = 20 - tracks.length.clamp(0, 17);
                       return '${title.substring(0, (title.length > maxLet ? maxLet : title.length))}..';
                     }).join(', '),
-              tracksWithDates: SelectedTracksController.inst.selectedTracksWithDates,
+              tracksWithDates: SelectedTracksController.inst.selectedTracks.tracksWithDates.toList(),
               playlistName: selectedPl.length == 1 ? selectedPl.first : null,
             );
           },

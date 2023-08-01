@@ -29,7 +29,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
 
   final Player namidaPlayer;
 
-  RxList<Track> get currentQueue => namidaPlayer.currentQueue;
+  RxList<Selectable> get currentQueue => namidaPlayer.currentQueue;
   Rx<Track> get nowPlayingTrack => namidaPlayer.nowPlayingTrack;
   RxInt get nowPlayingPosition => namidaPlayer.nowPlayingPosition;
   RxInt get currentIndex => namidaPlayer.currentIndex;
@@ -160,17 +160,17 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
 
   //
   // Namida Methods.
-  Future<void> setAudioSource(int index, {bool preload = true, bool startPlaying = true, int? dateAdded}) async {
+  Future<void> setAudioSource(int index, {bool preload = true, bool startPlaying = true}) async {
     updateTrackLastPosition(nowPlayingTrack.value, nowPlayingPosition.value);
 
-    final tr = currentQueue.elementAt(index);
+    final track = currentQueue.elementAt(index);
+    final tr = track.track;
+
     nowPlayingTrack.value = tr;
     currentIndex.value = index;
     updateCurrentMediaItem(tr);
-
-    CurrentColor.inst.updatePlayerColorFromTrack(tr, index, dateAdded: dateAdded);
-    VideoController.inst.updateLocalVidPath(tr);
-    updateVideoPlayingState();
+    CurrentColor.inst.updatePlayerColorFromTrack(track, index);
+    VideoController.inst.updateCurrentVideo(tr);
 
     /// The whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture] don't get detected.
     try {
@@ -324,7 +324,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
 
     currentIndex.value = i;
     CurrentColor.inst.currentPlayingIndex.value = i;
-    final item = currentQueue.elementAt(oldIndex);
+    final item = currentQueue.elementAt(oldIndex).track;
     currentQueue.removeAt(oldIndex);
     insertInQueue([item], newIndex);
   }
@@ -333,7 +333,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
     if (isLastTrack) {
       return;
     }
-    final List<Track> newTracks = [];
+    final List<Selectable> newTracks = [];
     final first = currentIndex.value + 1;
     final last = currentQueue.length;
     newTracks
@@ -351,16 +351,16 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
 
   void removeDuplicatesFromQueue() {
     final ct = nowPlayingTrack.value;
-    currentQueue.removeDuplicates((element) => element.path);
+    currentQueue.removeDuplicates((element) => element.track);
     final newIndex = currentQueue.indexOf(ct);
     currentIndex.value = newIndex;
     CurrentColor.inst.updatePlayerColorFromTrack(ct, newIndex);
   }
 
-  void addToQueue(List<Track> tracks, {bool insertNext = false, bool insertAfterLatest = false}) {
+  void addToQueue(List<Selectable> tracks, {bool insertNext = false, bool insertAfterLatest = false}) {
     if (currentQueue.isEmpty) {
       currentQueue.addAll(tracks);
-      nowPlayingTrack.value = tracks.first;
+      nowPlayingTrack.value = tracks.first.track;
     } else {
       if (insertNext) {
         insertInQueue(tracks, currentIndex.value + 1);
@@ -377,7 +377,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
     afterQueueChange();
   }
 
-  void insertInQueue(List<Track> tracks, int index) {
+  void insertInQueue(List<Selectable> tracks, int index) {
     currentQueue.insertAllSafe(index, tracks);
     afterQueueChange();
   }
@@ -416,7 +416,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
   Future<void> afterQueueChange() async {
     tryResettingLatestInsertedIndex();
     updateCurrentMediaItem();
-    await QueueController.inst.updateLatestQueue(currentQueue);
+    await QueueController.inst.updateLatestQueue(currentQueue.tracks.toList());
   }
 
   void tryResettingLatestInsertedIndex() {
@@ -561,45 +561,35 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
   }
 }
 
-extension MediaItemToAudioSource on MediaItem {
-  AudioSource get toAudioSource => AudioSource.uri(Uri.parse(id));
+extension _MediaItemToAudioSource on MediaItem {
+  AudioSource toAudioSource() => AudioSource.uri(Uri.parse(id));
 }
 
-extension MediaItemsListToAudioSources on Iterable<MediaItem> {
-  Iterable<AudioSource> get toAudioSources => map((e) => e.toAudioSource);
+extension _MediaItemsListToAudioSources on Iterable<MediaItem> {
+  Iterable<AudioSource> toAudioSources() => map((e) => e.toAudioSource());
 }
 
-extension TrackToAudioSourceMediaItem on Track {
+extension TrackToAudioSourceMediaItem on Selectable {
   UriAudioSource toAudioSource() {
     return AudioSource.uri(
-      Uri.parse(path),
+      Uri.parse(track.path),
       tag: toMediaItem,
     );
   }
 
   MediaItem toMediaItem() {
-    final track = toTrackExt();
+    final tr = track.toTrackExt();
     return MediaItem(
-      id: path,
-      title: track.title,
-      displayTitle: track.title,
-      displaySubtitle: track.hasUnknownAlbum ? track.originalArtist : "${track.originalArtist} - ${track.album}",
+      id: tr.path,
+      title: tr.title,
+      displayTitle: tr.title,
+      displaySubtitle: tr.hasUnknownAlbum ? tr.originalArtist : "${tr.originalArtist} - ${tr.album}",
       displayDescription: "${Player.inst.currentIndex.value + 1}/${Player.inst.currentQueue.length}",
-      artist: track.originalArtist,
-      album: track.hasUnknownAlbum ? '' : track.album,
-      genre: track.genresList.take(3).join(', '),
-      duration: Duration(seconds: track.duration),
-      artUri: Uri.file(File(pathToImage).existsSync() ? pathToImage : k_FILE_PATH_NAMIDA_LOGO),
+      artist: tr.originalArtist,
+      album: tr.hasUnknownAlbum ? '' : tr.album,
+      genre: tr.genresList.take(3).join(', '),
+      duration: Duration(seconds: tr.duration),
+      artUri: Uri.file(File(tr.pathToImage).existsSync() ? tr.pathToImage : k_FILE_PATH_NAMIDA_LOGO),
     );
   }
-}
-
-extension TracksListToAudioSourcesMediaItems on List<Track> {
-  Iterable<AudioSource> toAudioSources() => map((e) => e.toAudioSource());
-  Iterable<MediaItem> toMediaItems() => map((e) => e.toMediaItem());
-  ConcatenatingAudioSource get toConcatenatingAudioSource => ConcatenatingAudioSource(
-        useLazyPreparation: true,
-        shuffleOrder: DefaultShuffleOrder(),
-        children: map((e) => e.toAudioSource()).toList(),
-      );
 }

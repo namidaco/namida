@@ -49,7 +49,7 @@ class HistoryController {
 
     final sec = SettingsController.inst.isTrackPlayedSecondsCount.value;
     final perSett = SettingsController.inst.isTrackPlayedPercentageCount.value;
-    final trDurInSec = Player.inst.nowPlayingTrack.value.duration;
+    final trDurInSec = Player.inst.nowPlayingTrack.value.track.duration;
 
     _historyTimer?.cancel();
     _historyTimer = null;

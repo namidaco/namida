@@ -472,9 +472,9 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
     return s;
   }
 
-  List<Track> toTracks([int? limit, int? dayOfHistory]) {
-    final trs = <Track>[];
-    void addThese(Iterable<Track> tracks) => trs.addAll(tracks.withLimit(limit));
+  List<Selectable> toTracks([int? limit, int? dayOfHistory]) {
+    final trs = <Selectable>[];
+    void addThese(Iterable<Selectable> tracks) => trs.addAll(tracks.withLimit(limit));
     if (this == QueueSource.allTracks) {
       addThese(SearchSortController.inst.trackSearchList);
     }
@@ -502,11 +502,13 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
     }
     if (this == QueueSource.history) {
       dayOfHistory != null
-          ? addThese(HistoryController.inst.historyMap.value[dayOfHistory]?.toTracks() ?? [])
-          : addThese(HistoryController.inst.historyTracks.withLimit(limit).map((e) => e.track));
+          ? addThese(HistoryController.inst.historyMap.value[dayOfHistory] ?? [])
+          : addThese(
+              HistoryController.inst.historyTracks.withLimit(limit),
+            );
     }
     if (this == QueueSource.favourites) {
-      addThese(PlaylistController.inst.favouritesPlaylist.value.tracks.toTracks());
+      addThese(PlaylistController.inst.favouritesPlaylist.value.tracks);
     }
     if (this == QueueSource.playerQueue) {
       addThese(Player.inst.currentQueue);
@@ -834,8 +836,8 @@ extension RouteUtils on NamidaRoute {
     return null;
   }
 
-  List<Track> get tracksInside {
-    final tr = <Track>[];
+  List<Selectable> get tracksInside {
+    final tr = <Selectable>[];
     switch (route) {
       case RouteType.PAGE_allTracks:
         tr.addAll(SearchSortController.inst.trackSearchList);
@@ -850,9 +852,9 @@ extension RouteUtils on NamidaRoute {
       case RouteType.SUBPAGE_queueTracks:
         tr.addAll(name.getQueue()?.tracks ?? []);
       case RouteType.SUBPAGE_playlistTracks:
-        tr.addAll(PlaylistController.inst.getPlaylist(name)?.tracks.map((e) => e.track) ?? []);
+        tr.addAll(PlaylistController.inst.getPlaylist(name)?.tracks ?? []);
       case RouteType.SUBPAGE_historyTracks:
-        tr.addAll(HistoryController.inst.historyTracks.map((e) => e.track));
+        tr.addAll(HistoryController.inst.historyTracks);
       case RouteType.SUBPAGE_mostPlayedTracks:
         tr.addAll(HistoryController.inst.mostPlayedTracks);
 

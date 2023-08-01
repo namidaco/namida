@@ -116,7 +116,7 @@ class FoldersPage extends StatelessWidget {
                                         itemBuilder: (context, i) {
                                           return TrackTile(
                                             index: i,
-                                            track: Folders.inst.currentTracks[i],
+                                            trackOrTwd: Folders.inst.currentTracks[i],
                                             queueSource: QueueSource.folder,
                                             bgColor: i == Folders.inst.indexToScrollTo.value ? highlighedColor : null,
                                           );
@@ -173,7 +173,7 @@ class FoldersPage extends StatelessWidget {
                                         final tr = Folders.inst.currentTracks[i];
                                         return TrackTile(
                                           index: i,
-                                          track: tr,
+                                          trackOrTwd: tr,
                                           queueSource: QueueSource.folder,
                                           bgColor: i == Folders.inst.indexToScrollTo.value ? highlighedColor : null,
                                         );

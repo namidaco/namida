@@ -13,33 +13,19 @@ class SelectedTracksController {
   static final SelectedTracksController _instance = SelectedTracksController._internal();
   SelectedTracksController._internal();
 
-  List<Track> get selectedTracks {
-    return _tracksOrTwdList.mapped((t) {
-      if (t is TrackWithDate) {
-        return t.track;
-      }
-      return t as Track;
-    });
-  }
+  List<Selectable> get selectedTracks => _tracksOrTwdList;
 
-  List<TrackWithDate> get selectedTracksWithDates {
-    return _tracksOrTwdList.whereType<TrackWithDate>().toList();
-  }
+  final selectedPlaylistsNames = <Track, String>{};
 
-  final Map<Track, String> selectedPlaylistsNames = <Track, String>{};
+  final _tracksOrTwdList = <Selectable>[].obs;
+  final _allTracksHashCodes = <Track, bool>{}.obs;
 
-  final RxList<Selectable> _tracksOrTwdList = <Selectable>[].obs;
-
-  List<Track> get currentAllTracks {
+  List<Selectable> get currentAllTracks {
     if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
       return SearchSortController.inst.trackSearchTemp;
     }
 
     return NamidaNavigator.inst.currentRoute?.tracksInside ?? [];
-  }
-
-  List<TrackWithDate>? get currentAllTracksWithDate {
-    return NamidaNavigator.inst.currentRoute?.tracksWithDateInside;
   }
 
   final RxBool isMenuMinimized = true.obs;
@@ -49,25 +35,21 @@ class SelectedTracksController {
 
   final RxDouble bottomPadding = 0.0.obs;
 
-  bool isTrackSelected(Track tr, TrackWithDate? twd) => _tracksOrTwdList.contains(twd) || _tracksOrTwdList.contains(tr);
+  // bool isTrackSelected(Selectable twd) => _tracksOrTwdList.contains(twd);
+  bool isTrackSelected(Selectable twd) => _allTracksHashCodes[twd.track] != null;
 
-  void selectOrUnselect(Track track, QueueSource queueSource, TrackWithDate? twd, String? playlistName) {
+  void selectOrUnselect(Selectable track, QueueSource queueSource, String? playlistName) {
     playlistName ??= '';
-    final trToAdd = twd ?? track;
-    final gonnaRemoveTrack = isTrackSelected(track, twd);
-    if (gonnaRemoveTrack) {
-      _tracksOrTwdList.remove(trToAdd);
-    } else {
-      _tracksOrTwdList.add(trToAdd);
-    }
-    // -- updating playlists
-
-    if (gonnaRemoveTrack) {
+    final rawTrack = track.track;
+    final didRemove = _allTracksHashCodes.remove(rawTrack) ?? false;
+    if (didRemove) {
+      _tracksOrTwdList.remove(track);
       selectedPlaylistsNames.remove(track);
     } else {
-      selectedPlaylistsNames[track] = playlistName;
+      _tracksOrTwdList.add(track);
+      _allTracksHashCodes[rawTrack] = true;
+      selectedPlaylistsNames[track.track] = playlistName;
     }
-    // -------------
 
     bottomPadding.value = _tracksOrTwdList.isEmpty ? 0.0 : 102.0;
   }
@@ -82,11 +64,13 @@ class SelectedTracksController {
   }
 
   void removeTrack(int index) {
-    _tracksOrTwdList.removeAt(index);
+    final removed = _tracksOrTwdList.removeAt(index);
+    _allTracksHashCodes.remove(removed.track);
   }
 
   void clearEverything() {
     _tracksOrTwdList.clear();
+    _allTracksHashCodes.clear();
     selectedPlaylistsNames.clear();
     isMenuMinimized.value = true;
     didInsertTracks.value = false;
@@ -94,20 +78,17 @@ class SelectedTracksController {
   }
 
   void selectAllTracks() {
-    _tracksOrTwdList.addAll(currentAllTracksWithDate ?? currentAllTracks);
-    _tracksOrTwdList.removeDuplicates((element) {
-      if (element is TrackWithDate) {
-        return element.track.path;
-      }
-      return (element as Track).path;
-    });
+    final tracks = currentAllTracks;
+    _tracksOrTwdList.addAll(tracks);
+    _tracksOrTwdList.removeDuplicates((element) => element.track);
+    tracks.loop((e, index) => _allTracksHashCodes[e.track] = true);
 
     // -- Adding playlist name if the current route is referring to a playlist
     final cr = NamidaNavigator.inst.currentRoute;
     if (cr?.route != null) {
       if (cr!.route == RouteType.SUBPAGE_playlistTracks || cr.route == RouteType.SUBPAGE_historyTracks) {
         cr.tracksInside.loop((e, index) {
-          selectedPlaylistsNames[e] = cr.name;
+          selectedPlaylistsNames[e.track] = cr.name;
         });
       }
     }
@@ -116,5 +97,7 @@ class SelectedTracksController {
 
   void replaceThisTrack(Track oldTrack, Track newTrack) {
     _tracksOrTwdList.replaceItem(oldTrack, newTrack);
+    _allTracksHashCodes.remove(oldTrack);
+    _allTracksHashCodes[newTrack] = true;
   }
 }

@@ -179,6 +179,7 @@ class VideoController {
   }
 
   Future<NamidaVideo?> fetchVideoFromYoutube(String id) async {
+    if (id == '') return null;
     int downloaded = 0;
     _downloadTimerCancel();
     _downloadTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -603,6 +604,7 @@ class _NamidaVideoPlayer {
 
     if (disable) {
       await dispose();
+      _videoController = null;
     } else if (_videoController != null) {
       await _videoController!.initialize();
       _videoController!.setLooping(looping(_videoController!.value.duration));

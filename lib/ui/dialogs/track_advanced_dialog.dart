@@ -13,20 +13,27 @@ import 'package:namida/ui/dialogs/track_clear_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 void showTrackAdvancedDialog({
-  required List<Track> tracksPre,
-  List<TrackWithDate> tracksWithDates = const <TrackWithDate>[],
+  required List<Selectable> tracks,
   required Color colorScheme,
-}) {
-  final isSingle = tracksPre.length == 1;
-  final tracks = tracksWithDates.isNotEmpty ? tracksWithDates.toTracks() : tracksPre;
+}) async {
+  final isSingle = tracks.length == 1;
   final canShowClearDialog = tracks.hasAnythingCached;
 
   final Map<TrackSource, int> sourcesMap = {};
-  tracksWithDates.loop((e, index) {
-    sourcesMap.update(e.source, (value) => value + 1, ifAbsent: () => 1);
+  tracks.loop((e, index) {
+    final twd = e.trackWithDate;
+    if (twd != null) {
+      sourcesMap.update(twd.source, (value) => value + 1, ifAbsent: () => 1);
+    }
   });
-
   final RxBool willUpdateArtwork = false.obs;
+
+  final trackColor = await CurrentColor.inst.getTrackColors(tracks.first.track);
+
+  final reIndexedTracksSuccessful = 0.obs;
+  final reIndexedTracksFailed = 0.obs;
+
+  final tracksUniqued = tracks.uniqued((element) => element.track);
 
   NamidaNavigator.inst.navigateDialog(
     colorScheme: colorScheme,

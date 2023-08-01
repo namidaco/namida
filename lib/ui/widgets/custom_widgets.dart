@@ -1399,7 +1399,7 @@ class SubpagesTopContainer extends StatelessWidget {
   final double topPadding;
   final double bottomPadding;
   final Widget imageWidget;
-  final List<Track> tracks;
+  final List<Selectable> tracks;
   final QueueSource source;
   final String heroTag;
   const SubpagesTopContainer({
@@ -2022,7 +2022,7 @@ class NamidaListView extends StatelessWidget {
 }
 
 class NamidaTracksList extends StatelessWidget {
-  final List<Track>? queue;
+  final List<Selectable>? queue;
   final int queueLength;
   final Widget Function(BuildContext context, int i)? itemBuilder;
   final Widget? header;
@@ -2074,7 +2074,7 @@ class NamidaTracksList extends StatelessWidget {
                 shouldAnimate: shouldAnimate,
                 child: TrackTile(
                   index: i,
-                  track: track,
+                  trackOrTwd: track,
                   draggableThumbnail: false,
                   selectable: isTrackSelectable,
                   queueSource: queueSource,

@@ -464,7 +464,7 @@ class SearchSortController {
         sortThis((p) => p.value.modifiedDate);
         break;
       case GroupSortType.duration:
-        sortThis((p) => p.value.tracks.toTracks().totalDurationInS);
+        sortThis((p) => p.value.tracks.totalDurationInS);
         break;
       case GroupSortType.numberOfTracks:
         sortThis((p) => p.value.tracks.length);

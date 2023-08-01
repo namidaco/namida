@@ -263,10 +263,10 @@ double checkIfListsSimilar<E>(List<E> q1, List<E> q2, {bool fullyFunctional = fa
   }
 }
 
-bool checkIfQueueSameAsCurrent(List<Track> queue) {
+bool checkIfQueueSameAsCurrent(List<Selectable> queue) {
   return checkIfListsSimilar(queue, Player.inst.currentQueue) == 1.0;
 }
 
-bool checkIfQueueSameAsAllTracks(List<Track> queue) {
+bool checkIfQueueSameAsAllTracks(List<Selectable> queue) {
   return checkIfListsSimilar(queue, allTracksInLibrary) == 1.0;
 }

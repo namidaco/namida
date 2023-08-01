@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -27,23 +28,23 @@ class EditDeleteController {
     await Player.inst.updateVideoPlayingState();
   }
 
-  Future<void> deleteWaveFormData(List<Track> tracks) async {
+  Future<void> deleteWaveFormData(List<Selectable> tracks) async {
     await tracks.loopFuture((track, index) async {
-      final file = File("$k_DIR_WAVEFORMS${track.filename}.wave");
+      final file = File("$k_DIR_WAVEFORMS${track.track.filename}.wave");
       await Indexer.inst.updateWaveformSizeInStorage(file, true);
       await file.delete();
     });
   }
 
-  Future<void> deleteLyrics(List<Track> tracks) async {
+  Future<void> deleteLyrics(List<Selectable> tracks) async {
     await tracks.loopFuture((track, index) async {
-      await File("$k_DIR_LYRICS${track.filename}.txt").delete();
+      await File("$k_DIR_LYRICS${track.track.filename}.txt").delete();
     });
   }
 
-  Future<void> deleteArtwork(List<Track> tracks) async {
+  Future<void> deleteArtwork(List<Selectable> tracks) async {
     await tracks.loopFuture((track, index) async {
-      final file = File("$k_DIR_ARTWORKS${track.filename}.png");
+      final file = File(track.track.pathToImage);
       await Indexer.inst.updateImageSizeInStorage(file, true);
       await file.delete();
     });
@@ -51,9 +52,9 @@ class EditDeleteController {
     await deleteExtractedColor(tracks);
   }
 
-  Future<void> deleteExtractedColor(List<Track> tracks) async {
+  Future<void> deleteExtractedColor(List<Selectable> tracks) async {
     await tracks.loopFuture((track, index) async {
-      await File("$k_DIR_PALETTES${track.filename}.palette").delete();
+      await File("$k_DIR_PALETTES${track.track.filename}.palette").delete();
     });
   }
 
@@ -100,11 +101,11 @@ class EditDeleteController {
   }
 }
 
-extension HasCachedFiles on List<Track> {
-  bool get hasWaveformCached => doesAnyPathExist(this, k_DIR_WAVEFORMS, 'wave');
-  bool get hasArtworkCached => doesAnyPathExist(this, k_DIR_ARTWORKS, 'png');
-  bool get hasLyricsCached => doesAnyPathExist(this, k_DIR_LYRICS, 'txt');
-  bool get hasColorCached => doesAnyPathExist(this, k_DIR_PALETTES, 'palette');
+extension HasCachedFiles on List<Selectable> {
+  bool get hasWaveformCached => _doesAnyPathExist(k_DIR_WAVEFORMS, 'wave');
+  bool get hasArtworkCached => _doesAnyPathExist(k_DIR_ARTWORKS, 'png');
+  bool get hasLyricsCached => _doesAnyPathExist(k_DIR_LYRICS, 'txt');
+  bool get hasColorCached => _doesAnyPathExist(k_DIR_PALETTES, 'palette');
   bool get hasVideoCached {
     for (int i = 0; i < length; i++) {
       final tr = this[i];
@@ -116,13 +117,14 @@ extension HasCachedFiles on List<Track> {
   }
 
   bool get hasAnythingCached => hasWaveformCached || hasArtworkCached || hasLyricsCached /* || hasColorCached */;
-}
 
-bool doesAnyPathExist(List<Track> tracks, String directory, String extension) {
-  for (final track in tracks) {
-    if (File("$directory${track.filename}.$extension").existsSync()) {
-      return true;
+  bool _doesAnyPathExist(String directory, String extension) {
+    for (int i = 0; i < length; i++) {
+      final track = this[i];
+      if (File("$directory${track.track.filename}.$extension").existsSync()) {
+        return true;
+      }
     }
+    return false;
   }
-  return false;
 }

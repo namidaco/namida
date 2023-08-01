@@ -33,21 +33,24 @@ class HistoryTracksPage extends StatelessWidget {
         controller: sc,
         slivers: [
           Obx(
-            () => SliverToBoxAdapter(
-              child: SubpagesTopContainer(
-                source: QueueSource.history,
-                title: k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
-                subtitle: HistoryController.inst.historyTracksLength.displayTrackKeyword,
-                heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
-                tracks: QueueSource.history.toTracks(),
-                imageWidget: MultiArtworkContainer(
+            () {
+              final historyTracks = QueueSource.history.toTracks();
+              return SliverToBoxAdapter(
+                child: SubpagesTopContainer(
+                  source: QueueSource.history,
+                  title: k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
+                  subtitle: HistoryController.inst.historyTracksLength.displayTrackKeyword,
                   heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
-                  size: Get.width * 0.35,
-                  paths: QueueSource.history.toTracks(4).toImagePaths(),
+                  tracks: historyTracks,
+                  imageWidget: MultiArtworkContainer(
+                    heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
+                    size: Get.width * 0.35,
+                    paths: historyTracks.toImagePaths(),
+                  ),
+                  bottomPadding: 8.0,
                 ),
-                bottomPadding: 8.0,
-              ),
-            ),
+              );
+            },
           ),
           Obx(
             () {
@@ -131,12 +134,10 @@ class HistoryTracksPage extends StatelessWidget {
                             itemExtent: Dimensions.inst.trackTileItemExtent,
                             itemCount: tracks.length,
                             itemBuilder: (context, i) {
-                              // final reverseIndex = (tracks.length - 1) - i;
                               final tr = tracks[i];
 
                               return TrackTile(
-                                track: tr.track,
-                                trackWithDate: tr,
+                                trackOrTwd: tr,
                                 index: i,
                                 queueSource: QueueSource.history,
                                 bgColor: day == HistoryController.inst.dayOfHighLight.value && i == HistoryController.inst.indexToHighlight.value
@@ -199,10 +200,10 @@ class MostPlayedTracksPage extends StatelessWidget {
                 child: TrackTile(
                   draggableThumbnail: false,
                   index: i,
-                  track: tracks[i],
+                  trackOrTwd: tracks[i],
                   queueSource: QueueSource.mostPlayed,
                   playlistName: k_PLAYLIST_NAME_MOST_PLAYED,
-                  onRightAreaTap: () => showTrackListensDialog(track, datesOfListen: listens),
+                  onRightAreaTap: () => showTrackListensDialog(track.track, datesOfListen: listens),
                   trailingWidget: Container(
                     padding: const EdgeInsets.all(6.0),
                     decoration: BoxDecoration(
@@ -210,7 +211,7 @@ class MostPlayedTracksPage extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: Text(
-                      listens.length.toString(),
+                      listens.length.formatDecimal(),
                       style: context.textTheme.displaySmall,
                     ),
                   ),
@@ -273,8 +274,7 @@ class NormalPlaylistTracksPage extends StatelessWidget {
                       children: [
                         TrackTile(
                           index: i,
-                          track: trackWithDate.track,
-                          trackWithDate: trackWithDate,
+                          trackOrTwd: trackWithDate,
                           playlistName: playlist.name,
                           queueSource: playlist.toQueueSource(),
                           draggableThumbnail: reorderable,

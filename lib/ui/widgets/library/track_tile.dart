@@ -21,8 +21,7 @@ import 'package:namida/ui/dialogs/track_info_dialog.dart';
 
 class TrackTile extends StatelessWidget {
   final int index;
-  final Track track;
-  final TrackWithDate? trackWithDate;
+  final Selectable trackOrTwd;
   final bool displayRightDragHandler;
   final bool draggableThumbnail;
   final Color? bgColor;
@@ -39,8 +38,7 @@ class TrackTile extends StatelessWidget {
 
   const TrackTile({
     super.key,
-    required this.track,
-    this.trackWithDate,
+    required this.trackOrTwd,
     this.displayRightDragHandler = false,
     this.draggableThumbnail = true,
     this.bgColor,
@@ -55,23 +53,28 @@ class TrackTile extends StatelessWidget {
     this.onRightAreaTap,
   });
 
-  bool get isFromQueue => queueSource == QueueSource.playerQueue;
+  bool get _isFromQueue => queueSource == QueueSource.playerQueue;
+
+  Track get _tr => trackOrTwd.track;
+  TrackWithDate? get _twd => trackOrTwd.trackWithDate;
 
   void _triggerTrackDialog() => NamidaDialogs.inst.showTrackDialog(
-        track,
+        _tr,
         playlistName: playlistName,
         index: index,
-        comingFromQueue: isFromQueue,
-        trackWithDate: trackWithDate,
+        comingFromQueue: _isFromQueue,
+        trackWithDate: trackOrTwd.trackWithDate,
       );
 
-  void _triggerTrackInfoDialog() => showTrackInfoDialog(track, true, comingFromQueue: isFromQueue, index: index);
+  void _triggerTrackInfoDialog() => showTrackInfoDialog(_tr, true, comingFromQueue: _isFromQueue, index: index);
 
-  void _selectTrack() => SelectedTracksController.inst.selectOrUnselect(track, queueSource, trackWithDate, playlistName);
+  void _selectTrack() => SelectedTracksController.inst.selectOrUnselect(trackOrTwd, queueSource, playlistName);
 
   @override
   Widget build(BuildContext context) {
-    final comingFromQueue = isFromQueue;
+    final track = _tr;
+    final trackWithDate = _twd;
+    final comingFromQueue = _isFromQueue;
     final canHaveDuplicates = comingFromQueue ||
         queueSource == QueueSource.playlist ||
         queueSource == QueueSource.queuePage ||
@@ -89,12 +92,11 @@ class TrackTile extends StatelessWidget {
             final TrackItem tritem = SettingsController.inst.trackItem.value;
             final double thumbnailSize = SettingsController.inst.trackThumbnailSizeinList.value;
             final double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
-            final bool isTrackSelected = SelectedTracksController.inst.isTrackSelected(track, trackWithDate);
-            final bool isTrackSamePath = CurrentColor.inst.currentPlayingTrackPath.value == track.path;
-            final bool isRightHistoryList =
-                trackWithDate != null && queueSource == QueueSource.history ? trackWithDate!.dateAdded == CurrentColor.inst.currentPlayingTrackDateAdded.value : true;
+            final bool isTrackSelected = SelectedTracksController.inst.isTrackSelected(trackOrTwd);
+            final bool isTrackSame = track == CurrentColor.inst.currentPlayingTrack.value?.track;
+            final bool isRightHistoryList = queueSource == QueueSource.history ? trackWithDate == CurrentColor.inst.currentPlayingTrack.value?.trackWithDate : true;
             final bool isRightIndex = canHaveDuplicates ? index == CurrentColor.inst.currentPlayingIndex.value : true;
-            final bool isTrackCurrentlyPlaying = isRightHistoryList && isRightIndex && isTrackSamePath;
+            final bool isTrackCurrentlyPlaying = isRightIndex && isTrackSame && isRightHistoryList;
 
             final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
             return Padding(
@@ -123,7 +125,6 @@ class TrackTile extends StatelessWidget {
                             index,
                             queueSource.toTracks(null, trackWithDate?.dateAdded.toDaysSinceEpoch()),
                             queueSource,
-                            dateAdded: trackWithDate?.dateAdded,
                           );
                         }
                       }
@@ -155,7 +156,7 @@ class TrackTile extends StatelessWidget {
                                 child: NamidaHero(
                                   tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
                                   child: ArtworkWidget(
-                                    key: UniqueKey(),
+                                    key: Key(trackOrTwd.hashCode.toString()),
                                     track: track,
                                     thumbnailSize: thumbnailSize,
                                     path: track.pathToImage,

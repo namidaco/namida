@@ -37,11 +37,8 @@ class CurrentColor {
   RxList<Color> paletteSecondHalf = <Color>[].obs;
 
   /// Same fields exists in [Player] class, they can be used but these ones ensure updating the color only after extracting.
-  final RxString currentPlayingTrackPath = ''.obs;
-  final RxInt currentPlayingIndex = 0.obs;
-
-  /// Used for history playlist where same track can exist in more than one list.
-  final Rxn<int> currentPlayingTrackDateAdded = Rxn<int>();
+  final currentPlayingTrack = Rxn<Selectable>();
+  final currentPlayingIndex = 0.obs;
 
   final RxBool generatingAllColorPalettes = false.obs;
 
@@ -85,13 +82,13 @@ class CurrentColor {
     _colorSchemeOfSubPages.value = colorWithAlpha;
   }
 
-  Future<void> updatePlayerColorFromTrack(Track track, int index, {int? dateAdded}) async {
+  Future<void> updatePlayerColorFromTrack(Selectable track, int index) async {
     if (SettingsController.inst.autoColor.value) {
-      await setPlayerColor(track);
+      await setPlayerColor(track.track);
     }
-    currentPlayingTrackPath.value = track.path;
+    currentPlayingTrack.value = null; // nullifying to re-assign safely if subtype has changed
+    currentPlayingTrack.value = track;
     currentPlayingIndex.value = index;
-    currentPlayingTrackDateAdded.value = dateAdded;
   }
 
   Future<void> setPlayerColor(Track track) async {
