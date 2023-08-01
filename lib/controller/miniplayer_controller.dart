@@ -27,7 +27,7 @@ class MiniPlayerController {
   final RxDouble miniplayerQueueHP = 0.0.obs;
 
   /// Used to temporarily hold the seek value.
-  final RxDouble seekValue = 0.0.obs;
+  final RxInt seekValue = 0.obs;
 
   /// Indicates that play/pause button is currently pressed.
   final RxBool isPlayPauseButtonHighlighted = false.obs;

@@ -411,11 +411,36 @@ class NamidaMiniPlayer extends StatelessWidget {
                                               onLongPress: () => Player.inst.seek(Duration.zero),
                                               child: Padding(
                                                 padding: const EdgeInsets.all(8.0),
-                                                child: Obx(
-                                                  () => Text(
-                                                    Player.inst.nowPlayingPosition.value.milliSecondsLabel,
-                                                    style: context.textTheme.displaySmall,
-                                                  ),
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Obx(
+                                                      () {
+                                                        final diffInMs = MiniPlayerController.inst.seekValue.value - Player.inst.nowPlayingPosition.value;
+                                                        final plusOrMinus = diffInMs < 0 ? '-' : '+';
+                                                        final seekText = diffInMs.abs().milliSecondsLabel;
+                                                        return AnimatedCrossFade(
+                                                          firstChild: Text(
+                                                            "$plusOrMinus$seekText",
+                                                            style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0.multipliedFontScale),
+                                                          ),
+                                                          secondChild: const SizedBox(),
+                                                          crossFadeState: MiniPlayerController.inst.seekValue.value != 0 ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+                                                          duration: const Duration(milliseconds: 700),
+                                                          reverseDuration: const Duration(milliseconds: 700),
+                                                          sizeCurve: Curves.easeInOutQuart,
+                                                          firstCurve: Curves.easeInOutQuart,
+                                                          secondCurve: Curves.easeInOutQuart,
+                                                        );
+                                                      },
+                                                    ),
+                                                    Obx(
+                                                      () => Text(
+                                                        Player.inst.nowPlayingPosition.value.milliSecondsLabel,
+                                                        style: context.textTheme.displaySmall,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             ),
