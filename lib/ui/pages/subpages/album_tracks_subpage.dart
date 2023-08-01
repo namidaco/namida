@@ -48,7 +48,6 @@ class AlbumTracksPage extends StatelessWidget {
                     child: NamidaHero(
                       tag: 'album_$name',
                       child: ArtworkWidget(
-                        track: tracks.trackOfImage,
                         thumbnailSize: Get.width * 0.35,
                         forceSquared: false,
                         path: tracks.pathToImage,

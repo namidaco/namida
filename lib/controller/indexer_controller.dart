@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
 
 import 'package:faudiotagger/models/faudiomodel.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:faudiotagger/faudiotagger.dart';
@@ -9,6 +11,8 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
+import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -214,6 +218,7 @@ class Indexer {
     void Function()? onMinSizeTrigger,
     bool deleteOldArtwork = false,
     bool checkForDuplicates = true,
+    bool tryExtractingFromFilename = true,
   }) async {
     // -- returns null early depending on size [byte] or duration [seconds]
     final fileStat = await File(trackPath).stat();
@@ -222,6 +227,17 @@ class Indexer {
       return null;
     }
 
+    late TrackExtended finalTrackExtended;
+
+    FAudioModel? trackInfo;
+    try {
+      trackInfo = await faudiotagger.readAllData(path: trackPath);
+    } catch (e) {
+      printy(e, isError: true);
+    }
+    if (trackInfo == null && !tryExtractingFromFilename) {
+      return null;
+    }
     final initialTrack = TrackExtended(
       title: k_UNKNOWN_TRACK_TITLE,
       originalArtist: k_UNKNOWN_TRACK_ARTIST,
@@ -247,15 +263,6 @@ class Indexer {
       language: '',
       lyrics: '',
     );
-
-    late TrackExtended finalTrackExtended;
-
-    FAudioModel? trackInfo;
-    try {
-      trackInfo = await faudiotagger.readAllData(path: trackPath);
-    } catch (e) {
-      printy(e, isError: true);
-    }
     if (trackInfo != null) {
       final duration = trackInfo.length ?? 0;
       if (minDur != 0 && duration < minDur) {
@@ -269,15 +276,17 @@ class Indexer {
       // -- Split Genres
       final genres = splitGenre(trackInfo.genre);
 
+      String? trimOrNull(String? value) => value == null ? value : value.trimAll();
+
       finalTrackExtended = initialTrack.copyWith(
-        title: trackInfo.title?.trim(),
-        originalArtist: trackInfo.artist?.trim(),
+        title: trimOrNull(trackInfo.title),
+        originalArtist: trimOrNull(trackInfo.artist),
         artistsList: artists,
-        album: trackInfo.album?.trim(),
-        albumArtist: trackInfo.albumArtist?.trim(),
-        originalGenre: trackInfo.genre?.trim(),
+        album: trimOrNull(trackInfo.album),
+        albumArtist: trimOrNull(trackInfo.albumArtist),
+        originalGenre: trimOrNull(trackInfo.genre),
         genresList: genres,
-        composer: trackInfo.composer?.trim(),
+        composer: trimOrNull(trackInfo.composer),
         trackNo: trackInfo.trackNumber.getIntValue(),
         duration: duration,
         year: trackInfo.year.getIntValue(),
@@ -379,19 +388,25 @@ class Indexer {
     return null;
   }
 
-  Future<void> reindexTracks(List<Track> tracks, {bool updateArtwork = false}) async {
+  Future<void> reindexTracks({
+    required List<Track> tracks,
+    bool updateArtwork = false,
+    required void Function(bool didExtract) onProgress,
+    bool tryExtractingFromFilename = true,
+  }) async {
     _removeTheseTracksToAlbumGenreArtistEtc(tracks);
 
     final paths = tracks.mappedUniqued((e) => e.path);
 
     if (updateArtwork) {
-      await tracks.loopFuture((track, index) async {
-        await File(track.pathToImage).tryDeleting();
-      });
+      imageCache.clear();
+      imageCache.clearLiveImages();
+      await EditDeleteController.inst.deleteArtwork(tracks);
     }
 
     await paths.loopFuture((path, index) async {
-      await extractOneTrack(trackPath: path);
+      final tr = await extractOneTrack(trackPath: path, tryExtractingFromFilename: tryExtractingFromFilename);
+      onProgress(tr != null);
     });
 
     final newtracks = paths.map((e) => e.toTrackOrNull());
@@ -401,14 +416,15 @@ class Indexer {
 
   Future<void> updateTrackMetadata({
     required Map<Track, TrackExtended> tracksMap,
-    bool updateArtwork = false,
-    String? artworkPath,
+    String newArtworkPath = '',
   }) async {
-    final trackEntries = tracksMap.entries.toList();
     final oldTracks = <Track>[];
     final newTracks = <Track>[];
 
-    trackEntries.loopFuture((e, _) async {
+    imageCache.clear();
+    imageCache.clearLiveImages();
+
+    for (final e in tracksMap.entries) {
       final ot = e.key;
       final nt = e.value.toTrack();
       oldTracks.add(ot);
@@ -417,14 +433,14 @@ class Indexer {
       currentFileNamesMap.remove(ot.filename);
       currentFileNamesMap[nt.filename] = true;
 
-      if (updateArtwork) {
+      if (newArtworkPath != '') {
         await extractOneArtwork(
           ot.path,
           forceReExtract: true,
-          artworkPath: artworkPath,
+          artworkPath: newArtworkPath,
         );
       }
-    });
+    }
 
     _removeTheseTracksToAlbumGenreArtistEtc(oldTracks);
     _addTheseTracksToAlbumGenreArtistEtc(newTracks);
@@ -476,11 +492,11 @@ class Indexer {
   }) async {
     if (forceReIndex) {
       _clearListsAndResetCounters();
-      audioFiles = await getAudioFiles();
+      audioFiles = await getAudioFiles(forceReCheckDirs: true);
     }
 
-    printy("New Audio Files: ${audioFiles.length}");
-    printy("Deleted Audio Files: ${deletedPaths.length}");
+    printy("Audio Files New: ${audioFiles.length}");
+    printy("Audio Files Deleted: ${deletedPaths.length}");
 
     if (deletedPaths.isNotEmpty) {
       tracksInfoList.removeWhere((tr) => deletedPaths.contains(tr.path));
@@ -581,9 +597,9 @@ class Indexer {
 
   List<String> splitBySeparators(String? string, Iterable<String> separators, String fallback, Iterable<String> blacklist) {
     final List<String> finalStrings = <String>[];
-    final List<String> pre = string?.trim().multiSplit(separators, blacklist) ?? [fallback];
+    final List<String> pre = string?.trimAll().multiSplit(separators, blacklist) ?? [fallback];
     pre.loop((e, index) {
-      finalStrings.addIf(e != '', e.trim());
+      finalStrings.addIf(e != '', e.trimAll());
     });
     return finalStrings;
   }
@@ -643,12 +659,12 @@ class Indexer {
 
     /// in case splitting produced 2 entries or more, it means its high likely to be [artist - title]
     /// otherwise [title] will be the [filename] and [artist] will be [Unknown]
-    final title = titleAndArtist.length >= 2 ? titleAndArtist[1].trim() : filenameWOEx;
-    final artist = titleAndArtist.length >= 2 ? titleAndArtist[0].trim() : k_UNKNOWN_TRACK_ARTIST;
+    final title = titleAndArtist.length >= 2 ? titleAndArtist[1].trimAll() : filenameWOEx;
+    final artist = titleAndArtist.length >= 2 ? titleAndArtist[0].trimAll() : k_UNKNOWN_TRACK_ARTIST;
 
     // TODO: split by ( and ) too, but retain Remixes and feat.
-    final cleanedUpTitle = title.split('[').first.trim();
-    final cleanedUpArtist = artist.split(']').last.trim();
+    final cleanedUpTitle = title.split('[').first.trimAll();
+    final cleanedUpArtist = artist.split(']').last.trimAll();
 
     return (cleanedUpTitle, cleanedUpArtist);
   }
@@ -660,9 +676,9 @@ class Indexer {
   ///
   /// ex: if (.nomedia) was found in [/storage/0/Music/],
   /// then subdirectories [/storage/0/Music/folder1/], [/storage/0/Music/folder2/] & [/storage/0/Music/folder2/subfolder/] will be excluded too.
-  Future<Set<String>> getAudioFiles({bool strictNoMedia = true}) async {
+  Future<Set<String>> getAudioFiles({bool strictNoMedia = true, bool forceReCheckDirs = false}) async {
     tracksExcludedByNoMedia.value = 0;
-    final allAvailableDirectories = await getAvailableDirectories();
+    final allAvailableDirectories = await getAvailableDirectories(forceReCheck: forceReCheckDirs, strictNoMedia: strictNoMedia);
 
     final allPaths = <String>{};
 
@@ -697,42 +713,50 @@ class Indexer {
     return allPaths;
   }
 
-  Future<Map<Directory, bool>> getAvailableDirectories({bool strictNoMedia = true}) async {
-    final allAvailableDirectories = <Directory, bool>{};
+  Completer<Map<Directory, bool>>? availableDirs;
+  Future<Map<Directory, bool>> getAvailableDirectories({bool strictNoMedia = true, bool forceReCheck = false}) async {
+    if (availableDirs != null && !forceReCheck) {
+      return await availableDirs!.future;
+    } else {
+      availableDirs = Completer<Map<Directory, bool>>();
 
-    await SettingsController.inst.directoriesToScan.loopFuture((dirPath, index) async {
-      final directory = Directory(dirPath);
+      final allAvailableDirectories = <Directory, bool>{};
 
-      if (await directory.exists()) {
-        allAvailableDirectories[directory] = false;
-        await for (final file in directory.list(recursive: true, followLinks: true)) {
-          if (file is Directory) {
-            allAvailableDirectories[file] = false;
-          }
-        }
-      }
-    });
+      await SettingsController.inst.directoriesToScan.loopFuture((dirPath, index) async {
+        final directory = Directory(dirPath);
 
-    /// Assigning directories and sub-subdirectories that has .nomedia.
-    if (SettingsController.inst.respectNoMedia.value) {
-      await allAvailableDirectories.keys.toList().loopFuture((d, index) async {
-        final hasNoMedia = await File("${d.path}/.nomedia").exists();
-        if (hasNoMedia) {
-          // TODO: expose [strictNoMedia] in settings?
-          if (strictNoMedia) {
-            // strictly applies bool to all subdirectories.
-            allAvailableDirectories.forEach((key, value) {
-              if (key.path.startsWith(d.path)) {
-                allAvailableDirectories[key] = true;
-              }
-            });
-          } else {
-            allAvailableDirectories[d] = true;
+        if (await directory.exists()) {
+          allAvailableDirectories[directory] = false;
+          await for (final file in directory.list(recursive: true, followLinks: true)) {
+            if (file is Directory) {
+              allAvailableDirectories[file] = false;
+            }
           }
         }
       });
+
+      /// Assigning directories and sub-subdirectories that has .nomedia.
+      if (SettingsController.inst.respectNoMedia.value) {
+        await allAvailableDirectories.keys.toList().loopFuture((d, index) async {
+          final hasNoMedia = await File("${d.path}/.nomedia").exists();
+          if (hasNoMedia) {
+            // TODO: expose [strictNoMedia] in settings?
+            if (strictNoMedia) {
+              // strictly applies bool to all subdirectories.
+              allAvailableDirectories.forEach((key, value) {
+                if (key.path.startsWith(d.path)) {
+                  allAvailableDirectories[key] = true;
+                }
+              });
+            } else {
+              allAvailableDirectories[d] = true;
+            }
+          }
+        });
+      }
+      availableDirs?.complete(allAvailableDirectories);
+      return allAvailableDirectories;
     }
-    return allAvailableDirectories;
   }
 
   Future<void> updateImageSizeInStorage([File? newImgFile, bool decreaseStats = false]) async {

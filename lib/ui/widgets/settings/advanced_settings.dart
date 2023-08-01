@@ -360,7 +360,6 @@ class AdvancedSettings extends StatelessWidget {
                       iconSize: 24.0,
                       width: 70,
                       height: 70 * 9 / 16,
-                      track: null,
                       path: video.pathToYTImage,
                     ),
                     title: Text(video.ytID ?? ''),

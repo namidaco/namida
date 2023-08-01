@@ -59,11 +59,11 @@ class FolderTile extends StatelessWidget {
                             child: Padding(
                               padding: const EdgeInsets.only(top: 8.0),
                               child: ArtworkWidget(
+                                key: ValueKey(tracks.firstOrNull),
                                 blur: 0,
                                 borderRadius: 6,
                                 thumbnailSize: (SettingsController.inst.trackThumbnailSizeinList.value / 2.6).clamp(0, SettingsController.inst.trackListTileHeight.value * 0.5),
                                 path: tracks.firstOrNull?.pathToImage,
-                                track: tracks.firstOrNull,
                                 forceSquared: true,
                               ),
                             ),

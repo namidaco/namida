@@ -367,12 +367,13 @@ class JsonToHistoryParser {
         int date = 0;
         try {
           date = DateFormat('dd MMM yyyy HH:mm').parseLoose(pieces.last).millisecondsSinceEpoch;
-          lastDate = date;
         } catch (e) {
           if (lastDate != null) {
             date = lastDate - 30000;
           }
         }
+        lastDate = date;
+
         // -- skips if the date is not inside date range specified.
         if (oldestDay != null && newestDay != null) {
           final watchAsDSE = date.toDaysSinceEpoch();
@@ -382,19 +383,22 @@ class JsonToHistoryParser {
         /// matching has to meet 2 conditons:
         /// [csv artist] contains [track.artistsList.first]
         /// [csv title] contains [track.title], anything after ( or [ is ignored.
-        final tr = allTracksInLibrary.firstWhereOrNull(
+        final tr = allTracksInLibrary.firstWhereEff(
           (trPre) {
             final track = trPre.toTrackExt();
-            return pieces.first.cleanUpForComparison.contains(track.artistsList.first.cleanUpForComparison) &&
-                pieces[2].cleanUpForComparison.contains(track.title.split('(').first.split('[').first.cleanUpForComparison);
+            final matchingArtist = track.artistsList.isNotEmpty && pieces[0].cleanUpForComparison.contains(track.artistsList.first.cleanUpForComparison);
+            final matchingTitle = pieces[2].cleanUpForComparison.contains(track.title.split('(').first.split('[').first.cleanUpForComparison);
+            return matchingArtist && matchingTitle;
           },
         );
         if (tr != null) {
-          tracksToAdd.add(TrackWithDate(
-            dateAdded: date,
-            track: tr,
-            source: TrackSource.lastfm,
-          ));
+          tracksToAdd.add(
+            TrackWithDate(
+              dateAdded: date,
+              track: tr,
+              source: TrackSource.lastfm,
+            ),
+          );
           addedHistoryJsonToPlaylist.value++;
         }
       } catch (e) {

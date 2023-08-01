@@ -21,7 +21,7 @@ class Player {
   NamidaAudioVideoHandler? _audioHandler;
 
   final Rx<Track> nowPlayingTrack = kDummyTrack.obs;
-  final RxList<Track> currentQueue = <Track>[].obs;
+  final RxList<Selectable> currentQueue = <Selectable>[].obs;
   final RxInt currentIndex = 0.obs;
   final RxDouble currentVolume = SettingsController.inst.playerVolume.value.obs;
   final RxBool isPlaying = false.obs;
@@ -53,20 +53,6 @@ class Player {
     prepareTotalListenTime();
     setSkipSilenceEnabled(SettingsController.inst.playerSkipSilenceEnabled.value);
   }
-
-  // Future<void> closePlayerNotification() async {
-  //   _audioHandler = await AudioService.init(
-  //     builder: () => NamidaAudioVideoHandler(this),
-  //     config: const AudioServiceConfig(
-  //       androidNotificationChannelId: 'com.msob7y.namida',
-  //       androidNotificationChannelName: 'Namida',
-  //       androidNotificationChannelDescription: 'Namida Media Notification',
-  //       androidNotificationIcon: 'drawable/ic_stat_musicnote',
-  //       androidStopForegroundOnPause: true,
-  //       androidNotificationOngoing: false,
-  //     ),
-  //   );
-  // }
 
   void updateMediaItemForce() {
     _audioHandler?.updateCurrentMediaItem(null, true);
@@ -109,7 +95,7 @@ class Player {
 
   /// returns true if tracks aren't empty.
   bool addToQueue(
-    List<Track> tracks, {
+    List<Selectable> tracks, {
     bool insertNext = false,
     bool insertAfterLatest = false,
     bool showSnackBar = true,
@@ -198,17 +184,16 @@ class Player {
 
   Future<void> playOrPause(
     int index,
-    List<Track> queue,
+    List<Selectable> queue,
     QueueSource source, {
     bool shuffle = false,
     bool startPlaying = true,
     bool addAsNewQueue = true,
-    int? dateAdded,
   }) async {
-    List<Track> finalQueue = <Track>[];
+    final finalQueue = <Selectable>[];
 
     /// maximum 1000 track for performance.
-    if (queue.length > 1000) {
+    if (queue.length > 1000 && !shuffle) {
       const trimCount = 500;
 
       // adding tracks after current index.
@@ -243,18 +228,25 @@ class Player {
 
     if (shuffle) {
       finalQueue.shuffle();
+      final trimmedQueue = List<Selectable>.from(finalQueue.take(1000));
+      finalQueue
+        ..clear()
+        ..addAll(trimmedQueue);
       index = 0;
     }
 
     /// if the queue is the same, it will skip instead of saving the same queue.
     if (addAsNewQueue && !isQueueSame) {
-      QueueController.inst.addNewQueue(source: source, tracks: finalQueue);
-      QueueController.inst.updateLatestQueue(finalQueue);
+      final trs = finalQueue.tracks.toList();
+      QueueController.inst.addNewQueue(source: source, tracks: trs);
+      QueueController.inst.updateLatestQueue(trs);
     }
 
-    currentQueue.assignAll(finalQueue);
+    currentQueue
+      ..clear()
+      ..addAll(finalQueue);
 
-    await _audioHandler?.setAudioSource(index, startPlaying: startPlaying, dateAdded: dateAdded);
+    await _audioHandler?.setAudioSource(index, startPlaying: startPlaying);
   }
 
   Future<void> prepareTotalListenTime() async {

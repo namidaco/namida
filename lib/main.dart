@@ -81,8 +81,10 @@ void main() async {
   k_DIR_APP_INTERNAL_STORAGE = "${paths[0]}/Namida";
 
   await SettingsController.inst.prepareSettingsFile();
-  await Indexer.inst.prepareTracksFile();
-  await Language.initialize(lang: SettingsController.inst.selectedLanguage.value);
+  await Future.wait([
+    Indexer.inst.prepareTracksFile(),
+    Language.initialize(),
+  ]);
 
   /// updates values on startup
   Indexer.inst.updateImageSizeInStorage();
@@ -158,7 +160,9 @@ Future<bool> playExternalFiles(Iterable<String> paths) async {
 }
 
 Future<bool> requestManageStoragePermission() async {
+  Future<void> createDir() async => await Directory(SettingsController.inst.defaultBackupLocation.value).create(recursive: true);
   if (kSdkVersion < 30) {
+    await createDir();
     return true;
   }
 
@@ -170,6 +174,7 @@ Future<bool> requestManageStoragePermission() async {
     Get.snackbar(Language.inst.STORAGE_PERMISSION_DENIED, Language.inst.STORAGE_PERMISSION_DENIED_SUBTITLE);
     return false;
   }
+  await createDir();
   return true;
 }
 
@@ -180,6 +185,7 @@ class Namida extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () => GetMaterialApp(
+        key: Key(SettingsController.inst.selectedLanguage.value.code),
         themeAnimationDuration: const Duration(milliseconds: kThemeAnimationDurationMS),
         debugShowCheckedModeBanner: false,
         title: 'Namida',

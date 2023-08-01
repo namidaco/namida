@@ -77,6 +77,7 @@ class AlbumsPage extends StatelessWidget {
               ),
               Obx(
                 () {
+                  SettingsController.inst.albumListTileHeight.value;
                   return countPerRow == 1
                       ? Expanded(
                           child: ListView.builder(

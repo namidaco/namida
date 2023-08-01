@@ -67,7 +67,6 @@ class AlbumCard extends StatelessWidget {
               NamidaHero(
                 tag: hero,
                 child: ArtworkWidget(
-                  track: album.trackOfImage,
                   thumbnailSize: thumbnailSize,
                   path: album.pathToImage,
                   borderRadius: 10.0,

@@ -157,7 +157,6 @@ class TrackTile extends StatelessWidget {
                                   tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
                                   child: ArtworkWidget(
                                     key: Key(trackOrTwd.hashCode.toString()),
-                                    track: track,
                                     thumbnailSize: thumbnailSize,
                                     path: track.pathToImage,
                                     forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,

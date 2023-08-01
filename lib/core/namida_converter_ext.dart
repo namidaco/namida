@@ -70,7 +70,7 @@ extension LibraryTabUtils on LibraryTab {
     Widget page = const SizedBox();
     switch (this) {
       case LibraryTab.tracks:
-        page = const TracksPage();
+        page = TracksPage(animateTiles: animateTiles);
         break;
       case LibraryTab.albums:
         page = AlbumsPage(

@@ -133,7 +133,7 @@ Future<void> showGeneralPopupDialog(
               List<String> moodsFinal = [];
               moodsPre.loop((m, index) {
                 if (!m.contains(',') && m != ' ' && m.isNotEmpty) {
-                  moodsFinal.add(m.trim());
+                  moodsFinal.add(m.trimAll());
                 }
               });
 
@@ -447,8 +447,7 @@ Future<void> showGeneralPopupDialog(
     title: Language.inst.ADVANCED,
     icon: Broken.code_circle,
     onTap: () => showTrackAdvancedDialog(
-      tracksPre: tracks,
-      tracksWithDates: tracksWithDates,
+      tracks: tracksWithDates.isNotEmpty ? tracksWithDates : tracks,
       colorScheme: colorDelightened,
     ),
   );
@@ -542,7 +541,6 @@ Future<void> showGeneralPopupDialog(
                       NamidaHero(
                         tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${tracks.first.path}',
                         child: ArtworkWidget(
-                          track: tracks.trackOfImage,
                           path: tracks.pathToImage,
                           thumbnailSize: 60,
                           forceSquared: forceSquared,
@@ -719,7 +717,7 @@ Future<void> showGeneralPopupDialog(
                           compact: true,
                           title: Language.inst.ADD_MORE_FROM_TO_QUEUE.replaceFirst('_MEDIA_', '"$albumToAddFrom"'),
                           icon: Broken.music_dashboard,
-                          onTap: () => NamidaOnTaps.inst.onAlbumTap(availableAlbums.first),
+                          onTap: () => Player.inst.addToQueue(NamidaGenerator.inst.generateTracksFromAlbum(availableAlbums.first), insertNext: true),
                           trailing: IgnorePointer(
                             child: IconButton(
                               onPressed: () {},
@@ -921,7 +919,7 @@ Future<void> showGeneralPopupDialog(
                         SmallListTile(
                           color: colorDelightened,
                           compact: true,
-                          title: '${Language.inst.PLAY_AFTER} "${Player.inst.currentQueue.elementAt(Player.inst.latestInsertedIndex).title}"',
+                          title: '${Language.inst.PLAY_AFTER} "${Player.inst.currentQueue.elementAt(Player.inst.latestInsertedIndex).track.title}"',
                           subtitle: (Player.inst.latestInsertedIndex - Player.inst.currentIndex.value).displayTrackKeyword,
                           icon: Broken.hierarchy_square,
                           onTap: () {

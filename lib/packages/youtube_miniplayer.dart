@@ -82,7 +82,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(finalbr),
                               ),
                               child: ArtworkWidget(
-                                track: currentTrack,
+                                key: Key("$percentage$currentTrack"),
                                 path: currentTrack.pathToImage,
                                 thumbnailSize: finalthumbnailsize,
                                 width: finalthumbnailsize,
@@ -369,7 +369,6 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                               width: 42.0,
                                                               isCircle: true,
                                                               errorWidget: (context, url, error) => ArtworkWidget(
-                                                                track: null,
                                                                 thumbnailSize: 42.0,
                                                                 forceDummyArtwork: true,
                                                                 borderRadius: 124.0.multipliedRadius,

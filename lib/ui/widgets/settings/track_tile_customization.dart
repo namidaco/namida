@@ -153,7 +153,6 @@ class TrackTileCustomization extends StatelessWidget {
                   height: SettingsController.inst.trackThumbnailSizeinList.value,
                   child: ArtworkWidget(
                     thumbnailSize: SettingsController.inst.trackThumbnailSizeinList.value,
-                    track: allTracksInLibrary.firstOrNull,
                     path: allTracksInLibrary.firstOrNull?.pathToImage,
                     forceSquared: stg.forceSquaredTrackThumbnail.value,
                   ),

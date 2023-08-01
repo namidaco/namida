@@ -235,10 +235,7 @@ class PlaybackSettings extends StatelessWidget {
       ),
       Obx(
         () => CustomSwitchListTile(
-          leading: const StackedIcon(
-            baseIcon: Broken.wind,
-            secondaryIcon: Broken.forward,
-          ),
+          icon: Broken.forward,
           title: Language.inst.SKIP_SILENCE,
           onChanged: (value) async {
             final willBeTrue = !value;

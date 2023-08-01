@@ -42,7 +42,6 @@ class ArtistCard extends StatelessWidget {
                 child: ContainerWithBorder(
                   child: ArtworkWidget(
                     thumbnailSize: thumbnailSize,
-                    track: artist.trackOfImage,
                     path: artist.pathToImage,
                     borderRadius: 10.0,
                     forceSquared: true,

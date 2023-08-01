@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 import 'package:animated_background/animated_background.dart';
 import 'package:get/get.dart';
-import 'package:video_player/video_player.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
@@ -29,6 +28,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/youtube_miniplayer.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
@@ -54,27 +54,33 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // -- MiniPlayer Wallpaper
-        Obx(
-          () {
-            final anim = MiniPlayerController.inst.miniplayerHP.value;
-            return Visibility(
-              visible: anim > 0.01,
-              child: Positioned.fill(
-                child: Opacity(
-                  opacity: MiniPlayerController.inst.miniplayerHP.value,
-                  child: const Wallpaper(gradient: false, particleOpacity: .3),
-                ),
-              ),
-            );
-          },
-        ),
+    return Obx(
+      () => AnimatedTheme(
+        duration: const Duration(milliseconds: 300),
+        data: AppThemes.inst.getAppTheme(CurrentColor.inst.color),
+        child: Stack(
+          children: [
+            // -- MiniPlayer Wallpaper
+            Obx(
+              () {
+                final anim = MiniPlayerController.inst.miniplayerHP.value;
+                return Visibility(
+                  visible: anim > 0.01,
+                  child: Positioned.fill(
+                    child: Opacity(
+                      opacity: MiniPlayerController.inst.miniplayerHP.value,
+                      child: const Wallpaper(gradient: false, particleOpacity: .3),
+                    ),
+                  ),
+                );
+              },
+            ),
 
-        // -- MiniPlayers
-        const MiniPlayerSwitchers(),
-      ],
+            // -- MiniPlayers
+            const MiniPlayerSwitchers(),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -772,7 +778,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                               //       bottomOffset: bottomOffset,
                               //       maxOffset: maxOffset,
                               //       child: _TrackImage(
-                              //         track: prevTrack,
+                              //         track: prevTrack.track,
                               //         cp: cp,
                               //       ),
                               //     ),
@@ -790,7 +796,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                     bottomOffset: bottomOffset,
                                     maxOffset: maxOffset,
                                     child: _AnimatingTrackImage(
-                                      key: Key(currentTrack.pathToImage),
+                                      key: ValueKey(currentTrack),
                                       track: currentTrack,
                                       cp: bcp,
                                     ),
@@ -809,7 +815,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                               //       bottomOffset: bottomOffset,
                               //       maxOffset: maxOffset,
                               //       child: _TrackImage(
-                              //         track: nextTrack,
+                              //         track: nextTrack.track,
                               //         cp: cp,
                               //       ),
                               //     ),
@@ -843,7 +849,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                         child: Stack(
                                           children: [
                                             WaveformComponent(
-                                              key: Key("$currentTrack$currentIndex"),
+                                              key: Key("$currentTrack$currentIndex${context.theme.colorScheme}"),
                                               color: context.theme.colorScheme.onBackground.withAlpha(40),
                                             ),
                                             ShaderMask(
@@ -867,23 +873,23 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                     void onSeekDragUpdate(double deltax) {
                                                       final percentageSwiped = deltax / constraints.maxWidth;
                                                       final newSeek = percentageSwiped * currentDurationInMS;
-                                                      MiniPlayerController.inst.seekValue.value = newSeek;
+                                                      MiniPlayerController.inst.seekValue.value = newSeek.toInt();
                                                     }
 
                                                     void onSeekEnd() {
-                                                      final ms = MiniPlayerController.inst.seekValue.value.toInt();
+                                                      final ms = MiniPlayerController.inst.seekValue.value;
                                                       Player.inst.seek(Duration(milliseconds: ms));
-                                                      MiniPlayerController.inst.seekValue.value = 0.0;
+                                                      MiniPlayerController.inst.seekValue.value = 0;
                                                     }
 
                                                     return GestureDetector(
                                                       onTapDown: (details) => onSeekDragUpdate(details.localPosition.dx),
                                                       onTapUp: (details) => onSeekEnd(),
-                                                      onTapCancel: () => MiniPlayerController.inst.seekValue.value = 0.0,
+                                                      onTapCancel: () => MiniPlayerController.inst.seekValue.value = 0,
                                                       onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx),
                                                       onHorizontalDragEnd: (details) => onSeekEnd(),
                                                       child: WaveformComponent(
-                                                        key: Key("$currentTrack$currentIndex"),
+                                                        key: Key("$currentTrack$currentIndex${context.theme.colorScheme}"),
                                                         color: context.theme.colorScheme.onBackground.withAlpha(110),
                                                       ),
                                                     );
@@ -927,7 +933,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                           itemCount: Player.inst.currentQueue.length,
                                           itemBuilder: (context, i) {
                                             final track = Player.inst.currentQueue[i];
-                                            final key = "$i${track.path}";
+                                            final key = "$i${track.track.path}";
                                             return AnimatedOpacity(
                                               key: Key('GD_$key'),
                                               duration: const Duration(milliseconds: 300),
@@ -939,7 +945,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                 child: TrackTile(
                                                   index: i,
                                                   key: Key('tile_$key'),
-                                                  track: track,
+                                                  trackOrTwd: track,
                                                   displayRightDragHandler: true,
                                                   draggableThumbnail: true,
                                                   queueSource: QueueSource.playerQueue,
@@ -1450,7 +1456,6 @@ class _TrackImage extends StatelessWidget {
     return ArtworkWidget(
       key: Key("${track.path}$cp"),
       path: track.pathToImage,
-      track: track,
       thumbnailSize: Get.width,
       compressed: cp == 0,
       borderRadius: 6.0 + 10.0 * cp,

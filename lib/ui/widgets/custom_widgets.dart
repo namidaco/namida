@@ -336,7 +336,7 @@ class CustomBlurryDialog extends StatelessWidget {
   final String? bodyText;
   final bool isWarning;
   final bool scrollable;
-  final EdgeInsets? insetPadding;
+  final EdgeInsets insetPadding;
   final EdgeInsetsGeometry? contentPadding;
   final ThemeData? theme;
 
@@ -455,19 +455,22 @@ class CustomBlurryDialog extends StatelessWidget {
                   if (actions != null)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.max,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          if (leftAction != null) ...[
-                            const SizedBox(width: 6.0),
-                            leftAction!,
-                            const SizedBox(width: 6.0),
-                            const Spacer(),
-                          ],
-                          ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
-                        ],
+                      child: FittedBox(
+                        child: SizedBox(
+                          width: context.width - insetPadding.left - insetPadding.right,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              if (leftAction != null) ...[
+                                const SizedBox(width: 6.0),
+                                leftAction!,
+                                const SizedBox(width: 6.0),
+                              ],
+                              const Spacer(),
+                              ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                 ],
@@ -721,9 +724,25 @@ class ListTileWithCheckMark extends StatelessWidget {
   final bool active;
   final void Function()? onTap;
   final String? title;
+  final String subtitle;
   final IconData? icon;
   final Color? tileColor;
-  const ListTileWithCheckMark({super.key, required this.active, this.onTap, this.title, this.icon, this.tileColor});
+  final Widget? titleWidget;
+  final Widget? leading;
+  final double? iconSize;
+
+  const ListTileWithCheckMark({
+    super.key,
+    required this.active,
+    this.onTap,
+    this.title,
+    this.subtitle = '',
+    this.icon,
+    this.tileColor,
+    this.titleWidget,
+    this.leading,
+    this.iconSize,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -733,8 +752,22 @@ class ListTileWithCheckMark extends StatelessWidget {
       child: ListTile(
         horizontalTitleGap: 10.0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0.multipliedRadius)),
-        leading: Icon(icon ?? Broken.arrange_circle),
-        title: Text(title ?? Language.inst.REVERSE_ORDER),
+        leading: leading ??
+            Icon(
+              icon ?? Broken.arrange_circle,
+              size: iconSize,
+            ),
+        title: titleWidget ??
+            Text(
+              title ?? Language.inst.REVERSE_ORDER,
+              style: context.textTheme.displayMedium,
+            ),
+        subtitle: subtitle != ''
+            ? Text(
+                subtitle,
+                style: context.textTheme.displaySmall,
+              )
+            : null,
         trailing: SizedBox(
           height: 18.0,
           width: 18.0,

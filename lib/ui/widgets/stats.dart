@@ -28,22 +28,22 @@ class StatsSection extends StatelessWidget {
               StatsContainer(
                 icon: Broken.music_circle,
                 title: '${Language.inst.TRACKS} :',
-                value: allTracksInLibrary.length.toString(),
+                value: allTracksInLibrary.length.formatDecimal(),
               ),
               StatsContainer(
                 icon: Broken.music_dashboard,
                 title: '${Language.inst.ALBUMS} :',
-                value: Indexer.inst.mainMapAlbums.value.keys.length.toString(),
+                value: Indexer.inst.mainMapAlbums.value.keys.length.formatDecimal(),
               ),
               StatsContainer(
                 icon: Broken.microphone,
                 title: '${Language.inst.ARTISTS} :',
-                value: Indexer.inst.mainMapArtists.value.length.toString(),
+                value: Indexer.inst.mainMapArtists.value.length.formatDecimal(),
               ),
               StatsContainer(
                 icon: Broken.smileys,
                 title: '${Language.inst.GENRES} :',
-                value: Indexer.inst.mainMapGenres.value.length.toString(),
+                value: Indexer.inst.mainMapGenres.value.length.formatDecimal(),
               ),
               StatsContainer(
                 icon: Broken.music_library_2,

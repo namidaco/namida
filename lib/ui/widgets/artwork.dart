@@ -15,8 +15,6 @@ import 'package:namida/packages/drop_shadow.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class ArtworkWidget extends StatefulWidget {
-  final Track? track;
-
   /// path of image file.
   final String? path;
   final Uint8List? bytes;
@@ -25,7 +23,7 @@ class ArtworkWidget extends StatefulWidget {
   final bool staggered;
   final bool compressed;
   final int fadeMilliSeconds;
-  final int? cacheHeight;
+  final int cacheHeight;
   final double? width;
   final double? height;
   final double? iconSize;
@@ -51,7 +49,7 @@ class ArtworkWidget extends StatefulWidget {
     this.blur = 1.5,
     this.width,
     this.height,
-    this.cacheHeight,
+    this.cacheHeight = 100,
     this.useTrackTileCacheHeight = false,
     this.forceDummyArtwork = false,
     this.bgcolor,
@@ -60,7 +58,6 @@ class ArtworkWidget extends StatefulWidget {
     this.boxShadow,
     this.onTopWidgets = const <Widget>[],
     this.path,
-    required this.track,
   });
 
   @override
@@ -72,17 +69,20 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
   late Widget _stockWidget;
   double? _realWidthAndHeight;
   Widget? _finalWidget;
+  String? _lastPath;
+  Color? _lastCardColor;
 
   Widget getImagePathWidget() {
+    final pixelRatio = context.mediaQuery.devicePixelRatio.round();
     return Image.file(
       File(widget.path!),
       gaplessPlayback: true,
       fit: BoxFit.cover,
       cacheHeight: widget.useTrackTileCacheHeight
-          ? SettingsController.inst.trackThumbnailSizeinList.value.toInt() > 120
+          ? SettingsController.inst.trackThumbnailSizeinList.value > 120
               ? null
-              : 60 * (context.mediaQuery.devicePixelRatio).round()
-          : (widget.cacheHeight ?? 100) * (context.mediaQuery.devicePixelRatio).round(),
+              : 60 * pixelRatio
+          : widget.cacheHeight * pixelRatio,
       filterQuality: FilterQuality.medium,
       width: _realWidthAndHeight,
       height: _realWidthAndHeight,
@@ -106,10 +106,12 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
   }
 
   void fillWidgets() {
+    _lastPath = widget.path;
+    _lastCardColor = context.theme.cardColor;
+
     _stockWidget = Container(
       width: widget.width ?? widget.thumbnailSize,
       height: widget.height ?? widget.thumbnailSize,
-      key: const Key("empty"),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: widget.bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
@@ -122,24 +124,23 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
             Broken.musicnote,
             size: widget.iconSize ?? widget.thumbnailSize / 2,
           ),
-          if (widget.onTopWidgets.isNotEmpty) ...widget.onTopWidgets,
+          ...widget.onTopWidgets,
         ],
       ),
     );
     if (widget.forceDummyArtwork) return;
     if (widget.path == null && widget.bytes == null) return;
 
-    final shouldDisplayMemory = _finalBytes != null && (_finalBytes ?? []).isNotEmpty;
+    final shouldDisplayMemory = _finalBytes != null && (_finalBytes ?? []).isNotEmpty; // if bytes are sent and valid.
     final shouldDisplayPath = widget.path != null;
     if (!shouldDisplayMemory && !shouldDisplayPath) return;
-    // [extImageChild] wont get assigned, leaving [extImageChild==null], i.e. displays [stockWidget] only.
+    // -- [extImageChild] wont get assigned, leaving [extImageChild==null], i.e. displays [stockWidget] only.
 
     _realWidthAndHeight = widget.forceSquared ? context.width : null;
 
     final extImageChild = Stack(
       alignment: Alignment.center,
       children: [
-        // if bytes are sent and valid.
         if (shouldDisplayMemory)
           ExtendedImage.memory(
             _finalBytes!,
@@ -170,7 +171,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
                   },
                 ),
         ],
-        if (widget.onTopWidgets.isNotEmpty) ...widget.onTopWidgets,
+        ...widget.onTopWidgets,
       ],
     );
     _finalWidget = SettingsController.inst.enableGlowEffect.value && widget.blur != 0.0
@@ -219,7 +220,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (_finalWidget == null) {
+    if (_finalWidget == null || _lastPath != widget.path || _lastCardColor != context.theme.cardColor) {
       fillWidgets();
     }
     return _finalWidget ?? _stockWidget;
@@ -260,7 +261,6 @@ class MultiArtworks extends StatelessWidget {
             ? ArtworkWidget(
                 key: UniqueKey(),
                 thumbnailSize: thumbnailSize,
-                track: allTracksInLibrary.firstOrNull,
                 path: allTracksInLibrary.firstOrNull?.pathToImage,
                 forceSquared: true,
                 blur: 0,
@@ -274,7 +274,6 @@ class MultiArtworks extends StatelessWidget {
                     key: UniqueKey(),
                     thumbnailSize: thumbnailSize,
                     path: paths.elementAt(0),
-                    track: null,
                     forceSquared: true,
                     blur: 0,
                     borderRadius: 0,
@@ -285,7 +284,6 @@ class MultiArtworks extends StatelessWidget {
                         children: [
                           ArtworkWidget(
                             key: UniqueKey(),
-                            track: null,
                             thumbnailSize: thumbnailSize / 2,
                             height: thumbnailSize,
                             path: paths.elementAt(0),
@@ -296,7 +294,6 @@ class MultiArtworks extends StatelessWidget {
                           ),
                           ArtworkWidget(
                             key: UniqueKey(),
-                            track: null,
                             thumbnailSize: thumbnailSize / 2,
                             height: thumbnailSize,
                             path: paths.elementAt(1),
@@ -314,7 +311,6 @@ class MultiArtworks extends StatelessWidget {
                                 children: [
                                   ArtworkWidget(
                                     key: UniqueKey(),
-                                    track: null,
                                     thumbnailSize: thumbnailSize / 2,
                                     path: paths.elementAt(0),
                                     forceSquared: true,
@@ -324,7 +320,6 @@ class MultiArtworks extends StatelessWidget {
                                   ),
                                   ArtworkWidget(
                                     key: UniqueKey(),
-                                    track: null,
                                     thumbnailSize: thumbnailSize / 2,
                                     path: paths.elementAt(1),
                                     forceSquared: true,
@@ -338,7 +333,6 @@ class MultiArtworks extends StatelessWidget {
                                 children: [
                                   ArtworkWidget(
                                     key: UniqueKey(),
-                                    track: null,
                                     thumbnailSize: thumbnailSize / 2,
                                     path: paths.elementAt(2),
                                     forceSquared: true,
@@ -357,7 +351,6 @@ class MultiArtworks extends StatelessWidget {
                                 children: [
                                   ArtworkWidget(
                                     key: UniqueKey(),
-                                    track: null,
                                     thumbnailSize: thumbnailSize / 2,
                                     path: paths.elementAt(0),
                                     forceSquared: true,
@@ -367,7 +360,6 @@ class MultiArtworks extends StatelessWidget {
                                   ),
                                   ArtworkWidget(
                                     key: UniqueKey(),
-                                    track: null,
                                     thumbnailSize: thumbnailSize / 2,
                                     path: paths.elementAt(1),
                                     forceSquared: true,
@@ -381,7 +373,6 @@ class MultiArtworks extends StatelessWidget {
                                 children: [
                                   ArtworkWidget(
                                     key: UniqueKey(),
-                                    track: null,
                                     thumbnailSize: thumbnailSize / 2,
                                     path: paths.elementAt(2),
                                     forceSquared: true,
@@ -391,7 +382,6 @@ class MultiArtworks extends StatelessWidget {
                                   ),
                                   ArtworkWidget(
                                     key: UniqueKey(),
-                                    track: null,
                                     thumbnailSize: thumbnailSize / 2,
                                     path: paths.elementAt(3),
                                     forceSquared: true,

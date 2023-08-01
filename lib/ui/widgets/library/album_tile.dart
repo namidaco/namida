@@ -58,7 +58,6 @@ class AlbumTile extends StatelessWidget {
                     tag: hero,
                     child: ArtworkWidget(
                       thumbnailSize: albumThumbnailSize,
-                      track: album.trackOfImage,
                       path: album.pathToImage,
                       forceSquared: SettingsController.inst.forceSquaredAlbumThumbnail.value,
                     ),

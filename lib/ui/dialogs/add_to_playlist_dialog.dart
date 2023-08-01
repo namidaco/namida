@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/pages/playlists_page.dart';
@@ -38,7 +39,7 @@ void showAddToPlaylistDialog(List<Track> tracks) {
       ),
       leftAction: Obx(
         () => Text(
-          "${PlaylistController.inst.playlistsMap.length.toString()} ${Language.inst.PLAYLISTS}",
+          "${PlaylistController.inst.playlistsMap.length.formatDecimal()} ${Language.inst.PLAYLISTS}",
           style: Get.theme.textTheme.displayMedium,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,

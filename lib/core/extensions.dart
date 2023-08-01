@@ -46,11 +46,30 @@ extension StringUtilsNull on String? {
     int? res;
     res = int.tryParse(value);
     res ??= int.tryParse(value.cleanUpForComparison);
+
+    return res;
+  }
+
+  double? getDoubleValue() {
+    final value = this;
+    if (value == null) return null;
+    double? res;
+    res = double.tryParse(value);
     return res;
   }
 }
 
 extension StringUtils on String {
+  /// Trims a string and removes all extra white spaces.
+  String trimAll() {
+    // second time ensures removing extra ones if number of white spaces is odd, for ex:
+    // 1. 'W...H' => 'W..H'
+    // 2. 'W..H' => 'W.H'
+    return replaceAll('  ', ' ')
+      ..replaceAll('  ', ' ')
+      ..trim();
+  }
+
   String addQuotation() => "'$this'";
   String addDQuotation() => '"$this"';
 
@@ -211,7 +230,7 @@ extension TotalTime on int {
 
 extension DisplayKeywords on int {
   String displayKeyword(String singular, String plural) {
-    return '$this ${this > 1 ? plural : singular}';
+    return '${formatDecimal()} ${this > 1 ? plural : singular}';
   }
 
   String get displayTrackKeyword => displayKeyword(Language.inst.TRACK, Language.inst.TRACKS);
@@ -461,6 +480,7 @@ extension FileUtils<R> on File {
   /// has a built in try-catch.
   Future<dynamic> readAsJson({void Function()? onError}) async {
     try {
+      await create(recursive: true);
       final content = await readAsString();
       if (content.isEmpty) return null;
       return jsonDecode(content);
@@ -583,6 +603,15 @@ extension StuffUtils<T> on T {
 }
 
 extension ListieExt<E, Id> on List<E> {
+  /// Adds [item] to [this] if it doesn't exist,
+  /// or removes [item] if it exists.
+  void addOrRemove(E item) {
+    final didRemove = remove(item);
+    if (!didRemove) {
+      add(item);
+    }
+  }
+
   /// Replaces All Items that fullfils [test] with [newElement] inside the list.
   void replaceWhere(bool Function(E e) test, E Function(E old) newElement, {void Function()? onMatch}) {
     loop((currentElement, index) {
@@ -738,6 +767,17 @@ extension ListieExt<E, Id> on List<E> {
     return fallback;
   }
 
+  /// Efficient version of firstWhere()
+  E? firstWhereEff(bool Function(E e) test, {E? fallback}) {
+    for (int i = 0; i < length; i++) {
+      final element = this[i];
+      if (test(element)) {
+        return element;
+      }
+    }
+    return fallback;
+  }
+
   /// Efficient looping, uses normal for loop.
   ///
   /// Doesn't support keywork statements like [break], [continue], etc...
@@ -821,10 +861,10 @@ extension CloseDialogIfTrue on bool {
   ///
   /// This is mainly created for [addToQueue] Function inside Player Class,
   /// where it should close the dialog only if there were tracks added.
-  void closeDialog([int count = 1]) {
-    if (this) {
-      NamidaNavigator.inst.closeDialog(count);
-    }
+  void closeDialog([int count = 1]) => executeIfTrue(() => NamidaNavigator.inst.closeDialog(count));
+
+  void executeIfTrue<T>(T Function() execute) {
+    if (this) execute();
   }
 }
 

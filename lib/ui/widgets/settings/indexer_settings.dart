@@ -94,8 +94,8 @@ class IndexerSettings extends StatelessWidget {
                     () => StatsContainer(
                       icon: Broken.info_circle,
                       title: '${Language.inst.TRACKS_INFO} :',
-                      value: allTracksInLibrary.length.toString(),
-                      total: Indexer.inst.allAudioFiles.isEmpty ? null : Indexer.inst.allAudioFiles.length.toString(),
+                      value: allTracksInLibrary.length.formatDecimal(),
+                      total: Indexer.inst.allAudioFiles.isEmpty ? null : Indexer.inst.allAudioFiles.length.formatDecimal(),
                     ),
                   ),
                   Obx(
@@ -103,7 +103,7 @@ class IndexerSettings extends StatelessWidget {
                       icon: Broken.image,
                       title: '${Language.inst.ARTWORKS} :',
                       value: Indexer.inst.artworksInStorage.value.toString(),
-                      total: Indexer.inst.allAudioFiles.isEmpty ? null : Indexer.inst.allAudioFiles.length.toString(),
+                      total: Indexer.inst.allAudioFiles.isEmpty ? null : Indexer.inst.allAudioFiles.length.formatDecimal(),
                     ),
                   ),
                 ],

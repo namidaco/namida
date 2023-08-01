@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:dismissible_page/dismissible_page.dart';
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:photo_view/photo_view.dart';
@@ -109,7 +108,6 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
   final artwork = NamidaHero(
     tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}',
     child: ArtworkWidget(
-      track: track,
       path: trackExt.pathToImage,
       thumbnailSize: 120,
       forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
@@ -168,12 +166,13 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                             GestureDetector(
                               onTap: () => NamidaNavigator.inst.navigateDialog(
                                 scale: 1.0,
+                                blackBg: true,
                                 dialog: GestureDetector(
                                   onLongPress: () async {
                                     final saveDirPath = await EditDeleteController.inst.saveArtworkToStorage(track);
                                     String title = Language.inst.COPIED_ARTWORK;
                                     String subtitle = '${Language.inst.SAVED_IN} $saveDirPath';
-                                    Color snackColor = CurrentColor.inst.color;
+                                    Color snackColor = color;
 
                                     if (saveDirPath == null) {
                                       title = Language.inst.ERROR;
@@ -200,18 +199,15 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                       borderRadius: 0,
                                     );
                                   },
-                                  child: DismissiblePage(
-                                    dragSensitivity: 0.2,
-                                    onDismissed: NamidaNavigator.inst.closeDialog,
-                                    child: PhotoView(
-                                      heroAttributes: PhotoViewHeroAttributes(tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}'),
-                                      gaplessPlayback: true,
-                                      tightMode: true,
-                                      loadingBuilder: (context, event) => artwork,
-                                      backgroundDecoration: const BoxDecoration(color: Colors.transparent),
-                                      imageProvider: FileImage(
-                                        File(trackExt.pathToImage),
-                                      ),
+                                  child: PhotoView(
+                                    heroAttributes: PhotoViewHeroAttributes(tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}'),
+                                    gaplessPlayback: true,
+                                    tightMode: true,
+                                    minScale: PhotoViewComputedScale.contained,
+                                    loadingBuilder: (context, event) => artwork,
+                                    backgroundDecoration: const BoxDecoration(color: Colors.transparent),
+                                    imageProvider: FileImage(
+                                      File(trackExt.pathToImage),
                                     ),
                                   ),
                                 ),
@@ -411,7 +407,7 @@ class TrackInfoListTile extends StatelessWidget {
   final bool isComment;
   const TrackInfoListTile({super.key, required this.title, required this.value, required this.icon, this.isComment = false});
 
-  void _copyField() {
+  void _copyField(BuildContext context) {
     if (value == '') return;
 
     Clipboard.setData(ClipboardData(text: value));
@@ -422,7 +418,7 @@ class TrackInfoListTile extends StatelessWidget {
       snackStyle: SnackStyle.FLOATING,
       animationDuration: const Duration(milliseconds: 300),
       duration: const Duration(seconds: 2),
-      leftBarIndicatorColor: CurrentColor.inst.color,
+      leftBarIndicatorColor: context.theme.colorScheme.primary,
       margin: const EdgeInsets.all(0.0),
       titleText: Text(
         'Copied $title',
@@ -442,8 +438,8 @@ class TrackInfoListTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: NamidaInkWell(
         borderRadius: 16.0,
-        onTap: _copyField,
-        onLongPress: _copyField,
+        onTap: () => _copyField(context),
+        onLongPress: () => _copyField(context),
         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 6.0),
         child: Wrap(
           runSpacing: 6.0,

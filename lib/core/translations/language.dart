@@ -14,17 +14,20 @@ class Language extends LanguageKeys {
   static final Language _instance = Language._internal();
   Language._internal();
 
-  /// Currently Selected & Set Language.
   static final Rx<NamidaLanguage> _currentLanguage = kDefaultLang.obs;
+
+  /// Currently Selected & Set Language.
   NamidaLanguage get currentLanguage => _currentLanguage.value;
 
   /// All Available Languages fetched from `'/assets/language/translations/'`
   static late final List<NamidaLanguage> availableLanguages;
 
   /// Used as a backup in case a key wasn't found in the desired language.
-  static late final Map<String, String> defaultMap;
+  static late final Map<String, String> _defaultMap;
 
-  static Future<void> initialize({required NamidaLanguage lang}) async {
+  static Future<void> initialize() async {
+    final lang = SettingsController.inst.selectedLanguage.value;
+
     Future<void> updateAllAvailable() async {
       availableLanguages = await getAllLanguages();
     }
@@ -32,13 +35,13 @@ class Language extends LanguageKeys {
     // -- Assigning default map, used as a backup in case a key doesnt exist in [lang].
     final path = inst._getAssetPath(kDefaultLang);
     final map = await jsonDecode(await rootBundle.loadString(path)) as Map<String, dynamic>;
-    defaultMap = map.cast();
+    _defaultMap = map.cast();
     // ---------
 
     await Future.wait([
       inst.update(
         lang: lang,
-        trMap: lang.code == kDefaultLang.code ? defaultMap : null,
+        trMap: lang.code == kDefaultLang.code ? _defaultMap : null,
       ),
       updateAllAvailable(),
     ]);
@@ -61,7 +64,7 @@ class Language extends LanguageKeys {
     try {
       final map = trMap ?? await jsonDecode(await rootBundle.loadString(path)) as Map<String, dynamic>;
 
-      String getKey(String key) => map[key] ?? defaultMap[key] ?? 'hh';
+      String getKey(String key) => map[key] ?? _defaultMap[key] ?? 'hh';
 
       // -- Keys Start ---------------------------------------------------------
       A_MINUTE = getKey("A_MINUTE");

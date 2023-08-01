@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import 'package:checkmark/checkmark.dart';
@@ -37,7 +35,7 @@ Future<void> showEditTracksTagsDialog(List<Track> tracks, Color? colorScheme) as
     colorScheme ??= await CurrentColor.inst.getTrackDelightnedColor(tracks.first);
     _editSingleTrackTagsDialog(tracks.first, colorScheme);
   } else {
-    _editMultipleTracksTags(tracks);
+    _editMultipleTracksTags(tracks.uniqued());
   }
 }
 
@@ -328,7 +326,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                           children: [
                             Obx(
                               () => ArtworkWidget(
-                                track: track,
+                                key: Key(currentImagePath.value),
                                 thumbnailSize: Get.width / 3,
                                 bytes: currentImagePath.value != '' ? null : info.firstArtwork,
                                 path: currentImagePath.value != '' ? currentImagePath.value : track.pathToImage,
@@ -341,8 +339,8 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                                         final pickedFile = await FilePicker.platform.pickFiles(type: FileType.image);
                                         final path = pickedFile?.files.first.path ?? '';
                                         if (pickedFile != null && path != '') {
-                                          final copiedImage = await File(path).copy("${SettingsController.inst.defaultBackupLocation.value}/sussyimage.png");
-                                          currentImagePath.value = copiedImage.path;
+                                          currentImagePath.value = path;
+                                          canEditTags.value = true;
                                         }
                                       },
                                       borderRadius: BorderRadius.only(topLeft: Radius.circular(12.0.multipliedRadius)),
@@ -454,7 +452,7 @@ Future<void> _updateTracksMetadata({
   tagger ??= FAudioTagger();
 
   if (trimWhiteSpaces) {
-    editedTags.updateAll((key, value) => value.trim());
+    editedTags.updateAll((key, value) => value.trimAll());
   }
 
   final shouldUpdateArtwork = imagePath != '';
@@ -505,7 +503,7 @@ Future<void> _updateTracksMetadata({
 
   await Indexer.inst.updateTrackMetadata(
     tracksMap: tracksMap,
-    updateArtwork: shouldUpdateArtwork,
+    newArtworkPath: imagePath,
   );
 }
 
@@ -537,7 +535,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
             return Obx(
               () => TrackTile(
                 index: index,
-                track: tr,
+                trackOrTwd: tr,
                 queueSource: QueueSource.allTracks,
                 onTap: () => tracks.addIf(() => !tracks.contains(tr), tr),
                 bgColor: tracks.contains(tr) ? null : Colors.black.withAlpha(0),
@@ -630,7 +628,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                     onPressed: () async {
                       NamidaNavigator.inst.closeDialog();
                       if (trimWhiteSpaces.value) {
-                        editedTags.updateAll((key, value) => value.trim());
+                        editedTags.updateAll((key, value) => value.trimAll());
                       }
 
                       final RxInt successfullEdits = 0.obs;
@@ -659,7 +657,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                 itemBuilder: (context, i) {
                                   return TrackTile(
                                     key: Key(i.toString()),
-                                    track: failedEditsTracks[i],
+                                    trackOrTwd: failedEditsTracks[i],
                                     index: i,
                                     queueSource: QueueSource.others,
                                     onTap: () {},
@@ -834,7 +832,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                 Obx(
                                   () => currentImagePath.value != ''
                                       ? ArtworkWidget(
-                                          track: null,
+                                          key: Key(currentImagePath.value),
                                           thumbnailSize: Get.width / 3,
                                           path: currentImagePath.value,
                                         )
@@ -908,8 +906,8 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                         final pickedFile = await FilePicker.platform.pickFiles(type: FileType.image);
                                         final path = pickedFile?.files.first.path ?? '';
                                         if (pickedFile != null && path != '') {
-                                          final copiedImage = await File(path).copy("${SettingsController.inst.defaultBackupLocation.value}/sussyimage.png");
-                                          currentImagePath.value = copiedImage.path;
+                                          currentImagePath.value = path;
+                                          canEditTags.value = true;
                                         }
                                       },
                                     ),
