@@ -7,6 +7,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -26,7 +27,7 @@ class PlaybackSettings extends StatelessWidget {
           title: Language.inst.ENABLE_VIDEO_PLAYBACK,
           icon: Broken.video,
           value: SettingsController.inst.enableVideoPlayback.value,
-          onChanged: (p0) async => await VideoController.inst.toggleVideoPlaybackInSetting(),
+          onChanged: (p0) async => await VideoController.inst.toggleVideoPlayback(),
         ),
       ),
       Obx(
@@ -35,11 +36,11 @@ class PlaybackSettings extends StatelessWidget {
           icon: Broken.scroll,
           trailingText: SettingsController.inst.videoPlaybackSource.value.toText(),
           onTap: () {
-            bool isEnabled(int val) {
+            bool isEnabled(VideoPlaybackSource val) {
               return SettingsController.inst.videoPlaybackSource.value == val;
             }
 
-            void tileOnTap(int val) {
+            void tileOnTap(VideoPlaybackSource val) {
               SettingsController.inst.save(videoPlaybackSource: val);
             }
 
@@ -48,7 +49,7 @@ class PlaybackSettings extends StatelessWidget {
                 title: Language.inst.VIDEO_PLAYBACK_SOURCE,
                 actions: [
                   IconButton(
-                    onPressed: () => tileOnTap(0),
+                    onPressed: () => tileOnTap(VideoPlaybackSource.auto),
                     icon: const Icon(Broken.refresh),
                   ),
                   NamidaButton(
@@ -111,29 +112,16 @@ class PlaybackSettings extends StatelessWidget {
                               ],
                             ),
                           ),
-                          const SizedBox(
-                            height: 18.0,
-                          ),
-                          ListTileWithCheckMark(
-                            active: isEnabled(0),
-                            title: Language.inst.AUTO,
-                            onTap: () => tileOnTap(0),
-                          ),
-                          const SizedBox(
-                            height: 12.0,
-                          ),
-                          ListTileWithCheckMark(
-                            active: isEnabled(1),
-                            title: Language.inst.VIDEO_PLAYBACK_SOURCE_LOCAL,
-                            onTap: () => tileOnTap(1),
-                          ),
-                          const SizedBox(
-                            height: 12.0,
-                          ),
-                          ListTileWithCheckMark(
-                            active: isEnabled(2),
-                            title: Language.inst.VIDEO_PLAYBACK_SOURCE_YOUTUBE,
-                            onTap: () => tileOnTap(2),
+                          const SizedBox(height: 18.0),
+                          ...VideoPlaybackSource.values.map(
+                            (e) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12.0),
+                              child: ListTileWithCheckMark(
+                                active: isEnabled(e),
+                                title: e.toText(),
+                                onTap: () => tileOnTap(e),
+                              ),
+                            ),
                           ),
                         ],
                       ),

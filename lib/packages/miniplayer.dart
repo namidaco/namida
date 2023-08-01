@@ -548,65 +548,63 @@ class NamidaMiniPlayer extends StatelessWidget {
                                       ScrollSearchController.inst.unfocusKeyboard();
                                       NamidaNavigator.inst.navigateDialog(dialog: const Dialog(child: PlaybackSettings(isInDialog: true)));
                                     },
-                                    onPressed: () async {
-                                      VideoController.inst.updateYTLink(currentTrack);
-                                      await VideoController.inst.toggleVideoPlaybackInSetting();
-                                    },
+                                    onPressed: () async => await VideoController.inst.toggleVideoPlayback(),
                                     child: Obx(
-                                      () => Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(6.0),
-                                            decoration: BoxDecoration(
-                                              color: context.theme.colorScheme.secondaryContainer,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: Icon(SettingsController.inst.enableVideoPlayback.value ? Broken.video : Broken.video_slash, size: 18.0, color: onSecondary),
-                                          ),
-                                          const SizedBox(
-                                            width: 8.0,
-                                          ),
-                                          if (!SettingsController.inst.enableVideoPlayback.value) ...[
-                                            Text(
-                                              Language.inst.AUDIO,
-                                              style: TextStyle(color: onSecondary),
-                                            ),
-                                            if (SettingsController.inst.displayAudioInfoMiniplayer.value)
-                                              Text(
-                                                " • ${currentTrack.audioInfoFormattedCompact}",
-                                                style: TextStyle(color: context.theme.colorScheme.onPrimaryContainer, fontSize: 10.0.multipliedFontScale),
+                                      () {
+                                        final videoPlaybackEnabled = SettingsController.inst.enableVideoPlayback.value;
+                                        final downloadedBytes = VideoController.inst.currentDownloadedBytes.value;
+                                        final currentVideo = VideoController.inst.currentVideo.value;
+                                        final videoTotalSize = currentVideo?.sizeInBytes ?? 0;
+                                        final videoQuality = currentVideo?.height ?? 0;
+                                        // final altText = currentVideo == null
+                                        //     ? '?'
+                                        //     : currentVideo.ytID == null
+                                        //         ? Language.inst.LOCAL
+                                        //         : 'Cache';
+                                        final qualityText = videoQuality == 0 ? '?' : '${videoQuality}p';
+                                        Widget getTextWidget(String text, {required bool colored, Color? textColor, double? fontSize}) {
+                                          return Text(
+                                            text,
+                                            style: TextStyle(color: textColor ?? (colored ? onSecondary : null), fontSize: fontSize?.multipliedFontScale),
+                                          );
+                                        }
+
+                                        return Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(6.0),
+                                              decoration: BoxDecoration(
+                                                color: context.theme.colorScheme.secondaryContainer,
+                                                shape: BoxShape.circle,
                                               ),
-                                          ],
-                                          if (SettingsController.inst.enableVideoPlayback.value) ...[
-                                            Text(
-                                              Language.inst.VIDEO,
-                                              style: TextStyle(
-                                                color: onSecondary,
-                                              ),
+                                              child: Icon(videoPlaybackEnabled ? Broken.video : Broken.video_slash, size: 18.0, color: onSecondary),
                                             ),
-                                            Text(
-                                              " • ${VideoController.inst.videoCurrentQuality.value}",
-                                              style: TextStyle(fontSize: 13.0.multipliedFontScale),
+                                            const SizedBox(
+                                              width: 8.0,
                                             ),
-                                            if (VideoController.inst.videoTotalSize.value > 10) ...[
-                                              Text(
-                                                " • ",
-                                                style: TextStyle(fontSize: 13.0.multipliedFontScale),
-                                              ),
-                                              if (VideoController.inst.videoCurrentSize.value > 10)
-                                                Text(
-                                                  "${VideoController.inst.videoCurrentSize.value.fileSizeFormatted}/",
-                                                  style: TextStyle(color: onSecondary, fontSize: 10.0.multipliedFontScale),
+                                            if (!videoPlaybackEnabled) ...[
+                                              getTextWidget(Language.inst.AUDIO, colored: true),
+                                              if (SettingsController.inst.displayAudioInfoMiniplayer.value)
+                                                getTextWidget(
+                                                  " • ${currentTrack.audioInfoFormattedCompact}",
+                                                  colored: true,
+                                                  textColor: context.theme.colorScheme.onPrimaryContainer,
+                                                  fontSize: 10.0,
                                                 ),
-                                              Text(
-                                                VideoController.inst.videoTotalSize.value.fileSizeFormatted,
-                                                style: TextStyle(color: onSecondary, fontSize: 10.0.multipliedFontScale),
-                                              ),
+                                            ],
+                                            if (videoPlaybackEnabled) ...[
+                                              getTextWidget(Language.inst.VIDEO, colored: true),
+                                              getTextWidget(" • $qualityText", colored: false, fontSize: 13.0),
+                                              if (videoTotalSize > 0) ...[
+                                                getTextWidget(" • ", colored: false, fontSize: 13.0),
+                                                if (downloadedBytes > 0) getTextWidget("${downloadedBytes.fileSizeFormatted}/", colored: true, fontSize: 10.0),
+                                                getTextWidget(videoTotalSize.fileSizeFormatted, colored: true, fontSize: 10.0),
+                                              ]
                                             ]
-                                          ]
-                                        ],
-                                      ),
+                                          ],
+                                        );
+                                      },
                                     ),
                                   ),
                                 ),
@@ -1406,7 +1404,8 @@ class _AnimatingTrackImage extends StatelessWidget {
       padding: EdgeInsets.all(12.0 * (1 - cp)),
       child: Obx(
         () {
-          final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value);
+          final additionalScale = VideoController.inst.videoZoomAdditionalScale.value;
+          final finalScale = (additionalScale * 0.02) + WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value);
           final isInversed = SettingsController.inst.animatingThumbnailInversed.value;
           return AnimatedScale(
             duration: const Duration(milliseconds: 100),
@@ -1417,15 +1416,9 @@ class _AnimatingTrackImage extends StatelessWidget {
                   ? ClipRRect(
                       key: const Key('videocontainer'),
                       borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
-                      child: AspectRatio(
-                        aspectRatio: VideoController.inst.vidcontroller!.value.aspectRatio,
-                        child: LyricsWrapper(
-                          cp: cp,
-                          child: VideoPlayer(
-                            key: const Key('video'),
-                            VideoController.inst.vidcontroller!,
-                          ),
-                        ),
+                      child: LyricsWrapper(
+                        cp: cp,
+                        child: VideoController.inst.getVideoWidget(false),
                       ),
                     )
                   : LyricsWrapper(

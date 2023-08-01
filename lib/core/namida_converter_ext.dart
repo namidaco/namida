@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:youtube_explode_dart/youtube_explode_dart.dart' hide Playlist;
 
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/queue.dart';
@@ -259,51 +258,64 @@ extension GroupSortToText on GroupSortType {
 }
 
 extension YTVideoQuality on String {
-  VideoQuality toVideoQuality() {
-    if (this == '144p') {
-      return VideoQuality.low144;
+  String settingLabeltoVideoLabel() {
+    final val = split('p').first;
+    String vl = '144';
+    switch (val) {
+      case '144':
+        vl = '144';
+        break;
+      case '240':
+        vl = '240';
+        break;
+      case '360':
+        vl = '360';
+        break;
+      case '480':
+        vl = '480';
+        break;
+      case '720':
+        vl = '720';
+        break;
+
+      case '1080':
+        vl = '1080';
+        break;
+      case '2k':
+        vl = '1440';
+        break;
+      case '4k':
+        vl = '2160';
+        break;
+      case '8k':
+        vl = '4320';
+        break;
+
+      default:
+        null;
     }
-    if (this == '240p') {
-      return VideoQuality.low240;
-    }
-    if (this == '360p') {
-      return VideoQuality.medium360;
-    }
-    if (this == '480p') {
-      return VideoQuality.medium480;
-    }
-    if (this == '720p') {
-      return VideoQuality.high720;
-    }
-    if (this == '1080p') {
-      return VideoQuality.high1080;
-    }
-    if (this == '2k') {
-      return VideoQuality.high1440;
-    }
-    if (this == '4k') {
-      return VideoQuality.high2160;
-    }
-    if (this == '8k') {
-      return VideoQuality.high4320;
-    }
-    return VideoQuality.low144;
+
+    return vl;
   }
 }
 
-extension VideoSource on int {
+extension VideoSource on VideoPlaybackSource {
   String toText() {
-    if (this == 0) {
-      return Language.inst.AUTO;
+    String s = '';
+    switch (this) {
+      case VideoPlaybackSource.auto:
+        s = Language.inst.AUTO;
+        break;
+      case VideoPlaybackSource.youtube:
+        s = Language.inst.VIDEO_PLAYBACK_SOURCE_YOUTUBE;
+        break;
+      case VideoPlaybackSource.local:
+        s = Language.inst.VIDEO_PLAYBACK_SOURCE_LOCAL;
+        break;
+      default:
+        null;
     }
-    if (this == 1) {
-      return Language.inst.VIDEO_PLAYBACK_SOURCE_LOCAL;
-    }
-    if (this == 2) {
-      return Language.inst.VIDEO_PLAYBACK_SOURCE_YOUTUBE;
-    }
-
-    return '';
+    return s;
   }
 }
 

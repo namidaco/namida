@@ -88,7 +88,7 @@ class SettingsController {
   ].obs;
   final RxBool enableVideoPlayback = true.obs;
   final RxBool enableLyrics = false.obs;
-  final RxInt videoPlaybackSource = 0.obs;
+  final Rx<VideoPlaybackSource> videoPlaybackSource = VideoPlaybackSource.auto.obs;
   final RxList<String> youtubeVideoQualities = ['480p', '360p', '240p', '144p'].obs;
   final RxInt animatingThumbnailIntensity = 25.obs;
   final RxBool animatingThumbnailInversed = false.obs;
@@ -228,7 +228,7 @@ class SettingsController {
       backupItemslist.value = List<String>.from(json['backupItemslist'] ?? backupItemslist);
       enableVideoPlayback.value = json['enableVideoPlayback'] ?? enableVideoPlayback.value;
       enableLyrics.value = json['enableLyrics'] ?? enableLyrics.value;
-      videoPlaybackSource.value = json['videoPlaybackSource'] ?? videoPlaybackSource.value;
+      videoPlaybackSource.value = VideoPlaybackSource.values.getEnum(json['VideoPlaybackSource']) ?? videoPlaybackSource.value;
       youtubeVideoQualities.value = List<String>.from(json['youtubeVideoQualities'] ?? youtubeVideoQualities);
 
       animatingThumbnailIntensity.value = json['animatingThumbnailIntensity'] ?? animatingThumbnailIntensity.value;
@@ -352,7 +352,7 @@ class SettingsController {
       'backupItemslist': backupItemslist.toList(),
       'enableVideoPlayback': enableVideoPlayback.value,
       'enableLyrics': enableLyrics.value,
-      'videoPlaybackSource': videoPlaybackSource.value,
+      'videoPlaybackSource': videoPlaybackSource.value.convertToString,
       'youtubeVideoQualities': youtubeVideoQualities.toList(),
       'animatingThumbnailIntensity': animatingThumbnailIntensity.value,
       'animatingThumbnailInversed': animatingThumbnailInversed.value,
@@ -469,7 +469,7 @@ class SettingsController {
     List<String>? backupItemslist,
     bool? enableVideoPlayback,
     bool? enableLyrics,
-    int? videoPlaybackSource,
+    VideoPlaybackSource? videoPlaybackSource,
     List<String>? youtubeVideoQualities,
     int? animatingThumbnailIntensity,
     bool? animatingThumbnailInversed,

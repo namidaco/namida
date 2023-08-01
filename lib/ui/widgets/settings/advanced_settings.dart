@@ -1,23 +1,20 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
-import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:checkmark/checkmark.dart';
+import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:get/get.dart';
-import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:namida/packages/youtube_miniplayer.dart';
+import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
@@ -36,19 +33,32 @@ class AdvancedSettings extends StatelessWidget {
       // icon: Broken.danger,
       child: Column(
         children: [
-          Obx(
-            () => CustomListTile(
-              leading: const StackedIcon(
-                baseIcon: Broken.video,
-                secondaryIcon: Broken.refresh,
-              ),
-              trailing: VideoController.inst.isUpdatingVideoFiles.value ? const LoadingIndicator() : null,
-              title: Language.inst.RESCAN_VIDEOS,
-              onTap: () async {
-                await VideoController.inst.getVideoFiles(forceRescan: true);
-                Get.snackbar(Language.inst.DONE, Language.inst.FINISHED_UPDATING_LIBRARY);
+          CustomListTile(
+            leading: const StackedIcon(
+              baseIcon: Broken.video,
+              secondaryIcon: Broken.refresh,
+            ),
+            trailingRaw: Obx(
+              () {
+                final current = VideoController.inst.localVideoExtractCurrent.value;
+                final total = VideoController.inst.localVideoExtractTotal.value;
+                final isCounterVisible = total != 0;
+                final isLoadingVisible = current != null;
+
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isCounterVisible) Text("$current/$total"),
+                    if (isLoadingVisible) const LoadingIndicator(),
+                  ],
+                );
               },
             ),
+            title: Language.inst.RESCAN_VIDEOS,
+            onTap: () async {
+              await VideoController.inst.scanLocalVideos(forceReScan: true);
+              Get.snackbar(Language.inst.DONE, Language.inst.FINISHED_UPDATING_LIBRARY);
+            },
           ),
           CustomListTile(
             leading: const StackedIcon(
@@ -250,9 +260,8 @@ class AdvancedSettings extends StatelessWidget {
               title: Language.inst.CLEAR_VIDEO_CACHE,
               trailingText: Indexer.inst.videosSizeInStorage.value.fileSizeFormatted,
               onTap: () async {
-                final allvideo = Directory(k_DIR_VIDEOS_CACHE).listSync();
-                allvideo.sortByReverse((e) => e.statSync().size);
-                allvideo.removeWhere((element) => element is Directory);
+                final allvideo = VideoController.inst.getCurrentVideosInCache();
+                allvideo.sortByReverse((e) => e.sizeInBytes);
 
                 /// First Dialog
                 NamidaNavigator.inst.navigateDialog(
@@ -271,7 +280,7 @@ class AdvancedSettings extends StatelessWidget {
                       ),
                       const CancelButton(),
                       NamidaButton(
-                        text: Language.inst.CLEAR.toUpperCase(),
+                        text: Language.inst.DELETE.toUpperCase(),
                         onPressed: () async {
                           NamidaNavigator.inst.closeDialog();
                           await Indexer.inst.clearVideoCache();
@@ -288,14 +297,14 @@ class AdvancedSettings extends StatelessWidget {
     );
   }
 
-  String _getVideoSubtitleText(List<FileSystemEntity> videos) {
+  String _getVideoSubtitleText(List<NamidaVideo> videos) {
     return Language.inst.CLEAR_VIDEO_CACHE_SUBTITLE
-        .replaceFirst('_CURRENT_VIDEOS_COUNT_', videos.length.toString())
-        .replaceFirst('_TOTAL_SIZE_', videos.map((e) => e.statSync().size).reduce((a, b) => a + b).fileSizeFormatted);
+        .replaceFirst('_CURRENT_VIDEOS_COUNT_', videos.length.formatDecimal())
+        .replaceFirst('_TOTAL_SIZE_', videos.fold(0, (previousValue, element) => previousValue + element.sizeInBytes).fileSizeFormatted);
   }
 
-  _showChooseVideosToDeleteDialog(List<FileSystemEntity> videoFiles) {
-    RxList<FileSystemEntity> videosToDelete = <FileSystemEntity>[].obs;
+  _showChooseVideosToDeleteDialog(List<NamidaVideo> videoFiles) {
+    final RxList<NamidaVideo> videosToDelete = <NamidaVideo>[].obs;
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
@@ -307,55 +316,55 @@ class AdvancedSettings extends StatelessWidget {
           const CancelButton(),
 
           /// Clear after choosing
-          NamidaButton(
-            text: Language.inst.CLEAR.toUpperCase(),
-            onPressed: () async {
-              if (videosToDelete.isEmpty) {
-                return;
-              }
-              NamidaNavigator.inst.navigateDialog(
-                dialog: CustomBlurryDialog(
-                  isWarning: true,
-                  normalTitleStyle: true,
-                  actions: [
-                    const CancelButton(),
+          Obx(
+            () => NamidaButton(
+              enabled: videosToDelete.isNotEmpty,
+              text: Language.inst.DELETE.toUpperCase(),
+              onPressed: () async {
+                NamidaNavigator.inst.navigateDialog(
+                  dialog: CustomBlurryDialog(
+                    isWarning: true,
+                    normalTitleStyle: true,
+                    actions: [
+                      const CancelButton(),
 
-                    /// final clear confirm
-                    NamidaButton(
-                      text: Language.inst.CLEAR.toUpperCase(),
-                      onPressed: () async {
-                        NamidaNavigator.inst.closeDialog(2);
-                        await Indexer.inst.clearVideoCache(videosToDelete);
-                      },
-                    ),
-                  ],
-                  bodyText: _getVideoSubtitleText(videosToDelete),
-                ),
-              );
-            },
+                      /// final clear confirm
+                      NamidaButton(
+                        text: Language.inst.DELETE.toUpperCase(),
+                        onPressed: () async {
+                          NamidaNavigator.inst.closeDialog(2);
+                          await Indexer.inst.clearVideoCache(videosToDelete);
+                        },
+                      ),
+                    ],
+                    bodyText: _getVideoSubtitleText(videosToDelete),
+                  ),
+                );
+              },
+            ),
           ),
         ],
         child: CupertinoScrollbar(
           child: SizedBox(
             width: Get.width,
-            height: Get.height / 1.5,
+            height: Get.height * 0.65,
             child: ListView.builder(
               itemCount: videoFiles.length,
               itemBuilder: (context, index) {
-                final file = videoFiles[index];
-                final quality = file.path.getFilename.split('_').last.split('.').first;
-                final id = file.path.getFilename.split('').take(11).join();
+                final video = videoFiles[index];
                 return Obx(
                   () => ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    leading: YoutubeThumbnail(
-                      borderRadius: 8.0,
-                      url: ThumbnailSet(id).mediumResUrl,
+                    leading: ArtworkWidget(
+                      thumbnailSize: 70.0,
+                      iconSize: 24.0,
                       width: 70,
                       height: 70 * 9 / 16,
+                      track: null,
+                      path: video.pathToYTImage,
                     ),
-                    title: Text(id),
-                    subtitle: Text([quality, file.statSync().size.fileSizeFormatted].join(' - ')),
+                    title: Text(video.ytID ?? ''),
+                    subtitle: Text("${video.height}p • ${video.framerate}fps - ${video.sizeInBytes.fileSizeFormatted}"),
                     trailing: IgnorePointer(
                       child: SizedBox(
                         height: 18.0,
@@ -365,17 +374,11 @@ class AdvancedSettings extends StatelessWidget {
                           activeColor: context.theme.listTileTheme.iconColor!,
                           inactiveColor: context.theme.listTileTheme.iconColor!,
                           duration: const Duration(milliseconds: 400),
-                          active: videosToDelete.contains(file),
+                          active: videosToDelete.contains(video),
                         ),
                       ),
                     ),
-                    onTap: () {
-                      if (videosToDelete.contains(file)) {
-                        videosToDelete.remove(file);
-                      } else {
-                        videosToDelete.add(file);
-                      }
-                    },
+                    onTap: () => videosToDelete.addOrRemove(video),
                   ),
                 );
               },

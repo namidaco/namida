@@ -821,9 +821,9 @@ class Indexer {
   }
 
   /// Deletes specific videos or the whole cache.
-  Future<void> clearVideoCache([List<FileSystemEntity>? videosToDelete]) async {
+  Future<void> clearVideoCache([List<NamidaVideo>? videosToDelete]) async {
     if (videosToDelete != null) {
-      await videosToDelete.loopFuture((v, index) async => await v.delete());
+      await videosToDelete.loopFuture((v, index) async => await File(v.path).delete());
     } else {
       await Directory(k_DIR_VIDEOS_CACHE).delete(recursive: true);
       await Directory(k_DIR_VIDEOS_CACHE).create();

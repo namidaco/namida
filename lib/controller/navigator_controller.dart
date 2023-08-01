@@ -8,6 +8,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -57,6 +58,35 @@ class NamidaNavigator {
     final initialTab = SettingsController.inst.selectedLibraryTab.value;
     navigateTo(initialTab.toWidget(), durationInMs: 0);
     Dimensions.inst.updateDimensions(initialTab);
+  }
+
+  Future<void> _setOrientations(List<DeviceOrientation> orientations) async {
+    await SystemChrome.setPreferredOrientations(orientations);
+  }
+
+  Future<void> enterFullScreen(Widget widget) async {
+    Get.to(
+      () => WillPopScope(
+        onWillPop: () async {
+          exitFullScreen();
+          return false;
+        },
+        child: widget,
+      ),
+      id: null,
+      preventDuplicates: true,
+      transition: Transition.zoom,
+      curve: Curves.easeOut,
+      duration: const Duration(milliseconds: 400),
+      opaque: true,
+      fullscreenDialog: false,
+    );
+    await _setOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
+  }
+
+  Future<void> exitFullScreen() async {
+    Get.close(1);
+    await _setOrientations(kDefaultOrientations);
   }
 
   Future<void> navigateTo(

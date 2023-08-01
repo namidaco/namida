@@ -104,17 +104,11 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
 
     _player.playingStream.listen((event) async {
       isPlaying.value = event;
-      await updateVideoPlayingState();
       CurrentColor.inst.switchColorPalettes(event);
     });
 
     _player.positionStream.listen((event) {
       nowPlayingPosition.value = event.inMilliseconds;
-    });
-
-    // Attempt to fix video position after switching to bg or turning off screen
-    _player.positionDiscontinuityStream.listen((event) async {
-      await updateVideoPlayingState();
     });
   }
 
@@ -149,17 +143,16 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
   //
   // Video Methods
   Future<void> updateVideoPlayingState() async {
-    await refreshVideoPosition();
     if (isPlaying.value) {
-      VideoController.inst.play();
+      VideoController.vcontroller.play();
     } else {
-      VideoController.inst.pause();
+      VideoController.vcontroller.pause();
     }
-    await refreshVideoPosition();
+    refreshVideoPosition();
   }
 
   Future<void> refreshVideoPosition() async {
-    await VideoController.inst.seek(Duration(milliseconds: nowPlayingPosition.value));
+    await VideoController.vcontroller.seek(Duration(milliseconds: nowPlayingPosition.value));
   }
 
   // End of Video Methods.
@@ -197,6 +190,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
 
     if (startPlaying) {
       _player.play();
+      VideoController.vcontroller.play();
       setVolume(SettingsController.inst.playerVolume.value);
     }
 
@@ -450,6 +444,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
       _player.play();
       setVolume(SettingsController.inst.playerVolume.value);
     }
+    VideoController.vcontroller.play();
   }
 
   @override
@@ -460,6 +455,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
     } else {
       _player.pause();
     }
+    VideoController.vcontroller.pause();
   }
 
   @override
@@ -477,17 +473,15 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
         HistoryController.inst.startCounterToAListen(nowPlayingTrack.value);
       }
     }
-    await _player.seek(p.milliseconds);
-    await VideoController.inst.seek(p.milliseconds);
+    final msd = p.milliseconds;
+    await Future.wait([
+      _player.seek(msd),
+      VideoController.vcontroller.seek(msd),
+    ]);
   }
 
   @override
-  Future<void> stop() async {
-    // await _player.pause();
-    // await Player.inst.closePlayerNotification();
-    // await _player.pause();
-    await _player.stop();
-  }
+  Future<void> stop() async => await _player.stop();
 
   @override
   Future<void> skipToNext([bool? andPlay]) async {

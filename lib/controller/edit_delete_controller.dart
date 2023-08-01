@@ -18,20 +18,12 @@ class EditDeleteController {
   static final EditDeleteController _instance = EditDeleteController._internal();
   EditDeleteController._internal();
 
-  Future<void> deleteCachedVideos(List<Track> tracks) async {
-    final idsToDelete = tracks.mapped((e) => e.youtubeID);
-    await for (final v in Directory(k_DIR_VIDEOS_CACHE).list()) {
-      if (v is File) {
-        await idsToDelete.loopFuture((id, index) async {
-          if (v.path.getFilename.startsWith(id)) {
-            await Indexer.inst.updateVideosSizeInStorage(v, true);
-            await v.delete();
-          }
-        });
-      }
-    }
-
-    VideoController.inst.resetEverything();
+  Future<void> deleteCachedVideos(List<Selectable> tracks) async {
+    final videosToDelete = <NamidaVideo>[];
+    tracks.loop((e, index) {
+      videosToDelete.addAll(VideoController.inst.getNVFromID(e.track.youtubeID));
+    });
+    await Indexer.inst.clearVideoCache(videosToDelete);
     await Player.inst.updateVideoPlayingState();
   }
 
@@ -114,12 +106,10 @@ extension HasCachedFiles on List<Track> {
   bool get hasLyricsCached => doesAnyPathExist(this, k_DIR_LYRICS, 'txt');
   bool get hasColorCached => doesAnyPathExist(this, k_DIR_PALETTES, 'palette');
   bool get hasVideoCached {
-    final allvideos = Directory(k_DIR_VIDEOS_CACHE).listSync();
-    for (final track in this) {
-      for (final v in allvideos) {
-        if (v.path.getFilename.startsWith(track.youtubeID)) {
-          return true;
-        }
+    for (int i = 0; i < length; i++) {
+      final tr = this[i];
+      if (VideoController.inst.doesVideoExistsInCache(tr.track.youtubeID)) {
+        return true;
       }
     }
     return false;

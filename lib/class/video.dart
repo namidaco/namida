@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 /// used for stats.
@@ -85,6 +89,117 @@ class YTLVideo {
     data['channel'] = channel.toJson();
 
     return data;
+  }
+}
+
+class NamidaVideo {
+  final String path;
+  final String? ytID;
+  final int height;
+  final int width;
+  final int sizeInBytes;
+  final double frameratePrecise;
+  final int creationTimeMS;
+  final int durationMS;
+  final int bitrate;
+
+  const NamidaVideo({
+    required this.path,
+    this.ytID,
+    required this.height,
+    required this.width,
+    required this.sizeInBytes,
+    required this.frameratePrecise,
+    required this.creationTimeMS,
+    required this.durationMS,
+    required this.bitrate,
+  });
+
+  factory NamidaVideo.fromJson(Map<String, dynamic> json) {
+    return NamidaVideo(
+      path: json['path'] ?? '',
+      ytID: json['ytID'],
+      height: json['height'] ?? 0,
+      width: json['width'] ?? 0,
+      sizeInBytes: json['sizeInBytes'] ?? 0,
+      frameratePrecise: json['frameratePrecise'] ?? 0.0,
+      creationTimeMS: json['creationTimeMS'] ?? 0,
+      durationMS: json['durationMS'] ?? 0,
+      bitrate: json['bitrate'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'path': path,
+      'ytID': ytID,
+      'height': height,
+      'width': width,
+      'sizeInBytes': sizeInBytes,
+      'frameratePrecise': frameratePrecise,
+      'creationTimeMS': creationTimeMS,
+      'durationMS': durationMS,
+      'bitrate': bitrate,
+    };
+  }
+
+  @override
+  bool operator ==(other) {
+    if (other is NamidaVideo) {
+      return path == other.path &&
+          ytID == other.ytID &&
+          height == other.height &&
+          width == other.width &&
+          sizeInBytes == other.sizeInBytes &&
+          frameratePrecise == other.frameratePrecise &&
+          creationTimeMS == other.creationTimeMS;
+    }
+    return false;
+  }
+
+  @override
+  int get hashCode => "$path$ytID$height$width$sizeInBytes".hashCode;
+
+  @override
+  String toString() {
+    return toJson().toString();
+  }
+}
+
+extension NamidaVideoUtils on NamidaVideo {
+  int get framerate => frameratePrecise.round();
+
+  String get pathToImage {
+    final isLocal = ytID == null;
+    final dir = isLocal ? k_DIR_THUMBNAILS : k_DIR_YT_THUMBNAILS;
+    final idOrFileNameWOExt = ytID ?? path.getFilenameWOExt;
+
+    String getPath(String prefix) => "$dir$prefix$idOrFileNameWOExt.png";
+
+    if (!isLocal) {
+      final path = getPath('');
+      if (File(path).existsSync()) {
+        return path;
+      }
+    }
+    return getPath('EXT_');
+  }
+
+  String get pathToLocalImage {
+    final name = path.getFilenameWOExt;
+    const prefix = 'EXT_';
+    return "$k_DIR_THUMBNAILS$prefix$name.png";
+  }
+
+  String get pathToYTImage {
+    String getPath(String prefix) => "$k_DIR_YT_THUMBNAILS$prefix$ytID.png";
+
+    final path = getPath('');
+    if (File(path).existsSync()) {
+      return path;
+    }
+
+    return getPath('EXT_');
   }
 }
 

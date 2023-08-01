@@ -1,6 +1,6 @@
 // ignore_for_file: non_constant_identifier_names, constant_identifier_names
 
-import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/track.dart';
@@ -28,11 +28,13 @@ const Color kMainColorLight = Color.fromARGB(255, 116, 126, 219);
 const Color kMainColorDark = Color.fromARGB(255, 139, 149, 241);
 
 /// Directories and files used by Namida
-final String k_FILE_PATH_SETTINGS = '$k_DIR_USER_DATA/namidaSettings.json';
+final String k_FILE_PATH_SETTINGS = '$k_DIR_USER_DATA/namida_settings.json';
 final String k_FILE_PATH_TRACKS = '$k_DIR_USER_DATA/tracks.json';
-final String k_FILE_PATH_TRACKS_STATS = '$k_DIR_USER_DATA/tracksStats.json';
-final String k_FILE_PATH_VIDEO_PATHS = '$k_DIR_USER_DATA/videoFilesPaths.txt';
-final String k_FILE_PATH_LATEST_QUEUE = '$k_DIR_USER_DATA/latestqueue.json';
+final String k_FILE_PATH_VIDEOS_LOCAL = '$k_DIR_USER_DATA/local_videos.json';
+final String k_FILE_PATH_VIDEOS_CACHE = '$k_DIR_USER_DATA/cache_videos.json';
+final String k_FILE_PATH_TRACKS_STATS = '$k_DIR_USER_DATA/tracks_stats.json';
+final String k_FILE_PATH_LATEST_QUEUE = '$k_DIR_USER_DATA/latest_queue.json';
+final String k_FILE_PATH_LOGS = '$k_DIR_USER_DATA/logs.txt';
 
 final String k_FILE_PATH_TOTAL_LISTEN_TIME = '$k_DIR_USER_DATA/total_listen.txt';
 
@@ -46,6 +48,8 @@ final String k_DIR_PALETTES = '$k_DIR_USER_DATA/Palettes/';
 final String k_DIR_WAVEFORMS = '$k_DIR_USER_DATA/Waveforms/';
 final String k_DIR_VIDEOS_CACHE = '$k_DIR_USER_DATA/Videos/';
 final String k_DIR_VIDEOS_CACHE_TEMP = '$k_DIR_USER_DATA/Videos/Temp/';
+final String k_DIR_THUMBNAILS = '$k_DIR_USER_DATA/Thumbnails/';
+final String k_DIR_YT_THUMBNAILS = '$k_DIR_USER_DATA/YTThumbnails/';
 final String k_DIR_LYRICS = '$k_DIR_USER_DATA/Lyrics/';
 final String k_DIR_YT_METADATA = '$k_DIR_USER_DATA/Metadata/';
 final String k_DIR_YT_METADATA_COMMENTS = '$k_DIR_USER_DATA/Metadata/Comments/';
@@ -93,8 +97,8 @@ const kDefaultDateTimeStrings = {
   '[dd.MM.yyyy]': '[13.04.2022]',
 };
 
-/// Extensions used to filter files
-const List<String> kFileExtensions = [
+/// Extensions used to filter audio files
+const List<String> kAudioFileExtensions = [
   '.aac',
   '.ac3',
   '.aiff',
@@ -115,6 +119,8 @@ const List<String> kFileExtensions = [
   '.wav',
   '.wma',
 ];
+
+/// Extensions used to filter video files
 const List<String> kVideoFilesExtensions = [
   'mp4',
   'mkv',
@@ -147,7 +153,7 @@ const List<String> kVideoFilesExtensions = [
   'mpeg2',
   'mpeg4'
 ];
-
+const kDefaultOrientations = <DeviceOrientation>[DeviceOrientation.portraitUp, DeviceOrientation.portraitDown];
 const kDefaultLang = NamidaLanguage(
   code: "en_US",
   name: "English",
@@ -155,7 +161,7 @@ const kDefaultLang = NamidaLanguage(
 );
 
 const kDummyTrack = Track('');
-final kDummyExtendedTrack = TrackExtended(
+const kDummyExtendedTrack = TrackExtended(
   title: "",
   originalArtist: "",
   artistsList: [],

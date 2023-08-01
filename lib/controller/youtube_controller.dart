@@ -2,13 +2,23 @@
 
 import 'dart:io';
 
-import 'package:get/get.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:get/get_rx/get_rx.dart';
 import 'package:http/http.dart' as http;
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
+
+class YTThumbnail {
+  final String id;
+  const YTThumbnail(this.id);
+  String get maxResUrl => ThumbnailSet(id).maxResUrl;
+  String get highResUrl => ThumbnailSet(id).highResUrl;
+}
 
 class YoutubeController {
   static YoutubeController get inst => _instance;
@@ -23,23 +33,150 @@ class YoutubeController {
   final RxList<Channel> searchChannels = <Channel>[].obs;
 
   String sussyBaka = '';
-  Map<String, String> sussyBakaHeader = {};
+  int? currentDownloadStartRange;
+
+  YoutubeExplode? _ytexp;
+  YoutubeExplode? _ytexpDownload;
+  final _connectivity = Connectivity();
+
+  YoutubeExplode _getNewYTCilent({Map<String, String> headers = const <String, String>{}, bool useRangeHeader = false}) {
+    return YoutubeExplode(YoutubeHttpClient(_NamidaClient(headers: headers, useRangeHeader: useRangeHeader)));
+  }
+
+  Future<bool> _hasConnection() async {
+    final connection = await _connectivity.checkConnectivity();
+    if (connection == ConnectivityResult.none) {
+      printy('Error Requesting: No Connection', isError: true);
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _tryDownloading<T>(Future<T> Function(YoutubeExplode ytexp) fun) async {
+    if (!await _hasConnection()) return;
+
+    void assignClient() => _ytexpDownload = _getNewYTCilent(useRangeHeader: true);
+    currentDownloadStartRange = null;
+    try {
+      if (_ytexpDownload == null) assignClient();
+      await fun(_ytexpDownload!);
+    } catch (e) {
+      _ytexpDownload?.close();
+      assignClient();
+      await fun(_ytexpDownload!);
+    }
+  }
+
+  Future<void> _tryRequest<T>(Future<T> Function(YoutubeExplode ytexp) fun) async {
+    if (!await _hasConnection()) return;
+
+    void assignClient() => _ytexp = _getNewYTCilent();
+    try {
+      if (_ytexp == null) assignClient();
+      await fun(_ytexp!);
+    } catch (e) {
+      _ytexp?.close();
+      assignClient();
+      await fun(_ytexp!);
+    }
+  }
 
   Future<void> prepareHomePage() async {
-    final ytexp = YoutubeExplode(YoutubeHttpClient(NamidaClient()));
-    currentSearchList.value = await ytexp.search.search('');
+    _tryRequest((ytexp) async {
+      currentSearchList.value = await ytexp.search.search('');
 
-    /// Channels in search
-    final search = currentSearchList.value;
-    if (search == null) {
-      return;
-    }
-    await search.loopFuture((ch, index) async {
-      searchChannels.add(await ytexp.channels.get(ch.channelId));
+      /// Channels in search
+      final search = currentSearchList.value;
+      if (search == null) {
+        return;
+      }
+      await search.loopFuture((ch, index) async {
+        searchChannels.add(await ytexp.channels.get(ch.channelId));
+      });
+
+      searchChannels.refresh();
     });
+  }
 
-    searchChannels.refresh();
-    ytexp.close();
+  Future<NamidaVideo?> downloadYoutubeVideo({
+    required String id,
+    required void Function(List<VideoOnlyStreamInfo> availableStreams) onAvailableQualities,
+    required void Function(VideoOnlyStreamInfo choosenStream) onChoosingQuality,
+    required void Function(List<int> downloadedBytes) downloadingStream,
+    required void Function(int initialFileSize) onInitialFileSize,
+  }) async {
+    if (id == '') return null;
+    NamidaVideo? dv;
+    try {
+      _ytexpDownload?.close(); // closing to stop previous download processes.
+      await _tryDownloading((ytexp) async {
+        // --------- Getting Video to Download.
+        final stClient = ytexp.videos.streamsClient;
+        final manifest = await stClient.getManifest(id);
+        final availableVideos = List<VideoOnlyStreamInfo>.from(manifest.videoOnly);
+        availableVideos.sortByReverseAlt((e) => e.videoResolution, (e) => e.bitrate);
+        onAvailableQualities(availableVideos);
+
+        final preferredQualities = SettingsController.inst.youtubeVideoQualities.map((element) => element.settingLabeltoVideoLabel());
+        VideoOnlyStreamInfo erabaretaStream = availableVideos.last; // worst quality
+        for (int i = 0; i < availableVideos.length; i++) {
+          final q = availableVideos[i];
+          if (preferredQualities.contains(q.videoQualityLabel.split('p').first)) {
+            erabaretaStream = q;
+            break;
+          }
+        }
+        onChoosingQuality(erabaretaStream);
+        // ------------------------------------
+
+        // --------- Downloading Choosen Video.
+        String getVPath(bool isTemp) {
+          final dir = isTemp ? k_DIR_VIDEOS_CACHE_TEMP : k_DIR_VIDEOS_CACHE;
+          return "$dir${id}_${erabaretaStream.videoQualityLabel}.mp4";
+        }
+
+        final file = await File(getVPath(true)).create(); // retrieving the temp file (or creating a new one).
+        final initialFileSizeOnDisk = await file.stat().then((value) => value.size); // fetching current size to be used as a range bytes for download request
+        onInitialFileSize(initialFileSizeOnDisk);
+        // only download if the download is incomplete, useful sometimes when file 'moving' fails.
+        if (initialFileSizeOnDisk < erabaretaStream.size.totalBytes) {
+          currentDownloadStartRange = initialFileSizeOnDisk;
+          final downloadStream = ytexp.videos.streamsClient.get(erabaretaStream);
+
+          final fileStream = file.openWrite(mode: FileMode.append);
+          await for (final data in downloadStream) {
+            fileStream.add(data);
+            downloadingStream(data);
+          }
+          await fileStream.flush();
+          await fileStream.close(); // closing file.
+        }
+
+        // ------------------------------------
+
+        // -- ensuring the file is downloaded completely before moving.
+        final fileStats = await file.stat();
+        const allowance = 1024; // 1KB allowance
+        if (fileStats.size >= erabaretaStream.size.totalBytes - allowance) {
+          final newfile = await file.rename(getVPath(false));
+          dv = NamidaVideo(
+            path: newfile.path,
+            ytID: id,
+            height: erabaretaStream.videoResolution.height,
+            width: erabaretaStream.videoResolution.width,
+            sizeInBytes: erabaretaStream.size.totalBytes,
+            frameratePrecise: erabaretaStream.framerate.framesPerSecond.toDouble(),
+            creationTimeMS: 0, // TODO: get using metadata
+            durationMS: 0, // TODO: get using metadata
+            bitrate: erabaretaStream.bitrate.bitsPerSecond,
+          );
+        }
+      });
+    } catch (e) {
+      printy('Error Downloading YT Video: $e', isError: true);
+    }
+    currentDownloadStartRange = null;
+    return dv;
   }
 
   Future<void> updateCurrentVideoMetadata(String id, {bool forceReload = false}) async {
@@ -55,31 +192,31 @@ class YoutubeController {
     if (id == '') {
       return null;
     }
-    final videometafile = File('$k_DIR_YT_METADATA$id.txt');
     YTLVideo? vid;
-    if (!forceReload && await videometafile.existsAndValid()) {
-      final jsonResponse = await videometafile.readAsJson();
-      if (jsonResponse != null) {
-        final ytl = YTLVideo.fromJson(jsonResponse);
-        currentYoutubeMetadata.value = ytl;
-        vid = ytl;
+    await _tryRequest((ytexp) async {
+      final videometafile = File('$k_DIR_YT_METADATA$id.txt');
+
+      if (!forceReload && await videometafile.existsAndValid()) {
+        final jsonResponse = await videometafile.readAsJson();
+        if (jsonResponse != null) {
+          final ytl = YTLVideo.fromJson(jsonResponse);
+          currentYoutubeMetadata.value = ytl;
+          vid = ytl;
+        }
+      } else {
+        final video = await ytexp.videos.get(id);
+        final channel = await ytexp.channels.get(video.channelId);
+        final ytlvideo = YTLVideo(video: video, channel: channel);
+        currentYoutubeMetadata.value = ytlvideo;
+        final file = await videometafile.create();
+        await file.writeAsJson(ytlvideo.toJson());
+        vid = ytlvideo;
       }
-    } else {
-      final ytexp = YoutubeExplode(YoutubeHttpClient(NamidaClient()));
-      final video = await ytexp.videos.get(id);
-      final channel = await ytexp.channels.get(video.channelId);
-      final ytlvideo = YTLVideo(video: video, channel: channel);
-      currentYoutubeMetadata.value = ytlvideo;
-      final file = await videometafile.create();
-      await file.writeAsJson(ytlvideo.toJson());
-      vid = ytlvideo;
-      ytexp.close();
-    }
+    });
     return vid;
   }
 
   Future<void> updateCurrentComments(Video video, {bool forceReload = false, bool loadNext = false}) async {
-    final ytexp = YoutubeExplode(YoutubeHttpClient(NamidaClient()));
     if (!loadNext) {
       comments.value = null;
     }
@@ -102,8 +239,10 @@ class YoutubeController {
         final more = await _commentlistclient.value?.nextPage() ?? <Comment>[];
         finalcomm.addAll(more);
       } else {
-        _commentlistclient.value = await ytexp.videos.commentsClient.getComments(video);
-        finalcomm.assignAll(_commentlistclient.value?.map((p0) => p0) ?? []);
+        await _tryRequest((ytexp) async {
+          _commentlistclient.value = await ytexp.videos.commentsClient.getComments(video);
+          finalcomm.assignAll(_commentlistclient.value?.map((p0) => p0) ?? []);
+        });
       }
 
       if (_commentlistclient.value != null) {
@@ -119,27 +258,50 @@ class YoutubeController {
       comments.value = newcomm;
 
       /// Comments Channels
-      await comments.value!.comments.loopFuture((ch, index) async {
-        commentsChannels.add(await ytexp.channels.get(ch.channelId));
+      await _tryRequest((ytexp) async {
+        await comments.value!.comments.loopFuture((ch, index) async {
+          commentsChannels.add(await ytexp.channels.get(ch.channelId));
+        });
       });
     }
-    ytexp.close();
+  }
+
+  void dispose({bool downloadClientOnly = false}) {
+    _ytexpDownload?.close();
+    _ytexpDownload = null;
+    if (downloadClientOnly) return;
+    _ytexp?.close();
+    _ytexp = null;
   }
 }
 
-class NamidaClient extends http.BaseClient {
+class _NamidaClient extends http.BaseClient {
+  final Map<String, String> headers;
+  final bool useRangeHeader;
   final _client = http.Client();
+
+  _NamidaClient({
+    // ignore: unused_element
+    this.headers = const <String, String>{},
+    this.useRangeHeader = false,
+  });
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) {
-    if (YoutubeController.inst.sussyBakaHeader.isNotEmpty) {
-      request.headers.addAll(YoutubeController.inst.sussyBakaHeader);
-    }
     if (YoutubeController.inst.sussyBaka.isNotEmpty) {
-      request.headers.addAll({'Authorization': 'Bearer ${YoutubeController.inst.sussyBaka}'});
+      request.headers.addAll({HttpHeaders.authorizationHeader: 'Bearer ${YoutubeController.inst.sussyBaka}'});
     }
 
-    printy('NamidaClient Header: ${request.headers}');
+    if (useRangeHeader) {
+      final downloadStartRange = YoutubeController.inst.currentDownloadStartRange;
+      if (downloadStartRange != null) {
+        request.headers.addAll({'Range': 'bytes=$downloadStartRange-'});
+      }
+    }
+
+    request.headers.addAll(headers);
+
+    printy('_NamidaClient Header: ${request.headers}');
     return _client.send(request);
   }
 

@@ -211,3 +211,9 @@ enum MediaType {
   /// not used
   folder,
 }
+
+enum VideoPlaybackSource {
+  auto,
+  local,
+  youtube,
+}
