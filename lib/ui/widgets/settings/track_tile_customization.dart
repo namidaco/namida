@@ -170,26 +170,18 @@ class TrackTileCustomization extends StatelessWidget {
                       FittedBox(
                         child: Row(
                           children: [
-                            TrackItemSmallBox(
-                              text: SettingsController.inst.trackItem.value.row1Item1.label,
-                              onTap: () => _showTrackItemsDialog(TrackTilePosition.row1Item1, SettingsController.inst.trackItem.value.row1Item1),
-                            ),
-                            const SizedBox(
-                              width: 6.0,
-                            ),
-                            TrackItemSmallBox(
-                              text: SettingsController.inst.trackItem.value.row1Item2.label,
-                              onTap: () => _showTrackItemsDialog(TrackTilePosition.row1Item2, SettingsController.inst.trackItem.value.row1Item2),
-                            ),
-                            const SizedBox(
-                              width: 6.0,
-                            ),
-                            if (SettingsController.inst.displayThirdItemInEachRow.value)
-                              TrackItemSmallBox(
-                                text: SettingsController.inst.trackItem.value.row1Item3.label,
-                                onTap: () => _showTrackItemsDialog(TrackTilePosition.row1Item3, SettingsController.inst.trackItem.value.row1Item3),
-                              ),
-                          ],
+                            TrackTilePosition.row1Item1,
+                            TrackTilePosition.row1Item2,
+                            if (SettingsController.inst.displayThirdItemInEachRow.value) TrackTilePosition.row1Item3,
+                          ]
+                              .map(
+                                (e) => TrackItemSmallBox(
+                                  text: SettingsController.inst.trackItem[e]?.label,
+                                  onTap: () => _showTrackItemsDialog(e),
+                                ),
+                              )
+                              .addSeparators(separator: const SizedBox(width: 6.0))
+                              .toList(),
                         ),
                       ),
                       const SizedBox(
@@ -198,26 +190,18 @@ class TrackTileCustomization extends StatelessWidget {
                       FittedBox(
                         child: Row(
                           children: [
-                            TrackItemSmallBox(
-                              text: SettingsController.inst.trackItem.value.row2Item1.label,
-                              onTap: () => _showTrackItemsDialog(TrackTilePosition.row2Item1, SettingsController.inst.trackItem.value.row2Item1),
-                            ),
-                            const SizedBox(
-                              width: 6.0,
-                            ),
-                            TrackItemSmallBox(
-                              text: SettingsController.inst.trackItem.value.row2Item2.label,
-                              onTap: () => _showTrackItemsDialog(TrackTilePosition.row2Item2, SettingsController.inst.trackItem.value.row2Item2),
-                            ),
-                            const SizedBox(
-                              width: 6.0,
-                            ),
-                            if (SettingsController.inst.displayThirdItemInEachRow.value)
-                              TrackItemSmallBox(
-                                text: SettingsController.inst.trackItem.value.row2Item3.label,
-                                onTap: () => _showTrackItemsDialog(TrackTilePosition.row2Item3, SettingsController.inst.trackItem.value.row2Item3),
-                              ),
-                          ],
+                            TrackTilePosition.row2Item1,
+                            TrackTilePosition.row2Item2,
+                            if (SettingsController.inst.displayThirdItemInEachRow.value) TrackTilePosition.row2Item3,
+                          ]
+                              .map(
+                                (e) => TrackItemSmallBox(
+                                  text: SettingsController.inst.trackItem[e]?.label,
+                                  onTap: () => _showTrackItemsDialog(e),
+                                ),
+                              )
+                              .addSeparators(separator: const SizedBox(width: 6.0))
+                              .toList(),
                         ),
                       ),
                       const SizedBox(
@@ -227,26 +211,18 @@ class TrackTileCustomization extends StatelessWidget {
                         FittedBox(
                           child: Row(
                             children: [
-                              TrackItemSmallBox(
-                                text: SettingsController.inst.trackItem.value.row3Item1.label,
-                                onTap: () => _showTrackItemsDialog(TrackTilePosition.row3Item1, SettingsController.inst.trackItem.value.row3Item1),
-                              ),
-                              const SizedBox(
-                                width: 6.0,
-                              ),
-                              TrackItemSmallBox(
-                                text: SettingsController.inst.trackItem.value.row3Item2.label,
-                                onTap: () => _showTrackItemsDialog(TrackTilePosition.row3Item2, SettingsController.inst.trackItem.value.row3Item2),
-                              ),
-                              const SizedBox(
-                                width: 6.0,
-                              ),
-                              if (SettingsController.inst.displayThirdItemInEachRow.value)
-                                TrackItemSmallBox(
-                                  text: SettingsController.inst.trackItem.value.row3Item3.label,
-                                  onTap: () => _showTrackItemsDialog(TrackTilePosition.row3Item3, SettingsController.inst.trackItem.value.row3Item3),
-                                ),
-                            ],
+                              TrackTilePosition.row3Item1,
+                              TrackTilePosition.row3Item2,
+                              if (SettingsController.inst.displayThirdItemInEachRow.value) TrackTilePosition.row3Item3,
+                            ]
+                                .map(
+                                  (e) => TrackItemSmallBox(
+                                    text: SettingsController.inst.trackItem[e]?.label,
+                                    onTap: () => _showTrackItemsDialog(e),
+                                  ),
+                                )
+                                .addSeparators(separator: const SizedBox(width: 6.0))
+                                .toList(),
                           ),
                         ),
                     ],
@@ -259,25 +235,25 @@ class TrackTileCustomization extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    TrackItemSmallBox(
-                      text: SettingsController.inst.trackItem.value.rightItem1.label,
-                      onTap: () => _showTrackItemsDialog(TrackTilePosition.rightItem1, SettingsController.inst.trackItem.value.rightItem1),
-                    ),
-                    const SizedBox(
-                      height: 3.0,
-                    ),
-                    TrackItemSmallBox(
-                      text: SettingsController.inst.trackItem.value.rightItem2.label,
-                      onTap: () => _showTrackItemsDialog(TrackTilePosition.rightItem2, SettingsController.inst.trackItem.value.rightItem2),
-                    ),
-                    const SizedBox(
-                      height: 3.0,
-                    ),
-                    if (SettingsController.inst.displayFavouriteIconInListTile.value)
+                    ...[
+                      TrackTilePosition.rightItem1,
+                      TrackTilePosition.rightItem2,
+                    ]
+                        .map(
+                          (e) => TrackItemSmallBox(
+                            text: SettingsController.inst.trackItem[e]?.label,
+                            onTap: () => _showTrackItemsDialog(e),
+                          ),
+                        )
+                        .addSeparators(separator: const SizedBox(height: 3.0))
+                        .toList(),
+                    if (SettingsController.inst.displayFavouriteIconInListTile.value) ...[
+                      const SizedBox(height: 3.0),
                       const NamidaLikeButton(
                         track: null,
                         size: 20,
                       ),
+                    ]
                   ],
                 ),
                 const SizedBox(width: 6.0),
@@ -293,7 +269,7 @@ class TrackTileCustomization extends StatelessWidget {
     );
   }
 
-  _showTrackItemsDialog(TrackTilePosition p, TrackTileItem rowItemInSetting) {
+  _showTrackItemsDialog(TrackTilePosition p) {
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         title: Language.inst.CHOOSE,
@@ -313,7 +289,7 @@ class TrackTileCustomization extends StatelessWidget {
                   SettingsController.inst.updateTrackItemList(p, trItem);
                   NamidaNavigator.inst.closeDialog();
                 },
-                active: rowItemInSetting == trItem,
+                active: SettingsController.inst.trackItem[p] == trItem,
               );
             },
             itemCount: TrackTileItem.values.length,

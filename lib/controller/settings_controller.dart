@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/lang.dart';
-import 'package:namida/class/trackitem.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -139,19 +138,20 @@ class SettingsController {
   final RxBool displayThirdItemInEachRow = false.obs;
   final RxString trackTileSeparator = '•'.obs;
   final RxBool displayFavouriteIconInListTile = true.obs;
-  final Rx<TrackItem> trackItem = TrackItem(
-    TrackTileItem.title,
-    TrackTileItem.none,
-    TrackTileItem.none,
-    TrackTileItem.artists,
-    TrackTileItem.none,
-    TrackTileItem.none,
-    TrackTileItem.album,
-    TrackTileItem.year,
-    TrackTileItem.none,
-    TrackTileItem.duration,
-    TrackTileItem.none,
-  ).obs;
+
+  final RxMap<TrackTilePosition, TrackTileItem> trackItem = {
+    TrackTilePosition.row1Item1: TrackTileItem.title,
+    TrackTilePosition.row1Item2: TrackTileItem.none,
+    TrackTilePosition.row1Item3: TrackTileItem.none,
+    TrackTilePosition.row2Item1: TrackTileItem.artists,
+    TrackTilePosition.row2Item2: TrackTileItem.none,
+    TrackTilePosition.row2Item3: TrackTileItem.none,
+    TrackTilePosition.row3Item1: TrackTileItem.album,
+    TrackTilePosition.row3Item2: TrackTileItem.year,
+    TrackTilePosition.row3Item3: TrackTileItem.none,
+    TrackTilePosition.rightItem1: TrackTileItem.duration,
+    TrackTilePosition.rightItem2: TrackTileItem.none,
+  }.obs;
 
   bool didSupportNamida = false;
 
@@ -271,7 +271,10 @@ class SettingsController {
       displayThirdItemInEachRow.value = json['displayThirdItemInEachRow'] ?? displayThirdItemInEachRow.value;
       trackTileSeparator.value = json['trackTileSeparator'] ?? trackTileSeparator.value;
       displayFavouriteIconInListTile.value = json['displayFavouriteIconInListTile'] ?? displayFavouriteIconInListTile.value;
-      trackItem.value = TrackItem.fromJson(json['trackItem']);
+      trackItem.value = ((json['trackItem'] as Map?)?.map(
+            (key, value) => MapEntry(TrackTilePosition.values.getEnum(key) ?? TrackTilePosition.rightItem3, TrackTileItem.values.getEnum(value) ?? TrackTileItem.none),
+          )) ??
+          trackItem;
 
       ///
     } catch (e) {
@@ -390,7 +393,7 @@ class SettingsController {
       'displayThirdItemInEachRow': displayThirdItemInEachRow.value,
       'trackTileSeparator': trackTileSeparator.value,
       'displayFavouriteIconInListTile': displayFavouriteIconInListTile.value,
-      'trackItem': trackItem.value.toJson(),
+      'trackItem': trackItem.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
     };
     await file.writeAsJson(res);
 
@@ -969,44 +972,7 @@ class SettingsController {
   }
 
   void updateTrackItemList(TrackTilePosition p, TrackTileItem i) {
-    switch (p) {
-      case TrackTilePosition.row1Item1:
-        trackItem.value.row1Item1 = i;
-        break;
-      case TrackTilePosition.row1Item2:
-        trackItem.value.row1Item2 = i;
-        break;
-      case TrackTilePosition.row1Item3:
-        trackItem.value.row1Item3 = i;
-        break;
-      case TrackTilePosition.row2Item1:
-        trackItem.value.row2Item1 = i;
-        break;
-      case TrackTilePosition.row2Item2:
-        trackItem.value.row2Item2 = i;
-        break;
-      case TrackTilePosition.row2Item3:
-        trackItem.value.row2Item3 = i;
-        break;
-      case TrackTilePosition.row3Item1:
-        trackItem.value.row3Item1 = i;
-        break;
-      case TrackTilePosition.row3Item2:
-        trackItem.value.row3Item2 = i;
-        break;
-      case TrackTilePosition.row3Item3:
-        trackItem.value.row3Item3 = i;
-        break;
-      case TrackTilePosition.rightItem1:
-        trackItem.value.rightItem1 = i;
-        break;
-      case TrackTilePosition.rightItem2:
-        trackItem.value.rightItem2 = i;
-        break;
-      default:
-        null;
-    }
-    trackItem.refresh();
+    trackItem[p] = i;
     _writeToStorage();
   }
 }

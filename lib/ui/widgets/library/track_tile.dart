@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
-import 'package:namida/class/trackitem.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -89,7 +88,7 @@ class TrackTile extends StatelessWidget {
       children: [
         Obx(
           () {
-            final TrackItem tritem = SettingsController.inst.trackItem.value;
+            // final TrackItem tritem = SettingsController.inst.trackItem.value;
             final double thumbnailSize = SettingsController.inst.trackThumbnailSizeinList.value;
             final double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
             final bool isTrackSelected = SelectedTracksController.inst.isTrackSelected(trackOrTwd);
@@ -99,6 +98,12 @@ class TrackTile extends StatelessWidget {
             final bool isTrackCurrentlyPlaying = isRightIndex && isTrackSame && isRightHistoryList;
 
             final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
+
+            final row1Text = _joinTrackItems(TrackTilePosition.row1Item1, TrackTilePosition.row1Item2, TrackTilePosition.row1Item3, track);
+            final row2Text = _joinTrackItems(TrackTilePosition.row2Item1, TrackTilePosition.row2Item2, TrackTilePosition.row2Item3, track);
+            final row3Text = _joinTrackItems(TrackTilePosition.row3Item1, TrackTilePosition.row3Item2, TrackTilePosition.row3Item3, track);
+            final rightItem1Text = _getChoosenTrackTileItem(TrackTilePosition.rightItem1, track);
+            final rightItem2Text = _getChoosenTrackTileItem(TrackTilePosition.rightItem2, track);
             return Padding(
               padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin),
               child: NamidaInkWell(
@@ -216,9 +221,9 @@ class TrackTile extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // check if first row isnt empty
-                              if (tritem.row1Item1 != TrackTileItem.none || tritem.row1Item2 != TrackTileItem.none || tritem.row1Item3 != TrackTileItem.none)
+                              if (row1Text != '')
                                 Text(
-                                  _joinTrackItems(tritem.row1Item1, tritem.row1Item2, tritem.row1Item3, track),
+                                  row1Text,
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
                                   style: context.textTheme.displayMedium!.copyWith(
@@ -227,9 +232,9 @@ class TrackTile extends StatelessWidget {
                                 ),
 
                               // check if second row isnt empty
-                              if (tritem.row2Item1 != TrackTileItem.none || tritem.row2Item2 != TrackTileItem.none || tritem.row2Item3 != TrackTileItem.none)
+                              if (row2Text != '')
                                 Text(
-                                  _joinTrackItems(tritem.row2Item1, tritem.row2Item2, tritem.row2Item3, track),
+                                  row2Text,
                                   style: context.textTheme.displaySmall?.copyWith(
                                     fontWeight: FontWeight.w500,
                                     color: textColor?.withAlpha(140),
@@ -240,9 +245,9 @@ class TrackTile extends StatelessWidget {
 
                               // check if third row isnt empty
                               if (thirdLineText == '' && SettingsController.inst.displayThirdRow.value)
-                                if (tritem.row3Item1 != TrackTileItem.none || tritem.row3Item2 != TrackTileItem.none || tritem.row3Item3 != TrackTileItem.none)
+                                if (row3Text != '')
                                   Text(
-                                    _joinTrackItems(tritem.row3Item1, tritem.row3Item2, tritem.row3Item3, track),
+                                    row3Text,
                                     style: context.textTheme.displaySmall?.copyWith(
                                       color: textColor?.withAlpha(130),
                                     ),
@@ -261,22 +266,22 @@ class TrackTile extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 6.0),
-                        if (SettingsController.inst.displayFavouriteIconInListTile.value || tritem.rightItem1 != TrackTileItem.none || tritem.rightItem2 != TrackTileItem.none)
+                        if (SettingsController.inst.displayFavouriteIconInListTile.value || rightItem1Text != '' || rightItem2Text != '')
                           Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              if (tritem.rightItem1 != TrackTileItem.none)
+                              if (rightItem1Text != '')
                                 Text(
-                                  _getChoosenTrackTileItem(tritem.rightItem1, track),
+                                  rightItem1Text,
                                   style: context.textTheme.displaySmall?.copyWith(
                                     fontWeight: FontWeight.w500,
                                     color: textColor?.withAlpha(170),
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                              if (tritem.rightItem2 != TrackTileItem.none)
+                              if (rightItem2Text != '')
                                 Text(
-                                  _getChoosenTrackTileItem(tritem.rightItem2, track),
+                                  rightItem2Text,
                                   style: context.textTheme.displaySmall?.copyWith(
                                     fontWeight: FontWeight.w500,
                                     color: textColor?.withAlpha(170),
@@ -338,10 +343,11 @@ class TrackTile extends StatelessWidget {
   }
 }
 
-String _getChoosenTrackTileItem(TrackTileItem trackItem, Track trackPre) {
+String _getChoosenTrackTileItem(TrackTilePosition? itemPosition, Track trackPre) {
   final track = trackPre.toTrackExt();
   final finalDate = track.dateModified.dateFormatted;
   final finalClock = track.dateModified.clockFormatted;
+  final trackItem = SettingsController.inst.trackItem[itemPosition] ?? TrackTileItem.none;
   final trackItemPlaceV = [
     if (trackItem == TrackTileItem.none) '',
     if (trackItem == TrackTileItem.title) track.title.overflow,
@@ -379,10 +385,10 @@ String _getChoosenTrackTileItem(TrackTileItem trackItem, Track trackPre) {
   return trackItemPlaceV;
 }
 
-String _joinTrackItems(TrackTileItem? trackItem1, TrackTileItem? trackItem2, TrackTileItem? trackItem3, Track track) {
-  final i1 = _getChoosenTrackTileItem(trackItem1 ?? TrackTileItem.none, track);
-  final i2 = _getChoosenTrackTileItem(trackItem2 ?? TrackTileItem.none, track);
-  final i3 = _getChoosenTrackTileItem(trackItem3 ?? TrackTileItem.none, track);
+String _joinTrackItems(TrackTilePosition? p1, TrackTilePosition? p2, TrackTilePosition? p3, Track track) {
+  final i1 = _getChoosenTrackTileItem(p1, track);
+  final i2 = _getChoosenTrackTileItem(p2, track);
+  final i3 = _getChoosenTrackTileItem(p3, track);
   return [
     if (i1 != '') i1,
     if (i2 != '') i2,
