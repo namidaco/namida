@@ -206,9 +206,8 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                     minScale: PhotoViewComputedScale.contained,
                                     loadingBuilder: (context, event) => artwork,
                                     backgroundDecoration: const BoxDecoration(color: Colors.transparent),
-                                    imageProvider: FileImage(
-                                      File(trackExt.pathToImage),
-                                    ),
+                                    filterQuality: FilterQuality.high,
+                                    imageProvider: FileImage(File(trackExt.pathToImage)),
                                   ),
                                 ),
                               ),

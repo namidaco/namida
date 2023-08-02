@@ -182,6 +182,8 @@ class CurrentColor {
   }
 
   Future<void> reExtractTrackColorPalette({required Track track, required NamidaColor? newNC, required String? imagePath}) async {
+    assert(newNC != null || imagePath != null, 'a color or imagePath must be provided');
+
     final paletteFile = File("$k_DIR_PALETTES${track.filename}.palette");
     if (newNC != null) {
       await paletteFile.writeAsJson(newNC.toJson());
@@ -192,7 +194,6 @@ class CurrentColor {
       _updateInColorMap(imagePath.getFilenameWOExt, nc);
       return;
     }
-    throw Exception('Please Provide at least 1 parameter');
   }
 
   Future<Iterable<Color>> _extractPaletteGenerator(String imagePath) async {

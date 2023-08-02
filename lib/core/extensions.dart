@@ -878,6 +878,10 @@ extension CloseDialogIfTrue on bool {
   void executeIfTrue<T>(T Function() execute) {
     if (this) execute();
   }
+
+  void executeIfFalse<T>(T Function() execute) {
+    if (!this) execute();
+  }
 }
 
 extension PrintFunction on dynamic {

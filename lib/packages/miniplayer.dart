@@ -1611,54 +1611,52 @@ class Wallpaper extends StatefulWidget {
 class _WallpaperState extends State<Wallpaper> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () {
-        final bpm = 2000 * WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value);
-        final background = AnimatedBackground(
-          vsync: this,
-          behaviour: RandomParticleBehaviour(
-            options: ParticleOptions(
-              baseColor: context.theme.colorScheme.tertiary,
-              spawnMaxRadius: 4,
-              spawnMinRadius: 2,
-              spawnMaxSpeed: 60 + bpm,
-              spawnMinSpeed: bpm,
-              maxOpacity: widget.particleOpacity,
-              minOpacity: 0,
-              particleCount: 50,
-            ),
-          ),
-          child: const SizedBox(),
-        );
-
-        return Scaffold(
-          resizeToAvoidBottomInset: false,
-          body: Stack(
-            children: [
-              if (widget.gradient)
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: const Alignment(0.95, -0.95),
-                      radius: 1.0,
-                      colors: [
-                        context.theme.colorScheme.onSecondary.withOpacity(.3),
-                        context.theme.colorScheme.onSecondary.withOpacity(.2),
-                      ],
-                    ),
-                  ),
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      body: Stack(
+        children: [
+          if (widget.gradient)
+            Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0.95, -0.95),
+                  radius: 1.0,
+                  colors: [
+                    context.theme.colorScheme.onSecondary.withOpacity(.3),
+                    context.theme.colorScheme.onSecondary.withOpacity(.2),
+                  ],
                 ),
-              if (SettingsController.inst.enableMiniplayerParticles.value)
-                AnimatedOpacity(
+              ),
+            ),
+          if (SettingsController.inst.enableMiniplayerParticles.value)
+            Obx(
+              () {
+                final bpm = 2000 * WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value);
+                return AnimatedOpacity(
                   duration: const Duration(seconds: 1),
                   opacity: Player.inst.isPlaying.value ? 1 : 0,
-                  child: background,
-                ),
-              if (widget.child != null) widget.child!,
-            ],
-          ),
-        );
-      },
+                  child: AnimatedBackground(
+                    vsync: this,
+                    behaviour: RandomParticleBehaviour(
+                      options: ParticleOptions(
+                        baseColor: context.theme.colorScheme.tertiary,
+                        spawnMaxRadius: 4,
+                        spawnMinRadius: 2,
+                        spawnMaxSpeed: 60 + bpm * 2,
+                        spawnMinSpeed: bpm,
+                        maxOpacity: widget.particleOpacity,
+                        minOpacity: 0,
+                        particleCount: 50,
+                      ),
+                    ),
+                    child: const SizedBox(),
+                  ),
+                );
+              },
+            ),
+          if (widget.child != null) widget.child!,
+        ],
+      ),
     );
   }
 }
