@@ -67,7 +67,10 @@ class LanguageKeys {
   late String CLEAR_WAVEFORM_DATA;
   late String CLEAR;
   late String CLOCK;
+  late String COLOR_PALETTE;
   late String COLOR_PALETTES;
+  late String COLOR_PALETTE_NOTE_1;
+  late String COLOR_PALETTE_NOTE_2;
   late String COMMENT;
   late String COMMENTS;
   late String COMPOSER;
@@ -292,6 +295,10 @@ class LanguageKeys {
   late String OF;
   late String OPEN_YOUTUBE_LINK;
   late String OR;
+  late String PALETTE;
+  late String PALETTE_MIX;
+  late String PALETTE_NEW_MIX;
+  late String PALETTE_SELECTED_MIX;
   late String PARSED;
   late String PATH;
   late String PAUSE_FADE_DURATION;
@@ -440,6 +447,7 @@ class LanguageKeys {
   late String UNLOCK;
   late String UPDATE;
   late String UPDATING;
+  late String USED;
   late String USE_COLLAPSED_SETTING_TILES;
   late String USE_YOUTUBE_MINIPLAYER;
   late String VALUE_BETWEEN_50_200;

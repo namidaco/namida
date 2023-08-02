@@ -383,12 +383,12 @@ class ExtrasSettings extends StatelessWidget {
               () => Column(
                 children: [
                   Text("${Indexer.inst.colorPalettesInStorage.value}/${Indexer.inst.artworksInStorage.value}"),
-                  if (CurrentColor.inst.generatingAllColorPalettes.value) const LoadingIndicator(),
+                  if (CurrentColor.inst.isGeneratingAllColorPalettes.value) const LoadingIndicator(),
                 ],
               ),
             ),
             onTap: () async {
-              if (CurrentColor.inst.generatingAllColorPalettes.value) {
+              if (CurrentColor.inst.isGeneratingAllColorPalettes.value) {
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
                     title: Language.inst.NOTE,

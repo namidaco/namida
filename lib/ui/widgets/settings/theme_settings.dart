@@ -46,7 +46,7 @@ class ThemeSetting extends StatelessWidget {
                   if (isTrue) {
                     CurrentColor.inst.updatePlayerColorFromColor(playerStaticColor);
                   } else {
-                    await CurrentColor.inst.setPlayerColor(Player.inst.nowPlayingTrack.value);
+                    await CurrentColor.inst.updatePlayerColorFromTrack(Player.inst.nowPlayingTrack.value, null);
                   }
                 },
               ),
@@ -66,16 +66,16 @@ class ThemeSetting extends StatelessWidget {
                     dialog: Obx(
                       () => Theme(
                         data: AppThemes.inst.getAppTheme(),
-                        child: CustomBlurryDialog(
-                          actions: [
-                            IconButton(
-                              icon: const Icon(Broken.refresh),
-                              tooltip: Language.inst.RESTORE_DEFAULTS,
-                              onPressed: () {
-                                _updateColor(kMainColor);
-                                NamidaNavigator.inst.closeDialog();
-                              },
-                            ),
+                        child: NamidaColorPickerDialog(
+                          doneText: Language.inst.DONE,
+                          onColorChanged: _updateColor,
+                          onDonePressed: NamidaNavigator.inst.closeDialog,
+                          onRefreshButtonPressed: () {
+                            _updateColor(kMainColor);
+                            NamidaNavigator.inst.closeDialog();
+                          },
+                          cancelButton: false,
+                        ),
                       ),
                     ),
                   );
@@ -235,6 +235,46 @@ class ToggleThemeModeContainer extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class NamidaColorPickerDialog extends StatelessWidget {
+  final String doneText;
+  final VoidCallback? onRefreshButtonPressed;
+  final ValueChanged<Color> onColorChanged;
+  final VoidCallback onDonePressed;
+  final bool cancelButton;
+
+  const NamidaColorPickerDialog({
+    super.key,
+    required this.doneText,
+    this.onRefreshButtonPressed,
+    required this.onColorChanged,
+    required this.onDonePressed,
+    required this.cancelButton,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomBlurryDialog(
+      actions: [
+        if (onRefreshButtonPressed != null)
+          IconButton(
+            icon: const Icon(Broken.refresh),
+            tooltip: Language.inst.RESTORE_DEFAULTS,
+            onPressed: onRefreshButtonPressed,
+          ),
+        if (cancelButton) const CancelButton(),
+        NamidaButton(
+          text: doneText,
+          onPressed: onDonePressed,
+        ),
+      ],
+      child: ColorPicker(
+        pickerColor: playerStaticColor,
+        onColorChanged: onColorChanged,
+      ),
     );
   }
 }
