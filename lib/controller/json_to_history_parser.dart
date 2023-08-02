@@ -276,7 +276,7 @@ class JsonToHistoryParser {
     final oldestDay = oldestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
     final newestDay = newestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
 
-    final tr = allTracksInLibrary.firstWhereOrNull((trPre) {
+    final tr = allTracksInLibrary.firstWhereEff((trPre) {
       final element = trPre.toTrackExt();
       return isMatchingTypeLink
           ? trPre.youtubeID == vh.id

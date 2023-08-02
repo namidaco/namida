@@ -9,7 +9,6 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:collection/collection.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 
@@ -309,7 +308,7 @@ extension Channels on String {
 
 extension FavouriteTrack on Track {
   bool get isFavourite {
-    return PlaylistController.inst.favouritesPlaylist.value.tracks.firstWhereOrNull((element) => element.track == this) != null;
+    return PlaylistController.inst.favouritesPlaylist.value.tracks.firstWhereEff((element) => element.track == this) != null;
   }
 }
 
@@ -604,6 +603,17 @@ extension StuffUtils<T> on T {
   T toIf(T convertTo, T ifValueEquals) => this == ifValueEquals ? convertTo : this;
 }
 
+extension SetExt<E, Id> on Set<E> {
+  /// Adds [item] to [this] if it doesn't exist,
+  /// or removes [item] if it exists.
+  void addOrRemove(E item) {
+    final didRemove = remove(item);
+    if (!didRemove) {
+      add(item);
+    }
+  }
+}
+
 extension ListieExt<E, Id> on List<E> {
   /// Adds [item] to [this] if it doesn't exist,
   /// or removes [item] if it exists.
@@ -658,7 +668,7 @@ extension ListieExt<E, Id> on List<E> {
     }
   }
 
-  E? getEnum(String? string) => firstWhereOrNull((element) => element.toString().split('.').last == string);
+  E? getEnum(String? string) => firstWhereEff((element) => element.toString().split('.').last == string);
   void insertSafe(int index, E object) => insert(index.clamp(0, length), object);
   void insertAllSafe(int index, Iterable<E> objects) => insertAll(index.clamp(0, length), objects);
 

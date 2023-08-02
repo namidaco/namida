@@ -50,7 +50,7 @@ class YoutubePage extends StatelessWidget {
                   );
                 }
                 final v = searchList[i];
-                final searchChannel = YoutubeController.inst.searchChannels.firstWhereOrNull((element) => element.id.value == v.channelId.value);
+                final searchChannel = YoutubeController.inst.searchChannels.firstWhereEff((element) => element.id.value == v.channelId.value);
                 return YoutubeVideoCard(
                   index: i,
                   key: ValueKey(i),

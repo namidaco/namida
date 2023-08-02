@@ -341,7 +341,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                             itemCount: comments?.comments.length ?? 20,
                                             itemBuilder: (context, i) {
                                               final com = comments?.comments[i];
-                                              final commentChannel = YoutubeController.inst.commentsChannels.firstWhereOrNull((element) => element.id == com?.channelId);
+                                              final commentChannel = YoutubeController.inst.commentsChannels.firstWhereEff((element) => element.id == com?.channelId);
 
                                               return Container(
                                                 key: ValueKey(i),

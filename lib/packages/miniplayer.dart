@@ -1152,13 +1152,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                     () => ListTileWithCheckMark(
                                       title: e,
                                       active: selectedmoods.contains(e),
-                                      onTap: () {
-                                        if (selectedmoods.contains(e)) {
-                                          selectedmoods.remove(e);
-                                        } else {
-                                          selectedmoods.add(e);
-                                        }
-                                      },
+                                      onTap: () => selectedmoods.addOrRemove(e),
                                     ),
                                   ),
                                 ],
