@@ -36,6 +36,8 @@ void showTrackAdvancedDialog({
 
   final reIndexedTracksSuccessful = 0.obs;
   final reIndexedTracksFailed = 0.obs;
+  final shouldShowReIndexProgress = false.obs;
+  final shouldReIndexEnabled = true.obs;
 
   final tracksUniqued = tracks.uniqued((element) => element.track);
 
@@ -70,11 +72,11 @@ void showTrackAdvancedDialog({
             ),
           Obx(
             () {
-              final shouldShow = reIndexedTracksSuccessful.value > 0;
+              final shouldShow = shouldShowReIndexProgress.value;
               final errors = reIndexedTracksFailed.value;
               final secondLine = errors > 0 ? '\n${Language.inst.ERROR}: $errors' : '';
               return CustomListTile(
-                enabled: !shouldShow,
+                enabled: shouldReIndexEnabled.value,
                 passedColor: colorScheme,
                 title: Language.inst.RE_INDEX,
                 icon: Broken.direct_inbox,
@@ -91,12 +93,15 @@ void showTrackAdvancedDialog({
                     updateArtwork: willUpdateArtwork.value,
                     tryExtractingFromFilename: false,
                     onProgress: (didExtract) {
+                      shouldReIndexEnabled.value = false;
+                      shouldShowReIndexProgress.value = true;
                       if (didExtract) {
                         reIndexedTracksSuccessful.value++;
                       } else {
                         reIndexedTracksFailed.value++;
                       }
                     },
+                    onFinish: (tracksLength) {},
                   );
                 },
               );

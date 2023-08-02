@@ -93,7 +93,6 @@ class VideoController {
     if (!SettingsController.inst.enableVideoPlayback.value) return;
 
     currentVideo.value = null;
-    _videoController.updateInitialization(disable: true, looping: (videoDuration) => false);
     final possibleVideos = _getPossibleVideosFromTrack(track);
     currentPossibleVideos
       ..clear()
@@ -582,11 +581,10 @@ class _NamidaVideoPlayer {
   _NamidaVideoPlayer._internal();
 
   VideoPlayerController? get videoController => _videoController;
-  bool get isInitialized => _isInitialized;
+  bool get isInitialized => _videoController?.value.isInitialized ?? false;
   double get aspectRatio => _videoController?.value.aspectRatio ?? 1.0;
 
   VideoPlayerController? _videoController;
-  bool _isInitialized = false;
 
   Future<void> playFile(String path, bool Function(Duration videoDuration) looping) async {
     await setFile(path, looping);
@@ -594,23 +592,12 @@ class _NamidaVideoPlayer {
   }
 
   Future<void> setFile(String path, bool Function(Duration videoDuration) looping) async {
+    await _videoController?.dispose();
     final options = VideoPlayerOptions(allowBackgroundPlayback: true, mixWithOthers: true);
     _videoController = VideoPlayerController.file(File(path), videoPlayerOptions: options);
-    (await updateInitialization(looping: looping)).executeIfTrue(() => File(path).setLastAccessedSync(DateTime.now()));
-  }
-
-  Future<bool> updateInitialization({required bool Function(Duration videoDuration) looping, bool disable = false}) async {
-    _isInitialized = false;
-
-    if (disable) {
-      await dispose();
-      _videoController = null;
-    } else if (_videoController != null) {
-      await _videoController!.initialize();
-      _videoController!.setLooping(looping(_videoController!.value.duration));
-      _isInitialized = true;
-    }
-    return _isInitialized;
+    await _videoController?.initialize();
+    _videoController?.setLooping(looping(_videoController!.value.duration));
+    File(path).setLastAccessedSync(DateTime.now());
   }
 
   Future<void> play() async => await _videoController?.play();

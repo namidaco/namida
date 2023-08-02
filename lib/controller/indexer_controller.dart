@@ -392,26 +392,38 @@ class Indexer {
     required List<Track> tracks,
     bool updateArtwork = false,
     required void Function(bool didExtract) onProgress,
+    required void Function(int tracksLength) onFinish,
     bool tryExtractingFromFilename = true,
   }) async {
-    _removeTheseTracksToAlbumGenreArtistEtc(tracks);
-
-    final paths = tracks.mappedUniqued((e) => e.path);
-
+    final tracksExisting = <Track, bool>{};
+    await tracks.loopFuture((tr, index) async {
+      try {
+        tracksExisting[tr] = await File(tr.path).exists();
+      } catch (e) {
+        tracksExisting[tr] = false;
+      }
+    });
+    final tracksReal = tracksExisting.keys.toList();
+    _removeTheseTracksToAlbumGenreArtistEtc(tracksReal);
     if (updateArtwork) {
       imageCache.clear();
       imageCache.clearLiveImages();
       await EditDeleteController.inst.deleteArtwork(tracks);
     }
 
-    await paths.loopFuture((path, index) async {
-      final tr = await extractOneTrack(trackPath: path, tryExtractingFromFilename: tryExtractingFromFilename);
-      onProgress(tr != null);
+    await tracksReal.loopFuture((track, index) async {
+      if (tracksExisting[track] == false) {
+        onProgress(false);
+      } else {
+        final tr = await extractOneTrack(trackPath: track.path, tryExtractingFromFilename: tryExtractingFromFilename);
+        onProgress(tr != null);
+      }
     });
 
-    final newtracks = paths.map((e) => e.toTrackOrNull());
+    final newtracks = tracksReal.map((e) => e.path.toTrackOrNull());
     _addTheseTracksToAlbumGenreArtistEtc(newtracks.whereType<Track>().toList());
     await _sortAndSaveTracks();
+    onFinish(newtracks.length);
   }
 
   Future<void> updateTrackMetadata({

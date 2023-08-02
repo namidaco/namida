@@ -92,7 +92,8 @@ $mapText
     print('Added Successfully');
     return true;
   } on Exception catch (e) {
-    print('Error Adding: $e');
+    print('Error Adding: $e\nRemoving Key...');
+    _removeKey(argKey);
     return false;
   }
 }
@@ -161,5 +162,5 @@ extension OrderedInsert<T extends Comparable> on List<T> {
 }
 
 const _keysFilePath = 'lib/core/translations/keys.dart';
-const _controllerFilePath = 'lib/controller/language_controller.dart';
+const _controllerFilePath = 'lib/core/translations/language.dart';
 const _languagesDirectoryPath = 'assets/language/translations';

@@ -517,12 +517,14 @@ extension FileUtils<R> on File {
   }) async {
     final success = await readAsJsonAnd(
       (response) async {
-        response as List?;
-        if (onListReady != null) onListReady(response ?? []);
+        if (response != null) {
+          response as List;
+          if (onListReady != null) onListReady(response);
 
-        (response)?.loop((e, index) {
-          execute(e, index);
-        });
+          response.loop((e, index) {
+            execute(e, index);
+          });
+        }
       },
       onError: onError,
     );

@@ -127,7 +127,7 @@ extension SelectableUtils on Selectable {
 }
 
 extension SelectableListUtils on Iterable<Selectable> {
-  Iterable<Track> get tracks => whereType<Track>();
+  Iterable<Track> get tracks => map((e) => e.track);
   Iterable<TrackWithDate> get tracksWithDates => whereType<TrackWithDate>();
 }
 

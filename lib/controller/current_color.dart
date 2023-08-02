@@ -99,8 +99,8 @@ class CurrentColor {
 
   Future<NamidaColor> getTrackColors(Track track, {bool fallbackToPlayerStaticColor = true, bool delightnedAndAlpha = true}) async {
     NamidaColor maybeDelightned(NamidaColor nc) {
-      final used = delightnedAndAlpha ? nc.color.delightned.withAlpha(colorAlpha) : nc.color;
-      final mix = delightnedAndAlpha ? nc.mix.delightned.withAlpha(colorAlpha) : nc.color;
+      final used = delightnedAndAlpha ? nc.color.withAlpha(colorAlpha).delightned : nc.color;
+      final mix = delightnedAndAlpha ? nc.mix.withAlpha(colorAlpha).delightned : nc.color;
       return NamidaColor(
         used: used,
         mix: mix,

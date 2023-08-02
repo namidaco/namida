@@ -739,11 +739,12 @@ Future<void> showGeneralPopupDialog(
                               children: [
                                 ...availableAlbums.map(
                                   (e) => Padding(
-                                    padding: const EdgeInsets.all(2.0),
+                                    padding: const EdgeInsets.all(2.0).add(const EdgeInsets.only(right: 2.0)),
                                     child: NamidaInkWell(
+                                        borderRadius: 0.0,
                                         onTap: () => NamidaOnTaps.inst.onAlbumTap(e),
                                         child: Text(
-                                          "$e  ",
+                                          e,
                                           style: Get.textTheme.displaySmall?.copyWith(decoration: TextDecoration.underline),
                                         )),
                                   ),
@@ -797,11 +798,12 @@ Future<void> showGeneralPopupDialog(
                               children: [
                                 ...availableArtists.map(
                                   (e) => Padding(
-                                    padding: const EdgeInsets.all(2.0),
+                                    padding: const EdgeInsets.all(2.0).add(const EdgeInsets.only(right: 2.0)),
                                     child: NamidaInkWell(
+                                      borderRadius: 0.0,
                                       onTap: () => NamidaOnTaps.inst.onArtistTap(e),
                                       child: Text(
-                                        "$e  ",
+                                        e,
                                         style: Get.textTheme.displaySmall?.copyWith(
                                           decoration: TextDecoration.underline,
                                           color: Color.alphaBlend(colorDelightened.withAlpha(40), Get.textTheme.displayMedium!.color!),
