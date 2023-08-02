@@ -5,14 +5,16 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:catcher/catcher.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:external_path/external_path.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
+import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
@@ -26,8 +28,8 @@ import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
-
 import 'package:namida/main_page.dart';
 
 void main() async {
@@ -35,8 +37,7 @@ void main() async {
   Paint.enableDithering = true; // for smooth gradient effect.
 
   /// Getting Device info
-  DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-  AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+  final androidInfo = await DeviceInfoPlugin().androidInfo;
   kSdkVersion = androidInfo.version.sdkInt;
 
   /// Granting Storage Permission.
@@ -105,8 +106,40 @@ void main() async {
   await QueueController.inst.prepareLatestQueue();
   CurrentColor.inst.prepareColors();
 
+  await _initializeIntenties();
+
+  await SystemChrome.setPreferredOrientations(kDefaultOrientations);
+
+  ScrollSearchController.inst.initialize();
+  FlutterLocalNotificationsPlugin().cancelAll();
+
+  _initializeCatcher(() => runApp(const Namida()));
+
+  Folders.inst.onFirstLoad();
+}
+
+void _initializeCatcher(void Function() runAppFunction) {
+  final options = CatcherOptions(SilentReportMode(), [FileHandler(File(k_FILE_PATH_LOGS), printLogs: true)]);
+
+  Catcher(
+    runAppFunction: runAppFunction,
+    debugConfig: options,
+    releaseConfig: options,
+  );
+}
+
+Future<void> _initializeIntenties() async {
+  Future<void> clearIntentCachedFiles() async {
+    final cacheDir = await getTemporaryDirectory();
+    await for (final cf in cacheDir.list()) {
+      if (cf is File) {
+        cf.tryDeleting();
+      }
+    }
+  }
+
   /// Clearing files cached by intents
-  _clearIntentCachedFiles();
+  clearIntentCachedFiles();
 
   void showErrorPlayingFileSnackbar({String? error}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -115,38 +148,21 @@ void main() async {
     });
   }
 
-  /// Recieving Initial Android Shared Intent.
-  final intentfiles = await ReceiveSharingIntent.getInitialMedia();
-  if (intentfiles.isNotEmpty) {
-    final playedsuccessfully = await playExternalFiles(intentfiles.mapped((e) => e.path));
-    if (!playedsuccessfully) {
-      showErrorPlayingFileSnackbar();
+  Future<void> playFiles(List<SharedFile> files) async {
+    if (files.isNotEmpty) {
+      final paths = files.map((e) => e.realPath).whereType<String>();
+      (await playExternalFiles(paths)).executeIfFalse(showErrorPlayingFileSnackbar);
     }
   }
 
-  /// Listening to Android Shared Intents.
-  /// Opening multiple files sometimes crashes the app.
-  ReceiveSharingIntent.getMediaStream().listen(
-    (event) async => await playExternalFiles(event.mapped((e) => e.path)),
-    onError: (err) => showErrorPlayingFileSnackbar(error: err.toString()),
-  );
+  // -- Recieving Initial Android Shared Intent.
+  await playFiles(await FlutterSharingIntent.instance.getInitialSharing());
 
-  /// should be removed soon when fullscreen video is available.
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-
-  ScrollSearchController.inst.initialize();
-  FlutterLocalNotificationsPlugin().cancelAll();
-  runApp(const Namida());
-  Folders.inst.onFirstLoad();
-}
-
-Future<void> _clearIntentCachedFiles() async {
-  final cacheDir = await getTemporaryDirectory();
-  await for (final cf in cacheDir.list()) {
-    if (cf is File) {
-      cf.tryDeleting();
-    }
-  }
+  // -- Listening to Android Shared Intents.
+  FlutterSharingIntent.instance.getMediaStream().listen(
+        playFiles,
+        onError: (err) => showErrorPlayingFileSnackbar(error: err.toString()),
+      );
 }
 
 /// returns [true] if played successfully.
