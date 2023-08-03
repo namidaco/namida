@@ -27,7 +27,11 @@ class JsonToHistoryParser {
   final RxInt addedHistoryJsonToPlaylist = 0.obs;
   final RxBool isParsing = false.obs;
   final RxBool isLoadingFile = false.obs;
+  final RxInt _updatingYoutubeStatsDirectoryProgress = 0.obs;
+  final RxInt _updatingYoutubeStatsDirectoryTotal = 0.obs;
   final Rx<TrackSource> currentParsingSource = TrackSource.local.obs;
+  final _currentOldestDate = Rxn<DateTime>();
+  final _currentNewestDate = Rxn<DateTime>();
 
   String get parsedProgress => '${parsedHistoryJson.value.formatDecimal()} / ${totalJsonToParse.value.formatDecimal()}';
   String get parsedProgressPercentage => '${(_percentage * 100).round()}%';
@@ -41,15 +45,16 @@ class JsonToHistoryParser {
 
   void _hideParsingDialog() => _isShowingParsingMenu = false;
 
-  void showParsingProgressDialog({DateTime? oldestDate, DateTime? newestDate}) {
+  void showParsingProgressDialog() {
     if (_isShowingParsingMenu) return;
     Widget getTextWidget(String text, {TextStyle? style}) {
       return Text(text, style: style ?? Get.textTheme.displayMedium);
     }
 
     _isShowingParsingMenu = true;
-    final dateText =
-        oldestDate != null && newestDate != null ? "(${oldestDate.millisecondsSinceEpoch.dateFormattedOriginal} → ${newestDate.millisecondsSinceEpoch.dateFormattedOriginal})" : '';
+    final dateText = _currentNewestDate.value != null
+        ? "(${_currentOldestDate.value!.millisecondsSinceEpoch.dateFormattedOriginal} → ${_currentNewestDate.value!.millisecondsSinceEpoch.dateFormattedOriginal})"
+        : '';
 
     NamidaNavigator.inst.navigateDialog(
       onDismissing: _hideParsingDialog,
@@ -84,7 +89,17 @@ class JsonToHistoryParser {
               const SizedBox(height: 10.0),
               Obx(() => getTextWidget('$addedHistoryJson ${Language.inst.ADDED}')),
               const SizedBox(height: 4.0),
-              getTextWidget(dateText, style: Get.textTheme.displaySmall),
+              if (dateText != '') ...[
+                getTextWidget(dateText, style: Get.textTheme.displaySmall),
+                const SizedBox(height: 4.0),
+              ],
+              const SizedBox(height: 4.0),
+              Obx(() {
+                final shouldShow = currentParsingSource.value == TrackSource.youtube || currentParsingSource.value == TrackSource.youtubeMusic;
+                return shouldShow
+                    ? getTextWidget('${Language.inst.STATS}: ${_updatingYoutubeStatsDirectoryProgress.value}/${_updatingYoutubeStatsDirectoryTotal.value}')
+                    : const SizedBox();
+              }),
             ],
           ),
         ),
@@ -96,6 +111,10 @@ class JsonToHistoryParser {
     totalJsonToParse.value = 0;
     parsedHistoryJson.value = 0;
     addedHistoryJsonToPlaylist.value = 0;
+    _updatingYoutubeStatsDirectoryProgress.value = 0;
+    _updatingYoutubeStatsDirectoryTotal.value = 0;
+    _currentOldestDate.value = null;
+    _currentNewestDate.value = null;
   }
 
   Timer? _notificationTimer;
@@ -113,7 +132,9 @@ class JsonToHistoryParser {
     _resetValues();
     isParsing.value = true;
     isLoadingFile.value = true;
-    showParsingProgressDialog(oldestDate: oldestDate, newestDate: newestDate);
+    _currentOldestDate.value = oldestDate;
+    _currentNewestDate.value = newestDate;
+    showParsingProgressDialog();
 
     // TODO: warning to backup history
 
@@ -176,20 +197,6 @@ class JsonToHistoryParser {
     NotificationService.inst.doneImportingHistoryNotification(parsedHistoryJson.value, addedHistoryJsonToPlaylist.value);
   }
 
-  /// needs rewrite
-  // Future<void> _addYoutubeSourceFromDirectory(bool isMatchingTypeLink, bool matchYT, bool matchYTMusic) async {
-  //   totalJsonToParse.value = Directory(k_DIR_YOUTUBE_STATS).listSync().length;
-
-  //   /// Adding tracks that their link matches.
-  //   await for (final f in Directory(k_DIR_YOUTUBE_STATS).list()) {
-  //     final p = await File(f.path).readAsJson();
-  //     final vh = YoutubeVideoHistory.fromJson(p);
-  //     final addedTracks = _matchYTVHToNamidaHistory(vh, isMatchingTypeLink, matchYT, matchYTMusic);
-  //     addedHistoryJsonToPlaylist.value += addedTracks.length;
-  //     parsedHistoryJson.value++;
-  //   }
-  // }
-
   /// Returns a map of {`trackYTID`: `List<Track>`}
   Map<String, List<Track>> _getTrackIDsMap() {
     final map = <String, List<Track>>{};
@@ -209,7 +216,6 @@ class JsonToHistoryParser {
     required DateTime? newestDate,
     required bool matchAll,
   }) async {
-    _resetValues();
     isParsing.value = true;
     await Future.delayed(const Duration(milliseconds: 300));
 
@@ -221,8 +227,8 @@ class JsonToHistoryParser {
 
     totalJsonToParse.value = jsonResponse?.length ?? 0;
     isLoadingFile.value = false;
-
     if (jsonResponse != null) {
+      final mapOfAffectedIds = <String, YoutubeVideoHistory>{};
       for (int i = 0; i <= jsonResponse.length - 1; i++) {
         try {
           final p = jsonResponse[i];
@@ -244,6 +250,13 @@ class JsonToHistoryParser {
               )
             ],
           );
+          // -- updating affected ids map, used to update youtube stats
+          if (mapOfAffectedIds[id] != null) {
+            mapOfAffectedIds[id]!.watches.addAllNoDuplicates(yth.watches.map((e) => YTWatch(date: e.date, isYTMusic: e.isYTMusic)));
+          } else {
+            mapOfAffectedIds[id] = yth;
+          }
+          // ---------------------------------------------------------
           final addedDates = _matchYTVHToNamidaHistory(
             vh: yth,
             matchYT: matchYT,
@@ -255,32 +268,20 @@ class JsonToHistoryParser {
           );
           datesToSave.addAll(addedDates);
 
-          /// extracting and saving to [k_DIR_YOUTUBE_STATS] directory.
-          ///  [_addYoutubeSourceFromDirectory] should be called after this.
-
-          // final file = File('$k_DIR_YOUTUBE_STATS$id.txt');
-          // final string = await file.exists() ? await File('$k_DIR_YOUTUBE_STATS$id.txt').readAsString() : '';
-          // YoutubeVideoHistory? obj = string.isEmpty ? null : YoutubeVideoHistory.fromJson(jsonDecode(string));
-
-          // if (obj == null) {
-          //   obj = YoutubeVideoHistory(
-          //     id,
-          //     (p['title'] as String).replaceFirst('Watched ', ''),
-          //     z.isNotEmpty ? z.first['name'] : '',
-          //     z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
-          //     [YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music")],
-          //   );
-          // } else {
-          //   obj.watches.add(YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music"));
-          // }
-          // await File('$k_DIR_YOUTUBE_STATS$id.txt').writeAsJson(obj);
-
           parsedHistoryJson.value++;
         } catch (e) {
           printy(e, isError: true);
           continue;
         }
       }
+      _updatingYoutubeStatsDirectoryTotal.value = mapOfAffectedIds.length;
+      await _updateYoutubeStatsDirectory(
+        affectedIds: mapOfAffectedIds,
+        onProgress: (updatedIds) {
+          _updatingYoutubeStatsDirectoryProgress.value += updatedIds.length;
+          printy('updatedIds: ${updatedIds.length}');
+        },
+      );
     }
 
     isParsing.value = false;
@@ -344,6 +345,7 @@ class JsonToHistoryParser {
 
         // -- if the type is youtube, but the user dont want yt.
         if (!d.isYTMusic && !matchYT) continue;
+
         tracksToAdd.addAll(
           tracks.map((tr) => TrackWithDate(
                 dateAdded: d.date,
@@ -444,6 +446,55 @@ class JsonToHistoryParser {
     totalDaysToSave.addAll(HistoryController.inst.addTracksToHistoryOnly(tracksToAdd));
 
     return totalDaysToSave;
+  }
+
+  Future<void> _updateYoutubeStatsDirectory({required Map<String, YoutubeVideoHistory> affectedIds, required void Function(List<String> updatedIds) onProgress}) async {
+    // ===== Getting affected files (which are arranged by id[0])
+    final fileIdentifierMap = <String, Map<String, YoutubeVideoHistory>>{}; // {id[0]: {id: YoutubeVideoHistory}}
+    for (final entry in affectedIds.entries) {
+      final id = entry.key;
+      final video = entry.value;
+      final filename = id[0];
+      if (fileIdentifierMap[filename] == null) {
+        fileIdentifierMap[filename] = {id: video};
+      } else {
+        fileIdentifierMap[filename]!.addAll({id: video});
+      }
+    }
+    // ==================================================
+
+    // ===== looping each file and getting all videos inside
+    // then mapping all to a map for instant lookup
+    // then merging affected videos inside [fileIdentifierMap]
+    for (final entry in fileIdentifierMap.entries) {
+      final filename = entry.key; // id[0]
+      final videos = entry.value; // {id: YoutubeVideoHistory}
+
+      final file = File('$k_DIR_YOUTUBE_STATS$filename.json');
+      final res = await file.readAsJson();
+      final videosInStorage = (res as List?)?.map((e) => YoutubeVideoHistory.fromJson(e)) ?? [];
+      final videosMapInStorage = <String, YoutubeVideoHistory>{};
+      for (final videoStor in videosInStorage) {
+        videosMapInStorage[videoStor.id] = videoStor;
+      }
+
+      // ===========
+      final updatedIds = <String>[];
+      for (final affectedv in videos.entries) {
+        final id = affectedv.key;
+        final video = affectedv.value;
+        if (videosMapInStorage[id] != null) {
+          // -- video exists inside the file, so we add only new watches
+          videosMapInStorage[id]!.watches.addAllNoDuplicates(video.watches.map((e) => YTWatch(date: e.date, isYTMusic: e.isYTMusic)));
+        } else {
+          // -- video does NOT exist, so the whole video is added with all its watches.
+          videosMapInStorage[id] = video;
+        }
+        updatedIds.add(id);
+      }
+      await file.writeAsJson(videosMapInStorage.values.toList());
+      onProgress(updatedIds);
+    }
   }
 }
 

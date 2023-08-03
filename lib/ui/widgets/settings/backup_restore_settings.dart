@@ -33,10 +33,10 @@ class BackupAndRestore extends StatelessWidget {
 
   Widget getDivider() => const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 8.0));
 
-  Widget matchAllTracksListTile({required bool active, required void Function() onTap}) {
+  Widget matchAllTracksListTile({required bool active, required void Function() onTap, required bool displayPerfWarning}) {
     return ListTileWithCheckMark(
       title: Language.inst.MATCH_ALL_TRACKS,
-      subtitle: '${Language.inst.NOTE}: ${Language.inst.MATCH_ALL_TRACKS_NOTE}',
+      subtitle: displayPerfWarning ? '${Language.inst.NOTE}: ${Language.inst.MATCH_ALL_TRACKS_NOTE}' : '',
       active: active,
       onTap: onTap,
     );
@@ -323,49 +323,61 @@ class BackupAndRestore extends StatelessWidget {
                                   },
                                 )
                               ],
-                              child: Obx(
-                                () => Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    getTitleText(Language.inst.SOURCE),
-                                    ListTileWithCheckMark(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  getTitleText(Language.inst.SOURCE),
+                                  Obx(
+                                    () => ListTileWithCheckMark(
                                       active: matchYT.value,
                                       title: Language.inst.YOUTUBE,
                                       onTap: () => matchYT.value = !matchYT.value,
                                     ),
-                                    const SizedBox(height: 8.0),
-                                    ListTileWithCheckMark(
+                                  ),
+                                  const SizedBox(height: 8.0),
+                                  Obx(
+                                    () => ListTileWithCheckMark(
                                       active: matchYTMusic.value,
                                       title: Language.inst.YOUTUBE_MUSIC,
                                       onTap: () => matchYTMusic.value = !matchYTMusic.value,
                                     ),
-                                    getDivider(),
-                                    getTitleText(Language.inst.MATCHING_TYPE),
-                                    ListTileWithCheckMark(
+                                  ),
+                                  getDivider(),
+                                  getTitleText(Language.inst.MATCHING_TYPE),
+                                  Obx(
+                                    () => ListTileWithCheckMark(
                                       active: !isMatchingTypeLink.value,
                                       title: [Language.inst.TITLE, Language.inst.ARTIST].join(' & '),
                                       onTap: () => isMatchingTypeLink.value = !isMatchingTypeLink.value,
                                     ),
-                                    const SizedBox(height: 8.0),
-                                    ListTileWithCheckMark(
+                                  ),
+                                  const SizedBox(height: 8.0),
+                                  Obx(
+                                    () => ListTileWithCheckMark(
                                       active: isMatchingTypeLink.value,
                                       title: Language.inst.LINK,
                                       onTap: () => isMatchingTypeLink.value = !isMatchingTypeLink.value,
                                     ),
-                                    getDivider(),
-                                    matchAllTracksListTile(active: matchAll.value, onTap: () => matchAll.value = !matchAll.value),
-                                    getDivider(),
-                                    BetweenDatesTextButton(
-                                      useHistoryDates: false,
-                                      maxToday: true,
-                                      onConfirm: (dates) {
-                                        oldestDate.value = dates.firstOrNull;
-                                        newestDate = dates.lastOrNull;
-                                        NamidaNavigator.inst.closeDialog();
-                                      },
+                                  ),
+                                  getDivider(),
+                                  Obx(
+                                    () => matchAllTracksListTile(
+                                      active: matchAll.value,
+                                      onTap: () => matchAll.value = !matchAll.value,
+                                      displayPerfWarning: !isMatchingTypeLink.value,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  getDivider(),
+                                  BetweenDatesTextButton(
+                                    useHistoryDates: false,
+                                    maxToday: true,
+                                    onConfirm: (dates) {
+                                      oldestDate.value = dates.firstOrNull;
+                                      newestDate = dates.lastOrNull;
+                                      NamidaNavigator.inst.closeDialog();
+                                    },
+                                  ),
+                                ],
                               ),
                             ),
                           );
@@ -445,7 +457,13 @@ class BackupAndRestore extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Obx(() => matchAllTracksListTile(active: matchAll.value, onTap: () => matchAll.value = !matchAll.value)),
+                                  Obx(
+                                    () => matchAllTracksListTile(
+                                      active: matchAll.value,
+                                      onTap: () => matchAll.value = !matchAll.value,
+                                      displayPerfWarning: true,
+                                    ),
+                                  ),
                                   getDivider(),
                                   BetweenDatesTextButton(
                                     useHistoryDates: false,
