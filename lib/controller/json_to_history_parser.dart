@@ -190,6 +190,15 @@ class JsonToHistoryParser {
   //   }
   // }
 
+  /// Returns a map of {`trackYTID`: `List<Track>`}
+  Map<String, List<Track>> _getTrackIDsMap() {
+    final map = <String, List<Track>>{};
+    allTracksInLibrary.loop((t, index) {
+      map.addForce(t.youtubeID, t);
+    });
+    return map;
+  }
+
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
   Future<List<int>> _parseYTHistoryJsonAndAdd({
     required File file,
@@ -203,6 +212,10 @@ class JsonToHistoryParser {
     _resetValues();
     isParsing.value = true;
     await Future.delayed(const Duration(milliseconds: 300));
+
+    Map<String, List<Track>>? tracksIdsMap;
+    if (isMatchingTypeLink) tracksIdsMap = _getTrackIDsMap();
+
     final datesToSave = <int>[];
     final jsonResponse = await file.readAsJson() as List?;
 
@@ -233,12 +246,12 @@ class JsonToHistoryParser {
           );
           final addedDates = _matchYTVHToNamidaHistory(
             vh: yth,
-            isMatchingTypeLink: isMatchingTypeLink,
             matchYT: matchYT,
             matchYTMusic: matchYTMusic,
             oldestDate: oldestDate,
             newestDate: newestDate,
             matchAll: matchAll,
+            tracksIdsMap: tracksIdsMap,
           );
           datesToSave.addAll(addedDates);
 
@@ -277,34 +290,42 @@ class JsonToHistoryParser {
   /// Returns [daysToSave].
   List<int> _matchYTVHToNamidaHistory({
     required YoutubeVideoHistory vh,
-    required bool isMatchingTypeLink,
     required bool matchYT,
     required bool matchYTMusic,
     required DateTime? oldestDate,
     required DateTime? newestDate,
     required bool matchAll,
+    required Map<String, List<Track>>? tracksIdsMap,
   }) {
     final oldestDay = oldestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
     final newestDay = newestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
+    late Iterable<Track> tracks;
+    if (tracksIdsMap != null) {
+      final match = tracksIdsMap[vh.id] ?? [];
+      if (match.isNotEmpty) {
+        tracks = matchAll ? match : [match.first];
+      } else {
+        tracks = [];
+      }
+    } else {
+      tracks = allTracksInLibrary.firstWhereOrWhere(matchAll, (trPre) {
+        final element = trPre.toTrackExt();
 
-    final tracks = allTracksInLibrary.firstWhereOrWhere(matchAll, (trPre) {
-      final element = trPre.toTrackExt();
-      return isMatchingTypeLink
-          ? trPre.youtubeID == vh.id
+        /// matching has to meet 2 conditons:
+        /// 1. [json title] contains [track.title]
+        /// 2. - [json title] contains [track.artistsList.first]
+        ///     or
+        ///    - [json channel] contains [track.album]
+        ///    (useful for nightcore channels, album has to be the channel name)
+        ///     or
+        ///    - [json channel] contains [track.artistsList.first]
+        return vh.title.cleanUpForComparison.contains(element.title.cleanUpForComparison) &&
+            (vh.title.cleanUpForComparison.contains(element.artistsList.first.cleanUpForComparison) ||
+                vh.channel.cleanUpForComparison.contains(element.album.cleanUpForComparison) ||
+                vh.channel.cleanUpForComparison.contains(element.artistsList.first.cleanUpForComparison));
+      });
+    }
 
-          /// matching has to meet 2 conditons:
-          /// 1. [json title] contains [track.title]
-          /// 2. - [json title] contains [track.artistsList.first]
-          ///     or
-          ///    - [json channel] contains [track.album]
-          ///    (useful for nightcore channels, album has to be the channel name)
-          ///     or
-          ///    - [json channel] contains [track.artistsList.first]
-          : vh.title.cleanUpForComparison.contains(element.title.cleanUpForComparison) &&
-              (vh.title.cleanUpForComparison.contains(element.artistsList.first.cleanUpForComparison) ||
-                  vh.channel.cleanUpForComparison.contains(element.album.cleanUpForComparison) ||
-                  vh.channel.cleanUpForComparison.contains(element.artistsList.first.cleanUpForComparison));
-    });
     final tracksToAdd = <TrackWithDate>[];
     if (tracks.isNotEmpty) {
       for (int i = 0; i < vh.watches.length; i++) {
