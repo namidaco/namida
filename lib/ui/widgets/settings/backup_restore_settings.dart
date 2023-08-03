@@ -31,6 +31,17 @@ class BackupAndRestore extends StatelessWidget {
     return true;
   }
 
+  Widget getDivider() => const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 8.0));
+
+  Widget matchAllTracksListTile({required bool active, required void Function() onTap}) {
+    return ListTileWithCheckMark(
+      title: Language.inst.MATCH_ALL_TRACKS,
+      subtitle: '${Language.inst.NOTE}: ${Language.inst.MATCH_ALL_TRACKS_NOTE}',
+      active: active,
+      onTap: onTap,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -277,20 +288,26 @@ class BackupAndRestore extends StatelessWidget {
                       text: Language.inst.CONFIRM,
                       onPressed: () async {
                         NamidaNavigator.inst.closeDialog();
-                        final jsonfile = await FilePicker.platform.pickFiles(allowedExtensions: ['json'], type: FileType.custom);
 
+                        Widget getTitleText(String text) => Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0).add(const EdgeInsets.only(bottom: 10.0)),
+                              child: Text("- $text", style: Get.textTheme.displayLarge),
+                            );
+
+                        final jsonfile = await FilePicker.platform.pickFiles(allowedExtensions: ['json'], type: FileType.custom);
                         if (jsonfile != null) {
                           final RxBool isMatchingTypeLink = true.obs;
                           final RxBool matchYT = true.obs;
                           final RxBool matchYTMusic = true.obs;
-                          DateTime? oldestDate;
+                          final RxBool matchAll = false.obs;
+                          final oldestDate = Rxn<DateTime>();
                           DateTime? newestDate;
                           NamidaNavigator.inst.navigateDialog(
                             dialog: CustomBlurryDialog(
                               title: Language.inst.CONFIGURE,
                               actions: [
                                 NamidaButton(
-                                  text: Language.inst.CONFIRM,
+                                  textWidget: Obx(() => Text(oldestDate.value != null ? Language.inst.IMPORT_TIME_RANGE : Language.inst.IMPORT_ALL)),
                                   onPressed: () async {
                                     NamidaNavigator.inst.closeDialog();
                                     await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
@@ -299,8 +316,9 @@ class BackupAndRestore extends StatelessWidget {
                                       isMatchingTypeLink: isMatchingTypeLink.value,
                                       matchYT: matchYT.value,
                                       matchYTMusic: matchYTMusic.value,
-                                      oldestDate: oldestDate,
+                                      oldestDate: oldestDate.value,
                                       newestDate: newestDate,
+                                      matchAll: matchAll.value,
                                     );
                                   },
                                 )
@@ -309,42 +327,39 @@ class BackupAndRestore extends StatelessWidget {
                                 () => Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    CustomListTile(
-                                      title: Language.inst.SOURCE,
-                                      largeTitle: true,
-                                    ),
+                                    getTitleText(Language.inst.SOURCE),
                                     ListTileWithCheckMark(
                                       active: matchYT.value,
                                       title: Language.inst.YOUTUBE,
                                       onTap: () => matchYT.value = !matchYT.value,
                                     ),
-                                    const SizedBox(height: 12.0),
+                                    const SizedBox(height: 8.0),
                                     ListTileWithCheckMark(
                                       active: matchYTMusic.value,
                                       title: Language.inst.YOUTUBE_MUSIC,
                                       onTap: () => matchYTMusic.value = !matchYTMusic.value,
                                     ),
-                                    CustomListTile(
-                                      title: Language.inst.MATCHING_TYPE,
-                                      largeTitle: true,
-                                    ),
+                                    getDivider(),
+                                    getTitleText(Language.inst.MATCHING_TYPE),
                                     ListTileWithCheckMark(
                                       active: !isMatchingTypeLink.value,
                                       title: [Language.inst.TITLE, Language.inst.ARTIST].join(' & '),
                                       onTap: () => isMatchingTypeLink.value = !isMatchingTypeLink.value,
                                     ),
-                                    const SizedBox(height: 12.0),
+                                    const SizedBox(height: 8.0),
                                     ListTileWithCheckMark(
                                       active: isMatchingTypeLink.value,
                                       title: Language.inst.LINK,
                                       onTap: () => isMatchingTypeLink.value = !isMatchingTypeLink.value,
                                     ),
-                                    const SizedBox(height: 18.0),
+                                    getDivider(),
+                                    matchAllTracksListTile(active: matchAll.value, onTap: () => matchAll.value = !matchAll.value),
+                                    getDivider(),
                                     BetweenDatesTextButton(
                                       useHistoryDates: false,
                                       maxToday: true,
                                       onConfirm: (dates) {
-                                        oldestDate = dates.firstOrNull;
+                                        oldestDate.value = dates.firstOrNull;
                                         newestDate = dates.lastOrNull;
                                         NamidaNavigator.inst.closeDialog();
                                       },
@@ -400,15 +415,17 @@ class BackupAndRestore extends StatelessWidget {
                       text: Language.inst.CONFIRM,
                       onPressed: () async {
                         NamidaNavigator.inst.closeDialog();
+
                         final csvFiles = await FilePicker.platform.pickFiles(allowedExtensions: ['csv'], type: FileType.custom);
                         final csvFilePath = csvFiles?.files.first.path;
                         if (csvFiles != null && csvFilePath != null) {
                           final oldestDate = Rxn<DateTime>();
                           DateTime? newestDate;
+                          final matchAll = false.obs;
                           NamidaNavigator.inst.navigateDialog(
                             dialog: CustomBlurryDialog(
                               insetPadding: const EdgeInsets.all(38.0),
-                              title: Language.inst.CHOOSE,
+                              title: Language.inst.CONFIGURE,
                               actions: [
                                 const CancelButton(),
                                 NamidaButton(
@@ -420,6 +437,7 @@ class BackupAndRestore extends StatelessWidget {
                                       TrackSource.lastfm,
                                       oldestDate: oldestDate.value,
                                       newestDate: newestDate,
+                                      matchAll: matchAll.value,
                                     );
                                   },
                                 )
@@ -427,11 +445,8 @@ class BackupAndRestore extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    Language.inst.IMPORT_TIME_RANGE_PROMPT,
-                                    style: Get.textTheme.displayMedium,
-                                  ),
-                                  const SizedBox(height: 12.0),
+                                  Obx(() => matchAllTracksListTile(active: matchAll.value, onTap: () => matchAll.value = !matchAll.value)),
+                                  getDivider(),
                                   BetweenDatesTextButton(
                                     useHistoryDates: false,
                                     maxToday: true,

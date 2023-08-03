@@ -208,7 +208,6 @@ class LanguageKeys {
   late String IMPORT_ALL;
   late String IMPORT_LAST_FM_HISTORY_GUIDE;
   late String IMPORT_LAST_FM_HISTORY;
-  late String IMPORT_TIME_RANGE_PROMPT;
   late String IMPORT_TIME_RANGE;
   late String IMPORT_YOUTUBE_HISTORY_GUIDE;
   late String IMPORT_YOUTUBE_HISTORY;
@@ -240,6 +239,8 @@ class LanguageKeys {
   late String MANUAL_BACKUP_SUBTITLE;
   late String MANUAL_BACKUP;
   late String MATCHING_TYPE;
+  late String MATCH_ALL_TRACKS;
+  late String MATCH_ALL_TRACKS_NOTE;
   late String MAXIMUM;
   late String METADATA_EDIT_FAILED_SUBTITLE;
   late String METADATA_EDIT_FAILED;

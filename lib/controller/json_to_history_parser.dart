@@ -103,6 +103,7 @@ class JsonToHistoryParser {
   Future<void> addFileSourceToNamidaHistory(
     File file,
     TrackSource source, {
+    bool matchAll = false,
     bool isMatchingTypeLink = true,
     bool matchYT = true,
     bool matchYTMusic = true,
@@ -152,6 +153,7 @@ class JsonToHistoryParser {
         matchYTMusic: matchYTMusic,
         oldestDate: oldestDate,
         newestDate: newestDate,
+        matchAll: matchAll,
       );
       datesAdded.addAll(res);
       // await _addYoutubeSourceFromDirectory(isMatchingTypeLink, matchYT, matchYTMusic);
@@ -160,6 +162,7 @@ class JsonToHistoryParser {
       currentParsingSource.value = TrackSource.lastfm;
       final res = await _addLastFmSource(
         file: file,
+        matchAll: matchAll,
         oldestDate: oldestDate,
         newestDate: newestDate,
       );
@@ -195,6 +198,7 @@ class JsonToHistoryParser {
     required bool matchYTMusic,
     required DateTime? oldestDate,
     required DateTime? newestDate,
+    required bool matchAll,
   }) async {
     _resetValues();
     isParsing.value = true;
@@ -207,56 +211,62 @@ class JsonToHistoryParser {
 
     if (jsonResponse != null) {
       for (int i = 0; i <= jsonResponse.length - 1; i++) {
-        final p = jsonResponse[i];
-        final link = utf8.decode((p['titleUrl']).toString().codeUnits);
-        final id = link.length >= 11 ? link.substring(link.length - 11) : link;
-        final z = List<Map<String, dynamic>>.from((p['subtitles'] ?? []));
+        try {
+          final p = jsonResponse[i];
+          final link = utf8.decode((p['titleUrl']).toString().codeUnits);
+          final id = link.length >= 11 ? link.substring(link.length - 11) : link;
+          final z = List<Map<String, dynamic>>.from((p['subtitles'] ?? []));
 
-        /// matching in real time, each object.
-        await Future.delayed(Duration.zero);
-        final yth = YoutubeVideoHistory(
-          id: id,
-          title: (p['title'] as String).replaceFirst('Watched ', ''),
-          channel: z.isNotEmpty ? z.first['name'] : '',
-          channelUrl: z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
-          watches: [
-            YTWatch(
-              date: DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch,
-              isYTMusic: p['header'] == "YouTube Music",
-            )
-          ],
-        );
-        final addedDates = _matchYTVHToNamidaHistory(
-          vh: yth,
-          isMatchingTypeLink: isMatchingTypeLink,
-          matchYT: matchYT,
-          matchYTMusic: matchYTMusic,
-          oldestDate: oldestDate,
-          newestDate: newestDate,
-        );
-        datesToSave.addAll(addedDates);
+          /// matching in real time, each object.
+          await Future.delayed(Duration.zero);
+          final yth = YoutubeVideoHistory(
+            id: id,
+            title: (p['title'] as String).replaceFirst('Watched ', ''),
+            channel: z.isNotEmpty ? z.first['name'] : '',
+            channelUrl: z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
+            watches: [
+              YTWatch(
+                date: DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch,
+                isYTMusic: p['header'] == "YouTube Music",
+              )
+            ],
+          );
+          final addedDates = _matchYTVHToNamidaHistory(
+            vh: yth,
+            isMatchingTypeLink: isMatchingTypeLink,
+            matchYT: matchYT,
+            matchYTMusic: matchYTMusic,
+            oldestDate: oldestDate,
+            newestDate: newestDate,
+            matchAll: matchAll,
+          );
+          datesToSave.addAll(addedDates);
 
-        /// extracting and saving to [k_DIR_YOUTUBE_STATS] directory.
-        ///  [_addYoutubeSourceFromDirectory] should be called after this.
+          /// extracting and saving to [k_DIR_YOUTUBE_STATS] directory.
+          ///  [_addYoutubeSourceFromDirectory] should be called after this.
 
-        // final file = File('$k_DIR_YOUTUBE_STATS$id.txt');
-        // final string = await file.exists() ? await File('$k_DIR_YOUTUBE_STATS$id.txt').readAsString() : '';
-        // YoutubeVideoHistory? obj = string.isEmpty ? null : YoutubeVideoHistory.fromJson(jsonDecode(string));
+          // final file = File('$k_DIR_YOUTUBE_STATS$id.txt');
+          // final string = await file.exists() ? await File('$k_DIR_YOUTUBE_STATS$id.txt').readAsString() : '';
+          // YoutubeVideoHistory? obj = string.isEmpty ? null : YoutubeVideoHistory.fromJson(jsonDecode(string));
 
-        // if (obj == null) {
-        //   obj = YoutubeVideoHistory(
-        //     id,
-        //     (p['title'] as String).replaceFirst('Watched ', ''),
-        //     z.isNotEmpty ? z.first['name'] : '',
-        //     z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
-        //     [YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music")],
-        //   );
-        // } else {
-        //   obj.watches.add(YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music"));
-        // }
-        // await File('$k_DIR_YOUTUBE_STATS$id.txt').writeAsJson(obj);
+          // if (obj == null) {
+          //   obj = YoutubeVideoHistory(
+          //     id,
+          //     (p['title'] as String).replaceFirst('Watched ', ''),
+          //     z.isNotEmpty ? z.first['name'] : '',
+          //     z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
+          //     [YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music")],
+          //   );
+          // } else {
+          //   obj.watches.add(YTWatch(DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch, p['header'] == "YouTube Music"));
+          // }
+          // await File('$k_DIR_YOUTUBE_STATS$id.txt').writeAsJson(obj);
 
-        parsedHistoryJson.value++;
+          parsedHistoryJson.value++;
+        } catch (e) {
+          printy(e, isError: true);
+          continue;
+        }
       }
     }
 
@@ -272,11 +282,12 @@ class JsonToHistoryParser {
     required bool matchYTMusic,
     required DateTime? oldestDate,
     required DateTime? newestDate,
+    required bool matchAll,
   }) {
     final oldestDay = oldestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
     final newestDay = newestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
 
-    final tr = allTracksInLibrary.firstWhereEff((trPre) {
+    final tracks = allTracksInLibrary.firstWhereOrWhere(matchAll, (trPre) {
       final element = trPre.toTrackExt();
       return isMatchingTypeLink
           ? trPre.youtubeID == vh.id
@@ -295,7 +306,7 @@ class JsonToHistoryParser {
                   vh.channel.cleanUpForComparison.contains(element.artistsList.first.cleanUpForComparison));
     });
     final tracksToAdd = <TrackWithDate>[];
-    if (tr != null) {
+    if (tracks.isNotEmpty) {
       for (int i = 0; i < vh.watches.length; i++) {
         final d = vh.watches[i];
 
@@ -312,13 +323,15 @@ class JsonToHistoryParser {
 
         // -- if the type is youtube, but the user dont want yt.
         if (!d.isYTMusic && !matchYT) continue;
+        tracksToAdd.addAll(
+          tracks.map((tr) => TrackWithDate(
+                dateAdded: d.date,
+                track: tr,
+                source: d.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
+              )),
+        );
 
-        tracksToAdd.add(TrackWithDate(
-          dateAdded: d.date,
-          track: tr,
-          source: d.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
-        ));
-        addedHistoryJsonToPlaylist.value++;
+        addedHistoryJsonToPlaylist.value += tracks.length;
       }
     }
     final daysToSave = HistoryController.inst.addTracksToHistoryOnly(tracksToAdd);
@@ -328,6 +341,7 @@ class JsonToHistoryParser {
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
   Future<List<int>> _addLastFmSource({
     required File file,
+    required bool matchAll,
     required DateTime? oldestDate,
     required DateTime? newestDate,
   }) async {
@@ -383,7 +397,8 @@ class JsonToHistoryParser {
         /// matching has to meet 2 conditons:
         /// [csv artist] contains [track.artistsList.first]
         /// [csv title] contains [track.title], anything after ( or [ is ignored.
-        final tr = allTracksInLibrary.firstWhereEff(
+        final tracks = allTracksInLibrary.firstWhereOrWhere(
+          matchAll,
           (trPre) {
             final track = trPre.toTrackExt();
             final matchingArtist = track.artistsList.isNotEmpty && pieces[0].cleanUpForComparison.contains(track.artistsList.first.cleanUpForComparison);
@@ -391,16 +406,14 @@ class JsonToHistoryParser {
             return matchingArtist && matchingTitle;
           },
         );
-        if (tr != null) {
-          tracksToAdd.add(
-            TrackWithDate(
-              dateAdded: date,
-              track: tr,
-              source: TrackSource.lastfm,
-            ),
-          );
-          addedHistoryJsonToPlaylist.value++;
-        }
+        tracksToAdd.addAll(
+          tracks.map((tr) => TrackWithDate(
+                dateAdded: date,
+                track: tr,
+                source: TrackSource.lastfm,
+              )),
+        );
+        addedHistoryJsonToPlaylist.value += tracks.length;
       } catch (e) {
         printy(e, isError: true);
         continue;
@@ -410,5 +423,20 @@ class JsonToHistoryParser {
     totalDaysToSave.addAll(HistoryController.inst.addTracksToHistoryOnly(tracksToAdd));
 
     return totalDaysToSave;
+  }
+}
+
+extension _FWORWHERE<E> on List<E> {
+  Iterable<E> firstWhereOrWhere(bool matchAll, bool Function(E e) test) {
+    if (matchAll) {
+      return where(test);
+    } else {
+      final item = firstWhereEff(test);
+      if (item != null) {
+        return [item];
+      } else {
+        return [];
+      }
+    }
   }
 }
