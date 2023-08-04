@@ -851,11 +851,11 @@ Future<void> showGeneralPopupDialog(
                         },
                       ),
 
-                      isSingle && tracks.first == Player.inst.nowPlayingTrack.value
+                      isSingle && tracks.first == Player.inst.nowPlayingTrack
                           ? Opacity(
-                              opacity: Player.inst.sleepAfterTracks.value == 1 ? 0.6 : 1.0,
+                              opacity: Player.inst.sleepAfterTracks == 1 ? 0.6 : 1.0,
                               child: IgnorePointer(
-                                ignoring: Player.inst.sleepAfterTracks.value == 1,
+                                ignoring: Player.inst.sleepAfterTracks == 1,
                                 child: SmallListTile(
                                   color: colorDelightened,
                                   compact: false,
@@ -863,8 +863,7 @@ Future<void> showGeneralPopupDialog(
                                   icon: Broken.pause,
                                   onTap: () {
                                     NamidaNavigator.inst.closeDialog();
-                                    Player.inst.enableSleepAfterTracks.value = true;
-                                    Player.inst.sleepAfterTracks.value = 1;
+                                    Player.inst.updateSleepTimerValues(enableSleepAfterTracks: true, sleepAfterTracks: 1);
                                   },
                                 ),
                               ),
@@ -917,19 +916,19 @@ Future<void> showGeneralPopupDialog(
 
                       if (removeQueueTile != null) removeQueueTile,
 
-                      if (Player.inst.latestInsertedIndex != Player.inst.currentIndex.value)
+                      if (Player.inst.latestInsertedIndex != Player.inst.currentIndex)
                         SmallListTile(
                           color: colorDelightened,
                           compact: true,
                           title: '${Language.inst.PLAY_AFTER} "${Player.inst.currentQueue.elementAt(Player.inst.latestInsertedIndex).track.title}"',
-                          subtitle: (Player.inst.latestInsertedIndex - Player.inst.currentIndex.value).displayTrackKeyword,
+                          subtitle: (Player.inst.latestInsertedIndex - Player.inst.currentIndex).displayTrackKeyword,
                           icon: Broken.hierarchy_square,
                           onTap: () {
                             NamidaNavigator.inst.closeDialog();
                             Player.inst.addToQueue(tracks, insertAfterLatest: true, showSnackBar: !isSingle);
                           },
                         ),
-                      if (isSingle && tracks.first == Player.inst.nowPlayingTrack.value)
+                      if (isSingle && tracks.first == Player.inst.nowPlayingTrack)
                         Obx(
                           () => SmallListTile(
                             color: colorDelightened,
@@ -939,7 +938,7 @@ Future<void> showGeneralPopupDialog(
                             onTap: () {
                               NamidaNavigator.inst.closeDialog();
                               SettingsController.inst.save(playerRepeatMode: RepeatMode.forNtimes);
-                              Player.inst.numberOfRepeats.value = numberOfRepeats.value;
+                              Player.inst.updateNumberOfRepeats(numberOfRepeats.value);
                             },
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,

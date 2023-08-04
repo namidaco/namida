@@ -49,7 +49,7 @@ class HistoryController {
 
     final sec = SettingsController.inst.isTrackPlayedSecondsCount.value;
     final perSett = SettingsController.inst.isTrackPlayedPercentageCount.value;
-    final trDurInSec = Player.inst.nowPlayingTrack.value.track.duration;
+    final trDurInSec = Player.inst.nowPlayingTrack.duration;
 
     _historyTimer?.cancel();
     _historyTimer = null;
@@ -57,7 +57,7 @@ class HistoryController {
       final per = currentListenedSeconds / trDurInSec * 100;
 
       printy("Current percentage $per", dumpshit: true);
-      if (Player.inst.isPlaying.value) {
+      if (Player.inst.isPlaying) {
         currentListenedSeconds++;
       }
 

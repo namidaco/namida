@@ -113,7 +113,7 @@ class MiniPlayerController {
 
   void animateQueueToCurrentTrack({bool jump = false}) {
     if (queueScrollController.hasClients) {
-      final trackTileItemScrollOffsetInQueue = Dimensions.inst.trackTileItemExtent * Player.inst.currentIndex.value - screenSize.height * 0.3;
+      final trackTileItemScrollOffsetInQueue = Dimensions.inst.trackTileItemExtent * Player.inst.currentIndex - screenSize.height * 0.3;
       if (queueScrollController.positions.lastOrNull?.pixels == trackTileItemScrollOffsetInQueue) {
         return;
       }
@@ -312,7 +312,7 @@ class MiniPlayerController {
   void _updateScrollPositionInQueue() {
     void updateIcon() {
       final pixels = queueScrollController.position.pixels;
-      final sizeInSettings = Dimensions.inst.trackTileItemExtent * Player.inst.currentIndex.value - Get.height * 0.3;
+      final sizeInSettings = Dimensions.inst.trackTileItemExtent * Player.inst.currentIndex - Get.height * 0.3;
       if (pixels > sizeInSettings) {
         arrowIcon.value = Broken.arrow_up_1;
       }

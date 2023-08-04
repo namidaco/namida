@@ -122,7 +122,7 @@ void showTrackAdvancedDialog({
               onTap: () {
                 void onAction() {
                   NamidaNavigator.inst.closeDialog(3);
-                  if (Player.inst.nowPlayingTrack.value == tracks.first.track) {
+                  if (Player.inst.nowPlayingTrack == tracks.first.track) {
                     CurrentColor.inst.updatePlayerColorFromTrack(tracks.first.track, null);
                   }
                 }

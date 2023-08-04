@@ -1348,7 +1348,7 @@ class NamidaPartyContainer extends StatelessWidget {
     if (!SettingsController.inst.enablePartyModeColorSwap.value) {
       return Obx(
         () {
-          final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value);
+          final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
           return Opacity(
             opacity: opacity,
             child: AnimatedContainer(
@@ -1373,7 +1373,7 @@ class NamidaPartyContainer extends StatelessWidget {
         opacity: opacity,
         child: Obx(
           () {
-            final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value);
+            final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
             final firstHalf = CurrentColor.inst.paletteFirstHalf;
             final secondHalf = CurrentColor.inst.paletteSecondHalf;
             return height != null

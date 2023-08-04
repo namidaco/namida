@@ -54,7 +54,7 @@ class StatsSection extends StatelessWidget {
                 () => StatsContainer(
                   icon: Broken.timer_1,
                   title: '${Language.inst.TOTAL_LISTEN_TIME} :',
-                  value: Player.inst.totalListenedTimeInSec.value.getTimeFormatted,
+                  value: Player.inst.totalListenedTimeInSec.value.formattedTime,
                 ),
               ),
             ],

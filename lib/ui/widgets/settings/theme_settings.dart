@@ -46,7 +46,7 @@ class ThemeSetting extends StatelessWidget {
                   if (isTrue) {
                     CurrentColor.inst.updatePlayerColorFromColor(playerStaticColor);
                   } else {
-                    await CurrentColor.inst.updatePlayerColorFromTrack(Player.inst.nowPlayingTrack.value, null);
+                    await CurrentColor.inst.updatePlayerColorFromTrack(Player.inst.nowPlayingTWD, null);
                   }
                 },
               ),

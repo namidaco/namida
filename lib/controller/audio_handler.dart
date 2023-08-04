@@ -7,6 +7,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_utils/src/extensions/num_extensions.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:queue_manager/queue_manager.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
@@ -24,34 +25,54 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 
-class NamidaAudioVideoHandler extends BaseAudioHandler {
-  final _player = AudioPlayer();
+class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selectable> {
+  Selectable get currentTrack => currentItem ?? kDummyTrack;
+  int get currentPositionMS => _currentPositionMS.value;
+  bool get isPlaying => _isPlaying.value;
+  int get numberOfRepeats => _numberOfRepeats.value;
 
-  final Player namidaPlayer;
+  final _currentPositionMS = 0.obs;
+  final _totalListenedTimeInSec = 0.obs;
+  final _isPlaying = false.obs;
+  final _numberOfRepeats = 1.obs;
 
-  RxList<Selectable> get currentQueue => namidaPlayer.currentQueue;
-  Rx<Track> get nowPlayingTrack => namidaPlayer.nowPlayingTrack;
-  RxInt get nowPlayingPosition => namidaPlayer.nowPlayingPosition;
-  RxInt get currentIndex => namidaPlayer.currentIndex;
-  RxDouble get currentVolume => namidaPlayer.currentVolume;
-  RxBool get isPlaying => namidaPlayer.isPlaying;
-  RxInt get numberOfRepeats => namidaPlayer.numberOfRepeats;
-  RxBool get enableSleepAfterTracks => namidaPlayer.enableSleepAfterTracks;
-  RxBool get enableSleepAfterMins => namidaPlayer.enableSleepAfterMins;
-  RxInt get sleepAfterTracks => namidaPlayer.sleepAfterTracks;
-  RxInt get sleepAfterMin => namidaPlayer.sleepAfterMin;
+  final currentVolume = SettingsController.inst.playerVolume.value.obs;
 
-  RxInt get totalListenedTimeInSec => namidaPlayer.totalListenedTimeInSec;
+  // Sleep Timer related
+  final _enableSleepAfterTracks = false.obs;
+  final _enableSleepAfterMins = false.obs;
+  final _sleepAfterMin = 0.obs;
+  final _sleepAfterTracks = 0.obs;
+  bool get enableSleepAfterTracks => _enableSleepAfterTracks.value;
+  bool get enableSleepAfterMins => _enableSleepAfterMins.value;
+  int get sleepAfterMin => _sleepAfterMin.value;
+  int get sleepAfterTracks => _sleepAfterTracks.value;
 
-  bool get isLastTrack => currentIndex.value == currentQueue.length - 1;
+  void updateSleepTimerValues({
+    bool? enableSleepAfterTracks,
+    bool? enableSleepAfterMins,
+    int? sleepAfterMin,
+    int? sleepAfterTracks,
+  }) {
+    if (enableSleepAfterTracks != null) _enableSleepAfterMins.value = enableSleepAfterTracks;
+    if (enableSleepAfterMins != null) _enableSleepAfterMins.value = enableSleepAfterMins;
+    if (sleepAfterMin != null) _sleepAfterMin.value = sleepAfterMin;
+    if (sleepAfterTracks != null) _sleepAfterTracks.value = sleepAfterTracks;
+  }
 
-  /// Timers
-  Timer? _playFadeTimer;
-  Timer? _pauseFadeTimer;
-  Timer? _increaseListenTimer;
-  Timer? _startsleepAfterMinTimer;
+  void resetSleepAfterTimer() {
+    _enableSleepAfterMins.value = false;
+    _enableSleepAfterTracks.value = false;
+    _sleepAfterMin.value = 0;
+    _sleepAfterTracks.value = 0;
+  }
 
-  NamidaAudioVideoHandler(this.namidaPlayer) {
+  void updateNumberOfRepeats(int newNumber) {
+    _numberOfRepeats.value = newNumber;
+  }
+
+  // ============== CONSTRUCTOR ==============
+  NamidaAudioVideoHandler() {
     _player.playbackEventStream.listen((event) {
       playbackState.add(_transformEvent(event));
     });
@@ -59,9 +80,9 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
     _player.processingStateStream.listen((state) async {
       if (state == ProcessingState.completed) {
         /// Sleep timer after n tracks
-        if (enableSleepAfterTracks.value) {
-          sleepAfterTracks.value = (sleepAfterTracks.value - 1).clamp(0, 40);
-          if (sleepAfterTracks.value == 0) {
+        if (_enableSleepAfterTracks.value) {
+          _sleepAfterTracks.value = (sleepAfterTracks - 1).clamp(0, kMaximumSleepTimerTracks);
+          if (sleepAfterTracks == 0) {
             Player.inst.resetSleepAfterTimer();
             await pause();
             return;
@@ -70,26 +91,34 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
 
         /// repeat moods
         final repeat = SettingsController.inst.playerRepeatMode.value;
-        if (repeat == RepeatMode.none) {
-          if (SettingsController.inst.jumpToFirstTrackAfterFinishingQueue.value) {
-            await skipToNext(!isLastTrack);
-          } else {
-            await pause();
-          }
-        }
-        if (repeat == RepeatMode.one) {
-          await skipToQueueItem(currentIndex.value);
-        }
-        if (repeat == RepeatMode.forNtimes) {
-          if (numberOfRepeats.value == 1) {
-            SettingsController.inst.save(playerRepeatMode: RepeatMode.none);
-          } else {
-            numberOfRepeats.value--;
-          }
-          await skipToQueueItem(currentIndex.value);
-        }
-        if (repeat == RepeatMode.all) {
-          await skipToNext();
+        switch (repeat) {
+          case RepeatMode.none:
+            if (SettingsController.inst.jumpToFirstTrackAfterFinishingQueue.value) {
+              await skipToNext(!isLastItem);
+            } else {
+              await pause();
+            }
+            break;
+
+          case RepeatMode.one:
+            await skipToQueueItem(currentIndex);
+            break;
+
+          case RepeatMode.forNtimes:
+            if (numberOfRepeats == 1) {
+              SettingsController.inst.save(playerRepeatMode: RepeatMode.none);
+            } else {
+              _numberOfRepeats.value--;
+            }
+            await skipToQueueItem(currentIndex);
+            break;
+
+          case RepeatMode.all:
+            await skipToNext();
+            break;
+
+          default:
+            null;
         }
       }
     });
@@ -99,119 +128,75 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
     });
 
     _player.positionStream.listen((event) {
-      nowPlayingPosition.value = event.inMilliseconds;
+      _currentPositionMS.value = event.inMilliseconds;
     });
 
     _player.playingStream.listen((event) async {
-      isPlaying.value = event;
+      _isPlaying.value = event;
       CurrentColor.inst.switchColorPalettes(event);
-    });
-
-    _player.positionStream.listen((event) {
-      nowPlayingPosition.value = event.inMilliseconds;
     });
   }
 
   /// For ensuring stabilty while fade effect is on.
   /// Typically stops ongoing [playWithFadeEffect] to prevent multiple [setVolume] interferring.
-  bool wantToPause = false;
+  bool _wantToPause = false;
+
+  /// Timers
+  Timer? _playFadeTimer;
+  Timer? _pauseFadeTimer;
+  Timer? _increaseListenTimer;
+  Timer? _startsleepAfterMinTimer;
 
   void increaseListenTime(Track track) {
     _increaseListenTimer?.cancel();
     _increaseListenTimer = null;
     _increaseListenTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      if (isPlaying.value) {
-        totalListenedTimeInSec.value++;
+      if (isPlaying) {
+        _totalListenedTimeInSec.value++;
 
         /// saves the file each 20 seconds.
-        if (totalListenedTimeInSec.value % 20 == 0) {
-          await File(k_FILE_PATH_TOTAL_LISTEN_TIME).writeAsString(totalListenedTimeInSec.value.toString());
+        final sec = _totalListenedTimeInSec.value;
+        if (sec % 20 == 0) {
+          await File(k_FILE_PATH_TOTAL_LISTEN_TIME).writeAsString(sec.toString());
         }
       }
     });
+  }
+
+  void startSleepAfterMinCount(Track track) async {
+    _startsleepAfterMinTimer?.cancel();
+    _startsleepAfterMinTimer = null;
+    _startsleepAfterMinTimer = Timer.periodic(const Duration(minutes: 1), (timer) async {
+      if (enableSleepAfterMins) {
+        if (isPlaying) {
+          _sleepAfterMin.value = (sleepAfterMin - 1).clamp(0, kMaximumSleepTimerMins);
+          if (_sleepAfterMin.value == 0) {
+            Player.inst.resetSleepAfterTimer();
+            await pause();
+            timer.cancel();
+            return;
+          }
+        }
+      }
+    });
+  }
+
+  Future<void> updateTrackLastPosition(Track track, int lastPositionMS) async {
+    /// Saves a starting position in case the remaining was less than 30 seconds.
+    final remaining = (track.duration * 1000) - lastPositionMS;
+    final positionToSave = remaining <= 30000 ? 0 : lastPositionMS;
+
+    await Indexer.inst.updateTrackStats(track, lastPositionInMs: positionToSave);
   }
 
   Future<void> prepareTotalListenTime() async {
     final file = await File(k_FILE_PATH_TOTAL_LISTEN_TIME).create();
     final text = await file.readAsString();
     final listenTime = int.tryParse(text);
-    totalListenedTimeInSec.value = listenTime ?? 0;
+    _totalListenedTimeInSec.value = listenTime ?? 0;
   }
 
   Future<void> setSkipSilenceEnabled(bool enabled) async => await _player.setSkipSilenceEnabled(enabled);
-
-  //
-  // Video Methods
-  Future<void> updateVideoPlayingState() async {
-    if (isPlaying.value) {
-      VideoController.vcontroller.play();
-    } else {
-      VideoController.vcontroller.pause();
-    }
-    refreshVideoPosition();
-  }
-
-  Future<void> refreshVideoPosition() async {
-    await VideoController.vcontroller.seek(Duration(milliseconds: nowPlayingPosition.value));
-  }
-
-  // End of Video Methods.
-  //
-
-  //
-  // Namida Methods.
-  Future<void> setAudioSource(int index, {bool preload = true, bool startPlaying = true}) async {
-    updateTrackLastPosition(nowPlayingTrack.value, nowPlayingPosition.value);
-
-    final track = currentQueue.elementAt(index);
-    final tr = track.track;
-
-    nowPlayingTrack.value = tr;
-    currentIndex.value = index;
-    updateCurrentMediaItem(tr);
-    CurrentColor.inst.updatePlayerColorFromTrack(track, index);
-    VideoController.inst.updateCurrentVideo(tr);
-
-    /// The whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture] don't get detected.
-    try {
-      final dur = await _player.setAudioSource(tr.toAudioSource());
-      if (tr.duration == 0) tr.duration = dur?.inSeconds ?? 0;
-    } catch (e) {
-      SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-        NamidaDialogs.inst.showTrackDialog(tr, isFromPlayerQueue: true, errorPlayingTrack: true);
-      });
-      printy(e, isError: true);
-      return;
-    }
-    await Future.wait([
-      _player.pause(),
-      tryRestoringLastPosition(tr),
-    ]);
-
-    if (startPlaying) {
-      _player.play();
-      VideoController.vcontroller.play();
-      setVolume(SettingsController.inst.playerVolume.value);
-    }
-
-    startSleepAfterMinCount(tr);
-    WaveformController.inst.generateWaveform(tr);
-    HistoryController.inst.startCounterToAListen(nowPlayingTrack.value);
-    increaseListenTime(tr);
-    SettingsController.inst.save(lastPlayedTrackPath: tr.path);
-    Lyrics.inst.updateLyrics(tr);
-    tryResettingLatestInsertedIndex();
-  }
-
-  Future<void> updateTrackLastPosition(Track trackPre, int lastPosition) async {
-    final track = trackPre.toTrackExt();
-
-    /// Saves a starting position in case the remaining was less than 30 seconds.
-    final remaining = (track.duration * 1000) - lastPosition;
-    final positionToSave = remaining <= 30000 ? 0 : lastPosition;
-
-    await Indexer.inst.updateTrackStats(trackPre, lastPositionInMs: positionToSave);
-  }
 
   Future<void> tryRestoringLastPosition(Track trackPre) async {
     final minValueInSet = SettingsController.inst.minTrackDurationToRestoreLastPosInMinutes.value * 60;
@@ -224,40 +209,43 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
     }
   }
 
-  void startSleepAfterMinCount(Track track) async {
-    _startsleepAfterMinTimer?.cancel();
-    _startsleepAfterMinTimer = null;
-    _startsleepAfterMinTimer = Timer.periodic(const Duration(minutes: 1), (timer) async {
-      if (enableSleepAfterMins.value) {
-        if (isPlaying.value) {
-          sleepAfterMin.value = (sleepAfterMin.value - 1).clamp(0, 180);
-          if (sleepAfterMin.value == 0) {
-            Player.inst.resetSleepAfterTimer();
-            await pause();
-            timer.cancel();
-            return;
-          }
-        }
-      }
-    });
+  //
+  // =================================================================================
+  // ================================ Video Methods ==================================
+  // =================================================================================
+  Future<void> updateVideoPlayingState() async {
+    if (isPlaying) {
+      VideoController.vcontroller.play();
+    } else {
+      VideoController.vcontroller.pause();
+    }
+    refreshVideoPosition();
   }
 
-  /// if [force] is enabled, [track] will not be used.
-  void updateCurrentMediaItem([Track? track, bool force = false]) {
-    if (force) {
-      playbackState.add(_transformEvent(PlaybackEvent()));
-      return;
-    }
-    track ??= nowPlayingTrack.value;
-    mediaItem.add(track.toMediaItem());
+  Future<void> refreshVideoPosition() async {
+    await VideoController.vcontroller.seek(Duration(milliseconds: currentPositionMS));
+  }
+  // =================================================================================
+  //
+
+  //
+  // =================================================================================
+  // ================================ Player methods =================================
+  // =================================================================================
+  void updateCurrentMediaItem(Track track) {
+    mediaItem.add(track.toMediaItem(currentIndex, currentQueue.length));
+  }
+
+  void updateCurrentMediaItemForce() {
+    playbackState.add(_transformEvent(PlaybackEvent()));
   }
 
   Future<void> togglePlayPause() async {
-    if (isPlaying.value) {
+    if (isPlaying) {
       await pause();
     } else {
       await play();
-      await seek(Duration(milliseconds: nowPlayingPosition.value));
+      await seek(Duration(milliseconds: currentPositionMS));
     }
   }
 
@@ -275,7 +263,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
       vol += 1 / steps;
       printy("Fade Volume Play: ${vol.toString()}");
       setVolume(vol);
-      if (vol >= SettingsController.inst.playerVolume.value || wantToPause) {
+      if (vol >= SettingsController.inst.playerVolume.value || _wantToPause) {
         timer.cancel();
       }
     });
@@ -300,139 +288,11 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
     });
   }
 
-  void reorderTrack(int oldIndex, int newIndex) {
-    if (oldIndex == newIndex) {
-      return;
-    }
-    if (newIndex > oldIndex) {
-      newIndex -= 1;
-    }
-    int i = currentIndex.value;
-    if (oldIndex == currentIndex.value) {
-      i = newIndex;
-    }
-
-    /// Track is dragged from after the currentTrack to before the currentTrack.
-    if (oldIndex < currentIndex.value && newIndex >= currentIndex.value) {
-      i = currentIndex.value - 1;
-    }
-
-    /// Track is dragged from before the currentTrack to after the currentTrack.
-    if (oldIndex > currentIndex.value && newIndex <= currentIndex.value) {
-      i = currentIndex.value + 1;
-    }
-
-    currentIndex.value = i;
-    CurrentColor.inst.currentPlayingIndex.value = i;
-    final item = currentQueue.elementAt(oldIndex).track;
-    currentQueue.removeAt(oldIndex);
-    insertInQueue([item], newIndex);
-  }
-
-  void shuffleNextTracks() {
-    if (isLastTrack) {
-      return;
-    }
-    final List<Selectable> newTracks = [];
-    final first = currentIndex.value + 1;
-    final last = currentQueue.length;
-    newTracks
-      ..assignAll(currentQueue.getRange(first, last))
-      ..shuffle();
-    removeRangeFromQueue(first, last);
-    insertInQueue(newTracks, first);
-  }
-
-  void removeDuplicatesFromQueue() {
-    final ct = nowPlayingTrack.value;
-    currentQueue.removeDuplicates((element) => element.track);
-    final newIndex = currentQueue.indexWhere((element) => element.track == ct);
-    currentIndex.value = newIndex;
-    CurrentColor.inst.updatePlayerColorFromTrack(ct, newIndex, updateIndexOnly: true);
-  }
-
-  void addToQueue(List<Selectable> tracks, {bool insertNext = false, bool insertAfterLatest = false}) {
-    if (currentQueue.isEmpty) {
-      currentQueue.addAll(tracks);
-      nowPlayingTrack.value = tracks.first.track;
-    } else {
-      if (insertNext) {
-        insertInQueue(tracks, currentIndex.value + 1);
-        namidaPlayer.latestInsertedIndex = currentIndex.value + 1;
-      } else if (insertAfterLatest) {
-        insertInQueue(tracks, namidaPlayer.latestInsertedIndex + 1);
-        namidaPlayer.latestInsertedIndex += tracks.length;
-      } else {
-        currentQueue.addAll(tracks);
-        namidaPlayer.latestInsertedIndex = currentQueue.length - 1;
-      }
-    }
-
-    afterQueueChange();
-  }
-
-  void insertInQueue(List<Selectable> tracks, int index) {
-    currentQueue.insertAllSafe(index, tracks);
-    afterQueueChange();
-  }
-
-  Future<void> removeFromQueue(int index) async {
-    if (index == currentIndex.value) {
-      if (currentQueue.isNotEmpty) {
-        if (isLastTrack) {
-          await setAudioSource(index - 1);
-        } else {
-          await setAudioSource(index);
-        }
-      }
-    }
-    currentQueue.removeAt(index);
-    final ci = currentIndex.value;
-    if (index < ci) {
-      currentIndex.value = ci - 1;
-      CurrentColor.inst.currentPlayingIndex.value = ci - 1;
-    }
-
-    afterQueueChange();
-  }
-
-  Future<void> removeRangeFromQueue(int start, int end) async {
-    currentQueue.removeRange(start, end);
-    await afterQueueChange();
-  }
-
-  /// Only use when updating missing track.
-  Future<void> replaceAllTracksInQueue(Track oldTrack, Track newTrack) async {
-    currentQueue.replaceItems(oldTrack, newTrack);
-    afterQueueChange();
-  }
-
-  Future<void> afterQueueChange() async {
-    tryResettingLatestInsertedIndex();
-    updateCurrentMediaItem();
-    await QueueController.inst.updateLatestQueue(currentQueue.tracks.toList());
-  }
-
-  void tryResettingLatestInsertedIndex() {
-    if (currentIndex.value >= namidaPlayer.latestInsertedIndex || currentQueue.length <= namidaPlayer.latestInsertedIndex) {
-      namidaPlayer.latestInsertedIndex = currentIndex.value;
-    }
-  }
-
-  Future<void> setVolume(double volume) async {
-    await _player.setVolume(volume);
-  }
-
-  // End of Namida Methods.
-  //
-
-  //
-  // audio_service overriden methods.
   @override
   Future<void> play() async {
-    wantToPause = false;
+    _wantToPause = false;
 
-    if (SettingsController.inst.enableVolumeFadeOnPlayPause.value && nowPlayingPosition.value > 200) {
+    if (SettingsController.inst.enableVolumeFadeOnPlayPause.value && currentPositionMS > 200) {
       await playWithFadeEffect();
     } else {
       _player.play();
@@ -443,8 +303,8 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
 
   @override
   Future<void> pause() async {
-    wantToPause = true;
-    if (SettingsController.inst.enableVolumeFadeOnPlayPause.value && nowPlayingPosition.value > 200) {
+    _wantToPause = true;
+    if (SettingsController.inst.enableVolumeFadeOnPlayPause.value && currentPositionMS > 200) {
       await pauseWithFadeEffect();
     } else {
       _player.pause();
@@ -460,11 +320,11 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
     }
 
     /// Starts a new listen counter in case seeking was backwards and was >= 20% of the track
-    if (position.inMilliseconds < nowPlayingPosition.value) {
-      final diffInSeek = nowPlayingPosition.value - position.inMilliseconds;
+    if (position.inMilliseconds < currentPositionMS) {
+      final diffInSeek = currentPositionMS - position.inMilliseconds;
       final percentage = diffInSeek / (_player.duration?.inMilliseconds ?? 1);
       if (percentage >= 0.2) {
-        HistoryController.inst.startCounterToAListen(nowPlayingTrack.value);
+        HistoryController.inst.startCounterToAListen(currentTrack.track);
       }
     }
     final msd = p.milliseconds;
@@ -474,47 +334,49 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
     ]);
   }
 
-  @override
-  Future<void> stop() async => await _player.stop();
+  Future<void> setVolume(double volume) async {
+    await _player.setVolume(volume);
+  }
 
   @override
   Future<void> skipToNext([bool? andPlay]) async {
-    if (isLastTrack) {
+    if (isLastItem) {
       await skipToQueueItem(0, andPlay);
     } else {
-      await skipToQueueItem(currentIndex.value + 1);
+      await skipToQueueItem(currentIndex + 1);
     }
   }
 
   @override
   Future<void> skipToPrevious() async {
-    if (currentIndex.value == 0) {
+    if (currentIndex == 0) {
       await skipToQueueItem(currentQueue.length - 1);
     } else {
-      await skipToQueueItem(currentIndex.value - 1);
+      await skipToQueueItem(currentIndex - 1);
     }
   }
 
   @override
   Future<void> skipToQueueItem(int index, [bool? andPlay]) async {
-    await setAudioSource(index, startPlaying: andPlay ?? (SettingsController.inst.playerPlayOnNextPrev.value || isPlaying.value));
+    await skipToItem(index, andPlay ?? defaultShouldStartPlaying);
   }
 
-  // End of  audio_service overriden methods.
-  //
+  @override
+  Future<void> stop() async => await _player.stop();
 
-  //
-  // Media Control Specific
   @override
   Future<void> fastForward() async {
-    PlaylistController.inst.favouriteButtonOnPressed(Player.inst.nowPlayingTrack.value);
-    updateCurrentMediaItem(null, true);
+    _toggleFavTrack();
   }
 
   @override
   Future<void> rewind() async {
-    PlaylistController.inst.favouriteButtonOnPressed(Player.inst.nowPlayingTrack.value);
-    updateCurrentMediaItem(null, true);
+    _toggleFavTrack();
+  }
+
+  Future<void> _toggleFavTrack() async {
+    await PlaylistController.inst.favouriteButtonOnPressed(Player.inst.nowPlayingTrack);
+    updateCurrentMediaItemForce();
   }
 
   /// [fastForward] is favourite track.
@@ -528,7 +390,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
       MediaControl.stop,
     ];
     if (SettingsController.inst.displayFavouriteButtonInNotification.value) {
-      fmc.insertSafe(0, Player.inst.nowPlayingTrack.value.isFavourite ? MediaControl.fastForward : MediaControl.rewind);
+      fmc.insertSafe(0, Player.inst.nowPlayingTrack.isFavourite ? MediaControl.fastForward : MediaControl.rewind);
       iconsIndexes.assignAll(const [1, 2, 3]);
     }
     return PlaybackState(
@@ -553,8 +415,71 @@ class NamidaAudioVideoHandler extends BaseAudioHandler {
       queueIndex: event.currentIndex,
     );
   }
+  // =================================================================================
+  //
+
+  //
+  // ==============================================================================================
+  // ==============================================================================================
+  // ================================== QueueManager Overriden ====================================
+  @override
+  FutureOr<void> beforePlaying() async {
+    updateTrackLastPosition(currentTrack.track, currentPositionMS);
+  }
+
+  @override
+  Future<void> playFunction(Selectable item, bool startPlaying) async {
+    final tr = item.track;
+    VideoController.inst.updateCurrentVideo(tr);
+
+    /// The whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture] don't get detected.
+    try {
+      final dur = await _player.setAudioSource(tr.toAudioSource(currentIndex, currentQueue.length));
+      if (tr.duration == 0) tr.duration = dur?.inSeconds ?? 0;
+    } catch (e) {
+      SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+        NamidaDialogs.inst.showTrackDialog(tr, isFromPlayerQueue: true, errorPlayingTrack: true);
+      });
+      printy(e, isError: true);
+      return;
+    }
+    await Future.wait([
+      _player.pause(),
+      tryRestoringLastPosition(tr),
+    ]);
+
+    if (startPlaying) {
+      _player.play();
+      VideoController.vcontroller.play();
+      setVolume(SettingsController.inst.playerVolume.value);
+    }
+
+    startSleepAfterMinCount(tr);
+    WaveformController.inst.generateWaveform(tr);
+    HistoryController.inst.startCounterToAListen(tr);
+    increaseListenTime(tr);
+    SettingsController.inst.save(lastPlayedTrackPath: tr.path);
+    Lyrics.inst.updateLyrics(tr);
+  }
+
+  @override
+  FutureOr<void> onIndexChanged(int newIndex, Selectable newItem) {
+    CurrentColor.inst.updatePlayerColorFromTrack(newItem, newIndex);
+  }
+
+  @override
+  FutureOr<void> onQueueChanged() async {
+    super.onQueueChanged();
+    updateCurrentMediaItemForce();
+    await QueueController.inst.updateLatestQueue(currentQueue.tracks.toList());
+  }
+
+  bool get defaultShouldStartPlaying => (SettingsController.inst.playerPlayOnNextPrev.value || isPlaying);
+
+  final _player = AudioPlayer();
 }
 
+// ----------------------- Extensions --------------------------
 extension _MediaItemToAudioSource on MediaItem {
   AudioSource toAudioSource() => AudioSource.uri(Uri.parse(id));
 }
@@ -564,21 +489,21 @@ extension _MediaItemsListToAudioSources on Iterable<MediaItem> {
 }
 
 extension TrackToAudioSourceMediaItem on Selectable {
-  UriAudioSource toAudioSource() {
+  UriAudioSource toAudioSource(int currentIndex, int queueLength) {
     return AudioSource.uri(
       Uri.parse(track.path),
-      tag: toMediaItem,
+      tag: toMediaItem(currentIndex, queueLength),
     );
   }
 
-  MediaItem toMediaItem() {
+  MediaItem toMediaItem(int currentIndex, int queueLength) {
     final tr = track.toTrackExt();
     return MediaItem(
       id: tr.path,
       title: tr.title,
       displayTitle: tr.title,
       displaySubtitle: tr.hasUnknownAlbum ? tr.originalArtist : "${tr.originalArtist} - ${tr.album}",
-      displayDescription: "${Player.inst.currentIndex.value + 1}/${Player.inst.currentQueue.length}",
+      displayDescription: "${currentIndex + 1}/$queueLength",
       artist: tr.originalArtist,
       album: tr.hasUnknownAlbum ? '' : tr.album,
       genre: tr.genresList.take(3).join(', '),

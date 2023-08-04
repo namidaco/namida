@@ -198,3 +198,6 @@ const k_UNKNOWN_TRACK_COMPOSER = 'Unknown Composer';
 int get currentTimeMS => DateTime.now().millisecondsSinceEpoch;
 
 const kThemeAnimationDurationMS = 350;
+
+const kMaximumSleepTimerTracks = 40;
+const kMaximumSleepTimerMins = 180;

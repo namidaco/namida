@@ -104,15 +104,16 @@ class TrackTile extends StatelessWidget {
             final row3Text = _joinTrackItems(TrackTilePosition.row3Item1, TrackTilePosition.row3Item2, TrackTilePosition.row3Item3, track);
             final rightItem1Text = _getChoosenTrackTileItem(TrackTilePosition.rightItem1, track);
             final rightItem2Text = _getChoosenTrackTileItem(TrackTilePosition.rightItem2, track);
+            final backgroundColor = bgColor ??
+                Color.alphaBlend(
+                  isTrackSelected & !isInSelectedTracksPreview ? context.theme.focusColor : Colors.transparent,
+                  isTrackCurrentlyPlaying ? CurrentColor.inst.color : context.theme.cardTheme.color!,
+                );
             return Padding(
               padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin),
               child: NamidaInkWell(
                 borderRadius: 0.0,
-                bgColor: bgColor ??
-                    Color.alphaBlend(
-                      isTrackSelected & !isInSelectedTracksPreview ? context.theme.focusColor : Colors.transparent,
-                      isTrackCurrentlyPlaying ? CurrentColor.inst.color : context.theme.cardTheme.color!,
-                    ),
+                bgColor: backgroundColor,
                 onTap: onTap ??
                     () async {
                       if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {

@@ -203,6 +203,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.17.3"
+  dart_extensions:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: "9c588a5c421b02351db8e6aea882b56d982d5618"
+      resolved-ref: "9c588a5c421b02351db8e6aea882b56d982d5618"
+      url: "https://github.com/MSOB7YY/dart_extensions"
+    source: git
+    version: "0.0.1"
   dbus:
     dependency: transitive
     description:
@@ -848,6 +857,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.2.4"
+  queue_manager:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: ed219e2b434d9e65dec9e339a2adf2d89e0c4d71
+      resolved-ref: ed219e2b434d9e65dec9e339a2adf2d89e0c4d71
+      url: "https://github.com/MSOB7YY/queue_manager"
+    source: git
+    version: "0.0.1"
   readmore:
     dependency: "direct main"
     description:

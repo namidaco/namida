@@ -73,7 +73,7 @@ class WaveformController {
         printy(e, isError: true);
       }
 
-      if (track == Player.inst.nowPlayingTrack.value) {
+      if (track == Player.inst.nowPlayingTrack) {
         curentWaveform.assignAll(_increaseListToMax(waveformData));
         final dList = changeListSize(waveformData, numberOfScales);
         _updateScaleMap(dList);

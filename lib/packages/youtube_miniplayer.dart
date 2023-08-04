@@ -56,7 +56,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   MiniPlayerController.inst.miniplayerHP.value = percentage;
                 });
-                final currentTrack = Player.inst.nowPlayingTrack.value;
+                final currentTrack = Player.inst.nowPlayingTrack;
                 final inversePerc = 1 - percentage;
                 final finalspace1sb = space1sb * inversePerc;
                 final finalspace3sb = space3sb * inversePerc;
@@ -121,8 +121,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                 width: finalspace4buttons / 2,
                                 child: NamidaInkWell(
                                   transparentHighlight: true,
-                                  onTap: () => Player.inst.playOrPause(Player.inst.currentIndex.value, [], QueueSource.playerQueue),
-                                  child: Obx(() => Icon(Player.inst.isPlaying.value ? Broken.pause : Broken.play)),
+                                  onTap: () => Player.inst.playOrPause(Player.inst.currentIndex, [], QueueSource.playerQueue),
+                                  child: Obx(() => Icon(Player.inst.isPlaying ? Broken.pause : Broken.play)),
                                 ),
                               ),
                             ),
@@ -269,7 +269,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                     title: Language.inst.REFRESH,
                                                     icon: Broken.refresh,
                                                     onPressed: () async =>
-                                                        await YoutubeController.inst.updateCurrentVideoMetadata(Player.inst.nowPlayingTrack.value.youtubeID, forceReload: true),
+                                                        await YoutubeController.inst.updateCurrentVideoMetadata(Player.inst.nowPlayingTrack.youtubeID, forceReload: true),
                                                   ),
                                                   const SizedBox(width: 12.0),
                                                 ],

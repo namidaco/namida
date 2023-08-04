@@ -55,6 +55,14 @@ dependencies:
   catcher:
     git:
       url: https://github.com/MSOB7YY/catcher
+  dart_extensions:
+    git:
+      url: https://github.com/MSOB7YY/dart_extensions
+      ref: 9c588a5c421b02351db8e6aea882b56d982d5618
+  queue_manager:
+    git:
+      url: https://github.com/MSOB7YY/queue_manager
+      ref: ed219e2b434d9e65dec9e339a2adf2d89e0c4d71
 
   # ---- Path/File Providers ----
   path_provider: ^2.0.14

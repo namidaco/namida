@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:get/get.dart';
@@ -7,10 +8,8 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/audio_handler.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/language.dart';
 
 class Player {
@@ -18,29 +17,29 @@ class Player {
   static final Player _instance = Player._internal();
   Player._internal();
 
-  NamidaAudioVideoHandler? _audioHandler;
+  late NamidaAudioVideoHandler _audioHandler;
 
-  final Rx<Track> nowPlayingTrack = kDummyTrack.obs;
-  final RxList<Selectable> currentQueue = <Selectable>[].obs;
-  final RxInt currentIndex = 0.obs;
-  final RxDouble currentVolume = SettingsController.inst.playerVolume.value.obs;
-  final RxBool isPlaying = false.obs;
-  final RxInt nowPlayingPosition = 0.obs;
-  final RxInt numberOfRepeats = 1.obs;
-  int latestInsertedIndex = 0;
+  Track get nowPlayingTrack => _audioHandler.currentTrack.track;
+  Selectable get nowPlayingTWD => _audioHandler.currentTrack;
+  UnmodifiableListView<Selectable> get currentQueue => _audioHandler.currentQueue;
+  int get currentIndex => _audioHandler.currentIndex;
+  int get nowPlayingPosition => _audioHandler.currentPositionMS;
+  bool get isPlaying => _audioHandler.isPlaying;
+  int get numberOfRepeats => _audioHandler.numberOfRepeats;
+  int get latestInsertedIndex => _audioHandler.latestInsertedIndex;
 
-  final RxBool enableSleepAfterTracks = false.obs;
-  final RxBool enableSleepAfterMins = false.obs;
-  final RxInt sleepAfterMin = 0.obs;
-  final RxInt sleepAfterTracks = 0.obs;
+  bool get enableSleepAfterTracks => _audioHandler.enableSleepAfterTracks;
+  bool get enableSleepAfterMins => _audioHandler.enableSleepAfterMins;
+  int get sleepAfterMin => _audioHandler.sleepAfterMin;
+  int get sleepAfterTracks => _audioHandler.sleepAfterTracks;
 
   final RxInt totalListenedTimeInSec = 0.obs;
 
-  bool isSleepingTrack(int queueIndex) => enableSleepAfterTracks.value && sleepAfterTracks.value + currentIndex.value - 1 == queueIndex;
+  bool isSleepingTrack(int queueIndex) => enableSleepAfterTracks && sleepAfterTracks + currentIndex - 1 == queueIndex;
 
   Future<void> initializePlayer() async {
     _audioHandler = await AudioService.init(
-      builder: () => NamidaAudioVideoHandler(this),
+      builder: () => NamidaAudioVideoHandler(),
       config: const AudioServiceConfig(
         androidNotificationChannelId: 'com.msob7y.namida',
         androidNotificationChannelName: 'Namida',
@@ -55,42 +54,65 @@ class Player {
   }
 
   void updateMediaItemForce() {
-    _audioHandler?.updateCurrentMediaItem(null, true);
+    _audioHandler.updateCurrentMediaItemForce();
   }
 
   Future<void> setSkipSilenceEnabled(bool enabled) async {
-    await _audioHandler?.setSkipSilenceEnabled(enabled);
+    await _audioHandler.setSkipSilenceEnabled(enabled);
+  }
+
+  void refreshRxVariables() {
+    _audioHandler.refreshRxVariables();
+  }
+
+  void updateNumberOfRepeats(int newNumber) {
+    _audioHandler.updateNumberOfRepeats(newNumber);
+  }
+
+  void updateSleepTimerValues({
+    bool? enableSleepAfterTracks,
+    bool? enableSleepAfterMins,
+    int? sleepAfterMin,
+    int? sleepAfterTracks,
+  }) {
+    _audioHandler.updateSleepTimerValues(
+      enableSleepAfterTracks: enableSleepAfterTracks,
+      enableSleepAfterMins: enableSleepAfterMins,
+      sleepAfterMin: sleepAfterMin,
+      sleepAfterTracks: sleepAfterTracks,
+    );
   }
 
   void resetSleepAfterTimer() {
-    enableSleepAfterMins.value = false;
-    enableSleepAfterTracks.value = false;
-    sleepAfterMin.value = 0;
-    sleepAfterTracks.value = 0;
+    _audioHandler.resetSleepAfterTimer();
   }
 
   Future<void> updateVideoPlayingState() async {
-    await _audioHandler?.updateVideoPlayingState();
+    await _audioHandler.updateVideoPlayingState();
   }
 
   Future<void> setVolume(double volume) async {
-    await _audioHandler?.setVolume(volume);
+    await _audioHandler.setVolume(volume);
   }
 
   void reorderTrack(int oldIndex, int newIndex) {
-    _audioHandler?.reorderTrack(oldIndex, newIndex);
+    _audioHandler.reorderItems(oldIndex, newIndex);
   }
 
-  void shuffleNextTracks() {
-    _audioHandler?.shuffleNextTracks();
+  FutureOr<void> shuffleNextTracks() async {
+    await _audioHandler.shuffleNextItems();
+  }
+
+  FutureOr<void> shuffleAllTracks() async {
+    await _audioHandler.shuffleAllItems((element) => element.track);
   }
 
   // void shuffleAllQueue() {
   //   _audioHandler?.shuffleAllQueue();
   // }
 
-  void removeDuplicatesFromQueue() {
-    _audioHandler?.removeDuplicatesFromQueue();
+  int removeDuplicatesFromQueue() {
+    return _audioHandler.removeDuplicatesFromQueue((element) => element.track);
   }
 
   /// returns true if tracks aren't empty.
@@ -105,7 +127,7 @@ class Player {
       Get.snackbar(Language.inst.NOTE, emptyTracksMessage ?? Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES);
       return false;
     }
-    _audioHandler?.addToQueue(
+    _audioHandler.addToQueue(
       tracks,
       insertNext: insertNext,
       insertAfterLatest: insertAfterLatest,
@@ -118,62 +140,62 @@ class Player {
   }
 
   void insertInQueue(List<Track> tracks, int index) {
-    _audioHandler?.insertInQueue(tracks, index);
+    _audioHandler.insertInQueue(tracks, index);
   }
 
   Future<void> removeFromQueue(int index) async {
-    await _audioHandler?.removeFromQueue(index);
+    await _audioHandler.removeFromQueue(index, _audioHandler.defaultShouldStartPlaying);
   }
 
   Future<void> replaceAllTracksInQueue(Track oldTrack, Track newTrack) async {
-    await _audioHandler?.replaceAllTracksInQueue(oldTrack, newTrack);
+    await _audioHandler.replaceAllItemsInQueue(oldTrack, newTrack);
   }
 
   void removeRangeFromQueue(int start, int end) {
-    _audioHandler?.removeRangeFromQueue(start, end);
+    _audioHandler.removeRangeFromQueue(start, end);
   }
 
   Future<void> play() async {
-    await _audioHandler?.play();
+    await _audioHandler.play();
   }
 
   Future<void> pause() async {
-    await _audioHandler?.pause();
+    await _audioHandler.pause();
   }
 
   Future<void> next() async {
-    await _audioHandler?.skipToNext();
+    await _audioHandler.skipToNext();
   }
 
   Future<void> previous() async {
-    await _audioHandler?.skipToPrevious();
+    await _audioHandler.skipToPrevious();
   }
 
   Future<void> skipToQueueItem(int index) async {
-    _audioHandler?.skipToQueueItem(index);
+    _audioHandler.skipToQueueItem(index);
   }
 
   Future<void> seek(Duration position) async {
-    await _audioHandler?.seek(position);
+    await _audioHandler.seek(position);
   }
 
   /// Default value is set to user preference [seekDurationInSeconds]
   Future<void> seekSecondsForward([int? seconds]) async {
     final newSeconds = _secondsToSeek(seconds);
-    await _audioHandler?.seek(Duration(milliseconds: nowPlayingPosition.value + newSeconds * 1000));
+    await _audioHandler.seek(Duration(milliseconds: nowPlayingPosition + newSeconds * 1000));
   }
 
   /// Default value is set to user preference [seekDurationInSeconds]
   Future<void> seekSecondsBackward([int? seconds]) async {
     final newSeconds = _secondsToSeek(seconds);
-    await _audioHandler?.seek(Duration(milliseconds: nowPlayingPosition.value - newSeconds * 1000));
+    await _audioHandler.seek(Duration(milliseconds: nowPlayingPosition - newSeconds * 1000));
   }
 
   int _secondsToSeek([int? seconds]) {
     int? newSeconds = seconds;
     if (newSeconds == null) {
       if (SettingsController.inst.isSeekDurationPercentage.value) {
-        final sFromP = nowPlayingTrack.value.duration * (SettingsController.inst.seekDurationInPercentage.value / 100);
+        final sFromP = nowPlayingTrack.track.duration * (SettingsController.inst.seekDurationInPercentage.value / 100);
         newSeconds = sFromP.toInt();
       } else {
         newSeconds = SettingsController.inst.seekDurationInSeconds.value;
@@ -190,66 +212,23 @@ class Player {
     bool startPlaying = true,
     bool addAsNewQueue = true,
   }) async {
-    final finalQueue = <Selectable>[];
-
-    /// maximum 1000 track for performance.
-    if (queue.length > 1000 && !shuffle) {
-      const trimCount = 500;
-
-      // adding tracks after current index.
-      final end = (index + trimCount).clamp(0, queue.length - 1);
-      finalQueue.addAll(queue.sublist(index, end + 1));
-
-      // inserting tracks before current index.
-      final firstIndex = (index - trimCount).clamp(0, index);
-      final initialTracks = queue.sublist(firstIndex, index);
-      finalQueue.insertAll(0, initialTracks);
-
-      // fixing index
-      index = index - firstIndex;
-    } else {
-      finalQueue.addAll(queue);
-    }
-
-    if (finalQueue.isEmpty) {
-      _audioHandler?.togglePlayPause();
-      return;
-    }
-
-    final isQueueSame = checkIfQueueSameAsCurrent(finalQueue);
-
-    if (index == currentIndex.value && isQueueSame) {
-      _audioHandler?.togglePlayPause();
-      return;
-    }
-    if (!isQueueSame) {
-      latestInsertedIndex = index;
-    }
-
-    if (shuffle) {
-      finalQueue.shuffle();
-      final trimmedQueue = List<Selectable>.from(finalQueue.take(1000));
-      finalQueue
-        ..clear()
-        ..addAll(trimmedQueue);
-      index = 0;
-    }
-
-    /// if the queue is the same, it will skip instead of saving the same queue.
-    if (addAsNewQueue && !isQueueSame) {
-      final trs = finalQueue.tracks.toList();
-      QueueController.inst.addNewQueue(source: source, tracks: trs);
-      QueueController.inst.updateLatestQueue(trs);
-    }
-
-    currentQueue
-      ..clear()
-      ..addAll(finalQueue);
-
-    await _audioHandler?.setAudioSource(index, startPlaying: startPlaying);
+    _audioHandler.assignNewQueue(
+      playAtIndex: index,
+      queue: queue,
+      maximumItems: 1000,
+      onIndexAndQueueSame: _audioHandler.togglePlayPause,
+      onQueueDifferent: (finalizedQueue) {
+        final trs = finalizedQueue.tracks.toList();
+        QueueController.inst.addNewQueue(source: source, tracks: trs);
+        QueueController.inst.updateLatestQueue(trs);
+      },
+      onQueueEmpty: _audioHandler.togglePlayPause,
+      startPlaying: startPlaying,
+      shuffle: shuffle,
+    );
   }
 
   Future<void> prepareTotalListenTime() async {
-    await _audioHandler?.prepareTotalListenTime();
+    await _audioHandler.prepareTotalListenTime();
   }
 }

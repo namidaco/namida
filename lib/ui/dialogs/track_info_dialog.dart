@@ -42,13 +42,13 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
   bool shouldShowTheField(bool isUnknown) => !isUnknown || (SettingsController.inst.showUnknownFieldsInTrackInfoDialog.value && isUnknown);
 
   void showPreviewTrackDialog() async {
-    final wasPlaying = Player.inst.isPlaying.value;
+    final wasPlaying = Player.inst.isPlaying;
     if (wasPlaying) {
       Player.inst.pause();
     }
 
     final ap = AudioPlayer();
-    await ap.setAudioSource(track.toAudioSource());
+    await ap.setAudioSource(track.toAudioSource(0, 0));
     ap.play();
 
     NamidaNavigator.inst.navigateDialog(

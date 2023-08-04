@@ -107,7 +107,7 @@ class _MiniPlayerSwitchersState extends State<MiniPlayerSwitchers> with SingleTi
         SettingsController.inst.enableBottomNavBar.value;
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 600),
-          child: Player.inst.nowPlayingTrack.value == kDummyTrack
+          child: Player.inst.nowPlayingTrack == kDummyTrack
               ? const SizedBox(
                   key: Key('emptyminiplayer'),
                 )
@@ -151,11 +151,11 @@ class NamidaMiniPlayer extends StatelessWidget {
           onHorizontalDragEnd: MiniPlayerController.inst.gestureDetectorOnHorizontalDragEnd,
           child: Obx(
             () {
-              final currentIndex = Player.inst.currentIndex.value;
+              final currentIndex = Player.inst.currentIndex;
               final indminus = refine(currentIndex - 1);
               final indplus = refine(currentIndex + 1);
               final prevTrack = Player.inst.currentQueue[indminus];
-              final currentTrack = Player.inst.nowPlayingTrack.value;
+              final currentTrack = Player.inst.nowPlayingTrack;
               final nextTrack = Player.inst.currentQueue[indplus];
               final currentDuration = currentTrack.duration;
               final currentDurationInMS = currentDuration * 1000;
@@ -258,7 +258,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                       /// Smol progress bar
                                       Obx(
                                         () {
-                                          final w = Player.inst.nowPlayingPosition.value / currentDurationInMS;
+                                          final w = Player.inst.nowPlayingPosition / currentDurationInMS;
                                           return Container(
                                             height: 2 * (1 - cp),
                                             width: w > 0 ? ((Get.width * w) * 0.9) : 0,
@@ -416,7 +416,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                   children: [
                                                     Obx(
                                                       () {
-                                                        final diffInMs = MiniPlayerController.inst.seekValue.value - Player.inst.nowPlayingPosition.value;
+                                                        final diffInMs = MiniPlayerController.inst.seekValue.value - Player.inst.nowPlayingPosition;
                                                         final plusOrMinus = diffInMs < 0 ? '-' : '+';
                                                         final seekText = diffInMs.abs().milliSecondsLabel;
                                                         return AnimatedCrossFade(
@@ -436,7 +436,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                     ),
                                                     Obx(
                                                       () => Text(
-                                                        Player.inst.nowPlayingPosition.value.milliSecondsLabel,
+                                                        Player.inst.nowPlayingPosition.milliSecondsLabel,
                                                         style: context.textTheme.displaySmall,
                                                       ),
                                                     ),
@@ -523,7 +523,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                           child: Obx(
                                                             () => AnimatedSwitcher(
                                                               duration: const Duration(milliseconds: 200),
-                                                              child: Player.inst.isPlaying.value
+                                                              child: Player.inst.isPlaying
                                                                   ? Icon(
                                                                       Broken.pause,
                                                                       size: (_velpy(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp,
@@ -666,7 +666,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                           child: Obx(
                                             () => IconButton(
                                               visualDensity: VisualDensity.compact,
-                                              tooltip: SettingsController.inst.playerRepeatMode.value.toText().replaceFirst('_NUM_', Player.inst.numberOfRepeats.value.toString()),
+                                              tooltip: SettingsController.inst.playerRepeatMode.value.toText().replaceFirst('_NUM_', Player.inst.numberOfRepeats.toString()),
                                               onPressed: () => SettingsController.inst.playerRepeatMode.value.toggleSetting(),
                                               padding: const EdgeInsets.all(2.0),
                                               icon: Stack(
@@ -679,7 +679,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                   ),
                                                   if (SettingsController.inst.playerRepeatMode.value == RepeatMode.forNtimes)
                                                     Text(
-                                                      Player.inst.numberOfRepeats.value.toString(),
+                                                      Player.inst.numberOfRepeats.toString(),
                                                       style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSecondaryContainer),
                                                     ),
                                                 ],
@@ -865,7 +865,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                   Obx(
                                     () {
                                       final seekValue = MiniPlayerController.inst.seekValue.value;
-                                      final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPosition.value;
+                                      final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPosition;
                                       final durInMs = currentDurationInMS;
                                       final percentage = (position / durInMs).clamp(0.0, durInMs.toDouble());
                                       const horizontalPadding = 16.0;
@@ -1024,11 +1024,8 @@ class NamidaMiniPlayer extends StatelessWidget {
           tooltip: Language.inst.REMOVE_DUPLICATES,
           icon: Broken.trash,
           onPressed: () {
-            final qlBefore = Player.inst.currentQueue.length;
-            Player.inst.removeDuplicatesFromQueue();
-            final qlAfter = Player.inst.currentQueue.length;
-            final difference = qlBefore - qlAfter;
-            Get.snackbar(Language.inst.NOTE, "${Language.inst.REMOVED} ${difference.displayTrackKeyword}");
+            final removed = Player.inst.removeDuplicatesFromQueue();
+            Get.snackbar(Language.inst.NOTE, "${Language.inst.REMOVED} ${removed.displayTrackKeyword}");
           },
         ),
         const SizedBox(width: 6.0),
@@ -1430,7 +1427,7 @@ class _AnimatingTrackImage extends StatelessWidget {
       child: Obx(
         () {
           final additionalScale = VideoController.inst.videoZoomAdditionalScale.value;
-          final finalScale = (additionalScale * 0.02) + WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value);
+          final finalScale = (additionalScale * 0.02) + WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
           final isInversed = SettingsController.inst.animatingThumbnailInversed.value;
           return AnimatedScale(
             duration: const Duration(milliseconds: 100),
@@ -1439,7 +1436,6 @@ class _AnimatingTrackImage extends StatelessWidget {
               duration: const Duration(milliseconds: 300),
               child: VideoController.inst.shouldShowVideo
                   ? ClipRRect(
-                      key: const Key('videocontainer'),
                       borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
                       child: LyricsWrapper(
                         cp: cp,
@@ -1631,10 +1627,10 @@ class _WallpaperState extends State<Wallpaper> with TickerProviderStateMixin {
           if (SettingsController.inst.enableMiniplayerParticles.value)
             Obx(
               () {
-                final bpm = 2000 * WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value);
+                final bpm = 2000 * WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
                 return AnimatedOpacity(
                   duration: const Duration(seconds: 1),
-                  opacity: Player.inst.isPlaying.value ? 1 : 0,
+                  opacity: Player.inst.isPlaying ? 1 : 0,
                   child: AnimatedBackground(
                     vsync: this,
                     behaviour: RandomParticleBehaviour(

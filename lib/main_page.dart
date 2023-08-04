@@ -7,6 +7,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/youtube_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -106,8 +107,8 @@ class MainPageWrapper extends StatelessWidget {
               icon: Broken.timer_1,
               onTap: () {
                 toggleDrawer();
-                final RxInt minutes = Player.inst.sleepAfterMin.value.obs;
-                final RxInt tracks = Player.inst.sleepAfterTracks.value.obs;
+                final minutes = Player.inst.sleepAfterMin.obs;
+                final tracks = Player.inst.sleepAfterTracks.obs;
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
                     title: Language.inst.SLEEP_AFTER,
@@ -116,7 +117,7 @@ class MainPageWrapper extends StatelessWidget {
                     actions: [
                       const CancelButton(),
                       Obx(
-                        () => Player.inst.enableSleepAfterMins.value || Player.inst.enableSleepAfterTracks.value
+                        () => Player.inst.enableSleepAfterMins || Player.inst.enableSleepAfterTracks
                             ? NamidaButton(
                                 icon: Broken.timer_pause,
                                 text: Language.inst.STOP,
@@ -130,10 +131,12 @@ class MainPageWrapper extends StatelessWidget {
                                 text: Language.inst.START,
                                 onPressed: () {
                                   if (minutes.value > 0 || tracks.value > 0) {
-                                    Player.inst.enableSleepAfterMins.value = minutes.value > 0;
-                                    Player.inst.enableSleepAfterTracks.value = tracks.value > 0;
-                                    Player.inst.sleepAfterMin.value = minutes.value;
-                                    Player.inst.sleepAfterTracks.value = tracks.value;
+                                    Player.inst.updateSleepTimerValues(
+                                      enableSleepAfterMins: minutes.value > 0,
+                                      enableSleepAfterTracks: tracks.value > 0,
+                                      sleepAfterMin: minutes.value,
+                                      sleepAfterTracks: tracks.value,
+                                    );
                                   }
                                   NamidaNavigator.inst.closeDialog();
                                 },
@@ -167,7 +170,7 @@ class MainPageWrapper extends StatelessWidget {
                             // tracks
                             Obx(
                               () => NamidaWheelSlider(
-                                totalCount: 40,
+                                totalCount: kMaximumSleepTimerTracks,
                                 initValue: tracks.value,
                                 itemSize: 6,
                                 onValueChanged: (val) => tracks.value = val,
