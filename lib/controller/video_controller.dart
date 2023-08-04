@@ -601,7 +601,11 @@ class _NamidaVideoPlayer {
     await _videoController?.initialize();
     _initializedVideo = true;
     _videoController?.setLooping(looping(_videoController!.value.duration));
-    File(path).setLastAccessedSync(DateTime.now());
+    try {
+      File(path).setLastAccessedSync(DateTime.now());
+    } catch (e) {
+      printy(e, isError: true);
+    }
   }
 
   Future<void> play() async => await _videoController?.play();

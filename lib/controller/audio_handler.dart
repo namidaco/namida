@@ -464,6 +464,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
 
   @override
   FutureOr<void> onIndexChanged(int newIndex, Selectable newItem) {
+    updateCurrentMediaItem(newItem.track);
     CurrentColor.inst.updatePlayerColorFromTrack(newItem, newIndex);
   }
 
@@ -473,6 +474,8 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
     updateCurrentMediaItemForce();
     await QueueController.inst.updateLatestQueue(currentQueue.tracks.toList());
   }
+  // ==============================================================================================
+  //
 
   bool get defaultShouldStartPlaying => (SettingsController.inst.playerPlayOnNextPrev.value || isPlaying);
 
