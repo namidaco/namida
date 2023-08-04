@@ -489,7 +489,6 @@ class SettingsController {
     bool? isSeekDurationPercentage,
     int? playerPlayFadeDurInMilli,
     int? playerPauseFadeDurInMilli,
-    int? totalListenedTimeInSec,
     int? minTrackDurationToRestoreLastPosInMinutes,
     String? lastPlayedTrackPath,
     bool? displayFavouriteButtonInNotification,

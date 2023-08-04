@@ -64,7 +64,11 @@ class NamidaNavigator {
     await SystemChrome.setPreferredOrientations(orientations);
   }
 
+  bool _isInFullScreen = false;
   Future<void> enterFullScreen(Widget widget) async {
+    if (_isInFullScreen) return;
+
+    _isInFullScreen = true;
     Get.to(
       () => WillPopScope(
         onWillPop: () async {
@@ -85,8 +89,10 @@ class NamidaNavigator {
   }
 
   Future<void> exitFullScreen() async {
+    if (!_isInFullScreen) return;
     Get.close(1);
     await _setOrientations(kDefaultOrientations);
+    _isInFullScreen = false;
   }
 
   Future<void> navigateTo(

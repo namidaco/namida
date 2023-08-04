@@ -145,7 +145,8 @@ class VideoController {
   }) async {
     await _executeForCurrentTrackOnly(track, () async {
       const allowance = 5; // seconds
-      await _videoController.setFile(path, (videoDuration) => videoDuration.inSeconds < track.duration - allowance); // loop only if video duration is less than audio.
+      await _videoController.setFile(
+          path, (videoDuration) => videoDuration.inSeconds > allowance && videoDuration.inSeconds < track.duration - allowance); // loop only if video duration is less than audio.
       await _videoController.setVolume(0);
       await Player.inst.updateVideoPlayingState();
       currentVideo.refresh();
@@ -162,7 +163,7 @@ class VideoController {
       YoutubeController.inst.dispose(downloadClientOnly: true);
     } else {
       _videoController = _NamidaVideoPlayer.inst;
-      await updateCurrentVideo(Player.inst.nowPlayingTrack.value);
+      await updateCurrentVideo(Player.inst.nowPlayingTrack);
     }
   }
 
@@ -173,8 +174,8 @@ class VideoController {
   }
 
   FutureOr<void> _executeForCurrentTrackOnly(Track initialTrack, FutureOr<void> Function() execute) async {
-    if (initialTrack.path != Player.inst.nowPlayingTrack.value.path) return;
-    execute();
+    if (initialTrack.path != Player.inst.nowPlayingTrack.path) return;
+    await execute();
   }
 
   Future<NamidaVideo?> fetchVideoFromYoutube(String id) async {
@@ -185,7 +186,7 @@ class VideoController {
       currentDownloadedBytes.value = downloaded;
       printy('Video Download: ${currentDownloadedBytes.value.fileSizeFormatted}');
     });
-    final initialTrack = Player.inst.nowPlayingTrack.value;
+    final initialTrack = Player.inst.nowPlayingTrack;
     void updateValuesCT(void Function() execute) => _executeForCurrentTrackOnly(initialTrack, execute);
 
     final downloadedVideo = await YoutubeController.inst.downloadYoutubeVideo(
@@ -288,7 +289,7 @@ class VideoController {
       scanLocalVideos(),
     ]);
     _isInitializing = false;
-    await updateCurrentVideo(Player.inst.nowPlayingTrack.value);
+    await updateCurrentVideo(Player.inst.nowPlayingTrack);
   }
 
   Future<void> scanLocalVideos({bool strictNoMedia = true, bool forceReScan = false}) async {
@@ -581,8 +582,9 @@ class _NamidaVideoPlayer {
   _NamidaVideoPlayer._internal();
 
   VideoPlayerController? get videoController => _videoController;
-  bool get isInitialized => _videoController?.value.isInitialized ?? false;
+  bool get isInitialized => _initializedVideo && (_videoController?.value.isInitialized ?? false);
   double get aspectRatio => _videoController?.value.aspectRatio ?? 1.0;
+  bool _initializedVideo = false;
 
   VideoPlayerController? _videoController;
 
@@ -592,10 +594,12 @@ class _NamidaVideoPlayer {
   }
 
   Future<void> setFile(String path, bool Function(Duration videoDuration) looping) async {
+    _initializedVideo = false;
     await _videoController?.dispose();
     final options = VideoPlayerOptions(allowBackgroundPlayback: true, mixWithOthers: true);
     _videoController = VideoPlayerController.file(File(path), videoPlayerOptions: options);
     await _videoController?.initialize();
+    _initializedVideo = true;
     _videoController?.setLooping(looping(_videoController!.value.duration));
     File(path).setLastAccessedSync(DateTime.now());
   }
