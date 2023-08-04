@@ -387,6 +387,8 @@ class LanguageKeys {
   late String SHOW_HIDE_UNKNOWN_FIELDS;
   late String SHOW_MORE;
   late String SHUFFLE;
+  late String SHUFFLE_ALL;
+  late String SHUFFLE_NEXT;
   late String SIZE;
   late String SKIP_SILENCE;
   late String SKIP;

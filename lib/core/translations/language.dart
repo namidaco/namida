@@ -452,6 +452,8 @@ class Language extends LanguageKeys {
 			SHOW_HIDE_UNKNOWN_FIELDS = getKey("SHOW_HIDE_UNKNOWN_FIELDS");
 			SHOW_MORE = getKey("SHOW_MORE");
 			SHUFFLE = getKey("SHUFFLE");
+			SHUFFLE_ALL = getKey("SHUFFLE_ALL");
+			SHUFFLE_NEXT = getKey("SHUFFLE_NEXT");
 			SIZE = getKey("SIZE");
 			SKIP_SILENCE = getKey("SKIP_SILENCE");
 			SKIP = getKey("SKIP");
@@ -554,6 +556,8 @@ class Language extends LanguageKeys {
     }
   }
 }
+
+
 
 
 

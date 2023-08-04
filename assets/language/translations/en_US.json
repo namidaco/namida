@@ -384,6 +384,8 @@
   "SHOW_HIDE_UNKNOWN_FIELDS": "Show/hide Unknown Fields",
   "SHOW_MORE": "Show more",
   "SHUFFLE": "Shuffle",
+  "SHUFFLE_ALL": "Shuffle All",
+  "SHUFFLE_NEXT": "Shuffle Next",
   "SIZE": "Size",
   "SKIP": "Skip",
   "SKIP_SILENCE": "Skip Silence",

@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/audio_handler.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
@@ -99,12 +100,13 @@ class Player {
     _audioHandler.reorderItems(oldIndex, newIndex);
   }
 
-  FutureOr<void> shuffleNextTracks() async {
-    await _audioHandler.shuffleNextItems();
-  }
-
-  FutureOr<void> shuffleAllTracks() async {
-    await _audioHandler.shuffleAllItems((element) => element.track);
+  FutureOr<void> shuffleTracks(bool allTracks) async {
+    if (allTracks) {
+      await _audioHandler.shuffleAllItems((element) => element.track);
+      MiniPlayerController.inst.animateQueueToCurrentTrack(jump: true);
+    } else {
+      await _audioHandler.shuffleNextItems();
+    }
   }
 
   // void shuffleAllQueue() {

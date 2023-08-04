@@ -1038,10 +1038,55 @@ class NamidaMiniPlayer extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 6.0),
-        NamidaButton(
-          text: Language.inst.SHUFFLE,
-          icon: Broken.shuffle,
-          onPressed: Player.inst.shuffleNextTracks,
+        GestureDetector(
+          onLongPressStart: (details) async {
+            final left = details.localPosition.dx;
+            final top = details.localPosition.dy;
+            const verticalPadding = 3.0;
+            const totalPadding = verticalPadding * 4;
+            void saveSetting(bool shuffleAll) => SettingsController.inst.save(playerShuffleAllTracks: shuffleAll);
+            await showMenu(
+              context: context,
+              position: RelativeRect.fromLTRB(left, context.height - top - kQueueBottomRowHeight * 3.25, 0, 0),
+              items: [
+                ...[
+                  (
+                    Language.inst.SHUFFLE_NEXT,
+                    Broken.forward,
+                    false,
+                  ),
+                  (
+                    Language.inst.SHUFFLE_ALL,
+                    Broken.task,
+                    true,
+                  ),
+                ].map(
+                  (e) => PopupMenuItem(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: verticalPadding),
+                      child: Obx(
+                        () => ListTileWithCheckMark(
+                          active: SettingsController.inst.playerShuffleAllTracks.value == e.$3,
+                          leading: StackedIcon(
+                            baseIcon: Broken.shuffle,
+                            secondaryIcon: e.$2,
+                            blurRadius: 8.0,
+                          ),
+                          title: e.$1,
+                          onTap: () => saveSetting(e.$3),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+          child: NamidaButton(
+            text: Language.inst.SHUFFLE,
+            icon: Broken.shuffle,
+            onPressed: () => Player.inst.shuffleTracks(SettingsController.inst.playerShuffleAllTracks.value),
+          ),
         ),
         const SizedBox(width: 8.0),
       ],

@@ -111,6 +111,7 @@ class SettingsController {
   final RxBool useYoutubeMiniplayer = false.obs;
   final RxBool playerPlayOnNextPrev = true.obs;
   final RxBool playerSkipSilenceEnabled = false.obs;
+  final RxBool playerShuffleAllTracks = false.obs;
   final RxBool jumpToFirstTrackAfterFinishingQueue = true.obs;
   final RxBool displayAudioInfoMiniplayer = false.obs;
   final RxBool showUnknownFieldsInTrackInfoDialog = true.obs;
@@ -253,6 +254,7 @@ class SettingsController {
       useYoutubeMiniplayer.value = json['useYoutubeMiniplayer'] ?? useYoutubeMiniplayer.value;
       playerPlayOnNextPrev.value = json['playerPlayOnNextPrev'] ?? playerPlayOnNextPrev.value;
       playerSkipSilenceEnabled.value = json['playerSkipSilenceEnabled'] ?? playerSkipSilenceEnabled.value;
+      playerShuffleAllTracks.value = json['playerShuffleAllTracks'] ?? playerShuffleAllTracks.value;
       jumpToFirstTrackAfterFinishingQueue.value = json['jumpToFirstTrackAfterFinishingQueue'] ?? jumpToFirstTrackAfterFinishingQueue.value;
       displayAudioInfoMiniplayer.value = json['displayAudioInfoMiniplayer'] ?? displayAudioInfoMiniplayer.value;
       showUnknownFieldsInTrackInfoDialog.value = json['showUnknownFieldsInTrackInfoDialog'] ?? showUnknownFieldsInTrackInfoDialog.value;
@@ -379,6 +381,7 @@ class SettingsController {
       'useYoutubeMiniplayer': useYoutubeMiniplayer.value,
       'playerPlayOnNextPrev': playerPlayOnNextPrev.value,
       'playerSkipSilenceEnabled': playerSkipSilenceEnabled.value,
+      'playerShuffleAllTracks': playerShuffleAllTracks.value,
       'jumpToFirstTrackAfterFinishingQueue': jumpToFirstTrackAfterFinishingQueue.value,
       'displayAudioInfoMiniplayer': displayAudioInfoMiniplayer.value,
       'showUnknownFieldsInTrackInfoDialog': showUnknownFieldsInTrackInfoDialog.value,
@@ -497,6 +500,7 @@ class SettingsController {
     bool? useYoutubeMiniplayer,
     bool? playerPlayOnNextPrev,
     bool? playerSkipSilenceEnabled,
+    bool? playerShuffleAllTracks,
     bool? jumpToFirstTrackAfterFinishingQueue,
     bool? displayAudioInfoMiniplayer,
     bool? showUnknownFieldsInTrackInfoDialog,
@@ -800,6 +804,9 @@ class SettingsController {
     }
     if (playerSkipSilenceEnabled != null) {
       this.playerSkipSilenceEnabled.value = playerSkipSilenceEnabled;
+    }
+    if (playerShuffleAllTracks != null) {
+      this.playerShuffleAllTracks.value = playerShuffleAllTracks;
     }
     if (jumpToFirstTrackAfterFinishingQueue != null) {
       this.jumpToFirstTrackAfterFinishingQueue.value = jumpToFirstTrackAfterFinishingQueue;
