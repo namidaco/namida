@@ -965,7 +965,10 @@ class NamidaMiniPlayer extends StatelessWidget {
                                               opacity: i < currentIndex ? 0.7 : 1.0,
                                               child: FadeDismissible(
                                                 key: Key("Diss_$key"),
-                                                onDismissed: (direction) => Player.inst.removeFromQueue(i),
+                                                onDismissed: (direction) {
+                                                  Player.inst.removeFromQueue(i);
+                                                  MiniPlayerController.inst.isReorderingQueue = false;
+                                                },
                                                 onUpdate: (detailts) => MiniPlayerController.inst.isReorderingQueue = detailts.progress != 0.0,
                                                 child: TrackTile(
                                                   index: i,
