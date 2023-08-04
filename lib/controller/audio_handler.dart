@@ -232,11 +232,9 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   // =================================================================================
   // ================================ Player methods =================================
   // =================================================================================
-  void updateCurrentMediaItem(Track track) {
+  void notificationUpdateItem([Track? track]) {
+    track ??= currentTrack.track;
     mediaItem.add(track.toMediaItem(currentIndex, currentQueue.length));
-  }
-
-  void updateCurrentMediaItemForce() {
     playbackState.add(_transformEvent(PlaybackEvent()));
   }
 
@@ -375,8 +373,8 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   }
 
   Future<void> _toggleFavTrack() async {
-    await PlaylistController.inst.favouriteButtonOnPressed(Player.inst.nowPlayingTrack);
-    updateCurrentMediaItemForce();
+    PlaylistController.inst.favouriteButtonOnPressed(Player.inst.nowPlayingTrack);
+    notificationUpdateItem();
   }
 
   /// [fastForward] is favourite track.
@@ -423,7 +421,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   // ==============================================================================================
   // ================================== QueueManager Overriden ====================================
   @override
-  FutureOr<void> beforePlaying() async {
+  void beforePlaying() async {
     updateTrackLastPosition(currentTrack.track, currentPositionMS);
   }
 
@@ -463,16 +461,22 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   }
 
   @override
-  FutureOr<void> onIndexChanged(int newIndex, Selectable newItem) {
-    updateCurrentMediaItem(newItem.track);
+  void onIndexChanged(int newIndex, Selectable newItem) {
+    notificationUpdateItem(newItem.track);
     CurrentColor.inst.updatePlayerColorFromTrack(newItem, newIndex);
   }
 
   @override
-  FutureOr<void> onQueueChanged() async {
+  void onQueueChanged() async {
     super.onQueueChanged();
-    updateCurrentMediaItemForce();
+    notificationUpdateItem();
     await QueueController.inst.updateLatestQueue(currentQueue.tracks.toList());
+  }
+
+  @override
+  void onReorderItems(int currentIndex) {
+    super.onReorderItems(currentIndex);
+    QueueController.inst.updateLatestQueue(currentQueue.tracks.toList());
   }
   // ==============================================================================================
   //

@@ -226,7 +226,7 @@ class PlaybackSettings extends StatelessWidget {
           value: SettingsController.inst.displayFavouriteButtonInNotification.value,
           onChanged: (val) {
             SettingsController.inst.save(displayFavouriteButtonInNotification: !val);
-            Player.inst.updateMediaItemForce();
+            Player.inst.refreshNotification();
             if (!val && kSdkVersion < 31) {
               Get.snackbar(Language.inst.NOTE, Language.inst.DISPLAY_FAV_BUTTON_IN_NOTIFICATION_SUBTITLE);
             }

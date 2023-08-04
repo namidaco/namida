@@ -477,7 +477,7 @@ class Indexer {
 
   Future<void> _sortAndSaveTracks() async {
     Player.inst.refreshRxVariables();
-    Player.inst.updateMediaItemForce();
+    Player.inst.refreshNotification();
     SearchSortController.inst.searchAll(ScrollSearchController.inst.searchTextEditingController.text);
     SearchSortController.inst.sortMedia(MediaType.track);
     await _saveTrackFileToStorage();

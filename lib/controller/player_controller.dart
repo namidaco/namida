@@ -54,8 +54,8 @@ class Player {
     setSkipSilenceEnabled(SettingsController.inst.playerSkipSilenceEnabled.value);
   }
 
-  void updateMediaItemForce() {
-    _audioHandler.updateCurrentMediaItemForce();
+  void refreshNotification() {
+    _audioHandler.notificationUpdateItem();
   }
 
   Future<void> setSkipSilenceEnabled(bool enabled) async {
@@ -220,9 +220,11 @@ class Player {
       maximumItems: 1000,
       onIndexAndQueueSame: _audioHandler.togglePlayPause,
       onQueueDifferent: (finalizedQueue) {
-        final trs = finalizedQueue.tracks.toList();
-        QueueController.inst.addNewQueue(source: source, tracks: trs);
-        QueueController.inst.updateLatestQueue(trs);
+        if (addAsNewQueue) {
+          final trs = finalizedQueue.tracks.toList();
+          QueueController.inst.addNewQueue(source: source, tracks: trs);
+          QueueController.inst.updateLatestQueue(trs);
+        }
       },
       onQueueEmpty: _audioHandler.togglePlayPause,
       startPlaying: startPlaying,

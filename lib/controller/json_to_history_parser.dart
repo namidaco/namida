@@ -191,7 +191,7 @@ class JsonToHistoryParser {
     }
     isParsing.value = false;
     HistoryController.inst.sortHistoryTracks(datesAdded);
-    HistoryController.inst.saveHistoryToStorage(datesAdded);
+    await HistoryController.inst.saveHistoryToStorage(datesAdded);
     HistoryController.inst.updateMostPlayedPlaylist();
     _notificationTimer?.cancel();
     NotificationService.inst.doneImportingHistoryNotification(parsedHistoryJson.value, addedHistoryJsonToPlaylist.value);

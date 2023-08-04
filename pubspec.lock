@@ -861,8 +861,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "6e6e703efe79877bb2b582e1284834b5290b4158"
-      resolved-ref: "6e6e703efe79877bb2b582e1284834b5290b4158"
+      ref: "4b4985d5d03088a4b6c12a57444b687f82468be1"
+      resolved-ref: "4b4985d5d03088a4b6c12a57444b687f82468be1"
       url: "https://github.com/MSOB7YY/queue_manager"
     source: git
     version: "0.0.1"

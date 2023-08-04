@@ -166,7 +166,7 @@ void _showTrackColorPaletteDialog({
   final allPaletteColor = List<Color>.from(trackColor.palette).obs;
   final selectedColors = <Color>[].obs;
   final removedColors = <Color>[].obs;
-  final didAddNewColor = false.obs;
+  final didChangeOriginalPalette = false.obs;
 
   void showAddNewColorPaletteDialog() {
     Color? color;
@@ -178,7 +178,7 @@ void _showTrackColorPaletteDialog({
         onDonePressed: () {
           if (color != null) {
             allPaletteColor.add(color!);
-            didAddNewColor.value = true;
+            didChangeOriginalPalette.value = true;
           }
           NamidaNavigator.inst.closeDialog();
         },
@@ -324,6 +324,7 @@ void _showTrackColorPaletteDialog({
                   allPaletteColor.remove(color);
                   selectedColors.remove(color);
                   removedColors.add(color);
+                  didChangeOriginalPalette.value = true;
                 },
                 displayCheckMark: (color) => selectedColors.contains(color),
                 theme: theme,
@@ -353,7 +354,7 @@ void _showTrackColorPaletteDialog({
                     title: Language.inst.PALETTE_MIX,
                     colors: trackColor.palette,
                   ),
-                  if (didAddNewColor.value)
+                  if (didChangeOriginalPalette.value)
                     mixWidget(
                       title: Language.inst.PALETTE_NEW_MIX,
                       colors: allPaletteColor,
