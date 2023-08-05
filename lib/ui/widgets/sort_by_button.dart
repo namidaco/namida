@@ -38,6 +38,7 @@ class SortByMenuTracks extends StatelessWidget {
               SortType.sampleRate,
               SortType.size,
               SortType.rating,
+              SortType.shuffle,
             ].map(
               (e) => SmallListTile(
                 title: e.toText(),
@@ -75,6 +76,7 @@ class SortByMenuAlbums extends StatelessWidget {
               GroupSortType.dateModified,
               GroupSortType.artistsList,
               GroupSortType.composer,
+              GroupSortType.shuffle,
             ].map(
               (e) => SmallListTile(
                 title: e.toText(),
@@ -114,6 +116,7 @@ class SortByMenuArtists extends StatelessWidget {
               GroupSortType.albumArtist,
               GroupSortType.year,
               GroupSortType.dateModified,
+              GroupSortType.shuffle,
             ].map(
               (e) => SmallListTile(
                 title: e.toText(),
@@ -152,6 +155,7 @@ class SortByMenuGenres extends StatelessWidget {
               GroupSortType.albumArtist,
               GroupSortType.dateModified,
               GroupSortType.composer,
+              GroupSortType.shuffle,
             ].map(
               (e) => SmallListTile(
                 title: e.toText(),
@@ -186,6 +190,7 @@ class SortByMenuPlaylist extends StatelessWidget {
               GroupSortType.modifiedDate,
               GroupSortType.duration,
               GroupSortType.numberOfTracks,
+              GroupSortType.shuffle,
             ].map(
               (e) => SmallListTile(
                 title: e.toText(),

@@ -205,6 +205,9 @@ extension SortToText on SortType {
     if (this == SortType.rating) {
       return Language.inst.RATING;
     }
+    if (this == SortType.shuffle) {
+      return Language.inst.SHUFFLE;
+    }
 
     return '';
   }
@@ -251,6 +254,9 @@ extension GroupSortToText on GroupSortType {
     }
     if (this == GroupSortType.modifiedDate) {
       return Language.inst.DATE_MODIFIED;
+    }
+    if (this == GroupSortType.shuffle) {
+      return Language.inst.SHUFFLE;
     }
 
     return '';

@@ -17,6 +17,7 @@ enum SortType {
   sampleRate,
   size,
   rating,
+  shuffle,
 }
 
 enum GroupSortType {
@@ -33,6 +34,7 @@ enum GroupSortType {
   albumsCount,
   creationDate,
   modifiedDate,
+  shuffle,
 }
 
 enum TrackTilePosition {

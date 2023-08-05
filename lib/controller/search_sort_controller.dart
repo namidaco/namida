@@ -289,6 +289,9 @@ class SearchSortController {
       case SortType.rating:
         sortThis((e) => e.stats.rating);
         break;
+      case SortType.shuffle:
+        tracksInfoList.shuffle();
+        break;
 
       default:
         null;
@@ -330,6 +333,9 @@ class SearchSortController {
         break;
       case GroupSortType.numberOfTracks:
         sortThis((e) => e.value.length);
+        break;
+      case GroupSortType.shuffle:
+        albumsList.shuffle();
         break;
 
       default:
@@ -384,6 +390,9 @@ class SearchSortController {
       case GroupSortType.albumsCount:
         sortThis((e) => e.key.getArtistAlbums().length);
         break;
+      case GroupSortType.shuffle:
+        artistsList.shuffle();
+        break;
       default:
         null;
     }
@@ -432,7 +441,9 @@ class SearchSortController {
       case GroupSortType.numberOfTracks:
         sortThis((e) => e.value.length);
         break;
-
+      case GroupSortType.shuffle:
+        genresList.shuffle();
+        break;
       default:
         null;
     }
@@ -468,6 +479,9 @@ class SearchSortController {
         break;
       case GroupSortType.numberOfTracks:
         sortThis((p) => p.value.tracks.length);
+        break;
+      case GroupSortType.shuffle:
+        playlistList.shuffle();
         break;
 
       default:
