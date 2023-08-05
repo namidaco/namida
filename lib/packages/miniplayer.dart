@@ -57,7 +57,7 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
     return Obx(
       () => AnimatedTheme(
         duration: const Duration(milliseconds: 300),
-        data: AppThemes.inst.getAppTheme(CurrentColor.inst.color),
+        data: AppThemes.inst.getAppTheme(CurrentColor.inst.color, !context.isDarkMode),
         child: Stack(
           children: [
             // -- MiniPlayer Wallpaper

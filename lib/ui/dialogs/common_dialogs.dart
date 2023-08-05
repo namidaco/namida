@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -131,22 +132,7 @@ class NamidaDialogs {
     if (playlist == null) return;
     // -- Delete Empty Playlists --
     if (playlist.tracks.isEmpty) {
-      NamidaNavigator.inst.navigateDialog(
-        dialog: CustomBlurryDialog(
-          title: Language.inst.WARNING,
-          bodyText: '${Language.inst.DELETE_PLAYLIST}: "${playlist.name}"?',
-          actions: [
-            const CancelButton(),
-            NamidaButton(
-              text: Language.inst.DELETE.toUpperCase(),
-              onPressed: () {
-                PlaylistController.inst.removePlaylist(playlist);
-                NamidaNavigator.inst.closeDialog();
-              },
-            )
-          ],
-        ),
-      );
+      showDeletePlaylistDialog(playlist);
     } else {
       final trackss = playlist.tracks.toTracks();
       await showGeneralPopupDialog(
@@ -162,6 +148,25 @@ class NamidaDialogs {
         forceSquared: true,
       );
     }
+  }
+
+  void showDeletePlaylistDialog(Playlist playlist) {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: Language.inst.WARNING,
+        bodyText: '${Language.inst.DELETE_PLAYLIST}: "${playlist.name}"?',
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            text: Language.inst.DELETE.toUpperCase(),
+            onPressed: () {
+              PlaylistController.inst.removePlaylist(playlist);
+              NamidaNavigator.inst.closeDialog();
+            },
+          )
+        ],
+      ),
+    );
   }
 
   Future<void> showQueueDialog(int date) async {

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:known_extents_list_view_builder/sliver_known_extents_list.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
+import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -15,6 +15,9 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/themes.dart';
+import 'package:namida/core/translations/language.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -225,6 +228,110 @@ class MostPlayedTracksPage extends StatelessWidget {
   }
 }
 
+class EmptyPlaylistSubpage extends StatelessWidget {
+  final Playlist playlist;
+  EmptyPlaylistSubpage({super.key, required this.playlist});
+
+  final tracksToAddMap = <Track, bool>{}.obs;
+  final isExpanded = false.obs;
+  @override
+  Widget build(BuildContext context) {
+    final randomTracks = List<Track>.from(allTracksInLibrary..shuffle()).take(150).toList();
+
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Obx(
+            () => AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: isExpanded.value ? context.height * 0.1 : context.height * 0.3,
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: context.width * 0.15).add(const EdgeInsets.only(bottom: 8.0)),
+          sliver: SliverToBoxAdapter(
+            child: Theme(
+              data: AppThemes.inst.getAppTheme(Colors.red, !context.isDarkMode),
+              child: NamidaButton(
+                icon: Broken.trash,
+                onPressed: () => NamidaDialogs.inst.showDeletePlaylistDialog(playlist),
+                text: Language.inst.DELETE_PLAYLIST,
+              ),
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: context.width * 0.1),
+          sliver: SliverToBoxAdapter(
+            child: NamidaExpansionTile(
+              initiallyExpanded: isExpanded.value,
+              titleText: Language.inst.ADD,
+              icon: Broken.add_circle,
+              onExpansionChanged: (value) => isExpanded.value = value,
+              children: [
+                Container(
+                  clipBehavior: Clip.antiAlias,
+                  height: context.height * 0.5,
+                  width: context.width,
+                  decoration: BoxDecoration(
+                    color: context.theme.cardColor,
+                    borderRadius: BorderRadius.circular(18.0.multipliedRadius),
+                  ),
+                  child: ListView.builder(
+                    itemExtent: Dimensions.inst.trackTileItemExtent,
+                    itemCount: randomTracks.length,
+                    itemBuilder: (context, i) {
+                      final tr = randomTracks[i];
+                      return TrackTile(
+                        trackOrTwd: tr,
+                        index: i,
+                        queueSource: QueueSource.playlist,
+                        onTap: () => tracksToAddMap[tr] = !(tracksToAddMap[tr] ?? false),
+                        onRightAreaTap: () => tracksToAddMap[tr] = !(tracksToAddMap[tr] ?? false),
+                        trailingWidget: SizedBox(
+                          width: 22.0,
+                          height: 22.0,
+                          child: Obx(
+                            () => NamidaCheckMark(
+                              active: tracksToAddMap[tr] == true,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SliverPadding(padding: EdgeInsets.only(top: 12.0)),
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: context.width * 0.2),
+          sliver: SliverToBoxAdapter(
+            child: SizedBox(
+              height: 42.0,
+              child: Obx(
+                () {
+                  final trl = tracksToAddMap.entries.where((element) => element.value).length;
+                  return NamidaButton(
+                    enabled: trl > 0,
+                    icon: Broken.add,
+                    text: '${Language.inst.ADD} ${trl.displayTrackKeyword}',
+                    onPressed: () => PlaylistController.inst.addTracksToPlaylist(playlist, tracksToAddMap.keys.toList()),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+        SliverPadding(padding: EdgeInsets.only(bottom: context.height * 0.2)),
+      ],
+    );
+  }
+}
+
 class NormalPlaylistTracksPage extends StatelessWidget {
   final String playlistName;
   final bool disableAnimation;
@@ -240,6 +347,8 @@ class NormalPlaylistTracksPage extends StatelessWidget {
           if (playlist == null) return const SizedBox();
 
           final tracksWithDate = playlist.tracks;
+          if (tracksWithDate.isEmpty) return EmptyPlaylistSubpage(playlist: playlist);
+
           final tracks = tracksWithDate.toTracks();
 
           return NamidaListView(
@@ -266,7 +375,7 @@ class NormalPlaylistTracksPage extends StatelessWidget {
                 () {
                   final reorderable = PlaylistController.inst.canReorderTracks.value;
                   return FadeDismissible(
-                    key: Key("Diss_$i${trackWithDate.track.path}"),
+                    key: Key("Diss_$i$trackWithDate"),
                     direction: reorderable ? DismissDirection.horizontal : DismissDirection.none,
                     onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTracksFromPlaylist(playlist.name, [trackWithDate]),
                     child: Stack(

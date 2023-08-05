@@ -771,17 +771,35 @@ class ListTileWithCheckMark extends StatelessWidget {
         trailing: SizedBox(
           height: 18.0,
           width: 18.0,
-          child: CheckMark(
-            strokeWidth: 2,
-            activeColor: context.theme.listTileTheme.iconColor!,
-            inactiveColor: context.theme.listTileTheme.iconColor!,
-            duration: const Duration(milliseconds: 400),
-            active: active,
-          ),
+          child: NamidaCheckMark(active: active),
         ),
         visualDensity: VisualDensity.compact,
         onTap: onTap,
       ),
+    );
+  }
+}
+
+class NamidaCheckMark extends StatelessWidget {
+  final bool active;
+  final Color? activeColor;
+  final Color? inactiveColor;
+
+  const NamidaCheckMark({
+    super.key,
+    required this.active,
+    this.activeColor,
+    this.inactiveColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CheckMark(
+      strokeWidth: 2,
+      activeColor: activeColor ?? context.theme.listTileTheme.iconColor!,
+      inactiveColor: inactiveColor ?? context.theme.listTileTheme.iconColor!,
+      duration: const Duration(milliseconds: 400),
+      active: active,
     );
   }
 }
@@ -799,6 +817,7 @@ class NamidaExpansionTile extends StatelessWidget {
   final EdgeInsetsGeometry? childrenPadding;
   final bool initiallyExpanded;
   final Widget? trailing;
+  final ValueChanged? onExpansionChanged;
 
   const NamidaExpansionTile({
     super.key,
@@ -814,6 +833,7 @@ class NamidaExpansionTile extends StatelessWidget {
     this.childrenPadding = EdgeInsets.zero,
     this.initiallyExpanded = false,
     this.trailing,
+    this.onExpansionChanged,
   });
 
   @override
@@ -823,6 +843,7 @@ class NamidaExpansionTile extends StatelessWidget {
       dense: true,
       child: ExpansionTile(
         initiallyExpanded: initiallyExpanded,
+        onExpansionChanged: onExpansionChanged,
         expandedAlignment: Alignment.centerLeft,
         tilePadding: const EdgeInsets.only(left: 16.0, right: 12.0),
         leading: leading ??
