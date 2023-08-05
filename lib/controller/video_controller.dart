@@ -60,6 +60,9 @@ class VideoController {
   final currentPossibleVideos = <NamidaVideo>[].obs;
   final currentDownloadedBytes = 0.obs;
 
+  /// Indicates that [updateCurrentVideo] didn't find any matching video.
+  final isNoVideosAvailable = false.obs;
+
   /// `path`: `NamidaVideo`
   final _videoPathsMap = <String, NamidaVideo>{};
 
@@ -88,15 +91,21 @@ class VideoController {
   bool _isInitializing = true;
 
   Future<void> updateCurrentVideo(Track track) async {
+    isNoVideosAvailable.value = false;
     currentDownloadedBytes.value = 0;
     if (_isInitializing) return;
     if (!SettingsController.inst.enableVideoPlayback.value) return;
+    await vcontroller.dispose();
 
     currentVideo.value = null;
     final possibleVideos = _getPossibleVideosFromTrack(track);
     currentPossibleVideos
       ..clear()
       ..addAll(possibleVideos);
+
+    final trackYTID = track.youtubeID;
+    if (possibleVideos.isEmpty && trackYTID == '') isNoVideosAvailable.value = true;
+
     final vpsInSettings = SettingsController.inst.videoPlaybackSource.value;
     switch (vpsInSettings) {
       case VideoPlaybackSource.local:
@@ -125,7 +134,7 @@ class VideoController {
     currentVideo.value = erabaretaVideo;
 
     if (erabaretaVideo == null && vpsInSettings != VideoPlaybackSource.local) {
-      final downloadedVideo = await fetchVideoFromYoutube(track.youtubeID);
+      final downloadedVideo = await fetchVideoFromYoutube(trackYTID);
       erabaretaVideo = downloadedVideo;
     }
 
@@ -595,7 +604,7 @@ class _NamidaVideoPlayer {
 
   Future<void> setFile(String path, bool Function(Duration videoDuration) looping) async {
     _initializedVideo = false;
-    await _videoController?.dispose();
+    await dispose();
     final options = VideoPlayerOptions(allowBackgroundPlayback: true, mixWithOthers: true);
     _videoController = VideoPlayerController.file(File(path), videoPlayerOptions: options);
     await _videoController?.initialize();
@@ -623,5 +632,8 @@ class _NamidaVideoPlayer {
 
   void exitFullScreen() => NamidaNavigator.inst.exitFullScreen();
 
-  Future<void> dispose() async => await _videoController?.dispose();
+  Future<void> dispose() async {
+    await _videoController?.dispose();
+    _videoController = null;
+  }
 }

@@ -587,12 +587,13 @@ class NamidaMiniPlayer extends StatelessWidget {
                                         final currentVideo = VideoController.inst.currentVideo.value;
                                         final videoTotalSize = currentVideo?.sizeInBytes ?? 0;
                                         final videoQuality = currentVideo?.height ?? 0;
+                                        final markText = VideoController.inst.isNoVideosAvailable.value ? 'x' : '?';
                                         // final altText = currentVideo == null
                                         //     ? '?'
                                         //     : currentVideo.ytID == null
                                         //         ? Language.inst.LOCAL
                                         //         : 'Cache';
-                                        final qualityText = videoQuality == 0 ? '?' : '${videoQuality}p';
+                                        final qualityText = videoQuality == 0 ? markText : '${videoQuality}p';
                                         Widget getTextWidget(String text, {required bool colored, Color? textColor, double? fontSize}) {
                                           return Text(
                                             text,

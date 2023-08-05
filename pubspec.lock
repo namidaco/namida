@@ -415,8 +415,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: HEAD
-      resolved-ref: "18b62071150ea0cb80e59cdb30ffb91322df6d34"
+      ref: "90b3dd291cd2b62c1cfe48f239326474d962c03d"
+      resolved-ref: "90b3dd291cd2b62c1cfe48f239326474d962c03d"
       url: "https://github.com/MSOB7YY/flutter_sharing_intent"
     source: git
     version: "1.0.6"

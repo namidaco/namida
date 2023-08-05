@@ -52,6 +52,7 @@ dependencies:
   flutter_sharing_intent:
     git:
       url: https://github.com/MSOB7YY/flutter_sharing_intent
+      ref: 90b3dd291cd2b62c1cfe48f239326474d962c03d
   catcher:
     git:
       url: https://github.com/MSOB7YY/catcher
