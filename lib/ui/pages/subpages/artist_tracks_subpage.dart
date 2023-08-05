@@ -27,6 +27,7 @@ class ArtistTracksPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final albumDimensions = Dimensions.inst.getAlbumCardDimensions(Dimensions.albumInsideArtistGridCount);
     return BackgroundWrapper(
       child: NamidaTracksList(
         queueSource: QueueSource.artist,
@@ -80,7 +81,7 @@ class ArtistTracksPage extends StatelessWidget {
                         width: 100.0,
                         margin: const EdgeInsets.only(left: 2.0),
                         child: AlbumCard(
-                          gridCountOverride: Dimensions.albumInsideArtistGridCount,
+                          dimensions: albumDimensions,
                           name: albumName,
                           album: albumName.getAlbumTracks(),
                           staggered: false,

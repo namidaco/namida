@@ -38,6 +38,7 @@ class ArtistsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final finalArtists = artists ?? SearchSortController.inst.artistSearchList;
     final scrollController = LibraryTab.artists.scrollController;
+    final artistDimensions = Dimensions.inst.getArtistCardDimensions(countPerRow);
 
     return BackgroundWrapper(
       child: CupertinoScrollbar(
@@ -111,9 +112,9 @@ class ArtistsPage extends StatelessWidget {
                           position: i,
                           shouldAnimate: _shouldAnimate,
                           child: ArtistCard(
+                            dimensions: artistDimensions,
                             name: artist,
                             artist: artist.getArtistTracks(),
-                            gridCount: countPerRow,
                           ),
                         );
                       },

@@ -39,6 +39,7 @@ class AlbumsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final finalAlbums = albums ?? SearchSortController.inst.albumSearchList;
     final scrollController = LibraryTab.albums.scrollController;
+    final albumDimensions = Dimensions.inst.getAlbumCardDimensions(countPerRow);
 
     return BackgroundWrapper(
       child: CupertinoScrollbar(
@@ -113,6 +114,7 @@ class AlbumsPage extends StatelessWidget {
                                     position: i,
                                     shouldAnimate: _shouldAnimate,
                                     child: AlbumCard(
+                                      dimensions: albumDimensions,
                                       name: albumName,
                                       album: albumName.getAlbumTracks(),
                                       staggered: true,
@@ -134,9 +136,9 @@ class AlbumsPage extends StatelessWidget {
                                     position: i,
                                     shouldAnimate: _shouldAnimate,
                                     child: AlbumCard(
+                                      dimensions: albumDimensions,
                                       name: albumName,
                                       album: albumName.getAlbumTracks(),
-                                      gridCountOverride: countPerRow,
                                       staggered: false,
                                     ),
                                   );

@@ -39,25 +39,16 @@ class NamidaNavigator {
   void _hideSearchMenuAndUnfocus() => ScrollSearchController.inst.hideSearchMenu();
   void _minimizeMiniplayer() => MiniPlayerController.inst.snapToMini();
 
-  /// used when going to artist subpage
-  void _calculateDimensions() {
-    final libTab = currentRoute?.toLibraryTab();
-    if (libTab != null) {
-      Dimensions.inst.updateDimensions(libTab);
-    }
-  }
-
   void _hideEverything() {
     _hideSearchMenuAndUnfocus();
     _minimizeMiniplayer();
-    _calculateDimensions();
     closeAllDialogs();
   }
 
   void onFirstLoad() {
     final initialTab = SettingsController.inst.selectedLibraryTab.value;
     navigateTo(initialTab.toWidget(), durationInMs: 0);
-    Dimensions.inst.updateDimensions(initialTab);
+    Dimensions.inst.updateAllTileDimensions();
   }
 
   Future<void> _setOrientations(List<DeviceOrientation> orientations) async {
@@ -254,7 +245,6 @@ class NamidaNavigator {
     // pop only if not in root, otherwise show _doubleTapToExit().
     if (currentWidgetStack.length > 1) {
       currentWidgetStack.removeLast();
-      _calculateDimensions();
       navKey?.currentState?.pop();
     } else {
       await _doubleTapToExit();

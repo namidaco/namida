@@ -11,22 +11,21 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 
 class ArtistCard extends StatelessWidget {
-  final int gridCount;
   final String name;
   final List<Track> artist;
+  final (double, double, double) dimensions;
 
   const ArtistCard({
     super.key,
-    required this.gridCount,
     required this.name,
     required this.artist,
+    required this.dimensions,
   });
 
   @override
   Widget build(BuildContext context) {
-    final d = Dimensions.inst.artistCardDimensions;
-    final thumbnailSize = d.$1;
-    final fontSize = d.$2.multipliedFontScale;
+    final thumbnailSize = dimensions.$1;
+    final fontSize = dimensions.$2.multipliedFontScale;
 
     final hero = 'artist_$name';
     return GridTile(

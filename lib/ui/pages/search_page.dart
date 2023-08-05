@@ -28,6 +28,8 @@ class SearchPage extends StatelessWidget {
   final ScrollController _scrollController = ScrollController();
   @override
   Widget build(BuildContext context) {
+    final albumDimensions = Dimensions.inst.getAlbumCardDimensions(Dimensions.albumSearchGridCount);
+    final artistDimensions = Dimensions.inst.getArtistCardDimensions(Dimensions.artistSearchGridCount);
     return BackgroundWrapper(
       child: Obx(
         () => AnimatedSwitcher(
@@ -89,8 +91,8 @@ class SearchPage extends StatelessWidget {
                                     width: 130.0,
                                     margin: const EdgeInsets.only(left: 2.0),
                                     child: AlbumCard(
+                                      dimensions: albumDimensions,
                                       name: albumName,
-                                      gridCountOverride: Dimensions.albumSearchGridCount,
                                       album: albumName.getAlbumTracks(),
                                       staggered: false,
                                     ),
@@ -128,7 +130,7 @@ class SearchPage extends StatelessWidget {
                                     width: 80.0,
                                     margin: const EdgeInsets.only(left: 2.0),
                                     child: ArtistCard(
-                                      gridCount: Dimensions.artistSearchGridCount,
+                                      dimensions: artistDimensions,
                                       name: artistName,
                                       artist: artistName.getArtistTracks(),
                                     ),

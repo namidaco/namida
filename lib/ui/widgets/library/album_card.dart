@@ -15,27 +15,27 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 
 class AlbumCard extends StatelessWidget {
-  final int? gridCountOverride;
   final String name;
   final List<Track> album;
   final bool staggered;
   final bool compact;
+  final (double, double, double) dimensions;
 
   const AlbumCard({
     super.key,
-    this.gridCountOverride,
     required this.name,
     required this.album,
     required this.staggered,
     this.compact = false,
+    required this.dimensions,
   });
 
   @override
   Widget build(BuildContext context) {
-    final d = Dimensions.inst.albumCardDimensions;
-    final thumbnailSize = d.$1;
-    final fontSize = d.$2.multipliedFontScale;
-    final sizeAlternative = d.$3;
+    // final d = Dimensions.inst.albumCardDimensions;
+    final thumbnailSize = dimensions.$1;
+    final fontSize = dimensions.$2.multipliedFontScale;
+    final sizeAlternative = dimensions.$3;
 
     final finalYear = album.year.yearFormatted;
     final shouldDisplayTopRightDate = SettingsController.inst.albumCardTopRightDate.value && finalYear != '';

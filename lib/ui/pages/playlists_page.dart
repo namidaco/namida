@@ -55,6 +55,7 @@ class PlaylistsPage extends StatelessWidget {
     final scrollController = isInsideDialog ? null : LibraryTab.playlists.scrollController;
     final defaultCardHorizontalPadding = context.width * 0.045;
     final defaultCardHorizontalPaddingCenter = context.width * 0.035;
+    final cardDimensions = Dimensions.inst.getMultiCardDimensions(countPerRow);
 
     return BackgroundWrapper(
       child: CupertinoScrollbar(
@@ -250,6 +251,7 @@ class PlaylistsPage extends StatelessWidget {
                               position: i,
                               shouldAnimate: _shouldAnimate,
                               child: MultiArtworkCard(
+                                dimensions: cardDimensions,
                                 heroTag: 'playlist_${playlist.name}',
                                 tracks: playlist.tracks.toTracks(),
                                 name: playlist.name.translatePlaylistName(),

@@ -36,6 +36,7 @@ class GenresPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scrollController = LibraryTab.genres.scrollController;
+    final cardDimensions = Dimensions.inst.getMultiCardDimensions(countPerRow);
 
     return BackgroundWrapper(
       child: CupertinoScrollbar(
@@ -83,6 +84,7 @@ class GenresPage extends StatelessWidget {
                         position: i,
                         shouldAnimate: _shouldAnimate,
                         child: MultiArtworkCard(
+                          dimensions: cardDimensions,
                           heroTag: 'genre_$genre',
                           tracks: genre.getGenresTracks(),
                           name: genre,

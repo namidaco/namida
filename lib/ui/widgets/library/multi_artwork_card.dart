@@ -15,14 +15,23 @@ class MultiArtworkCard extends StatelessWidget {
   final String heroTag;
   final void Function()? onTap;
   final void Function()? showMenuFunction;
+  final (double, double, double) dimensions;
 
-  const MultiArtworkCard({super.key, required this.tracks, required this.name, required this.gridCount, this.onTap, this.showMenuFunction, required this.heroTag});
+  const MultiArtworkCard({
+    super.key,
+    required this.tracks,
+    required this.name,
+    required this.gridCount,
+    this.onTap,
+    this.showMenuFunction,
+    required this.heroTag,
+    required this.dimensions,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final d = Dimensions.inst.multiCardDimensions;
-    final thumbnailSize = d.$1;
-    final fontSize = d.$2.multipliedFontScale;
+    final thumbnailSize = dimensions.$1;
+    final fontSize = dimensions.$2.multipliedFontScale;
 
     return GridTile(
       child: Container(
@@ -81,9 +90,11 @@ class MultiArtworkCard extends StatelessWidget {
                 ),
               ],
             ),
-            NamidaInkWell(
-              onTap: onTap,
-              onLongPress: showMenuFunction,
+            Positioned.fill(
+              child: NamidaInkWell(
+                onTap: onTap,
+                onLongPress: showMenuFunction,
+              ),
             ),
           ],
         ),

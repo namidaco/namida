@@ -13,7 +13,6 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -42,7 +41,6 @@ class NamidaOnTaps {
         albums: albums,
       ),
     );
-    Dimensions.inst.updateDimensions(LibraryTab.albums, gridOverride: Dimensions.albumInsideArtistGridCount);
   }
 
   Future<void> onAlbumTap(String album) async {

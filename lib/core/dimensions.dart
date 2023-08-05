@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/enums.dart';
 
 class Dimensions {
   static Dimensions get inst => _instance;
@@ -40,37 +39,28 @@ class Dimensions {
   static const _queueTileHeight = 72.0;
   static const queueTileItemExtent = _queueTileHeight + tileBottomMargin6 + 2 * tileVerticalPadding + _tileAdditionalMargin;
 
-  /// {@macro card_dimensions}
-  (double, double, double) albumCardDimensions = (0.0, 0.0, 0.0);
-
-  /// {@macro card_dimensions}
-  (double, double, double) artistCardDimensions = (0.0, 0.0, 0.0);
-
-  /// {@macro card_dimensions}
-  (double, double, double) multiCardDimensions = (0.0, 0.0, 0.0);
-
   static const albumSearchGridCount = 3;
   static const artistSearchGridCount = 5;
   static const albumInsideArtistGridCount = 4;
 
-  void updateDimensions(LibraryTab tab, {int? gridOverride}) {
-    switch (tab) {
-      case LibraryTab.albums:
-        _updateAlbumDimensions(gridOverride);
-      case LibraryTab.artists:
-        _updateArtistDimensions(gridOverride);
-      case LibraryTab.genres || LibraryTab.playlists:
-        _updateMultiDimensions(tab, gridOverride);
-      default:
-        null;
-    }
-    updateTrackTileDimensions();
-    updateAlbumTileDimensions();
+  /// {@macro card_dimensions}
+  (double, double, double) getAlbumCardDimensions(int gridCount) {
+    return _getSizes(gridCount, false);
   }
 
-  void updateSearchDimensions(bool isOpen) {
-    _updateAlbumDimensions(isOpen ? albumSearchGridCount : null);
-    _updateArtistDimensions(isOpen ? artistSearchGridCount : null);
+  /// {@macro card_dimensions}
+  (double, double, double) getArtistCardDimensions(int gridCount) {
+    return _getSizes(gridCount, true);
+  }
+
+  /// {@macro card_dimensions}
+  (double, double, double) getMultiCardDimensions(int gridCount) {
+    return _getSizes(gridCount, true);
+  }
+
+  void updateAllTileDimensions() {
+    updateTrackTileDimensions();
+    updateAlbumTileDimensions();
   }
 
   void updateTrackTileDimensions() {
@@ -80,31 +70,6 @@ class Dimensions {
 
   void updateAlbumTileDimensions() {
     albumTileItemExtent = SettingsController.inst.albumListTileHeight.value + totalVerticalDistance;
-  }
-
-  void _updateAlbumDimensions(int? gridOverride) {
-    final gridCount = gridOverride ?? SettingsController.inst.albumGridCount.value;
-    albumCardDimensions = _getSizes(gridCount, false);
-  }
-
-  void _updateArtistDimensions(int? gridOverride) {
-    final gridCount = gridOverride ?? SettingsController.inst.artistGridCount.value;
-    artistCardDimensions = _getSizes(gridCount, true);
-  }
-
-  void _updateMultiDimensions(LibraryTab tab, int? gridOverride) {
-    int getGridInSett() {
-      if (tab == LibraryTab.genres) {
-        return SettingsController.inst.genreGridCount.value;
-      }
-      if (tab == LibraryTab.playlists) {
-        return SettingsController.inst.playlistGridCount.value;
-      }
-      return 0;
-    }
-
-    final gridCount = gridOverride ?? getGridInSett();
-    multiCardDimensions = _getSizes(gridCount, true);
   }
 
   (double, double, double) _getSizes(int gridCount, bool biggerFont) {
