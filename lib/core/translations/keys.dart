@@ -295,6 +295,7 @@ class LanguageKeys {
   late String NUMBER_OF_TRACKS;
   late String OF;
   late String OLDEST_WATCH;
+  late String ON_VOLUME_ZERO;
   late String OPEN_YOUTUBE_LINK;
   late String OR;
   late String PALETTE;
@@ -304,6 +305,7 @@ class LanguageKeys {
   late String PARSED;
   late String PATH;
   late String PAUSE_FADE_DURATION;
+  late String PAUSE_PLAYBACK;
   late String PERCENTAGE;
   late String PERFORMANCE_NOTE;
   late String PERMISSION_UPDATE;
@@ -365,6 +367,7 @@ class LanguageKeys {
   late String RESTORE_DEFAULTS;
   late String RESTORED_BACKUP_SUCCESSFULLY_SUB;
   late String RESTORED_BACKUP_SUCCESSFULLY;
+  late String RESUME_IF_WAS_PAUSED_BY_VOLUME;
   late String REVERSE_ORDER;
   late String SAMPLE_RATE;
   late String SAVE;

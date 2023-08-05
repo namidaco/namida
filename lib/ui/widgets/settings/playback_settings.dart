@@ -306,6 +306,30 @@ class PlaybackSettings extends StatelessWidget {
           value: SettingsController.inst.playerPlayOnNextPrev.value,
         ),
       ),
+      NamidaExpansionTile(
+        childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+        iconColor: context.defaultIconColor(),
+        icon: Broken.volume_slash,
+        titleText: Language.inst.ON_VOLUME_ZERO,
+        children: [
+          Obx(
+            () => CustomSwitchListTile(
+              icon: Broken.pause_circle,
+              title: Language.inst.PAUSE_PLAYBACK,
+              onChanged: (value) => SettingsController.inst.save(playerPauseOnVolume0: !value),
+              value: SettingsController.inst.playerPauseOnVolume0.value,
+            ),
+          ),
+          Obx(
+            () => CustomSwitchListTile(
+              icon: Broken.play_circle,
+              title: Language.inst.RESUME_IF_WAS_PAUSED_BY_VOLUME,
+              onChanged: (value) => SettingsController.inst.save(playerResumeAfterOnVolume0Pause: !value),
+              value: SettingsController.inst.playerResumeAfterOnVolume0Pause.value,
+            ),
+          ),
+        ],
+      ),
       Obx(
         () => CustomSwitchListTile(
           icon: Broken.rotate_left,

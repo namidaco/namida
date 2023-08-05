@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/scheduler.dart';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_utils/src/extensions/num_extensions.dart';
 import 'package:just_audio/just_audio.dart';
@@ -135,7 +136,22 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
       _isPlaying.value = event;
       CurrentColor.inst.switchColorPalettes(event);
     });
+
+    FlutterVolumeController.addListener((value) async {
+      if (isPlaying && value == 0 && SettingsController.inst.playerPauseOnVolume0.value) {
+        final ast = await FlutterVolumeController.getAndroidAudioStream();
+        if (ast == AudioStream.music) {
+          _wasPausedByVolume0 = true;
+          await pause();
+        }
+      } else if (_wasPausedByVolume0 && SettingsController.inst.playerResumeAfterOnVolume0Pause.value) {
+        _wasPausedByVolume0 = false;
+        await play();
+      }
+    });
   }
+
+  bool _wasPausedByVolume0 = false;
 
   /// For ensuring stabilty while fade effect is on.
   /// Typically stops ongoing [playWithFadeEffect] to prevent multiple [setVolume] interferring.

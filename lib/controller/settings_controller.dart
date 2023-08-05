@@ -112,6 +112,8 @@ class SettingsController {
   final RxBool playerPlayOnNextPrev = true.obs;
   final RxBool playerSkipSilenceEnabled = false.obs;
   final RxBool playerShuffleAllTracks = false.obs;
+  final RxBool playerPauseOnVolume0 = true.obs;
+  final RxBool playerResumeAfterOnVolume0Pause = true.obs;
   final RxBool jumpToFirstTrackAfterFinishingQueue = true.obs;
   final RxBool displayAudioInfoMiniplayer = false.obs;
   final RxBool showUnknownFieldsInTrackInfoDialog = true.obs;
@@ -255,6 +257,8 @@ class SettingsController {
       playerPlayOnNextPrev.value = json['playerPlayOnNextPrev'] ?? playerPlayOnNextPrev.value;
       playerSkipSilenceEnabled.value = json['playerSkipSilenceEnabled'] ?? playerSkipSilenceEnabled.value;
       playerShuffleAllTracks.value = json['playerShuffleAllTracks'] ?? playerShuffleAllTracks.value;
+      playerPauseOnVolume0.value = json['playerPauseOnVolume0'] ?? playerPauseOnVolume0.value;
+      playerResumeAfterOnVolume0Pause.value = json['playerResumeAfterOnVolume0Pause'] ?? playerResumeAfterOnVolume0Pause.value;
       jumpToFirstTrackAfterFinishingQueue.value = json['jumpToFirstTrackAfterFinishingQueue'] ?? jumpToFirstTrackAfterFinishingQueue.value;
       displayAudioInfoMiniplayer.value = json['displayAudioInfoMiniplayer'] ?? displayAudioInfoMiniplayer.value;
       showUnknownFieldsInTrackInfoDialog.value = json['showUnknownFieldsInTrackInfoDialog'] ?? showUnknownFieldsInTrackInfoDialog.value;
@@ -382,6 +386,8 @@ class SettingsController {
       'playerPlayOnNextPrev': playerPlayOnNextPrev.value,
       'playerSkipSilenceEnabled': playerSkipSilenceEnabled.value,
       'playerShuffleAllTracks': playerShuffleAllTracks.value,
+      'playerPauseOnVolume0': playerPauseOnVolume0.value,
+      'playerResumeAfterOnVolume0Pause': playerResumeAfterOnVolume0Pause.value,
       'jumpToFirstTrackAfterFinishingQueue': jumpToFirstTrackAfterFinishingQueue.value,
       'displayAudioInfoMiniplayer': displayAudioInfoMiniplayer.value,
       'showUnknownFieldsInTrackInfoDialog': showUnknownFieldsInTrackInfoDialog.value,
@@ -501,6 +507,8 @@ class SettingsController {
     bool? playerPlayOnNextPrev,
     bool? playerSkipSilenceEnabled,
     bool? playerShuffleAllTracks,
+    bool? playerPauseOnVolume0,
+    bool? playerResumeAfterOnVolume0Pause,
     bool? jumpToFirstTrackAfterFinishingQueue,
     bool? displayAudioInfoMiniplayer,
     bool? showUnknownFieldsInTrackInfoDialog,
@@ -807,6 +815,12 @@ class SettingsController {
     }
     if (playerShuffleAllTracks != null) {
       this.playerShuffleAllTracks.value = playerShuffleAllTracks;
+    }
+    if (playerPauseOnVolume0 != null) {
+      this.playerPauseOnVolume0.value = playerPauseOnVolume0;
+    }
+    if (playerResumeAfterOnVolume0Pause != null) {
+      this.playerResumeAfterOnVolume0Pause.value = playerResumeAfterOnVolume0Pause;
     }
     if (jumpToFirstTrackAfterFinishingQueue != null) {
       this.jumpToFirstTrackAfterFinishingQueue.value = jumpToFirstTrackAfterFinishingQueue;

@@ -49,6 +49,7 @@ dependencies:
   calendar_date_picker2: ^0.5.2
   wakelock_plus: ^1.1.1
   flutter_local_notifications: ^15.1.0
+  flutter_volume_controller: ^1.2.7
   flutter_sharing_intent:
     git:
       url: https://github.com/MSOB7YY/flutter_sharing_intent

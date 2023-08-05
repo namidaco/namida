@@ -1081,3 +1081,7 @@ extension QueueFromMap on int {
 extension TrackTileItemExtentExt on Iterable {
   List<double> toTrackItemExtents() => List.filled(length, Dimensions.inst.trackTileItemExtent);
 }
+
+extension ThemeDefaultColors on BuildContext {
+  Color defaultIconColor([Color? mainColor]) => Color.alphaBlend((mainColor ?? CurrentColor.inst.color).withAlpha(100), theme.colorScheme.onBackground);
+}

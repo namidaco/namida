@@ -360,6 +360,7 @@ class Language extends LanguageKeys {
 			NUMBER_OF_TRACKS = getKey("NUMBER_OF_TRACKS");
 			OF = getKey("OF");
 			OLDEST_WATCH = getKey("OLDEST_WATCH");
+			ON_VOLUME_ZERO = getKey("ON_VOLUME_ZERO");
 			OPEN_YOUTUBE_LINK = getKey("OPEN_YOUTUBE_LINK");
 			OR = getKey("OR");
 			PALETTE = getKey("PALETTE");
@@ -369,6 +370,7 @@ class Language extends LanguageKeys {
 			PARSED = getKey("PARSED");
 			PATH = getKey("PATH");
 			PAUSE_FADE_DURATION = getKey("PAUSE_FADE_DURATION");
+			PAUSE_PLAYBACK = getKey("PAUSE_PLAYBACK");
 			PERCENTAGE = getKey("PERCENTAGE");
 			PERFORMANCE_NOTE = getKey("PERFORMANCE_NOTE");
 			PERMISSION_UPDATE = getKey("PERMISSION_UPDATE");
@@ -430,6 +432,7 @@ class Language extends LanguageKeys {
 			RESTORE_DEFAULTS = getKey("RESTORE_DEFAULTS");
 			RESTORED_BACKUP_SUCCESSFULLY_SUB = getKey("RESTORED_BACKUP_SUCCESSFULLY_SUB");
 			RESTORED_BACKUP_SUCCESSFULLY = getKey("RESTORED_BACKUP_SUCCESSFULLY");
+			RESUME_IF_WAS_PAUSED_BY_VOLUME = getKey("RESUME_IF_WAS_PAUSED_BY_VOLUME");
 			REVERSE_ORDER = getKey("REVERSE_ORDER");
 			SAMPLE_RATE = getKey("SAMPLE_RATE");
 			SAVE = getKey("SAVE");
@@ -557,6 +560,9 @@ class Language extends LanguageKeys {
     }
   }
 }
+
+
+
 
 
 

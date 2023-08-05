@@ -31,6 +31,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/pages/settings_page.dart';
@@ -244,7 +245,7 @@ class CustomListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = Color.alphaBlend((passedColor ?? CurrentColor.inst.color).withAlpha(100), context.theme.colorScheme.onBackground);
+    final iconColor = context.defaultIconColor(passedColor);
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 400),
       opacity: enabled ? 1.0 : 0.5,
