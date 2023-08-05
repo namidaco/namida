@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:checkmark/checkmark.dart';
@@ -261,7 +263,6 @@ class AdvancedSettings extends StatelessWidget {
               trailingText: Indexer.inst.videosSizeInStorage.value.fileSizeFormatted,
               onTap: () async {
                 final allvideo = VideoController.inst.getCurrentVideosInCache();
-                allvideo.sortByReverse((e) => e.sizeInBytes);
 
                 /// First Dialog
                 NamidaNavigator.inst.navigateDialog(
@@ -303,8 +304,30 @@ class AdvancedSettings extends StatelessWidget {
         .replaceFirst('_TOTAL_SIZE_', videos.fold(0, (previousValue, element) => previousValue + element.sizeInBytes).fileSizeFormatted);
   }
 
-  _showChooseVideosToDeleteDialog(List<NamidaVideo> videoFiles) {
+  _showChooseVideosToDeleteDialog(List<NamidaVideo> allVideoFiles) {
     final RxList<NamidaVideo> videosToDelete = <NamidaVideo>[].obs;
+    final videoFiles = List<NamidaVideo>.from(allVideoFiles).obs;
+    final isSortTypeSize = true.obs;
+
+    sortBySize() {
+      videoFiles.sortByReverse((e) => e.sizeInBytes);
+      isSortTypeSize.value = true;
+    }
+
+    sortByAccessTime() {
+      videoFiles.sortBy((e) => File(e.path).statSync().accessed);
+      isSortTypeSize.value = false;
+    }
+
+    toggleSort() {
+      if (isSortTypeSize.value) {
+        sortByAccessTime();
+      } else {
+        sortBySize();
+      }
+    }
+
+    sortBySize();
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
@@ -348,39 +371,63 @@ class AdvancedSettings extends StatelessWidget {
           child: SizedBox(
             width: Get.width,
             height: Get.height * 0.65,
-            child: ListView.builder(
-              itemCount: videoFiles.length,
-              itemBuilder: (context, index) {
-                final video = videoFiles[index];
-                return Obx(
-                  () => ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    leading: ArtworkWidget(
-                      thumbnailSize: 70.0,
-                      iconSize: 24.0,
-                      width: 70,
-                      height: 70 * 9 / 16,
-                      path: video.pathToYTImage,
-                    ),
-                    title: Text(video.ytID ?? ''),
-                    subtitle: Text("${video.height}p • ${video.framerate}fps - ${video.sizeInBytes.fileSizeFormatted}"),
-                    trailing: IgnorePointer(
-                      child: SizedBox(
-                        height: 18.0,
-                        width: 18.0,
-                        child: CheckMark(
-                          strokeWidth: 2,
-                          activeColor: context.theme.listTileTheme.iconColor!,
-                          inactiveColor: context.theme.listTileTheme.iconColor!,
-                          duration: const Duration(milliseconds: 400),
-                          active: videosToDelete.contains(video),
-                        ),
+            child: Column(
+              children: [
+                const SizedBox(height: 6.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Obx(
+                      () => NamidaButton(
+                        icon: Broken.sort,
+                        text: isSortTypeSize.value ? Language.inst.SIZE : Language.inst.OLDEST_WATCH,
+                        onPressed: toggleSort,
                       ),
                     ),
-                    onTap: () => videosToDelete.addOrRemove(video),
+                    const SizedBox(width: 24.0)
+                  ],
+                ),
+                const SizedBox(height: 6.0),
+                Expanded(
+                  child: Obx(
+                    () => ListView.builder(
+                      padding: EdgeInsets.zero,
+                      itemCount: videoFiles.length,
+                      itemBuilder: (context, index) {
+                        final video = videoFiles[index];
+                        return Obx(
+                          () => ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 24.0),
+                            leading: ArtworkWidget(
+                              thumbnailSize: 70.0,
+                              iconSize: 24.0,
+                              width: 70,
+                              height: 70 * 9 / 16,
+                              path: video.pathToYTImage,
+                            ),
+                            title: Text(video.ytID ?? ''),
+                            subtitle: Text("${video.height}p • ${video.framerate}fps - ${video.sizeInBytes.fileSizeFormatted}"),
+                            trailing: IgnorePointer(
+                              child: SizedBox(
+                                height: 18.0,
+                                width: 18.0,
+                                child: CheckMark(
+                                  strokeWidth: 2,
+                                  activeColor: context.theme.listTileTheme.iconColor!,
+                                  inactiveColor: context.theme.listTileTheme.iconColor!,
+                                  duration: const Duration(milliseconds: 400),
+                                  active: videosToDelete.contains(video),
+                                ),
+                              ),
+                            ),
+                            onTap: () => videosToDelete.addOrRemove(video),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                );
-              },
+                ),
+              ],
             ),
           ),
         ),

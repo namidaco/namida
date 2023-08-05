@@ -21,37 +21,38 @@ class IndexerSettings extends StatelessWidget {
 
   SettingsController get stg => SettingsController.inst;
 
-  Future<void> _showRefreshPromptDialog() async {
-    RefreshLibraryIcon.controller.repeat();
-    final currentFiles = await Indexer.inst.getAudioFiles();
+  Future<void> _showRefreshPromptDialog(bool didModifyFolder) async {
+    _RefreshLibraryIcon.controller.repeat();
+    final currentFiles = await Indexer.inst.getAudioFiles(forceReCheckDirs: didModifyFolder);
     final newPathsLength = Indexer.inst.getNewFoundPaths(currentFiles).length;
     final deletedPathLength = Indexer.inst.getDeletedPaths(currentFiles).length;
     if (newPathsLength == 0 && deletedPathLength == 0) {
       Get.snackbar(Language.inst.NOTE, Language.inst.NO_CHANGES_FOUND);
-      return;
-    }
-    NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
-        title: Language.inst.NOTE,
-        bodyText: Language.inst.PROMPT_INDEXING_REFRESH.replaceFirst('_NEW_FILES_', newPathsLength.toString()).replaceFirst(
-              '_DELETED_FILES_',
-              deletedPathLength.toString(),
+    } else {
+      NamidaNavigator.inst.navigateDialog(
+        dialog: CustomBlurryDialog(
+          title: Language.inst.NOTE,
+          bodyText: Language.inst.PROMPT_INDEXING_REFRESH.replaceFirst('_NEW_FILES_', newPathsLength.toString()).replaceFirst(
+                '_DELETED_FILES_',
+                deletedPathLength.toString(),
+              ),
+          actions: [
+            const CancelButton(),
+            NamidaButton(
+              text: Language.inst.REFRESH,
+              onPressed: () async {
+                NamidaNavigator.inst.closeDialog();
+                await Future.delayed(const Duration(milliseconds: 300));
+                await Indexer.inst.refreshLibraryAndCheckForDiff(currentFiles: currentFiles);
+              },
             ),
-        actions: [
-          const CancelButton(),
-          NamidaButton(
-            text: Language.inst.REFRESH,
-            onPressed: () async {
-              NamidaNavigator.inst.closeDialog();
-              await Future.delayed(const Duration(milliseconds: 300));
-              await Indexer.inst.refreshLibraryAndCheckForDiff(currentFiles: currentFiles);
-            },
-          ),
-        ],
-      ),
-    );
-    await RefreshLibraryIcon.controller.fling(velocity: 0.6);
-    RefreshLibraryIcon.controller.stop();
+          ],
+        ),
+      );
+    }
+
+    await _RefreshLibraryIcon.controller.fling(velocity: 0.6);
+    _RefreshLibraryIcon.controller.stop();
   }
 
   Widget addFolderButton(void Function(String dirPath) onSuccessChoose) {
@@ -66,7 +67,7 @@ class IndexerSettings extends StatelessWidget {
         }
 
         onSuccessChoose(path);
-        _showRefreshPromptDialog();
+        _showRefreshPromptDialog(true);
       },
     );
   }
@@ -254,10 +255,10 @@ class IndexerSettings extends StatelessWidget {
             },
           ),
           CustomListTile(
-            leading: const RefreshLibraryIcon(),
+            leading: const _RefreshLibraryIcon(),
             title: Language.inst.REFRESH_LIBRARY,
             subtitle: Language.inst.REFRESH_LIBRARY_SUBTITLE,
-            onTap: () => _showRefreshPromptDialog(),
+            onTap: () => _showRefreshPromptDialog(false),
           ),
           Obx(
             () => NamidaExpansionTile(
@@ -301,7 +302,7 @@ class IndexerSettings extends StatelessWidget {
                                   onPressed: () {
                                     SettingsController.inst.removeFromList(directoriesToScan1: e);
                                     NamidaNavigator.inst.closeDialog();
-                                    _showRefreshPromptDialog();
+                                    _showRefreshPromptDialog(true);
                                   },
                                 ),
                               ],
@@ -351,7 +352,7 @@ class IndexerSettings extends StatelessWidget {
                           trailing: TextButton(
                             onPressed: () {
                               SettingsController.inst.removeFromList(directoriesToExclude1: e);
-                              _showRefreshPromptDialog();
+                              _showRefreshPromptDialog(true);
                             },
                             child: Text(Language.inst.REMOVE.toUpperCase()),
                           ),
@@ -524,20 +525,20 @@ class IndexerSettings extends StatelessWidget {
   }
 }
 
-class RefreshLibraryIcon extends StatefulWidget {
-  const RefreshLibraryIcon({Key? key}) : super(key: key);
+class _RefreshLibraryIcon extends StatefulWidget {
+  const _RefreshLibraryIcon({Key? key}) : super(key: key);
   static late AnimationController controller;
 
   @override
-  State<RefreshLibraryIcon> createState() => _RefreshLibraryIconState();
+  State<_RefreshLibraryIcon> createState() => __RefreshLibraryIconState();
 }
 
-class _RefreshLibraryIconState extends State<RefreshLibraryIcon> with TickerProviderStateMixin {
+class __RefreshLibraryIconState extends State<_RefreshLibraryIcon> with TickerProviderStateMixin {
   final turnsTween = Tween<double>(begin: 0.0, end: 1.0);
   @override
   void initState() {
     super.initState();
-    RefreshLibraryIcon.controller = AnimationController(
+    _RefreshLibraryIcon.controller = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
@@ -545,14 +546,14 @@ class _RefreshLibraryIconState extends State<RefreshLibraryIcon> with TickerProv
 
   @override
   void dispose() {
-    RefreshLibraryIcon.controller.dispose();
+    _RefreshLibraryIcon.controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return RotationTransition(
-      turns: turnsTween.animate(RefreshLibraryIcon.controller),
+      turns: turnsTween.animate(_RefreshLibraryIcon.controller),
       child: const Icon(
         Broken.refresh_2,
       ),

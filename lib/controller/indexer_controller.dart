@@ -733,6 +733,7 @@ class Indexer {
     if (availableDirs != null && !forceReCheck) {
       return await availableDirs!.future;
     } else {
+      availableDirs = null; // for when forceReCheck enabled.
       availableDirs = Completer<Map<Directory, bool>>();
 
       final allAvailableDirectories = <Directory, bool>{};

@@ -112,7 +112,7 @@ class QueueController {
 
   /// Only use when updating missing track.
   Future<void> replaceTrackInAllQueues(Track oldTrack, Track newTrack) async {
-    final queuesToSave = <Queue>[];
+    final queuesToSave = <Queue>{};
     queuesMap.value.entries.toList().loop((entry, index) {
       final q = entry.value;
       q.tracks.replaceItems(
@@ -121,7 +121,7 @@ class QueueController {
         onMatch: () => queuesToSave.add(q),
       );
     });
-    await queuesToSave.loopFuture((q, index) async {
+    await queuesToSave.toList().loopFuture((q, index) async {
       _updateMap(q);
       await _saveQueueToStorage(q);
     });

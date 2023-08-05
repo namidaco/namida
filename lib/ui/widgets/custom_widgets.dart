@@ -674,7 +674,7 @@ class SmallListTile extends StatelessWidget {
                         size: 18.0,
                       ),
           ),
-      visualDensity: compact ? VisualDensity.compact : null,
+      visualDensity: compact ? const VisualDensity(horizontal: -2.0, vertical: -2.0) : const VisualDensity(horizontal: -1.0, vertical: -1.0),
       title: Text(
         title,
         style: context.textTheme.displayMedium?.copyWith(
