@@ -88,6 +88,7 @@ class NamidaDialogs {
       QueueSource.genre,
       extractColor: false,
       heroTag: 'genre_$name',
+      forceSquared: true,
     );
   }
 
@@ -106,6 +107,7 @@ class NamidaDialogs {
         tracksWithDates: twds,
         extractColor: false,
         heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
+        forceSquared: true,
       );
       return;
     }
@@ -120,6 +122,7 @@ class NamidaDialogs {
         playlistName: k_PLAYLIST_NAME_MOST_PLAYED,
         extractColor: false,
         heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
+        forceSquared: true,
       );
       return;
     }
@@ -156,6 +159,7 @@ class NamidaDialogs {
         tracksWithDates: playlist.tracks,
         extractColor: false,
         heroTag: 'playlist_${playlist.name}',
+        forceSquared: true,
       );
     }
   }

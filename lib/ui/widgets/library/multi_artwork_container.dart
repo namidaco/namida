@@ -17,24 +17,24 @@ class MultiArtworkContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NamidaHero(
-      tag: heroTag,
-      child: Container(
-        margin: margin ?? const EdgeInsets.symmetric(horizontal: 12.0),
-        padding: const EdgeInsets.all(3.0),
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: context.theme.cardTheme.color?.withAlpha(180),
-          borderRadius: BorderRadius.circular(18.0.multipliedRadius),
-          boxShadow: [
-            BoxShadow(
-              color: context.theme.shadowColor.withAlpha(180),
-              blurRadius: 8,
-              offset: const Offset(0, 2.0),
-            )
-          ],
-        ),
+    return Container(
+      margin: margin ?? const EdgeInsets.symmetric(horizontal: 12.0),
+      padding: const EdgeInsets.all(3.0),
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: context.theme.cardTheme.color?.withAlpha(180),
+        borderRadius: BorderRadius.circular(18.0.multipliedRadius),
+        boxShadow: [
+          BoxShadow(
+            color: context.theme.shadowColor.withAlpha(180),
+            blurRadius: 8,
+            offset: const Offset(0, 2.0),
+          )
+        ],
+      ),
+      child: NamidaHero(
+        tag: heroTag,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16.0.multipliedRadius),
           child: Stack(
