@@ -513,7 +513,7 @@ extension TrackToAudioSourceMediaItem on Selectable {
       displayDescription: "${currentIndex + 1}/$queueLength",
       artist: tr.originalArtist,
       album: tr.hasUnknownAlbum ? '' : tr.album,
-      genre: tr.genresList.take(3).join(', '),
+      genre: tr.originalGenre,
       duration: Duration(seconds: tr.duration),
       artUri: Uri.file(File(tr.pathToImage).existsSync() ? tr.pathToImage : k_FILE_PATH_NAMIDA_LOGO),
     );

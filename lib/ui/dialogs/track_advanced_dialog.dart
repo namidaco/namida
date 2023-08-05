@@ -7,7 +7,6 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -122,9 +121,6 @@ void showTrackAdvancedDialog({
               onTap: () {
                 void onAction() {
                   NamidaNavigator.inst.closeDialog(3);
-                  if (Player.inst.nowPlayingTrack == tracks.first.track) {
-                    CurrentColor.inst.updatePlayerColorFromTrack(tracks.first.track, null);
-                  }
                 }
 
                 _showTrackColorPaletteDialog(

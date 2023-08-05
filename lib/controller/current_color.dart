@@ -188,11 +188,12 @@ class CurrentColor {
     if (newNC != null) {
       await paletteFile.writeAsJson(newNC.toJson());
       _updateInColorMap(track.filename, newNC);
-      return;
     } else if (imagePath != null) {
       final nc = await _extractPaletteFromImage(imagePath, forceReExtract: true);
       _updateInColorMap(imagePath.getFilenameWOExt, nc);
-      return;
+    }
+    if (Player.inst.nowPlayingTrack == track) {
+      updatePlayerColorFromTrack(track, null);
     }
   }
 

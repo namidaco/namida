@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:get/get.dart';
@@ -49,6 +50,10 @@ class Player {
         androidNotificationOngoing: false,
         androidStopForegroundOnPause: false,
       ),
+      cacheKeyResolver: (mediaItem) {
+        final imagePath = mediaItem.artUri?.path;
+        return imagePath != null ? File(imagePath).statSync().toString() : '';
+      },
     );
     prepareTotalListenTime();
     setSkipSilenceEnabled(SettingsController.inst.playerSkipSilenceEnabled.value);

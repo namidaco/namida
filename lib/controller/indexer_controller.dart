@@ -12,6 +12,7 @@ import 'package:get/get.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -451,6 +452,7 @@ class Indexer {
           forceReExtract: true,
           artworkPath: newArtworkPath,
         );
+        CurrentColor.inst.reExtractTrackColorPalette(track: ot, newNC: null, imagePath: ot.pathToImage);
       }
     }
 
