@@ -4,13 +4,13 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:better_player/better_player.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get_rx/get_rx.dart';
 import 'package:media_metadata_retriever/media_metadata_retriever.dart';
 import 'package:media_metadata_retriever/models/media_info.dart';
-import 'package:video_player/video_player.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -44,8 +44,8 @@ class VideoController {
         },
         child: AspectRatio(
           aspectRatio: aspectRatio,
-          child: VideoPlayer(
-            playerController!,
+          child: BetterPlayer(
+            controller: playerController!,
           ),
         ),
       );
@@ -84,7 +84,7 @@ class VideoController {
     return videos;
   }
 
-  VideoPlayerController? get playerController => _videoController.videoController;
+  BetterPlayerController? get playerController => _videoController.videoController;
   static _NamidaVideoPlayer get vcontroller => inst._videoController;
   _NamidaVideoPlayer _videoController = _NamidaVideoPlayer.inst;
 
@@ -590,12 +590,23 @@ class _NamidaVideoPlayer {
   static final _NamidaVideoPlayer _instance = _NamidaVideoPlayer._internal();
   _NamidaVideoPlayer._internal();
 
-  VideoPlayerController? get videoController => _videoController;
-  bool get isInitialized => _initializedVideo && (_videoController?.value.isInitialized ?? false);
-  double get aspectRatio => _videoController?.value.aspectRatio ?? 1.0;
+  BetterPlayerController? get videoController => _videoController;
+  bool get isInitialized => _initializedVideo;
+  double get aspectRatio => _videoController.videoPlayerController?.value.aspectRatio ?? 1.0;
   bool _initializedVideo = false;
 
-  VideoPlayerController? _videoController;
+  final BetterPlayerController _videoController = BetterPlayerController(
+    const BetterPlayerConfiguration(
+        autoDispose: false,
+        handleLifecycle: false,
+        autoDetectFullscreenAspectRatio: false,
+        autoDetectFullscreenDeviceOrientation: false,
+        useRootNavigator: true,
+        fit: BoxFit.contain,
+        controlsConfiguration: BetterPlayerControlsConfiguration(
+          showControls: false,
+        )),
+  );
 
   Future<void> playFile(String path, bool Function(Duration videoDuration) looping) async {
     await setFile(path, looping);
@@ -605,11 +616,9 @@ class _NamidaVideoPlayer {
   Future<void> setFile(String path, bool Function(Duration videoDuration) looping) async {
     _initializedVideo = false;
     await dispose();
-    final options = VideoPlayerOptions(allowBackgroundPlayback: true, mixWithOthers: true);
-    _videoController = VideoPlayerController.file(File(path), videoPlayerOptions: options);
-    await _videoController?.initialize();
+    await _videoController.setupDataSource(BetterPlayerDataSource.file(path));
     _initializedVideo = true;
-    _videoController?.setLooping(looping(_videoController!.value.duration));
+    _videoController.setLooping(looping(_videoController.videoPlayerController?.value.duration ?? Duration.zero));
     try {
       File(path).setLastAccessedSync(DateTime.now());
     } catch (e) {
@@ -617,13 +626,13 @@ class _NamidaVideoPlayer {
     }
   }
 
-  Future<void> play() async => await _videoController?.play();
+  Future<void> play() async => await _videoController.play();
 
-  Future<void> pause() async => await _videoController?.pause();
+  Future<void> pause() async => await _videoController.pause();
 
-  Future<void> seek(Duration duration) async => await _videoController?.seekTo(duration);
+  Future<void> seek(Duration duration) async => await _videoController.seekTo(duration);
 
-  Future<void> setVolume(double volume) async => await _videoController?.setVolume(volume);
+  Future<void> setVolume(double volume) async => await _videoController.setVolume(volume);
 
   Future<void> enablePictureInPicture() async {}
   Future<void> disablePictureInPicture() async {}
@@ -633,7 +642,9 @@ class _NamidaVideoPlayer {
   void exitFullScreen() => NamidaNavigator.inst.exitFullScreen();
 
   Future<void> dispose() async {
-    await _videoController?.dispose();
-    _videoController = null;
+    if (_initializedVideo) {
+      _videoController.dispose();
+      _initializedVideo = false;
+    }
   }
 }

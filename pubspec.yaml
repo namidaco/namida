@@ -85,7 +85,9 @@ dependencies:
       url: https://github.com/MSOB7YY/faudiotagger
 
   # ---- Video Indexing & Playback ----
-  video_player: "2.6.0"
+  better_player:
+    git:
+      url: https://github.com/tintran-dev/betterplayer
   youtube_explode_dart: ^1.12.4
   media_metadata_retriever:
     git:
