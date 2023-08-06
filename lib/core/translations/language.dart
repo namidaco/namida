@@ -64,7 +64,7 @@ class Language extends LanguageKeys {
     try {
       final map = trMap ?? await jsonDecode(await rootBundle.loadString(path)) as Map<String, dynamic>;
 
-      String getKey(String key) => map[key] ?? _defaultMap[key] ?? 'hh';
+      String getKey(String key) => map[key] ?? _defaultMap[key] ?? '';
 
       // -- Keys Start ---------------------------------------------------------
 			A_MINUTE = getKey("A_MINUTE");
@@ -189,6 +189,8 @@ class Language extends LanguageKeys {
 			DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE = getKey("DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE");
 			DONE = getKey("DONE");
 			DONT_RESTORE_POSITION = getKey("DONT_RESTORE_POSITION");
+			DO_NOTHING = getKey("DO_NOTHING");
+			DUCK_AUDIO = getKey("DUCK_AUDIO");
 			DUPLICATED_TRACKS = getKey("DUPLICATED_TRACKS");
 			DURATION = getKey("DURATION");
 			EDGE_COLORS_SWITCHING = getKey("EDGE_COLORS_SWITCHING");
@@ -360,9 +362,11 @@ class Language extends LanguageKeys {
 			NUMBER_OF_TRACKS = getKey("NUMBER_OF_TRACKS");
 			OF = getKey("OF");
 			OLDEST_WATCH = getKey("OLDEST_WATCH");
+			ON_INTERRUPTION = getKey("ON_INTERRUPTION");
 			ON_VOLUME_ZERO = getKey("ON_VOLUME_ZERO");
 			OPEN_YOUTUBE_LINK = getKey("OPEN_YOUTUBE_LINK");
 			OR = getKey("OR");
+			OTHERS = getKey("OTHERS");
 			PALETTE = getKey("PALETTE");
 			PALETTE_MIX = getKey("PALETTE_MIX");
 			PALETTE_NEW_MIX = getKey("PALETTE_NEW_MIX");
@@ -432,6 +436,7 @@ class Language extends LanguageKeys {
 			RESTORE_DEFAULTS = getKey("RESTORE_DEFAULTS");
 			RESTORED_BACKUP_SUCCESSFULLY_SUB = getKey("RESTORED_BACKUP_SUCCESSFULLY_SUB");
 			RESTORED_BACKUP_SUCCESSFULLY = getKey("RESTORED_BACKUP_SUCCESSFULLY");
+			RESUME_IF_WAS_INTERRUPTED = getKey("RESUME_IF_WAS_INTERRUPTED");
 			RESUME_IF_WAS_PAUSED_BY_VOLUME = getKey("RESUME_IF_WAS_PAUSED_BY_VOLUME");
 			REVERSE_ORDER = getKey("REVERSE_ORDER");
 			SAMPLE_RATE = getKey("SAMPLE_RATE");
@@ -453,6 +458,10 @@ class Language extends LanguageKeys {
 			SET_YOUTUBE_LINK = getKey("SET_YOUTUBE_LINK");
 			SETTINGS = getKey("SETTINGS");
 			SHARE = getKey("SHARE");
+			SHOULD_DUCK = getKey("SHOULD_DUCK");
+			SHOULD_DUCK_NOTE = getKey("SHOULD_DUCK_NOTE");
+			SHOULD_PAUSE = getKey("SHOULD_PAUSE");
+			SHOULD_PAUSE_NOTE = getKey("SHOULD_PAUSE_NOTE");
 			SHOW_HIDE_UNKNOWN_FIELDS = getKey("SHOW_HIDE_UNKNOWN_FIELDS");
 			SHOW_MORE = getKey("SHOW_MORE");
 			SHUFFLE = getKey("SHUFFLE");
@@ -560,13 +569,6 @@ class Language extends LanguageKeys {
     }
   }
 }
-
-
-
-
-
-
-
 
 
 

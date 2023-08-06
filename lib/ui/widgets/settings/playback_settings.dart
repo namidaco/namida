@@ -330,6 +330,66 @@ class PlaybackSettings extends StatelessWidget {
           ),
         ],
       ),
+      NamidaExpansionTile(
+        childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+        iconColor: context.defaultIconColor(),
+        icon: Broken.notification_bing,
+        titleText: Language.inst.ON_INTERRUPTION,
+        children: [
+          ...InterruptionType.values.map(
+            (type) {
+              return CustomListTile(
+                icon: type.toIcon(),
+                title: type.toText(),
+                subtitle: type.toSubtitle(),
+                trailingRaw: PopupMenuButton<InterruptionAction>(
+                  child: Obx(() {
+                    final actionInSetting = SettingsController.inst.playerOnInterrupted[type] ?? InterruptionAction.pause;
+                    return Text(actionInSetting.toText());
+                  }),
+                  itemBuilder: (context) => <PopupMenuItem<InterruptionAction>>[
+                    ...InterruptionAction.values.map(
+                      (action) => PopupMenuItem(
+                        value: action,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Icon(action.toIcon(), size: 22.0),
+                            const SizedBox(width: 6.0),
+                            Text(action.toText()),
+                            const Spacer(),
+                            Obx(
+                              () {
+                                final actionInSetting = SettingsController.inst.playerOnInterrupted[type] ?? InterruptionAction.pause;
+                                return NamidaCheckMark(
+                                  size: 16.0,
+                                  active: actionInSetting == action,
+                                );
+                              },
+                            ),
+                            const SizedBox(width: 6.0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                  onSelected: (action) => SettingsController.inst.updatePlayerInterruption(type, action),
+                ),
+              );
+            },
+          ),
+          const NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 16.0)),
+          Obx(
+            () => CustomSwitchListTile(
+              icon: Broken.play_circle,
+              value: SettingsController.inst.playerResumeAfterWasInterrupted.value,
+              onChanged: (isTrue) => SettingsController.inst.save(playerResumeAfterWasInterrupted: !isTrue),
+              title: Language.inst.RESUME_IF_WAS_INTERRUPTED,
+            ),
+          ),
+          const SizedBox(height: 6.0),
+        ],
+      ),
       Obx(
         () => CustomSwitchListTile(
           icon: Broken.rotate_left,

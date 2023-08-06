@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/scheduler.dart';
 
+import 'package:audio_session/audio_session.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
@@ -149,8 +150,59 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
         await play();
       }
     });
+
+    AudioSession.instance.then((session) {
+      session.becomingNoisyEventStream.listen((_) {
+        pause();
+      });
+      session.interruptionEventStream.listen((event) {
+        if (event.begin) {
+          switch (event.type) {
+            case AudioInterruptionType.duck:
+              _onInterruption(InterruptionType.shouldDuck);
+              break;
+            case AudioInterruptionType.pause:
+              _onInterruption(InterruptionType.shouldPause);
+              break;
+            default:
+              _onInterruption(InterruptionType.unknown);
+          }
+        } else {
+          if (_didDuckVolume) {
+            setVolume((currentVolume.value * 2).withMaximum(1.0));
+            _didDuckVolume = false;
+          }
+          if (_didPauseByInterruption) {
+            play();
+            _didPauseByInterruption = false;
+          }
+        }
+      });
+    });
   }
 
+  void _onInterruption(InterruptionType type) {
+    final whatToDo = SettingsController.inst.playerOnInterrupted[type] ?? InterruptionAction.pause;
+    switch (whatToDo) {
+      case InterruptionAction.pause:
+        pause();
+        _didDuckVolume = false;
+        _didPauseByInterruption = true;
+        break;
+      case InterruptionAction.duckAudio:
+        setVolume(currentVolume.value / 2);
+        _didDuckVolume = true;
+        _didPauseByInterruption = false;
+        break;
+      case InterruptionAction.doNothing: // yeah
+      default:
+        _didDuckVolume = false;
+        _didPauseByInterruption = false;
+    }
+  }
+
+  bool _didPauseByInterruption = false;
+  bool _didDuckVolume = false;
   bool _wasPausedByVolume0 = false;
 
   /// For ensuring stabilty while fade effect is on.
@@ -500,7 +552,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
 
   bool get defaultShouldStartPlaying => (SettingsController.inst.playerPlayOnNextPrev.value || isPlaying);
 
-  final _player = AudioPlayer();
+  final _player = AudioPlayer(handleInterruptions: false);
 }
 
 // ----------------------- Extensions --------------------------

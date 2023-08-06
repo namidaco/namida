@@ -219,3 +219,15 @@ enum VideoPlaybackSource {
   local,
   youtube,
 }
+
+enum InterruptionType {
+  shouldPause,
+  shouldDuck,
+  unknown,
+}
+
+enum InterruptionAction {
+  pause,
+  duckAudio,
+  doNothing,
+}

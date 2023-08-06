@@ -289,13 +289,10 @@ class EmptyPlaylistSubpage extends StatelessWidget {
                         queueSource: QueueSource.playlist,
                         onTap: () => tracksToAddMap[tr] = !(tracksToAddMap[tr] ?? false),
                         onRightAreaTap: () => tracksToAddMap[tr] = !(tracksToAddMap[tr] ?? false),
-                        trailingWidget: SizedBox(
-                          width: 22.0,
-                          height: 22.0,
-                          child: Obx(
-                            () => NamidaCheckMark(
-                              active: tracksToAddMap[tr] == true,
-                            ),
+                        trailingWidget: Obx(
+                          () => NamidaCheckMark(
+                            size: 22.0,
+                            active: tracksToAddMap[tr] == true,
                           ),
                         ),
                       );

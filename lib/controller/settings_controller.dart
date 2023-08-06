@@ -114,6 +114,7 @@ class SettingsController {
   final RxBool playerShuffleAllTracks = false.obs;
   final RxBool playerPauseOnVolume0 = true.obs;
   final RxBool playerResumeAfterOnVolume0Pause = true.obs;
+  final RxBool playerResumeAfterWasInterrupted = true.obs;
   final RxBool jumpToFirstTrackAfterFinishingQueue = true.obs;
   final RxBool displayAudioInfoMiniplayer = false.obs;
   final RxBool showUnknownFieldsInTrackInfoDialog = true.obs;
@@ -154,6 +155,12 @@ class SettingsController {
     TrackTilePosition.row3Item3: TrackTileItem.none,
     TrackTilePosition.rightItem1: TrackTileItem.duration,
     TrackTilePosition.rightItem2: TrackTileItem.none,
+  }.obs;
+
+  final playerOnInterrupted = <InterruptionType, InterruptionAction>{
+    InterruptionType.shouldPause: InterruptionAction.pause,
+    InterruptionType.shouldDuck: InterruptionAction.duckAudio,
+    InterruptionType.unknown: InterruptionAction.pause,
   }.obs;
 
   bool didSupportNamida = false;
@@ -259,6 +266,7 @@ class SettingsController {
       playerShuffleAllTracks.value = json['playerShuffleAllTracks'] ?? playerShuffleAllTracks.value;
       playerPauseOnVolume0.value = json['playerPauseOnVolume0'] ?? playerPauseOnVolume0.value;
       playerResumeAfterOnVolume0Pause.value = json['playerResumeAfterOnVolume0Pause'] ?? playerResumeAfterOnVolume0Pause.value;
+      playerResumeAfterWasInterrupted.value = json['playerResumeAfterWasInterrupted'] ?? playerResumeAfterWasInterrupted.value;
       jumpToFirstTrackAfterFinishingQueue.value = json['jumpToFirstTrackAfterFinishingQueue'] ?? jumpToFirstTrackAfterFinishingQueue.value;
       displayAudioInfoMiniplayer.value = json['displayAudioInfoMiniplayer'] ?? displayAudioInfoMiniplayer.value;
       showUnknownFieldsInTrackInfoDialog.value = json['showUnknownFieldsInTrackInfoDialog'] ?? showUnknownFieldsInTrackInfoDialog.value;
@@ -277,16 +285,36 @@ class SettingsController {
       displayThirdItemInEachRow.value = json['displayThirdItemInEachRow'] ?? displayThirdItemInEachRow.value;
       trackTileSeparator.value = json['trackTileSeparator'] ?? trackTileSeparator.value;
       displayFavouriteIconInListTile.value = json['displayFavouriteIconInListTile'] ?? displayFavouriteIconInListTile.value;
-      trackItem.value = ((json['trackItem'] as Map?)?.map(
-            (key, value) => MapEntry(TrackTilePosition.values.getEnum(key) ?? TrackTilePosition.rightItem3, TrackTileItem.values.getEnum(value) ?? TrackTileItem.none),
-          )) ??
-          trackItem;
+
+      trackItem.value = _getEnumMap(
+            json['trackItem'],
+            TrackTilePosition.values,
+            TrackTilePosition.rightItem3,
+            TrackTileItem.values,
+            TrackTileItem.none,
+          ) ??
+          trackItem.map((key, value) => MapEntry(key, value));
+
+      playerOnInterrupted.value = _getEnumMap(
+            json['playerOnInterrupted'],
+            InterruptionType.values,
+            InterruptionType.unknown,
+            InterruptionAction.values,
+            InterruptionAction.doNothing,
+          ) ??
+          playerOnInterrupted.map((key, value) => MapEntry(key, value));
 
       ///
     } catch (e) {
       printy(e, isError: true);
       await file.delete();
     }
+  }
+
+  Map<K, V>? _getEnumMap<K, V>(dynamic jsonMap, List<K> enumKeys, K defaultKey, List<V> enumValues, V defaultValue) {
+    return ((jsonMap as Map?)?.map(
+      (key, value) => MapEntry(enumKeys.getEnum(key) ?? defaultKey, enumValues.getEnum(value) ?? defaultValue),
+    ));
   }
 
   bool _canWriteSettings = true;
@@ -388,6 +416,7 @@ class SettingsController {
       'playerShuffleAllTracks': playerShuffleAllTracks.value,
       'playerPauseOnVolume0': playerPauseOnVolume0.value,
       'playerResumeAfterOnVolume0Pause': playerResumeAfterOnVolume0Pause.value,
+      'playerResumeAfterWasInterrupted': playerResumeAfterWasInterrupted.value,
       'jumpToFirstTrackAfterFinishingQueue': jumpToFirstTrackAfterFinishingQueue.value,
       'displayAudioInfoMiniplayer': displayAudioInfoMiniplayer.value,
       'showUnknownFieldsInTrackInfoDialog': showUnknownFieldsInTrackInfoDialog.value,
@@ -403,6 +432,7 @@ class SettingsController {
       'trackTileSeparator': trackTileSeparator.value,
       'displayFavouriteIconInListTile': displayFavouriteIconInListTile.value,
       'trackItem': trackItem.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
+      'playerOnInterrupted': playerOnInterrupted.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
     };
     await file.writeAsJson(res);
 
@@ -509,6 +539,7 @@ class SettingsController {
     bool? playerShuffleAllTracks,
     bool? playerPauseOnVolume0,
     bool? playerResumeAfterOnVolume0Pause,
+    bool? playerResumeAfterWasInterrupted,
     bool? jumpToFirstTrackAfterFinishingQueue,
     bool? displayAudioInfoMiniplayer,
     bool? showUnknownFieldsInTrackInfoDialog,
@@ -822,6 +853,9 @@ class SettingsController {
     if (playerResumeAfterOnVolume0Pause != null) {
       this.playerResumeAfterOnVolume0Pause.value = playerResumeAfterOnVolume0Pause;
     }
+    if (playerResumeAfterWasInterrupted != null) {
+      this.playerResumeAfterWasInterrupted.value = playerResumeAfterWasInterrupted;
+    }
     if (jumpToFirstTrackAfterFinishingQueue != null) {
       this.jumpToFirstTrackAfterFinishingQueue.value = jumpToFirstTrackAfterFinishingQueue;
     }
@@ -993,6 +1027,11 @@ class SettingsController {
 
   void updateTrackItemList(TrackTilePosition p, TrackTileItem i) {
     trackItem[p] = i;
+    _writeToStorage();
+  }
+
+  void updatePlayerInterruption(InterruptionType type, InterruptionAction action) {
+    playerOnInterrupted[type] = action;
     _writeToStorage();
   }
 }

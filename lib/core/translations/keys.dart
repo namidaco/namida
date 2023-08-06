@@ -124,6 +124,8 @@ class LanguageKeys {
   late String DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE;
   late String DONE;
   late String DONT_RESTORE_POSITION;
+  late String DO_NOTHING;
+  late String DUCK_AUDIO;
   late String DUPLICATED_TRACKS;
   late String DURATION;
   late String EDGE_COLORS_SWITCHING;
@@ -295,9 +297,11 @@ class LanguageKeys {
   late String NUMBER_OF_TRACKS;
   late String OF;
   late String OLDEST_WATCH;
+  late String ON_INTERRUPTION;
   late String ON_VOLUME_ZERO;
   late String OPEN_YOUTUBE_LINK;
   late String OR;
+  late String OTHERS;
   late String PALETTE;
   late String PALETTE_MIX;
   late String PALETTE_NEW_MIX;
@@ -367,6 +371,7 @@ class LanguageKeys {
   late String RESTORE_DEFAULTS;
   late String RESTORED_BACKUP_SUCCESSFULLY_SUB;
   late String RESTORED_BACKUP_SUCCESSFULLY;
+  late String RESUME_IF_WAS_INTERRUPTED;
   late String RESUME_IF_WAS_PAUSED_BY_VOLUME;
   late String REVERSE_ORDER;
   late String SAMPLE_RATE;
@@ -388,6 +393,10 @@ class LanguageKeys {
   late String SET_YOUTUBE_LINK;
   late String SETTINGS;
   late String SHARE;
+  late String SHOULD_DUCK;
+  late String SHOULD_DUCK_NOTE;
+  late String SHOULD_PAUSE;
+  late String SHOULD_PAUSE_NOTE;
   late String SHOW_HIDE_UNKNOWN_FIELDS;
   late String SHOW_MORE;
   late String SHUFFLE;

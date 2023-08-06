@@ -1085,3 +1085,47 @@ extension TrackTileItemExtentExt on Iterable {
 extension ThemeDefaultColors on BuildContext {
   Color defaultIconColor([Color? mainColor]) => Color.alphaBlend((mainColor ?? CurrentColor.inst.color).withAlpha(100), theme.colorScheme.onBackground);
 }
+
+extension InterruptionMediaUtils on InterruptionType {
+  String toText() {
+    return {
+      InterruptionType.shouldPause: Language.inst.SHOULD_PAUSE,
+      InterruptionType.shouldDuck: Language.inst.SHOULD_DUCK,
+      InterruptionType.unknown: Language.inst.OTHERS,
+    }[this]!;
+  }
+
+  String? toSubtitle() {
+    return {
+      InterruptionType.shouldPause: Language.inst.SHOULD_PAUSE_NOTE,
+      InterruptionType.shouldDuck: Language.inst.SHOULD_DUCK_NOTE,
+      InterruptionType.unknown: null,
+    }[this];
+  }
+
+  IconData toIcon() {
+    return {
+      InterruptionType.shouldPause: Broken.pause_circle,
+      InterruptionType.shouldDuck: Broken.volume_low_1,
+      InterruptionType.unknown: Broken.status,
+    }[this]!;
+  }
+}
+
+extension InterruptionActionUtils on InterruptionAction {
+  String toText() {
+    return {
+      InterruptionAction.doNothing: Language.inst.DO_NOTHING,
+      InterruptionAction.duckAudio: Language.inst.DUCK_AUDIO,
+      InterruptionAction.pause: Language.inst.PAUSE_PLAYBACK,
+    }[this]!;
+  }
+
+  IconData toIcon() {
+    return {
+      InterruptionAction.doNothing: Broken.minus_cirlce,
+      InterruptionAction.duckAudio: Broken.volume_low_1,
+      InterruptionAction.pause: Broken.pause_circle,
+    }[this]!;
+  }
+}

@@ -73,6 +73,7 @@ dependencies:
 
   # ----Audio Indexing & Playback ----
   just_audio: ^0.9.34
+  audio_session: ^0.1.16
   audio_service:
     git:
       url: https://github.com/MSOB7YY/audio_service

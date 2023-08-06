@@ -769,10 +769,9 @@ class ListTileWithCheckMark extends StatelessWidget {
                 style: context.textTheme.displaySmall,
               )
             : null,
-        trailing: SizedBox(
-          height: 18.0,
-          width: 18.0,
-          child: NamidaCheckMark(active: active),
+        trailing: NamidaCheckMark(
+          size: 18.0,
+          active: active,
         ),
         visualDensity: VisualDensity.compact,
         onTap: onTap,
@@ -782,12 +781,14 @@ class ListTileWithCheckMark extends StatelessWidget {
 }
 
 class NamidaCheckMark extends StatelessWidget {
+  final double size;
   final bool active;
   final Color? activeColor;
   final Color? inactiveColor;
 
   const NamidaCheckMark({
     super.key,
+    required this.size,
     required this.active,
     this.activeColor,
     this.inactiveColor,
@@ -795,12 +796,16 @@ class NamidaCheckMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CheckMark(
-      strokeWidth: 2,
-      activeColor: activeColor ?? context.theme.listTileTheme.iconColor!,
-      inactiveColor: inactiveColor ?? context.theme.listTileTheme.iconColor!,
-      duration: const Duration(milliseconds: 400),
-      active: active,
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CheckMark(
+        strokeWidth: 2,
+        activeColor: activeColor ?? context.theme.listTileTheme.iconColor!,
+        inactiveColor: inactiveColor ?? context.theme.listTileTheme.iconColor!,
+        duration: const Duration(milliseconds: 400),
+        active: active,
+      ),
     );
   }
 }
@@ -840,7 +845,7 @@ class NamidaExpansionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTileTheme(
-      horizontalTitleGap: 12.0,
+      // horizontalTitleGap: 12.0,
       dense: true,
       child: ExpansionTile(
         initiallyExpanded: initiallyExpanded,
