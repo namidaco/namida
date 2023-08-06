@@ -84,15 +84,17 @@ class CurrentColor {
     );
   }
 
-  Future<void> updatePlayerColorFromTrack(Selectable track, int? index, {bool updateIndexOnly = false}) async {
-    if (!updateIndexOnly && SettingsController.inst.autoColor.value) {
+  Future<void> updatePlayerColorFromTrack(Selectable? track, int? index, {bool updateIndexOnly = false}) async {
+    if (!updateIndexOnly && track != null && SettingsController.inst.autoColor.value) {
       final color = await getTrackColors(track.track);
       _namidaColor.value = color;
       _updateCurrentPaletteHalfs(color);
     }
-    if (index != null) {
+    if (track != null) {
       currentPlayingTrack.value = null; // nullifying to re-assign safely if subtype has changed
       currentPlayingTrack.value = track;
+    }
+    if (index != null) {
       currentPlayingIndex.value = index;
     }
   }

@@ -490,8 +490,9 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   }
 
   @override
-  void onReorderItems(int currentIndex) {
-    super.onReorderItems(currentIndex);
+  void onReorderItems(int currentIndex, Selectable itemDragged) {
+    super.onReorderItems(currentIndex, itemDragged);
+    CurrentColor.inst.updatePlayerColorFromTrack(null, currentIndex, updateIndexOnly: true);
     QueueController.inst.updateLatestQueue(currentQueue.tracks.toList());
   }
   // ==============================================================================================

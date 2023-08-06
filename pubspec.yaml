@@ -64,7 +64,7 @@ dependencies:
   queue_manager:
     git:
       url: https://github.com/MSOB7YY/queue_manager
-      ref: 4b4985d5d03088a4b6c12a57444b687f82468be1
+      ref: b76685ef60184404c7dbadc9aa04483b6639d8c9
 
   # ---- Path/File Providers ----
   path_provider: ^2.0.14
