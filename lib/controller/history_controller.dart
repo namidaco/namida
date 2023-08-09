@@ -282,17 +282,24 @@ class HistoryController {
   }
 
   Future<void> prepareHistoryFile() async {
+    int loops = 0;
     await for (final f in Directory(k_PLAYLIST_DIR_PATH_HISTORY).list()) {
       if (f is File) {
-        await f.readAsJsonAnd((response) async {
+        try {
+          final isStep = loops % 10 == 0;
+          final response = isStep ? await f.readAsJson() : f.readAsJsonSync();
           final dayOfTrack = int.parse(f.path.getFilenameWOExt);
-          final listTracks = (response as List?)?.mapped((e) => TrackWithDate.fromJson(e)) ?? [];
-          historyMap.value[dayOfTrack] = List<TrackWithDate>.from(listTracks);
-        });
-        await Future.delayed(Duration.zero);
-        historyMap.refresh();
+          final listTracks = (response as List?)?.mapped((e) => TrackWithDate.fromJson(e)) ?? <TrackWithDate>[];
+          historyMap.value[dayOfTrack] = listTracks;
+          if (isStep) historyMap.refresh();
+        } catch (e) {
+          printy(e, isError: true);
+          continue;
+        }
+        loops++;
       }
     }
+    historyMap.refresh();
     _isLoadingHistory = false;
     // Adding tracks that were rejected by [addToHistory] since history wasn't fully loaded.
     if (_tracksToAddAfterHistoryLoad.isNotEmpty) {

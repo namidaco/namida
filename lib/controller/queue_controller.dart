@@ -129,15 +129,22 @@ class QueueController {
 
   ///
   Future<void> prepareAllQueuesFile() async {
-    await for (final p in Directory(k_DIR_QUEUES).list()) {
-      // prevents freezing the ui. cheap alternative for Isolate/compute.
-      await Future.delayed(Duration.zero);
-
-      await File(p.path).readAsJsonAnd((response) async {
-        final q = Queue.fromJson(response);
-        _updateMap(q);
-      });
+    int loops = 0;
+    await for (final f in Directory(k_DIR_QUEUES).list()) {
+      if (f is File) {
+        try {
+          final isStep = loops % 10 == 0;
+          final response = isStep ? await f.readAsJson() : f.readAsJsonSync();
+          final q = Queue.fromJson(response);
+          _updateMap(q);
+        } catch (e) {
+          printy(e, isError: true);
+          continue;
+        }
+        loops++;
+      }
     }
+
     _isLoadingQueues = false;
     // Adding queues that were rejected by [addNewQueue] since Queues wasn't fully loaded.
     if (_queuesToAddAfterAllQueuesLoad.isNotEmpty) {
