@@ -35,7 +35,7 @@ class Player {
   int get sleepAfterMin => _audioHandler.sleepAfterMin;
   int get sleepAfterTracks => _audioHandler.sleepAfterTracks;
 
-  final RxInt totalListenedTimeInSec = 0.obs;
+  int get totalListenedTimeInSec => _audioHandler.totalListenedTimeInSec;
 
   bool isSleepingTrack(int queueIndex) => enableSleepAfterTracks && sleepAfterTracks + currentIndex - 1 == queueIndex;
 

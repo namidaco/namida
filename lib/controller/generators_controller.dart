@@ -65,7 +65,7 @@ class NamidaGenerator {
 
     final Map<Track, int> numberOfListensMap = {};
 
-    for (int i = 0; i <= historytracks.length - 1; i++) {
+    for (int i = 0; i <= historytracks.length - 1;) {
       final t = historytracks[i];
       if (t.track == track) {
         final heatTracks = historytracks.getRange(clamped(i - length), clamped(i + length)).toList();
@@ -74,6 +74,8 @@ class NamidaGenerator {
         });
         // skip length since we already took 10 tracks.
         i += length;
+      } else {
+        i++;
       }
     }
 

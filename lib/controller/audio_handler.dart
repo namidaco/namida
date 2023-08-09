@@ -32,6 +32,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   int get currentPositionMS => _currentPositionMS.value;
   bool get isPlaying => _isPlaying.value;
   int get numberOfRepeats => _numberOfRepeats.value;
+  int get totalListenedTimeInSec => _totalListenedTimeInSec.value;
 
   final _currentPositionMS = 0.obs;
   final _totalListenedTimeInSec = 0.obs;
@@ -185,9 +186,12 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
     final whatToDo = SettingsController.inst.playerOnInterrupted[type] ?? InterruptionAction.pause;
     switch (whatToDo) {
       case InterruptionAction.pause:
-        pause();
+        if (isPlaying) {
+          pause();
+          _didPauseByInterruption = true;
+        }
+        _didPauseByInterruption = false;
         _didDuckVolume = false;
-        _didPauseByInterruption = true;
         break;
       case InterruptionAction.duckAudio:
         setVolume(currentVolume.value / 2);
@@ -505,7 +509,9 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
       if (tr.duration == 0) tr.duration = dur?.inSeconds ?? 0;
     } catch (e) {
       SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-        NamidaDialogs.inst.showTrackDialog(tr, isFromPlayerQueue: true, errorPlayingTrack: true);
+        if (item.track == currentTrack.track) {
+          NamidaDialogs.inst.showTrackDialog(tr, isFromPlayerQueue: true, errorPlayingTrack: true);
+        }
       });
       printy(e, isError: true);
       return;

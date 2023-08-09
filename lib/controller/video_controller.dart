@@ -93,11 +93,11 @@ class VideoController {
   Future<void> updateCurrentVideo(Track track) async {
     isNoVideosAvailable.value = false;
     currentDownloadedBytes.value = 0;
+    currentVideo.value = null;
+    await vcontroller.dispose();
     if (_isInitializing) return;
     if (!SettingsController.inst.enableVideoPlayback.value) return;
-    await vcontroller.dispose();
 
-    currentVideo.value = null;
     final possibleVideos = _getPossibleVideosFromTrack(track);
     currentPossibleVideos
       ..clear()
@@ -184,7 +184,11 @@ class VideoController {
 
   FutureOr<void> _executeForCurrentTrackOnly(Track initialTrack, FutureOr<void> Function() execute) async {
     if (initialTrack.path != Player.inst.nowPlayingTrack.path) return;
-    await execute();
+    try {
+      await execute();
+    } catch (e) {
+      printy(e, isError: true);
+    }
   }
 
   Future<NamidaVideo?> fetchVideoFromYoutube(String id) async {
@@ -615,10 +619,14 @@ class _NamidaVideoPlayer {
 
   Future<void> setFile(String path, bool Function(Duration videoDuration) looping) async {
     _initializedVideo = false;
-    await dispose();
-    await _videoController.setupDataSource(BetterPlayerDataSource.file(path));
-    _initializedVideo = true;
-    _videoController.setLooping(looping(_videoController.videoPlayerController?.value.duration ?? Duration.zero));
+    try {
+      await dispose();
+      await _videoController.setupDataSource(BetterPlayerDataSource.file(path));
+      _initializedVideo = true;
+      _videoController.setLooping(looping(_videoController.videoPlayerController?.value.duration ?? Duration.zero));
+    } catch (e) {
+      printy(e, isError: true);
+    }
     try {
       File(path).setLastAccessedSync(DateTime.now());
     } catch (e) {
@@ -626,13 +634,21 @@ class _NamidaVideoPlayer {
     }
   }
 
-  Future<void> play() async => await _videoController.play();
+  Future<void> _execute(FutureOr<void> Function() fun) async {
+    try {
+      await fun();
+    } catch (e) {
+      printy(e, isError: true);
+    }
+  }
 
-  Future<void> pause() async => await _videoController.pause();
+  Future<void> play() async => _execute(() async => await _videoController.play());
 
-  Future<void> seek(Duration duration) async => await _videoController.seekTo(duration);
+  Future<void> pause() async => _execute(() async => await _videoController.pause());
 
-  Future<void> setVolume(double volume) async => await _videoController.setVolume(volume);
+  Future<void> seek(Duration duration) async => _execute(() async => await _videoController.seekTo(duration));
+
+  Future<void> setVolume(double volume) async => _execute(() async => await _videoController.setVolume(volume));
 
   Future<void> enablePictureInPicture() async {}
   Future<void> disablePictureInPicture() async {}
@@ -642,9 +658,11 @@ class _NamidaVideoPlayer {
   void exitFullScreen() => NamidaNavigator.inst.exitFullScreen();
 
   Future<void> dispose() async {
-    if (_initializedVideo) {
-      _videoController.dispose();
-      _initializedVideo = false;
+    if (_initializedVideo && (videoController?.isVideoInitialized() ?? false)) {
+      await _execute(() {
+        // _videoController.dispose(forceDispose: true);
+        _initializedVideo = false;
+      });
     }
   }
 }

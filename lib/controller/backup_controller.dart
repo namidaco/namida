@@ -88,8 +88,8 @@ class BackupController {
       final dir = Directory(SettingsController.inst.defaultBackupLocation.value);
       final possibleFiles = dir.listSync();
 
-      List<File> filessss = [];
-      await possibleFiles.loopFuture((pf, index) async {
+      final List<File> filessss = [];
+      possibleFiles.loop((pf, index) {
         if (pf.path.getFilename.startsWith('Namida Backup - ')) {
           if (pf is File) {
             filessss.add(pf);
@@ -99,15 +99,16 @@ class BackupController {
 
       // seems like the files are already sorted but anyways
       filessss.sortByReverse((e) => e.lastModifiedSync());
-      backupzip = filessss.first;
+      backupzip = filessss.firstOrNull;
     } else {
       final filePicked = await FilePicker.platform.pickFiles(allowedExtensions: ['zip'], type: FileType.custom);
-      if (filePicked != null) {
-        backupzip = File(filePicked.files.first.path!);
-      } else {
-        return;
+      final path = filePicked?.files.first.path;
+      if (path != null) {
+        backupzip = File(path);
       }
     }
+
+    if (backupzip == null) return;
 
     isRestoringBackup.value = true;
 
@@ -128,7 +129,6 @@ class BackupController {
     Indexer.inst.refreshLibraryAndCheckForDiff();
     Indexer.inst.updateImageSizeInStorage();
     Indexer.inst.updateVideosSizeInStorage();
-    Indexer.inst.updateWaveformSizeInStorage();
     Get.snackbar(Language.inst.RESTORED_BACKUP_SUCCESSFULLY, Language.inst.RESTORED_BACKUP_SUCCESSFULLY_SUB);
     isRestoringBackup.value = false;
   }
