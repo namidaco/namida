@@ -36,12 +36,10 @@ class Indexer {
   final RxInt tracksExcludedByNoMedia = 0.obs;
 
   final RxInt artworksInStorage = 0.obs;
-  final RxInt waveformsInStorage = 0.obs;
   final RxInt colorPalettesInStorage = 0.obs;
   final RxInt videosInStorage = 0.obs;
 
   final RxInt artworksSizeInStorage = 0.obs;
-  final RxInt waveformsSizeInStorage = 0.obs;
   final RxInt videosSizeInStorage = 0.obs;
 
   final Rx<Map<String, List<Track>>> mainMapAlbums = LinkedHashMap<String, List<Track>>(equals: (p0, p1) => p0.toLowerCase() == p1.toLowerCase()).obs;
@@ -791,22 +789,6 @@ class Indexer {
     await _updateDirectoryStats(k_DIR_ARTWORKS, artworksInStorage, artworksSizeInStorage);
   }
 
-  Future<void> updateWaveformSizeInStorage([File? newWaveFile, bool decreaseStats = false]) async {
-    if (newWaveFile != null) {
-      final size = await newWaveFile.stat().then((value) => value.size);
-      if (decreaseStats) {
-        waveformsInStorage.value--;
-        waveformsInStorage.value -= size;
-      } else {
-        waveformsInStorage.value++;
-        waveformsInStorage.value += size;
-      }
-
-      return;
-    }
-    await _updateDirectoryStats(k_DIR_WAVEFORMS, waveformsInStorage, waveformsSizeInStorage);
-  }
-
   Future<void> updateColorPalettesSizeInStorage([File? newPaletteFile]) async {
     if (newPaletteFile != null) {
       colorPalettesInStorage.value++;
@@ -852,12 +834,6 @@ class Indexer {
     await Directory(k_DIR_ARTWORKS).create();
     await _createDefaultNamidaArtwork();
     updateImageSizeInStorage();
-  }
-
-  Future<void> clearWaveformData() async {
-    await Directory(k_DIR_WAVEFORMS).delete(recursive: true);
-    await Directory(k_DIR_WAVEFORMS).create();
-    updateWaveformSizeInStorage();
   }
 
   /// Deletes specific videos or the whole cache.

@@ -137,15 +137,6 @@ class BackupAndRestore extends StatelessWidget {
                               height: 12.0,
                             ),
                             ListTileWithCheckMark(
-                              active: isActive(k_DIR_WAVEFORMS),
-                              title: Language.inst.WAVEFORMS,
-                              icon: Broken.sound,
-                              onTap: () => onItemTap(k_DIR_WAVEFORMS),
-                            ),
-                            const SizedBox(
-                              height: 12.0,
-                            ),
-                            ListTileWithCheckMark(
                               active: isActive(k_DIR_LYRICS),
                               title: Language.inst.LYRICS,
                               icon: Broken.document,

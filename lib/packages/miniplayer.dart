@@ -68,7 +68,7 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
                   visible: anim > 0.01,
                   child: Positioned.fill(
                     child: Opacity(
-                      opacity: MiniPlayerController.inst.miniplayerHP.value,
+                      opacity: anim,
                       child: const Wallpaper(gradient: false, particleOpacity: .3),
                     ),
                   ),
@@ -860,75 +860,65 @@ class NamidaMiniPlayer extends StatelessWidget {
                             offset: Offset(0, bottomOffset + (-maxOffset / 4.4 * p)),
                             child: Align(
                               alignment: Alignment.bottomLeft,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Obx(
-                                    () {
-                                      final seekValue = MiniPlayerController.inst.seekValue.value;
-                                      final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPosition;
-                                      final durInMs = currentDurationInMS;
-                                      final percentage = (position / durInMs).clamp(0.0, durInMs.toDouble());
-                                      const horizontalPadding = 16.0;
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
-                                        child: Stack(
-                                          children: [
-                                            WaveformComponent(
-                                              key: Key("$currentTrack$currentIndex${context.theme.colorScheme}"),
-                                              color: context.theme.colorScheme.onBackground.withAlpha(40),
-                                            ),
-                                            ShaderMask(
-                                              blendMode: BlendMode.srcIn,
-                                              shaderCallback: (Rect bounds) {
-                                                return LinearGradient(
-                                                  tileMode: TileMode.decal,
-                                                  stops: [0.0, percentage, percentage + 0.005, 1.0],
-                                                  colors: [
-                                                    Color.alphaBlend(CurrentColor.inst.color.withAlpha(220), context.theme.colorScheme.onBackground).withAlpha(255),
-                                                    Color.alphaBlend(CurrentColor.inst.color.withAlpha(180), context.theme.colorScheme.onBackground).withAlpha(255),
-                                                    Colors.transparent,
-                                                    Colors.transparent,
-                                                  ],
-                                                ).createShader(bounds);
-                                              },
-                                              child: SizedBox(
-                                                width: Get.width - horizontalPadding / 2,
-                                                child: LayoutBuilder(
-                                                  builder: (context, constraints) {
-                                                    void onSeekDragUpdate(double deltax) {
-                                                      final percentageSwiped = deltax / constraints.maxWidth;
-                                                      final newSeek = percentageSwiped * currentDurationInMS;
-                                                      MiniPlayerController.inst.seekValue.value = newSeek.toInt();
-                                                    }
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                child: LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    void onSeekDragUpdate(double deltax) {
+                                      final percentageSwiped = deltax / constraints.maxWidth;
+                                      final newSeek = percentageSwiped * currentDurationInMS;
+                                      MiniPlayerController.inst.seekValue.value = newSeek.toInt();
+                                    }
 
-                                                    void onSeekEnd() {
-                                                      final ms = MiniPlayerController.inst.seekValue.value;
-                                                      Player.inst.seek(Duration(milliseconds: ms));
-                                                      MiniPlayerController.inst.seekValue.value = 0;
-                                                    }
+                                    void onSeekEnd() {
+                                      final ms = MiniPlayerController.inst.seekValue.value;
+                                      Player.inst.seek(Duration(milliseconds: ms));
+                                      MiniPlayerController.inst.seekValue.value = 0;
+                                    }
 
-                                                    return GestureDetector(
-                                                      onTapDown: (details) => onSeekDragUpdate(details.localPosition.dx),
-                                                      onTapUp: (details) => onSeekEnd(),
-                                                      onTapCancel: () => MiniPlayerController.inst.seekValue.value = 0,
-                                                      onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx),
-                                                      onHorizontalDragEnd: (details) => onSeekEnd(),
-                                                      child: WaveformComponent(
-                                                        key: Key("$currentTrack$currentIndex${context.theme.colorScheme}"),
-                                                        color: context.theme.colorScheme.onBackground.withAlpha(110),
-                                                      ),
-                                                    );
-                                                  },
+                                    return GestureDetector(
+                                      onTapDown: (details) => onSeekDragUpdate(details.localPosition.dx),
+                                      onTapUp: (details) => onSeekEnd(),
+                                      onTapCancel: () => MiniPlayerController.inst.seekValue.value = 0,
+                                      onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx),
+                                      onHorizontalDragEnd: (details) => onSeekEnd(),
+                                      child: WaveformComponent(
+                                        key: const Key('waveform_widget'),
+                                        color: context.theme.colorScheme.onBackground.withAlpha(40),
+                                        barsColorOnTop: context.theme.colorScheme.onBackground.withAlpha(110),
+                                        widgetOnTop: (barsWidgetWithDiffColor) {
+                                          return Obx(
+                                            () {
+                                              final seekValue = MiniPlayerController.inst.seekValue.value;
+                                              final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPosition;
+                                              final durInMs = currentDurationInMS;
+                                              final percentage = (position / durInMs).clamp(0.0, durInMs.toDouble());
+                                              return ShaderMask(
+                                                blendMode: BlendMode.srcIn,
+                                                shaderCallback: (Rect bounds) {
+                                                  return LinearGradient(
+                                                    tileMode: TileMode.decal,
+                                                    stops: [0.0, percentage, percentage + 0.005, 1.0],
+                                                    colors: [
+                                                      Color.alphaBlend(CurrentColor.inst.color.withAlpha(220), context.theme.colorScheme.onBackground),
+                                                      Color.alphaBlend(CurrentColor.inst.color.withAlpha(180), context.theme.colorScheme.onBackground),
+                                                      Colors.transparent,
+                                                      Colors.transparent,
+                                                    ],
+                                                  ).createShader(bounds);
+                                                },
+                                                child: SizedBox(
+                                                  width: Get.width - 16.0 / 2,
+                                                  child: barsWidgetWithDiffColor,
                                                 ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ],
+                                              );
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                           ),
@@ -950,6 +940,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                     children: [
                                       Obx(
                                         () => NamidaListView(
+                                          key: const PageStorageKey('miniplayer_queue'),
                                           itemExtents: Player.inst.currentQueue.toTrackItemExtents(),
                                           scrollController: MiniPlayerController.inst.queueScrollController,
                                           padding: EdgeInsets.only(bottom: 56.0 + SelectedTracksController.inst.bottomPadding.value),

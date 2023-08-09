@@ -10,7 +10,6 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -324,57 +323,6 @@ class ExtrasSettings extends StatelessWidget {
               value: SettingsController.inst.enableSearchCleanup.value,
               onChanged: (p0) => SettingsController.inst.save(enableSearchCleanup: !p0),
             ),
-          ),
-          CustomListTile(
-            icon: Broken.sound,
-            title: Language.inst.GENERATE_ALL_WAVEFORM_DATA,
-            trailing: Obx(
-              () => Column(
-                children: [
-                  Text("${Indexer.inst.waveformsInStorage.value}/${allTracksInLibrary.length}"),
-                  if (WaveformController.inst.generatingAllWaveforms.value) const LoadingIndicator(),
-                ],
-              ),
-            ),
-            onTap: () async {
-              if (WaveformController.inst.generatingAllWaveforms.value) {
-                NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    title: Language.inst.NOTE,
-                    bodyText: Language.inst.FORCE_STOP_WAVEFORM_GENERATION,
-                    actions: [
-                      const CancelButton(),
-                      NamidaButton(
-                        text: Language.inst.STOP,
-                        onPressed: () {
-                          WaveformController.inst.generatingAllWaveforms.value = false;
-                          NamidaNavigator.inst.closeDialog();
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              } else {
-                NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    title: Language.inst.NOTE,
-                    bodyText: Language.inst.GENERATE_ALL_WAVEFORM_DATA_SUBTITLE
-                        .replaceFirst('_WAVEFORM_CURRENT_LENGTH_', '${Indexer.inst.waveformsInStorage.value}')
-                        .replaceFirst('_WAVEFORM_TOTAL_LENGTH_', '${allTracksInLibrary.length}'),
-                    actions: [
-                      const CancelButton(),
-                      NamidaButton(
-                        text: Language.inst.GENERATE,
-                        onPressed: () {
-                          WaveformController.inst.generateAllWaveforms();
-                          NamidaNavigator.inst.closeDialog();
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              }
-            },
           ),
           CustomListTile(
             icon: Broken.colorfilter,

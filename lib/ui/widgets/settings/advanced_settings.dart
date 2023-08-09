@@ -226,36 +226,6 @@ class AdvancedSettings extends StatelessWidget {
           Obx(
             () => CustomListTile(
               leading: const StackedIcon(
-                baseIcon: Broken.sound,
-                secondaryIcon: Broken.close_circle,
-              ),
-              title: Language.inst.CLEAR_WAVEFORM_DATA,
-              trailingText: Indexer.inst.waveformsSizeInStorage.value.fileSizeFormatted,
-              onTap: () {
-                NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    isWarning: true,
-                    normalTitleStyle: true,
-                    title: Language.inst.CLEAR_WAVEFORM_DATA,
-                    bodyText: Language.inst.CLEAR_WAVEFORM_DATA_WARNING,
-                    actions: [
-                      const CancelButton(),
-                      NamidaButton(
-                        text: Language.inst.CLEAR.toUpperCase(),
-                        onPressed: () {
-                          NamidaNavigator.inst.closeDialog();
-                          Indexer.inst.clearWaveformData();
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-          Obx(
-            () => CustomListTile(
-              leading: const StackedIcon(
                 baseIcon: Broken.video,
                 secondaryIcon: Broken.close_circle,
               ),

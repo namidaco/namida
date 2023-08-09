@@ -63,8 +63,6 @@ class LanguageKeys {
   late String CLEAR_VIDEO_CACHE_NOTE;
   late String CLEAR_VIDEO_CACHE_SUBTITLE;
   late String CLEAR_VIDEO_CACHE;
-  late String CLEAR_WAVEFORM_DATA_WARNING;
-  late String CLEAR_WAVEFORM_DATA;
   late String CLEAR;
   late String CLOCK;
   late String COLOR_PALETTE;
@@ -185,11 +183,8 @@ class LanguageKeys {
   late String FORCE_SQUARED_THUMBNAIL_NOTE;
   late String FORCE_SQUARED_TRACK_THUMBNAIL;
   late String FORCE_STOP_COLOR_PALETTE_GENERATION;
-  late String FORCE_STOP_WAVEFORM_GENERATION;
   late String FORMAT;
   late String FROM_NOW;
-  late String GENERATE_ALL_WAVEFORM_DATA_SUBTITLE;
-  late String GENERATE_ALL_WAVEFORM_DATA;
   late String GENERATE_FROM_DATES_SUBTITLE;
   late String GENERATE_FROM_DATES;
   late String GENERATE;
@@ -486,8 +481,6 @@ class LanguageKeys {
   late String VIEW_ALL;
   late String WARNING;
   late String WAVEFORM_BARS_COUNT;
-  late String WAVEFORM_DATA;
-  late String WAVEFORMS_DATA;
   late String WAVEFORMS;
   late String YEAR;
   late String YES;

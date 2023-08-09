@@ -61,7 +61,6 @@ void main() async {
   await createDirectories([
     k_DIR_ARTWORKS,
     k_DIR_PALETTES,
-    k_DIR_WAVEFORMS,
     k_DIR_VIDEOS_CACHE,
     k_DIR_VIDEOS_CACHE_TEMP,
     k_DIR_THUMBNAILS,
@@ -89,7 +88,6 @@ void main() async {
 
   /// updates values on startup
   Indexer.inst.updateImageSizeInStorage();
-  Indexer.inst.updateWaveformSizeInStorage();
   Indexer.inst.updateColorPalettesSizeInStorage();
   Indexer.inst.updateVideosSizeInStorage();
 

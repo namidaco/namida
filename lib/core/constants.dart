@@ -14,8 +14,8 @@ String k_DIR_APP_INTERNAL_STORAGE = '';
 
 final Set<String> kStoragePaths = {};
 final Set<String> kDirectoriesPaths = {};
-final List<double> kDefaultWaveFormData = List<double>.filled(1000, 0.02);
-final List<double> kDefaultScaleList = List<double>.filled(500, 0.01);
+final List<double> kDefaultWaveFormData = List<double>.filled(1, 2.0);
+final List<double> kDefaultScaleList = List<double>.filled(1, 0.01);
 final RegExp kYoutubeRegex = RegExp(
   r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)(?:\S+)?',
   caseSensitive: false,
@@ -45,7 +45,6 @@ final String k_DIR_PLAYLISTS = '$k_DIR_USER_DATA/Playlists/';
 final String k_DIR_QUEUES = '$k_DIR_USER_DATA/Queues/';
 final String k_DIR_ARTWORKS = '$k_DIR_USER_DATA/Artworks/';
 final String k_DIR_PALETTES = '$k_DIR_USER_DATA/Palettes/';
-final String k_DIR_WAVEFORMS = '$k_DIR_USER_DATA/Waveforms/';
 final String k_DIR_VIDEOS_CACHE = '$k_DIR_USER_DATA/Videos/';
 final String k_DIR_VIDEOS_CACHE_TEMP = '$k_DIR_USER_DATA/Videos/Temp/';
 final String k_DIR_THUMBNAILS = '$k_DIR_USER_DATA/Thumbnails/';

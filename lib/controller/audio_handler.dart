@@ -497,6 +497,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   Future<void> playFunction(Selectable item, bool startPlaying) async {
     final tr = item.track;
     VideoController.inst.updateCurrentVideo(tr);
+    WaveformController.inst.generateWaveform(tr);
 
     /// The whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture] don't get detected.
     try {
@@ -521,7 +522,6 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
     }
 
     startSleepAfterMinCount(tr);
-    WaveformController.inst.generateWaveform(tr);
     HistoryController.inst.startCounterToAListen(tr);
     increaseListenTime(tr);
     SettingsController.inst.save(lastPlayedTrackPath: tr.path);

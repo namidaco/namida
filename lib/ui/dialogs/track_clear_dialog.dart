@@ -29,16 +29,6 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) {
                 NamidaNavigator.inst.closeDialog();
               },
             ),
-          if (tracks.hasWaveformCached)
-            CustomListTile(
-              passedColor: colorScheme,
-              title: isSingle ? Language.inst.WAVEFORM_DATA : Language.inst.WAVEFORMS_DATA,
-              icon: Broken.sound,
-              onTap: () async {
-                await EditDeleteController.inst.deleteWaveFormData(tracks);
-                NamidaNavigator.inst.closeDialog();
-              },
-            ),
           if (tracks.hasLyricsCached)
             CustomListTile(
               passedColor: colorScheme,

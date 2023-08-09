@@ -1,10 +1,9 @@
-import 'dart:io';
+import 'dart:math';
 
-import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:get/get.dart';
+import 'package:waveform_extractor/waveform_extractor.dart';
 
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -15,146 +14,60 @@ class WaveformController {
   static final WaveformController _instance = WaveformController._internal();
   WaveformController._internal();
 
-  final RxList<double> curentWaveform = kDefaultWaveFormData.obs;
-  final RxBool generatingAllWaveforms = false.obs;
-
+  final RxList<double> currentWaveform = kDefaultWaveFormData.obs;
+  final RxDouble barWidth = 1.0.obs;
   final RxMap<int, double> _currentScaleMap = <int, double>{}.obs;
 
   int retryNumber = 0;
 
-  int _getlistSize(int durationInMs) => durationInMs ~/ 50 - 1; // each 50ms
-
-  /// Extracts waveform data from a given track, or immediately read from .wave file if exists, then assigns wavedata to [curentWaveform].
+  /// Extracts waveform data from a given track, or immediately read from .wave file if exists, then assigns wavedata to [currentWaveform].
   ///
   /// Has a timeout of 3 minutes, otherwise it will assign [kDefaultWaveFormData] permanently.
   Future<void> generateWaveform(Track track) async {
-    final wavePath = "$k_DIR_WAVEFORMS${track.filename}.wave";
-    final waveFile = File(wavePath);
-    final numberOfScales = _getlistSize(track.duration * 1000);
+    currentWaveform
+      ..clear()
+      ..addAll(kDefaultWaveFormData);
 
-    // If Waveform file exists in storage
-    if (await waveFile.existsAndValid()) {
-      try {
-        final waveform = List<double>.from(await waveFile.readAsJson() ?? []);
+    const maxSampleRate = 400;
+    final scaledDuration = 0.4 * track.duration;
+    final scaledSampleRate = maxSampleRate * (exp(-scaledDuration / 100));
 
-        // A Delay to prevent glitches caused by theme change
-        Future.delayed(const Duration(milliseconds: 400), () async {
-          curentWaveform.assignAll(_increaseListToMax(waveform));
-          final dList = changeListSize(waveform, numberOfScales);
-          _updateScaleMap(dList);
-        });
-      } catch (e) {
-        printy(e, isError: true);
-      }
-    }
-    // If Waveform file does NOT exist in storage
-    else {
-      /// A Delay to prevent glitches caused by theme change
-      Future.delayed(const Duration(milliseconds: 400), () async {
-        curentWaveform.assignAll(kDefaultWaveFormData);
-        final dList = changeListSize(kDefaultScaleList, numberOfScales);
-        _updateScaleMap(dList);
-      });
+    final samplePerSecond = scaledSampleRate.toInt().clamp(1, maxSampleRate);
 
-      await waveFile.create();
+    List<int> waveformData = [];
+    await Future.wait([
+      _waveformExtractor.extractWaveformDataOnly(track.path, samplePerSecond: samplePerSecond).then((value) {
+        waveformData = value;
+      }),
+      Future.delayed(const Duration(milliseconds: 800)),
+    ]);
 
-      List<double> waveformData = kDefaultWaveFormData;
-      // creates a new instance to prevent extracting from the same file.
-      // currently this won't be performant when the user plays multiple files at once
-      try {
-        waveformData = await PlayerController().extractWaveformData(path: track.path, noOfSamples: 1000).timeout(const Duration(minutes: 3));
-        retryNumber = 0;
-      } catch (e) {
-        retryNumber++;
-        if (retryNumber < 3) {
-          await waveFile.delete();
-          await generateWaveform(track);
-        }
-        printy(e, isError: true);
-      }
+    if (track == Player.inst.nowPlayingTrack) {
+      // ----- Updating [currentWaveform]
+      final downscaled = waveformData.changeListSize(targetSize: 2000);
+      currentWaveform
+        ..clear()
+        ..addAll(downscaled);
 
-      if (track == Player.inst.nowPlayingTrack) {
-        curentWaveform.assignAll(_increaseListToMax(waveformData));
-        final dList = changeListSize(waveformData, numberOfScales);
-        _updateScaleMap(dList);
-      }
-
-      await waveFile.writeAsString(waveformData.toString());
-      Indexer.inst.updateWaveformSizeInStorage(waveFile);
+      // ----- Updating [currentScale]
+      final numberOfScales = (track.duration * 1000) ~/ 50;
+      final dList = waveformData.changeListSize(targetSize: numberOfScales, multiplier: 0.003);
+      _updateScaleMap(dList);
     }
   }
 
   void _updateScaleMap(List<double> doubleList) {
-    for (int index = 0; index < doubleList.length; index++) {
-      _currentScaleMap[index] = doubleList[index];
-    }
-  }
-
-  Future<void> generateAllWaveforms() async {
-    Directory(k_DIR_WAVEFORMS).create();
-
-    generatingAllWaveforms.value = true;
-
-    for (final tr in allTracksInLibrary) {
-      if (!generatingAllWaveforms.value) {
-        break;
-      }
-      await generateWaveform(tr);
-    }
-    generatingAllWaveforms.value = false;
+    _currentScaleMap.value = doubleList.asMap();
   }
 
   double getCurrentAnimatingScale(int positionInMs) {
-    final bitScale = positionInMs ~/ 50 - 1;
+    final bitScale = positionInMs ~/ 50 + 0; // TODO: expose this 0 as a calibration
     final dynamicScale = _currentScaleMap[bitScale] ?? 0.01;
     final intensity = SettingsController.inst.animatingThumbnailIntensity.value;
-    final finalScale = dynamicScale * (intensity / 100);
+    final finalScale = dynamicScale * intensity * 0.02;
 
-    return finalScale;
+    return finalScale.isNaN ? 0.01 : finalScale;
   }
 
-  List<double> changeListSize(List<double> list, int n) {
-    if (list.length > n) {
-      // downscale
-      final downscaledList = <double>[];
-      final scaleFactor = (list.length / n).ceil();
-      for (int i = 0; i < n; i++) {
-        double sum = 0.0;
-        int count = 0;
-        for (int j = i * scaleFactor; j < (i + 1) * scaleFactor && j < list.length; j++) {
-          sum += list[j];
-          count++;
-        }
-        downscaledList.add(sum / count);
-      }
-
-      // removes NaN values
-      downscaledList.removeWhere((value) => value.isNaN);
-
-      return downscaledList;
-    } else {
-      // upscale
-      final double step = (list.length - 1) / (n - 1);
-
-      final finalList = List<double>.generate(n, (i) {
-        final double index = i * step;
-        final int lowerIndex = index.floor();
-        final int upperIndex = index.ceil();
-        if (upperIndex >= list.length) {
-          return list.last;
-        } else if (lowerIndex == upperIndex) {
-          return list[lowerIndex];
-        } else {
-          final double weight = index - lowerIndex;
-          return list[lowerIndex] * (1 - weight) + list[upperIndex] * weight;
-        }
-      });
-      return finalList;
-    }
-  }
-
-  Iterable<double> _increaseListToMax(List<double> list) {
-    final max = list.reduce((a, b) => a > b ? a : b);
-    return list.map((value) => value / max / 2.0);
-  }
+  final _waveformExtractor = WaveformExtractor();
 }

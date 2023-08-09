@@ -28,14 +28,6 @@ class EditDeleteController {
     await Player.inst.updateVideoPlayingState();
   }
 
-  Future<void> deleteWaveFormData(List<Selectable> tracks) async {
-    await tracks.loopFuture((track, index) async {
-      final file = File("$k_DIR_WAVEFORMS${track.track.filename}.wave");
-      await Indexer.inst.updateWaveformSizeInStorage(file, true);
-      await file.delete();
-    });
-  }
-
   Future<void> deleteLyrics(List<Selectable> tracks) async {
     await tracks.loopFuture((track, index) async {
       await File("$k_DIR_LYRICS${track.track.filename}.txt").delete();
@@ -102,7 +94,6 @@ class EditDeleteController {
 }
 
 extension HasCachedFiles on List<Selectable> {
-  bool get hasWaveformCached => _doesAnyPathExist(k_DIR_WAVEFORMS, 'wave');
   bool get hasArtworkCached => _doesAnyPathExist(k_DIR_ARTWORKS, 'png');
   bool get hasLyricsCached => _doesAnyPathExist(k_DIR_LYRICS, 'txt');
   bool get hasColorCached => _doesAnyPathExist(k_DIR_PALETTES, 'palette');
@@ -116,7 +107,7 @@ extension HasCachedFiles on List<Selectable> {
     return false;
   }
 
-  bool get hasAnythingCached => hasWaveformCached || hasArtworkCached || hasLyricsCached /* || hasColorCached */;
+  bool get hasAnythingCached => hasArtworkCached || hasLyricsCached /* || hasColorCached */;
 
   bool _doesAnyPathExist(String directory, String extension) {
     for (int i = 0; i < length; i++) {
