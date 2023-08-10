@@ -198,20 +198,23 @@ class Namida extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () => GetMaterialApp(
-        key: Key(SettingsController.inst.selectedLanguage.value.code),
-        themeAnimationDuration: const Duration(milliseconds: kThemeAnimationDurationMS),
-        debugShowCheckedModeBanner: false,
-        title: 'Namida',
-        restorationScopeId: 'Namida',
-        theme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, true),
-        darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, false),
-        themeMode: SettingsController.inst.themeMode.value,
-        builder: (context, widget) {
-          return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
-        },
-        home: const MainPageWrapper(),
-      ),
+      () {
+        final locale = SettingsController.inst.selectedLanguage.value.code.split('_');
+        return GetMaterialApp(
+          key: Key(locale.join()),
+          themeAnimationDuration: const Duration(milliseconds: kThemeAnimationDurationMS),
+          debugShowCheckedModeBanner: false,
+          title: 'Namida',
+          restorationScopeId: 'Namida',
+          theme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, true),
+          darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, false),
+          themeMode: SettingsController.inst.themeMode.value,
+          builder: (context, widget) {
+            return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
+          },
+          home: const MainPageWrapper(),
+        );
+      },
     );
   }
 }

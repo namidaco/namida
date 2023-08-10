@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
+import 'package:namida/class/lang.dart';
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/route.dart';
@@ -110,373 +111,46 @@ extension LibraryTabUtils on LibraryTab {
     return page;
   }
 
-  IconData toIcon() {
-    if (this == LibraryTab.albums) {
-      return Broken.music_dashboard;
-    }
-    if (this == LibraryTab.tracks) {
-      return Broken.music_circle;
-    }
-    if (this == LibraryTab.artists) {
-      return Broken.profile_2user;
-    }
-    if (this == LibraryTab.genres) {
-      return Broken.smileys;
-    }
-    if (this == LibraryTab.playlists) {
-      return Broken.music_library_2;
-    }
-    if (this == LibraryTab.folders) {
-      return Broken.folder;
-    }
-    return Broken.music_circle;
-  }
-
-  String toText() {
-    if (this == LibraryTab.albums) {
-      return Language.inst.ALBUMS;
-    }
-    if (this == LibraryTab.tracks) {
-      return Language.inst.TRACKS;
-    }
-    if (this == LibraryTab.artists) {
-      return Language.inst.ARTISTS;
-    }
-    if (this == LibraryTab.genres) {
-      return Language.inst.GENRES;
-    }
-    if (this == LibraryTab.playlists) {
-      return Language.inst.PLAYLISTS;
-    }
-    if (this == LibraryTab.folders) {
-      return Language.inst.FOLDERS;
-    }
-    return Language.inst.TRACKS;
-  }
+  String toText() => _NamidaConverters.inst.getTitle(this);
+  IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 }
 
 extension SortToText on SortType {
-  String toText() {
-    if (this == SortType.title) {
-      return Language.inst.TITLE;
-    }
-    if (this == SortType.album) {
-      return Language.inst.ALBUM;
-    }
-    if (this == SortType.albumArtist) {
-      return Language.inst.ALBUM_ARTIST;
-    }
-    if (this == SortType.artistsList) {
-      return Language.inst.ARTISTS;
-    }
-    if (this == SortType.bitrate) {
-      return Language.inst.BITRATE;
-    }
-    if (this == SortType.composer) {
-      return Language.inst.COMPOSER;
-    }
-    if (this == SortType.dateAdded) {
-      return Language.inst.DATE_ADDED;
-    }
-    if (this == SortType.dateModified) {
-      return Language.inst.DATE_MODIFIED;
-    }
-    if (this == SortType.discNo) {
-      return Language.inst.DISC_NUMBER;
-    }
-    if (this == SortType.filename) {
-      return Language.inst.FILE_NAME;
-    }
-    if (this == SortType.duration) {
-      return Language.inst.DURATION;
-    }
-    if (this == SortType.genresList) {
-      return Language.inst.GENRES;
-    }
-    if (this == SortType.sampleRate) {
-      return Language.inst.SAMPLE_RATE;
-    }
-    if (this == SortType.size) {
-      return Language.inst.SIZE;
-    }
-    if (this == SortType.year) {
-      return Language.inst.YEAR;
-    }
-    if (this == SortType.rating) {
-      return Language.inst.RATING;
-    }
-    if (this == SortType.shuffle) {
-      return Language.inst.SHUFFLE;
-    }
-
-    return '';
-  }
+  String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
 extension GroupSortToText on GroupSortType {
-  String toText() {
-    if (this == GroupSortType.title) {
-      return Language.inst.TITLE;
-    }
-    if (this == GroupSortType.album) {
-      return Language.inst.ALBUM;
-    }
-    if (this == GroupSortType.albumArtist) {
-      return Language.inst.ALBUM_ARTIST;
-    }
-    if (this == GroupSortType.artistsList) {
-      return Language.inst.ARTIST;
-    }
-    if (this == GroupSortType.genresList) {
-      return Language.inst.GENRES;
-    }
-
-    if (this == GroupSortType.composer) {
-      return Language.inst.COMPOSER;
-    }
-    if (this == GroupSortType.dateModified) {
-      return Language.inst.DATE_MODIFIED;
-    }
-    if (this == GroupSortType.duration) {
-      return Language.inst.DURATION;
-    }
-    if (this == GroupSortType.numberOfTracks) {
-      return Language.inst.NUMBER_OF_TRACKS;
-    }
-    if (this == GroupSortType.albumsCount) {
-      return Language.inst.ALBUMS_COUNT;
-    }
-    if (this == GroupSortType.year) {
-      return Language.inst.YEAR;
-    }
-    if (this == GroupSortType.creationDate) {
-      return Language.inst.DATE_CREATED;
-    }
-    if (this == GroupSortType.modifiedDate) {
-      return Language.inst.DATE_MODIFIED;
-    }
-    if (this == GroupSortType.shuffle) {
-      return Language.inst.SHUFFLE;
-    }
-
-    return '';
-  }
+  String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
 extension YTVideoQuality on String {
   String settingLabeltoVideoLabel() {
     final val = split('p').first;
-    String vl = '144';
-    switch (val) {
-      case '144':
-        vl = '144';
-        break;
-      case '240':
-        vl = '240';
-        break;
-      case '360':
-        vl = '360';
-        break;
-      case '480':
-        vl = '480';
-        break;
-      case '720':
-        vl = '720';
-        break;
-
-      case '1080':
-        vl = '1080';
-        break;
-      case '2k':
-        vl = '1440';
-        break;
-      case '4k':
-        vl = '2160';
-        break;
-      case '8k':
-        vl = '4320';
-        break;
-
-      default:
-        null;
-    }
-
-    return vl;
+    return <String, String>{
+          '144': '144',
+          '240': '240',
+          '360': '360',
+          '480': '480',
+          '720': '720',
+          '1080': '1080',
+          '2k': '1440',
+          '4k': '2160',
+          '8k': '4320',
+        }[val] ??
+        '144';
   }
 }
 
 extension VideoSource on VideoPlaybackSource {
-  String toText() {
-    String s = '';
-    switch (this) {
-      case VideoPlaybackSource.auto:
-        s = Language.inst.AUTO;
-        break;
-      case VideoPlaybackSource.youtube:
-        s = Language.inst.VIDEO_PLAYBACK_SOURCE_YOUTUBE;
-        break;
-      case VideoPlaybackSource.local:
-        s = Language.inst.VIDEO_PLAYBACK_SOURCE_LOCAL;
-        break;
-      default:
-        null;
-    }
-    return s;
-  }
+  String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
 extension TrackItemSubstring on TrackTileItem {
-  String toText() {
-    String t = '';
-    if (this == TrackTileItem.none) {
-      t = Language.inst.NONE;
-    }
-    if (this == TrackTileItem.title) {
-      t = Language.inst.TITLE;
-    }
-    if (this == TrackTileItem.artists) {
-      t = Language.inst.ARTISTS;
-    }
-    if (this == TrackTileItem.album) {
-      t = Language.inst.ALBUM;
-    }
-
-    if (this == TrackTileItem.albumArtist) {
-      t = Language.inst.ALBUM_ARTIST;
-    }
-    if (this == TrackTileItem.genres) {
-      t = Language.inst.GENRES;
-    }
-
-    if (this == TrackTileItem.composer) {
-      t = Language.inst.COMPOSER;
-    }
-    if (this == TrackTileItem.year) {
-      t = Language.inst.YEAR;
-    }
-
-    if (this == TrackTileItem.bitrate) {
-      t = Language.inst.BITRATE;
-    }
-    if (this == TrackTileItem.channels) {
-      t = Language.inst.CHANNELS;
-    }
-
-    if (this == TrackTileItem.comment) {
-      t = Language.inst.COMMENT;
-    }
-    if (this == TrackTileItem.dateAdded) {
-      t = Language.inst.DATE_ADDED;
-    }
-
-    if (this == TrackTileItem.dateModified) {
-      t = Language.inst.DATE_MODIFIED;
-    }
-    if (this == TrackTileItem.dateModifiedClock) {
-      t = "${Language.inst.DATE_MODIFIED} (${Language.inst.CLOCK})";
-    }
-    if (this == TrackTileItem.dateModifiedDate) {
-      t = "${Language.inst.DATE_MODIFIED} (${Language.inst.DATE})";
-    }
-    if (this == TrackTileItem.discNumber) {
-      t = Language.inst.DISC_NUMBER;
-    }
-    if (this == TrackTileItem.trackNumber) {
-      t = Language.inst.TRACK_NUMBER;
-    }
-    if (this == TrackTileItem.duration) {
-      t = Language.inst.DURATION;
-    }
-    if (this == TrackTileItem.fileName) {
-      t = Language.inst.FILE_NAME;
-    }
-    if (this == TrackTileItem.fileNameWOExt) {
-      t = Language.inst.FILE_NAME_WO_EXT;
-    }
-    if (this == TrackTileItem.extension) {
-      t = Language.inst.EXTENSION;
-    }
-    if (this == TrackTileItem.folder) {
-      t = Language.inst.FOLDER_NAME;
-    }
-
-    if (this == TrackTileItem.format) {
-      t = Language.inst.FORMAT;
-    }
-    if (this == TrackTileItem.path) {
-      t = Language.inst.PATH;
-    }
-
-    if (this == TrackTileItem.sampleRate) {
-      t = Language.inst.SAMPLE_RATE;
-    }
-    if (this == TrackTileItem.size) {
-      t = Language.inst.SIZE;
-    }
-
-    if (this == TrackTileItem.rating) {
-      t = Language.inst.RATING;
-    }
-    if (this == TrackTileItem.moods) {
-      t = Language.inst.MOODS;
-    }
-    if (this == TrackTileItem.tags) {
-      t = Language.inst.TAGS;
-    }
-
-    return t;
-  }
+  String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
 extension QUEUESOURCEtoTRACKS on QueueSource {
-  String toText() {
-    String s = '';
-    if (this == QueueSource.allTracks) {
-      s = Language.inst.TRACKS;
-    }
-    // onMediaTap should have handled it already.
-    if (this == QueueSource.album) {
-      s = Language.inst.ALBUM;
-    }
-    if (this == QueueSource.artist) {
-      s = Language.inst.ARTIST;
-    }
-    if (this == QueueSource.genre) {
-      s = Language.inst.GENRE;
-    }
-    if (this == QueueSource.playlist) {
-      s = Language.inst.PLAYLIST;
-    }
-    if (this == QueueSource.favourites) {
-      s = Language.inst.FAVOURITES;
-    }
-    if (this == QueueSource.history) {
-      s = Language.inst.HISTORY;
-    }
-    if (this == QueueSource.mostPlayed) {
-      s = Language.inst.MOST_PLAYED;
-    }
-    if (this == QueueSource.folder) {
-      s = Language.inst.FOLDER;
-    }
-    if (this == QueueSource.search) {
-      s = Language.inst.SEARCH;
-    }
-
-    if (this == QueueSource.playerQueue) {
-      s = Language.inst.QUEUE;
-    }
-    if (this == QueueSource.queuePage) {
-      s = Language.inst.QUEUES;
-    }
-    if (this == QueueSource.selectedTracks) {
-      s = Language.inst.SELECTED_TRACKS;
-    }
-    if (this == QueueSource.externalFile) {
-      s = Language.inst.EXTERNAL_FILES;
-    }
-    return s;
-  }
+  String toText() => _NamidaConverters.inst.getTitle(this);
 
   List<Selectable> toTracks([int? limit, int? dayOfHistory]) {
     final trs = <Selectable>[];
@@ -546,205 +220,25 @@ extension PlaylistToQueueSource on Playlist {
 }
 
 extension WAKELOCKMODETEXT on WakelockMode {
-  String toText() {
-    if (this == WakelockMode.none) {
-      return Language.inst.KEEP_SCREEN_AWAKE_NONE;
-    }
-    if (this == WakelockMode.expanded) {
-      return Language.inst.KEEP_SCREEN_AWAKE_MINIPLAYER_EXPANDED;
-    }
-    if (this == WakelockMode.expandedAndVideo) {
-      return Language.inst.KEEP_SCREEN_AWAKE_MINIPLAYER_EXPANDED_AND_VIDEO;
-    }
-    return '';
-  }
+  String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
 extension TRACKPLAYMODE on TrackPlayMode {
-  String toText() {
-    if (this == TrackPlayMode.selectedTrack) {
-      return Language.inst.TRACK_PLAY_MODE_SELECTED_ONLY;
-    }
-    if (this == TrackPlayMode.searchResults) {
-      return Language.inst.TRACK_PLAY_MODE_SEARCH_RESULTS;
-    }
-    if (this == TrackPlayMode.trackAlbum) {
-      return Language.inst.TRACK_PLAY_MODE_TRACK_ALBUM;
-    }
-    if (this == TrackPlayMode.trackArtist) {
-      return Language.inst.TRACK_PLAY_MODE_TRACK_ARTIST;
-    }
-    if (this == TrackPlayMode.trackGenre) {
-      return Language.inst.TRACK_PLAY_MODE_TRACK_GENRE;
-    }
-
-    return '';
-  }
+  String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
 extension TagFieldsUtilsC on TagField {
-  String toText() {
-    if (this == TagField.title) {
-      return Language.inst.TITLE;
-    }
-    if (this == TagField.album) {
-      return Language.inst.ALBUM;
-    }
-    if (this == TagField.artist) {
-      return Language.inst.ARTIST;
-    }
-    if (this == TagField.albumArtist) {
-      return Language.inst.ALBUM_ARTIST;
-    }
-    if (this == TagField.genre) {
-      return Language.inst.GENRE;
-    }
-    if (this == TagField.composer) {
-      return Language.inst.COMPOSER;
-    }
-    if (this == TagField.comment) {
-      return Language.inst.COMMENT;
-    }
-    if (this == TagField.lyrics) {
-      return Language.inst.LYRICS;
-    }
-    if (this == TagField.trackNumber) {
-      return Language.inst.TRACK_NUMBER;
-    }
-    if (this == TagField.discNumber) {
-      return Language.inst.DISC_NUMBER;
-    }
-    if (this == TagField.year) {
-      return Language.inst.YEAR;
-    }
-    if (this == TagField.remixer) {
-      return Language.inst.REMIXER;
-    }
-    if (this == TagField.trackTotal) {
-      return Language.inst.TRACK_NUMBER_TOTAL;
-    }
-    if (this == TagField.discTotal) {
-      return Language.inst.DISC_NUMBER_TOTAL;
-    }
-    if (this == TagField.lyricist) {
-      return Language.inst.LYRICIST;
-    }
-    if (this == TagField.language) {
-      return Language.inst.LANGUAGE;
-    }
-    if (this == TagField.recordLabel) {
-      return Language.inst.RECORD_LABEL;
-    }
-    if (this == TagField.country) {
-      return Language.inst.COUNTRY;
-    }
-    return '';
-  }
-
-  IconData toIcon() {
-    if (this == TagField.title) {
-      return Broken.music;
-    }
-    if (this == TagField.album) {
-      return Broken.music_dashboard;
-    }
-    if (this == TagField.artist) {
-      return Broken.microphone;
-    }
-    if (this == TagField.albumArtist) {
-      return Broken.user;
-    }
-    if (this == TagField.genre) {
-      return Broken.smileys;
-    }
-    if (this == TagField.composer) {
-      return Broken.profile_2user;
-    }
-    if (this == TagField.comment) {
-      return Broken.text_block;
-    }
-    if (this == TagField.lyrics) {
-      return Broken.message_text;
-    }
-    if (this == TagField.trackNumber) {
-      return Broken.hashtag;
-    }
-    if (this == TagField.discNumber) {
-      return Broken.hashtag;
-    }
-    if (this == TagField.year) {
-      return Broken.calendar;
-    }
-    if (this == TagField.remixer) {
-      return Broken.radio;
-    }
-    if (this == TagField.trackTotal) {
-      return Broken.hashtag;
-    }
-    if (this == TagField.discTotal) {
-      return Broken.hashtag;
-    }
-    if (this == TagField.lyricist) {
-      return Broken.pen_add;
-    }
-    if (this == TagField.language) {
-      return Broken.language_circle;
-    }
-    if (this == TagField.recordLabel) {
-      return Broken.ticket;
-    }
-    if (this == TagField.country) {
-      return Broken.house;
-    }
-    return Broken.activity;
-  }
+  String toText() => _NamidaConverters.inst.getTitle(this);
+  IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 }
 
 extension PlayerRepeatModeUtils on RepeatMode {
-  String toText() {
-    if (this == RepeatMode.none) {
-      return Language.inst.REPEAT_MODE_NONE;
-    }
-    if (this == RepeatMode.one) {
-      return Language.inst.REPEAT_MODE_ONE;
-    }
-    if (this == RepeatMode.all) {
-      return Language.inst.REPEAT_MODE_ALL;
-    }
-    if (this == RepeatMode.forNtimes) {
-      return Language.inst.REPEAT_FOR_N_TIMES;
-    }
-    return '';
-  }
-
-  IconData toIcon() {
-    if (this == RepeatMode.none) {
-      return Broken.repeate_music;
-    }
-    if (this == RepeatMode.one) {
-      return Broken.repeate_one;
-    }
-    if (this == RepeatMode.forNtimes) {
-      return Broken.status;
-    }
-    if (this == RepeatMode.all) {
-      return Broken.repeat;
-    }
-
-    return Broken.repeat;
-  }
+  String toText() => _NamidaConverters.inst.getTitle(this);
+  IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 }
 
 extension ThemeUtils on ThemeMode {
-  IconData toIcon() {
-    if (this == ThemeMode.light) {
-      return Broken.sun_1;
-    }
-    if (this == ThemeMode.dark) {
-      return Broken.moon;
-    }
-    return Broken.autobrightness;
-  }
+  IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 }
 
 extension WidgetsPagess on Widget {
@@ -847,22 +341,31 @@ extension RouteUtils on NamidaRoute {
     switch (route) {
       case RouteType.PAGE_allTracks:
         tr.addAll(SearchSortController.inst.trackSearchList);
+        break;
       case RouteType.PAGE_folders:
         tr.addAll(Folders.inst.currentTracks);
+        break;
       case RouteType.SUBPAGE_albumTracks:
         tr.addAll(name.getAlbumTracks());
+        break;
       case RouteType.SUBPAGE_artistTracks:
         tr.addAll(name.getArtistTracks());
+        break;
       case RouteType.SUBPAGE_genreTracks:
         tr.addAll(name.getGenresTracks());
+        break;
       case RouteType.SUBPAGE_queueTracks:
         tr.addAll(name.getQueue()?.tracks ?? []);
+        break;
       case RouteType.SUBPAGE_playlistTracks:
         tr.addAll(PlaylistController.inst.getPlaylist(name)?.tracks ?? []);
+        break;
       case RouteType.SUBPAGE_historyTracks:
         tr.addAll(HistoryController.inst.historyTracks);
+        break;
       case RouteType.SUBPAGE_mostPlayedTracks:
         tr.addAll(HistoryController.inst.mostPlayedTracks);
+        break;
 
       default:
         null;
@@ -900,14 +403,19 @@ extension RouteUtils on NamidaRoute {
     switch (route) {
       case RouteType.SETTINGS_page:
         finalWidget = getTextWidget(Language.inst.SETTINGS);
+        break;
       case RouteType.SETTINGS_subpage:
         finalWidget = getTextWidget(name);
+        break;
       case RouteType.SEARCH_albumResults:
         finalWidget = getTextWidget(Language.inst.ALBUMS);
+        break;
       case RouteType.SEARCH_artistResults:
         finalWidget = getTextWidget(Language.inst.ARTISTS);
+        break;
       case RouteType.PAGE_queue:
         finalWidget = Obx(() => getTextWidget("${Language.inst.QUEUES} • ${QueueController.inst.queuesMap.value.length}"));
+        break;
       default:
         null;
     }
@@ -986,12 +494,16 @@ extension RouteUtils on NamidaRoute {
           switch (route) {
             case RouteType.SUBPAGE_albumTracks:
               NamidaDialogs.inst.showAlbumDialog(name);
+              break;
             case RouteType.SUBPAGE_artistTracks:
               NamidaDialogs.inst.showArtistDialog(name);
+              break;
             case RouteType.SUBPAGE_genreTracks:
               NamidaDialogs.inst.showGenreDialog(name);
+              break;
             case RouteType.SUBPAGE_queueTracks:
               NamidaDialogs.inst.showQueueDialog(int.parse(name));
+              break;
 
             default:
               null;
@@ -1032,16 +544,22 @@ extension RouteUtils on NamidaRoute {
     switch (route) {
       case RouteType.PAGE_allTracks:
         tab = LibraryTab.tracks;
+        break;
       case RouteType.PAGE_albums:
         tab = LibraryTab.albums;
+        break;
       case RouteType.PAGE_artists:
         tab = LibraryTab.artists;
+        break;
       case RouteType.PAGE_genres:
         tab = LibraryTab.genres;
+        break;
       case RouteType.PAGE_folders:
         tab = LibraryTab.folders;
+        break;
       case RouteType.PAGE_playlists:
         tab = LibraryTab.playlists;
+        break;
       default:
         null;
     }
@@ -1087,45 +605,266 @@ extension ThemeDefaultColors on BuildContext {
 }
 
 extension InterruptionMediaUtils on InterruptionType {
-  String toText() {
-    return {
-      InterruptionType.shouldPause: Language.inst.SHOULD_PAUSE,
-      InterruptionType.shouldDuck: Language.inst.SHOULD_DUCK,
-      InterruptionType.unknown: Language.inst.OTHERS,
-    }[this]!;
-  }
-
-  String? toSubtitle() {
-    return {
-      InterruptionType.shouldPause: Language.inst.SHOULD_PAUSE_NOTE,
-      InterruptionType.shouldDuck: Language.inst.SHOULD_DUCK_NOTE,
-      InterruptionType.unknown: null,
-    }[this];
-  }
-
-  IconData toIcon() {
-    return {
-      InterruptionType.shouldPause: Broken.pause_circle,
-      InterruptionType.shouldDuck: Broken.volume_low_1,
-      InterruptionType.unknown: Broken.status,
-    }[this]!;
-  }
+  String toText() => _NamidaConverters.inst.getTitle(this);
+  String? toSubtitle() => _NamidaConverters.inst.getSubtitle(this);
+  IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 }
 
 extension InterruptionActionUtils on InterruptionAction {
-  String toText() {
-    return {
-      InterruptionAction.doNothing: Language.inst.DO_NOTHING,
-      InterruptionAction.duckAudio: Language.inst.DUCK_AUDIO,
-      InterruptionAction.pause: Language.inst.PAUSE_PLAYBACK,
-    }[this]!;
+  String toText() => _NamidaConverters.inst.getTitle(this);
+  IconData toIcon() => _NamidaConverters.inst.getIcon(this);
+}
+
+extension NamidaLanguageRefresher on NamidaLanguage {
+  void refreshConverterMaps() => _NamidaConverters.inst.refillMaps();
+}
+
+class _NamidaConverters {
+  static _NamidaConverters get inst => _instance;
+  static final _NamidaConverters _instance = _NamidaConverters._internal();
+  _NamidaConverters._internal() {
+    refillMaps();
   }
 
-  IconData toIcon() {
-    return {
-      InterruptionAction.doNothing: Broken.minus_cirlce,
-      InterruptionAction.duckAudio: Broken.volume_low_1,
-      InterruptionAction.pause: Broken.pause_circle,
-    }[this]!;
+  void refillMaps() {
+    // =================================================
+    // ====================== Title ====================
+    // =================================================
+    final toTitle = <Type, Map<Enum, String>>{
+      InterruptionAction: {
+        InterruptionAction.doNothing: Language.inst.DO_NOTHING,
+        InterruptionAction.duckAudio: Language.inst.DUCK_AUDIO,
+        InterruptionAction.pause: Language.inst.PAUSE_PLAYBACK,
+      },
+      InterruptionType: {
+        InterruptionType.shouldPause: Language.inst.SHOULD_PAUSE,
+        InterruptionType.shouldDuck: Language.inst.SHOULD_DUCK,
+        InterruptionType.unknown: Language.inst.OTHERS,
+      },
+      RepeatMode: {
+        RepeatMode.none: Language.inst.REPEAT_MODE_NONE,
+        RepeatMode.one: Language.inst.REPEAT_MODE_ONE,
+        RepeatMode.all: Language.inst.REPEAT_MODE_ALL,
+        RepeatMode.forNtimes: Language.inst.REPEAT_FOR_N_TIMES,
+      },
+      LibraryTab: {
+        LibraryTab.albums: Language.inst.ALBUMS,
+        LibraryTab.tracks: Language.inst.TRACKS,
+        LibraryTab.artists: Language.inst.ARTISTS,
+        LibraryTab.genres: Language.inst.GENRES,
+        LibraryTab.playlists: Language.inst.PLAYLISTS,
+        LibraryTab.folders: Language.inst.FOLDERS,
+      },
+      SortType: {
+        SortType.title: Language.inst.TITLE,
+        SortType.album: Language.inst.ALBUM,
+        SortType.albumArtist: Language.inst.ALBUM_ARTIST,
+        SortType.artistsList: Language.inst.ARTISTS,
+        SortType.bitrate: Language.inst.BITRATE,
+        SortType.composer: Language.inst.COMPOSER,
+        SortType.dateAdded: Language.inst.DATE_ADDED,
+        SortType.dateModified: Language.inst.DATE_MODIFIED,
+        SortType.discNo: Language.inst.DISC_NUMBER,
+        SortType.filename: Language.inst.FILE_NAME,
+        SortType.duration: Language.inst.DURATION,
+        SortType.genresList: Language.inst.GENRES,
+        SortType.sampleRate: Language.inst.SAMPLE_RATE,
+        SortType.size: Language.inst.SIZE,
+        SortType.year: Language.inst.YEAR,
+        SortType.rating: Language.inst.RATING,
+        SortType.shuffle: Language.inst.SHUFFLE,
+      },
+      GroupSortType: {
+        GroupSortType.title: Language.inst.TITLE,
+        GroupSortType.album: Language.inst.ALBUM,
+        GroupSortType.albumArtist: Language.inst.ALBUM_ARTIST,
+        GroupSortType.artistsList: Language.inst.ARTIST,
+        GroupSortType.genresList: Language.inst.GENRES,
+        GroupSortType.composer: Language.inst.COMPOSER,
+        GroupSortType.dateModified: Language.inst.DATE_MODIFIED,
+        GroupSortType.duration: Language.inst.DURATION,
+        GroupSortType.numberOfTracks: Language.inst.NUMBER_OF_TRACKS,
+        GroupSortType.albumsCount: Language.inst.ALBUMS_COUNT,
+        GroupSortType.year: Language.inst.YEAR,
+        GroupSortType.creationDate: Language.inst.DATE_CREATED,
+        GroupSortType.modifiedDate: Language.inst.DATE_MODIFIED,
+        GroupSortType.shuffle: Language.inst.SHUFFLE,
+      },
+      TrackTileItem: {
+        TrackTileItem.none: Language.inst.NONE,
+        TrackTileItem.title: Language.inst.TITLE,
+        TrackTileItem.artists: Language.inst.ARTISTS,
+        TrackTileItem.album: Language.inst.ALBUM,
+        TrackTileItem.albumArtist: Language.inst.ALBUM_ARTIST,
+        TrackTileItem.genres: Language.inst.GENRES,
+        TrackTileItem.composer: Language.inst.COMPOSER,
+        TrackTileItem.year: Language.inst.YEAR,
+        TrackTileItem.bitrate: Language.inst.BITRATE,
+        TrackTileItem.channels: Language.inst.CHANNELS,
+        TrackTileItem.comment: Language.inst.COMMENT,
+        TrackTileItem.dateAdded: Language.inst.DATE_ADDED,
+        TrackTileItem.dateModified: Language.inst.DATE_MODIFIED,
+        TrackTileItem.dateModifiedClock: "${Language.inst.DATE_MODIFIED} (${Language.inst.CLOCK})",
+        TrackTileItem.dateModifiedDate: "${Language.inst.DATE_MODIFIED} (${Language.inst.DATE})",
+        TrackTileItem.discNumber: Language.inst.DISC_NUMBER,
+        TrackTileItem.trackNumber: Language.inst.TRACK_NUMBER,
+        TrackTileItem.duration: Language.inst.DURATION,
+        TrackTileItem.fileName: Language.inst.FILE_NAME,
+        TrackTileItem.fileNameWOExt: Language.inst.FILE_NAME_WO_EXT,
+        TrackTileItem.extension: Language.inst.EXTENSION,
+        TrackTileItem.folder: Language.inst.FOLDER_NAME,
+        TrackTileItem.format: Language.inst.FORMAT,
+        TrackTileItem.path: Language.inst.PATH,
+        TrackTileItem.sampleRate: Language.inst.SAMPLE_RATE,
+        TrackTileItem.size: Language.inst.SIZE,
+        TrackTileItem.rating: Language.inst.RATING,
+        TrackTileItem.moods: Language.inst.MOODS,
+        TrackTileItem.tags: Language.inst.TAGS,
+      },
+      QueueSource: {
+        QueueSource.allTracks: Language.inst.TRACKS,
+        QueueSource.album: Language.inst.ALBUM,
+        QueueSource.artist: Language.inst.ARTIST,
+        QueueSource.genre: Language.inst.GENRE,
+        QueueSource.playlist: Language.inst.PLAYLIST,
+        QueueSource.favourites: Language.inst.FAVOURITES,
+        QueueSource.history: Language.inst.HISTORY,
+        QueueSource.mostPlayed: Language.inst.MOST_PLAYED,
+        QueueSource.folder: Language.inst.FOLDER,
+        QueueSource.search: Language.inst.SEARCH,
+        QueueSource.playerQueue: Language.inst.QUEUE,
+        QueueSource.queuePage: Language.inst.QUEUES,
+        QueueSource.selectedTracks: Language.inst.SELECTED_TRACKS,
+        QueueSource.externalFile: Language.inst.EXTERNAL_FILES,
+      },
+      TagField: {
+        TagField.title: Language.inst.TITLE,
+        TagField.album: Language.inst.ALBUM,
+        TagField.artist: Language.inst.ARTIST,
+        TagField.albumArtist: Language.inst.ALBUM_ARTIST,
+        TagField.genre: Language.inst.GENRE,
+        TagField.composer: Language.inst.COMPOSER,
+        TagField.comment: Language.inst.COMMENT,
+        TagField.lyrics: Language.inst.LYRICS,
+        TagField.trackNumber: Language.inst.TRACK_NUMBER,
+        TagField.discNumber: Language.inst.DISC_NUMBER,
+        TagField.year: Language.inst.YEAR,
+        TagField.remixer: Language.inst.REMIXER,
+        TagField.trackTotal: Language.inst.TRACK_NUMBER_TOTAL,
+        TagField.discTotal: Language.inst.DISC_NUMBER_TOTAL,
+        TagField.lyricist: Language.inst.LYRICIST,
+        TagField.language: Language.inst.LANGUAGE,
+        TagField.recordLabel: Language.inst.RECORD_LABEL,
+        TagField.country: Language.inst.COUNTRY,
+      },
+      VideoPlaybackSource: {
+        VideoPlaybackSource.auto: Language.inst.AUTO,
+        VideoPlaybackSource.youtube: Language.inst.VIDEO_PLAYBACK_SOURCE_YOUTUBE,
+        VideoPlaybackSource.local: Language.inst.VIDEO_PLAYBACK_SOURCE_LOCAL,
+      },
+      WakelockMode: {
+        WakelockMode.none: Language.inst.KEEP_SCREEN_AWAKE_NONE,
+        WakelockMode.expanded: Language.inst.KEEP_SCREEN_AWAKE_MINIPLAYER_EXPANDED,
+        WakelockMode.expandedAndVideo: Language.inst.KEEP_SCREEN_AWAKE_MINIPLAYER_EXPANDED_AND_VIDEO,
+      },
+      TrackPlayMode: {
+        TrackPlayMode.selectedTrack: Language.inst.TRACK_PLAY_MODE_SELECTED_ONLY,
+        TrackPlayMode.searchResults: Language.inst.TRACK_PLAY_MODE_SEARCH_RESULTS,
+        TrackPlayMode.trackAlbum: Language.inst.TRACK_PLAY_MODE_TRACK_ALBUM,
+        TrackPlayMode.trackArtist: Language.inst.TRACK_PLAY_MODE_TRACK_ARTIST,
+        TrackPlayMode.trackGenre: Language.inst.TRACK_PLAY_MODE_TRACK_GENRE,
+      }
+    };
+
+    // ====================================================
+    // ====================== Subtitle ====================
+    // ====================================================
+    final toSubtitle = <Type, Map<Enum, String?>>{
+      InterruptionType: {
+        InterruptionType.shouldPause: Language.inst.SHOULD_PAUSE_NOTE,
+        InterruptionType.shouldDuck: Language.inst.SHOULD_DUCK_NOTE,
+        InterruptionType.unknown: null,
+      }
+    };
+
+    // =================================================
+    // ====================== Icons ====================
+    // =================================================
+    final toIcon = <Type, Map<Enum, IconData>>{
+      InterruptionAction: {
+        InterruptionAction.doNothing: Broken.minus_cirlce,
+        InterruptionAction.duckAudio: Broken.volume_low_1,
+        InterruptionAction.pause: Broken.pause_circle,
+      },
+      InterruptionType: {
+        InterruptionType.shouldPause: Broken.pause_circle,
+        InterruptionType.shouldDuck: Broken.volume_low_1,
+        InterruptionType.unknown: Broken.status,
+      },
+      RepeatMode: {
+        RepeatMode.none: Broken.repeate_music,
+        RepeatMode.one: Broken.repeate_one,
+        RepeatMode.all: Broken.repeat,
+        RepeatMode.forNtimes: Broken.status,
+      },
+      ThemeMode: {
+        ThemeMode.light: Broken.sun_1,
+        ThemeMode.dark: Broken.moon,
+        ThemeMode.system: Broken.autobrightness,
+      },
+      LibraryTab: {
+        LibraryTab.albums: Broken.music_dashboard,
+        LibraryTab.tracks: Broken.music_circle,
+        LibraryTab.artists: Broken.profile_2user,
+        LibraryTab.genres: Broken.smileys,
+        LibraryTab.playlists: Broken.music_library_2,
+        LibraryTab.folders: Broken.folder,
+      },
+      TagField: {
+        TagField.title: Broken.music,
+        TagField.album: Broken.music_dashboard,
+        TagField.artist: Broken.microphone,
+        TagField.albumArtist: Broken.user,
+        TagField.genre: Broken.smileys,
+        TagField.composer: Broken.profile_2user,
+        TagField.comment: Broken.text_block,
+        TagField.lyrics: Broken.message_text,
+        TagField.trackNumber: Broken.hashtag,
+        TagField.discNumber: Broken.hashtag,
+        TagField.year: Broken.calendar,
+        TagField.remixer: Broken.radio,
+        TagField.trackTotal: Broken.hashtag,
+        TagField.discTotal: Broken.hashtag,
+        TagField.lyricist: Broken.pen_add,
+        TagField.language: Broken.language_circle,
+        TagField.recordLabel: Broken.ticket,
+        TagField.country: Broken.house,
+      }
+    };
+    _toTitle
+      ..clear()
+      ..addAll(toTitle);
+    _toSubtitle
+      ..clear()
+      ..addAll(toSubtitle);
+    _toIcon
+      ..clear()
+      ..addAll(toIcon);
+  }
+
+  final _toTitle = <Type, Map<Enum, String>>{};
+  final _toSubtitle = <Type, Map<Enum, String?>>{};
+  final _toIcon = <Type, Map<Enum, IconData>>{};
+
+  String getTitle(Enum enumValue) {
+    return _toTitle[enumValue.runtimeType]![enumValue]!;
+  }
+
+  String? getSubtitle(Enum enumValue) {
+    return _toSubtitle[enumValue.runtimeType]?[enumValue];
+  }
+
+  IconData getIcon(Enum enumValue) {
+    return _toIcon[enumValue.runtimeType]![enumValue]!;
   }
 }
