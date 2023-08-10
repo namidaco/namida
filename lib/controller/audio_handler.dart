@@ -229,6 +229,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
         /// saves the file each 20 seconds.
         final sec = _totalListenedTimeInSec.value;
         if (sec % 20 == 0) {
+          _updateTrackLastPosition(currentTrack.track, currentPositionMS);
           await File(k_FILE_PATH_TOTAL_LISTEN_TIME).writeAsString(sec.toString());
         }
       }
@@ -253,7 +254,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
     });
   }
 
-  Future<void> updateTrackLastPosition(Track track, int lastPositionMS) async {
+  Future<void> _updateTrackLastPosition(Track track, int lastPositionMS) async {
     /// Saves a starting position in case the remaining was less than 30 seconds.
     final remaining = (track.duration * 1000) - lastPositionMS;
     final positionToSave = remaining <= 30000 ? 0 : lastPositionMS;
@@ -373,6 +374,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
 
   @override
   Future<void> pause() async {
+    _updateTrackLastPosition(currentTrack.track, currentPositionMS);
     _wantToPause = true;
     if (SettingsController.inst.enableVolumeFadeOnPlayPause.value && currentPositionMS > 200) {
       await pauseWithFadeEffect();
@@ -384,6 +386,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
 
   @override
   Future<void> seek(Duration position) async {
+    _updateTrackLastPosition(currentTrack.track, currentPositionMS);
     int p = position.inMilliseconds;
     if (p < 0) {
       p = 0;
@@ -432,7 +435,10 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   }
 
   @override
-  Future<void> stop() async => await _player.stop();
+  Future<void> stop() async {
+    _updateTrackLastPosition(currentTrack.track, currentPositionMS);
+    await _player.stop();
+  }
 
   @override
   Future<void> fastForward() async {
@@ -494,7 +500,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   // ================================== QueueManager Overriden ====================================
   @override
   void beforePlaying() async {
-    updateTrackLastPosition(currentTrack.track, currentPositionMS);
+    _updateTrackLastPosition(currentTrack.track, currentPositionMS);
   }
 
   @override
