@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:animated_background/animated_background.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
@@ -1093,6 +1094,135 @@ class NamidaMiniPlayer extends StatelessWidget {
   }
 
   Widget _addTracksButton(BuildContext context, Track currentTrack) {
+    final shouldShowConfigureIcon = false.obs;
+
+    void openQueueInsertionConfigure(QueueInsertionType insertionType, String title) {
+      final qinsertion = insertionType.toQueueInsertion();
+      final tracksNo = qinsertion.numberOfTracks.obs;
+      final insertN = qinsertion.insertNext.obs;
+      final sortBy = qinsertion.sortBy.obs;
+      final maxCount = 200.withMaximum(allTracksInLibrary.length);
+      NamidaNavigator.inst.navigateDialog(
+        dialog: CustomBlurryDialog(
+          title: Language.inst.CONFIGURE,
+          actions: [
+            const CancelButton(),
+            NamidaButton(
+              text: Language.inst.SAVE,
+              onPressed: () {
+                SettingsController.inst.updateQueueInsertion(
+                  insertionType,
+                  QueueInsertion(
+                    numberOfTracks: tracksNo.value,
+                    insertNext: insertN.value,
+                    sortBy: sortBy.value,
+                  ),
+                );
+                NamidaNavigator.inst.closeDialog();
+              },
+            )
+          ],
+          child: Column(
+            children: [
+              NamidaInkWell(
+                bgColor: context.theme.cardColor,
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                child: Text(title, style: context.textTheme.displayLarge),
+              ),
+              const SizedBox(height: 24.0),
+              CustomListTile(
+                icon: Broken.computing,
+                title: Language.inst.NUMBER_OF_TRACKS,
+                subtitle: "${Language.inst.UNLIMITED}-$maxCount",
+                trailing: Obx(
+                  () => NamidaWheelSlider(
+                    totalCount: maxCount,
+                    initValue: tracksNo.value,
+                    itemSize: 1,
+                    squeeze: 0.3,
+                    onValueChanged: (val) => tracksNo.value = val,
+                    text: tracksNo.value == 0 ? Language.inst.UNLIMITED : '${tracksNo.value}',
+                  ),
+                ),
+              ),
+              Obx(
+                () => CustomSwitchListTile(
+                  icon: Broken.next,
+                  title: Language.inst.PLAY_NEXT,
+                  value: insertN.value,
+                  onChanged: (isTrue) => insertN.value = !isTrue,
+                ),
+              ),
+              CustomListTile(
+                icon: Broken.sort,
+                title: Language.inst.SORT_BY,
+                trailingRaw: PopupMenuButton<InsertionSortingType>(
+                  child: Obx(
+                    () => Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(sortBy.value.toIcon(), size: 18.0),
+                        const SizedBox(width: 8.0),
+                        Text(sortBy.value.toText()),
+                      ],
+                    ),
+                  ),
+                  itemBuilder: (context) {
+                    return <PopupMenuEntry<InsertionSortingType>>[
+                      ...InsertionSortingType.values
+                          .map(
+                            (e) => PopupMenuItem(
+                              value: e,
+                              child: Row(
+                                children: [
+                                  Icon(e.toIcon(), size: 20.0),
+                                  const SizedBox(width: 8.0),
+                                  Text(e.toText()),
+                                ],
+                              ),
+                            ),
+                          )
+                          .toList()
+                    ];
+                  },
+                  onSelected: (value) => sortBy.value = value,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    Widget getAddTracksTile({
+      required String title,
+      required String subtitle,
+      required IconData icon,
+      required QueueInsertionType insertionType,
+      required void Function(QueueInsertionType insertionType) onTap,
+    }) {
+      return Stack(
+        alignment: Alignment.centerRight,
+        children: [
+          CustomListTile(
+            title: title,
+            subtitle: subtitle,
+            icon: icon,
+            maxSubtitleLines: 22,
+            onTap: () => onTap(insertionType),
+          ),
+          Obx(
+            () => AnimatedCrossFade(
+              firstChild: NamidaIconButton(icon: Broken.setting_4, onPressed: () => openQueueInsertionConfigure(insertionType, title)),
+              secondChild: const SizedBox(),
+              crossFadeState: shouldShowConfigureIcon.value ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+              duration: const Duration(milliseconds: 200),
+            ),
+          ),
+        ],
+      );
+    }
+
     return NamidaButton(
       tooltip: Language.inst.NEW_TRACKS_ADD,
       icon: Broken.add_circle,
@@ -1101,24 +1231,33 @@ class NamidaMiniPlayer extends StatelessWidget {
           dialog: CustomBlurryDialog(
             normalTitleStyle: true,
             title: Language.inst.NEW_TRACKS_ADD,
+            trailingWidgets: [
+              NamidaIconButton(
+                icon: Broken.setting_3,
+                tooltip: Language.inst.CONFIGURE,
+                onPressed: () => shouldShowConfigureIcon.value = !shouldShowConfigureIcon.value,
+              ),
+            ],
             child: Column(
               children: [
-                CustomListTile(
+                getAddTracksTile(
                   title: Language.inst.NEW_TRACKS_RANDOM,
                   subtitle: Language.inst.NEW_TRACKS_RANDOM_SUBTITLE,
                   icon: Broken.format_circle,
-                  maxSubtitleLines: 22,
-                  onTap: () {
-                    final rt = NamidaGenerator.inst.getRandomTracks(8, 11);
-                    Player.inst.addToQueue(rt, emptyTracksMessage: Language.inst.NO_ENOUGH_TRACKS).closeDialog();
+                  insertionType: QueueInsertionType.random,
+                  onTap: (insertionType) {
+                    final config = insertionType.toQueueInsertion();
+                    final count = config.numberOfTracks;
+                    final rt = NamidaGenerator.inst.getRandomTracks(count - 1, count);
+                    Player.inst.addToQueue(rt, insertionType: insertionType, emptyTracksMessage: Language.inst.NO_ENOUGH_TRACKS).closeDialog();
                   },
                 ),
-                CustomListTile(
+                getAddTracksTile(
                   title: Language.inst.GENERATE_FROM_DATES,
                   subtitle: Language.inst.GENERATE_FROM_DATES_SUBTITLE,
                   icon: Broken.calendar,
-                  maxSubtitleLines: 22,
-                  onTap: () {
+                  insertionType: QueueInsertionType.listenTimeRange,
+                  onTap: (insertionType) {
                     NamidaNavigator.inst.closeDialog();
                     final historyTracks = HistoryController.inst.historyTracks;
                     if (historyTracks.isEmpty) {
@@ -1134,6 +1273,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                         Player.inst
                             .addToQueue(
                               tracks,
+                              insertionType: insertionType,
                               emptyTracksMessage: Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES,
                             )
                             .closeDialog();
@@ -1141,26 +1281,27 @@ class NamidaMiniPlayer extends StatelessWidget {
                     );
                   },
                 ),
-                CustomListTile(
+                getAddTracksTile(
                   title: Language.inst.NEW_TRACKS_MOODS,
                   subtitle: Language.inst.NEW_TRACKS_MOODS_SUBTITLE,
                   icon: Broken.emoji_happy,
-                  maxSubtitleLines: 22,
-                  onTap: () {
+                  insertionType: QueueInsertionType.mood,
+                  onTap: (insertionType) {
                     NamidaNavigator.inst.closeDialog();
 
-                    final moods = <String>[];
-
                     // moods from playlists.
-                    final allAvailableMoodsPlaylists = PlaylistController.inst.playlistsMap.entries.expand((element) => element.value.moods).toSet();
-                    moods.addAll(allAvailableMoodsPlaylists);
+                    final allAvailableMoodsPlaylists = PlaylistController.inst.playlistsMap.entries.expand((element) => element.value.moods).toSet().toList();
+
                     // moods from tracks.
-                    Indexer.inst.trackStatsMap.forEach((key, value) => moods.addAll(value.moods));
-                    if (moods.isEmpty) {
+                    final allAvailableMoodsTracks =
+                        Indexer.inst.trackStatsMap.values.fold(<String>[], (previousValue, element) => [...previousValue, ...element.moods]).toSet().toList();
+
+                    if (allAvailableMoodsPlaylists.isEmpty && allAvailableMoodsTracks.isEmpty) {
                       Get.snackbar(Language.inst.ERROR, Language.inst.NO_MOODS_AVAILABLE);
                       return;
                     }
-                    final RxSet<String> selectedmoods = <String>{}.obs;
+                    final selectedmoodsPlaylists = <String>[].obs;
+                    final selectedmoodsTracks = <String>[].obs;
                     NamidaNavigator.inst.navigateDialog(
                       dialog: CustomBlurryDialog(
                         normalTitleStyle: true,
@@ -1171,51 +1312,78 @@ class NamidaMiniPlayer extends StatelessWidget {
                           NamidaButton(
                             text: Language.inst.GENERATE,
                             onPressed: () {
-                              final genTracks = NamidaGenerator.inst.generateTracksFromMoods(selectedmoods);
-                              Player.inst.addToQueue(genTracks);
+                              final genTracks = NamidaGenerator.inst.generateTracksFromMoods(selectedmoodsPlaylists, selectedmoodsTracks);
+                              Player.inst.addToQueue(
+                                genTracks,
+                                insertionType: insertionType,
+                              );
                               NamidaNavigator.inst.closeDialog();
                             },
                           ),
                         ],
                         child: SizedBox(
-                          height: context.height * 0.4,
-                          width: context.width,
-                          child: NamidaListView(
-                            itemCount: moods.length,
-                            itemExtents: null,
-                            itemBuilder: (context, i) {
-                              final e = moods[i];
-                              return Column(
-                                key: ValueKey(i),
-                                children: [
-                                  const SizedBox(height: 12.0),
-                                  Obx(
-                                    () => ListTileWithCheckMark(
-                                      title: e,
-                                      active: selectedmoods.contains(e),
-                                      onTap: () => selectedmoods.addOrRemove(e),
-                                    ),
+                            height: context.height * 0.4,
+                            width: context.width,
+                            child: CustomScrollView(
+                              slivers: [
+                                // -- Playlist moods
+                                SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Text(Language.inst.PLAYLISTS, style: context.textTheme.displayMedium),
                                   ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
+                                ),
+                                SliverList.separated(
+                                  separatorBuilder: (context, index) => const SizedBox(height: 12.0),
+                                  itemCount: allAvailableMoodsPlaylists.length,
+                                  itemBuilder: (context, index) {
+                                    final m = allAvailableMoodsPlaylists[index];
+                                    return Obx(
+                                      () => ListTileWithCheckMark(
+                                        title: m,
+                                        active: selectedmoodsPlaylists.contains(m),
+                                        onTap: () => selectedmoodsPlaylists.addOrRemove(m),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                // -- Tracks moods
+                                SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Text(Language.inst.TRACKS, style: context.textTheme.displayMedium),
+                                  ),
+                                ),
+                                SliverList.separated(
+                                  separatorBuilder: (context, index) => const SizedBox(height: 12.0),
+                                  itemCount: allAvailableMoodsTracks.length,
+                                  itemBuilder: (context, index) {
+                                    final m = allAvailableMoodsTracks[index];
+                                    return Obx(
+                                      () => ListTileWithCheckMark(
+                                        title: m,
+                                        active: selectedmoodsTracks.contains(m),
+                                        onTap: () => selectedmoodsTracks.addOrRemove(m),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            )),
                       ),
                     );
                   },
                 ),
-                CustomListTile(
+                getAddTracksTile(
                   title: Language.inst.NEW_TRACKS_RATINGS,
                   subtitle: Language.inst.NEW_TRACKS_RATINGS_SUBTITLE,
                   icon: Broken.happyemoji,
-                  maxSubtitleLines: 22,
-                  onTap: () {
+                  insertionType: QueueInsertionType.rating,
+                  onTap: (insertionType) {
                     NamidaNavigator.inst.closeDialog();
 
                     final RxInt minRating = 80.obs;
                     final RxInt maxRating = 100.obs;
-                    final RxInt maxNumberOfTracks = 40.obs;
                     NamidaNavigator.inst.navigateDialog(
                       dialog: CustomBlurryDialog(
                         normalTitleStyle: true,
@@ -1232,9 +1400,8 @@ class NamidaMiniPlayer extends StatelessWidget {
                               final tracks = NamidaGenerator.inst.generateTracksFromRatings(
                                 minRating.value,
                                 maxRating.value,
-                                maxNumberOfTracks.value,
                               );
-                              Player.inst.addToQueue(tracks);
+                              Player.inst.addToQueue(tracks, insertionType: insertionType);
                               NamidaNavigator.inst.closeDialog();
                             },
                           ),
@@ -1290,24 +1457,6 @@ class NamidaMiniPlayer extends StatelessWidget {
                                 )
                               ],
                             ),
-                            const SizedBox(height: 24.0),
-                            Text(Language.inst.NUMBER_OF_TRACKS),
-                            NamidaWheelSlider(
-                              totalCount: 100,
-                              initValue: maxNumberOfTracks.value,
-                              itemSize: 1,
-                              squeeze: 0.3,
-                              onValueChanged: (val) {
-                                maxNumberOfTracks.value = val;
-                              },
-                            ),
-                            const SizedBox(height: 2.0),
-                            Obx(
-                              () => Text(
-                                maxNumberOfTracks.value == 0 ? Language.inst.UNLIMITED : '${maxNumberOfTracks.value}',
-                                style: context.textTheme.displaySmall,
-                              ),
-                            ),
                           ],
                         ),
                       ),
@@ -1315,35 +1464,49 @@ class NamidaMiniPlayer extends StatelessWidget {
                   },
                 ),
                 const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 4.0)),
-                CustomListTile(
+                getAddTracksTile(
                   title: Language.inst.NEW_TRACKS_SIMILARR_RELEASE_DATE,
                   subtitle: Language.inst.NEW_TRACKS_SIMILARR_RELEASE_DATE_SUBTITLE.replaceFirst(
                     '_CURRENT_TRACK_',
                     currentTrack.title.addDQuotation(),
                   ),
                   icon: Broken.calendar_1,
-                  onTap: () {
+                  insertionType: QueueInsertionType.sameReleaseDate,
+                  onTap: (insertionType) {
                     final year = currentTrack.year;
                     if (year == 0) {
                       Get.snackbar(Language.inst.ERROR, Language.inst.NEW_TRACKS_UNKNOWN_YEAR);
                       return;
                     }
                     final tracks = NamidaGenerator.inst.generateTracksFromSameEra(year, currentTrack: currentTrack);
-                    Player.inst.addToQueue(tracks, emptyTracksMessage: Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES).closeDialog();
+                    Player.inst
+                        .addToQueue(
+                          tracks,
+                          insertionType: insertionType,
+                          emptyTracksMessage: Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES,
+                        )
+                        .closeDialog();
                   },
                 ),
-                CustomListTile(
+                getAddTracksTile(
                   title: Language.inst.NEW_TRACKS_RECOMMENDED,
                   subtitle: Language.inst.NEW_TRACKS_RECOMMENDED_SUBTITLE.replaceFirst(
                     '_CURRENT_TRACK_',
                     currentTrack.title.addDQuotation(),
                   ),
                   icon: Broken.bezier,
-                  maxSubtitleLines: 22,
-                  onTap: () {
+                  insertionType: QueueInsertionType.algorithm,
+                  onTap: (insertionType) {
                     final gentracks = NamidaGenerator.inst.generateRecommendedTrack(currentTrack);
 
-                    Player.inst.addToQueue(gentracks, insertNext: true, emptyTracksMessage: Language.inst.NO_TRACKS_IN_HISTORY).closeDialog();
+                    Player.inst
+                        .addToQueue(
+                          gentracks,
+                          insertionType: insertionType,
+                          insertNext: true,
+                          emptyTracksMessage: Language.inst.NO_TRACKS_IN_HISTORY,
+                        )
+                        .closeDialog();
                   },
                 ),
               ],

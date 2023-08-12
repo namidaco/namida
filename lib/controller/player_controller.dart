@@ -12,6 +12,7 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 
 class Player {
@@ -124,24 +125,31 @@ class Player {
 
   /// returns true if tracks aren't empty.
   bool addToQueue(
-    List<Selectable> tracks, {
+    Iterable<Selectable> tracks, {
+    QueueInsertionType? insertionType,
     bool insertNext = false,
     bool insertAfterLatest = false,
     bool showSnackBar = true,
     String? emptyTracksMessage,
   }) {
-    if (showSnackBar && tracks.isEmpty) {
-      Get.snackbar(Language.inst.NOTE, emptyTracksMessage ?? Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES);
+    final insertionDetails = insertionType?.toQueueInsertion();
+    final shouldInsertNext = insertionDetails?.insertNext ?? insertNext;
+    final maxCount = insertionDetails?.numberOfTracks == 0 ? null : insertionDetails?.numberOfTracks;
+    final finalTracks = List<Selectable>.from(tracks.withLimit(maxCount));
+    insertionType?.shuffleOrSort(finalTracks);
+
+    if (showSnackBar && finalTracks.isEmpty) {
+      Get.snackbar(Language.inst.NOTE, emptyTracksMessage ?? Language.inst.NO_TRACKS_FOUND);
       return false;
     }
     _audioHandler.addToQueue(
-      tracks,
-      insertNext: insertNext,
+      finalTracks,
+      insertNext: shouldInsertNext,
       insertAfterLatest: insertAfterLatest,
     );
     if (showSnackBar) {
-      final addins = insertNext ? Language.inst.INSERTED : Language.inst.ADDED;
-      Get.snackbar(Language.inst.NOTE, '${addins.capitalizeFirst} ${tracks.displayTrackKeyword}');
+      final addins = shouldInsertNext ? Language.inst.INSERTED : Language.inst.ADDED;
+      Get.snackbar(Language.inst.NOTE, '${addins.capitalizeFirst} ${finalTracks.displayTrackKeyword}');
     }
     return true;
   }

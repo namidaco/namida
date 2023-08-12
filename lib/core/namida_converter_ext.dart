@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/queue.dart';
+import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
@@ -238,6 +239,34 @@ extension PlayerRepeatModeUtils on RepeatMode {
 }
 
 extension ThemeUtils on ThemeMode {
+  IconData toIcon() => _NamidaConverters.inst.getIcon(this);
+}
+
+extension QueueInsertionTypeToQI on QueueInsertionType {
+  QueueInsertion toQueueInsertion() => SettingsController.inst.queueInsertion[this]!;
+
+  /// NOTE: Modifies the original list.
+  List<Selectable> shuffleOrSort(List<Selectable> tracks) {
+    final sortBy = toQueueInsertion().sortBy;
+
+    switch (sortBy) {
+      case InsertionSortingType.listenCount:
+        tracks.sortByReverse((e) => HistoryController.inst.topTracksMapListens[e.track]?.length ?? 0);
+      case InsertionSortingType.rating:
+        tracks.sortByReverse((e) => e.track.stats.rating);
+      case InsertionSortingType.random:
+        tracks.shuffle();
+
+      default:
+        null;
+    }
+
+    return tracks;
+  }
+}
+
+extension InsertionSortingTypeTextIcon on InsertionSortingType {
+  String toText() => _NamidaConverters.inst.getTitle(this);
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 }
 
@@ -774,6 +803,11 @@ class _NamidaConverters {
         TrackPlayMode.trackAlbum: Language.inst.TRACK_PLAY_MODE_TRACK_ALBUM,
         TrackPlayMode.trackArtist: Language.inst.TRACK_PLAY_MODE_TRACK_ARTIST,
         TrackPlayMode.trackGenre: Language.inst.TRACK_PLAY_MODE_TRACK_GENRE,
+      },
+      InsertionSortingType: {
+        InsertionSortingType.listenCount: Language.inst.TOTAL_LISTENS,
+        InsertionSortingType.random: Language.inst.RANDOM,
+        InsertionSortingType.rating: Language.inst.RATING,
       }
     };
 
@@ -840,6 +874,11 @@ class _NamidaConverters {
         TagField.language: Broken.language_circle,
         TagField.recordLabel: Broken.ticket,
         TagField.country: Broken.house,
+      },
+      InsertionSortingType: {
+        InsertionSortingType.listenCount: Broken.award,
+        InsertionSortingType.random: Broken.format_circle,
+        InsertionSortingType.rating: Broken.grammerly,
       }
     };
     _toTitle

@@ -231,3 +231,21 @@ enum InterruptionAction {
   duckAudio,
   doNothing,
 }
+
+enum QueueInsertionType {
+  moreAlbum,
+  moreArtist,
+  moreFolder,
+  random,
+  listenTimeRange,
+  mood,
+  rating,
+  sameReleaseDate,
+  algorithm,
+}
+
+enum InsertionSortingType {
+  random,
+  listenCount,
+  rating,
+}

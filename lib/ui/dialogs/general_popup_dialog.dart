@@ -25,6 +25,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -636,7 +637,7 @@ Future<void> showGeneralPopupDialog(
                       if (isSingle) ...[
                         SmallListTile(
                           title: Language.inst.UPDATE,
-                          subtitle: tracks.first.path.getFilename,
+                          subtitle: tracks.first.path,
                           color: colorDelightened,
                           compact: true,
                           icon: Broken.document_upload,
@@ -707,7 +708,8 @@ Future<void> showGeneralPopupDialog(
                             tooltip: Language.inst.ADD_MORE_FROM_THIS_ALBUM,
                             onPressed: () {
                               NamidaNavigator.inst.closeDialog();
-                              Player.inst.addToQueue(NamidaGenerator.inst.generateTracksFromAlbum(availableAlbums.first), insertNext: true);
+                              final tracks = availableAlbums.first.getAlbumTracks();
+                              Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreAlbum);
                             },
                             icon: const Icon(Broken.add),
                           ),
@@ -718,7 +720,10 @@ Future<void> showGeneralPopupDialog(
                           compact: true,
                           title: Language.inst.ADD_MORE_FROM_TO_QUEUE.replaceFirst('_MEDIA_', '"$albumToAddFrom"'),
                           icon: Broken.music_dashboard,
-                          onTap: () => Player.inst.addToQueue(NamidaGenerator.inst.generateTracksFromAlbum(availableAlbums.first), insertNext: true),
+                          onTap: () {
+                            final tracks = availableAlbums.first.getAlbumTracks();
+                            Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreAlbum);
+                          },
                           trailing: IgnorePointer(
                             child: IconButton(
                               onPressed: () {},
@@ -762,7 +767,8 @@ Future<void> showGeneralPopupDialog(
                           icon: Broken.microphone,
                           onTap: () {
                             NamidaNavigator.inst.closeDialog();
-                            Player.inst.addToQueue(NamidaGenerator.inst.generateTracksFromArtist(artistToAddFrom), insertNext: true);
+                            final tracks = artistToAddFrom.getArtistTracks();
+                            Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreArtist);
                           },
                           trailing: IgnorePointer(
                             child: IconButton(
@@ -781,7 +787,10 @@ Future<void> showGeneralPopupDialog(
                           onTap: () => NamidaOnTaps.inst.onArtistTap(availableArtists.first),
                           trailing: IconButton(
                             tooltip: Language.inst.ADD_MORE_FROM_THIS_ARTIST,
-                            onPressed: () => Player.inst.addToQueue(NamidaGenerator.inst.generateTracksFromArtist(availableArtists.first), insertNext: true),
+                            onPressed: () {
+                              final tracks = availableArtists.first.getArtistTracks();
+                              Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreArtist);
+                            },
                             icon: const Icon(Broken.add),
                           ),
                         ),
@@ -833,7 +842,10 @@ Future<void> showGeneralPopupDialog(
                           },
                           trailing: IconButton(
                             tooltip: Language.inst.ADD_MORE_FROM_THIS_FOLDER,
-                            onPressed: () => Player.inst.addToQueue(NamidaGenerator.inst.generateTracksFromFolder(availableFolders.first), insertNext: true),
+                            onPressed: () {
+                              final tracks = availableFolders.first.tracks;
+                              Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreFolder);
+                            },
                             icon: const Icon(Broken.add),
                           ),
                         ),

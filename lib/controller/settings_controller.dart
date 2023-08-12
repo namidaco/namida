@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/lang.dart';
+import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -164,6 +165,18 @@ class SettingsController {
     InterruptionType.unknown: InterruptionAction.pause,
   }.obs;
 
+  final queueInsertion = <QueueInsertionType, QueueInsertion>{
+    QueueInsertionType.moreAlbum: const QueueInsertion(numberOfTracks: 10, insertNext: false, sortBy: InsertionSortingType.random),
+    QueueInsertionType.moreArtist: const QueueInsertion(numberOfTracks: 10, insertNext: false, sortBy: InsertionSortingType.random),
+    QueueInsertionType.moreFolder: const QueueInsertion(numberOfTracks: 10, insertNext: false, sortBy: InsertionSortingType.random),
+    QueueInsertionType.random: const QueueInsertion(numberOfTracks: 10, insertNext: false, sortBy: InsertionSortingType.random),
+    QueueInsertionType.listenTimeRange: const QueueInsertion(numberOfTracks: 0, insertNext: true, sortBy: InsertionSortingType.listenCount),
+    QueueInsertionType.mood: const QueueInsertion(numberOfTracks: 20, insertNext: true, sortBy: InsertionSortingType.listenCount),
+    QueueInsertionType.rating: const QueueInsertion(numberOfTracks: 20, insertNext: false, sortBy: InsertionSortingType.rating),
+    QueueInsertionType.sameReleaseDate: const QueueInsertion(numberOfTracks: 30, insertNext: true, sortBy: InsertionSortingType.listenCount),
+    QueueInsertionType.algorithm: const QueueInsertion(numberOfTracks: 20, insertNext: true, sortBy: InsertionSortingType.listenCount),
+  }.obs;
+
   bool didSupportNamida = false;
 
   Future<void> prepareSettingsFile() async {
@@ -305,6 +318,11 @@ class SettingsController {
           ) ??
           playerOnInterrupted.map((key, value) => MapEntry(key, value));
 
+      queueInsertion.value = ((json["queueInsertion"] as Map?)?.map(
+            (key, value) => MapEntry(QueueInsertionType.values.getEnum(key) ?? QueueInsertionType.moreAlbum, QueueInsertion.fromJson(value)),
+          )) ??
+          queueInsertion.map((key, value) => MapEntry(key, value));
+
       ///
     } catch (e) {
       printy(e, isError: true);
@@ -434,6 +452,7 @@ class SettingsController {
       'displayFavouriteIconInListTile': displayFavouriteIconInListTile.value,
       'trackItem': trackItem.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
       'playerOnInterrupted': playerOnInterrupted.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
+      'queueInsertion': queueInsertion.map((key, value) => MapEntry(key.convertToString, value.toJson())),
     };
     await file.writeAsJson(res);
 
@@ -1017,6 +1036,11 @@ class SettingsController {
 
   void updatePlayerInterruption(InterruptionType type, InterruptionAction action) {
     playerOnInterrupted[type] = action;
+    _writeToStorage();
+  }
+
+  void updateQueueInsertion(QueueInsertionType type, QueueInsertion qi) {
+    queueInsertion[type] = qi;
     _writeToStorage();
   }
 }

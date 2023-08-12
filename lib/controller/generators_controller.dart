@@ -1,12 +1,9 @@
-import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/namida_converter_ext.dart';
 
 class NamidaGenerator {
   static NamidaGenerator get inst => _instance;
@@ -29,7 +26,6 @@ class NamidaGenerator {
   }
 
   List<Track> getRandomTracks([int? min, int? max]) {
-    final Set<Track> randomList = {};
     final trackslist = allTracksInLibrary;
     final trackslistLength = trackslist.length;
 
@@ -48,13 +44,14 @@ class NamidaGenerator {
     // number of resulting tracks.
     final int randomNumber = (max - min).getRandomNumberBelow(min);
 
+    final Set<Track> randomList = {};
     for (int i = 0; i <= randomNumber; i++) {
       randomList.add(trackslist[trackslistLength.getRandomNumberBelow()]);
     }
     return randomList.toList();
   }
 
-  List<Track> generateRecommendedTrack(Track track, {int maxCount = 20}) {
+  List<Track> generateRecommendedTrack(Track track) {
     final historytracks = HistoryController.inst.historyTracks;
     if (historytracks.isEmpty) {
       return [];
@@ -84,11 +81,11 @@ class NamidaGenerator {
     final sortedByValueMap = numberOfListensMap.entries.toList();
     sortedByValueMap.sortByReverse((e) => e.value);
 
-    return sortedByValueMap.take(maxCount).map((e) => e.key).toList();
+    return sortedByValueMap.map((e) => e.key).toList();
   }
 
   /// if [maxCount == null], it will return all available tracks
-  List<Track> generateTracksFromHistoryDates(DateTime? oldestDate, DateTime? newestDate, [int? maxCount]) {
+  List<Track> generateTracksFromHistoryDates(DateTime? oldestDate, DateTime? newestDate) {
     if (oldestDate == null || newestDate == null) return [];
 
     final tracksAvailable = <Track>[];
@@ -106,18 +103,14 @@ class NamidaGenerator {
 
     tracksAvailable.removeDuplicates((element) => element.path);
 
-    if (maxCount == null) {
-      return tracksAvailable;
-    } else {
-      return _addTheseTracksFromMedia(tracksAvailable, maxCount: maxCount, removeTracksInQueue: false);
-    }
+    return tracksAvailable;
   }
 
   /// [daysRange] means taking n days before [yearTimeStamp] & n days after [yearTimeStamp].
   ///
   /// For best results, track should have the year tag in [yyyyMMdd] format (or any parsable format),
   /// Having a [yyyy] year tag will generate from the same year which is quite a wide range.
-  List<Track> generateTracksFromSameEra(int yearTimeStamp, {int daysRange = 30, int maxCount = 30, Track? currentTrack}) {
+  List<Track> generateTracksFromSameEra(int yearTimeStamp, {int daysRange = 30, Track? currentTrack}) {
     final tracksAvailable = <Track>[];
 
     // -- [yyyy] year format.
@@ -155,68 +148,39 @@ class NamidaGenerator {
       });
     }
     tracksAvailable.remove(currentTrack);
-
-    return _addTheseTracksFromMedia(tracksAvailable, maxCount: maxCount, removeTracksInQueue: false);
+    return tracksAvailable;
   }
 
-  List<Track> generateTracksFromMoods(Iterable<String> moods, [int maxCount = 20]) {
+  Iterable<Track> generateTracksFromMoods(Iterable<String> playlistMoods, Iterable<String> tracksMoods) {
     final finalTracks = <Track>[];
-    final moodsSet = moods.toSet();
 
-    /// Generating from Playlists.
-    final matchingPlEntries = PlaylistController.inst.playlistsMap.entries.where(
-      (plEntry) => plEntry.value.moods.any((e) => moodsSet.contains(e)),
-    );
-    final playlistsTracks = matchingPlEntries.expand((pl) => pl.value.tracks.toTracks());
-    finalTracks.addAll(playlistsTracks);
+    // --- Generating from Playlists.
+    for (final pl in PlaylistController.inst.playlistsMap.entries) {
+      if (pl.value.moods.any((e) => playlistMoods.contains(e))) {
+        finalTracks.addAll(pl.value.tracks.tracks);
+      }
+    }
 
-    /// Generating from all Tracks.
+    /// --- Generating from all Tracks.
     Indexer.inst.trackStatsMap.forEach((key, value) {
-      if (value.moods.any((element) => moodsSet.contains(element))) {
+      if (value.moods.any((element) => tracksMoods.contains(element))) {
         finalTracks.add(key);
       }
     });
 
-    return _addTheseTracksFromMedia(finalTracks, maxCount: maxCount, removeTracksInQueue: false);
+    return finalTracks.uniqued();
   }
 
   List<Track> generateTracksFromRatings(
-    int min,
-    int max,
-
-    /// use 0 for unlimited.
-    int maxNumberOfTracks,
+    int minRating,
+    int maxRating,
   ) {
     final finalTracks = <Track>[];
     Indexer.inst.trackStatsMap.forEach((key, value) {
-      if (value.rating >= min && value.rating <= max) {
+      if (value.rating >= minRating && value.rating <= maxRating) {
         finalTracks.add(key);
       }
     });
-    finalTracks.shuffle();
-    final l = (maxNumberOfTracks == 0 ? finalTracks : finalTracks.take(maxNumberOfTracks));
-
-    return l.toList();
-  }
-
-  List<Track> generateTracksFromAlbum(String album) {
-    return _addTheseTracksFromMedia(album.getAlbumTracks());
-  }
-
-  List<Track> generateTracksFromArtist(String artist) {
-    return _addTheseTracksFromMedia(artist.getArtistTracks());
-  }
-
-  List<Track> generateTracksFromFolder(Folder folder) {
-    return _addTheseTracksFromMedia(folder.tracks);
-  }
-
-  List<Track> _addTheseTracksFromMedia(Iterable<Track> tracks, {int maxCount = 10, bool removeTracksInQueue = true}) {
-    final trs = List<Track>.from(tracks);
-    trs.shuffle();
-    if (removeTracksInQueue) {
-      trs.removeWhere((element) => Player.inst.currentQueue.contains(element));
-    }
-    return trs.take(maxCount).toList();
+    return finalTracks;
   }
 }
