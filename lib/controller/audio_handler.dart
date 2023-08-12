@@ -386,25 +386,24 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
       _player.pause();
     }
     VideoController.vcontroller.pause();
+    AudioSession.instance.then((value) => value.setActive(false)); // deactivaing audio session for other apps to resume.
+    _wantToPause = false;
   }
 
   @override
   Future<void> seek(Duration position) async {
     _updateTrackLastPosition(currentTrack.track, currentPositionMS);
-    int p = position.inMilliseconds;
-    if (p < 0) {
-      p = 0;
-    }
+    final millisToSeek = position.inMilliseconds.withMinimum(0);
 
     /// Starts a new listen counter in case seeking was backwards and was >= 20% of the track
-    if (position.inMilliseconds < currentPositionMS) {
-      final diffInSeek = currentPositionMS - position.inMilliseconds;
+    if (millisToSeek < currentPositionMS) {
+      final diffInSeek = currentPositionMS - millisToSeek;
       final percentage = diffInSeek / (_player.duration?.inMilliseconds ?? 1);
       if (percentage >= 0.2) {
         HistoryController.inst.startCounterToAListen(currentTrack.track);
       }
     }
-    final msd = p.milliseconds;
+    final msd = millisToSeek.milliseconds;
     await Future.wait([
       _player.seek(msd),
       VideoController.vcontroller.seek(msd),
@@ -446,7 +445,10 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
       }
       await seek(Duration.zero);
     } else {
-      await skipToItem(index, shouldPlay);
+      // -- only skip if pause button wasn't pressed.
+      if (!_wantToPause) {
+        await skipToItem(index, shouldPlay);
+      }
     }
   }
 

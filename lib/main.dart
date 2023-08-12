@@ -148,7 +148,7 @@ Future<void> _initializeIntenties() async {
 
   Future<void> playFiles(List<SharedFile> files) async {
     if (files.isNotEmpty) {
-      final paths = files.map((e) => e.realPath).whereType<String>();
+      final paths = files.map((e) => e.realPath ?? e.value).whereType<String>();
       (await playExternalFiles(paths)).executeIfFalse(showErrorPlayingFileSnackbar);
     }
   }
