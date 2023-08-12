@@ -66,14 +66,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.16"
-  audio_waveforms:
-    dependency: "direct main"
-    description:
-      name: audio_waveforms
-      sha256: f2f81e256c5c03b64e2861e0323a77e1b6790c256c73393b671214c9846260fc
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.4"
   better_player:
     dependency: "direct main"
     description:
@@ -221,11 +213,11 @@ packages:
     source: hosted
     version: "1.0.5"
   dart_extensions:
-    dependency: "direct main"
+    dependency: "direct overridden"
     description:
       path: "."
-      ref: "9c588a5c421b02351db8e6aea882b56d982d5618"
-      resolved-ref: "9c588a5c421b02351db8e6aea882b56d982d5618"
+      ref: "347828d5b1b5a62e252fe9c94b47722ffd716e7d"
+      resolved-ref: "347828d5b1b5a62e252fe9c94b47722ffd716e7d"
       url: "https://github.com/MSOB7YY/dart_extensions"
     source: git
     version: "0.0.1"
@@ -297,8 +289,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: HEAD
-      resolved-ref: b81e5a4a1fe840b65d44aecc64cfc8801d87f3cf
+      ref: "454f4357840eebae5c3ec1f91345257c858caf93"
+      resolved-ref: "454f4357840eebae5c3ec1f91345257c858caf93"
       url: "https://github.com/MSOB7YY/faudiotagger"
     source: git
     version: "0.0.1"
@@ -432,8 +424,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "90b3dd291cd2b62c1cfe48f239326474d962c03d"
-      resolved-ref: "90b3dd291cd2b62c1cfe48f239326474d962c03d"
+      ref: "974b7864a3eec341b9aa3e0d6a02630f2e4b925f"
+      resolved-ref: "974b7864a3eec341b9aa3e0d6a02630f2e4b925f"
       url: "https://github.com/MSOB7YY/flutter_sharing_intent"
     source: git
     version: "1.0.6"
@@ -902,8 +894,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: b76685ef60184404c7dbadc9aa04483b6639d8c9
-      resolved-ref: b76685ef60184404c7dbadc9aa04483b6639d8c9
+      ref: HEAD
+      resolved-ref: a8e49d7e4f921b7b5d5964bcb25dd92462411e02
       url: "https://github.com/MSOB7YY/queue_manager"
     source: git
     version: "0.0.1"
@@ -1232,6 +1224,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.1"
+  waveform_extractor:
+    dependency: "direct main"
+    description:
+      name: waveform_extractor
+      sha256: f1f6ed8c5a1415337a76a26aa97223270d853011c276162024d082d2ea192191
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   wheel_chooser:
     dependency: transitive
     description:

@@ -22,6 +22,13 @@ version: 1.0.0+1
 environment:
   sdk: ">=3.0.5 <4.0.0"
 
+dependency_overrides:
+  win32: ^3.0.0
+  dart_extensions:
+    git:
+      url: https://github.com/MSOB7YY/dart_extensions
+      ref: 347828d5b1b5a62e252fe9c94b47722ffd716e7d
+
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
 # consider running `flutter pub upgrade --major-versions`. Alternatively,
@@ -53,18 +60,14 @@ dependencies:
   flutter_sharing_intent:
     git:
       url: https://github.com/MSOB7YY/flutter_sharing_intent
-      ref: 90b3dd291cd2b62c1cfe48f239326474d962c03d
+      ref: 974b7864a3eec341b9aa3e0d6a02630f2e4b925f
   catcher:
     git:
       url: https://github.com/MSOB7YY/catcher
-  dart_extensions:
-    git:
-      url: https://github.com/MSOB7YY/dart_extensions
-      ref: 9c588a5c421b02351db8e6aea882b56d982d5618
+
   queue_manager:
     git:
       url: https://github.com/MSOB7YY/queue_manager
-      ref: b76685ef60184404c7dbadc9aa04483b6639d8c9
 
   # ---- Path/File Providers ----
   path_provider: ^2.0.14
@@ -79,10 +82,11 @@ dependencies:
       url: https://github.com/MSOB7YY/audio_service
       path: audio_service/
       ref: b21b6503c2c4ee39d83c163cfa4cc7b05044e649
-  audio_waveforms: ^1.0.3
   faudiotagger:
     git:
       url: https://github.com/MSOB7YY/faudiotagger
+      ref: 454f4357840eebae5c3ec1f91345257c858caf93
+  waveform_extractor: ^1.0.1
 
   # ---- Video Indexing & Playback ----
   better_player:
@@ -131,9 +135,6 @@ dependencies:
   # git:
   #   url: https://github.com/AnonymHK/betterplayer
   dio: ^5.3.1
-
-dependency_overrides:
-  win32: ^3.0.0
 
 dev_dependencies:
   flutter_test:
