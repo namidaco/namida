@@ -549,9 +549,11 @@ class VideoController {
   }
 
   NamidaVideo _getNVFromFFMPEGMap({MediaInfo? mediaInfo, required int size, String? ytID, String? path}) {
+    final finalPath = mediaInfo?.path ?? path ?? '';
     return NamidaVideo(
-      path: mediaInfo?.path ?? path ?? '',
+      path: finalPath,
       ytID: ytID,
+      nameInCache: ytID != null ? finalPath.getFilenameWOExt : null,
       height: mediaInfo?.videoHeight ?? 0,
       width: mediaInfo?.videoWidth ?? 0,
       sizeInBytes: size,

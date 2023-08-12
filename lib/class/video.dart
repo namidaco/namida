@@ -95,6 +95,7 @@ class YTLVideo {
 class NamidaVideo {
   final String path;
   final String? ytID;
+  final String? nameInCache;
   final int height;
   final int width;
   final int sizeInBytes;
@@ -106,6 +107,7 @@ class NamidaVideo {
   const NamidaVideo({
     required this.path,
     this.ytID,
+    this.nameInCache,
     required this.height,
     required this.width,
     required this.sizeInBytes,
@@ -116,9 +118,12 @@ class NamidaVideo {
   });
 
   factory NamidaVideo.fromJson(Map<String, dynamic> json) {
+    final youtubeId = json['ytID'] as String?;
+    final path = json['path'] as String?;
     return NamidaVideo(
-      path: json['path'] ?? '',
-      ytID: json['ytID'],
+      path: path ?? '',
+      ytID: youtubeId,
+      nameInCache: json['nameInCache'] ?? (youtubeId != null ? path?.getFilenameWOExt : null),
       height: json['height'] ?? 0,
       width: json['width'] ?? 0,
       sizeInBytes: json['sizeInBytes'] ?? 0,
@@ -133,6 +138,7 @@ class NamidaVideo {
     return {
       'path': path,
       'ytID': ytID,
+      'nameInCache': nameInCache,
       'height': height,
       'width': width,
       'sizeInBytes': sizeInBytes,

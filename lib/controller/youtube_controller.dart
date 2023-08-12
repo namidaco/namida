@@ -162,6 +162,7 @@ class YoutubeController {
           dv = NamidaVideo(
             path: newfile.path,
             ytID: id,
+            nameInCache: newfile.path.getFilenameWOExt,
             height: erabaretaStream.videoResolution.height,
             width: erabaretaStream.videoResolution.width,
             sizeInBytes: erabaretaStream.size.totalBytes,

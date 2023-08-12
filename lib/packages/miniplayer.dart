@@ -7,6 +7,7 @@ import 'package:animated_background/animated_background.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -587,13 +588,16 @@ class NamidaMiniPlayer extends StatelessWidget {
                                         final currentVideo = VideoController.inst.currentVideo.value;
                                         final videoTotalSize = currentVideo?.sizeInBytes ?? 0;
                                         final videoQuality = currentVideo?.height ?? 0;
+                                        final videoFramerate = currentVideo?.framerate;
                                         final markText = VideoController.inst.isNoVideosAvailable.value ? 'x' : '?';
+                                        final fallbackQualityLabel = currentVideo?.nameInCache?.split('_').last;
                                         // final altText = currentVideo == null
                                         //     ? '?'
                                         //     : currentVideo.ytID == null
                                         //         ? Language.inst.LOCAL
                                         //         : 'Cache';
-                                        final qualityText = videoQuality == 0 ? markText : '${videoQuality}p';
+                                        final qualityText = videoQuality == 0 ? fallbackQualityLabel ?? markText : '${videoQuality}p';
+                                        final framerateText = videoFramerate != null && videoFramerate > 30 ? videoFramerate : '';
                                         Widget getTextWidget(String text, {required bool colored, Color? textColor, double? fontSize}) {
                                           return Text(
                                             text,
@@ -627,7 +631,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                             ],
                                             if (videoPlaybackEnabled) ...[
                                               getTextWidget(Language.inst.VIDEO, colored: true),
-                                              getTextWidget(" • $qualityText", colored: false, fontSize: 13.0),
+                                              getTextWidget(" • $qualityText$framerateText", colored: false, fontSize: 13.0),
                                               if (videoTotalSize > 0) ...[
                                                 getTextWidget(" • ", colored: false, fontSize: 13.0),
                                                 if (downloadedBytes > 0) getTextWidget("${downloadedBytes.fileSizeFormatted}/", colored: true, fontSize: 10.0),
