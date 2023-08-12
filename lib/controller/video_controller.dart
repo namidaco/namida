@@ -436,23 +436,29 @@ class VideoController {
       final mmr = MediaMetadataRetriever();
 
       for (final path in videos) {
-        final v = await mmr.getAllMediaInfo(path);
-        if (v != null) {
-          final filePath = v.path;
-          _saveThumbnailToStorage(
-            bytes: v.artwork ?? v.thumbnail,
-            isLocal: true,
-            idOrFileNameWOExt: filePath.getFilenameWOExt,
-            isExtracted: true,
-          );
-          final stats = await File(filePath).stat();
-          final nv = _getNVFromFFMPEGMap(
-            mediaInfo: v,
-            size: stats.size,
-            ytID: null,
-          );
-          namidaVideos.add(nv);
+        try {
+          final v = await mmr.getAllMediaInfo(path);
+          if (v != null) {
+            final filePath = v.path;
+            _saveThumbnailToStorage(
+              bytes: v.artwork ?? v.thumbnail,
+              isLocal: true,
+              idOrFileNameWOExt: filePath.getFilenameWOExt,
+              isExtracted: true,
+            );
+            final stats = await File(filePath).stat();
+            final nv = _getNVFromFFMPEGMap(
+              mediaInfo: v,
+              size: stats.size,
+              ytID: null,
+            );
+            namidaVideos.add(nv);
+          }
+        } catch (e) {
+          printy(e, isError: true);
+          continue;
         }
+
         onProgress(true, videos.length);
       }
       await videosFile.writeAsJson(namidaVideos.mapped((e) => e.toJson()));

@@ -179,6 +179,14 @@ void showSettingDialogWithTextField({
                     borderRadius: BorderRadius.circular(16.0.multipliedRadius),
                     borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 1.0),
                   ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+                    borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+                    borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
+                  ),
                   hintText: addNewPlaylist ? Language.inst.NAME : Language.inst.VALUE,
                 ),
                 validator: (value) {

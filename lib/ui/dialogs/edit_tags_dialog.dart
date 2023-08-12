@@ -1040,6 +1040,14 @@ class CustomTagTextField extends StatelessWidget {
             borderRadius: BorderRadius.circular(16.0.multipliedRadius),
             borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 1.0),
           ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+            borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+            borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
+          ),
           hintText: hintText,
           hintStyle: context.textTheme.displaySmall?.copyWith(fontSize: 14.5.multipliedFontScale, color: context.textTheme.displaySmall?.color?.withAlpha(120)),
         ),

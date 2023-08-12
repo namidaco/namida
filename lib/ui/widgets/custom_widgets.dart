@@ -747,9 +747,10 @@ class ListTileWithCheckMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tileAlpha = context.isDarkMode ? 5 : 20;
     return Material(
       borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-      color: tileColor ?? Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(10), context.theme.cardTheme.color!),
+      color: tileColor ?? Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(tileAlpha), context.theme.cardTheme.color!),
       child: ListTile(
         horizontalTitleGap: 10.0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0.multipliedRadius)),

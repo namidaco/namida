@@ -62,15 +62,24 @@ class BackupAndRestore extends StatelessWidget {
               child: const LoadingIndicator(),
             ),
             onTap: () {
-              void onItemTap(String item) {
-                if (SettingsController.inst.backupItemslist.contains(item)) {
-                  SettingsController.inst.removeFromList(backupItemslist1: item);
+              bool isActive(List<String> items) => items.every((element) => SettingsController.inst.backupItemslist.contains(element));
+
+              void onItemTap(List<String> items) {
+                if (isActive(items)) {
+                  SettingsController.inst.removeFromList(backupItemslistAll: items);
                 } else {
-                  SettingsController.inst.save(backupItemslist: [item]);
+                  SettingsController.inst.save(backupItemslist: items);
                 }
               }
 
-              bool isActive(String item) => SettingsController.inst.backupItemslist.contains(item);
+              Widget getItemWidget({required String title, required IconData icon, required List<String> items}) {
+                return ListTileWithCheckMark(
+                  active: isActive(items),
+                  title: title,
+                  icon: icon,
+                  onTap: () => onItemTap(items),
+                );
+              }
 
               NamidaNavigator.inst.navigateDialog(
                 dialog: Obx(
@@ -93,93 +102,60 @@ class BackupAndRestore extends StatelessWidget {
                       child: SingleChildScrollView(
                         child: Column(
                           children: [
-                            ListTileWithCheckMark(
-                              active: isActive(k_FILE_PATH_TRACKS) && isActive(k_FILE_PATH_TRACKS_STATS) && isActive(k_FILE_PATH_TOTAL_LISTEN_TIME),
-                              title: Language.inst.DATABASE,
-                              icon: Broken.box_1,
-                              onTap: () {
-                                onItemTap(k_FILE_PATH_TRACKS);
-                                onItemTap(k_FILE_PATH_TRACKS_STATS);
-                                onItemTap(k_FILE_PATH_TOTAL_LISTEN_TIME);
-                              },
-                            ),
-                            const SizedBox(
-                              height: 12.0,
-                            ),
-                            ListTileWithCheckMark(
-                              active: isActive(k_DIR_PLAYLISTS) && isActive(k_PLAYLIST_PATH_FAVOURITES),
+                            getItemWidget(title: Language.inst.DATABASE, icon: Broken.box_1, items: [
+                              k_FILE_PATH_TRACKS,
+                              k_FILE_PATH_TRACKS_STATS,
+                              k_FILE_PATH_TOTAL_LISTEN_TIME,
+                              k_FILE_PATH_VIDEOS_CACHE,
+                              k_FILE_PATH_VIDEOS_LOCAL,
+                            ]),
+                            const SizedBox(height: 12.0),
+                            getItemWidget(
                               title: Language.inst.PLAYLISTS,
                               icon: Broken.music_library_2,
-                              onTap: () {
-                                onItemTap(k_DIR_PLAYLISTS);
-                                onItemTap(k_PLAYLIST_PATH_FAVOURITES);
-                              },
+                              items: [k_DIR_PLAYLISTS, k_PLAYLIST_PATH_FAVOURITES],
                             ),
-                            const SizedBox(
-                              height: 12.0,
-                            ),
-                            ListTileWithCheckMark(
-                              active: isActive(k_PLAYLIST_DIR_PATH_HISTORY),
+                            const SizedBox(height: 12.0),
+                            getItemWidget(
                               title: Language.inst.HISTORY,
                               icon: Broken.refresh,
-                              onTap: () => onItemTap(k_PLAYLIST_DIR_PATH_HISTORY),
+                              items: [k_PLAYLIST_DIR_PATH_HISTORY],
                             ),
-                            const SizedBox(
-                              height: 12.0,
-                            ),
-                            ListTileWithCheckMark(
-                              active: isActive(k_FILE_PATH_SETTINGS),
+                            const SizedBox(height: 12.0),
+                            getItemWidget(
                               title: Language.inst.SETTINGS,
                               icon: Broken.setting,
-                              onTap: () => onItemTap(k_FILE_PATH_SETTINGS),
+                              items: [k_FILE_PATH_SETTINGS],
                             ),
-                            const SizedBox(
-                              height: 12.0,
-                            ),
-                            ListTileWithCheckMark(
-                              active: isActive(k_DIR_LYRICS),
+                            const SizedBox(height: 12.0),
+                            getItemWidget(
                               title: Language.inst.LYRICS,
                               icon: Broken.document,
-                              onTap: () => onItemTap(k_DIR_LYRICS),
+                              items: [k_DIR_LYRICS],
                             ),
-                            const SizedBox(
-                              height: 12.0,
-                            ),
-                            ListTileWithCheckMark(
-                              active: isActive(k_DIR_QUEUES) && isActive(k_FILE_PATH_LATEST_QUEUE),
+                            const SizedBox(height: 12.0),
+                            getItemWidget(
                               title: Language.inst.QUEUES,
                               icon: Broken.driver,
-                              onTap: () {
-                                onItemTap(k_DIR_QUEUES);
-                                onItemTap(k_FILE_PATH_LATEST_QUEUE);
-                              },
+                              items: [k_DIR_QUEUES, k_FILE_PATH_LATEST_QUEUE],
                             ),
-                            const SizedBox(
-                              height: 12.0,
-                            ),
-                            ListTileWithCheckMark(
-                              active: isActive(k_DIR_PALETTES),
+                            const SizedBox(height: 12.0),
+                            getItemWidget(
                               title: Language.inst.COLOR_PALETTES,
                               icon: Broken.colorfilter,
-                              onTap: () => onItemTap(k_DIR_PALETTES),
+                              items: [k_DIR_PALETTES],
                             ),
-                            const SizedBox(
-                              height: 12.0,
-                            ),
-                            ListTileWithCheckMark(
-                              active: isActive(k_DIR_VIDEOS_CACHE),
+                            const SizedBox(height: 12.0),
+                            getItemWidget(
                               title: Language.inst.VIDEO_CACHE,
                               icon: Broken.video,
-                              onTap: () => onItemTap(k_DIR_VIDEOS_CACHE),
+                              items: [k_DIR_VIDEOS_CACHE],
                             ),
-                            const SizedBox(
-                              height: 12.0,
-                            ),
-                            ListTileWithCheckMark(
-                              active: isActive(k_DIR_ARTWORKS),
+                            const SizedBox(height: 12.0),
+                            getItemWidget(
                               title: Language.inst.ARTWORKS,
                               icon: Broken.image,
-                              onTap: () => onItemTap(k_DIR_ARTWORKS),
+                              items: [k_DIR_ARTWORKS],
                             ),
                           ],
                         ),

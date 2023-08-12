@@ -72,10 +72,12 @@ class SettingsController {
   final RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
   final RxBool enableFoldersHierarchy = true.obs;
   final RxList<String> backupItemslist = [
-    k_FILE_PATH_SETTINGS,
     k_FILE_PATH_TRACKS,
     k_FILE_PATH_TRACKS_STATS,
     k_FILE_PATH_TOTAL_LISTEN_TIME,
+    k_FILE_PATH_VIDEOS_CACHE,
+    k_FILE_PATH_VIDEOS_LOCAL,
+    k_FILE_PATH_SETTINGS,
     k_DIR_PALETTES,
     k_DIR_LYRICS,
     k_DIR_PLAYLISTS,
@@ -946,9 +948,7 @@ class SettingsController {
     }
     if (trackSearchFilterAll != null) {
       trackSearchFilterAll.loop((f, index) {
-        if (trackSearchFilter.contains(f)) {
-          trackSearchFilter.remove(f);
-        }
+        trackSearchFilter.remove(f);
       });
     }
     if (playlistSearchFilter1 != null) {
@@ -956,9 +956,7 @@ class SettingsController {
     }
     if (playlistSearchFilterAll != null) {
       playlistSearchFilterAll.loop((f, index) {
-        if (playlistSearchFilter.contains(f)) {
-          playlistSearchFilter.remove(f);
-        }
+        playlistSearchFilter.remove(f);
       });
     }
     if (directoriesToScan1 != null) {
@@ -966,9 +964,7 @@ class SettingsController {
     }
     if (directoriesToScanAll != null) {
       directoriesToScanAll.loop((f, index) {
-        if (directoriesToScan.contains(f)) {
-          directoriesToScan.remove(f);
-        }
+        directoriesToScan.remove(f);
       });
     }
     if (directoriesToExclude1 != null) {
@@ -976,9 +972,7 @@ class SettingsController {
     }
     if (directoriesToExcludeAll != null) {
       directoriesToExcludeAll.loop((f, index) {
-        if (directoriesToExclude.contains(f)) {
-          directoriesToExclude.remove(f);
-        }
+        directoriesToExclude.remove(f);
       });
     }
     if (libraryTab1 != null) {
@@ -986,9 +980,7 @@ class SettingsController {
     }
     if (libraryTabsAll != null) {
       libraryTabsAll.loop((t, index) {
-        if (libraryTabs.contains(t)) {
-          libraryTabs.remove(t);
-        }
+        libraryTabs.remove(t);
       });
     }
     if (backupItemslist1 != null) {
@@ -996,9 +988,7 @@ class SettingsController {
     }
     if (backupItemslistAll != null) {
       backupItemslistAll.loop((t, index) {
-        if (backupItemslist.contains(t)) {
-          backupItemslist.remove(t);
-        }
+        backupItemslist.remove(t);
       });
     }
     if (youtubeVideoQualities1 != null) {
@@ -1006,9 +996,7 @@ class SettingsController {
     }
     if (youtubeVideoQualitiesAll != null) {
       youtubeVideoQualitiesAll.loop((t, index) {
-        if (youtubeVideoQualities.contains(t)) {
-          youtubeVideoQualities.remove(t);
-        }
+        youtubeVideoQualities.remove(t);
       });
     }
     if (tagFieldsToEdit1 != null) {
@@ -1016,9 +1004,7 @@ class SettingsController {
     }
     if (tagFieldsToEditAll != null) {
       tagFieldsToEditAll.loop((t, index) {
-        if (tagFieldsToEdit.contains(t)) {
-          tagFieldsToEdit.remove(t);
-        }
+        tagFieldsToEdit.remove(t);
       });
     }
     _writeToStorage();
