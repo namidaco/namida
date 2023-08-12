@@ -1289,19 +1289,32 @@ class NamidaMiniPlayer extends StatelessWidget {
                   onTap: (insertionType) {
                     NamidaNavigator.inst.closeDialog();
 
-                    // moods from playlists.
-                    final allAvailableMoodsPlaylists = PlaylistController.inst.playlistsMap.entries.expand((element) => element.value.moods).toSet().toList();
-
-                    // moods from tracks.
-                    final allAvailableMoodsTracks =
-                        Indexer.inst.trackStatsMap.values.fold(<String>[], (previousValue, element) => [...previousValue, ...element.moods]).toSet().toList();
+                    // -- moods from playlists.
+                    final allAvailableMoodsPlaylists = <String, List<Track>>{};
+                    for (final pl in PlaylistController.inst.playlistsMap.entries) {
+                      pl.value.moods.loop((mood, _) {
+                        allAvailableMoodsPlaylists.addAllNoDuplicatesForce(mood, pl.value.tracks.tracks);
+                      });
+                    }
+                    // -- moods from tracks.
+                    final allAvailableMoodsTracks = <String, List<Track>>{};
+                    for (final tr in Indexer.inst.trackStatsMap.entries) {
+                      tr.value.moods.loop((mood, _) {
+                        allAvailableMoodsTracks.addNoDuplicatesForce(mood, tr.key);
+                      });
+                    }
 
                     if (allAvailableMoodsPlaylists.isEmpty && allAvailableMoodsTracks.isEmpty) {
                       Get.snackbar(Language.inst.ERROR, Language.inst.NO_MOODS_AVAILABLE);
                       return;
                     }
+
+                    final playlistsAllMoods = allAvailableMoodsPlaylists.keys.toList();
+                    final tracksAllMoods = allAvailableMoodsTracks.keys.toList();
+
                     final selectedmoodsPlaylists = <String>[].obs;
                     final selectedmoodsTracks = <String>[].obs;
+
                     NamidaNavigator.inst.navigateDialog(
                       dialog: CustomBlurryDialog(
                         normalTitleStyle: true,
@@ -1312,9 +1325,15 @@ class NamidaMiniPlayer extends StatelessWidget {
                           NamidaButton(
                             text: Language.inst.GENERATE,
                             onPressed: () {
-                              final genTracks = NamidaGenerator.inst.generateTracksFromMoods(selectedmoodsPlaylists, selectedmoodsTracks);
+                              final finalTracks = <Track>[];
+                              selectedmoodsPlaylists.loop((m, _) {
+                                finalTracks.addAll(allAvailableMoodsPlaylists[m] ?? []);
+                              });
+                              selectedmoodsTracks.loop((m, _) {
+                                finalTracks.addAll(allAvailableMoodsTracks[m] ?? []);
+                              });
                               Player.inst.addToQueue(
-                                genTracks,
+                                finalTracks.uniqued(),
                                 insertionType: insertionType,
                               );
                               NamidaNavigator.inst.closeDialog();
@@ -1335,12 +1354,13 @@ class NamidaMiniPlayer extends StatelessWidget {
                                 ),
                                 SliverList.separated(
                                   separatorBuilder: (context, index) => const SizedBox(height: 12.0),
-                                  itemCount: allAvailableMoodsPlaylists.length,
+                                  itemCount: playlistsAllMoods.length,
                                   itemBuilder: (context, index) {
-                                    final m = allAvailableMoodsPlaylists[index];
+                                    final m = playlistsAllMoods[index];
+                                    final tracksCount = allAvailableMoodsPlaylists[m]?.length ?? 0;
                                     return Obx(
                                       () => ListTileWithCheckMark(
-                                        title: m,
+                                        title: "$m ($tracksCount)",
                                         active: selectedmoodsPlaylists.contains(m),
                                         onTap: () => selectedmoodsPlaylists.addOrRemove(m),
                                       ),
@@ -1356,12 +1376,13 @@ class NamidaMiniPlayer extends StatelessWidget {
                                 ),
                                 SliverList.separated(
                                   separatorBuilder: (context, index) => const SizedBox(height: 12.0),
-                                  itemCount: allAvailableMoodsTracks.length,
+                                  itemCount: tracksAllMoods.length,
                                   itemBuilder: (context, index) {
-                                    final m = allAvailableMoodsTracks[index];
+                                    final m = tracksAllMoods[index];
+                                    final tracksCount = allAvailableMoodsTracks[m]?.length ?? 0;
                                     return Obx(
                                       () => ListTileWithCheckMark(
-                                        title: m,
+                                        title: "$m ($tracksCount)",
                                         active: selectedmoodsTracks.contains(m),
                                         onTap: () => selectedmoodsTracks.addOrRemove(m),
                                       ),

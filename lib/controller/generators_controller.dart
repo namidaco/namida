@@ -1,7 +1,6 @@
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -149,26 +148,6 @@ class NamidaGenerator {
     }
     tracksAvailable.remove(currentTrack);
     return tracksAvailable;
-  }
-
-  Iterable<Track> generateTracksFromMoods(Iterable<String> playlistMoods, Iterable<String> tracksMoods) {
-    final finalTracks = <Track>[];
-
-    // --- Generating from Playlists.
-    for (final pl in PlaylistController.inst.playlistsMap.entries) {
-      if (pl.value.moods.any((e) => playlistMoods.contains(e))) {
-        finalTracks.addAll(pl.value.tracks.tracks);
-      }
-    }
-
-    /// --- Generating from all Tracks.
-    Indexer.inst.trackStatsMap.forEach((key, value) {
-      if (value.moods.any((element) => tracksMoods.contains(element))) {
-        finalTracks.add(key);
-      }
-    });
-
-    return finalTracks.uniqued();
   }
 
   List<Track> generateTracksFromRatings(
