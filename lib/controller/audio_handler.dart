@@ -435,7 +435,19 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
 
   @override
   Future<void> skipToQueueItem(int index, [bool? andPlay]) async {
-    await skipToItem(index, andPlay ?? defaultShouldStartPlaying);
+    final shouldPlay = andPlay ?? defaultShouldStartPlaying;
+    // -- skipping to same item will just seek to Duration.zero
+    // (usually for repeat modes or if the queue has only 1 item)
+    if (index == currentIndex) {
+      if (shouldPlay) {
+        await play();
+      } else {
+        await pause();
+      }
+      await seek(Duration.zero);
+    } else {
+      await skipToItem(index, shouldPlay);
+    }
   }
 
   @override
