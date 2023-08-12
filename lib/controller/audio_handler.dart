@@ -57,15 +57,15 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
     int? sleepAfterMin,
     int? sleepAfterTracks,
   }) {
-    if (enableSleepAfterTracks != null) _enableSleepAfterMins.value = enableSleepAfterTracks;
+    if (enableSleepAfterTracks != null) _enableSleepAfterTracks.value = enableSleepAfterTracks;
     if (enableSleepAfterMins != null) _enableSleepAfterMins.value = enableSleepAfterMins;
     if (sleepAfterMin != null) _sleepAfterMin.value = sleepAfterMin;
     if (sleepAfterTracks != null) _sleepAfterTracks.value = sleepAfterTracks;
   }
 
   void resetSleepAfterTimer() {
-    _enableSleepAfterMins.value = false;
     _enableSleepAfterTracks.value = false;
+    _enableSleepAfterMins.value = false;
     _sleepAfterMin.value = 0;
     _sleepAfterTracks.value = 0;
   }
