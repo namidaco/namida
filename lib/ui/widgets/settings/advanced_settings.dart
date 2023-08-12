@@ -285,7 +285,7 @@ class AdvancedSettings extends StatelessWidget {
     }
 
     sortByAccessTime() {
-      videoFiles.sortBy((e) => File(e.path).statSync().accessed);
+      videoFiles.sortByAlt((e) => File(e.path).statSync().accessed, (e) => File(e.path).statSync().modified);
       isSortTypeSize.value = false;
     }
 

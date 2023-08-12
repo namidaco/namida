@@ -50,8 +50,8 @@ class Indexer {
   final RxList<Track> tracksInfoList = <Track>[].obs;
 
   /// tracks map used for lookup
-  final Map<Track, TrackExtended> allTracksMappedByPath = {};
-  final Map<Track, TrackStats> trackStatsMap = {};
+  final allTracksMappedByPath = <Track, TrackExtended>{}.obs;
+  final trackStatsMap = <Track, TrackStats>{}.obs;
 
   /// Used to prevent duplicated track (by filename).
   final Map<String, bool> currentFileNamesMap = {};

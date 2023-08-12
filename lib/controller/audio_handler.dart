@@ -346,6 +346,8 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
     final steps = duration ~/ interval;
     double vol = currentVolume.value;
 
+    final didPause = Completer<bool>();
+
     _pauseFadeTimer?.cancel();
     _pauseFadeTimer = null;
     _pauseFadeTimer = Timer.periodic(Duration(milliseconds: interval), (timer) {
@@ -355,21 +357,23 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
       if (vol <= 0.0) {
         timer.cancel();
         _player.pause();
+        didPause.complete(true);
       }
     });
+    await didPause.future;
   }
 
   @override
   Future<void> play() async {
     _wantToPause = false;
 
+    VideoController.vcontroller.play();
     if (SettingsController.inst.enableVolumeFadeOnPlayPause.value && currentPositionMS > 200) {
       await playWithFadeEffect();
     } else {
       _player.play();
       setVolume(SettingsController.inst.playerVolume.value);
     }
-    VideoController.vcontroller.play();
   }
 
   @override

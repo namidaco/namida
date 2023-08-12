@@ -736,6 +736,7 @@ class _NamidaConverters {
         QueueSource.queuePage: Language.inst.QUEUES,
         QueueSource.selectedTracks: Language.inst.SELECTED_TRACKS,
         QueueSource.externalFile: Language.inst.EXTERNAL_FILES,
+        QueueSource.others: Language.inst.OTHERS,
       },
       TagField: {
         TagField.title: Language.inst.TITLE,

@@ -434,9 +434,9 @@ class VideoController {
     } else {
       final videos = await _fetchVideoPathsFromStorage(strictNoMedia: strictNoMedia, forceReCheckDir: forceReScan);
       final mmr = MediaMetadataRetriever();
-      final stream = await mmr.getAllMediaInfosAsStream(videos);
 
-      await for (final v in stream) {
+      for (final path in videos) {
+        final v = await mmr.getAllMediaInfo(path);
         if (v != null) {
           final filePath = v.path;
           _saveThumbnailToStorage(

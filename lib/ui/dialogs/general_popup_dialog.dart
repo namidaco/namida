@@ -414,6 +414,7 @@ Future<void> showGeneralPopupDialog(
                         key: ValueKey(i),
                         borderRadius: 12.0,
                         title: p.getFilename,
+                        subtitle: File(p).statSync().size.fileSizeFormatted,
                         onTap: () => updatePathDialog(p),
                       );
                     },
