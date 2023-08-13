@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:palette_generator/palette_generator.dart';
 
 import 'package:namida/class/color_m.dart';
 import 'package:namida/class/track.dart';
@@ -13,6 +14,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:palette_generator/palette_generator.dart';
 
 Color get playerStaticColor => Color(SettingsController.inst.staticColor.value);
 
@@ -99,26 +101,41 @@ class CurrentColor {
     }
   }
 
-  Future<NamidaColor> getTrackColors(Track track, {bool fallbackToPlayerStaticColor = true, bool delightnedAndAlpha = true}) async {
-    NamidaColor maybeDelightned(NamidaColor nc) {
-      final used = delightnedAndAlpha ? nc.color.withAlpha(colorAlpha).delightned : nc.color;
-      final mix = delightnedAndAlpha ? nc.mix.withAlpha(colorAlpha).delightned : nc.color;
-      return NamidaColor(
-        used: used,
-        mix: mix,
-        palette: nc.palette,
-      );
+  Future<NamidaColor> getTrackColors(
+    Track track, {
+    bool fallbackToPlayerStaticColor = true,
+    bool delightnedAndAlpha = true,
+    bool useIsolate = _defaultUseIsolate,
+  }) async {
+    NamidaColor maybeDelightned(NamidaColor? nc) {
+      if (nc == null) {
+        final c = fallbackToPlayerStaticColor ? playerStaticColor : currentColorScheme;
+        return NamidaColor(
+          used: c.lighter,
+          mix: c.lighter,
+          palette: [c.lighter],
+        );
+      } else {
+        return NamidaColor(
+          used: delightnedAndAlpha ? nc.used?.withAlpha(colorAlpha).delightned : nc.used,
+          mix: delightnedAndAlpha ? nc.mix.withAlpha(colorAlpha).delightned : nc.mix,
+          palette: nc.palette,
+        );
+      }
     }
 
     final valInMap = colorsMap[track.path.getFilename];
     if (valInMap != null) return maybeDelightned(valInMap);
 
-    final nc = await _extractPaletteFromImage(
+    NamidaColor? nc = await _extractPaletteFromImage(
       track.pathToImage,
       fallbackToPlayerStaticColor: fallbackToPlayerStaticColor,
+      useIsolate: useIsolate,
     );
-    _updateInColorMap(track.filename, nc);
-    return maybeDelightned(nc);
+
+    final finalnc = maybeDelightned(nc);
+    _updateInColorMap(track.filename, finalnc);
+    return finalnc;
   }
 
   /// Equivalent to calling [getTrackColors] with [delightnedAndAlpha == true]
@@ -150,37 +167,42 @@ class CurrentColor {
     return Color.fromARGB(255, red, green, blue);
   }
 
-  Future<NamidaColor> _extractPaletteFromImage(String imagePath, {bool fallbackToPlayerStaticColor = true, bool forceReExtract = false}) async {
+  Future<NamidaColor?> _extractPaletteFromImage(
+    String imagePath, {
+    bool fallbackToPlayerStaticColor = true,
+    bool forceReExtract = false,
+    bool useIsolate = _defaultUseIsolate,
+  }) async {
     if (!forceReExtract && !await File(imagePath).exists()) {
-      final c = fallbackToPlayerStaticColor ? playerStaticColor : currentColorScheme;
-      return NamidaColor(
-        used: c,
-        mix: c,
-        palette: [c],
-      );
+      return null;
     }
 
     final paletteFile = File("$k_DIR_PALETTES${imagePath.getFilenameWOExt}.palette");
 
     // -- try reading the cached file
     if (!forceReExtract) {
-      try {
-        final nc = NamidaColor.fromJson(await paletteFile.readAsJson());
+      final response = await paletteFile.readAsJson();
+      if (response != null) {
+        final nc = NamidaColor.fromJson(response);
         printy("Color Read From File");
         return nc;
-      } catch (e) {
+      } else {
         await paletteFile.deleteIfExists();
-        printy(e, isError: true);
       }
     }
 
     // -- file doesnt exist or couldn't be read or [forceReExtract==true]
-    final pcolors = await _extractPaletteGenerator(imagePath);
-    final nc = NamidaColor(used: null, mix: mixIntColors(pcolors), palette: pcolors.toList());
-    await paletteFile.writeAsJson(nc.toJson());
-    Indexer.inst.updateColorPalettesSizeInStorage(paletteFile);
-    printy("Color Extracted From Image");
-    return nc;
+    try {
+      final pcolors = await _extractPaletteGenerator(imagePath, useIsolate: useIsolate);
+      final nc = NamidaColor(used: null, mix: mixIntColors(pcolors), palette: pcolors.toList());
+      await paletteFile.writeAsJson(nc.toJson());
+      Indexer.inst.updateColorPalettesSizeInStorage(paletteFile);
+      printy("Color Extracted From Image");
+      return nc;
+    } catch (e) {
+      await File(imagePath).deleteIfExists();
+      return null;
+    }
   }
 
   Future<void> reExtractTrackColorPalette({required Track track, required NamidaColor? newNC, required String? imagePath}) async {
@@ -192,16 +214,54 @@ class CurrentColor {
       _updateInColorMap(track.filename, newNC);
     } else if (imagePath != null) {
       final nc = await _extractPaletteFromImage(imagePath, forceReExtract: true);
-      _updateInColorMap(imagePath.getFilenameWOExt, nc);
+      if (nc != null) _updateInColorMap(imagePath.getFilenameWOExt, nc);
     }
     if (Player.inst.nowPlayingTrack == track) {
       updatePlayerColorFromTrack(track, null);
     }
   }
 
-  Future<Iterable<Color>> _extractPaletteGenerator(String imagePath) async {
-    final result = await PaletteGenerator.fromImageProvider(FileImage(File(imagePath)), filters: [], maximumColorCount: 28);
-    return result.colors;
+  Future<Iterable<Color>> _extractPaletteGenerator(String imagePath, {bool useIsolate = _defaultUseIsolate}) async {
+    const defaultTimeout = Duration(seconds: 10);
+    if (!useIsolate) {
+      final result = await PaletteGenerator.fromImageProvider(FileImage(File(imagePath)), filters: [], maximumColorCount: 28, timeout: defaultTimeout);
+      return result.colors;
+    } else {
+      final imageProvider = FileImage(File(imagePath));
+      final ImageStream stream = imageProvider.resolve(
+        const ImageConfiguration(size: null, devicePixelRatio: 1.0),
+      );
+      final Completer<ui.Image> imageCompleter = Completer<ui.Image>();
+      Timer? loadFailureTimeout;
+      late ImageStreamListener listener;
+      listener = ImageStreamListener((ImageInfo info, bool synchronousCall) {
+        loadFailureTimeout?.cancel();
+        stream.removeListener(listener);
+        imageCompleter.complete(info.image);
+      });
+      if (defaultTimeout != Duration.zero) {
+        loadFailureTimeout = Timer(defaultTimeout, () {
+          stream.removeListener(listener);
+          imageCompleter.completeError(
+            TimeoutException('Timeout occurred trying to load from $imageProvider'),
+          );
+        });
+      }
+      stream.addListener(listener);
+      final ui.Image image = await imageCompleter.future;
+      final ByteData? imageData = await image.toByteData();
+      if (imageData == null) return [];
+
+      final encimg = EncodedImage(imageData, width: image.width, height: image.height);
+      final colorValues = await _extractPaletteGeneratorCompute.thready(encimg);
+
+      return colorValues.map((e) => Color(e));
+    }
+  }
+
+  static Future<List<int>> _extractPaletteGeneratorCompute(EncodedImage encimg) async {
+    final result = await PaletteGenerator.fromByteData(encimg, filters: [], maximumColorCount: 28);
+    return result.colors.map((e) => e.value).toList();
   }
 
   void _updateInColorMap(String filenameWoExt, NamidaColor nc) {
@@ -241,22 +301,28 @@ class CurrentColor {
 
     isGeneratingAllColorPalettes.value = true;
     for (int i = 0; i < allTracksInLibrary.length; i++) {
-      // stops extracting
-      if (!isGeneratingAllColorPalettes.value) break;
-      await getTrackColors(allTracksInLibrary[i]);
-      await Future.delayed(Duration.zero);
+      if (!isGeneratingAllColorPalettes.value) break; // stops extracting
+      await getTrackColors(allTracksInLibrary[i], useIsolate: true);
     }
 
     isGeneratingAllColorPalettes.value = false;
   }
 
   void stopGeneratingColorPalettes() => isGeneratingAllColorPalettes.value = false;
+
+  static const _defaultUseIsolate = false;
 }
 
 extension ColorUtils on Color {
   Color get delightned {
     final hslColor = HSLColor.fromColor(this);
     final modifiedColor = hslColor.withLightness(0.4).toColor();
+    return modifiedColor;
+  }
+
+  Color get lighter {
+    final hslColor = HSLColor.fromColor(this);
+    final modifiedColor = hslColor.withLightness(0.64).toColor();
     return modifiedColor;
   }
 }
