@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:photo_view/photo_view.dart';
 
+import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/audio_handler.dart';
 import 'package:namida/controller/current_color.dart';
@@ -273,7 +274,14 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
 
                       if (shouldShowTheField(trackExt.hasUnknownArtist))
                         TrackInfoListTile(
-                          title: Indexer.inst.splitArtist(trackExt.title, trackExt.originalArtist, addArtistsFromTitle: false).length == 1
+                          title: Indexer.inst
+                                      .splitArtist(
+                                        title: trackExt.title,
+                                        originalArtist: trackExt.originalArtist,
+                                        config: ArtistsSplitConfig.settings(addFeatArtist: false),
+                                      )
+                                      .length ==
+                                  1
                               ? Language.inst.ARTIST
                               : Language.inst.ARTISTS,
                           value: trackExt.hasUnknownArtist ? k_UNKNOWN_TRACK_ARTIST : trackExt.originalArtist,

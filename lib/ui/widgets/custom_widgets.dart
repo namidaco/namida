@@ -36,6 +36,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 
 class CustomReorderableDelayedDragStartListener extends ReorderableDragStartListener {
   final Duration delay;
@@ -1913,6 +1914,7 @@ class DefaultPlaylistCard extends StatelessWidget {
   final String title;
   final String text;
   final double? width;
+  final bool displayLoadingIndicator;
   final void Function()? onTap;
 
   const DefaultPlaylistCard({
@@ -1922,6 +1924,7 @@ class DefaultPlaylistCard extends StatelessWidget {
     required this.title,
     this.text = '',
     this.width,
+    this.displayLoadingIndicator = false,
     this.onTap,
   });
 
@@ -1948,10 +1951,12 @@ class DefaultPlaylistCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6.0),
-          Text(
-            text,
-            style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(30), context.textTheme.displayMedium!.color!)),
-          ),
+          displayLoadingIndicator
+              ? const LoadingIndicator()
+              : Text(
+                  text,
+                  style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(30), context.textTheme.displayMedium!.color!)),
+                ),
           const SizedBox(width: 2.0),
         ],
       ),

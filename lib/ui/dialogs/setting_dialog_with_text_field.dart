@@ -26,8 +26,8 @@ void showSettingDialogWithTextField({
   bool trackTileSeparator = false,
   bool addNewPlaylist = false,
 }) async {
-  SettingsController stg = SettingsController.inst;
-  TextEditingController controller = TextEditingController();
+  final SettingsController stg = SettingsController.inst;
+  final TextEditingController controller = TextEditingController();
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   if (dateTimeFormat) {

@@ -269,30 +269,41 @@ class PlaylistController {
   // File Related
   ///
   Future<void> prepareAllPlaylistsFile() async {
-    await for (final p in Directory(k_DIR_PLAYLISTS).list()) {
-      // prevents freezing the ui. cheap alternative for Isolate/compute.
-      await Future.delayed(Duration.zero);
-
-      await File(p.path).readAsJsonAnd((response) async {
-        final pl = Playlist.fromJson(response);
-        _updateMap(pl);
-      });
-    }
-
-    /// Sorting since [dir.list()]] doesnt maintain order
+    final map = await _readPlaylistFilesCompute.thready(k_DIR_PLAYLISTS);
+    playlistsMap
+      ..clear()
+      ..addAll(map);
     _sortPlaylists();
+  }
+
+  static Future<Map<String, Playlist>> _readPlaylistFilesCompute(String path) async {
+    final map = <String, Playlist>{};
+    for (final f in Directory(path).listSync()) {
+      if (f is File) {
+        try {
+          final response = f.readAsJsonSync();
+          final pl = Playlist.fromJson(response);
+          map[pl.name] = pl;
+        } catch (e) {
+          continue;
+        }
+      }
+    }
+    return map;
   }
 
   Future<void> prepareDefaultPlaylistsFile() async {
     HistoryController.inst.prepareHistoryFile();
-    await _prepareFavouritesFile();
+    final pl = await _prepareFavouritesFile.thready(k_PLAYLIST_PATH_FAVOURITES);
+    if (pl != null) favouritesPlaylist.value = pl;
   }
 
-  Future<void> _prepareFavouritesFile() async {
-    final file = File(k_PLAYLIST_PATH_FAVOURITES);
-    await file.readAsJsonAnd((response) async {
-      favouritesPlaylist.value = Playlist.fromJson(response);
-    });
+  static Future<Playlist?> _prepareFavouritesFile(String path) async {
+    try {
+      final response = File(path).readAsJsonSync();
+      return Playlist.fromJson(response);
+    } catch (_) {}
+    return null;
   }
 
   Future<bool> _saveFavouritesToStorage() async {

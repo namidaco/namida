@@ -282,23 +282,11 @@ class HistoryController {
   }
 
   Future<void> prepareHistoryFile() async {
-    int loops = 0;
-    await for (final f in Directory(k_PLAYLIST_DIR_PATH_HISTORY).list()) {
-      if (f is File) {
-        try {
-          final isStep = loops % 10 == 0;
-          final response = isStep ? await f.readAsJson() : f.readAsJsonSync();
-          final dayOfTrack = int.parse(f.path.getFilenameWOExt);
-          final listTracks = (response as List?)?.mapped((e) => TrackWithDate.fromJson(e)) ?? <TrackWithDate>[];
-          historyMap.value[dayOfTrack] = listTracks;
-          if (isStep) historyMap.refresh();
-        } catch (e) {
-          printy(e, isError: true);
-          continue;
-        }
-        loops++;
-      }
-    }
+    final map = await _readHistoryFilesCompute.thready(k_PLAYLIST_DIR_PATH_HISTORY);
+    historyMap.value
+      ..clear()
+      ..addAll(map);
+
     historyMap.refresh();
     _isLoadingHistory = false;
     // Adding tracks that were rejected by [addToHistory] since history wasn't fully loaded.
@@ -308,6 +296,23 @@ class HistoryController {
     }
     Dimensions.inst.calculateAllItemsExtentsInHistory();
     updateMostPlayedPlaylist();
+  }
+
+  static Future<Map<int, List<TrackWithDate>>> _readHistoryFilesCompute(String path) async {
+    final map = <int, List<TrackWithDate>>{};
+    for (final f in Directory(path).listSync()) {
+      if (f is File) {
+        try {
+          final response = f.readAsJsonSync();
+          final dayOfTrack = int.parse(f.path.getFilenameWOExt);
+          final listTracks = (response as List?)?.mapped((e) => TrackWithDate.fromJson(e)) ?? <TrackWithDate>[];
+          map[dayOfTrack] = listTracks;
+        } catch (e) {
+          continue;
+        }
+      }
+    }
+    return map;
   }
 
   /// Used to add tracks that were rejected by [addToHistory] after full loading of history.

@@ -129,22 +129,11 @@ class QueueController {
 
   ///
   Future<void> prepareAllQueuesFile() async {
-    int loops = 0;
-    await for (final f in Directory(k_DIR_QUEUES).list()) {
-      if (f is File) {
-        try {
-          final isStep = loops % 10 == 0;
-          final response = isStep ? await f.readAsJson() : f.readAsJsonSync();
-          final q = Queue.fromJson(response);
-          _updateMap(q);
-        } catch (e) {
-          printy(e, isError: true);
-          continue;
-        }
-        loops++;
-      }
-    }
-
+    final map = await _readQueueFilesCompute.thready(k_DIR_QUEUES);
+    queuesMap.value
+      ..clear()
+      ..addAll(map);
+    queuesMap.refresh();
     _isLoadingQueues = false;
     // Adding queues that were rejected by [addNewQueue] since Queues wasn't fully loaded.
     if (_queuesToAddAfterAllQueuesLoad.isNotEmpty) {
@@ -154,6 +143,22 @@ class QueueController {
       printy("Added ${_queuesToAddAfterAllQueuesLoad.length} queue that were suspended");
       _queuesToAddAfterAllQueuesLoad.clear();
     }
+  }
+
+  static Future<Map<int, Queue>> _readQueueFilesCompute(String path) async {
+    final map = <int, Queue>{};
+    for (final f in Directory(path).listSync()) {
+      if (f is File) {
+        try {
+          final response = f.readAsJsonSync();
+          final q = Queue.fromJson(response);
+          map[q.date] = q;
+        } catch (e) {
+          continue;
+        }
+      }
+    }
+    return map;
   }
 
   /// Assigns the last queue to the [Player]
@@ -195,4 +200,5 @@ class QueueController {
   /// Used to add Queues that were rejected by [addNewQueue] after full loading of queues.
   final List<Queue> _queuesToAddAfterAllQueuesLoad = <Queue>[];
   bool _isLoadingQueues = true;
+  bool get isLoadingQueues => _isLoadingQueues;
 }

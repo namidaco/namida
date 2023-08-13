@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:faudiotagger/models/tag.dart';
 
 import 'package:namida/class/folder.dart';
+import 'package:namida/class/split_config.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -203,15 +204,26 @@ class TrackExtended {
     required this.lyrics,
   });
 
-  factory TrackExtended.fromJson(Map<String, dynamic> json) {
+  factory TrackExtended.fromJson(
+    Map<String, dynamic> json, {
+    required ArtistsSplitConfig artistsSplitConfig,
+    required GenresSplitConfig genresSplitConfig,
+  }) {
     return TrackExtended(
       title: json['title'] ?? '',
       originalArtist: json['originalArtist'] ?? '',
-      artistsList: Indexer.inst.splitArtist(json['title'], json['originalArtist']),
+      artistsList: Indexer.inst.splitArtist(
+        title: json['title'],
+        originalArtist: json['originalArtist'],
+        config: artistsSplitConfig,
+      ),
       album: json['album'] ?? '',
       albumArtist: json['albumArtist'] ?? '',
       originalGenre: json['originalGenre'] ?? '',
-      genresList: Indexer.inst.splitGenre(json['originalGenre']),
+      genresList: Indexer.inst.splitGenre(
+        json['originalGenre'],
+        config: genresSplitConfig,
+      ),
       composer: json['composer'] ?? '',
       trackNo: json['trackNo'] ?? 0,
       duration: json['duration'] ?? 0,

@@ -2,6 +2,8 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -267,4 +269,13 @@ extension CloseDialogIfTrue on bool {
   /// This is mainly created for [addToQueue] Function inside Player Class,
   /// where it should close the dialog only if there were tracks added.
   void closeDialog([int count = 1]) => executeIfTrue(() => NamidaNavigator.inst.closeDialog(count));
+}
+
+extension ThreadOpener<M, R> on ComputeCallback<M, R> {
+  /// Executes function on a separate thread using compute().
+  /// Must be `static` or `global` function.
+  Future<R> thready(M parameter) async {
+    WidgetsFlutterBinding.ensureInitialized();
+    return await compute(this, parameter);
+  }
 }

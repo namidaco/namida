@@ -10,6 +10,7 @@ import 'package:faudiotagger/faudiotagger.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/folder.dart';
+import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
@@ -270,10 +271,17 @@ class Indexer {
       }
 
       // -- Split Artists
-      final artists = splitArtist(trackInfo.title, trackInfo.artist);
+      final artists = splitArtist(
+        title: trackInfo.title,
+        originalArtist: trackInfo.artist,
+        config: ArtistsSplitConfig.settings(),
+      );
 
       // -- Split Genres
-      final genres = splitGenre(trackInfo.genre);
+      final genres = splitGenre(
+        trackInfo.genre,
+        config: GenresSplitConfig.settings(),
+      );
 
       String? trimOrNull(String? value) => value == null ? value : value.trimAll();
 
@@ -587,25 +595,66 @@ class Indexer {
   }
 
   Future<void> readTrackData() async {
-    /// reading stats file containing track rating etc.
+    // reading stats file containing track rating etc.
+    final statsResult = await _readTracksStatsCompute.thready(k_FILE_PATH_TRACKS_STATS);
+    trackStatsMap
+      ..clear()
+      ..addAll(statsResult);
 
-    await File(k_FILE_PATH_TRACKS_STATS).readAsJsonAndLoop((item, i) async {
-      final trst = TrackStats.fromJson(item);
-      trackStatsMap[trst.track] = trst;
-    });
-    // clearing for cases which refreshing library is required (like after changing separators)
-    tracksInfoList.clear();
+    tracksInfoList.clear(); // clearing for cases which refreshing library is required (like after changing separators)
 
     /// Reading actual track file.
-    await File(k_FILE_PATH_TRACKS).readAsJsonAndLoop((item, i) async {
-      final trExt = TrackExtended.fromJson(item);
-      final track = trExt.toTrack();
-
-      tracksInfoList.add(track);
-      allTracksMappedByPath[track] = trExt;
-    });
+    final splitconfig = _SplitArtistGenreConfig(
+      path: k_FILE_PATH_TRACKS,
+      artistsConfig: ArtistsSplitConfig.settings(),
+      genresConfig: GenresSplitConfig.settings(),
+    );
+    final tracksResult = await _readTracksFileCompute.thready(splitconfig);
+    allTracksMappedByPath
+      ..clear()
+      ..addAll(tracksResult);
+    tracksInfoList.addAll(tracksResult.keys);
 
     printy("All Tracks Length From File: ${tracksInfoList.length}");
+  }
+
+  static Future<Map<Track, TrackStats>> _readTracksStatsCompute(String path) async {
+    final map = <Track, TrackStats>{};
+    final list = File(path).readAsJsonSync() as List?;
+    if (list != null) {
+      for (int i = 0; i <= list.length - 1; i++) {
+        try {
+          final item = list[i];
+          final trst = TrackStats.fromJson(item);
+          map[trst.track] = trst;
+        } catch (e) {
+          continue;
+        }
+      }
+    }
+    return map;
+  }
+
+  static Future<Map<Track, TrackExtended>> _readTracksFileCompute(_SplitArtistGenreConfig config) async {
+    final map = <Track, TrackExtended>{};
+    final list = File(config.path).readAsJsonSync() as List?;
+    if (list != null) {
+      for (int i = 0; i <= list.length - 1; i++) {
+        try {
+          final item = list[i];
+          final trExt = TrackExtended.fromJson(
+            item,
+            artistsSplitConfig: config.artistsConfig,
+            genresSplitConfig: config.genresConfig,
+          );
+          final track = trExt.toTrack();
+          map[track] = trExt;
+        } catch (e) {
+          continue;
+        }
+      }
+    }
+    return map;
   }
 
   List<String> splitBySeparators(String? string, Iterable<String> separators, String fallback, Iterable<String> blacklist) {
@@ -619,28 +668,31 @@ class Indexer {
 
   /// [addArtistsFromTitle] extracts feat artists.
   /// Defaults to [SettingsController.inst.extractFeatArtistFromTitle]
-  List<String> splitArtist(String? title, String? originalArtist, {bool? addArtistsFromTitle}) {
+  List<String> splitArtist({
+    required String? title,
+    required String? originalArtist,
+    required ArtistsSplitConfig config,
+  }) {
     final allArtists = <String>[];
-    addArtistsFromTitle ??= SettingsController.inst.extractFeatArtistFromTitle.value;
 
     final artistsOrg = splitBySeparators(
       originalArtist,
-      SettingsController.inst.trackArtistsSeparators,
+      config.separators,
       k_UNKNOWN_TRACK_ARTIST,
-      SettingsController.inst.trackArtistsSeparatorsBlacklist,
+      config.separatorsBlacklist,
     );
     allArtists.addAll(artistsOrg);
 
-    if (addArtistsFromTitle) {
+    if (config.addFeatArtist) {
       final List<String>? moreArtists = title?.split(RegExp(r'\(ft\. |\[ft\. |\(feat\. |\[feat\. \]', caseSensitive: false));
       if (moreArtists != null && moreArtists.length > 1) {
         final extractedFeatArtists = moreArtists[1].split(RegExp(r'\)|\]')).first;
         allArtists.addAll(
           splitBySeparators(
             extractedFeatArtists,
-            SettingsController.inst.trackArtistsSeparators,
+            config.separators,
             '',
-            SettingsController.inst.trackArtistsSeparatorsBlacklist,
+            config.separatorsBlacklist,
           ),
         );
       }
@@ -648,12 +700,15 @@ class Indexer {
     return allArtists;
   }
 
-  List<String> splitGenre(String? originalGenre) {
+  List<String> splitGenre(
+    String? originalGenre, {
+    required GenresSplitConfig config,
+  }) {
     return splitBySeparators(
       originalGenre,
-      SettingsController.inst.trackGenresSeparators,
+      config.separators,
       k_UNKNOWN_TRACK_GENRE,
-      SettingsController.inst.trackGenresSeparatorsBlacklist,
+      config.separatorsBlacklist,
     );
   }
 
@@ -855,4 +910,16 @@ class Indexer {
       await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
     }
   }
+}
+
+class _SplitArtistGenreConfig {
+  final String path;
+  final ArtistsSplitConfig artistsConfig;
+  final GenresSplitConfig genresConfig;
+
+  const _SplitArtistGenreConfig({
+    required this.path,
+    required this.artistsConfig,
+    required this.genresConfig,
+  });
 }
