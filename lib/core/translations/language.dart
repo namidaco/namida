@@ -267,6 +267,7 @@ class Language extends LanguageKeys {
 			HEIGHT_OF_TRACK_TILE = getKey("HEIGHT_OF_TRACK_TILE");
 			HIGH_MATCHES = getKey("HIGH_MATCHES");
 			HISTORY = getKey("HISTORY");
+			HISTORY_IMPORT_MISSING_ENTRIES_NOTE = getKey("HISTORY_IMPORT_MISSING_ENTRIES_NOTE");
 			HISTORY_LISTENS_REPLACE_WARNING = getKey("HISTORY_LISTENS_REPLACE_WARNING");
 			HOME = getKey("HOME");
 			HOUR_FORMAT_12 = getKey("HOUR_FORMAT_12");
@@ -326,6 +327,7 @@ class Language extends LanguageKeys {
 			MINIMUM = getKey("MINIMUM");
 			MINIPLAYER_CUSTOMIZATION = getKey("MINIPLAYER_CUSTOMIZATION");
 			MINUTES = getKey("MINUTES");
+			MISSING_ENTRIES = getKey("MISSING_ENTRIES");
 			MOODS = getKey("MOODS");
 			MORE = getKey("MORE");
 			MOST_PLAYED = getKey("MOST_PLAYED");
@@ -574,6 +576,8 @@ class Language extends LanguageKeys {
     }
   }
 }
+
+
 
 
 

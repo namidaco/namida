@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
@@ -14,7 +15,9 @@ import 'package:namida/controller/notification_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class JsonToHistoryParser {
@@ -107,6 +110,135 @@ class JsonToHistoryParser {
     );
   }
 
+  bool get shouldShowMissingEntriesDialog => _latestMissingMap.length != _latestMissingMapAddedStatus.length;
+  final _latestMissingMap = <_MissingListenEntry, List<int>>{}.obs;
+  final _latestMissingMapAddedStatus = <_MissingListenEntry, Track>{}.obs;
+
+  void showMissingEntriesDialog() {
+    void onTrackChoose(MapEntry<_MissingListenEntry, List<int>> entry) {
+      showLibraryTracksChooseDialog(
+        trackName: "${entry.key.artistOrChannel} - ${entry.key.title}",
+        onChoose: (choosenTrack) async {
+          final twds = entry.value.map(
+            (e) => TrackWithDate(
+              dateAdded: e,
+              track: choosenTrack,
+              source: entry.key.source,
+            ),
+          );
+          await HistoryController.inst.addTracksToHistory(twds.toList());
+          NamidaNavigator.inst.closeDialog();
+          _latestMissingMapAddedStatus[entry.key] = choosenTrack;
+        },
+      );
+    }
+
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        normalTitleStyle: true,
+        title: Language.inst.MISSING_ENTRIES,
+        child: SizedBox(
+          width: Get.width,
+          height: Get.height * 0.6,
+          child: CupertinoScrollbar(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    Language.inst.HISTORY_IMPORT_MISSING_ENTRIES_NOTE,
+                    style: Get.textTheme.displaySmall,
+                  ),
+                ),
+                Expanded(
+                  child: Obx(
+                    () {
+                      final missing = _latestMissingMap.entries.toList()..sortByReverse((e) => e.value.length);
+                      return ListView.separated(
+                        separatorBuilder: (context, index) => const SizedBox(height: 8.0),
+                        itemCount: missing.length,
+                        itemBuilder: (context, index) {
+                          final entry = missing[index];
+                          return Obx(
+                            () {
+                              final replacedWithTrack = _latestMissingMapAddedStatus[entry.key];
+                              return IgnorePointer(
+                                ignoring: replacedWithTrack != null,
+                                child: AnimatedOpacity(
+                                  duration: const Duration(milliseconds: 200),
+                                  opacity: replacedWithTrack != null ? 0.6 : 1.0,
+                                  child: NamidaInkWell(
+                                    onTap: () => onTrackChoose(entry),
+                                    bgColor: Get.theme.cardTheme.color,
+                                    borderRadius: 12.0,
+                                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        NamidaInkWell(
+                                          bgColor: Get.theme.cardTheme.color,
+                                          borderRadius: 42.0,
+                                          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                                          child: Text(
+                                            entry.value.length.formatDecimal(),
+                                            style: Get.textTheme.displaySmall,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12.0),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                entry.key.title,
+                                                style: Get.textTheme.displayMedium,
+                                              ),
+                                              Text(
+                                                "${entry.key.artistOrChannel} - ${entry.key.source.convertToString}",
+                                                maxLines: 1,
+                                                softWrap: false,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: Get.textTheme.displaySmall,
+                                              ),
+                                              if (replacedWithTrack != null)
+                                                Text(
+                                                  "→ ${replacedWithTrack.originalArtist} - ${replacedWithTrack.title}",
+                                                  maxLines: 2,
+                                                  softWrap: false,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: Get.textTheme.displaySmall?.copyWith(fontSize: 11.5.multipliedFontScale),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8.0),
+                                        NamidaIconButton(
+                                          icon: Broken.repeat_circle,
+                                          iconSize: 24.0,
+                                          onPressed: () => onTrackChoose(entry),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _resetValues() {
     totalJsonToParse.value = 0;
     parsedHistoryJson.value = 0;
@@ -164,7 +296,7 @@ class JsonToHistoryParser {
     });
 
     final datesAdded = <int>[];
-
+    final allMissingEntries = <_MissingListenEntry, List<int>>{};
     if (isytsource) {
       currentParsingSource.value = TrackSource.youtube;
       final res = await _parseYTHistoryJsonAndAdd(
@@ -175,6 +307,9 @@ class JsonToHistoryParser {
         oldestDate: oldestDate,
         newestDate: newestDate,
         matchAll: matchAll,
+        onMissingEntry: (missingEntry) {
+          missingEntry.loop((e, index) => allMissingEntries.addForce(e, e.dateMSSE));
+        },
       );
       datesAdded.addAll(res);
       // await _addYoutubeSourceFromDirectory(isMatchingTypeLink, matchYT, matchYTMusic);
@@ -186,6 +321,7 @@ class JsonToHistoryParser {
         matchAll: matchAll,
         oldestDate: oldestDate,
         newestDate: newestDate,
+        onMissingEntry: (missingEntry) => allMissingEntries.addForce(missingEntry, missingEntry.dateMSSE),
       );
       datesAdded.addAll(res);
     }
@@ -195,6 +331,12 @@ class JsonToHistoryParser {
     HistoryController.inst.updateMostPlayedPlaylist();
     _notificationTimer?.cancel();
     NotificationService.inst.doneImportingHistoryNotification(parsedHistoryJson.value, addedHistoryJsonToPlaylist.value);
+
+    _latestMissingMap
+      ..clear()
+      ..addAll(allMissingEntries);
+    _latestMissingMapAddedStatus.clear();
+    showMissingEntriesDialog();
   }
 
   /// Returns a map of {`trackYTID`: `List<Track>`}
@@ -215,6 +357,7 @@ class JsonToHistoryParser {
     required DateTime? oldestDate,
     required DateTime? newestDate,
     required bool matchAll,
+    required void Function(List<_MissingListenEntry> missingEntry) onMissingEntry,
   }) async {
     isParsing.value = true;
     await Future.delayed(const Duration(milliseconds: 300));
@@ -265,6 +408,7 @@ class JsonToHistoryParser {
             newestDate: newestDate,
             matchAll: matchAll,
             tracksIdsMap: tracksIdsMap,
+            onMissingEntry: onMissingEntry,
           );
           datesToSave.addAll(addedDates);
 
@@ -297,6 +441,7 @@ class JsonToHistoryParser {
     required DateTime? newestDate,
     required bool matchAll,
     required Map<String, List<Track>>? tracksIdsMap,
+    required void Function(List<_MissingListenEntry> missingEntry) onMissingEntry,
   }) {
     final oldestDay = oldestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
     final newestDay = newestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
@@ -356,6 +501,17 @@ class JsonToHistoryParser {
 
         addedHistoryJsonToPlaylist.value += tracks.length;
       }
+    } else {
+      onMissingEntry(
+        vh.watches
+            .map((e) => _MissingListenEntry(
+                  dateMSSE: e.date,
+                  source: e.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
+                  artistOrChannel: vh.channel,
+                  title: vh.title,
+                ))
+            .toList(),
+      );
     }
     final daysToSave = HistoryController.inst.addTracksToHistoryOnly(tracksToAdd);
     return daysToSave;
@@ -367,6 +523,7 @@ class JsonToHistoryParser {
     required bool matchAll,
     required DateTime? oldestDate,
     required DateTime? newestDate,
+    required void Function(_MissingListenEntry missingEntry) onMissingEntry,
   }) async {
     final oldestDay = oldestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
     final newestDay = newestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
@@ -429,14 +586,25 @@ class JsonToHistoryParser {
             return matchingArtist && matchingTitle;
           },
         );
-        tracksToAdd.addAll(
-          tracks.map((tr) => TrackWithDate(
-                dateAdded: date,
-                track: tr,
-                source: TrackSource.lastfm,
-              )),
-        );
-        addedHistoryJsonToPlaylist.value += tracks.length;
+        if (tracks.isNotEmpty) {
+          tracksToAdd.addAll(
+            tracks.map((tr) => TrackWithDate(
+                  dateAdded: date,
+                  track: tr,
+                  source: TrackSource.lastfm,
+                )),
+          );
+          addedHistoryJsonToPlaylist.value += tracks.length;
+        } else {
+          onMissingEntry(
+            _MissingListenEntry(
+              dateMSSE: date,
+              source: TrackSource.lastfm,
+              artistOrChannel: pieces[0],
+              title: pieces[2],
+            ),
+          );
+        }
       } catch (e) {
         printy(e, isError: true);
         continue;
@@ -511,4 +679,29 @@ extension _FWORWHERE<E> on List<E> {
       }
     }
   }
+}
+
+class _MissingListenEntry {
+  final int dateMSSE;
+  final TrackSource source;
+  final String title;
+  final String artistOrChannel;
+
+  const _MissingListenEntry({
+    required this.dateMSSE,
+    required this.source,
+    required this.title,
+    required this.artistOrChannel,
+  });
+
+  @override
+  bool operator ==(other) {
+    if (other is _MissingListenEntry) {
+      return source == other.source && title == other.title && artistOrChannel == other.artistOrChannel;
+    }
+    return false;
+  }
+
+  @override
+  int get hashCode => "$source$title$artistOrChannel".hashCode;
 }

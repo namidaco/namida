@@ -127,18 +127,8 @@ void showTrackAdvancedDialog({
             CustomListTile(
               passedColor: colorScheme,
               title: Language.inst.REPLACE_ALL_LISTENS_WITH_ANOTHER_TRACK,
-              icon: Broken.fatrows,
+              icon: Broken.convert_card,
               onTap: () async {
-                final allTracksList = List<Track>.from(allTracksInLibrary).obs;
-                final selectedTrack = Rxn<Track>();
-                void onTrackTap(Track tr) {
-                  if (selectedTrack.value == tr) {
-                    selectedTrack.value = null;
-                  } else {
-                    selectedTrack.value = tr;
-                  }
-                }
-
                 void showWarningAboutTrackListens(Track trackWillBeReplaced, Track newTrack) {
                   final listens = HistoryController.inst.topTracksMapListens[trackWillBeReplaced] ?? [];
                   NamidaNavigator.inst.navigateDialog(
@@ -163,96 +153,9 @@ void showTrackAdvancedDialog({
                   );
                 }
 
-                final searchController = TextEditingController();
-                final focusNode = FocusNode();
-
-                NamidaNavigator.inst.navigateDialog(
+                showLibraryTracksChooseDialog(
+                  onChoose: (choosenTrack) => showWarningAboutTrackListens(tracks.first.track, choosenTrack),
                   colorScheme: colorScheme,
-                  dialogBuilder: (theme) => CustomBlurryDialog(
-                    title: Language.inst.CHOOSE,
-                    normalTitleStyle: true,
-                    contentPadding: EdgeInsets.zero,
-                    insetPadding: const EdgeInsets.all(32.0),
-                    actions: [
-                      const CancelButton(),
-                      Obx(
-                        () => NamidaButton(
-                          enabled: selectedTrack.value != null,
-                          text: Language.inst.CONFIRM,
-                          onPressed: () => showWarningAboutTrackListens(tracks.first.track, selectedTrack.value!),
-                        ),
-                      )
-                    ],
-                    child: SizedBox(
-                      width: Get.width,
-                      height: Get.height * 0.6,
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 8.0),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: CustomTextFiled(
-                                    focusNode: focusNode,
-                                    textFieldController: searchController,
-                                    textFieldHintText: Language.inst.SEARCH,
-                                    onTextFieldValueChanged: (value) {
-                                      final matched = allTracksInLibrary.where((element) {
-                                        final titleMatch = element.title.cleanUpForComparison.contains(value);
-                                        final artistMatch = element.originalArtist.cleanUpForComparison.contains(value);
-                                        final albumMatch = element.album.cleanUpForComparison.contains(value);
-                                        return titleMatch || artistMatch || albumMatch;
-                                      });
-                                      allTracksList
-                                        ..clear()
-                                        ..addAll(matched);
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 8.0),
-                                NamidaIconButton(
-                                  icon: Broken.close_circle,
-                                  onPressed: () {
-                                    allTracksList
-                                      ..clear()
-                                      ..addAll(allTracksInLibrary);
-                                    searchController.clear();
-                                  },
-                                )
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 8.0),
-                          Expanded(
-                            child: Obx(
-                              () => ListView.builder(
-                                padding: EdgeInsets.zero,
-                                itemCount: allTracksList.length,
-                                itemBuilder: (context, i) {
-                                  final tr = allTracksList[i];
-                                  return Obx(
-                                    () => TrackTile(
-                                      trackOrTwd: tr,
-                                      index: i,
-                                      queueSource: QueueSource.playlist,
-                                      onTap: () => onTrackTap(tr),
-                                      onRightAreaTap: () => onTrackTap(tr),
-                                      trailingWidget: NamidaCheckMark(
-                                        size: 22.0,
-                                        active: selectedTrack.value == tr,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 );
               },
             ),
@@ -538,5 +441,122 @@ void _showTrackColorPaletteDialog({
         ),
       );
     },
+  );
+}
+
+void showLibraryTracksChooseDialog({
+  required void Function(Track choosenTrack) onChoose,
+  String trackName = '',
+  Color? colorScheme,
+}) {
+  final allTracksList = List<Track>.from(allTracksInLibrary).obs;
+  final selectedTrack = Rxn<Track>();
+  void onTrackTap(Track tr) {
+    if (selectedTrack.value == tr) {
+      selectedTrack.value = null;
+    } else {
+      selectedTrack.value = tr;
+    }
+  }
+
+  final searchController = TextEditingController();
+  final focusNode = FocusNode();
+
+  NamidaNavigator.inst.navigateDialog(
+    colorScheme: colorScheme,
+    dialogBuilder: (theme) => CustomBlurryDialog(
+      title: Language.inst.CHOOSE,
+      normalTitleStyle: true,
+      contentPadding: EdgeInsets.zero,
+      insetPadding: const EdgeInsets.all(32.0),
+      actions: [
+        const CancelButton(),
+        Obx(
+          () => NamidaButton(
+            enabled: selectedTrack.value != null,
+            text: Language.inst.CONFIRM,
+            onPressed: () => onChoose(selectedTrack.value!),
+          ),
+        )
+      ],
+      child: SizedBox(
+        width: Get.width,
+        height: Get.height * 0.6,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 18.0),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: CustomTextFiled(
+                      focusNode: focusNode,
+                      textFieldController: searchController,
+                      textFieldHintText: Language.inst.SEARCH,
+                      onTextFieldValueChanged: (value) {
+                        final matched = allTracksInLibrary.where((element) {
+                          final titleMatch = element.title.cleanUpForComparison.contains(value);
+                          final artistMatch = element.originalArtist.cleanUpForComparison.contains(value);
+                          final albumMatch = element.album.cleanUpForComparison.contains(value);
+                          return titleMatch || artistMatch || albumMatch;
+                        });
+                        allTracksList
+                          ..clear()
+                          ..addAll(matched);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8.0),
+                  NamidaIconButton(
+                    icon: Broken.close_circle,
+                    onPressed: () {
+                      allTracksList
+                        ..clear()
+                        ..addAll(allTracksInLibrary);
+                      searchController.clear();
+                    },
+                  )
+                ],
+              ),
+            ),
+            const SizedBox(height: 8.0),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                trackName,
+                style: Get.textTheme.displayMedium,
+              ),
+            ),
+            const SizedBox(height: 8.0),
+            Expanded(
+              child: Obx(
+                () => ListView.builder(
+                  padding: EdgeInsets.zero,
+                  itemCount: allTracksList.length,
+                  itemBuilder: (context, i) {
+                    final tr = allTracksList[i];
+                    return Obx(
+                      () => TrackTile(
+                        trackOrTwd: tr,
+                        index: i,
+                        queueSource: QueueSource.playlist,
+                        onTap: () => onTrackTap(tr),
+                        onRightAreaTap: () => onTrackTap(tr),
+                        trailingWidget: NamidaCheckMark(
+                          size: 22.0,
+                          active: selectedTrack.value == tr,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
   );
 }

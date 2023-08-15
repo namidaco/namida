@@ -12,6 +12,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -499,6 +500,14 @@ extension RouteUtils on NamidaRoute {
 
       // -- Parsing Json Icon
       getAnimatedCrossFade(child: const ParsingJsonPercentage(size: 30.0), shouldShow: shouldShowJsonParse),
+
+      getAnimatedCrossFade(
+        child: NamidaAppBarIcon(
+          icon: Broken.activity,
+          onPressed: () => JsonToHistoryParser.inst.showMissingEntriesDialog(),
+        ),
+        shouldShow: JsonToHistoryParser.inst.shouldShowMissingEntriesDialog,
+      ),
 
       // -- Settings Icon
       getAnimatedCrossFade(

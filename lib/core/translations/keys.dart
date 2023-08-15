@@ -202,6 +202,7 @@ class LanguageKeys {
   late String HEIGHT_OF_TRACK_TILE;
   late String HIGH_MATCHES;
   late String HISTORY;
+  late String HISTORY_IMPORT_MISSING_ENTRIES_NOTE;
   late String HISTORY_LISTENS_REPLACE_WARNING;
   late String HOME;
   late String HOUR_FORMAT_12;
@@ -261,6 +262,7 @@ class LanguageKeys {
   late String MINIMUM;
   late String MINIPLAYER_CUSTOMIZATION;
   late String MINUTES;
+  late String MISSING_ENTRIES;
   late String MOODS;
   late String MORE;
   late String MOST_PLAYED;

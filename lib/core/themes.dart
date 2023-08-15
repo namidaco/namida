@@ -109,12 +109,13 @@ class AppThemes {
       cardColor: cardColor,
       cardTheme: cardTheme,
       popupMenuTheme: PopupMenuThemeData(
-          surfaceTintColor: Colors.transparent,
-          elevation: 12.0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-          ),
-          color: Color.alphaBlend(cardColor.withAlpha(180), Colors.black)),
+        surfaceTintColor: Colors.transparent,
+        elevation: 12.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+        ),
+        color: light ? Color.alphaBlend(cardColor.withAlpha(180), Colors.white) : Color.alphaBlend(cardColor.withAlpha(180), Colors.black),
+      ),
       textTheme: TextTheme(
         bodyMedium: TextStyle(
           fontSize: 14.0.multipliedFontScale,
