@@ -187,23 +187,53 @@ class HistoryController {
     return totalRemoved;
   }
 
-  Future<void> replaceAllTracksInsideHistory(Track oldTrack, Track newTrack) async {
+  Future<void> _replaceTheseTracksInHistory(
+    bool Function(TrackWithDate e) test,
+    TrackWithDate Function(TrackWithDate old) newElement,
+  ) async {
     final daysToSave = <int>[];
     historyMap.value.entries.toList().loop((entry, index) {
       final day = entry.key;
       final trs = entry.value;
       trs.replaceWhere(
-        (e) => e.track == oldTrack,
-        (old) => TrackWithDate(
-          dateAdded: old.dateAdded,
-          track: newTrack,
-          source: old.source,
-        ),
+        test,
+        newElement,
         onMatch: () => daysToSave.add(day),
       );
     });
     await saveHistoryToStorage(daysToSave);
     updateMostPlayedPlaylist();
+  }
+
+  Future<void> replaceTracksDirectoryInHistory(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
+    String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
+    await _replaceTheseTracksInHistory(
+      (e) {
+        final trackPath = e.track.path;
+        if (ensureNewFileExists) {
+          if (!File(getNewPath(trackPath)).existsSync()) return false;
+        }
+        final firstC = forThesePathsOnly != null ? forThesePathsOnly.contains(e.track.path) : true;
+        final secondC = trackPath.startsWith(oldDir);
+        return firstC && secondC;
+      },
+      (old) => TrackWithDate(
+        dateAdded: old.dateAdded,
+        track: Track(getNewPath(old.track.path)),
+        source: old.source,
+      ),
+    );
+  }
+
+  Future<void> replaceAllTracksInsideHistory(Track oldTrack, Track newTrack) async {
+    await _replaceTheseTracksInHistory(
+      (e) => e.track == oldTrack,
+      (old) => TrackWithDate(
+        dateAdded: old.dateAdded,
+        track: newTrack,
+        source: old.source,
+      ),
+    );
   }
 
   /// Most Played Playlist, relies totally on History Playlist.

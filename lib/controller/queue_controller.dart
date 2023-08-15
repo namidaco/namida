@@ -111,8 +111,34 @@ class QueueController {
   }
 
   /// Only use when updating missing track.
-  Future<void> replaceTrackInAllQueues(Track oldTrack, Track newTrack) async {
+  Future<void> replaceTracksDirectoryInQueues(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
+    String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
+
     final queuesToSave = <Queue>{};
+    queuesMap.value.entries.toList().loop((entry, index) {
+      final q = entry.value;
+      q.tracks.replaceWhere(
+        (e) {
+          final trackPath = e.path;
+          if (ensureNewFileExists) {
+            if (!File(getNewPath(trackPath)).existsSync()) return false;
+          }
+          final firstC = forThesePathsOnly != null ? forThesePathsOnly.contains(e.track.path) : true;
+          final secondC = trackPath.startsWith(oldDir);
+          return firstC && secondC;
+        },
+        (old) => Track(old.path.replaceFirst(oldDir, newDir)),
+        onMatch: () => queuesToSave.add(q),
+      );
+    });
+    await queuesToSave.toList().loopFuture((q, index) async {
+      _updateMap(q);
+      await _saveQueueToStorage(q);
+    });
+  }
+
+  Future<void> replaceTrackInAllQueues(Track oldTrack, Track newTrack) async {
+    final queuesToSave = <Queue>[];
     queuesMap.value.entries.toList().loop((entry, index) {
       final q = entry.value;
       q.tracks.replaceItems(
@@ -121,7 +147,7 @@ class QueueController {
         onMatch: () => queuesToSave.add(q),
       );
     });
-    await queuesToSave.toList().loopFuture((q, index) async {
+    await queuesToSave.loopFuture((q, index) async {
       _updateMap(q);
       await _saveQueueToStorage(q);
     });

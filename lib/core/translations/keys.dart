@@ -50,6 +50,7 @@ class LanguageKeys {
   late String BITRATE;
   late String BLACKLIST;
   late String BORDER_RADIUS_MULTIPLIER;
+  late String CACHE;
   late String CANCEL;
   late String CHANGED;
   late String CHANNELS;
@@ -105,6 +106,7 @@ class LanguageKeys {
   late String DEFAULT;
   late String DELETE_PLAYLIST;
   late String DELETE;
+  late String DIRECTORY_DOESNT_EXIST;
   late String DISABLE_REORDERING;
   late String DISABLE_SEARCH_CLEANUP;
   late String DISC_NUMBER_TOTAL;
@@ -264,6 +266,7 @@ class LanguageKeys {
   late String MULTIPLE_TRACKS_TAGS_EDIT_NOTE;
   late String NAME_CONTAINS_BAD_CHARACTER;
   late String NAME;
+  late String NEW_DIRECTORY;
   late String NEW_TRACKS_ADD;
   late String NEW_TRACKS_MOODS_SUBTITLE;
   late String NEW_TRACKS_MOODS;
@@ -292,6 +295,8 @@ class LanguageKeys {
   late String NUMBER_OF_TRACKS;
   late String OF;
   late String OLDEST_WATCH;
+  late String OLD_DIRECTORY;
+  late String OLD_DIRECTORY_STILL_HAS_TRACKS;
   late String ON_INTERRUPTION;
   late String ON_VOLUME_ZERO;
   late String OPEN_YOUTUBE_LINK;
@@ -402,6 +407,7 @@ class LanguageKeys {
   late String SKIP;
   late String SLEEP_AFTER;
   late String SLEEP_TIMER;
+  late String SORT_BY;
   late String SOURCE;
   late String STAGGERED_ALBUM_GRID_VIEW;
   late String START;
@@ -457,6 +463,8 @@ class LanguageKeys {
   late String UNLIMITED;
   late String UNLOCK;
   late String UPDATE;
+  late String UPDATE_DIRECTORY_PATH;
+  late String UPDATE_MISSING_TRACKS_ONLY;
   late String UPDATING;
   late String USED;
   late String USE_COLLAPSED_SETTING_TILES;

@@ -103,6 +103,7 @@ class CustomSwitch extends StatelessWidget {
   final Color? bgColor;
   final Color? shadowColor;
   final int durationInMillisecond;
+  final Color? passedColor;
 
   const CustomSwitch({
     super.key,
@@ -113,10 +114,12 @@ class CustomSwitch extends StatelessWidget {
     this.durationInMillisecond = 400,
     this.bgColor,
     this.shadowColor,
+    this.passedColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final finalColor = passedColor ?? CurrentColor.inst.color;
     return AnimatedContainer(
       width: width,
       height: height,
@@ -124,7 +127,7 @@ class CustomSwitch extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: width / 10),
       decoration: BoxDecoration(
         color: (active
-            ? bgColor ?? Color.alphaBlend(CurrentColor.inst.color.withAlpha(180), context.theme.colorScheme.background).withAlpha(140)
+            ? bgColor ?? Color.alphaBlend(finalColor.withAlpha(180), context.theme.colorScheme.background).withAlpha(140)
             // : context.theme.scaffoldBackgroundColor.withAlpha(34)
             : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(60), context.theme.disabledColor)),
         borderRadius: BorderRadius.circular(30.0.multipliedRadius),
@@ -133,7 +136,7 @@ class CustomSwitch extends StatelessWidget {
             offset: const Offset(0, 2),
             blurRadius: active ? 8 : 2,
             spreadRadius: 0,
-            color: (shadowColor ?? Color.alphaBlend(CurrentColor.inst.color.withAlpha(180), context.theme.colorScheme.background)).withOpacity(active ? 0.8 : 0.3),
+            color: (shadowColor ?? Color.alphaBlend(finalColor.withAlpha(180), context.theme.colorScheme.background)).withOpacity(active ? 0.8 : 0.3),
           ),
         ],
       ),
@@ -204,7 +207,7 @@ class CustomSwitchListTile extends StatelessWidget {
               const SizedBox(
                 width: 12.0,
               ),
-              CustomSwitch(active: value),
+              CustomSwitch(active: value, passedColor: passedColor),
             ],
           ),
         ),

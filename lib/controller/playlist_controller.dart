@@ -188,28 +188,56 @@ class PlaylistController {
     await _savePlaylistToStorage(playlist);
   }
 
-  Future<void> replaceTrackInAllPlaylists(Track oldTrack, Track newTrack) async {
+  Future<void> _replaceTheseTracksInPlaylists(
+    bool Function(TrackWithDate e) test,
+    TrackWithDate Function(TrackWithDate old) newElement,
+  ) async {
     // -- normal
-    final playlistsToSave = <Playlist>[];
+    final playlistsToSave = <Playlist>{};
     playlistsMap.entries.toList().loop((entry, index) {
       final p = entry.value;
       p.tracks.replaceWhere(
-        (e) => e.track == oldTrack,
-        (old) => TrackWithDate(
-          dateAdded: old.dateAdded,
-          track: newTrack,
-          source: old.source,
-        ),
+        test,
+        newElement,
         onMatch: () => playlistsToSave.add(p),
       );
     });
-    await playlistsToSave.loopFuture((p, index) async {
+    await playlistsToSave.toList().loopFuture((p, index) async {
       _updateMap(p);
       await _savePlaylistToStorage(p);
     });
 
     // -- favourite
     favouritesPlaylist.value.tracks.replaceSingleWhere(
+      test,
+      newElement,
+    );
+    await _saveFavouritesToStorage();
+  }
+
+  Future<void> replaceTracksDirectory(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
+    String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
+
+    await _replaceTheseTracksInPlaylists(
+      (e) {
+        final trackPath = e.track.path;
+        if (ensureNewFileExists) {
+          if (!File(getNewPath(trackPath)).existsSync()) return false;
+        }
+        final firstC = forThesePathsOnly != null ? forThesePathsOnly.contains(e.track.path) : true;
+        final secondC = trackPath.startsWith(oldDir);
+        return firstC && secondC;
+      },
+      (old) => TrackWithDate(
+        dateAdded: old.dateAdded,
+        track: Track(getNewPath(old.track.path)),
+        source: old.source,
+      ),
+    );
+  }
+
+  Future<void> replaceTrackInAllPlaylists(Track oldTrack, Track newTrack) async {
+    await _replaceTheseTracksInPlaylists(
       (e) => e.track == oldTrack,
       (old) => TrackWithDate(
         dateAdded: old.dateAdded,
@@ -217,7 +245,6 @@ class PlaylistController {
         source: old.source,
       ),
     );
-    await _saveFavouritesToStorage();
   }
 
   void reorderTrack(Playlist playlist, int oldIndex, int newIndex) async {

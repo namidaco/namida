@@ -13,6 +13,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/track_clear_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings/advanced_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 
 void showTrackAdvancedDialog({
@@ -39,6 +40,8 @@ void showTrackAdvancedDialog({
   final shouldReIndexEnabled = true.obs;
 
   final tracksUniqued = tracks.uniqued((element) => element.track);
+
+  final firstTracksDirectoryPath = tracksUniqued.first.track.path.getDirectoryPath;
 
   NamidaNavigator.inst.navigateDialog(
     colorScheme: colorScheme,
@@ -68,6 +71,14 @@ void showTrackAdvancedDialog({
               subtitle: isSingle ? sourcesMap.keys.first.convertToString : sourcesMap.entries.map((e) => '${e.key.convertToString}: ${e.value.formatDecimal()}').join('\n'),
               icon: Broken.attach_circle,
               onTap: () {},
+            ),
+
+          // -- Updating directory path option, only for tracks whithin the same parent directory.
+          if (tracksUniqued.every((element) => element.track.path.startsWith(firstTracksDirectoryPath)))
+            UpdateDirectoryPathListTile(
+              colorScheme: colorScheme,
+              oldPath: firstTracksDirectoryPath,
+              tracksPaths: tracksUniqued.map((e) => e.track.path),
             ),
           Obx(
             () {
@@ -107,7 +118,7 @@ void showTrackAdvancedDialog({
             },
           ),
 
-          // todo: history replace with another track
+          // TODO: history replace with another track
 
           if (isSingle)
             CustomListTile(

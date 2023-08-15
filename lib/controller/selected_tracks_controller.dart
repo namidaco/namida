@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
@@ -99,5 +101,37 @@ class SelectedTracksController {
     _tracksOrTwdList.replaceItem(oldTrack, newTrack);
     _allTracksHashCodes.remove(oldTrack);
     _allTracksHashCodes[newTrack] = true;
+  }
+
+  void replaceTrackDirectory(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) {
+    String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
+
+    _tracksOrTwdList.replaceWhere(
+      (e) {
+        final trackPath = e.track.path;
+        if (ensureNewFileExists) {
+          if (!File(getNewPath(trackPath)).existsSync()) return false;
+        }
+        final firstC = forThesePathsOnly != null ? forThesePathsOnly.contains(e.track.path) : true;
+        final secondC = trackPath.startsWith(oldDir);
+        return firstC && secondC;
+      },
+      (old) {
+        final newtr = Track(getNewPath(old.track.path));
+        if (old is TrackWithDate) {
+          return TrackWithDate(
+            dateAdded: old.dateAdded,
+            track: newtr,
+            source: old.source,
+          );
+        } else {
+          return newtr;
+        }
+      },
+    );
+    _allTracksHashCodes.clear();
+    _tracksOrTwdList.loop((e, index) {
+      _allTracksHashCodes[e.track] = true;
+    });
   }
 }

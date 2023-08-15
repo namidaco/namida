@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import 'package:checkmark/checkmark.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -16,6 +18,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -194,6 +197,7 @@ class AdvancedSettings extends StatelessWidget {
               );
             },
           ),
+          const UpdateDirectoryPathListTile(),
           Obx(
             () => CustomListTile(
               leading: const StackedIcon(
@@ -402,6 +406,139 @@ class AdvancedSettings extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class UpdateDirectoryPathListTile extends StatelessWidget {
+  final Color? colorScheme;
+  final String? oldPath;
+  final Iterable<String>? tracksPaths;
+  const UpdateDirectoryPathListTile({super.key, this.colorScheme, this.oldPath, this.tracksPaths});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomListTile(
+      leading: const StackedIcon(
+        baseIcon: Broken.folder,
+        secondaryIcon: Broken.music,
+      ),
+      title: Language.inst.UPDATE_DIRECTORY_PATH,
+      subtitle: oldPath,
+      onTap: () {
+        final oldDirController = TextEditingController(text: oldPath);
+        final newDirController = TextEditingController();
+
+        final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+        final updateMissingOnly = true.obs;
+        NamidaNavigator.inst.navigateDialog(
+            colorScheme: colorScheme,
+            dialogBuilder: (theme) => Form(
+                  key: formKey,
+                  child: CustomBlurryDialog(
+                    title: Language.inst.UPDATE_DIRECTORY_PATH,
+                    actions: [
+                      const CancelButton(),
+                      NamidaButton(
+                        text: Language.inst.UPDATE,
+                        onPressed: () async {
+                          Future<void> okUpdate() async {
+                            await EditDeleteController.inst.updateDirectoryInEveryPartOfNamida(
+                              oldDirController.text,
+                              newDirController.text,
+                              forThesePathsOnly: tracksPaths,
+                              ensureNewFileExists: updateMissingOnly.value,
+                            );
+                            NamidaNavigator.inst.closeDialog();
+                          }
+
+                          if (formKey.currentState?.validate() ?? false) {
+                            if (tracksPaths != null && tracksPaths!.any((element) => File(element).existsSync())) {
+                              NamidaNavigator.inst.navigateDialog(
+                                colorScheme: colorScheme,
+                                dialogBuilder: (theme) => CustomBlurryDialog(
+                                  normalTitleStyle: true,
+                                  isWarning: true,
+                                  actions: [
+                                    const CancelButton(),
+                                    NamidaButton(
+                                      text: Language.inst.CONFIRM,
+                                      onPressed: () async {
+                                        NamidaNavigator.inst.closeDialog();
+                                        await okUpdate();
+                                      },
+                                    )
+                                  ],
+                                  bodyText: Language.inst.OLD_DIRECTORY_STILL_HAS_TRACKS,
+                                ),
+                              );
+                            } else {
+                              await okUpdate();
+                            }
+                          }
+                        },
+                      )
+                    ],
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 12.0),
+                        CustomTagTextField(
+                          controller: oldDirController,
+                          hintText: '',
+                          labelText: Language.inst.OLD_DIRECTORY,
+                          validator: (value) {
+                            value ??= '';
+                            if (value.isEmpty) {
+                              return Language.inst.PLEASE_ENTER_A_NAME;
+                            }
+
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 24.0),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: CustomTagTextField(
+                                controller: newDirController,
+                                hintText: '',
+                                labelText: Language.inst.NEW_DIRECTORY,
+                                validator: (value) {
+                                  value ??= '';
+                                  if (value.isEmpty) {
+                                    return Language.inst.PLEASE_ENTER_A_NAME;
+                                  }
+                                  if (!Directory(value).existsSync()) {
+                                    return Language.inst.DIRECTORY_DOESNT_EXIST;
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12.0),
+                            NamidaIconButton(
+                              onPressed: () async {
+                                final dir = await FilePicker.platform.getDirectoryPath();
+                                if (dir != null) newDirController.text = dir;
+                              },
+                              icon: Broken.folder,
+                            )
+                          ],
+                        ),
+                        const SizedBox(height: 12.0),
+                        Obx(
+                          () => CustomSwitchListTile(
+                            passedColor: colorScheme,
+                            title: Language.inst.UPDATE_MISSING_TRACKS_ONLY,
+                            value: updateMissingOnly.value,
+                            onChanged: (isTrue) => updateMissingOnly.value = !updateMissingOnly.value,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ));
+      },
     );
   }
 }

@@ -75,21 +75,32 @@ class EditDeleteController {
     final newtrlist = await Indexer.inst.convertPathToTrack([newPath]);
     if (newtrlist.isEmpty) return;
     final newTrack = newtrlist.first;
+    await Future.wait([
+      // --- Queues ---
+      QueueController.inst.replaceTrackInAllQueues(oldTrack, newTrack),
 
-    // --- Queues ---
-    QueueController.inst.replaceTrackInAllQueues(oldTrack, newTrack);
+      // --- Player Queue ---
+      Player.inst.replaceAllTracksInQueue(oldTrack, newTrack),
 
-    // --- Player Queue ---
-    Player.inst.replaceAllTracksInQueue(oldTrack, newTrack);
+      // --- Playlists & Favourites---
+      PlaylistController.inst.replaceTrackInAllPlaylists(oldTrack, newTrack),
 
-    // --- Playlists & Favourites---
-    PlaylistController.inst.replaceTrackInAllPlaylists(oldTrack, newTrack);
-
-    // --- History---
-    HistoryController.inst.replaceAllTracksInsideHistory(oldTrack, newTrack);
-
+      // --- History---
+      HistoryController.inst.replaceAllTracksInsideHistory(oldTrack, newTrack),
+    ]);
     // --- Selected Tracks ---
     SelectedTracksController.inst.replaceThisTrack(oldTrack, newTrack);
+  }
+
+  Future<void> updateDirectoryInEveryPartOfNamida(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
+    SettingsController.inst.save(directoriesToScan: [newDir]);
+    await Future.wait([
+      PlaylistController.inst.replaceTracksDirectory(oldDir, newDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists),
+      QueueController.inst.replaceTracksDirectoryInQueues(oldDir, newDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists),
+      Player.inst.replaceTracksDirectoryInQueue(oldDir, newDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists),
+      HistoryController.inst.replaceTracksDirectoryInHistory(oldDir, newDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists),
+    ]);
+    SelectedTracksController.inst.replaceTrackDirectory(oldDir, newDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists);
   }
 }
 

@@ -166,6 +166,33 @@ class Player {
     await _audioHandler.replaceAllItemsInQueue(oldTrack, newTrack);
   }
 
+  Future<void> replaceTracksDirectoryInQueue(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
+    String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
+    await _audioHandler.replaceWhereInQueue(
+      (e) {
+        final trackPath = e.track.path;
+        if (ensureNewFileExists) {
+          if (!File(getNewPath(trackPath)).existsSync()) return false;
+        }
+        final firstC = forThesePathsOnly != null ? forThesePathsOnly.contains(e.track.path) : true;
+        final secondC = trackPath.startsWith(oldDir);
+        return firstC && secondC;
+      },
+      (old) {
+        final newtr = Track(getNewPath(old.track.path));
+        if (old is TrackWithDate) {
+          return TrackWithDate(
+            dateAdded: old.dateAdded,
+            track: newtr,
+            source: old.source,
+          );
+        } else {
+          return newtr;
+        }
+      },
+    );
+  }
+
   void removeRangeFromQueue(int start, int end) {
     _audioHandler.removeRangeFromQueue(start, end);
   }
