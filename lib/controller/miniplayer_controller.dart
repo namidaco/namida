@@ -76,10 +76,10 @@ class MiniPlayerController {
   void updateBottomNavBarRelatedDimensions(bool isEnabled) {
     if (isEnabled) {
       _actuationOffset = 100.0;
-      _deadSpace = 100.0;
+      _deadSpace = 12.0;
     } else {
       _actuationOffset = 60.0;
-      _deadSpace = 60.0;
+      _deadSpace = 12.0;
     }
     animation.reset();
     verticalSnapping();

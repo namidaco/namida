@@ -56,8 +56,8 @@ class HistoryController {
     _historyTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       final per = currentListenedSeconds / trDurInSec * 100;
 
-      printy("Current percentage $per", dumpshit: true);
       if (Player.inst.isPlaying) {
+        printy("Current percentage $per", dumpshit: true);
         currentListenedSeconds++;
       }
 
