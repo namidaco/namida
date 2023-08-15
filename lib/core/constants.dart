@@ -1,5 +1,7 @@
 // ignore_for_file: non_constant_identifier_names, constant_identifier_names
 
+import 'dart:collection';
+
 import 'package:flutter/services.dart';
 
 import 'package:namida/class/lang.dart';
@@ -62,7 +64,7 @@ const k_PLAYLIST_NAME_HISTORY = '_HISTORY_';
 const k_PLAYLIST_NAME_MOST_PLAYED = '_MOST_PLAYED_';
 const k_PLAYLIST_NAME_AUTO_GENERATED = '_AUTO_GENERATED_';
 
-List<Track> get allTracksInLibrary => Indexer.inst.tracksInfoList;
+List<Track> get allTracksInLibrary => UnmodifiableListView(Indexer.inst.tracksInfoList);
 
 bool get shouldAlbumBeSquared =>
     (SettingsController.inst.albumGridCount.value > 1 && !SettingsController.inst.useAlbumStaggeredGridView.value) ||

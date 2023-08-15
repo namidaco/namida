@@ -63,9 +63,10 @@ class TrackTile extends StatelessWidget {
         index: index,
         comingFromQueue: _isFromQueue,
         trackWithDate: trackOrTwd.trackWithDate,
+        source: queueSource,
       );
 
-  void _triggerTrackInfoDialog() => showTrackInfoDialog(_tr, true, comingFromQueue: _isFromQueue, index: index);
+  void _triggerTrackInfoDialog() => showTrackInfoDialog(_tr, true, comingFromQueue: _isFromQueue, index: index, queueSource: queueSource);
 
   void _selectTrack() => SelectedTracksController.inst.selectOrUnselect(trackOrTwd, queueSource, playlistName);
 

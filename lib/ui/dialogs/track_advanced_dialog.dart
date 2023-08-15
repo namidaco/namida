@@ -5,20 +5,25 @@ import 'package:namida/class/color_m.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/track_clear_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/expandable_box.dart';
+import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/advanced_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 
 void showTrackAdvancedDialog({
   required List<Selectable> tracks,
   required Color colorScheme,
+  required QueueSource source,
 }) async {
   final isSingle = tracks.length == 1;
   final canShowClearDialog = tracks.hasAnythingCached;
@@ -118,8 +123,139 @@ void showTrackAdvancedDialog({
             },
           ),
 
-          // TODO: history replace with another track
+          if (source == QueueSource.history && isSingle)
+            CustomListTile(
+              passedColor: colorScheme,
+              title: Language.inst.REPLACE_ALL_LISTENS_WITH_ANOTHER_TRACK,
+              icon: Broken.fatrows,
+              onTap: () async {
+                final allTracksList = List<Track>.from(allTracksInLibrary).obs;
+                final selectedTrack = Rxn<Track>();
+                void onTrackTap(Track tr) {
+                  if (selectedTrack.value == tr) {
+                    selectedTrack.value = null;
+                  } else {
+                    selectedTrack.value = tr;
+                  }
+                }
 
+                void showWarningAboutTrackListens(Track trackWillBeReplaced, Track newTrack) {
+                  final listens = HistoryController.inst.topTracksMapListens[trackWillBeReplaced] ?? [];
+                  NamidaNavigator.inst.navigateDialog(
+                    colorScheme: colorScheme,
+                    dialogBuilder: (theme) => CustomBlurryDialog(
+                      isWarning: true,
+                      normalTitleStyle: true,
+                      actions: [
+                        const CancelButton(),
+                        NamidaButton(
+                            text: Language.inst.CONFIRM,
+                            onPressed: () async {
+                              await HistoryController.inst.replaceAllTracksInsideHistory(trackWillBeReplaced, newTrack);
+                              NamidaNavigator.inst.closeDialog(3);
+                            })
+                      ],
+                      bodyText: Language.inst.HISTORY_LISTENS_REPLACE_WARNING
+                          .replaceFirst('_LISTENS_COUNT_', listens.length.formatDecimal())
+                          .replaceFirst('_OLD_TRACK_INFO_', '"${trackWillBeReplaced.originalArtist} - ${trackWillBeReplaced.title}"')
+                          .replaceFirst('_NEW_TRACK_INFO_', '"${newTrack.originalArtist} - ${newTrack.title}"'),
+                    ),
+                  );
+                }
+
+                final searchController = TextEditingController();
+                final focusNode = FocusNode();
+
+                NamidaNavigator.inst.navigateDialog(
+                  colorScheme: colorScheme,
+                  dialogBuilder: (theme) => CustomBlurryDialog(
+                    title: Language.inst.CHOOSE,
+                    normalTitleStyle: true,
+                    contentPadding: EdgeInsets.zero,
+                    insetPadding: const EdgeInsets.all(32.0),
+                    actions: [
+                      const CancelButton(),
+                      Obx(
+                        () => NamidaButton(
+                          enabled: selectedTrack.value != null,
+                          text: Language.inst.CONFIRM,
+                          onPressed: () => showWarningAboutTrackListens(tracks.first.track, selectedTrack.value!),
+                        ),
+                      )
+                    ],
+                    child: SizedBox(
+                      width: Get.width,
+                      height: Get.height * 0.6,
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 8.0),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: CustomTextFiled(
+                                    focusNode: focusNode,
+                                    textFieldController: searchController,
+                                    textFieldHintText: Language.inst.SEARCH,
+                                    onTextFieldValueChanged: (value) {
+                                      final matched = allTracksInLibrary.where((element) {
+                                        final titleMatch = element.title.cleanUpForComparison.contains(value);
+                                        final artistMatch = element.originalArtist.cleanUpForComparison.contains(value);
+                                        final albumMatch = element.album.cleanUpForComparison.contains(value);
+                                        return titleMatch || artistMatch || albumMatch;
+                                      });
+                                      allTracksList
+                                        ..clear()
+                                        ..addAll(matched);
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 8.0),
+                                NamidaIconButton(
+                                  icon: Broken.close_circle,
+                                  onPressed: () {
+                                    allTracksList
+                                      ..clear()
+                                      ..addAll(allTracksInLibrary);
+                                    searchController.clear();
+                                  },
+                                )
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8.0),
+                          Expanded(
+                            child: Obx(
+                              () => ListView.builder(
+                                padding: EdgeInsets.zero,
+                                itemCount: allTracksList.length,
+                                itemBuilder: (context, i) {
+                                  final tr = allTracksList[i];
+                                  return Obx(
+                                    () => TrackTile(
+                                      trackOrTwd: tr,
+                                      index: i,
+                                      queueSource: QueueSource.playlist,
+                                      onTap: () => onTrackTap(tr),
+                                      onRightAreaTap: () => onTrackTap(tr),
+                                      trailingWidget: NamidaCheckMark(
+                                        size: 22.0,
+                                        active: selectedTrack.value == tr,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
           if (isSingle)
             CustomListTile(
               passedColor: colorScheme,

@@ -359,7 +359,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                       ),
                                       IconButton(
                                         onPressed: () {
-                                          NamidaDialogs.inst.showTrackDialog(currentTrack);
+                                          NamidaDialogs.inst.showTrackDialog(currentTrack, source: QueueSource.playerQueue);
                                         },
                                         icon: Container(
                                           padding: const EdgeInsets.all(4.0),
@@ -1583,7 +1583,7 @@ class _TrackInfo extends StatelessWidget {
                             padding: EdgeInsets.only(right: 22.0 + 92 * (1 - cp)),
                             child: NamidaInkWell(
                               borderRadius: 12.0,
-                              onTap: cp == 1 ? () => NamidaDialogs.inst.showTrackDialog(trackPre) : null,
+                              onTap: cp == 1 ? () => NamidaDialogs.inst.showTrackDialog(trackPre, source: QueueSource.playerQueue) : null,
                               padding: EdgeInsets.only(left: 8.0 * cp),
                               child: Column(
                                 key: Key(track.title),

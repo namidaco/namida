@@ -236,8 +236,7 @@ class EmptyPlaylistSubpage extends StatelessWidget {
   final isExpanded = false.obs;
   @override
   Widget build(BuildContext context) {
-    final randomTracks = List<Track>.from(allTracksInLibrary..shuffle()).take(150).toList();
-
+    final randomTracks = List<Track>.from(allTracksInLibrary.take(150));
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(

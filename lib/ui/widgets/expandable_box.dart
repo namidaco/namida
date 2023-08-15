@@ -117,17 +117,19 @@ class CustomTextFiled extends StatelessWidget {
   final TextEditingController? textFieldController;
   final String textFieldHintText;
   final void Function(String value)? onTextFieldValueChanged;
+  final FocusNode? focusNode;
   const CustomTextFiled({
     super.key,
     required this.textFieldController,
     required this.textFieldHintText,
     this.onTextFieldValueChanged,
+    this.focusNode,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextField(
-      focusNode: ScrollSearchController.inst.focusNode,
+      focusNode: focusNode ?? ScrollSearchController.inst.focusNode,
       controller: textFieldController,
       decoration: InputDecoration(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),

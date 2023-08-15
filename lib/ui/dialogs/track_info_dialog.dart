@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:namida/core/enums.dart';
 import 'package:photo_view/photo_view.dart';
 
 import 'package:namida/class/split_config.dart';
@@ -26,11 +27,11 @@ import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQueue = false, int? index, Color? colorScheme}) async {
+Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQueue = false, int? index, Color? colorScheme, required QueueSource queueSource}) async {
   // [showTrackDialog] calls [showGeneralPopupDialog] which has a built-check for tracks that are not available.
   final trackExt = track.toTrackExtOrNull();
   if (trackExt == null) {
-    NamidaDialogs.inst.showTrackDialog(track);
+    NamidaDialogs.inst.showTrackDialog(track, source: queueSource);
     return;
   }
 

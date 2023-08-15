@@ -267,6 +267,7 @@ class Language extends LanguageKeys {
 			HEIGHT_OF_TRACK_TILE = getKey("HEIGHT_OF_TRACK_TILE");
 			HIGH_MATCHES = getKey("HIGH_MATCHES");
 			HISTORY = getKey("HISTORY");
+			HISTORY_LISTENS_REPLACE_WARNING = getKey("HISTORY_LISTENS_REPLACE_WARNING");
 			HOME = getKey("HOME");
 			HOUR_FORMAT_12 = getKey("HOUR_FORMAT_12");
 			IMPORT_ALL = getKey("IMPORT_ALL");
@@ -404,6 +405,7 @@ class Language extends LanguageKeys {
 			QUEUES = getKey("QUEUES");
 			RANDOM = getKey("RANDOM");
 			RATING = getKey("RATING");
+			REPLACE_ALL_LISTENS_WITH_ANOTHER_TRACK = getKey("REPLACE_ALL_LISTENS_WITH_ANOTHER_TRACK");
 			RE_INDEX_SUBTITLE = getKey("RE_INDEX_SUBTITLE");
 			RE_INDEX_WARNING = getKey("RE_INDEX_WARNING");
 			RE_INDEX = getKey("RE_INDEX");
@@ -572,6 +574,8 @@ class Language extends LanguageKeys {
     }
   }
 }
+
+
 
 
 

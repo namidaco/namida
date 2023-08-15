@@ -225,9 +225,9 @@ class HistoryController {
     );
   }
 
-  Future<void> replaceAllTracksInsideHistory(Track oldTrack, Track newTrack) async {
+  Future<void> replaceAllTracksInsideHistory(Selectable oldTrack, Track newTrack) async {
     await _replaceTheseTracksInHistory(
-      (e) => e.track == oldTrack,
+      (e) => e.track == oldTrack.track,
       (old) => TrackWithDate(
         dateAdded: old.dateAdded,
         track: newTrack,

@@ -534,7 +534,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
     } catch (e) {
       SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
         if (item.track == currentTrack.track) {
-          NamidaDialogs.inst.showTrackDialog(tr, isFromPlayerQueue: true, errorPlayingTrack: true);
+          NamidaDialogs.inst.showTrackDialog(tr, isFromPlayerQueue: true, errorPlayingTrack: true, source: QueueSource.playerQueue);
         }
       });
       printy(e, isError: true);

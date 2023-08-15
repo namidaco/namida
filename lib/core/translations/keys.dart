@@ -202,6 +202,7 @@ class LanguageKeys {
   late String HEIGHT_OF_TRACK_TILE;
   late String HIGH_MATCHES;
   late String HISTORY;
+  late String HISTORY_LISTENS_REPLACE_WARNING;
   late String HOME;
   late String HOUR_FORMAT_12;
   late String IMPORT_ALL;
@@ -339,6 +340,7 @@ class LanguageKeys {
   late String QUEUES;
   late String RANDOM;
   late String RATING;
+  late String REPLACE_ALL_LISTENS_WITH_ANOTHER_TRACK;
   late String RE_INDEX_SUBTITLE;
   late String RE_INDEX_WARNING;
   late String RE_INDEX;

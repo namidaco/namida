@@ -451,6 +451,7 @@ Future<void> showGeneralPopupDialog(
     onTap: () => showTrackAdvancedDialog(
       tracks: tracksWithDates.isNotEmpty ? tracksWithDates : tracks,
       colorScheme: colorDelightened,
+      source: source,
     ),
   );
 
@@ -531,6 +532,7 @@ Future<void> showGeneralPopupDialog(
                       comingFromQueue: comingFromQueue,
                       index: index,
                       colorScheme: colorDelightened,
+                      queueSource: source,
                     )
                   : null,
               child: Container(
