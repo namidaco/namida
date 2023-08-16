@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
@@ -422,52 +420,65 @@ class ExtrasSettings extends StatelessWidget {
   }
 }
 
-class LoadingIndicator extends StatelessWidget {
+class LoadingIndicator extends StatefulWidget {
   final Color? circleColor;
   final double? width;
   final double? height;
-  final double? maxWidth;
-  final double? maxHeight;
-  final int? durationInMillisecond;
+  final double? boxWidth;
+  final double? boxHeight;
+  final int durationInMillisecond;
 
   const LoadingIndicator({
     super.key,
     this.circleColor,
-    this.width,
-    this.height,
-    this.durationInMillisecond,
-    this.maxWidth,
-    this.maxHeight,
+    this.width = 5.0,
+    this.height = 5.0,
+    this.durationInMillisecond = 300,
+    this.boxWidth = 20.0,
+    this.boxHeight = 5.0,
   });
 
   @override
+  State<LoadingIndicator> createState() => _LoadingIndicatorState();
+}
+
+class _LoadingIndicatorState extends State<LoadingIndicator> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  final _alignmentTween = Tween<AlignmentGeometry>(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: widget.durationInMillisecond),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final Rx<Alignment> alignment = Alignment.centerLeft.obs;
-    Timer.periodic(Duration(milliseconds: durationInMillisecond ?? 350), (Timer timer) {
-      if (alignment.value == Alignment.centerLeft) {
-        alignment.value = Alignment.centerRight;
-      } else {
-        alignment.value = Alignment.centerLeft;
-      }
-    });
     return SizedBox(
-      width: maxWidth ?? 20.0,
-      height: maxHeight ?? 5.0,
-      child: Obx(
-        () => AnimatedAlign(
-          duration: Duration(milliseconds: durationInMillisecond ?? 400),
-          curve: Curves.easeOutSine,
-          alignment: alignment.value,
-          child: Container(
-            width: width ?? 5.0,
-            height: height ?? 5.0,
-            decoration: BoxDecoration(
-              color: circleColor ?? context.textTheme.displayMedium?.color,
-              borderRadius: BorderRadius.circular(30.0.multipliedRadius),
-              // boxShadow: [
-              //   BoxShadow(color: Colors.black.withAlpha(100), spreadRadius: 1, blurRadius: 4, offset: Offset(0, 2)),
-              // ],
-            ),
+      width: widget.boxWidth,
+      height: widget.boxHeight,
+      child: AlignTransition(
+        alignment: _alignmentTween.animate(_controller),
+        child: Container(
+          width: widget.width,
+          height: widget.height,
+          decoration: BoxDecoration(
+            color: widget.circleColor ?? context.textTheme.displayMedium?.color,
+            borderRadius: BorderRadius.circular(30.0),
           ),
         ),
       ),

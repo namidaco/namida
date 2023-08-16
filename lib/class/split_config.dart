@@ -16,9 +16,25 @@ class ArtistsSplitConfig extends _SplitterConfig {
   }) {
     return ArtistsSplitConfig(
       addFeatArtist: addFeatArtist ?? SettingsController.inst.extractFeatArtistFromTitle.value,
-      separators: separators ?? SettingsController.inst.trackArtistsSeparators,
-      separatorsBlacklist: separatorsBlacklist ?? SettingsController.inst.trackArtistsSeparatorsBlacklist,
+      separators: separators ?? SettingsController.inst.trackArtistsSeparators.toList(),
+      separatorsBlacklist: separatorsBlacklist ?? SettingsController.inst.trackArtistsSeparatorsBlacklist.toList(),
     );
+  }
+
+  factory ArtistsSplitConfig.fromMap(Map<String, dynamic> map) {
+    return ArtistsSplitConfig(
+      addFeatArtist: map["addFeatArtist"],
+      separators: map["separators"],
+      separatorsBlacklist: map["separatorsBlacklist"],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      "addFeatArtist": addFeatArtist,
+      "separators": separators,
+      "separatorsBlacklist": separatorsBlacklist,
+    };
   }
 }
 
@@ -33,9 +49,23 @@ class GenresSplitConfig extends _SplitterConfig {
     final List<String>? separatorsBlacklist,
   }) {
     return GenresSplitConfig(
-      separators: separators ?? SettingsController.inst.trackGenresSeparators,
-      separatorsBlacklist: separatorsBlacklist ?? SettingsController.inst.trackGenresSeparatorsBlacklist,
+      separators: separators ?? SettingsController.inst.trackGenresSeparators.toList(),
+      separatorsBlacklist: separatorsBlacklist ?? SettingsController.inst.trackGenresSeparatorsBlacklist.toList(),
     );
+  }
+
+  factory GenresSplitConfig.fromMap(Map<String, dynamic> map) {
+    return GenresSplitConfig(
+      separators: map["separators"],
+      separatorsBlacklist: map["separatorsBlacklist"],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      "separators": separators,
+      "separatorsBlacklist": separatorsBlacklist,
+    };
   }
 }
 

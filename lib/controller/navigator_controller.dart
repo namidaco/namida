@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -115,7 +117,7 @@ class NamidaNavigator {
     Widget Function(ThemeData theme)? dialogBuilder,
     int durationInMs = 300,
     bool tapToDismiss = true,
-    void Function()? onDismissing,
+    FutureOr<void> Function()? onDismissing,
     Color? colorScheme,
     bool lighterDialogColor = true,
     double scale = 0.96,
@@ -129,7 +131,7 @@ class NamidaNavigator {
 
     Future<bool> onWillPop() async {
       if (!tapToDismiss) return false;
-      if (onDismissing != null) onDismissing();
+      if (onDismissing != null) await onDismissing();
 
       if (_currentDialogNumber > 0) {
         closeDialog();
