@@ -57,75 +57,23 @@ class PlaybackSettings extends StatelessWidget {
                     onPressed: NamidaNavigator.inst.closeDialog,
                   ),
                 ],
-                child: SizedBox(
-                  width: Get.width,
-                  height: Get.height / 2,
-                  child: DefaultTextStyle(
-                    style: context.textTheme.displaySmall!,
-                    child: Obx(
-                      () => ListView(
-                        shrinkWrap: true,
-                        children: [
-                          Text.rich(
-                            TextSpan(
-                              text: "${Language.inst.AUTO}: ",
-                              style: context.textTheme.displayMedium,
-                              children: [
-                                TextSpan(
-                                  text: Language.inst.VIDEO_PLAYBACK_SOURCE_AUTO_SUBTITLE,
-                                  style: context.textTheme.displaySmall,
-                                ),
-                              ],
-                            ),
+                child: Obx(
+                  () => ListView(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    children: [
+                      ...VideoPlaybackSource.values.map(
+                        (e) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: ListTileWithCheckMark(
+                            active: isEnabled(e),
+                            title: e.toText(),
+                            subtitle: e.toSubtitle(),
+                            onTap: () => tileOnTap(e),
                           ),
-                          const SizedBox(
-                            height: 12.0,
-                          ),
-                          Text.rich(
-                            TextSpan(
-                              text: "${Language.inst.VIDEO_PLAYBACK_SOURCE_LOCAL}: ",
-                              style: context.textTheme.displayMedium,
-                              children: [
-                                TextSpan(
-                                  text: "${Language.inst.VIDEO_PLAYBACK_SOURCE_LOCAL_SUBTITLE}, ${Language.inst.VIDEO_PLAYBACK_SOURCE_LOCAL_EXAMPLE}: ",
-                                  style: context.textTheme.displaySmall,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            Language.inst.VIDEO_PLAYBACK_SOURCE_LOCAL_EXAMPLE_SUBTITLE,
-                            style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0.multipliedFontScale, fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(
-                            height: 12.0,
-                          ),
-                          Text.rich(
-                            TextSpan(
-                              text: "${Language.inst.VIDEO_PLAYBACK_SOURCE_YOUTUBE}: ",
-                              style: context.textTheme.displayMedium,
-                              children: [
-                                TextSpan(
-                                  text: Language.inst.VIDEO_PLAYBACK_SOURCE_YOUTUBE_SUBTITLE,
-                                  style: context.textTheme.displaySmall,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 18.0),
-                          ...VideoPlaybackSource.values.map(
-                            (e) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12.0),
-                              child: ListTileWithCheckMark(
-                                active: isEnabled(e),
-                                title: e.toText(),
-                                onTap: () => tileOnTap(e),
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ),
@@ -169,40 +117,37 @@ class PlaybackSettings extends StatelessWidget {
                     onPressed: NamidaNavigator.inst.closeDialog,
                   ),
                 ],
-                child: SizedBox(
-                  width: Get.width,
-                  height: Get.height / 2,
-                  child: DefaultTextStyle(
-                    style: context.textTheme.displaySmall!,
-                    child: Obx(
-                      () => ListView(
-                        shrinkWrap: true,
-                        children: [
-                          Text(Language.inst.VIDEO_QUALITY_SUBTITLE),
-                          const SizedBox(
-                            height: 12.0,
-                          ),
-                          Text("${Language.inst.NOTE}: ${Language.inst.VIDEO_QUALITY_SUBTITLE_NOTE}"),
-                          const SizedBox(
-                            height: 18.0,
-                          ),
-                          ...kStockVideoQualities.asMap().entries.map(
-                                (e) => Column(
-                                  children: [
-                                    const SizedBox(
-                                      height: 12.0,
+                child: DefaultTextStyle(
+                  style: context.textTheme.displaySmall!,
+                  child: Obx(
+                    () => Column(
+                      children: [
+                        Text(Language.inst.VIDEO_QUALITY_SUBTITLE),
+                        const SizedBox(
+                          height: 12.0,
+                        ),
+                        Text("${Language.inst.NOTE}: ${Language.inst.VIDEO_QUALITY_SUBTITLE_NOTE}"),
+                        const SizedBox(height: 18.0),
+                        SizedBox(
+                          width: Get.width,
+                          height: Get.height * 0.4,
+                          child: ListView(
+                            padding: EdgeInsets.zero,
+                            children: [
+                              ...kStockVideoQualities.asMap().entries.map(
+                                    (e) => Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                      child: ListTileWithCheckMark(
+                                        active: isEnabled(e.value),
+                                        title: e.value,
+                                        onTap: () => tileOnTap(e.value, e.key),
+                                      ),
                                     ),
-                                    ListTileWithCheckMark(
-                                      tileColor: Colors.transparent,
-                                      active: isEnabled(e.value),
-                                      title: e.value,
-                                      onTap: () => tileOnTap(e.value, e.key),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                        ],
-                      ),
+                                  ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

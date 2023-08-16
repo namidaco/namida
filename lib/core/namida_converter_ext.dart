@@ -828,6 +828,11 @@ class _NamidaConverters {
         InterruptionType.shouldPause: Language.inst.SHOULD_PAUSE_NOTE,
         InterruptionType.shouldDuck: Language.inst.SHOULD_DUCK_NOTE,
         InterruptionType.unknown: null,
+      },
+      VideoPlaybackSource: {
+        VideoPlaybackSource.auto: Language.inst.VIDEO_PLAYBACK_SOURCE_AUTO_SUBTITLE,
+        VideoPlaybackSource.youtube: Language.inst.VIDEO_PLAYBACK_SOURCE_YOUTUBE_SUBTITLE,
+        VideoPlaybackSource.local: Language.inst.VIDEO_PLAYBACK_SOURCE_LOCAL_SUBTITLE,
       }
     };
 
