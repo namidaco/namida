@@ -4,16 +4,18 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:better_player/better_player.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:get/get_rx/get_rx.dart';
-import 'package:media_metadata_retriever/media_metadata_retriever.dart';
-import 'package:media_metadata_retriever/models/media_info.dart';
 
+import 'package:better_player/better_player.dart';
+import 'package:dio/dio.dart';
+import 'package:get/get_rx/get_rx.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+
+import 'package:namida/class/media_info.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -58,6 +60,7 @@ class VideoController {
 
   final currentVideo = Rxn<NamidaVideo>();
   final currentPossibleVideos = <NamidaVideo>[].obs;
+  final currentYTQualities = <VideoOnlyStreamInfo>[].obs;
   final currentDownloadedBytes = 0.obs;
 
   /// Indicates that [updateCurrentVideo] didn't find any matching video.
@@ -94,6 +97,7 @@ class VideoController {
     isNoVideosAvailable.value = false;
     currentDownloadedBytes.value = 0;
     currentVideo.value = null;
+    currentYTQualities.clear();
     await vcontroller.dispose();
     if (_isInitializing) return;
     if (!SettingsController.inst.enableVideoPlayback.value) return;
@@ -344,7 +348,6 @@ class VideoController {
   /// - Returns a copy of the map but with valid videos only.
   Future<Map<String, List<NamidaVideo>>> _checkIfVideosInMapValid(Map<String, List<NamidaVideo>> idsMap) async {
     final newIdsMap = <String, List<NamidaVideo>>{};
-    final mmr = MediaMetadataRetriever();
 
     final videosInMap = idsMap.entries.toList();
     await videosInMap.loopFuture((ve, _) async {
@@ -362,8 +365,7 @@ class VideoController {
           // -- Video exists but needs to be updated.
           else {
             final nv = await _extractNVFromFFMPEG(
-              mmr: mmr,
-              sizeInBytes: stats.size,
+              stats: stats,
               id: id,
               path: v.path,
             );
@@ -386,7 +388,6 @@ class VideoController {
   Future<Map<String, List<NamidaVideo>>> _checkForNewVideosInCache(Map<String, List<NamidaVideo>> idsMap) async {
     final dir = Directory(k_DIR_VIDEOS_CACHE);
     final newIdsMap = <String, List<NamidaVideo>>{};
-    final mmr = MediaMetadataRetriever();
 
     await for (final df in dir.list()) {
       if (df is File) {
@@ -403,8 +404,7 @@ class VideoController {
         // -- hmmm looks like a new video, extract metadata
         try {
           final nv = await _extractNVFromFFMPEG(
-            mmr: mmr,
-            sizeInBytes: sizeInBytes,
+            stats: stats,
             id: id,
             path: df.path,
           );
@@ -433,23 +433,23 @@ class VideoController {
       namidaVideos.addAll(vl);
     } else {
       final videos = await _fetchVideoPathsFromStorage(strictNoMedia: strictNoMedia, forceReCheckDir: forceReScan);
-      final mmr = MediaMetadataRetriever();
 
       for (final path in videos) {
         try {
-          final v = await mmr.getAllMediaInfo(path);
+          final v = await NamidaFFMPEG.inst.extractMetadata(path);
           if (v != null) {
-            final filePath = v.path;
             _saveThumbnailToStorage(
-              bytes: v.artwork ?? v.thumbnail,
+              videoPath: path,
+              bytes: null,
               isLocal: true,
-              idOrFileNameWOExt: filePath.getFilenameWOExt,
+              idOrFileNameWOExt: path.getFilenameWOExt,
               isExtracted: true,
             );
-            final stats = await File(filePath).stat();
+            final stats = await File(path).stat();
             final nv = _getNVFromFFMPEGMap(
+              path: path,
               mediaInfo: v,
-              size: stats.size,
+              stats: stats,
               ytID: null,
             );
             namidaVideos.add(nv);
@@ -468,22 +468,21 @@ class VideoController {
   }
 
   Future<NamidaVideo> _extractNVFromFFMPEG({
-    required MediaMetadataRetriever mmr,
-    required int sizeInBytes,
+    required FileStat stats,
     required String? id,
     required String path,
   }) async {
-    final info = await mmr.getAllMediaInfo(path);
-
     _saveThumbnailToStorage(
-      bytes: info?.artwork ?? info?.thumbnail,
+      bytes: null,
+      videoPath: path,
       isLocal: id == null,
       idOrFileNameWOExt: id ?? path.getFilenameWOExt,
       isExtracted: true,
     );
+    final info = await NamidaFFMPEG.inst.extractMetadata(path);
     return _getNVFromFFMPEGMap(
       mediaInfo: info,
-      size: sizeInBytes,
+      stats: stats,
       ytID: id,
       path: path,
     );
@@ -527,6 +526,7 @@ class VideoController {
 
     printy('Downloaded Thumbnail bytes: ${bytes?.length}');
     return await _saveThumbnailToStorage(
+      videoPath: null,
       bytes: bytes,
       isLocal: false,
       idOrFileNameWOExt: id,
@@ -536,37 +536,52 @@ class VideoController {
 
   Future<File?> _saveThumbnailToStorage({
     required Uint8List? bytes,
+    required String? videoPath,
     required bool isLocal,
     required String idOrFileNameWOExt,
     required bool isExtracted, // set to false if its a youtube thumbnail.
   }) async {
+    assert(bytes != null || videoPath != null);
+
+    final prefix = !isLocal && isExtracted ? 'EXT_' : '';
+    final dir = isLocal ? k_DIR_THUMBNAILS : k_DIR_YT_THUMBNAILS;
+    final file = File("$dir$prefix$idOrFileNameWOExt.png");
     if (bytes != null) {
-      final prefix = !isLocal && isExtracted ? 'EXT_' : '';
-      final dir = isLocal ? k_DIR_THUMBNAILS : k_DIR_YT_THUMBNAILS;
-      final file = File("$dir$prefix$idOrFileNameWOExt.png");
       // if pure yt thumbnail delete the extracted version
       if (!isExtracted) {
         await File("${k_DIR_YT_THUMBNAILS}EXT_$idOrFileNameWOExt.png").deleteIfExists();
       }
-
       return await file.writeAsBytes(bytes);
+    } else if (videoPath != null) {
+      await NamidaFFMPEG.inst.extractVideoThumbnail(videoPath: videoPath, thumbnailSavePath: file.path);
+      final fileExists = await file.exists();
+      return fileExists ? file : null;
     }
     return null;
   }
 
-  NamidaVideo _getNVFromFFMPEGMap({MediaInfo? mediaInfo, required int size, String? ytID, String? path}) {
-    final finalPath = mediaInfo?.path ?? path ?? '';
+  NamidaVideo _getNVFromFFMPEGMap({required String path, MediaInfo? mediaInfo, required FileStat stats, String? ytID}) {
+    final videoStream = mediaInfo?.streams?.firstWhere((element) => element.streamType == StreamType.video);
+
+    double? frameratePrecise;
+    final framerateField = videoStream?.rFrameRate?.split('/');
+    if (framerateField != null && framerateField.length == 2) {
+      final frp1 = int.tryParse(framerateField.first);
+      final frp2 = int.tryParse(framerateField.last) ?? 1000;
+      if (frp1 != null) frameratePrecise = frp1 / frp2;
+    }
+
     return NamidaVideo(
-      path: finalPath,
+      path: path,
       ytID: ytID,
-      nameInCache: ytID != null ? finalPath.getFilenameWOExt : null,
-      height: mediaInfo?.videoHeight ?? 0,
-      width: mediaInfo?.videoWidth ?? 0,
-      sizeInBytes: size,
-      creationTimeMS: DateTime.tryParse(mediaInfo?.creationTime ?? mediaInfo?.creationDate ?? '')?.millisecondsSinceEpoch ?? 0,
-      frameratePrecise: mediaInfo?.framerate ?? 0.0,
-      durationMS: mediaInfo?.durationMS ?? int.tryParse(mediaInfo?.durationAlt ?? '') ?? 0,
-      bitrate: mediaInfo?.bitrate ?? 0,
+      nameInCache: ytID != null ? path.getFilenameWOExt : null,
+      height: videoStream?.height ?? 0,
+      width: videoStream?.width ?? 0,
+      sizeInBytes: stats.size,
+      creationTimeMS: stats.changed.millisecondsSinceEpoch,
+      frameratePrecise: frameratePrecise ?? 0.0,
+      durationMS: videoStream?.duration?.inMilliseconds ?? mediaInfo?.format?.duration?.inMilliseconds ?? 0,
+      bitrate: int.tryParse(videoStream?.bitRate ?? '') ?? 0,
     );
   }
 

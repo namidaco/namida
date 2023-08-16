@@ -94,9 +94,7 @@ dependencies:
     git:
       url: https://github.com/tintran-dev/betterplayer
   youtube_explode_dart: ^1.12.4
-  media_metadata_retriever:
-    git:
-      url: https://github.com/MSOB7YY/media_metadata_retriever
+  ffmpeg_kit_flutter_min: "5.1.0-LTS"
 
   # ---- Image Utilities ----
   extended_image: ^8.0.2

@@ -1,1 +1,1 @@
--keep class wseemann.media.** {*;}
+-keep class com.google.android.exoplayer2.** { *; }
