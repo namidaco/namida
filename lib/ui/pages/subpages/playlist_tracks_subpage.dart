@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
 import 'package:known_extents_list_view_builder/sliver_known_extents_list.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
+import 'package:namida/class/date_range.dart';
 import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -171,12 +175,77 @@ class HistoryTracksPage extends StatelessWidget {
 class MostPlayedTracksPage extends StatelessWidget {
   const MostPlayedTracksPage({super.key});
 
+  void _onSelectingTimeRange({
+    required MostPlayedTimeRange? mptr,
+    DateRange? dateCustom,
+    bool? isStartOfDay,
+  }) {
+    SettingsController.inst.save(
+      mostPlayedTimeRange: mptr,
+      mostPlayedCustomDateRange: dateCustom,
+      mostPlayedCustomisStartOfDay: isStartOfDay,
+    );
+    HistoryController.inst.updateTempMostPlayedPlaylist(
+      mptr: mptr,
+      customDateRange: dateCustom,
+      isStartOfDay: isStartOfDay,
+    );
+    NamidaNavigator.inst.closeDialog();
+  }
+
+  bool _isEnabled(MostPlayedTimeRange type) => type == SettingsController.inst.mostPlayedTimeRange.value;
+
+  Widget _getChipChild({
+    required BuildContext context,
+    DateRange? dateCustom,
+    required MostPlayedTimeRange mptr,
+    Widget? Function(Color? textColor)? trailing,
+  }) {
+    final dateText = dateCustom == null || dateCustom == DateRange.dummy()
+        ? null
+        : "${dateCustom.oldest.millisecondsSinceEpoch.dateFormattedOriginalNoYears(dateCustom.newest)} → ${dateCustom.newest.millisecondsSinceEpoch.dateFormattedOriginalNoYears(dateCustom.oldest)}";
+
+    final textColor = _isEnabled(mptr) ? const Color.fromARGB(200, 255, 255, 255) : null;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2.0),
+      child: GestureDetector(
+        onTap: () => _onSelectingTimeRange(
+          dateCustom: dateCustom,
+          mptr: mptr,
+        ),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+          decoration: BoxDecoration(
+            color: _isEnabled(mptr) ? CurrentColor.inst.currentColorScheme.withAlpha(160) : context.theme.cardColor,
+            borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+          ),
+          child: Row(
+            children: [
+              Text(
+                dateText ?? mptr.toText(),
+                style: context.textTheme.displaySmall?.copyWith(
+                  color: textColor,
+                  fontSize: dateText == null ? null : 12.0.multipliedFontScale,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (trailing != null) trailing(textColor)!,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BackgroundWrapper(
       child: Obx(
         () {
+          final finalListenMap = HistoryController.inst.currentTopTracksMapListens;
           final tracks = QueueSource.mostPlayed.toTracks();
+          final mostplayedOptions = List<MostPlayedTimeRange>.from(MostPlayedTimeRange.values)..remove(MostPlayedTimeRange.custom);
           return NamidaListView(
             itemExtents: tracks.toTrackItemExtents(),
             header: SubpagesTopContainer(
@@ -190,12 +259,110 @@ class MostPlayedTracksPage extends StatelessWidget {
                 paths: tracks.toImagePaths(),
               ),
               tracks: tracks,
+              bottomPadding: 0.0,
+              bottomWidget: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 8.0),
+                    NamidaInkWell(
+                      animationDurationMS: 200,
+                      borderRadius: 6.0,
+                      bgColor: context.theme.cardTheme.color,
+                      padding: const EdgeInsets.all(8.0),
+                      decoration: BoxDecoration(
+                        border: _isEnabled(MostPlayedTimeRange.custom) ? Border.all(color: CurrentColor.inst.color) : null,
+                        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Broken.calendar, size: 18.0),
+                          const SizedBox(width: 4.0),
+                          Text(
+                            'Custom',
+                            style: context.textTheme.displayMedium,
+                          ),
+                          const SizedBox(width: 4.0),
+                          const Icon(Broken.arrow_down_2, size: 14.0),
+                        ],
+                      ),
+                      onTap: () {
+                        showCalendarDialog(
+                          title: Language.inst.CHOOSE,
+                          buttonText: Language.inst.CONFIRM,
+                          useHistoryDates: true,
+                          onGenerate: (dates) => _onSelectingTimeRange(
+                            dateCustom: DateRange(oldest: dates.first, newest: dates.last),
+                            mptr: MostPlayedTimeRange.custom,
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 4.0),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            Obx(
+                              () {
+                                final dateRange = SettingsController.inst.mostPlayedCustomDateRange.value;
+                                return AnimatedCrossFade(
+                                  firstChild: _getChipChild(
+                                    context: context,
+                                    mptr: MostPlayedTimeRange.custom,
+                                    dateCustom: dateRange,
+                                    trailing: (textColor) => NamidaIconButton(
+                                      padding: EdgeInsets.zero,
+                                      icon: Broken.close_circle,
+                                      iconSize: 14.0,
+                                      iconColor: textColor,
+                                      onPressed: () => _onSelectingTimeRange(mptr: MostPlayedTimeRange.allTime, dateCustom: DateRange.dummy()),
+                                    ),
+                                  ),
+                                  secondChild: const SizedBox(),
+                                  crossFadeState: dateRange.oldest != DateTime(0) ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+                                  duration: const Duration(milliseconds: 400),
+                                  reverseDuration: const Duration(milliseconds: 200),
+                                  layoutBuilder: (topChild, topChildKey, bottomChild, bottomChildKey) {
+                                    return Stack(
+                                      clipBehavior: Clip.none,
+                                      alignment: Alignment.center,
+                                      children: <Widget>[
+                                        Positioned(
+                                          key: bottomChildKey,
+                                          top: 0,
+                                          child: bottomChild,
+                                        ),
+                                        Positioned(
+                                          key: topChildKey,
+                                          child: topChild,
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                            ...mostplayedOptions.map(
+                              (action) => _getChipChild(
+                                context: context,
+                                mptr: action,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
             padding: const EdgeInsets.only(bottom: kBottomPadding),
-            itemCount: HistoryController.inst.topTracksMapListens.length,
+            itemCount: finalListenMap.length,
             itemBuilder: (context, i) {
               final track = tracks[i];
-              final listens = HistoryController.inst.topTracksMapListens[track] ?? [];
+              final listens = finalListenMap[track] ?? [];
 
               return AnimatingTile(
                 key: ValueKey(i),

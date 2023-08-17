@@ -89,6 +89,7 @@ class Language extends LanguageKeys {
 			ALBUM = getKey("ALBUM");
 			ALBUMS_COUNT = getKey("ALBUMS_COUNT");
 			ALBUMS = getKey("ALBUMS");
+			ALL_TIME = getKey("ALL_TIME");
 			ANIMATING_THUMBNAIL_INTENSITY = getKey("ANIMATING_THUMBNAIL_INTENSITY");
 			ANIMATING_THUMBNAIL_INVERSED_SUBTITLE = getKey("ANIMATING_THUMBNAIL_INVERSED_SUBTITLE");
 			ANIMATING_THUMBNAIL_INVERSED = getKey("ANIMATING_THUMBNAIL_INVERSED");
@@ -154,6 +155,7 @@ class Language extends LanguageKeys {
 			CREATE = getKey("CREATE");
 			CREATED_BACKUP_SUCCESSFULLY_SUB = getKey("CREATED_BACKUP_SUCCESSFULLY_SUB");
 			CREATED_BACKUP_SUCCESSFULLY = getKey("CREATED_BACKUP_SUCCESSFULLY");
+			CUSTOM = getKey("CUSTOM");
 			CUSTOMIZATIONS_SUBTITLE = getKey("CUSTOMIZATIONS_SUBTITLE");
 			CUSTOMIZATIONS = getKey("CUSTOMIZATIONS");
 			DATABASE = getKey("DATABASE");
@@ -328,6 +330,8 @@ class Language extends LanguageKeys {
 			MINIPLAYER_CUSTOMIZATION = getKey("MINIPLAYER_CUSTOMIZATION");
 			MINUTES = getKey("MINUTES");
 			MISSING_ENTRIES = getKey("MISSING_ENTRIES");
+			MONTH = getKey("MONTH");
+			MONTHS = getKey("MONTHS");
 			MOODS = getKey("MOODS");
 			MORE = getKey("MORE");
 			MOST_PLAYED = getKey("MOST_PLAYED");
@@ -559,6 +563,7 @@ class Language extends LanguageKeys {
 			WARNING = getKey("WARNING");
 			WAVEFORM_BARS_COUNT = getKey("WAVEFORM_BARS_COUNT");
 			WAVEFORMS = getKey("WAVEFORMS");
+			WEEK = getKey("WEEK");
 			YEAR = getKey("YEAR");
 			YES = getKey("YES");
 			YOUTUBE_MUSIC = getKey("YOUTUBE_MUSIC");
@@ -576,6 +581,15 @@ class Language extends LanguageKeys {
     }
   }
 }
+
+
+
+
+
+
+
+
+
 
 
 

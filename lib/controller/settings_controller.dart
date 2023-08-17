@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
+import 'package:namida/class/date_range.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/core/constants.dart';
@@ -137,7 +138,12 @@ class SettingsController {
   final Rx<WakelockMode> wakelockMode = WakelockMode.expandedAndVideo.obs;
 
   final Rx<RepeatMode> playerRepeatMode = RepeatMode.none.obs;
+
   final Rx<TrackPlayMode> trackPlayMode = TrackPlayMode.searchResults.obs;
+
+  final Rx<MostPlayedTimeRange> mostPlayedTimeRange = MostPlayedTimeRange.allTime.obs;
+  final mostPlayedCustomDateRange = DateRange.dummy().obs;
+  final mostPlayedCustomisStartOfDay = true.obs;
 
   /// Track Items
   final RxBool displayThirdRow = true.obs;
@@ -294,6 +300,10 @@ class SettingsController {
       playerRepeatMode.value = RepeatMode.values.getEnum(json['playerRepeatMode']) ?? playerRepeatMode.value;
       trackPlayMode.value = TrackPlayMode.values.getEnum(json['trackPlayMode']) ?? trackPlayMode.value;
 
+      mostPlayedTimeRange.value = MostPlayedTimeRange.values.getEnum(json['mostPlayedTimeRange']) ?? mostPlayedTimeRange.value;
+      mostPlayedCustomDateRange.value = json['mostPlayedCustomDateRange'] != null ? DateRange.fromJson(json['mostPlayedCustomDateRange']) : mostPlayedCustomDateRange.value;
+      mostPlayedCustomisStartOfDay.value = json['mostPlayedCustomisStartOfDay'] ?? mostPlayedCustomDateRange.value;
+
       /// Track Items
       displayThirdRow.value = json['displayThirdRow'] ?? displayThirdRow.value;
       displayThirdItemInEachRow.value = json['displayThirdItemInEachRow'] ?? displayThirdItemInEachRow.value;
@@ -444,6 +454,9 @@ class SettingsController {
       'wakelockMode': wakelockMode.value.convertToString,
       'playerRepeatMode': playerRepeatMode.value.convertToString,
       'trackPlayMode': trackPlayMode.value.convertToString,
+      'mostPlayedTimeRange': mostPlayedTimeRange.value.convertToString,
+      'mostPlayedCustomDateRange': mostPlayedCustomDateRange.value.toJson(),
+      'mostPlayedCustomisStartOfDay': mostPlayedCustomDateRange.value,
 
       /// Track Items
       'displayThirdRow': displayThirdRow.value,
@@ -568,6 +581,9 @@ class SettingsController {
     WakelockMode? wakelockMode,
     RepeatMode? playerRepeatMode,
     TrackPlayMode? trackPlayMode,
+    MostPlayedTimeRange? mostPlayedTimeRange,
+    DateRange? mostPlayedCustomDateRange,
+    bool? mostPlayedCustomisStartOfDay,
     bool? didSupportNamida,
   }) {
     if (selectedLanguage != null) {
@@ -903,6 +919,15 @@ class SettingsController {
     }
     if (trackPlayMode != null) {
       this.trackPlayMode.value = trackPlayMode;
+    }
+    if (mostPlayedTimeRange != null) {
+      this.mostPlayedTimeRange.value = mostPlayedTimeRange;
+    }
+    if (mostPlayedCustomDateRange != null) {
+      this.mostPlayedCustomDateRange.value = mostPlayedCustomDateRange;
+    }
+    if (mostPlayedCustomisStartOfDay != null) {
+      this.mostPlayedCustomisStartOfDay.value = mostPlayedCustomisStartOfDay;
     }
     if (didSupportNamida != null) {
       this.didSupportNamida = didSupportNamida;

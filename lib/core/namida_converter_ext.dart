@@ -145,6 +145,7 @@ extension YTVideoQuality on String {
 
 extension VideoSource on VideoPlaybackSource {
   String toText() => _NamidaConverters.inst.getTitle(this);
+  String? toSubtitle() => _NamidaConverters.inst.getSubtitle(this);
 }
 
 extension TrackItemSubstring on TrackTileItem {
@@ -157,49 +158,37 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
   List<Selectable> toTracks([int? limit, int? dayOfHistory]) {
     final trs = <Selectable>[];
     void addThese(Iterable<Selectable> tracks) => trs.addAll(tracks.withLimit(limit));
-    if (this == QueueSource.allTracks) {
-      addThese(SearchSortController.inst.trackSearchList);
-    }
-    // onMediaTap should have handled it already.
-    if (this == QueueSource.album) {
-      addThese(SelectedTracksController.inst.currentAllTracks);
-    }
-    if (this == QueueSource.artist) {
-      addThese(SelectedTracksController.inst.currentAllTracks);
-    }
-    if (this == QueueSource.genre) {
-      addThese(SelectedTracksController.inst.currentAllTracks);
-    }
-    if (this == QueueSource.playlist) {
-      addThese(SelectedTracksController.inst.currentAllTracks);
-    }
-    if (this == QueueSource.folder) {
-      addThese(SelectedTracksController.inst.currentAllTracks);
-    }
-    if (this == QueueSource.search) {
-      addThese(SearchSortController.inst.trackSearchTemp);
-    }
-    if (this == QueueSource.mostPlayed) {
-      addThese(HistoryController.inst.mostPlayedTracks);
-    }
-    if (this == QueueSource.history) {
-      dayOfHistory != null
-          ? addThese(HistoryController.inst.historyMap.value[dayOfHistory] ?? [])
-          : addThese(
-              HistoryController.inst.historyTracks.withLimit(limit),
-            );
-    }
-    if (this == QueueSource.favourites) {
-      addThese(PlaylistController.inst.favouritesPlaylist.value.tracks);
-    }
-    if (this == QueueSource.playerQueue) {
-      addThese(Player.inst.currentQueue);
-    }
-    if (this == QueueSource.queuePage) {
-      addThese(SelectedTracksController.inst.currentAllTracks);
-    }
-    if (this == QueueSource.selectedTracks) {
-      addThese(SelectedTracksController.inst.selectedTracks);
+    switch (this) {
+      case QueueSource.allTracks:
+        addThese(SearchSortController.inst.trackSearchList);
+        break;
+      case QueueSource.search:
+        addThese(SearchSortController.inst.trackSearchTemp);
+        break;
+      case QueueSource.mostPlayed:
+        addThese(HistoryController.inst.currentMostPlayedTracks);
+        break;
+      case QueueSource.history:
+        dayOfHistory != null
+            ? addThese(HistoryController.inst.historyMap.value[dayOfHistory] ?? [])
+            : addThese(
+                HistoryController.inst.historyTracks.withLimit(limit),
+              );
+        break;
+      case QueueSource.favourites:
+        addThese(PlaylistController.inst.favouritesPlaylist.value.tracks);
+        break;
+      case QueueSource.queuePage:
+        addThese(SelectedTracksController.inst.currentAllTracks);
+        break;
+      case QueueSource.selectedTracks:
+        addThese(SelectedTracksController.inst.selectedTracks);
+        break;
+      case QueueSource.playerQueue:
+        addThese(Player.inst.currentQueue);
+        break;
+      default:
+        addThese(SelectedTracksController.inst.currentAllTracks);
     }
 
     return trs;
@@ -394,7 +383,7 @@ extension RouteUtils on NamidaRoute {
         tr.addAll(HistoryController.inst.historyTracks);
         break;
       case RouteType.SUBPAGE_mostPlayedTracks:
-        tr.addAll(HistoryController.inst.mostPlayedTracks);
+        tr.addAll(HistoryController.inst.currentMostPlayedTracks);
         break;
 
       default:
@@ -635,7 +624,7 @@ extension QueueFromMap on int {
 }
 
 extension TrackTileItemExtentExt on Iterable {
-  List<double> toTrackItemExtents() => List.filled(length, Dimensions.inst.trackTileItemExtent);
+  List<double>? toTrackItemExtents() => length == 0 ? null : List.filled(length, Dimensions.inst.trackTileItemExtent);
 }
 
 extension ThemeDefaultColors on BuildContext {
@@ -651,6 +640,10 @@ extension InterruptionMediaUtils on InterruptionType {
 extension InterruptionActionUtils on InterruptionAction {
   String toText() => _NamidaConverters.inst.getTitle(this);
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
+}
+
+extension MostPlayedTimeRangeUtils on MostPlayedTimeRange {
+  String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
 extension NamidaLanguageRefresher on NamidaLanguage {
@@ -817,6 +810,17 @@ class _NamidaConverters {
         InsertionSortingType.listenCount: Language.inst.TOTAL_LISTENS,
         InsertionSortingType.random: Language.inst.RANDOM,
         InsertionSortingType.rating: Language.inst.RATING,
+      },
+      MostPlayedTimeRange: {
+        MostPlayedTimeRange.custom: Language.inst.CUSTOM,
+        MostPlayedTimeRange.day: Language.inst.DAY,
+        MostPlayedTimeRange.day3: "3 ${Language.inst.DAYS}",
+        MostPlayedTimeRange.week: Language.inst.WEEK,
+        MostPlayedTimeRange.month: Language.inst.MONTH,
+        MostPlayedTimeRange.month3: "3 ${Language.inst.MONTHS}",
+        MostPlayedTimeRange.month6: "6 ${Language.inst.MONTHS}",
+        MostPlayedTimeRange.year: Language.inst.YEAR,
+        MostPlayedTimeRange.allTime: Language.inst.ALL_TIME,
       }
     };
 

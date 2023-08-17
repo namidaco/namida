@@ -1467,6 +1467,7 @@ class SubpagesTopContainer extends StatelessWidget {
   final List<Selectable> tracks;
   final QueueSource source;
   final String heroTag;
+  final Widget? bottomWidget;
   const SubpagesTopContainer({
     super.key,
     required this.title,
@@ -1479,126 +1480,131 @@ class SubpagesTopContainer extends StatelessWidget {
     this.bottomPadding = 16.0,
     required this.source,
     required this.heroTag,
+    this.bottomWidget,
   });
 
   @override
   Widget build(BuildContext context) {
     const pauseHero = 'kururing';
-    return Container(
-      alignment: Alignment.center,
-      padding: const EdgeInsets.all(12.0),
-      margin: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
-      height: height,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          imageWidget,
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Transform.scale(
-                  scale: (constraints.maxWidth * 0.005).withMaximum(1.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(
-                        height: 18.0,
-                      ),
-                      Container(
-                        padding: const EdgeInsets.only(left: 14.0),
-                        child: NamidaHero(
-                          tag: '${pauseHero}line1_$heroTag',
-                          child: Text(
-                            title,
-                            style: context.textTheme.displayLarge,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 2.0,
-                      ),
-                      Container(
-                        padding: const EdgeInsets.only(left: 14.0),
-                        child: NamidaHero(
-                          tag: '${pauseHero}line2_$heroTag',
-                          child: Text(
-                            subtitle,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
-                          ),
-                        ),
-                      ),
-                      if (thirdLineText != '') ...[
-                        const SizedBox(
-                          height: 2.0,
-                        ),
-                        Container(
-                          padding: const EdgeInsets.only(left: 14.0),
-                          child: NamidaHero(
-                            tag: '${pauseHero}line3_$heroTag',
-                            child: Text(
-                              thirdLineText,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                              style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
-                            ),
-                          ),
-                        ),
-                      ],
-                      const SizedBox(
-                        height: 18.0,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Column(
+      children: [
+        Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.all(12.0),
+          margin: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
+          height: height,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              imageWidget,
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Transform.scale(
+                      scale: (constraints.maxWidth * 0.005).withMaximum(1.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          const SizedBox(width: 6.0),
-                          SizedBox(
-                            width: constraints.maxWidth * 0.3,
-                            child: NamidaButton(
-                              minimumSize: true,
-                              icon: Broken.shuffle,
-                              onPressed: () => Player.inst.playOrPause(
-                                0,
-                                tracks,
-                                source,
-                                shuffle: true,
-                              ),
-                            ),
+                          const SizedBox(
+                            height: 18.0,
                           ),
-                          const SizedBox(width: 6.0),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () => Player.inst.addToQueue(tracks),
-                              icon: const StackedIcon(baseIcon: Broken.play, secondaryIcon: Broken.add_circle),
-                              label: Text(
-                                Language.inst.PLAY_LAST,
-                                softWrap: false,
+                          Container(
+                            padding: const EdgeInsets.only(left: 14.0),
+                            child: NamidaHero(
+                              tag: '${pauseHero}line1_$heroTag',
+                              child: Text(
+                                title,
+                                style: context.textTheme.displayLarge,
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: (constraints.maxWidth * 0.1).clamp(10.0, 14.0).multipliedFontScale),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                fixedSize: const Size(0.0, 0.0),
-                                padding: EdgeInsets.zero,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 6.0),
+                          const SizedBox(
+                            height: 2.0,
+                          ),
+                          Container(
+                            padding: const EdgeInsets.only(left: 14.0),
+                            child: NamidaHero(
+                              tag: '${pauseHero}line2_$heroTag',
+                              child: Text(
+                                subtitle,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
+                              ),
+                            ),
+                          ),
+                          if (thirdLineText != '') ...[
+                            const SizedBox(
+                              height: 2.0,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.only(left: 14.0),
+                              child: NamidaHero(
+                                tag: '${pauseHero}line3_$heroTag',
+                                child: Text(
+                                  thirdLineText,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
+                                ),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(
+                            height: 18.0,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              const SizedBox(width: 6.0),
+                              SizedBox(
+                                width: constraints.maxWidth * 0.3,
+                                child: NamidaButton(
+                                  minimumSize: true,
+                                  icon: Broken.shuffle,
+                                  onPressed: () => Player.inst.playOrPause(
+                                    0,
+                                    tracks,
+                                    source,
+                                    shuffle: true,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6.0),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () => Player.inst.addToQueue(tracks),
+                                  icon: const StackedIcon(baseIcon: Broken.play, secondaryIcon: Broken.add_circle),
+                                  label: Text(
+                                    Language.inst.PLAY_LAST,
+                                    softWrap: false,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(fontSize: (constraints.maxWidth * 0.1).clamp(10.0, 14.0).multipliedFontScale),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    fixedSize: const Size(0.0, 0.0),
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6.0),
+                            ],
+                          )
                         ],
-                      )
-                    ],
-                  ),
-                );
-              },
-            ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-          // TODO: widget for most played music [CalendarSelectDay(), DateType(day, week, month, year, custom)]
-        ],
-      ),
+        ),
+        if (bottomWidget != null) bottomWidget!,
+      ],
     );
   }
 }
@@ -2025,7 +2031,7 @@ class NamidaListView extends StatelessWidget {
   final bool buildDefaultDragHandles;
   final ScrollPhysics? physics;
 
-  NamidaListView({
+  const NamidaListView({
     super.key,
     this.header,
     this.widgetsInColumn,
@@ -2042,10 +2048,9 @@ class NamidaListView extends StatelessWidget {
     this.physics,
   });
 
-  final ScrollController _scrollController = ScrollController();
   @override
   Widget build(BuildContext context) {
-    final sc = scrollController ?? _scrollController;
+    final sc = scrollController ?? ScrollController();
     return AnimationLimiter(
       child: CupertinoScrollbar(
         controller: sc,
@@ -2194,8 +2199,9 @@ class NamidaInkWell extends StatelessWidget {
   final VoidCallback? onLongPress;
   final double borderRadius;
   final EdgeInsetsGeometry padding;
-  final Decoration decoration;
+  final BoxDecoration decoration;
   final Widget? child;
+  final int animationDurationMS;
 
   /// Setting this to [true] will force the [borderRadius] to be [0.0].
   final bool transparentHighlight;
@@ -2209,27 +2215,32 @@ class NamidaInkWell extends StatelessWidget {
     this.decoration = const BoxDecoration(),
     this.child,
     this.transparentHighlight = false,
+    this.animationDurationMS = 0,
   });
 
   @override
   Widget build(BuildContext context) {
     final realBorderRadius = transparentHighlight ? 0.0 : borderRadius;
-    return Material(
-      color: bgColor ?? Colors.transparent,
-      borderRadius: BorderRadius.circular(realBorderRadius.multipliedRadius),
+    final borderR = BorderRadius.circular(realBorderRadius.multipliedRadius);
+    return AnimatedContainer(
+      duration: Duration(milliseconds: animationDurationMS),
+      decoration: BoxDecoration(
+        color: bgColor ?? Colors.transparent,
+        borderRadius: borderR,
+      ),
+      foregroundDecoration: BoxDecoration(
+        border: decoration.border,
+        borderRadius: borderR,
+      ),
+      padding: padding,
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        highlightColor: transparentHighlight ? Colors.transparent : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor),
-        onTap: onTap,
-        onLongPress: onLongPress,
-        child: DecoratedBox(
-          decoration: decoration,
-          child: child != null
-              ? Padding(
-                  padding: padding,
-                  child: child,
-                )
-              : null,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          highlightColor: transparentHighlight ? Colors.transparent : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor),
+          onTap: onTap,
+          onLongPress: onLongPress,
+          child: child,
         ),
       ),
     );

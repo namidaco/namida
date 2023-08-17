@@ -84,10 +84,10 @@ class NamidaGenerator {
   }
 
   /// if [maxCount == null], it will return all available tracks
-  List<Track> generateTracksFromHistoryDates(DateTime? oldestDate, DateTime? newestDate) {
+  List<TrackWithDate> generateTracksFromHistoryDates(DateTime? oldestDate, DateTime? newestDate, {bool removeDuplicates = true}) {
     if (oldestDate == null || newestDate == null) return [];
 
-    final tracksAvailable = <Track>[];
+    final tracksAvailable = <TrackWithDate>[];
     final entries = HistoryController.inst.historyMap.value.entries.toList();
 
     final oldestDay = oldestDate.millisecondsSinceEpoch.toDaysSinceEpoch();
@@ -96,11 +96,12 @@ class NamidaGenerator {
     entries.loop((entry, index) {
       final day = entry.key;
       if (day >= oldestDay && day <= newestDay) {
-        tracksAvailable.addAll(entry.value.toTracks());
+        tracksAvailable.addAll(entry.value);
       }
     });
-
-    tracksAvailable.removeDuplicates((element) => element.path);
+    if (removeDuplicates) {
+      tracksAvailable.removeDuplicates((element) => element.track);
+    }
 
     return tracksAvailable;
   }

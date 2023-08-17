@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
+import 'package:namida/class/date_range.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -33,7 +35,15 @@ class HistoryController {
   final Rx<SplayTreeMap<int, List<TrackWithDate>>> historyMap = SplayTreeMap<int, List<TrackWithDate>>((date1, date2) => date2.compareTo(date1)).obs;
 
   final RxMap<Track, List<int>> topTracksMapListens = <Track, List<int>>{}.obs;
-  Iterable<Track> get mostPlayedTracks => topTracksMapListens.keys;
+  final RxMap<Track, List<int>> topTracksMapListensTemp = <Track, List<int>>{}.obs;
+  Iterable<Track> get currentMostPlayedTracks => currentTopTracksMapListens.keys;
+  RxMap<Track, List<int>> get currentTopTracksMapListens {
+    final isAll = SettingsController.inst.mostPlayedTimeRange.value == MostPlayedTimeRange.allTime;
+    return isAll ? topTracksMapListens : topTracksMapListensTemp;
+  }
+
+  DateRange? get latestDateRange => _latestDateRange.value;
+  final _latestDateRange = Rxn<DateRange>();
 
   final ScrollController scrollController = ScrollController();
   final Rxn<int> indexToHighlight = Rxn<int>();
@@ -254,6 +264,7 @@ class HistoryController {
       fmap
         ..clear()
         ..addEntries(sortedEntries);
+      updateTempMostPlayedPlaylist();
     }
 
     if (tracksWithDate != null) {
@@ -275,6 +286,83 @@ class HistoryController {
 
       sortAndUpdateMap(tempMap, mapToUpdate: topTracksMapListens);
     }
+  }
+
+  void updateTempMostPlayedPlaylist({
+    DateRange? customDateRange,
+    MostPlayedTimeRange? mptr,
+    bool? isStartOfDay,
+  }) {
+    mptr ??= SettingsController.inst.mostPlayedTimeRange.value;
+    customDateRange ??= SettingsController.inst.mostPlayedCustomDateRange.value;
+    isStartOfDay ??= SettingsController.inst.mostPlayedCustomisStartOfDay.value;
+
+    if (mptr == MostPlayedTimeRange.allTime) {
+      topTracksMapListensTemp.clear();
+      return;
+    }
+
+    _latestDateRange.value = customDateRange;
+    final timeNow = DateTime.now();
+
+    final varMapOldestDate = isStartOfDay
+        ? {
+            MostPlayedTimeRange.allTime: null,
+            MostPlayedTimeRange.day: DateTime(timeNow.year, timeNow.month, timeNow.day),
+            MostPlayedTimeRange.day3: DateTime(timeNow.year, timeNow.month, timeNow.day - 2),
+            MostPlayedTimeRange.week: DateTime(timeNow.year, timeNow.month, timeNow.day - 6),
+            MostPlayedTimeRange.month: DateTime(timeNow.year, timeNow.month),
+            MostPlayedTimeRange.month3: DateTime(timeNow.year, timeNow.month - 2),
+            MostPlayedTimeRange.month6: DateTime(timeNow.year, timeNow.month - 5),
+            MostPlayedTimeRange.year: DateTime(timeNow.year),
+            MostPlayedTimeRange.custom: _latestDateRange.value?.oldest,
+          }
+        : {
+            MostPlayedTimeRange.allTime: null,
+            MostPlayedTimeRange.day: DateTime.now(),
+            MostPlayedTimeRange.day3: timeNow.subtract(const Duration(days: 3)),
+            MostPlayedTimeRange.week: timeNow.subtract(const Duration(days: 7)),
+            MostPlayedTimeRange.month: timeNow.subtract(const Duration(days: 30)),
+            MostPlayedTimeRange.month3: timeNow.subtract(const Duration(days: 30 * 3)),
+            MostPlayedTimeRange.month6: timeNow.subtract(const Duration(days: 30 * 6)),
+            MostPlayedTimeRange.year: timeNow.subtract(const Duration(days: 365)),
+            MostPlayedTimeRange.custom: _latestDateRange.value?.oldest,
+          };
+
+    final map = {for (final e in MostPlayedTimeRange.values) e: varMapOldestDate[e]};
+
+    final newDate = mptr == MostPlayedTimeRange.custom ? _latestDateRange.value?.newest : timeNow;
+    final oldDate = map[mptr];
+
+    final betweenDates = NamidaGenerator.inst.generateTracksFromHistoryDates(
+      oldDate,
+      newDate,
+      removeDuplicates: false,
+    );
+
+    final Map<Track, List<int>> tempMap = <Track, List<int>>{};
+
+    betweenDates.loop((t, index) {
+      tempMap.addForce(t.track, t.dateAdded);
+    });
+
+    for (final entry in tempMap.values) {
+      entry.sort();
+    }
+
+    final sortedEntries = tempMap.entries.toList()
+      ..sort((a, b) {
+        final compare = b.value.length.compareTo(a.value.length);
+        if (compare == 0) {
+          final lastListenB = b.value.lastOrNull ?? 0;
+          final lastListenA = a.value.lastOrNull ?? 0;
+          return lastListenB.compareTo(lastListenA);
+        }
+        return compare;
+      });
+    topTracksMapListensTemp
+      ..clear()
+      ..addEntries(sortedEntries);
   }
 
   Future<void> saveHistoryToStorage([List<int>? daysToSave]) async {

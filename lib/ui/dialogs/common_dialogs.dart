@@ -114,13 +114,13 @@ class NamidaDialogs {
       return;
     }
     if (playlistName == k_PLAYLIST_NAME_MOST_PLAYED) {
-      final trs = HistoryController.inst.mostPlayedTracks.toList();
+      final trs = HistoryController.inst.currentMostPlayedTracks.toList();
       await showGeneralPopupDialog(
         trs,
         k_PLAYLIST_NAME_MOST_PLAYED.translatePlaylistName(),
         trs.length.displayTrackKeyword,
         QueueSource.mostPlayed,
-        thirdLineText: "↑ ${HistoryController.inst.topTracksMapListens[trs.firstOrNull]?.length.formatDecimal()} • ${trs.firstOrNull?.title}",
+        thirdLineText: "↑ ${HistoryController.inst.currentTopTracksMapListens[trs.firstOrNull]?.length.formatDecimal()} • ${trs.firstOrNull?.title}",
         playlistName: k_PLAYLIST_NAME_MOST_PLAYED,
         extractColor: false,
         heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',

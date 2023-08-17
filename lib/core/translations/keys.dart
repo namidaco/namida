@@ -24,6 +24,7 @@ class LanguageKeys {
   late String ALBUM;
   late String ALBUMS_COUNT;
   late String ALBUMS;
+  late String ALL_TIME;
   late String ANIMATING_THUMBNAIL_INTENSITY;
   late String ANIMATING_THUMBNAIL_INVERSED_SUBTITLE;
   late String ANIMATING_THUMBNAIL_INVERSED;
@@ -89,6 +90,7 @@ class LanguageKeys {
   late String CREATE;
   late String CREATED_BACKUP_SUCCESSFULLY_SUB;
   late String CREATED_BACKUP_SUCCESSFULLY;
+  late String CUSTOM;
   late String CUSTOMIZATIONS_SUBTITLE;
   late String CUSTOMIZATIONS;
   late String DATABASE;
@@ -263,6 +265,8 @@ class LanguageKeys {
   late String MINIPLAYER_CUSTOMIZATION;
   late String MINUTES;
   late String MISSING_ENTRIES;
+  late String MONTH;
+  late String MONTHS;
   late String MOODS;
   late String MORE;
   late String MOST_PLAYED;
@@ -494,6 +498,7 @@ class LanguageKeys {
   late String WARNING;
   late String WAVEFORM_BARS_COUNT;
   late String WAVEFORMS;
+  late String WEEK;
   late String YEAR;
   late String YES;
   late String YOUTUBE_MUSIC;

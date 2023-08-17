@@ -118,7 +118,24 @@ extension YearDateFormatted on int {
 
   String get dateFormatted => formatTimeFromMSSE(SettingsController.inst.dateTimeFormat.value);
 
-  String get dateFormattedOriginal => getDateFormatted(format: 'dd MMM yyyy');
+  String get dateFormattedOriginal {
+    final valInSetting = SettingsController.inst.dateTimeFormat.value;
+    return getDateFormatted(format: valInSetting.contains('d') ? SettingsController.inst.dateTimeFormat.value : 'dd MMM yyyy');
+  }
+
+  String dateFormattedOriginalNoYears(DateTime diffDate) {
+    final valInSettingMain = SettingsController.inst.dateTimeFormat.value;
+    String valInSettingNew = valInSettingMain.contains('d') ? valInSettingMain : 'dd MMM yyyy';
+
+    bool lessThan1Year(Duration d) => d.inDays.abs() < 364;
+    final thisDate = DateTime.fromMillisecondsSinceEpoch(this);
+    final diffFromNow = thisDate.difference(DateTime.now());
+    final diffDur = thisDate.difference(diffDate);
+    if (lessThan1Year(diffDur) && lessThan1Year(diffFromNow)) {
+      valInSettingNew = valInSettingNew.replaceAll('y', '').replaceAll('Y', '');
+    }
+    return getDateFormatted(format: valInSettingNew);
+  }
 
   String get clockFormatted => getClockFormatted(SettingsController.inst.hourFormat12.value);
 
