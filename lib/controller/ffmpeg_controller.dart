@@ -76,8 +76,38 @@ class NamidaFFMPEG {
   Future<bool> extractAudioThumbnail({
     required String audioPath,
     required String thumbnailSavePath,
+  Future<bool> setFileStats(File file, FileStat stats) async {
+    try {
+      await file.setLastAccessed(stats.accessed);
+      await file.setLastModified(stats.modified);
+      return true;
+    } catch (e) {
+      printy(e, isError: true);
+      return false;
+    }
+  }
+
+  Future<bool> compressImage({
+    required String path,
+    required String saveDir,
+    bool keepOriginalFileStats = true,
+    int percentage = 50,
   }) async {
-    return await _ffmpegExecute('-i "$audioPath" -map 0:v -map -0:V -c copy -y "$thumbnailSavePath"');
+    assert(percentage >= 0 && percentage <= 100);
+
+    final toQSC = (percentage / 3.2).round();
+
+    final imageFile = File(path);
+    final originalStats = keepOriginalFileStats ? await imageFile.stat() : null;
+    final newFilePath = "$saveDir/${path.getFilenameWOExt}.jpg";
+    final output = await FFmpegKit.execute('-i "$path" -qscale:v $toQSC -y "$newFilePath"');
+    final didSuccess = await output.getReturnCode().then((value) => value?.isValueSuccess()) ?? false;
+
+    if (originalStats != null) {
+      await setFileStats(File(newFilePath), originalStats);
+    }
+
+    return didSuccess;
   }
 
   /// * Extracts thumbnail from a given video, usually this tries to get embed thumbnail,

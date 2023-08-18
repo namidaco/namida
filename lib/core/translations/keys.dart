@@ -74,6 +74,9 @@ class LanguageKeys {
   late String COMMENT;
   late String COMMENTS;
   late String COMPOSER;
+  late String COMPRESS;
+  late String COMPRESSION_PERCENTAGE;
+  late String COMPRESS_IMAGES;
   late String CONFIGURE;
   late String CONFIRM;
   late String COPIED_ARTWORK;
@@ -224,6 +227,7 @@ class LanguageKeys {
   late String JUMP_TO_DAY;
   late String JUMP_TO_FIRST_TRACK_AFTER_QUEUE_FINISH;
   late String JUMP;
+  late String KEEP_FILE_DATES;
   late String KEEP_SCREEN_AWAKE_MINIPLAYER_EXPANDED_AND_VIDEO;
   late String KEEP_SCREEN_AWAKE_MINIPLAYER_EXPANDED;
   late String KEEP_SCREEN_AWAKE_NONE;
