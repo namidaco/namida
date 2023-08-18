@@ -273,10 +273,13 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
 
   Future<void> tryRestoringLastPosition(Track trackPre) async {
     final minValueInSet = SettingsController.inst.minTrackDurationToRestoreLastPosInMinutes.value * 60;
-    final track = trackPre.toTrackExt();
+
     if (minValueInSet > 0) {
+      final seekValueInMS = SettingsController.inst.seekDurationInSeconds.value * 1000;
+      final track = trackPre.toTrackExt();
       final lastPos = track.stats.lastPositionInMs;
-      if (lastPos != 0 && track.duration >= minValueInSet) {
+      // -- only seek if not at the start of track.
+      if (lastPos >= seekValueInMS && track.duration >= minValueInSet) {
         await seek(lastPos.milliseconds);
       }
     }
