@@ -247,6 +247,7 @@ class Language extends LanguageKeys {
 			FILTER_TRACKS = getKey("FILTER_TRACKS");
 			FILTERED_BY_SIZE_AND_DURATION = getKey("FILTERED_BY_SIZE_AND_DURATION");
 			FINISHED_UPDATING_LIBRARY = getKey("FINISHED_UPDATING_LIBRARY");
+			FIX_YTDLP_BIG_THUMBNAIL_SIZE = getKey("FIX_YTDLP_BIG_THUMBNAIL_SIZE");
 			FOLDER_NAME = getKey("FOLDER_NAME");
 			FOLDER = getKey("FOLDER");
 			FOLDERS = getKey("FOLDERS");
@@ -585,6 +586,7 @@ class Language extends LanguageKeys {
     }
   }
 }
+
 
 
 

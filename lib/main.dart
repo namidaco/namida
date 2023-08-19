@@ -51,6 +51,7 @@ void main() async {
   }
 
   k_DIR_USER_DATA = await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
+  k_DIR_APP_CACHE = await getExternalCacheDirectories().then((value) async => value?.firstOrNull?.path ?? '');
 
   Future<void> createDirectories(List<String> paths) async {
     paths.loop((p, i) async {

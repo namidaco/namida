@@ -12,6 +12,7 @@ import 'package:namida/controller/settings_controller.dart';
 ///
 int kSdkVersion = 21;
 String k_DIR_USER_DATA = '';
+String k_DIR_APP_CACHE = '';
 String k_DIR_APP_INTERNAL_STORAGE = '';
 
 final Set<String> kStoragePaths = {};

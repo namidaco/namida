@@ -1,12 +1,15 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:checkmark/checkmark.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:get/get.dart' hide Response;
 
+import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
@@ -201,6 +204,8 @@ class AdvancedSettings extends StatelessWidget {
             },
           ),
           const UpdateDirectoryPathListTile(),
+          // -- this will loop all choosen files, get yt thumbnail (download or cache), edit tags, without affecting file modified time.
+          const _FixYTDLPThumbnailSizeListTile(),
           const _CompressImagesListTile(),
           Obx(
             () => CustomListTile(
@@ -547,6 +552,90 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
   }
 }
 
+class _FixYTDLPThumbnailSizeListTile extends StatefulWidget {
+  const _FixYTDLPThumbnailSizeListTile();
+
+  @override
+  State<_FixYTDLPThumbnailSizeListTile> createState() => __FixYTDLPThumbnailSizeListTileState();
+}
+
+class __FixYTDLPThumbnailSizeListTileState extends State<_FixYTDLPThumbnailSizeListTile> {
+  int _totalAudiosToFix = 0;
+  int _currentProgress = 0;
+  String? _currentAudioPath;
+  int _currentFailed = 0;
+
+  Future<void> _onFixYTDLPPress() async {
+    if (!await requestManageStoragePermission()) return;
+
+    _currentProgress = 0;
+    _totalAudiosToFix = 0;
+    setState(() {});
+    final dir = await FilePicker.platform.getDirectoryPath();
+    if (dir == null) return;
+
+    final dio = Dio();
+    final allFiles = Directory(dir).listSync(recursive: true);
+    _totalAudiosToFix = allFiles.length;
+    setState(() {});
+    for (final filee in allFiles) {
+      _currentProgress++;
+      _currentAudioPath = filee.path;
+      setState(() {});
+      if (filee is File) {
+        final ytId = filee.path.toTrackOrNull()?.youtubeID;
+        if (ytId == null || ytId == '') continue;
+
+        final trackThumbnailCached = "$k_DIR_YT_THUMBNAILS$ytId.png";
+        String? cachedThumbnailPath;
+        Uint8List? bytes;
+
+        final doesCacheExist = await File(trackThumbnailCached).exists();
+
+        if (doesCacheExist) {
+          cachedThumbnailPath = trackThumbnailCached;
+        } else {
+          bytes = await VideoController.inst.getYoutubeThumbnail(dio, ytId);
+        }
+
+        if (cachedThumbnailPath == null && bytes == null) {
+          setState(() => _currentFailed++);
+          continue;
+        }
+
+        final file = await Indexer.inst.extractOneArtwork(
+          filee.path,
+          forceReExtract: true,
+          bytes: bytes,
+          artworkPath: cachedThumbnailPath,
+        );
+        if (file != null) {
+          final didUpdate = await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: filee.path, thumbnailPath: file.path);
+          if (!didUpdate) setState(() => _currentFailed++);
+        }
+      }
+    }
+    dio.close();
+    _currentAudioPath = null;
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final failedSubtitle = _currentFailed > 0 ? "${Language.inst.FAILED}: $_currentFailed" : null;
+    return CustomListTile(
+      leading: const StackedIcon(
+        baseIcon: Broken.document_code_2,
+        secondaryIcon: Broken.video_square,
+      ),
+      title: Language.inst.FIX_YTDLP_BIG_THUMBNAIL_SIZE,
+      subtitle: _currentAudioPath?.getFilename ?? failedSubtitle,
+      trailingText: _totalAudiosToFix > 0 ? "$_currentProgress/$_totalAudiosToFix" : null,
+      onTap: _onFixYTDLPPress,
+    );
+  }
+}
+
 class _CompressImagesListTile extends StatefulWidget {
   const _CompressImagesListTile();
 
@@ -692,7 +781,7 @@ class __CompressImagesListTileState extends State<_CompressImagesListTile> {
       ),
       title: Language.inst.COMPRESS_IMAGES,
       subtitle: _currentImagePath?.getFilename ?? (_currentFailed > 0 ? "${Language.inst.FAILED}: $_currentFailed" : null),
-      trailingText: "$_currentProgress/$_totalImagesToCompress",
+      trailingText: _totalImagesToCompress > 0 ? "$_currentProgress/$_totalImagesToCompress" : null,
       onTap: _onCompressImagePress,
     );
   }

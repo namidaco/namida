@@ -182,6 +182,7 @@ class LanguageKeys {
   late String FILTER_TRACKS;
   late String FILTERED_BY_SIZE_AND_DURATION;
   late String FINISHED_UPDATING_LIBRARY;
+  late String FIX_YTDLP_BIG_THUMBNAIL_SIZE;
   late String FOLDER_NAME;
   late String FOLDER;
   late String FOLDERS;

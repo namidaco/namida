@@ -66,16 +66,48 @@ class NamidaFFMPEG {
     printy('tags:::: $tagsString');
     // -- restoring original stats.
     if (originalStats != null) {
-      await originalFile.setLastAccessed(originalStats.accessed);
-      await originalFile.setLastModified(originalStats.modified);
+      await setFileStats(originalFile, originalStats);
     }
     await tempFile.tryDeleting();
     return didExecute;
   }
 
-  Future<bool> extractAudioThumbnail({
+  Future<File?> extractAudioThumbnail({
     required String audioPath,
     required String thumbnailSavePath,
+    bool compress = false,
+    bool forceReExtract = false,
+  }) async {
+    if (!forceReExtract && await File(thumbnailSavePath).exists()) {
+      return File(thumbnailSavePath);
+    }
+
+    final codec = compress ? '-filter:v scale=-2:250 -an' : '-c copy';
+    final output = await FFmpegKit.execute('-i "$audioPath" -map 0:v -map -0:V $codec -y "$thumbnailSavePath"');
+    final didSuccess = await output.getReturnCode().then((value) => value?.isValueSuccess()) ?? false;
+    return didSuccess ? File(thumbnailSavePath) : null;
+  }
+
+  Future<bool> editAudioThumbnail({
+    required String audioPath,
+    required String thumbnailPath,
+    bool keepOriginalFileStats = true,
+  }) async {
+    final audioFile = File(audioPath);
+    final originalStats = keepOriginalFileStats ? await audioFile.stat() : null;
+
+    final copied = await audioFile.copy("$k_DIR_APP_CACHE/${audioPath.hashCode}");
+    final output = await FFmpegKit.execute(
+        '-i "${copied.path}" -i "$thumbnailPath" -map 0:a -map 1 -codec copy -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" -disposition:v attached_pic -y "$audioPath"');
+    final didSuccess = await output.getReturnCode().then((value) => value?.isValueSuccess()) ?? false;
+
+    if (originalStats != null) {
+      await setFileStats(audioFile, originalStats);
+    }
+    copied.delete();
+    return didSuccess;
+  }
+
   Future<bool> setFileStats(File file, FileStat stats) async {
     try {
       await file.setLastAccessed(stats.accessed);

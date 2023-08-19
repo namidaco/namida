@@ -488,25 +488,16 @@ class VideoController {
     );
   }
 
-  Future<File?> saveYoutubeThumbnail({
-    required String id,
-  }) async {
-    final file = File("$k_DIR_YT_THUMBNAILS$id.png");
-    if (await file.exists()) {
-      printy('Downloading Thumbnail Already Exists');
-      return file;
-    }
-    printy('Downloading Thumbnail Start');
-    final dio = Dio();
-    final link = YTThumbnail(id).maxResUrl;
-    final link2 = YTThumbnail(id).highResUrl;
+  Future<Uint8List?> getYoutubeThumbnail(Dio dio, String youtubeId) async {
+    final link = YTThumbnail(youtubeId).maxResUrl;
+    final link2 = YTThumbnail(youtubeId).highResUrl;
 
     Response<List<int>>? response;
     Future<Response<List<int>>> getImageBytes(String link) async {
       return await dio.get<List<int>>(
         link,
         options: Options(responseType: ResponseType.bytes),
-        onReceiveProgress: (count, total) => printy('Downloading Thumbnail ${count.fileSizeFormatted}/${total.fileSizeFormatted}'),
+        // onReceiveProgress: (count, total) => printy('Downloading Thumbnail ${count.fileSizeFormatted}/${total.fileSizeFormatted}'),
       );
     }
 
@@ -520,11 +511,27 @@ class VideoController {
         printy('Error getting highResUrl.\n$e', isError: true);
       }
     }
+    final bytes = response != null && response.data != null ? Uint8List.fromList(response.data!) : null;
+    return bytes;
+  }
+
+  Future<File?> saveYoutubeThumbnail({
+    required String id,
+  }) async {
+    final file = File("$k_DIR_YT_THUMBNAILS$id.png");
+    if (await file.exists()) {
+      printy('Downloading Thumbnail Already Exists');
+      return file;
+    }
+
+    printy('Downloading Thumbnail Started');
+
+    final dio = Dio();
+    final bytes = await getYoutubeThumbnail(dio, id);
     dio.close();
 
-    final bytes = response?.data != null ? Uint8List.fromList(response?.data ?? []) : null;
+    printy('Downloading Thumbnail Finished');
 
-    printy('Downloaded Thumbnail bytes: ${bytes?.length}');
     return await _saveThumbnailToStorage(
       videoPath: null,
       bytes: bytes,
