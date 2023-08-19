@@ -214,6 +214,10 @@ extension WAKELOCKMODETEXT on WakelockMode {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension LocalVideoMatchingTypeText on LocalVideoMatchingType {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension TRACKPLAYMODE on TrackPlayMode {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
@@ -798,6 +802,11 @@ class _NamidaConverters {
         WakelockMode.none: Language.inst.KEEP_SCREEN_AWAKE_NONE,
         WakelockMode.expanded: Language.inst.KEEP_SCREEN_AWAKE_MINIPLAYER_EXPANDED,
         WakelockMode.expandedAndVideo: Language.inst.KEEP_SCREEN_AWAKE_MINIPLAYER_EXPANDED_AND_VIDEO,
+      },
+      LocalVideoMatchingType: {
+        LocalVideoMatchingType.auto: Language.inst.AUTO,
+        LocalVideoMatchingType.titleAndArtist: "${Language.inst.TITLE} & ${Language.inst.ARTIST}",
+        LocalVideoMatchingType.filename: Language.inst.FILE_NAME,
       },
       TrackPlayMode: {
         TrackPlayMode.selectedTrack: Language.inst.TRACK_PLAY_MODE_SELECTED_ONLY,

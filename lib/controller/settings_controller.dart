@@ -137,6 +137,9 @@ class SettingsController {
 
   final Rx<WakelockMode> wakelockMode = WakelockMode.expandedAndVideo.obs;
 
+  final Rx<LocalVideoMatchingType> localVideoMatchingType = LocalVideoMatchingType.auto.obs;
+  final RxBool localVideoMatchingCheckSameDir = false.obs;
+
   final Rx<RepeatMode> playerRepeatMode = RepeatMode.none.obs;
 
   final Rx<TrackPlayMode> trackPlayMode = TrackPlayMode.searchResults.obs;
@@ -297,6 +300,9 @@ class SettingsController {
 
       wakelockMode.value = WakelockMode.values.getEnum(json['wakelockMode']) ?? wakelockMode.value;
 
+      localVideoMatchingType.value = LocalVideoMatchingType.values.getEnum(json['localVideoMatchingType']) ?? localVideoMatchingType.value;
+      localVideoMatchingCheckSameDir.value = json['localVideoMatchingCheckSameDir'] ?? localVideoMatchingCheckSameDir.value;
+
       playerRepeatMode.value = RepeatMode.values.getEnum(json['playerRepeatMode']) ?? playerRepeatMode.value;
       trackPlayMode.value = TrackPlayMode.values.getEnum(json['trackPlayMode']) ?? trackPlayMode.value;
 
@@ -452,6 +458,8 @@ class SettingsController {
       'extractFeatArtistFromTitle': extractFeatArtistFromTitle.value,
       'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
       'wakelockMode': wakelockMode.value.convertToString,
+      'localVideoMatchingType': localVideoMatchingType.value.convertToString,
+      'localVideoMatchingCheckSameDir': localVideoMatchingCheckSameDir.value,
       'playerRepeatMode': playerRepeatMode.value.convertToString,
       'trackPlayMode': trackPlayMode.value.convertToString,
       'mostPlayedTimeRange': mostPlayedTimeRange.value.convertToString,
@@ -579,6 +587,8 @@ class SettingsController {
     bool? extractFeatArtistFromTitle,
     List<TagField>? tagFieldsToEdit,
     WakelockMode? wakelockMode,
+    LocalVideoMatchingType? localVideoMatchingType,
+    bool? localVideoMatchingCheckSameDir,
     RepeatMode? playerRepeatMode,
     TrackPlayMode? trackPlayMode,
     MostPlayedTimeRange? mostPlayedTimeRange,
@@ -913,6 +923,12 @@ class SettingsController {
     }
     if (wakelockMode != null) {
       this.wakelockMode.value = wakelockMode;
+    }
+    if (localVideoMatchingType != null) {
+      this.localVideoMatchingType.value = localVideoMatchingType;
+    }
+    if (localVideoMatchingCheckSameDir != null) {
+      this.localVideoMatchingCheckSameDir.value = localVideoMatchingCheckSameDir;
     }
     if (playerRepeatMode != null) {
       this.playerRepeatMode.value = playerRepeatMode;

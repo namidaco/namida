@@ -282,3 +282,9 @@ enum MostPlayedTimeRange {
   year,
   allTime,
 }
+
+enum LocalVideoMatchingType {
+  auto,
+  filename,
+  titleAndArtist,
+}

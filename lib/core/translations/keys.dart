@@ -241,6 +241,7 @@ class LanguageKeys {
   late String LIST_OF_FOLDERS;
   late String LOADING_FILE;
   late String LOCAL;
+  late String LOCAL_VIDEO_MATCHING;
   late String LYRICIST;
   late String LYRICS;
   late String MAKE_YOUR_FIRST_LISTEN;
@@ -387,6 +388,7 @@ class LanguageKeys {
   late String RESUME_IF_WAS_INTERRUPTED;
   late String RESUME_IF_WAS_PAUSED_BY_VOLUME;
   late String REVERSE_ORDER;
+  late String SAME_DIRECTORY_ONLY;
   late String SAMPLE_RATE;
   late String SAVE;
   late String SAVED_IN;

@@ -252,18 +252,58 @@ class VideoController {
 
     final possibleLocal = <NamidaVideo>[];
     final trExt = track.toTrackExt();
-    _videoPathsMap.entries.toList().loop((vf, index) {
-      final videoName = vf.key.getFilenameWOExt;
+
+    final valInSett = SettingsController.inst.localVideoMatchingType.value;
+    final shouldCheckSameDir = SettingsController.inst.localVideoMatchingCheckSameDir.value;
+
+    void matchFileName(String videoName, MapEntry<String, NamidaVideo> vf, bool ensureSameDir) {
+      if (ensureSameDir) {
+        if (vf.key.getDirectoryPath != track.path.getDirectoryPath) return;
+      }
+
       final videoNameContainsMusicFileName = _checkFileNameAudioVideo(videoName, track.filenameWOExt);
+      if (videoNameContainsMusicFileName) possibleLocal.add(vf.value);
+    }
+
+    void matchTitleAndArtist(String videoName, MapEntry<String, NamidaVideo> vf, bool ensureSameDir) {
+      if (ensureSameDir) {
+        if (vf.key.getDirectoryPath != track.path.getDirectoryPath) return;
+      }
       final videoContainsTitle = videoName.contains(trExt.title.cleanUpForComparison);
       final videoNameContainsTitleAndArtist = videoContainsTitle && trExt.artistsList.isNotEmpty && videoName.contains(trExt.artistsList.first.cleanUpForComparison);
       // useful for [Nightcore - title]
       // track must contain Nightcore as the first Genre
       final videoNameContainsTitleAndGenre = videoContainsTitle && trExt.genresList.isNotEmpty && videoName.contains(trExt.genresList.first.cleanUpForComparison);
-      if (videoNameContainsMusicFileName || videoNameContainsTitleAndArtist || videoNameContainsTitleAndGenre) {
-        possibleLocal.add(vf.value);
-      }
-    });
+      if (videoNameContainsTitleAndArtist || videoNameContainsTitleAndGenre) possibleLocal.add(vf.value);
+    }
+
+    switch (valInSett) {
+      case LocalVideoMatchingType.auto:
+        for (final vf in _videoPathsMap.entries) {
+          final videoName = vf.key.getFilenameWOExt;
+          matchFileName(videoName, vf, shouldCheckSameDir);
+          matchTitleAndArtist(videoName, vf, shouldCheckSameDir);
+        }
+        break;
+
+      case LocalVideoMatchingType.filename:
+        for (final vf in _videoPathsMap.entries) {
+          final videoName = vf.key.getFilenameWOExt;
+          matchFileName(videoName, vf, shouldCheckSameDir);
+        }
+
+        break;
+      case LocalVideoMatchingType.titleAndArtist:
+        for (final vf in _videoPathsMap.entries) {
+          final videoName = vf.key.getFilenameWOExt;
+          matchTitleAndArtist(videoName, vf, shouldCheckSameDir);
+        }
+        break;
+
+      default:
+        null;
+    }
+
     return [...possibleCached, ...possibleLocal];
   }
 

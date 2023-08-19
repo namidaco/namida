@@ -535,8 +535,8 @@ Future<void> showGeneralPopupDialog(
                       queueSource: source,
                     )
                   : null,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 14.0),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [

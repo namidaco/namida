@@ -280,6 +280,16 @@ extension WAKELOCKMODETEXT on WakelockMode {
   }
 }
 
+extension LocalVideoMatchingTypeUtils on LocalVideoMatchingType {
+  void toggleSetting() {
+    if (SettingsController.inst.localVideoMatchingType.value.index + 1 == LocalVideoMatchingType.values.length) {
+      SettingsController.inst.save(localVideoMatchingType: LocalVideoMatchingType.values[0]);
+    } else {
+      SettingsController.inst.save(localVideoMatchingType: LocalVideoMatchingType.values[index + 1]);
+    }
+  }
+}
+
 extension CloseDialogIfTrue on bool {
   /// Closes dialog if [this == true].
   ///

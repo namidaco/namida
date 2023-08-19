@@ -306,6 +306,7 @@ class Language extends LanguageKeys {
 			LIST_OF_FOLDERS = getKey("LIST_OF_FOLDERS");
 			LOADING_FILE = getKey("LOADING_FILE");
 			LOCAL = getKey("LOCAL");
+			LOCAL_VIDEO_MATCHING = getKey("LOCAL_VIDEO_MATCHING");
 			LYRICIST = getKey("LYRICIST");
 			LYRICS = getKey("LYRICS");
 			MAKE_YOUR_FIRST_LISTEN = getKey("MAKE_YOUR_FIRST_LISTEN");
@@ -452,6 +453,7 @@ class Language extends LanguageKeys {
 			RESUME_IF_WAS_INTERRUPTED = getKey("RESUME_IF_WAS_INTERRUPTED");
 			RESUME_IF_WAS_PAUSED_BY_VOLUME = getKey("RESUME_IF_WAS_PAUSED_BY_VOLUME");
 			REVERSE_ORDER = getKey("REVERSE_ORDER");
+			SAME_DIRECTORY_ONLY = getKey("SAME_DIRECTORY_ONLY");
 			SAMPLE_RATE = getKey("SAMPLE_RATE");
 			SAVE = getKey("SAVE");
 			SAVED_IN = getKey("SAVED_IN");
@@ -586,6 +588,8 @@ class Language extends LanguageKeys {
     }
   }
 }
+
+
 
 
 

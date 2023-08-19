@@ -32,6 +32,7 @@ class PlaybackSettings extends StatelessWidget {
       ),
       Obx(
         () => CustomListTile(
+          enabled: SettingsController.inst.enableVideoPlayback.value,
           title: Language.inst.VIDEO_PLAYBACK_SOURCE,
           icon: Broken.scroll,
           trailingText: SettingsController.inst.videoPlaybackSource.value.toText(),
@@ -83,6 +84,7 @@ class PlaybackSettings extends StatelessWidget {
       ),
       Obx(
         () => CustomListTile(
+          enabled: SettingsController.inst.enableVideoPlayback.value,
           title: Language.inst.VIDEO_QUALITY,
           icon: Broken.story,
           trailingText: SettingsController.inst.youtubeVideoQualities.first,
@@ -150,6 +152,47 @@ class PlaybackSettings extends StatelessWidget {
                       ],
                     ),
                   ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+      Obx(
+        () => CustomListTile(
+          enabled: SettingsController.inst.enableVideoPlayback.value,
+          icon: Broken.video_tick,
+          title: Language.inst.LOCAL_VIDEO_MATCHING,
+          trailingText: SettingsController.inst.localVideoMatchingType.value.toText(),
+          onTap: () {
+            NamidaNavigator.inst.navigateDialog(
+              dialog: CustomBlurryDialog(
+                title: Language.inst.LOCAL_VIDEO_MATCHING,
+                actions: [
+                  NamidaButton(
+                    text: Language.inst.DONE,
+                    onPressed: NamidaNavigator.inst.closeDialog,
+                  ),
+                ],
+                child: Column(
+                  children: [
+                    Obx(
+                      () => CustomListTile(
+                        icon: Broken.video_tick,
+                        title: Language.inst.MATCHING_TYPE,
+                        trailingText: SettingsController.inst.localVideoMatchingType.value.toText(),
+                        onTap: SettingsController.inst.localVideoMatchingType.value.toggleSetting,
+                      ),
+                    ),
+                    Obx(
+                      () => CustomSwitchListTile(
+                        icon: Broken.folder,
+                        title: Language.inst.SAME_DIRECTORY_ONLY,
+                        value: SettingsController.inst.localVideoMatchingCheckSameDir.value,
+                        onChanged: (isTrue) => SettingsController.inst.save(localVideoMatchingCheckSameDir: !isTrue),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );

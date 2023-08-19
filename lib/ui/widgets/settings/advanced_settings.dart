@@ -703,13 +703,13 @@ class __CompressImagesListTileState extends State<_CompressImagesListTile> {
               title: Language.inst.COMPRESSION_PERCENTAGE,
               trailing: Obx(
                 () => NamidaWheelSlider(
-                  totalCount: 100 - 10,
+                  totalCount: 100,
                   initValue: 50,
                   itemSize: 2,
                   squeeze: 0.4,
                   text: "${compPerc.value}%",
                   onValueChanged: (val) {
-                    compPerc.value = (val as int) + 10;
+                    compPerc.value = (val as int);
                   },
                 ),
               ),
