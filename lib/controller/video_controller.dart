@@ -61,7 +61,7 @@ class VideoController {
   final currentVideo = Rxn<NamidaVideo>();
   final currentPossibleVideos = <NamidaVideo>[].obs;
   final currentYTQualities = <VideoOnlyStreamInfo>[].obs;
-  final currentDownloadedBytes = 0.obs;
+  final currentDownloadedBytes = Rxn<int>();
 
   /// Indicates that [updateCurrentVideo] didn't find any matching video.
   final isNoVideosAvailable = false.obs;
@@ -95,7 +95,7 @@ class VideoController {
 
   Future<void> updateCurrentVideo(Track track) async {
     isNoVideosAvailable.value = false;
-    currentDownloadedBytes.value = 0;
+    currentDownloadedBytes.value = null;
     currentVideo.value = null;
     currentYTQualities.clear();
     await vcontroller.dispose();
@@ -201,7 +201,7 @@ class VideoController {
     _downloadTimerCancel();
     _downloadTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       currentDownloadedBytes.value = downloaded;
-      printy('Video Download: ${currentDownloadedBytes.value.fileSizeFormatted}');
+      printy('Video Download: ${currentDownloadedBytes.value?.fileSizeFormatted}');
     });
     final initialTrack = Player.inst.nowPlayingTrack;
     void updateValuesCT(void Function() execute) => _executeForCurrentTrackOnly(initialTrack, execute);

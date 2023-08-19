@@ -635,7 +635,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                               getTextWidget(" • $qualityText$framerateText", colored: false, fontSize: 13.0),
                                               if (videoTotalSize > 0) ...[
                                                 getTextWidget(" • ", colored: false, fontSize: 13.0),
-                                                if (downloadedBytes > 0) getTextWidget("${downloadedBytes.fileSizeFormatted}/", colored: true, fontSize: 10.0),
+                                                if (downloadedBytes != null) getTextWidget("${downloadedBytes.fileSizeFormatted}/", colored: true, fontSize: 10.0),
                                                 getTextWidget(videoTotalSize.fileSizeFormatted, colored: true, fontSize: 10.0),
                                               ]
                                             ]
