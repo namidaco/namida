@@ -96,16 +96,21 @@ class NamidaFFMPEG {
     final audioFile = File(audioPath);
     final originalStats = keepOriginalFileStats ? await audioFile.stat() : null;
 
-    final copied = await audioFile.copy("$k_DIR_APP_CACHE/${audioPath.hashCode}");
-    final output = await FFmpegKit.execute(
-        '-i "${copied.path}" -i "$thumbnailPath" -map 0:a -map 1 -codec copy -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" -disposition:v attached_pic -y "$audioPath"');
+    final cacheFile = File("$k_DIR_APP_CACHE/${audioPath.hashCode}.${audioPath.getExtension}");
+    final output = await FFmpegKit.execute('-i "$audioPath" -i "$thumbnailPath" -map 0:a -map 1 -codec copy -disposition:v attached_pic -y "${cacheFile.path}"');
     final didSuccess = await output.getReturnCode().then((value) => value?.isValueSuccess()) ?? false;
+    final canSafelyMoveBack = didSuccess && await cacheFile.stat().then((value) => value.size) > 0;
+    if (canSafelyMoveBack) {
+      // only move output file back in case of success.
+      await cacheFile.copy(audioPath);
 
-    if (originalStats != null) {
-      await setFileStats(audioFile, originalStats);
+      if (originalStats != null) {
+        await setFileStats(audioFile, originalStats);
+      }
     }
-    copied.delete();
-    return didSuccess;
+
+    cacheFile.deleteIfExists();
+    return canSafelyMoveBack;
   }
 
   Future<bool> setFileStats(File file, FileStat stats) async {

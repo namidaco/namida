@@ -583,7 +583,8 @@ class __FixYTDLPThumbnailSizeListTileState extends State<_FixYTDLPThumbnailSizeL
       _currentAudioPath = filee.path;
       setState(() {});
       if (filee is File) {
-        final ytId = filee.path.toTrackOrNull()?.youtubeID;
+        final tr = await filee.path.toTrackExtOrExtract();
+        final ytId = tr?.youtubeID;
         if (ytId == null || ytId == '') continue;
 
         final trackThumbnailCached = "$k_DIR_YT_THUMBNAILS$ytId.png";

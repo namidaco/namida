@@ -32,7 +32,12 @@ class IndexerSettings extends StatelessWidget {
       NamidaNavigator.inst.navigateDialog(
         dialog: CustomBlurryDialog(
           title: Language.inst.NOTE,
-          bodyText: Language.inst.PROMPT_INDEXING_REFRESH.replaceFirst('_NEW_FILES_', newPathsLength.toString()).replaceFirst(
+          bodyText: Language.inst.PROMPT_INDEXING_REFRESH
+              .replaceFirst(
+                '_NEW_FILES_',
+                newPathsLength.toString(),
+              )
+              .replaceFirst(
                 '_DELETED_FILES_',
                 deletedPathLength.toString(),
               ),

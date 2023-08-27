@@ -298,6 +298,14 @@ extension TrackExtUtils on TrackExtended {
   String get folderName => folderPath.split(Platform.pathSeparator).last;
   String get pathToImage => "$k_DIR_ARTWORKS$filename.png";
 
+  String get youtubeLink {
+    final match = comment.isEmpty ? null : kYoutubeRegex.firstMatch(comment)?[0];
+    final match2 = filename.isEmpty ? null : kYoutubeRegex.firstMatch(filename)?[0];
+    return match ?? match2 ?? '';
+  }
+
+  String get youtubeID => youtubeLink.getYoutubeID;
+
   TrackStats get stats => Indexer.inst.trackStatsMap[toTrack()] ?? TrackStats(kDummyTrack, 0, [], [], 0);
 
   TrackExtended copyWithTag({
@@ -431,14 +439,10 @@ extension TrackUtils on Track {
   Folder get folder => Folder(folderPath);
   String get folderName => folderPath.split(Platform.pathSeparator).last;
   String get pathToImage => "$k_DIR_ARTWORKS$filename.png";
-  String get youtubeLink {
-    final trExt = toTrackExt();
-    final match = trExt.comment.isEmpty ? null : kYoutubeRegex.firstMatch(trExt.comment)?[0];
-    final match2 = filename.isEmpty ? null : kYoutubeRegex.firstMatch(filename)?[0];
-    return match ?? match2 ?? '';
-  }
 
+  String get youtubeLink => toTrackExt().youtubeLink;
   String get youtubeID => youtubeLink.getYoutubeID;
+
   String get audioInfoFormatted {
     final trExt = toTrackExt();
     return [
