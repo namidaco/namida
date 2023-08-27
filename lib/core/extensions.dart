@@ -4,6 +4,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:dart_extensions/dart_extensions.dart';
+
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -14,7 +16,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:dart_extensions/dart_extensions.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 
 export 'package:dart_extensions/dart_extensions.dart';
 
@@ -287,6 +289,30 @@ extension LocalVideoMatchingTypeUtils on LocalVideoMatchingType {
     } else {
       SettingsController.inst.save(localVideoMatchingType: LocalVideoMatchingType.values[index + 1]);
     }
+  }
+}
+
+extension WidgetsUtils on Widget {
+  Widget animateEntrance({
+    required bool showWhen,
+    int durationMS = 400,
+    int? reverseDurationMS,
+    Curve firstCurve = Curves.linear,
+    Curve secondCurve = Curves.linear,
+    Curve sizeCurve = Curves.linear,
+    Curve? allCurves,
+  }) {
+    return NamidaAnimatedSwitcher(
+      firstChild: this,
+      secondChild: const SizedBox(),
+      showFirst: showWhen,
+      durationMS: durationMS,
+      reverseDurationMS: reverseDurationMS,
+      firstCurve: firstCurve,
+      secondCurve: secondCurve,
+      sizeCurve: sizeCurve,
+      allCurves: allCurves,
+    );
   }
 }
 

@@ -418,21 +418,17 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                   children: [
                                                     Obx(
                                                       () {
-                                                        final diffInMs = MiniPlayerController.inst.seekValue.value - Player.inst.nowPlayingPosition;
+                                                        final seek = MiniPlayerController.inst.seekValue.value;
+                                                        final diffInMs = seek - Player.inst.nowPlayingPosition;
                                                         final plusOrMinus = diffInMs < 0 ? '-' : '+';
-                                                        final seekText = diffInMs.abs().milliSecondsLabel;
-                                                        return AnimatedCrossFade(
-                                                          firstChild: Text(
-                                                            "$plusOrMinus$seekText",
-                                                            style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0.multipliedFontScale),
-                                                          ),
-                                                          secondChild: const SizedBox(),
-                                                          crossFadeState: MiniPlayerController.inst.seekValue.value != 0 ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-                                                          duration: const Duration(milliseconds: 700),
-                                                          reverseDuration: const Duration(milliseconds: 700),
-                                                          sizeCurve: Curves.easeInOutQuart,
-                                                          firstCurve: Curves.easeInOutQuart,
-                                                          secondCurve: Curves.easeInOutQuart,
+                                                        final seekText = seek == 0 ? '00:00' : diffInMs.abs().milliSecondsLabel;
+                                                        return Text(
+                                                          "$plusOrMinus$seekText",
+                                                          style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0.multipliedFontScale),
+                                                        ).animateEntrance(
+                                                          showWhen: seek != 0,
+                                                          durationMS: 700,
+                                                          allCurves: Curves.easeInOutQuart,
                                                         );
                                                       },
                                                     ),
@@ -1211,11 +1207,12 @@ class NamidaMiniPlayer extends StatelessWidget {
             onTap: () => onTap(insertionType),
           ),
           Obx(
-            () => AnimatedCrossFade(
-              firstChild: NamidaIconButton(icon: Broken.setting_4, onPressed: () => openQueueInsertionConfigure(insertionType, title)),
-              secondChild: const SizedBox(),
-              crossFadeState: shouldShowConfigureIcon.value ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-              duration: const Duration(milliseconds: 200),
+            () => NamidaIconButton(
+              icon: Broken.setting_4,
+              onPressed: () => openQueueInsertionConfigure(insertionType, title),
+            ).animateEntrance(
+              showWhen: shouldShowConfigureIcon.value,
+              durationMS: 200,
             ),
           ),
         ],

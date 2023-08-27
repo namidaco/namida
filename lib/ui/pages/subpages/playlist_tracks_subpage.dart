@@ -307,40 +307,21 @@ class MostPlayedTracksPage extends StatelessWidget {
                             Obx(
                               () {
                                 final dateRange = SettingsController.inst.mostPlayedCustomDateRange.value;
-                                return AnimatedCrossFade(
-                                  firstChild: _getChipChild(
-                                    context: context,
-                                    mptr: MostPlayedTimeRange.custom,
-                                    dateCustom: dateRange,
-                                    trailing: (textColor) => NamidaIconButton(
-                                      padding: EdgeInsets.zero,
-                                      icon: Broken.close_circle,
-                                      iconSize: 14.0,
-                                      iconColor: textColor,
-                                      onPressed: () => _onSelectingTimeRange(mptr: MostPlayedTimeRange.allTime, dateCustom: DateRange.dummy()),
-                                    ),
+                                return _getChipChild(
+                                  context: context,
+                                  mptr: MostPlayedTimeRange.custom,
+                                  dateCustom: dateRange,
+                                  trailing: (textColor) => NamidaIconButton(
+                                    padding: EdgeInsets.zero,
+                                    icon: Broken.close_circle,
+                                    iconSize: 14.0,
+                                    iconColor: textColor,
+                                    onPressed: () => _onSelectingTimeRange(mptr: MostPlayedTimeRange.allTime, dateCustom: DateRange.dummy()),
                                   ),
-                                  secondChild: const SizedBox(),
-                                  crossFadeState: dateRange.oldest != DateTime(0) ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-                                  duration: const Duration(milliseconds: 400),
-                                  reverseDuration: const Duration(milliseconds: 200),
-                                  layoutBuilder: (topChild, topChildKey, bottomChild, bottomChildKey) {
-                                    return Stack(
-                                      clipBehavior: Clip.none,
-                                      alignment: Alignment.center,
-                                      children: <Widget>[
-                                        Positioned(
-                                          key: bottomChildKey,
-                                          top: 0,
-                                          child: bottomChild,
-                                        ),
-                                        Positioned(
-                                          key: topChildKey,
-                                          child: topChild,
-                                        ),
-                                      ],
-                                    );
-                                  },
+                                ).animateEntrance(
+                                  showWhen: dateRange.oldest != DateTime(0),
+                                  durationMS: 400,
+                                  reverseDurationMS: 200,
                                 );
                               },
                             ),

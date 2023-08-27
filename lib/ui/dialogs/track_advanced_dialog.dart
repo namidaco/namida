@@ -283,22 +283,17 @@ void _showTrackColorPaletteDialog({
                     alignment: Alignment.center,
                     children: [
                       getColorWidget(e),
-                      AnimatedCrossFade(
-                        firstChild: Container(
-                          padding: const EdgeInsets.all(2.0),
-                          decoration: BoxDecoration(
-                            color: theme.scaffoldBackgroundColor,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Text('✓'),
+                      Container(
+                        padding: const EdgeInsets.all(2.0),
+                        decoration: BoxDecoration(
+                          color: theme.scaffoldBackgroundColor,
+                          shape: BoxShape.circle,
                         ),
-                        secondChild: const SizedBox(),
-                        crossFadeState: displayCheckMark(e) ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-                        duration: const Duration(milliseconds: 100),
-                        reverseDuration: const Duration(milliseconds: 100),
-                        sizeCurve: Curves.easeOut,
-                        firstCurve: Curves.easeInOutQuart,
-                        secondCurve: Curves.easeInOutQuart,
+                        child: const Text('✓'),
+                      ).animateEntrance(
+                        showWhen: displayCheckMark(e),
+                        allCurves: Curves.easeInOutQuart,
+                        durationMS: 100,
                       ),
                     ],
                   ),

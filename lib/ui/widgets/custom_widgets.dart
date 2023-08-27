@@ -2379,3 +2379,58 @@ class NamidaHero extends StatelessWidget {
         : child;
   }
 }
+
+class NamidaAnimatedSwitcher extends StatelessWidget {
+  final Widget firstChild;
+  final Widget secondChild;
+  final bool showFirst;
+  final int durationMS;
+  final int? reverseDurationMS;
+  final Curve firstCurve;
+  final Curve secondCurve;
+  final Curve sizeCurve;
+  final Curve? allCurves;
+  const NamidaAnimatedSwitcher({
+    super.key,
+    required this.firstChild,
+    required this.secondChild,
+    required this.showFirst,
+    this.durationMS = 400,
+    this.reverseDurationMS,
+    this.firstCurve = Curves.linear,
+    this.secondCurve = Curves.linear,
+    this.sizeCurve = Curves.linear,
+    this.allCurves,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedCrossFade(
+      firstChild: firstChild,
+      secondChild: secondChild,
+      crossFadeState: showFirst ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+      duration: Duration(milliseconds: durationMS),
+      reverseDuration: Duration(milliseconds: reverseDurationMS ?? durationMS),
+      firstCurve: allCurves ?? firstCurve,
+      secondCurve: allCurves ?? secondCurve,
+      sizeCurve: allCurves ?? sizeCurve,
+      layoutBuilder: (topChild, topChildKey, bottomChild, bottomChildKey) {
+        return Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: <Widget>[
+            Positioned(
+              key: bottomChildKey,
+              top: 0,
+              child: bottomChild,
+            ),
+            Positioned(
+              key: topChildKey,
+              child: topChild,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}

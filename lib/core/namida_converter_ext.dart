@@ -481,12 +481,9 @@ extension RouteUtils on NamidaRoute {
     }
 
     Widget getAnimatedCrossFade({required Widget child, required bool shouldShow}) {
-      return AnimatedCrossFade(
-        firstChild: child,
-        secondChild: const SizedBox(),
-        crossFadeState: shouldShow ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-        duration: const Duration(milliseconds: 500),
-        reverseDuration: const Duration(milliseconds: 500),
+      return child.animateEntrance(
+        showWhen: shouldShow,
+        durationMS: 400,
         sizeCurve: Curves.easeOut,
         firstCurve: Curves.easeInOutQuart,
         secondCurve: Curves.easeInOutQuart,
