@@ -92,16 +92,14 @@ void main() async {
   Indexer.inst.updateColorPalettesSizeInStorage();
   Indexer.inst.updateVideosSizeInStorage();
 
-  VideoController.inst.initialize();
-
   FlutterNativeSplash.remove();
 
-  await PlaylistController.inst.prepareDefaultPlaylistsFile();
-
-  PlaylistController.inst.prepareAllPlaylistsFile();
   QueueController.inst.prepareAllQueuesFile();
 
   await Player.inst.initializePlayer();
+  PlaylistController.inst.prepareAllPlaylistsFile();
+  VideoController.inst.initialize();
+  await PlaylistController.inst.prepareDefaultPlaylistsFile();
   await QueueController.inst.prepareLatestQueue();
   CurrentColor.inst.prepareColors();
 

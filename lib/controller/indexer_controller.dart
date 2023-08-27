@@ -748,30 +748,17 @@ class Indexer {
     tracksExcludedByNoMedia.value = 0;
     final allAvailableDirectories = await getAvailableDirectories(forceReCheck: forceReCheckDirs, strictNoMedia: strictNoMedia);
 
-    final allPaths = <String>{};
+    final parameters = {
+      'allAvailableDirectories': allAvailableDirectories,
+      'directoriesToExclude': SettingsController.inst.directoriesToExclude.toList(),
+    };
 
-    await allAvailableDirectories.keys.toList().loopFuture((d, index) async {
-      final hasNoMedia = allAvailableDirectories[d] ?? false;
+    final mapResult = await _getAudioFilesIsolate.thready(parameters);
 
-      await for (final systemEntity in d.list()) {
-        if (systemEntity is File) {
-          final path = systemEntity.path;
-          if (!kAudioFileExtensions.any((ext) => path.endsWith(ext))) {
-            continue;
-          }
-          if (hasNoMedia) {
-            tracksExcludedByNoMedia.value++;
-            continue;
-          }
+    final allPaths = mapResult['allPaths']!;
+    final excludedByNoMedia = mapResult['pathsExcludedByNoMedia']!;
 
-          // Skips if the file is included in one of the excluded folders.
-          if (SettingsController.inst.directoriesToExclude.any((exc) => path.startsWith(exc))) {
-            continue;
-          }
-          allPaths.add(path);
-        }
-      }
-    });
+    tracksExcludedByNoMedia.value += excludedByNoMedia.length;
 
     allAudioFiles
       ..clear()
@@ -781,51 +768,110 @@ class Indexer {
     return allPaths;
   }
 
-  Completer<Map<Directory, bool>>? availableDirs;
-  Future<Map<Directory, bool>> getAvailableDirectories({bool strictNoMedia = true, bool forceReCheck = false}) async {
-    if (availableDirs != null && !forceReCheck) {
-      return await availableDirs!.future;
-    } else {
-      availableDirs = null; // for when forceReCheck enabled.
-      availableDirs = Completer<Map<Directory, bool>>();
+  /// ```
+  /// {
+  /// 'allPaths': <String>{},
+  /// 'pathsExcludedByNoMedia': <String>{},
+  /// }
+  /// ```
+  static Map<String, Set<String>> _getAudioFilesIsolate(Map parameters) {
+    final allAvailableDirectories = parameters['allAvailableDirectories'] as Map<Directory, bool>;
+    final directoriesToExclude = parameters['directoriesToExclude'] as List<String>;
 
-      final allAvailableDirectories = <Directory, bool>{};
+    final allPaths = <String>{};
+    final excludedByNoMedia = <String>{};
 
-      await SettingsController.inst.directoriesToScan.loopFuture((dirPath, index) async {
-        final directory = Directory(dirPath);
+    allAvailableDirectories.keys.toList().loop((d, index) {
+      final hasNoMedia = allAvailableDirectories[d] ?? false;
 
-        if (await directory.exists()) {
-          allAvailableDirectories[directory] = false;
-          await for (final file in directory.list(recursive: true, followLinks: true)) {
-            if (file is Directory) {
-              allAvailableDirectories[file] = false;
-            }
+      for (final systemEntity in d.listSync()) {
+        if (systemEntity is File) {
+          final path = systemEntity.path;
+          if (!kAudioFileExtensions.any((ext) => path.endsWith(ext))) {
+            continue;
           }
-        }
-      });
-
-      /// Assigning directories and sub-subdirectories that has .nomedia.
-      if (SettingsController.inst.respectNoMedia.value) {
-        await allAvailableDirectories.keys.toList().loopFuture((d, index) async {
-          final hasNoMedia = await File("${d.path}/.nomedia").exists();
           if (hasNoMedia) {
-            // TODO: expose [strictNoMedia] in settings?
-            if (strictNoMedia) {
-              // strictly applies bool to all subdirectories.
-              allAvailableDirectories.forEach((key, value) {
-                if (key.path.startsWith(d.path)) {
-                  allAvailableDirectories[key] = true;
-                }
-              });
-            } else {
-              allAvailableDirectories[d] = true;
-            }
+            excludedByNoMedia.add(path);
+            continue;
           }
-        });
+
+          // Skips if the file is included in one of the excluded folders.
+          if (directoriesToExclude.any((exc) => path.startsWith(exc))) {
+            continue;
+          }
+          allPaths.add(path);
+        }
       }
-      availableDirs?.complete(allAvailableDirectories);
+    });
+    return {
+      'allPaths': allPaths,
+      'pathsExcludedByNoMedia': excludedByNoMedia,
+    };
+  }
+
+  bool? _latestRespectNoMedia;
+  Completer<Map<Directory, bool>>? _availableDirs;
+  Future<Map<Directory, bool>> getAvailableDirectories({bool strictNoMedia = true, bool forceReCheck = false}) async {
+    if (_availableDirs != null && !forceReCheck && _latestRespectNoMedia == SettingsController.inst.respectNoMedia.value) {
+      return await _availableDirs!.future;
+    } else {
+      _availableDirs = null; // for when forceReCheck enabled.
+      _availableDirs = Completer<Map<Directory, bool>>();
+
+      _latestRespectNoMedia = SettingsController.inst.respectNoMedia.value;
+
+      final parameters = {
+        'directoriesToScan': SettingsController.inst.directoriesToScan.toList(),
+        'respectNoMedia': SettingsController.inst.respectNoMedia.value,
+        'strictNoMedia': strictNoMedia, // TODO: expose [strictNoMedia] in settings?
+      };
+      final allAvailableDirectories = await _getAvailableDirectoriesIsolate.thready(parameters);
+
+      _availableDirs?.complete(allAvailableDirectories);
+
       return allAvailableDirectories;
     }
+  }
+
+  static Map<Directory, bool> _getAvailableDirectoriesIsolate(Map parameters) {
+    final directoriesToScan = parameters['directoriesToScan'] as List<String>;
+    final respectNoMedia = parameters['respectNoMedia'] as bool;
+    final strictNoMedia = parameters['strictNoMedia'] as bool;
+
+    final allAvailableDirectories = <Directory, bool>{};
+
+    for (final dirPath in directoriesToScan) {
+      final directory = Directory(dirPath);
+
+      if (directory.existsSync()) {
+        allAvailableDirectories[directory] = false;
+        for (final file in directory.listSync(recursive: true, followLinks: true)) {
+          if (file is Directory) {
+            allAvailableDirectories[file] = false;
+          }
+        }
+      }
+    }
+
+    /// Assigning directories and sub-subdirectories that has .nomedia.
+    if (respectNoMedia) {
+      for (final d in allAvailableDirectories.keys) {
+        final hasNoMedia = File("${d.path}/.nomedia").existsSync();
+        if (hasNoMedia) {
+          if (strictNoMedia) {
+            // strictly applies bool to all subdirectories.
+            allAvailableDirectories.forEach((key, value) {
+              if (key.path.startsWith(d.path)) {
+                allAvailableDirectories[key] = true;
+              }
+            });
+          } else {
+            allAvailableDirectories[d] = true;
+          }
+        }
+      }
+    }
+    return allAvailableDirectories;
   }
 
   Future<void> updateImageSizeInStorage([File? newImgFile, bool decreaseStats = false]) async {
