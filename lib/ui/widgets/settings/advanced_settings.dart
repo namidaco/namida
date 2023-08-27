@@ -311,6 +311,37 @@ class AdvancedSettings extends StatelessWidget {
     }
 
     sortBySize();
+
+    Widget getChipButton({
+      required String title,
+      required IconData icon,
+      required bool enabled,
+    }) {
+      return NamidaInkWell(
+        animationDurationMS: 100,
+        borderRadius: 8.0,
+        bgColor: Get.theme.cardTheme.color,
+        padding: const EdgeInsets.all(8.0),
+        decoration: BoxDecoration(
+          border: enabled ? Border.all(color: Get.theme.colorScheme.primary) : null,
+          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+        ),
+        onTap: toggleSort,
+        child: Row(
+          children: [
+            Icon(icon, size: 18.0),
+            const SizedBox(width: 4.0),
+            Text(
+              title,
+              style: Get.textTheme.displayMedium,
+            ),
+            const SizedBox(width: 4.0),
+            const Icon(Broken.arrow_down_2, size: 14.0),
+          ],
+        ),
+      );
+    }
+
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
@@ -357,18 +388,17 @@ class AdvancedSettings extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 6.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Obx(
-                      () => NamidaButton(
-                        icon: Broken.sort,
-                        text: isSortTypeSize.value ? Language.inst.SIZE : Language.inst.OLDEST_WATCH,
-                        onPressed: toggleSort,
-                      ),
-                    ),
-                    const SizedBox(width: 24.0)
-                  ],
+                Obx(
+                  () => Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      const SizedBox(width: 24.0),
+                      getChipButton(title: Language.inst.SIZE, icon: Broken.size, enabled: isSortTypeSize.value),
+                      const SizedBox(width: 12.0),
+                      getChipButton(title: Language.inst.OLDEST_WATCH, icon: Broken.sort, enabled: !isSortTypeSize.value),
+                      const SizedBox(width: 24.0),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 6.0),
                 Expanded(
