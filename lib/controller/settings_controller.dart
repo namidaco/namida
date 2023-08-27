@@ -308,7 +308,7 @@ class SettingsController {
 
       mostPlayedTimeRange.value = MostPlayedTimeRange.values.getEnum(json['mostPlayedTimeRange']) ?? mostPlayedTimeRange.value;
       mostPlayedCustomDateRange.value = json['mostPlayedCustomDateRange'] != null ? DateRange.fromJson(json['mostPlayedCustomDateRange']) : mostPlayedCustomDateRange.value;
-      mostPlayedCustomisStartOfDay.value = json['mostPlayedCustomisStartOfDay'] ?? mostPlayedCustomDateRange.value;
+      mostPlayedCustomisStartOfDay.value = json['mostPlayedCustomisStartOfDay'] ?? mostPlayedCustomisStartOfDay.value;
 
       /// Track Items
       displayThirdRow.value = json['displayThirdRow'] ?? displayThirdRow.value;
@@ -464,7 +464,7 @@ class SettingsController {
       'trackPlayMode': trackPlayMode.value.convertToString,
       'mostPlayedTimeRange': mostPlayedTimeRange.value.convertToString,
       'mostPlayedCustomDateRange': mostPlayedCustomDateRange.value.toJson(),
-      'mostPlayedCustomisStartOfDay': mostPlayedCustomDateRange.value,
+      'mostPlayedCustomisStartOfDay': mostPlayedCustomisStartOfDay.value,
 
       /// Track Items
       'displayThirdRow': displayThirdRow.value,

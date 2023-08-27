@@ -50,7 +50,7 @@ class NamidaGenerator {
     return randomList.toList();
   }
 
-  List<Track> generateRecommendedTrack(Track track) {
+  Iterable<Track> generateRecommendedTrack(Track track) {
     final historytracks = HistoryController.inst.historyTracks;
     if (historytracks.isEmpty) {
       return [];
@@ -80,7 +80,7 @@ class NamidaGenerator {
     final sortedByValueMap = numberOfListensMap.entries.toList();
     sortedByValueMap.sortByReverse((e) => e.value);
 
-    return sortedByValueMap.map((e) => e.key).toList();
+    return sortedByValueMap.map((e) => e.key);
   }
 
   /// if [maxCount == null], it will return all available tracks

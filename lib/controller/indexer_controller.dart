@@ -472,8 +472,8 @@ class Indexer {
     final tracksPath = tracksPathPre.toList();
 
     tracksPath.loopFuture((tp, index) async {
-      final trako = await tp.toTrackOrExtract();
-      finalTracks.add(trako);
+      final trako = await tp.toTrackExtOrExtract();
+      if (trako != null) finalTracks.add(trako.toTrack());
     });
 
     _addTheseTracksToAlbumGenreArtistEtc(finalTracks);
@@ -525,7 +525,7 @@ class Indexer {
 
     final minDur = SettingsController.inst.indexMinDurationInSec.value; // Seconds
     final minSize = SettingsController.inst.indexMinFileSizeInB.value; // bytes
-    final prevDuplicated = SettingsController.inst.preventDuplicatedTracks.value; // bytes
+    final prevDuplicated = SettingsController.inst.preventDuplicatedTracks.value;
 
     if (audioFiles.isNotEmpty) {
       // -- Extracting All Metadata
@@ -568,7 +568,7 @@ class Indexer {
   }
 
   Future<void> _saveTrackFileToStorage() async {
-    await File(k_FILE_PATH_TRACKS).writeAsJson(allTracksMappedByPath.values.map((e) => e.toJson()).toList());
+    await File(k_FILE_PATH_TRACKS).writeAsJson(tracksInfoList.map((key) => allTracksMappedByPath[key]?.toJson()).toList());
   }
 
   /// Returns new [TrackStats].

@@ -1697,10 +1697,10 @@ class _TrackImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ArtworkWidget(
-      key: Key("${track.path}$cp"),
+      key: Key(track.path),
       path: track.pathToImage,
       thumbnailSize: Get.width,
-      compressed: cp == 0,
+      compressed: false,
       borderRadius: 6.0 + 10.0 * cp,
       forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
       boxShadow: [

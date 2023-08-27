@@ -2232,7 +2232,6 @@ class NamidaInkWell extends StatelessWidget {
         border: decoration.border,
         borderRadius: borderR,
       ),
-      padding: padding,
       clipBehavior: Clip.antiAlias,
       child: Material(
         type: MaterialType.transparency,
@@ -2240,7 +2239,10 @@ class NamidaInkWell extends StatelessWidget {
           highlightColor: transparentHighlight ? Colors.transparent : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor),
           onTap: onTap,
           onLongPress: onLongPress,
-          child: child,
+          child: Padding(
+            padding: padding,
+            child: child,
+          ),
         ),
       ),
     );

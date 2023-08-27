@@ -246,7 +246,7 @@ extension PlayerRepeatModeUtils on RepeatMode {
 }
 
 extension ConvertPathToTrack on String {
-  Future<Track> toTrackOrExtract() async => toTrackOrNull() ?? await Indexer.inst.extractOneTrack(trackPath: this).then((value) => value!.toTrack());
+  Future<TrackExtended?> toTrackExtOrExtract() async => toTrackExtOrNull() ?? (await Indexer.inst.extractOneTrack(trackPath: this));
   Track toTrack() => Track(this);
   Track? toTrackOrNull() => Indexer.inst.allTracksMappedByPath[toTrack()] == null ? null : toTrack();
   TrackExtended? toTrackExtOrNull() => Indexer.inst.allTracksMappedByPath[Track(this)];

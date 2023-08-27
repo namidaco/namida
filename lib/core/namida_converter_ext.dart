@@ -245,7 +245,11 @@ extension QueueInsertionTypeToQI on QueueInsertionType {
 
     switch (sortBy) {
       case InsertionSortingType.listenCount:
-        tracks.sortByReverse((e) => HistoryController.inst.topTracksMapListens[e.track]?.length ?? 0);
+        if (this == QueueInsertionType.algorithm) {
+          // already sorted by repeated times inside [NamidaGenerator.generateRecommendedTrack].
+        } else {
+          tracks.sortByReverse((e) => HistoryController.inst.topTracksMapListens[e.track]?.length ?? 0);
+        }
       case InsertionSortingType.rating:
         tracks.sortByReverse((e) => e.track.stats.rating);
       case InsertionSortingType.random:
