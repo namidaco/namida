@@ -138,8 +138,10 @@ class VideoController {
     currentVideo.value = erabaretaVideo;
 
     if (erabaretaVideo == null && vpsInSettings != VideoPlaybackSource.local) {
+      if (ConnectivityController.inst.hasConnection) {
       final downloadedVideo = await fetchVideoFromYoutube(trackYTID);
       erabaretaVideo = downloadedVideo;
+    }
     }
 
     if (erabaretaVideo != null) {
