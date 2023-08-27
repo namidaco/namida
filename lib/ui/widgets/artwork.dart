@@ -68,7 +68,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
   Uint8List? _finalBytes;
   late Widget _stockWidget;
   double? _realWidthAndHeight;
-  late Widget _extImageChild;
+  Widget? _extImageChild;
   Widget? _finalWidget;
   String? _lastPath;
   Color? _lastCardColor;
@@ -180,6 +180,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
   void rebuildSpecs() {
     _lastCardColor = context.theme.cardColor;
     _lastBorderRadius = widget.borderRadius;
+    final finalWidget = widget.child ?? _extImageChild ?? _stockWidget;
     _finalWidget = SettingsController.inst.enableGlowEffect.value && widget.blur != 0.0
         ? SizedBox(
             width: widget.staggered ? null : widget.width ?? widget.thumbnailSize * widget.scale,
@@ -192,7 +193,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
                       spread: 0.8,
                       offset: const Offset(0, 1),
                       boxShadow: widget.boxShadow,
-                      child: widget.child ?? _extImageChild,
+                      child: finalWidget,
                     )
                   : ClipRRect(
                       borderRadius: BorderRadius.circular(widget.borderRadius.multipliedRadius),
@@ -202,7 +203,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
                         spread: 0.8,
                         offset: const Offset(0, 1),
                         boxShadow: widget.boxShadow,
-                        child: widget.child ?? _extImageChild,
+                        child: finalWidget,
                       ),
                     ),
             ),
@@ -214,10 +215,10 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
               child: Container(
                 decoration: BoxDecoration(boxShadow: widget.boxShadow),
                 child: SettingsController.inst.borderRadiusMultiplier.value == 0.0
-                    ? widget.child ?? _extImageChild
+                    ? finalWidget
                     : ClipRRect(
                         borderRadius: BorderRadius.circular(widget.borderRadius.multipliedRadius),
-                        child: widget.child ?? _extImageChild,
+                        child: finalWidget,
                       ),
               ),
             ),

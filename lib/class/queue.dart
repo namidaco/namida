@@ -1,5 +1,4 @@
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -53,25 +52,11 @@ class Queue {
     bool? isFav,
     List<Track>? tracks,
   }) {
-    source ??= this.source;
-    date ??= this.date;
-    isFav ??= this.isFav;
-    tracks ??= this.tracks;
-
     return Queue(
-      source: source,
-      date: date,
-      isFav: isFav,
-      tracks: tracks,
+      source: source ?? this.source,
+      date: date ?? this.date,
+      isFav: isFav ?? this.isFav,
+      tracks: tracks ?? this.tracks,
     );
-  }
-}
-
-extension QueueUtils on Queue {
-  set isFavQueue(bool value) {
-    final q = QueueController.inst.queuesMap.value[date];
-    if (q != null) {
-      QueueController.inst.queuesMap.value[date] = q.copyWith(isFav: value);
-    }
   }
 }
