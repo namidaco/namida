@@ -26,6 +26,16 @@ class Folders {
   /// Highlights the track that is meant to be navigated to after calling [goToFolder].
   final RxnInt indexToScrollTo = RxnInt();
 
+  /// Indicates wether the navigator can go back at this point.
+  /// Returns true only if at home, otherwise will call [stepOut] and return false.
+  bool onBackButton() {
+    if (!isHome.value) {
+      stepOut();
+      return false;
+    }
+    return true;
+  }
+
   void stepIn(Folder? folder, {Track? trackToScrollTo}) {
     if (folder == null || folder.path == '') {
       isHome.value = true;

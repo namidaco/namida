@@ -7,11 +7,13 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -242,6 +244,11 @@ class NamidaNavigator {
     if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
       _hideSearchMenuAndUnfocus();
       return;
+    }
+
+    if (currentRoute?.route == RouteType.PAGE_folders) {
+      final canIgoBackPls = Folders.inst.onBackButton();
+      if (!canIgoBackPls) return;
     }
 
     // pop only if not in root, otherwise show _doubleTapToExit().
