@@ -19,27 +19,39 @@ class SearchSortController {
   RxBool get isSearching => (trackSearchTemp.isNotEmpty || albumSearchTemp.isNotEmpty || artistSearchTemp.isNotEmpty).obs;
 
   final RxList<Track> trackSearchList = <Track>[].obs;
-  final RxList<String> albumSearchList = <String>[].obs;
-  final RxList<String> artistSearchList = <String>[].obs;
-  final RxList<String> genreSearchList = <String>[].obs;
+  RxList<String> get albumSearchList => _searchMap[MediaType.album]!;
+  RxList<String> get artistSearchList => _searchMap[MediaType.artist]!;
+  RxList<String> get genreSearchList => _searchMap[MediaType.genre]!;
 
   final RxList<String> playlistSearchList = <String>[].obs;
 
+  final _searchMap = <MediaType, RxList<String>>{
+    MediaType.album: <String>[].obs,
+    MediaType.artist: <String>[].obs,
+    MediaType.genre: <String>[].obs,
+  };
+
   // -- Temporary lists, used for global search --
+  final _searchMapTemp = <MediaType, RxList<String>>{
+    MediaType.album: <String>[].obs,
+    MediaType.artist: <String>[].obs,
+  };
+  RxList<String> get albumSearchTemp => _searchMapTemp[MediaType.album]!;
+  RxList<String> get artistSearchTemp => _searchMapTemp[MediaType.artist]!;
   final RxList<Track> trackSearchTemp = <Track>[].obs;
-  final RxList<String> albumSearchTemp = <String>[].obs;
-  final RxList<String> artistSearchTemp = <String>[].obs;
 
   RxList<Track> get tracksInfoList => Indexer.inst.tracksInfoList;
+
   Rx<Map<String, List<Track>>> get mainMapAlbums => Indexer.inst.mainMapAlbums;
   Rx<Map<String, List<Track>>> get mainMapArtists => Indexer.inst.mainMapArtists;
   Rx<Map<String, List<Track>>> get mainMapGenres => Indexer.inst.mainMapGenres;
+
   RxMap<String, Playlist> get playlistsMap => PlaylistController.inst.playlistsMap;
 
   void searchAll(String text) {
     _searchTracks(text, temp: true);
-    _searchAlbums(text, temp: true);
-    _searchArtists(text, temp: true);
+    _searchMediaType(type: MediaType.album, text: text, temp: true);
+    _searchMediaType(type: MediaType.artist, text: text, temp: true);
   }
 
   void searchMedia(String text, MediaType media) {
@@ -48,13 +60,13 @@ class SearchSortController {
         _searchTracks(text);
         break;
       case MediaType.album:
-        _searchAlbums(text);
+        _searchMediaType(type: MediaType.album, text: text);
         break;
       case MediaType.artist:
-        _searchArtists(text);
+        _searchMediaType(type: MediaType.artist, text: text);
         break;
       case MediaType.genre:
-        _searchGenres(text);
+        _searchMediaType(type: MediaType.genre, text: text);
         break;
       case MediaType.playlist:
         _searchPlaylists(text);
@@ -94,85 +106,47 @@ class SearchSortController {
     printy("Search Tracks Found: ${finalList.length}");
   }
 
-  void _searchAlbums(String text, {bool temp = false}) async {
+  void _searchMediaType({required MediaType type, required String text, bool temp = false}) async {
+    Iterable<String> keys = [];
+    switch (type) {
+      case MediaType.album:
+        keys = mainMapAlbums.value.keys;
+      case MediaType.artist:
+        keys = mainMapArtists.value.keys;
+      case MediaType.genre:
+        keys = mainMapGenres.value.keys;
+      default:
+        null;
+    }
+
     if (text == '') {
       if (temp) {
-        albumSearchTemp.clear();
+        _searchMapTemp[type]?.clear();
       } else {
-        LibraryTab.albums.textSearchController?.clear();
-        albumSearchList
-          ..clear()
-          ..addAll(mainMapAlbums.value.keys);
+        type.toLibraryTab().textSearchController?.clear();
+        _searchMap[type]
+          ?..clear()
+          ..addAll(keys);
       }
       return;
     }
+
     final parameter = {
-      'keys': mainMapAlbums.value.keys,
+      'keys': keys,
       'cleanup': _shouldCleanup,
       'text': text,
     };
     final results = await _generalSearchIsolate.thready(parameter);
 
     if (temp) {
-      albumSearchTemp
-        ..clear()
+      _searchMapTemp[type]
+        ?..clear()
         ..addAll(results);
     } else {
-      albumSearchList
-        ..clear()
+      _searchMap[type]
+        ?..clear()
         ..addAll(results);
     }
-  }
-
-  void _searchArtists(String text, {bool temp = false}) async {
-    if (text == '') {
-      if (temp) {
-        artistSearchTemp.clear();
-      } else {
-        LibraryTab.artists.textSearchController?.clear();
-        artistSearchList
-          ..clear()
-          ..addAll(mainMapArtists.value.keys);
-      }
-      return;
-    }
-
-    final parameter = {
-      'keys': mainMapArtists.value.keys,
-      'cleanup': _shouldCleanup,
-      'text': text,
-    };
-    final results = await _generalSearchIsolate.thready(parameter);
-
-    if (temp) {
-      artistSearchTemp
-        ..clear()
-        ..addAll(results);
-    } else {
-      artistSearchList
-        ..clear()
-        ..addAll(results);
-    }
-  }
-
-  void _searchGenres(String text) async {
-    if (text == '') {
-      LibraryTab.genres.textSearchController?.clear();
-      genreSearchList.assignAll(mainMapGenres.value.keys);
-      return;
-    }
-
-    final parameter = {
-      'keys': mainMapGenres.value.keys,
-      'cleanup': _shouldCleanup,
-      'text': text,
-    };
-
-    final results = await _generalSearchIsolate.thready(parameter);
-
-    genreSearchList
-      ..clear()
-      ..addAll(results);
   }
 
   void _searchPlaylists(String text) async {
@@ -184,14 +158,33 @@ class SearchSortController {
       return;
     }
 
-    final parameters = {
-      // TODO(MSOB7YY): expose in settings
-      'psf': SettingsController.inst.playlistSearchFilter,
-      'cleanup': _shouldCleanup,
-      'playlists': playlistsMap,
-      'text': text,
-    };
-    final results = await _searchPlaylistsIsolate.thready(parameters);
+    // TODO(MSOB7YY): expose in settings
+    final psf = SettingsController.inst.playlistSearchFilter;
+
+    final cleanupFunction = _functionOfCleanup(_shouldCleanup);
+    String textCleanedForSearch(String textToClean) => cleanupFunction(textToClean);
+
+    final sTitle = psf.contains('name');
+    final sCreationDate = psf.contains('creationDate');
+    final sModifiedDate = psf.contains('modifiedDate');
+    final sComment = psf.contains('comment');
+    final sMoods = psf.contains('moods');
+    final formatDate = DateFormat('yyyyMMdd');
+
+    final results = playlistsMap.entries.where((e) {
+      final playlistName = e.key;
+      final item = e.value;
+
+      final lctext = textCleanedForSearch(text);
+      final dateCreatedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.creationDate));
+      final dateModifiedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.modifiedDate));
+
+      return (sTitle && textCleanedForSearch(playlistName.translatePlaylistName()).contains(lctext)) ||
+          (sCreationDate && textCleanedForSearch(dateCreatedFormatted.toString()).contains(lctext)) ||
+          (sModifiedDate && textCleanedForSearch(dateModifiedFormatted.toString()).contains(lctext)) ||
+          (sComment && textCleanedForSearch(item.comment).contains(lctext)) ||
+          (sMoods && item.moods.any((element) => textCleanedForSearch(element).contains(lctext)));
+    });
 
     playlistSearchList.addAll(results.map((e) => e.key));
   }
@@ -341,7 +334,7 @@ class SearchSortController {
 
     SettingsController.inst.save(albumSort: sortBy, albumSortReversed: reverse);
 
-    _searchAlbums(LibraryTab.albums.textSearchController?.text ?? '');
+    _searchMediaType(type: MediaType.album, text: LibraryTab.albums.textSearchController?.text ?? '');
   }
 
   /// Sorts Artists and Saves automatically to settings
@@ -395,7 +388,7 @@ class SearchSortController {
 
     SettingsController.inst.save(artistSort: sortBy, artistSortReversed: reverse);
 
-    _searchArtists(LibraryTab.artists.textSearchController?.text ?? '');
+    _searchMediaType(type: MediaType.artist, text: LibraryTab.artists.textSearchController?.text ?? '');
   }
 
   /// Sorts Genres and Saves automatically to settings
@@ -446,7 +439,7 @@ class SearchSortController {
       ..addEntries(genresList);
 
     SettingsController.inst.save(genreSort: sortBy, genreSortReversed: reverse);
-    _searchGenres(LibraryTab.genres.textSearchController?.text ?? '');
+    _searchMediaType(type: MediaType.genre, text: LibraryTab.genres.textSearchController?.text ?? '');
   }
 
   /// Sorts Playlists and Saves automatically to settings
@@ -526,38 +519,38 @@ class SearchSortController {
     return finalList;
   }
 
-  static Iterable<MapEntry<String, Playlist>> _searchPlaylistsIsolate(Map parameters) {
-    final psf = parameters['psf'] as List<String>;
-    final cleanup = parameters['cleanup'] as bool;
-    final playlists = parameters['playlists'] as Map<String, Playlist>;
-    final text = parameters['text'] as String;
+  // static Iterable<MapEntry<String, Playlist>> _searchPlaylistsIsolate(Map parameters) {
+  //   final psf = parameters['psf'] as List<String>;
+  //   final cleanup = parameters['cleanup'] as bool;
+  //   final playlists = parameters['playlists'] as Map<String, Playlist>;
+  //   final text = parameters['text'] as String;
 
-    final cleanupFunction = _functionOfCleanup(cleanup);
-    String textCleanedForSearch(String textToClean) => cleanupFunction(textToClean);
+  //   final cleanupFunction = _functionOfCleanup(cleanup);
+  //   String textCleanedForSearch(String textToClean) => cleanupFunction(textToClean);
 
-    final sTitle = psf.contains('name');
-    final sCreationDate = psf.contains('creationDate');
-    final sModifiedDate = psf.contains('modifiedDate');
-    final sComment = psf.contains('comment');
-    final sMoods = psf.contains('moods');
-    final formatDate = DateFormat('yyyyMMdd');
+  //   final sTitle = psf.contains('name');
+  //   final sCreationDate = psf.contains('creationDate');
+  //   final sModifiedDate = psf.contains('modifiedDate');
+  //   final sComment = psf.contains('comment');
+  //   final sMoods = psf.contains('moods');
+  //   final formatDate = DateFormat('yyyyMMdd');
 
-    final results = playlists.entries.where((e) {
-      final playlistName = e.key;
-      final item = e.value;
+  //   final results = playlists.entries.where((e) {
+  //     final playlistName = e.key;
+  //     final item = e.value;
 
-      final lctext = textCleanedForSearch(text);
-      final dateCreatedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.creationDate));
-      final dateModifiedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.modifiedDate));
+  //     final lctext = textCleanedForSearch(text);
+  //     final dateCreatedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.creationDate));
+  //     final dateModifiedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.modifiedDate));
 
-      return (sTitle && textCleanedForSearch(playlistName.translatePlaylistName()).contains(lctext)) ||
-          (sCreationDate && textCleanedForSearch(dateCreatedFormatted.toString()).contains(lctext)) ||
-          (sModifiedDate && textCleanedForSearch(dateModifiedFormatted.toString()).contains(lctext)) ||
-          (sComment && textCleanedForSearch(item.comment).contains(lctext)) ||
-          (sMoods && item.moods.any((element) => textCleanedForSearch(element).contains(lctext)));
-    });
-    return results;
-  }
+  //     return (sTitle && textCleanedForSearch(playlistName.translatePlaylistName()).contains(lctext)) ||
+  //         (sCreationDate && textCleanedForSearch(dateCreatedFormatted.toString()).contains(lctext)) ||
+  //         (sModifiedDate && textCleanedForSearch(dateModifiedFormatted.toString()).contains(lctext)) ||
+  //         (sComment && textCleanedForSearch(item.comment).contains(lctext)) ||
+  //         (sMoods && item.moods.any((element) => textCleanedForSearch(element).contains(lctext)));
+  //   });
+  //   return results;
+  // }
 
   static Iterable<String> _generalSearchIsolate(Map parameters) {
     final keys = parameters['keys'] as Iterable<String>;

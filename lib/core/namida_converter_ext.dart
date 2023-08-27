@@ -49,6 +49,25 @@ extension LibraryTabToEnum on int {
   LibraryTab toEnum() => SettingsController.inst.libraryTabs.elementAt(this);
 }
 
+extension MediaTypeUtils on MediaType {
+  LibraryTab toLibraryTab() {
+    switch (this) {
+      case MediaType.track:
+        return LibraryTab.tracks;
+      case MediaType.album:
+        return LibraryTab.albums;
+      case MediaType.artist:
+        return LibraryTab.artists;
+      case MediaType.genre:
+        return LibraryTab.genres;
+      case MediaType.folder:
+        return LibraryTab.folders;
+      default:
+        return LibraryTab.tracks;
+    }
+  }
+}
+
 extension LibraryTabUtils on LibraryTab {
   MediaType toMediaType() {
     switch (this) {
