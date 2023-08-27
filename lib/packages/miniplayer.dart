@@ -945,7 +945,6 @@ class NamidaMiniPlayer extends StatelessWidget {
                                     children: [
                                       Obx(
                                         () => NamidaListView(
-                                          key: const PageStorageKey('miniplayer_queue'),
                                           itemExtents: Player.inst.currentQueue.toTrackItemExtents(),
                                           scrollController: MiniPlayerController.inst.queueScrollController,
                                           padding: EdgeInsets.only(bottom: 56.0 + SelectedTracksController.inst.bottomPadding.value),

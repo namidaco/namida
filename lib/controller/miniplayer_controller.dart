@@ -158,7 +158,7 @@ class MiniPlayerController {
     bounceDown = false;
   }
 
-  bool _isInsideQueue() => queueScrollController.positions.isNotEmpty && queueScrollController.positions.first.pixels > 0.0 && _offset >= maxOffset * 2;
+  bool _isInsideQueue() => _offset >= maxOffset * 2 && (queueScrollController.positions.isNotEmpty && queueScrollController.positions.first.pixels > 0.0);
 
   void onPointerMove(PointerMoveEvent event) {
     if (isReorderingQueue) return;
@@ -279,7 +279,7 @@ class MiniPlayerController {
     } else {
       _toggleWakelockOff();
       if (shouldSnapToMini) snapToMini();
-      if (shouldSnapToQueue) snapToQueue();
+      if (shouldSnapToQueue) snapToQueue(animateScrollController: _offset < maxOffset * 1.8);
     }
   }
 
@@ -331,16 +331,17 @@ class MiniPlayerController {
     });
   }
 
-  Future<void> snapToQueue({bool haptic = true}) async {
+  Future<void> snapToQueue({bool animateScrollController = true, bool haptic = true}) async {
     _offset = maxOffset * 2;
     bounceUp = false;
-    // updating scroll before snapping makes a nice effect.
-    SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-      // prevents scrolling when user is already inside queue, like failed snapping to expanded.
-      if (!_isInsideQueue()) {
+
+    // prevents scrolling when user is already inside queue, like failed snapping to expanded.
+    if (animateScrollController) {
+      // updating scroll before snapping makes a nice effect.
+      SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
         _updateScrollPositionInQueue();
-      }
-    });
+      });
+    }
     await _snap(haptic: haptic);
   }
 
