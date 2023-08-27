@@ -101,7 +101,7 @@ void main() async {
   VideoController.inst.initialize();
   await PlaylistController.inst.prepareDefaultPlaylistsFile();
   await QueueController.inst.prepareLatestQueue();
-  CurrentColor.inst.prepareColors();
+  CurrentColor.inst.generateAllColorPalettes();
 
   await _initializeIntenties();
 

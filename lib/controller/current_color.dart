@@ -282,20 +282,6 @@ class CurrentColor {
     });
   }
 
-  Future<void> prepareColors() async {
-    await for (final f in Directory(k_DIR_PALETTES).list()) {
-      f as File;
-      final didExecute = await f.readAsJsonAnd(
-        (response) async {
-          final nc = NamidaColor.fromJson(response);
-          _updateInColorMap(f.path.getFilenameWOExt, nc);
-        },
-        onError: () async => await f.deleteIfExists(),
-      );
-      if (!didExecute) continue;
-    }
-  }
-
   Future<void> generateAllColorPalettes() async {
     await Directory(k_DIR_PALETTES).create();
 
