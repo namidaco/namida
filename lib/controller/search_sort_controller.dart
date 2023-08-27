@@ -65,9 +65,7 @@ class SearchSortController {
     }
   }
 
-  void _searchTracks(String text, {bool temp = false}) {
-    final finalList = temp ? trackSearchTemp : trackSearchList;
-    finalList.clear();
+  void _searchTracks(String text, {bool temp = false}) async {
     if (text == '') {
       if (temp) {
         trackSearchTemp.clear();
@@ -80,33 +78,23 @@ class SearchSortController {
     }
 
     final tsf = SettingsController.inst.trackSearchFilter;
-    final sTitle = tsf.contains('title');
-    final sAlbum = tsf.contains('album');
-    final sAlbumArtist = tsf.contains('albumartist');
-    final sArtist = tsf.contains('artist');
-    final sGenre = tsf.contains('genre');
-    final sComposer = tsf.contains('composer');
-    final sYear = tsf.contains('year');
-
-    tracksInfoList.loop((tr, index) {
-      final item = tr.toTrackExt();
-      final lctext = _textCleanedForSearch(text);
-
-      if ((sTitle && _textCleanedForSearch(item.title).contains(lctext)) ||
-          (sAlbum && _textCleanedForSearch(item.album).contains(lctext)) ||
-          (sAlbumArtist && _textCleanedForSearch(item.albumArtist).contains(lctext)) ||
-          (sArtist && item.artistsList.any((element) => _textCleanedForSearch(element).contains(lctext))) ||
-          (sGenre && item.genresList.any((element) => _textCleanedForSearch(element).contains(lctext))) ||
-          (sComposer && _textCleanedForSearch(item.composer).contains(lctext)) ||
-          (sYear && _textCleanedForSearch(item.year.toString()).contains(lctext))) {
-        finalList.add(tr);
-      }
+    final cleanup = SettingsController.inst.enableSearchCleanup.value;
+    final result = await _searchTracksIsolate.thready({
+      'tsf': tsf,
+      'cleanup': cleanup,
+      'tracks': tracksInfoList,
+      'text': text,
     });
+    final finalList = temp ? trackSearchTemp : trackSearchList;
+
+    finalList
+      ..clear()
+      ..addAll(result);
 
     printy("Search Tracks Found: ${finalList.length}");
   }
 
-  void _searchAlbums(String text, {bool temp = false}) {
+  void _searchAlbums(String text, {bool temp = false}) async {
     if (text == '') {
       if (temp) {
         albumSearchTemp.clear();
@@ -118,7 +106,12 @@ class SearchSortController {
       }
       return;
     }
-    final results = mainMapAlbums.value.keys.where((albumName) => _textCleanedForSearch(albumName).contains(_textCleanedForSearch(text)));
+    final parameter = {
+      'keys': mainMapAlbums.value.keys,
+      'cleanup': _shouldCleanup,
+      'text': text,
+    };
+    final results = await _generalSearchIsolate.thready(parameter);
 
     if (temp) {
       albumSearchTemp
@@ -131,7 +124,7 @@ class SearchSortController {
     }
   }
 
-  void _searchArtists(String text, {bool temp = false}) {
+  void _searchArtists(String text, {bool temp = false}) async {
     if (text == '') {
       if (temp) {
         artistSearchTemp.clear();
@@ -143,7 +136,13 @@ class SearchSortController {
       }
       return;
     }
-    final results = mainMapArtists.value.keys.where((artistName) => _textCleanedForSearch(artistName).contains(_textCleanedForSearch(text)));
+
+    final parameter = {
+      'keys': mainMapArtists.value.keys,
+      'cleanup': _shouldCleanup,
+      'text': text,
+    };
+    final results = await _generalSearchIsolate.thready(parameter);
 
     if (temp) {
       artistSearchTemp
@@ -156,20 +155,27 @@ class SearchSortController {
     }
   }
 
-  void _searchGenres(String text) {
+  void _searchGenres(String text) async {
     if (text == '') {
       LibraryTab.genres.textSearchController?.clear();
       genreSearchList.assignAll(mainMapGenres.value.keys);
       return;
     }
-    final results = mainMapGenres.value.keys.where((genreName) => _textCleanedForSearch(genreName).contains(_textCleanedForSearch(text)));
+
+    final parameter = {
+      'keys': mainMapGenres.value.keys,
+      'cleanup': _shouldCleanup,
+      'text': text,
+    };
+
+    final results = await _generalSearchIsolate.thready(parameter);
 
     genreSearchList
       ..clear()
       ..addAll(results);
   }
 
-  void _searchPlaylists(String text) {
+  void _searchPlaylists(String text) async {
     playlistSearchList.clear();
 
     if (text == '') {
@@ -177,29 +183,16 @@ class SearchSortController {
       playlistSearchList.addAll(playlistsMap.keys);
       return;
     }
-    // TODO(MSOB7YY): expose in settings
-    final psf = SettingsController.inst.playlistSearchFilter;
-    final sTitle = psf.contains('name');
-    final sCreationDate = psf.contains('creationDate');
-    final sModifiedDate = psf.contains('modifiedDate');
-    final sComment = psf.contains('comment');
-    final sMoods = psf.contains('moods');
-    final formatDate = DateFormat('yyyyMMdd');
 
-    final results = playlistsMap.entries.where((e) {
-      final playlistName = e.key;
-      final item = e.value;
+    final parameters = {
+      // TODO(MSOB7YY): expose in settings
+      'psf': SettingsController.inst.playlistSearchFilter,
+      'cleanup': _shouldCleanup,
+      'playlists': playlistsMap,
+      'text': text,
+    };
+    final results = await _searchPlaylistsIsolate.thready(parameters);
 
-      final lctext = _textCleanedForSearch(text);
-      final dateCreatedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.creationDate));
-      final dateModifiedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.modifiedDate));
-
-      return (sTitle && _textCleanedForSearch(playlistName.translatePlaylistName()).contains(lctext)) ||
-          (sCreationDate && _textCleanedForSearch(dateCreatedFormatted.toString()).contains(lctext)) ||
-          (sModifiedDate && _textCleanedForSearch(dateModifiedFormatted.toString()).contains(lctext)) ||
-          (sComment && _textCleanedForSearch(item.comment).contains(lctext)) ||
-          (sMoods && item.moods.any((element) => _textCleanedForSearch(element).contains(lctext)));
-    });
     playlistSearchList.addAll(results.map((e) => e.key));
   }
 
@@ -497,7 +490,90 @@ class SearchSortController {
     _searchPlaylists(LibraryTab.playlists.textSearchController?.text ?? '');
   }
 
-  String _textCleanedForSearch(String textToClean) {
-    return SettingsController.inst.enableSearchCleanup.value ? textToClean.cleanUpForComparison : textToClean.toLowerCase();
+  static List<Track> _searchTracksIsolate(Map parameters) {
+    final tsf = parameters['tsf'] as List<String>;
+    final cleanup = parameters['cleanup'] as bool;
+    final tracks = parameters['tracks'] as List<Track>;
+    final text = parameters['text'] as String;
+
+    final function = _functionOfCleanup(cleanup);
+    String textCleanedForSearch(String textToClean) => function(textToClean);
+
+    final sTitle = tsf.contains('title');
+    final sAlbum = tsf.contains('album');
+    final sAlbumArtist = tsf.contains('albumartist');
+    final sArtist = tsf.contains('artist');
+    final sGenre = tsf.contains('genre');
+    final sComposer = tsf.contains('composer');
+    final sYear = tsf.contains('year');
+
+    final finalList = <Track>[];
+
+    tracks.loop((tr, index) {
+      final item = tr.toTrackExt();
+      final lctext = textCleanedForSearch(text);
+
+      if ((sTitle && textCleanedForSearch(item.title).contains(lctext)) ||
+          (sAlbum && textCleanedForSearch(item.album).contains(lctext)) ||
+          (sAlbumArtist && textCleanedForSearch(item.albumArtist).contains(lctext)) ||
+          (sArtist && item.artistsList.any((element) => textCleanedForSearch(element).contains(lctext))) ||
+          (sGenre && item.genresList.any((element) => textCleanedForSearch(element).contains(lctext))) ||
+          (sComposer && textCleanedForSearch(item.composer).contains(lctext)) ||
+          (sYear && textCleanedForSearch(item.year.toString()).contains(lctext))) {
+        finalList.add(tr);
+      }
+    });
+    return finalList;
+  }
+
+  static Iterable<MapEntry<String, Playlist>> _searchPlaylistsIsolate(Map parameters) {
+    final psf = parameters['psf'] as List<String>;
+    final cleanup = parameters['cleanup'] as bool;
+    final playlists = parameters['playlists'] as Map<String, Playlist>;
+    final text = parameters['text'] as String;
+
+    final cleanupFunction = _functionOfCleanup(cleanup);
+    String textCleanedForSearch(String textToClean) => cleanupFunction(textToClean);
+
+    final sTitle = psf.contains('name');
+    final sCreationDate = psf.contains('creationDate');
+    final sModifiedDate = psf.contains('modifiedDate');
+    final sComment = psf.contains('comment');
+    final sMoods = psf.contains('moods');
+    final formatDate = DateFormat('yyyyMMdd');
+
+    final results = playlists.entries.where((e) {
+      final playlistName = e.key;
+      final item = e.value;
+
+      final lctext = textCleanedForSearch(text);
+      final dateCreatedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.creationDate));
+      final dateModifiedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.modifiedDate));
+
+      return (sTitle && textCleanedForSearch(playlistName.translatePlaylistName()).contains(lctext)) ||
+          (sCreationDate && textCleanedForSearch(dateCreatedFormatted.toString()).contains(lctext)) ||
+          (sModifiedDate && textCleanedForSearch(dateModifiedFormatted.toString()).contains(lctext)) ||
+          (sComment && textCleanedForSearch(item.comment).contains(lctext)) ||
+          (sMoods && item.moods.any((element) => textCleanedForSearch(element).contains(lctext)));
+    });
+    return results;
+  }
+
+  static Iterable<String> _generalSearchIsolate(Map parameters) {
+    final keys = parameters['keys'] as Iterable<String>;
+    final cleanup = parameters['cleanup'] as bool;
+    final text = parameters['text'] as String;
+
+    final cleanupFunction = _functionOfCleanup(cleanup);
+
+    final results = keys.where((albumName) => cleanupFunction(albumName).contains(cleanupFunction(text)));
+
+    return results;
+  }
+
+  bool get _shouldCleanup => SettingsController.inst.enableSearchCleanup.value;
+
+  static String Function(String text) _functionOfCleanup(bool enableSearchCleanup) {
+    return (String textToClean) => enableSearchCleanup ? textToClean.cleanUpForComparison : textToClean.toLowerCase();
   }
 }
