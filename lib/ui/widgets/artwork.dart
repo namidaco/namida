@@ -68,9 +68,11 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
   Uint8List? _finalBytes;
   late Widget _stockWidget;
   double? _realWidthAndHeight;
+  late Widget _extImageChild;
   Widget? _finalWidget;
   String? _lastPath;
   Color? _lastCardColor;
+  double? _lastBorderRadius;
 
   Widget getImagePathWidget() {
     final pixelRatio = context.mediaQuery.devicePixelRatio.round();
@@ -107,7 +109,6 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
 
   void fillWidgets() {
     _lastPath = widget.path;
-    _lastCardColor = context.theme.cardColor;
 
     _stockWidget = Container(
       width: widget.width ?? widget.thumbnailSize,
@@ -138,7 +139,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
 
     _realWidthAndHeight = widget.forceSquared ? context.width : null;
 
-    final extImageChild = Stack(
+    _extImageChild = Stack(
       alignment: Alignment.center,
       children: [
         if (shouldDisplayMemory)
@@ -174,6 +175,11 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
         ...widget.onTopWidgets,
       ],
     );
+  }
+
+  void rebuildSpecs() {
+    _lastCardColor = context.theme.cardColor;
+    _lastBorderRadius = widget.borderRadius;
     _finalWidget = SettingsController.inst.enableGlowEffect.value && widget.blur != 0.0
         ? SizedBox(
             width: widget.staggered ? null : widget.width ?? widget.thumbnailSize * widget.scale,
@@ -186,7 +192,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
                       spread: 0.8,
                       offset: const Offset(0, 1),
                       boxShadow: widget.boxShadow,
-                      child: widget.child ?? extImageChild,
+                      child: widget.child ?? _extImageChild,
                     )
                   : ClipRRect(
                       borderRadius: BorderRadius.circular(widget.borderRadius.multipliedRadius),
@@ -196,7 +202,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
                         spread: 0.8,
                         offset: const Offset(0, 1),
                         boxShadow: widget.boxShadow,
-                        child: widget.child ?? extImageChild,
+                        child: widget.child ?? _extImageChild,
                       ),
                     ),
             ),
@@ -208,10 +214,10 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
               child: Container(
                 decoration: BoxDecoration(boxShadow: widget.boxShadow),
                 child: SettingsController.inst.borderRadiusMultiplier.value == 0.0
-                    ? widget.child ?? extImageChild
+                    ? widget.child ?? _extImageChild
                     : ClipRRect(
                         borderRadius: BorderRadius.circular(widget.borderRadius.multipliedRadius),
-                        child: widget.child ?? extImageChild,
+                        child: widget.child ?? _extImageChild,
                       ),
               ),
             ),
@@ -220,8 +226,11 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (_finalWidget == null || _lastPath != widget.path || _lastCardColor != context.theme.cardColor) {
+    if (_finalWidget == null || _lastPath != widget.path) {
       fillWidgets();
+      rebuildSpecs();
+    } else if (_lastBorderRadius != widget.borderRadius || _lastCardColor != context.theme.cardColor) {
+      rebuildSpecs();
     }
     return _finalWidget ?? _stockWidget;
   }

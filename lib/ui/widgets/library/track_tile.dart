@@ -163,7 +163,7 @@ class TrackTile extends StatelessWidget {
                                 child: NamidaHero(
                                   tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
                                   child: ArtworkWidget(
-                                    key: Key(trackOrTwd.hashCode.toString()),
+                                    key: Key("$willSleepAfterThis${trackOrTwd.hashCode}"),
                                     thumbnailSize: thumbnailSize,
                                     path: track.pathToImage,
                                     forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
