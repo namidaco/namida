@@ -156,7 +156,7 @@ class QueueController {
 
   ///
   Future<void> prepareAllQueuesFile() async {
-    final map = await _readQueueFilesCompute.thready(k_DIR_QUEUES);
+    final map = await _readQueueFilesCompute.thready(AppDirs.QUEUES);
     queuesMap.value
       ..clear()
       ..addAll(map);
@@ -193,7 +193,7 @@ class QueueController {
     final latestQueue = <Track>[];
 
     // -- Reading file.
-    await File(k_FILE_PATH_LATEST_QUEUE).readAsJsonAndLoop((item, index) async {
+    await File(AppPaths.LATEST_QUEUE).readAsJsonAndLoop((item, index) async {
       latestQueue.add(Track(item));
     });
 
@@ -213,15 +213,15 @@ class QueueController {
   }
 
   Future<void> _saveQueueToStorage(Queue queue) async {
-    await File('$k_DIR_QUEUES${queue.date}.json').writeAsJson(queue.toJson());
+    await File('${AppDirs.QUEUES}${queue.date}.json').writeAsJson(queue.toJson());
   }
 
   Future<void> _saveLatestQueueToStorage(List<Track> tracks) async {
-    await File(k_FILE_PATH_LATEST_QUEUE).writeAsJson(tracks.mapped((e) => e.path));
+    await File(AppPaths.LATEST_QUEUE).writeAsJson(tracks.mapped((e) => e.path));
   }
 
   Future<void> _deleteQueueFromStorage(Queue queue) async {
-    await File('$k_DIR_QUEUES${queue.date}.json').delete();
+    await File('${AppDirs.QUEUES}${queue.date}.json').delete();
   }
 
   /// Used to add Queues that were rejected by [addNewQueue] after full loading of queues.

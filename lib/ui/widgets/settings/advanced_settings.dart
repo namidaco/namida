@@ -617,7 +617,7 @@ class __FixYTDLPThumbnailSizeListTileState extends State<_FixYTDLPThumbnailSizeL
         final ytId = tr?.youtubeID;
         if (ytId == null || ytId == '') continue;
 
-        final trackThumbnailCached = "$k_DIR_YT_THUMBNAILS$ytId.png";
+        final trackThumbnailCached = "${AppDirs.YT_THUMBNAILS}$ytId.png";
         String? cachedThumbnailPath;
         Uint8List? bytes;
 
@@ -686,7 +686,7 @@ class __CompressImagesListTileState extends State<_CompressImagesListTile> {
     _currentProgress = 0;
     final compPerc = 50.obs;
     final keepOriginalFileDates = true.obs;
-    final initialDirectories = [k_DIR_ARTWORKS, k_DIR_THUMBNAILS, k_DIR_YT_THUMBNAILS].obs;
+    final initialDirectories = [AppDirs.ARTWORKS, AppDirs.THUMBNAILS, AppDirs.YT_THUMBNAILS].obs;
     final dirsToCompress = <String>[].obs;
 
     NamidaNavigator.inst.navigateDialog(
@@ -774,8 +774,7 @@ class __CompressImagesListTileState extends State<_CompressImagesListTile> {
 
     setState(() {});
 
-    final saveDir = "$k_DIR_APP_INTERNAL_STORAGE/Compressed/";
-    final dir = await Directory(saveDir).create();
+    final dir = await Directory(AppDirs.COMPRESSED_IMAGES).create();
 
     final dirFiles = <FileSystemEntity>[];
 

@@ -177,7 +177,7 @@ class CurrentColor {
       return null;
     }
 
-    final paletteFile = File("$k_DIR_PALETTES${imagePath.getFilenameWOExt}.palette");
+    final paletteFile = File("${AppDirs.PALETTES}${imagePath.getFilenameWOExt}.palette");
 
     // -- try reading the cached file
     if (!forceReExtract) {
@@ -208,7 +208,7 @@ class CurrentColor {
   Future<void> reExtractTrackColorPalette({required Track track, required NamidaColor? newNC, required String? imagePath}) async {
     assert(newNC != null || imagePath != null, 'a color or imagePath must be provided');
 
-    final paletteFile = File("$k_DIR_PALETTES${track.filename}.palette");
+    final paletteFile = File("${AppDirs.PALETTES}${track.filename}.palette");
     if (newNC != null) {
       await paletteFile.writeAsJson(newNC.toJson());
       _updateInColorMap(track.filename, newNC);
@@ -283,7 +283,7 @@ class CurrentColor {
   }
 
   Future<void> generateAllColorPalettes() async {
-    await Directory(k_DIR_PALETTES).create();
+    await Directory(AppDirs.PALETTES).create();
 
     isGeneratingAllColorPalettes.value = true;
     for (int i = 0; i < allTracksInLibrary.length; i++) {

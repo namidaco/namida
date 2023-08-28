@@ -109,7 +109,7 @@ class PlaylistController {
   /// returns true if succeeded.
   Future<bool> renamePlaylist(String playlistName, String newName) async {
     try {
-      await File('$k_DIR_PLAYLISTS/$playlistName.json').rename('$k_DIR_PLAYLISTS/$newName.json');
+      await File('${AppDirs.PLAYLISTS}/$playlistName.json').rename('${AppDirs.PLAYLISTS}/$newName.json');
     } catch (e) {
       printy(e, isError: true);
       return false;
@@ -138,7 +138,7 @@ class PlaylistController {
       return "${Language.inst.NAME_CONTAINS_BAD_CHARACTER} $illegalChar";
     }
 
-    if (playlistsMap.keyExists(value) || File('$k_DIR_PLAYLISTS/$value.json').existsSync()) {
+    if (playlistsMap.keyExists(value) || File('${AppDirs.PLAYLISTS}/$value.json').existsSync()) {
       return Language.inst.PLEASE_ENTER_A_DIFFERENT_NAME;
     }
     return null;
@@ -296,7 +296,7 @@ class PlaylistController {
   // File Related
   ///
   Future<void> prepareAllPlaylistsFile() async {
-    final map = await _readPlaylistFilesCompute.thready(k_DIR_PLAYLISTS);
+    final map = await _readPlaylistFilesCompute.thready(AppDirs.PLAYLISTS);
     playlistsMap
       ..clear()
       ..addAll(map);
@@ -321,7 +321,7 @@ class PlaylistController {
 
   Future<void> prepareDefaultPlaylistsFile() async {
     HistoryController.inst.prepareHistoryFile();
-    final pl = await _prepareFavouritesFile.thready(k_PLAYLIST_PATH_FAVOURITES);
+    final pl = await _prepareFavouritesFile.thready(AppPaths.FAVOURITES_PLAYLIST);
     if (pl != null) favouritesPlaylist.value = pl;
   }
 
@@ -335,18 +335,18 @@ class PlaylistController {
 
   Future<bool> _saveFavouritesToStorage() async {
     favouritesPlaylist.refresh();
-    final f = await File(k_PLAYLIST_PATH_FAVOURITES).writeAsJson(favouritesPlaylist.value.toJson());
+    final f = await File(AppPaths.FAVOURITES_PLAYLIST).writeAsJson(favouritesPlaylist.value.toJson());
     return f != null;
   }
 
   /// returns true if succeeded.
   Future<bool> _savePlaylistToStorage(Playlist playlist) async {
-    final f = await File('$k_DIR_PLAYLISTS/${playlist.name}.json').writeAsJson(playlist.toJson());
+    final f = await File('${AppDirs.PLAYLISTS}/${playlist.name}.json').writeAsJson(playlist.toJson());
     return f != null;
   }
 
   Future<bool> _deletePlaylistFromStorage(Playlist playlist) async {
-    return (await File('$k_DIR_PLAYLISTS/${playlist.name}.json').deleteIfExists());
+    return (await File('${AppDirs.PLAYLISTS}/${playlist.name}.json').deleteIfExists());
   }
 
   bool isOneOfDefaultPlaylists(String name) {

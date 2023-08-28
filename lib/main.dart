@@ -50,8 +50,8 @@ void main() async {
     }
   }
 
-  k_DIR_USER_DATA = await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
-  k_DIR_APP_CACHE = await getExternalCacheDirectories().then((value) async => value?.firstOrNull?.path ?? '');
+  AppDirs.USER_DATA = await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
+  AppDirs.APP_CACHE = await getExternalCacheDirectories().then((value) async => value?.firstOrNull?.path ?? '');
 
   Future<void> createDirectories(List<String> paths) async {
     paths.loop((p, i) async {
@@ -59,27 +59,13 @@ void main() async {
     });
   }
 
-  await createDirectories([
-    k_DIR_ARTWORKS,
-    k_DIR_PALETTES,
-    k_DIR_VIDEOS_CACHE,
-    k_DIR_VIDEOS_CACHE_TEMP,
-    k_DIR_THUMBNAILS,
-    k_DIR_YT_THUMBNAILS,
-    k_DIR_LYRICS,
-    k_DIR_YT_METADATA,
-    k_DIR_YT_METADATA_COMMENTS,
-    k_DIR_PLAYLISTS,
-    k_DIR_QUEUES,
-    k_DIR_YOUTUBE_STATS,
-    k_PLAYLIST_DIR_PATH_HISTORY,
-  ]);
+  await createDirectories(AppDirs.values);
 
   final paths = await ExternalPath.getExternalStorageDirectories();
   kStoragePaths.assignAll(paths);
   kDirectoriesPaths.assignAll(paths.mappedUniqued((path) => "$path/${ExternalPath.DIRECTORY_MUSIC}"));
   kDirectoriesPaths.add('${paths[0]}/Download/');
-  k_DIR_APP_INTERNAL_STORAGE = "${paths[0]}/Namida";
+  AppDirs.INTERNAL_STORAGE = "${paths[0]}/Namida";
 
   await SettingsController.inst.prepareSettingsFile();
   await Future.wait([
@@ -116,7 +102,7 @@ void main() async {
 }
 
 void _initializeCatcher(void Function() runAppFunction) {
-  final options = CatcherOptions(SilentReportMode(), [FileHandler(File(k_FILE_PATH_LOGS), printLogs: true)]);
+  final options = CatcherOptions(SilentReportMode(), [FileHandler(File(AppPaths.LOGS), printLogs: true)]);
 
   Catcher(
     runAppFunction: runAppFunction,

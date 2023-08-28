@@ -31,7 +31,7 @@ class NamidaFFMPEG {
   }) async {
     final originalFile = File(path);
     final originalStats = keepFileStats ? await originalFile.stat() : null;
-    final tempFile = await originalFile.copy("$k_DIR_APP_INTERNAL_STORAGE/.temp_${path.hashCode}");
+    final tempFile = await originalFile.copy("${AppDirs.INTERNAL_STORAGE}/.temp_${path.hashCode}");
     final tagsMapToEditConverted = <String, String>{};
     for (final t in tagsMap.entries) {
       final fieldName = _defaultTagsMap[t.key];
@@ -96,7 +96,7 @@ class NamidaFFMPEG {
     final audioFile = File(audioPath);
     final originalStats = keepOriginalFileStats ? await audioFile.stat() : null;
 
-    final cacheFile = File("$k_DIR_APP_CACHE/${audioPath.hashCode}.${audioPath.getExtension}");
+    final cacheFile = File("${AppDirs.APP_CACHE}/${audioPath.hashCode}.${audioPath.getExtension}");
     final output = await FFmpegKit.execute('-i "$audioPath" -i "$thumbnailPath" -map 0:a -map 1 -codec copy -disposition:v attached_pic -y "${cacheFile.path}"');
     final didSuccess = await output.getReturnCode().then((value) => value?.isValueSuccess()) ?? false;
     final canSafelyMoveBack = didSuccess && await cacheFile.stat().then((value) => value.size) > 0;

@@ -11,9 +11,6 @@ import 'package:namida/controller/settings_controller.dart';
 
 ///
 int kSdkVersion = 21;
-String k_DIR_USER_DATA = '';
-String k_DIR_APP_CACHE = '';
-String k_DIR_APP_INTERNAL_STORAGE = '';
 
 final Set<String> kStoragePaths = {};
 final Set<String> kDirectoriesPaths = {};
@@ -30,34 +27,61 @@ const Color kMainColor = Color.fromARGB(160, 117, 128, 224);
 const Color kMainColorLight = Color.fromARGB(255, 116, 126, 219);
 const Color kMainColorDark = Color.fromARGB(255, 139, 149, 241);
 
-/// Directories and files used by Namida
-final String k_FILE_PATH_SETTINGS = '$k_DIR_USER_DATA/namida_settings.json';
-final String k_FILE_PATH_TRACKS = '$k_DIR_USER_DATA/tracks.json';
-final String k_FILE_PATH_VIDEOS_LOCAL = '$k_DIR_USER_DATA/local_videos.json';
-final String k_FILE_PATH_VIDEOS_CACHE = '$k_DIR_USER_DATA/cache_videos.json';
-final String k_FILE_PATH_TRACKS_STATS = '$k_DIR_USER_DATA/tracks_stats.json';
-final String k_FILE_PATH_LATEST_QUEUE = '$k_DIR_USER_DATA/latest_queue.json';
-final String k_FILE_PATH_LOGS = '$k_DIR_USER_DATA/logs.txt';
+/// Files used by Namida
+class AppPaths {
+  static final _USER_DATA = AppDirs.USER_DATA;
 
-final String k_FILE_PATH_TOTAL_LISTEN_TIME = '$k_DIR_USER_DATA/total_listen.txt';
+  static final SETTINGS = '$_USER_DATA/namida_settings.json';
+  static final TRACKS = '$_USER_DATA/tracks.json';
+  static final VIDEOS_LOCAL = '$_USER_DATA/local_videos.json';
+  static final VIDEOS_CACHE = '$_USER_DATA/cache_videos.json';
+  static final TRACKS_STATS = '$_USER_DATA/tracks_stats.json';
+  static final LATEST_QUEUE = '$_USER_DATA/latest_queue.json';
 
-final String k_PLAYLIST_DIR_PATH_HISTORY = '$k_DIR_USER_DATA/History/';
-final String k_PLAYLIST_PATH_FAVOURITES = '$k_DIR_USER_DATA/favs.json';
+  static final LOGS = '$_USER_DATA/logs.txt';
 
-final String k_DIR_PLAYLISTS = '$k_DIR_USER_DATA/Playlists/';
-final String k_DIR_QUEUES = '$k_DIR_USER_DATA/Queues/';
-final String k_DIR_ARTWORKS = '$k_DIR_USER_DATA/Artworks/';
-final String k_DIR_PALETTES = '$k_DIR_USER_DATA/Palettes/';
-final String k_DIR_VIDEOS_CACHE = '$k_DIR_USER_DATA/Videos/';
-final String k_DIR_VIDEOS_CACHE_TEMP = '$k_DIR_USER_DATA/Videos/Temp/';
-final String k_DIR_THUMBNAILS = '$k_DIR_USER_DATA/Thumbnails/';
-final String k_DIR_YT_THUMBNAILS = '$k_DIR_USER_DATA/YTThumbnails/';
-final String k_DIR_LYRICS = '$k_DIR_USER_DATA/Lyrics/';
-final String k_DIR_YT_METADATA = '$k_DIR_USER_DATA/Metadata/';
-final String k_DIR_YT_METADATA_COMMENTS = '$k_DIR_USER_DATA/Metadata/Comments/';
-final String k_DIR_YOUTUBE_STATS = '$k_DIR_USER_DATA/Youtube Stats/';
+  static final TOTAL_LISTEN_TIME = '$_USER_DATA/total_listen.txt';
+  static final FAVOURITES_PLAYLIST = '$_USER_DATA/favs.json';
+  static final NAMIDA_LOGO = '${AppDirs.ARTWORKS}.ARTWORKS.NAMIDA_DEFAULT_ARTWORK.PNG';
+}
 
-final String k_FILE_PATH_NAMIDA_LOGO = '$k_DIR_ARTWORKS.NAMIDA_DEFAULT_ARTWORK.PNG';
+/// Directories used by Namida
+class AppDirs {
+  static String USER_DATA = '';
+  static String APP_CACHE = '';
+  static String INTERNAL_STORAGE = '';
+
+  static final HISTORY_PLAYLIST = '$USER_DATA/History/';
+  static final PLAYLISTS = '$USER_DATA/Playlists/';
+  static final QUEUES = '$USER_DATA/Queues/';
+  static final ARTWORKS = '$USER_DATA/Artworks/';
+  static final PALETTES = '$USER_DATA/Palettes/';
+  static final VIDEOS_CACHE = '$USER_DATA/Videos/';
+  static final VIDEOS_CACHE_TEMP = '$USER_DATA/Videos/Temp/';
+  static final THUMBNAILS = '$USER_DATA/Thumbnails/';
+  static final YT_THUMBNAILS = '$USER_DATA/YTThumbnails/';
+  static final LYRICS = '$USER_DATA/Lyrics/';
+  static final YT_METADATA = '$USER_DATA/Metadata/';
+  static final YT_METADATA_COMMENTS = '$USER_DATA/Metadata/Comments/';
+  static final YOUTUBE_STATS = '$USER_DATA/Youtube Stats/';
+  static final COMPRESSED_IMAGES = '$INTERNAL_STORAGE/Compressed/';
+
+  static final List<String> values = [
+    HISTORY_PLAYLIST,
+    PLAYLISTS,
+    QUEUES,
+    ARTWORKS,
+    PALETTES,
+    VIDEOS_CACHE,
+    VIDEOS_CACHE_TEMP,
+    THUMBNAILS,
+    YT_THUMBNAILS,
+    LYRICS,
+    YT_METADATA,
+    YT_METADATA_COMMENTS,
+    YOUTUBE_STATS,
+  ];
+}
 
 /// Default Playlists IDs
 const k_PLAYLIST_NAME_FAV = '_FAVOURITES_';

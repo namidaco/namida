@@ -70,23 +70,23 @@ class SettingsController {
   final RxList<String> directoriesToExclude = <String>[].obs;
   final RxBool preventDuplicatedTracks = false.obs;
   final RxBool respectNoMedia = false.obs;
-  final RxString defaultBackupLocation = k_DIR_APP_INTERNAL_STORAGE.obs;
+  final RxString defaultBackupLocation = AppDirs.INTERNAL_STORAGE.obs;
   final RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
   final RxBool enableFoldersHierarchy = true.obs;
   final RxList<String> backupItemslist = [
-    k_FILE_PATH_TRACKS,
-    k_FILE_PATH_TRACKS_STATS,
-    k_FILE_PATH_TOTAL_LISTEN_TIME,
-    k_FILE_PATH_VIDEOS_CACHE,
-    k_FILE_PATH_VIDEOS_LOCAL,
-    k_FILE_PATH_SETTINGS,
-    k_DIR_PALETTES,
-    k_DIR_LYRICS,
-    k_DIR_PLAYLISTS,
-    k_PLAYLIST_DIR_PATH_HISTORY,
-    k_PLAYLIST_PATH_FAVOURITES,
-    k_DIR_QUEUES,
-    k_FILE_PATH_LATEST_QUEUE,
+    AppPaths.TRACKS,
+    AppPaths.TRACKS_STATS,
+    AppPaths.TOTAL_LISTEN_TIME,
+    AppPaths.VIDEOS_CACHE,
+    AppPaths.VIDEOS_LOCAL,
+    AppPaths.SETTINGS,
+    AppDirs.PALETTES,
+    AppDirs.LYRICS,
+    AppDirs.PLAYLISTS,
+    AppDirs.HISTORY_PLAYLIST,
+    AppPaths.FAVOURITES_PLAYLIST,
+    AppDirs.QUEUES,
+    AppPaths.LATEST_QUEUE,
   ].obs;
   final RxBool enableVideoPlayback = true.obs;
   final RxBool enableLyrics = false.obs;
@@ -189,7 +189,7 @@ class SettingsController {
   bool didSupportNamida = false;
 
   Future<void> prepareSettingsFile() async {
-    final file = await File(k_FILE_PATH_SETTINGS).create(recursive: true);
+    final file = await File(AppPaths.SETTINGS).create(recursive: true);
     try {
       final json = await file.readAsJson();
       if (json == null) return;
@@ -362,7 +362,7 @@ class SettingsController {
     }
     _canWriteSettings = false;
 
-    final file = File(k_FILE_PATH_SETTINGS);
+    final file = File(AppPaths.SETTINGS);
     final res = {
       'selectedLanguage': selectedLanguage.toJson(),
       'themeMode': themeMode.value.convertToString,

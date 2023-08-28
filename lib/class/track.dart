@@ -296,7 +296,7 @@ extension TrackExtUtils on TrackExtended {
   String get folderPath => path.getDirectoryName;
   Folder get folder => Folder(folderPath);
   String get folderName => folderPath.split(Platform.pathSeparator).last;
-  String get pathToImage => "$k_DIR_ARTWORKS$filename.png";
+  String get pathToImage => "${AppDirs.ARTWORKS}$filename.png";
 
   String get youtubeLink {
     final match = comment.isEmpty ? null : kYoutubeRegex.firstMatch(comment)?[0];
@@ -438,7 +438,7 @@ extension TrackUtils on Track {
   String get folderPath => path.getDirectoryName;
   Folder get folder => Folder(folderPath);
   String get folderName => folderPath.split(Platform.pathSeparator).last;
-  String get pathToImage => "$k_DIR_ARTWORKS$filename.png";
+  String get pathToImage => "${AppDirs.ARTWORKS}$filename.png";
 
   String get youtubeLink => toTrackExt().youtubeLink;
   String get youtubeID => youtubeLink.getYoutubeID;

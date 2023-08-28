@@ -230,7 +230,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
         final sec = _totalListenedTimeInSec.value;
         if (sec % 20 == 0) {
           _updateTrackLastPosition(currentTrack.track, currentPositionMS);
-          await File(k_FILE_PATH_TOTAL_LISTEN_TIME).writeAsString(sec.toString());
+          await File(AppPaths.TOTAL_LISTEN_TIME).writeAsString(sec.toString());
         }
       }
     });
@@ -263,7 +263,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   }
 
   Future<void> prepareTotalListenTime() async {
-    final file = await File(k_FILE_PATH_TOTAL_LISTEN_TIME).create();
+    final file = await File(AppPaths.TOTAL_LISTEN_TIME).create();
     final text = await file.readAsString();
     final listenTime = int.tryParse(text);
     _totalListenedTimeInSec.value = listenTime ?? 0;
@@ -617,7 +617,7 @@ extension TrackToAudioSourceMediaItem on Selectable {
       album: tr.hasUnknownAlbum ? '' : tr.album,
       genre: tr.originalGenre,
       duration: Duration(seconds: tr.duration),
-      artUri: Uri.file(File(tr.pathToImage).existsSync() ? tr.pathToImage : k_FILE_PATH_NAMIDA_LOGO),
+      artUri: Uri.file(File(tr.pathToImage).existsSync() ? tr.pathToImage : AppPaths.NAMIDA_LOGO),
     );
   }
 }

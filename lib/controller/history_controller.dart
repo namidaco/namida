@@ -367,12 +367,12 @@ class HistoryController {
 
   Future<void> saveHistoryToStorage([List<int>? daysToSave]) async {
     Future<void> saveThisDay(int key, List<TrackWithDate> tracks) async {
-      await File('$k_PLAYLIST_DIR_PATH_HISTORY$key.json').writeAsJson(tracks.mapped((e) => e.toJson()));
+      await File('${AppDirs.HISTORY_PLAYLIST}$key.json').writeAsJson(tracks.mapped((e) => e.toJson()));
     }
 
     Future<void> deleteThisDay(int key) async {
       historyMap.value.remove(key);
-      await File('$k_PLAYLIST_DIR_PATH_HISTORY$key.json').delete();
+      await File('${AppDirs.HISTORY_PLAYLIST}$key.json').delete();
     }
 
     if (daysToSave != null) {
@@ -400,7 +400,7 @@ class HistoryController {
   }
 
   Future<void> prepareHistoryFile() async {
-    final map = await _readHistoryFilesCompute.thready(k_PLAYLIST_DIR_PATH_HISTORY);
+    final map = await _readHistoryFilesCompute.thready(AppDirs.HISTORY_PLAYLIST);
     historyMap.value
       ..clear()
       ..addAll(map);

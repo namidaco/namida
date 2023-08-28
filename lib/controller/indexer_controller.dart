@@ -61,14 +61,14 @@ class Indexer {
 
   Future<void> prepareTracksFile() async {
     /// Only awaits if the track file exists, otherwise it will get into normally and start indexing.
-    if (await File(k_FILE_PATH_TRACKS).existsAndValid()) {
+    if (await File(AppPaths.TRACKS).existsAndValid()) {
       await readTrackData();
       _afterIndexing();
     }
 
     /// doesnt exists
     else {
-      await File(k_FILE_PATH_TRACKS).create();
+      await File(AppPaths.TRACKS).create();
       refreshLibraryAndCheckForDiff(forceReIndex: true);
     }
   }
@@ -355,7 +355,7 @@ class Indexer {
   /// - Path is needed bothways for making the file name.
   /// - Using path for extracting will call [faudiotagger.readArtwork] so it will be slower.
   /// - `final art = bytes ?? await faudiotagger.readArtwork(path: pathOfAudio);`
-  /// - Sending [artworkPath] that points towards an image file will just copy it to [k_DIR_ARTWORKS]
+  /// - Sending [artworkPath] that points towards an image file will just copy it to [AppDirs.ARTWORKS]
   /// - Returns the Artwork File created.
   Future<File?> extractOneArtwork(
     String pathOfAudio, {
@@ -363,7 +363,7 @@ class Indexer {
     bool forceReExtract = false,
     String? artworkPath,
   }) async {
-    final fileOfFull = File("$k_DIR_ARTWORKS${pathOfAudio.getFilename}.png");
+    final fileOfFull = File("${AppDirs.ARTWORKS}${pathOfAudio.getFilename}.png");
 
     if (artworkPath != null) {
       final newFile = await File(artworkPath).copy(fileOfFull.path);
@@ -568,7 +568,7 @@ class Indexer {
   }
 
   Future<void> _saveTrackFileToStorage() async {
-    await File(k_FILE_PATH_TRACKS).writeAsJson(tracksInfoList.map((key) => allTracksMappedByPath[key]?.toJson()).toList());
+    await File(AppPaths.TRACKS).writeAsJson(tracksInfoList.map((key) => allTracksMappedByPath[key]?.toJson()).toList());
   }
 
   /// Returns new [TrackStats].
@@ -591,12 +591,12 @@ class Indexer {
   }
 
   Future<void> _saveTrackStatsFileToStorage() async {
-    await File(k_FILE_PATH_TRACKS_STATS).writeAsJson(trackStatsMap.values.map((e) => e.toJson()).toList());
+    await File(AppPaths.TRACKS_STATS).writeAsJson(trackStatsMap.values.map((e) => e.toJson()).toList());
   }
 
   Future<void> readTrackData() async {
     // reading stats file containing track rating etc.
-    final statsResult = await _readTracksStatsCompute.thready(k_FILE_PATH_TRACKS_STATS);
+    final statsResult = await _readTracksStatsCompute.thready(AppPaths.TRACKS_STATS);
     trackStatsMap
       ..clear()
       ..addAll(statsResult);
@@ -605,7 +605,7 @@ class Indexer {
 
     /// Reading actual track file.
     final splitconfig = _SplitArtistGenreConfig(
-      path: k_FILE_PATH_TRACKS,
+      path: AppPaths.TRACKS,
       artistsConfig: ArtistsSplitConfig.settings(),
       genresConfig: GenresSplitConfig.settings(),
     );
@@ -887,7 +887,7 @@ class Indexer {
 
       return;
     }
-    await _updateDirectoryStats(k_DIR_ARTWORKS, artworksInStorage, artworksSizeInStorage);
+    await _updateDirectoryStats(AppDirs.ARTWORKS, artworksInStorage, artworksSizeInStorage);
   }
 
   Future<void> updateColorPalettesSizeInStorage([File? newPaletteFile]) async {
@@ -895,7 +895,7 @@ class Indexer {
       colorPalettesInStorage.value++;
       return;
     }
-    await _updateDirectoryStats(k_DIR_PALETTES, colorPalettesInStorage, null);
+    await _updateDirectoryStats(AppDirs.PALETTES, colorPalettesInStorage, null);
   }
 
   Future<void> updateVideosSizeInStorage([File? newVideoFile, bool decreaseStats = false]) async {
@@ -911,7 +911,7 @@ class Indexer {
 
       return;
     }
-    await _updateDirectoryStats(k_DIR_VIDEOS_CACHE, videosInStorage, videosSizeInStorage);
+    await _updateDirectoryStats(AppDirs.VIDEOS_CACHE, videosInStorage, videosSizeInStorage);
   }
 
   Future<void> _updateDirectoryStats(String dirPath, RxInt? filesCountVariable, RxInt? filesSizeVariable) async {
@@ -931,8 +931,8 @@ class Indexer {
   }
 
   Future<void> clearImageCache() async {
-    await Directory(k_DIR_ARTWORKS).delete(recursive: true);
-    await Directory(k_DIR_ARTWORKS).create();
+    await Directory(AppDirs.ARTWORKS).delete(recursive: true);
+    await Directory(AppDirs.ARTWORKS).create();
     await _createDefaultNamidaArtwork();
     updateImageSizeInStorage();
   }
@@ -942,17 +942,17 @@ class Indexer {
     if (videosToDelete != null) {
       await videosToDelete.loopFuture((v, index) async => await File(v.path).delete());
     } else {
-      await Directory(k_DIR_VIDEOS_CACHE).delete(recursive: true);
-      await Directory(k_DIR_VIDEOS_CACHE).create();
+      await Directory(AppDirs.VIDEOS_CACHE).delete(recursive: true);
+      await Directory(AppDirs.VIDEOS_CACHE).create();
     }
 
     updateVideosSizeInStorage();
   }
 
   Future<void> _createDefaultNamidaArtwork() async {
-    if (!await File(k_FILE_PATH_NAMIDA_LOGO).exists()) {
+    if (!await File(AppPaths.NAMIDA_LOGO).exists()) {
       final byteData = await rootBundle.load('assets/namida_icon.png');
-      final file = await File(k_FILE_PATH_NAMIDA_LOGO).create(recursive: true);
+      final file = await File(AppPaths.NAMIDA_LOGO).create(recursive: true);
       await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
     }
   }

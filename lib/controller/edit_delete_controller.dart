@@ -30,7 +30,7 @@ class EditDeleteController {
 
   Future<void> deleteLyrics(List<Selectable> tracks) async {
     await tracks.loopFuture((track, index) async {
-      await File("$k_DIR_LYRICS${track.track.filename}.txt").delete();
+      await File("${AppDirs.LYRICS}${track.track.filename}.txt").delete();
     });
   }
 
@@ -46,7 +46,7 @@ class EditDeleteController {
 
   Future<void> deleteExtractedColor(List<Selectable> tracks) async {
     await tracks.loopFuture((track, index) async {
-      await File("$k_DIR_PALETTES${track.track.filename}.palette").delete();
+      await File("${AppDirs.PALETTES}${track.track.filename}.palette").delete();
     });
   }
 
@@ -105,9 +105,9 @@ class EditDeleteController {
 }
 
 extension HasCachedFiles on List<Selectable> {
-  bool get hasArtworkCached => _doesAnyPathExist(k_DIR_ARTWORKS, 'png');
-  bool get hasLyricsCached => _doesAnyPathExist(k_DIR_LYRICS, 'txt');
-  bool get hasColorCached => _doesAnyPathExist(k_DIR_PALETTES, 'palette');
+  bool get hasArtworkCached => _doesAnyPathExist(AppDirs.ARTWORKS, 'png');
+  bool get hasLyricsCached => _doesAnyPathExist(AppDirs.LYRICS, 'txt');
+  bool get hasColorCached => _doesAnyPathExist(AppDirs.PALETTES, 'palette');
   bool get hasVideoCached {
     for (int i = 0; i < length; i++) {
       final tr = this[i];

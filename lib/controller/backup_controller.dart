@@ -34,7 +34,7 @@ class BackupController {
     // creates directories and file
     await Directory(SettingsController.inst.defaultBackupLocation.value).create();
     await File("${SettingsController.inst.defaultBackupLocation.value}/Namida Backup - $date.zip").create();
-    final sourceDir = Directory(k_DIR_USER_DATA);
+    final sourceDir = Directory(AppDirs.USER_DATA);
 
     // prepares files
 
@@ -53,7 +53,7 @@ class BackupController {
     try {
       for (final d in dirsOnly) {
         try {
-          final dirZipFile = File("$k_DIR_USER_DATA/TEMPDIR_${d.path.getFilename}.zip");
+          final dirZipFile = File("${AppDirs.USER_DATA}/TEMPDIR_${d.path.getFilename}.zip");
           await ZipFile.createFromDirectory(sourceDir: d, zipFile: dirZipFile);
           filesOnly.add(dirZipFile);
         } catch (e) {
@@ -112,15 +112,15 @@ class BackupController {
 
     isRestoringBackup.value = true;
 
-    await ZipFile.extractToDirectory(zipFile: backupzip, destinationDir: Directory(k_DIR_USER_DATA));
+    await ZipFile.extractToDirectory(zipFile: backupzip, destinationDir: Directory(AppDirs.USER_DATA));
 
     // after finishing, extracts zip files inside the main zip
-    final all = Directory(k_DIR_USER_DATA).listSync();
+    final all = Directory(AppDirs.USER_DATA).listSync();
     await all.loopFuture((one, index) async {
       if (one.path.getFilename.startsWith('TEMPDIR_')) {
         if (one is File) {
           await ZipFile.extractToDirectory(
-              zipFile: one, destinationDir: Directory("$k_DIR_USER_DATA/${one.path.getFilename.replaceFirst('TEMPDIR_', '').replaceFirst('.zip', '')}"));
+              zipFile: one, destinationDir: Directory("${AppDirs.USER_DATA}/${one.path.getFilename.replaceFirst('TEMPDIR_', '').replaceFirst('.zip', '')}"));
           await one.delete();
         }
       }
