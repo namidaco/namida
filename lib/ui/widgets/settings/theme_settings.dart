@@ -51,33 +51,50 @@ class ThemeSetting extends StatelessWidget {
                 },
               ),
             ),
-            Obx(
-              () => CustomListTile(
-                enabled: !SettingsController.inst.autoColor.value,
-                icon: Broken.bucket,
-                title: Language.inst.DEFAULT_COLOR,
-                subtitle: Language.inst.DEFAULT_COLOR_SUBTITLE,
-                trailing: CircleAvatar(
-                  minRadius: 12,
-                  backgroundColor: playerStaticColor,
-                ),
-                onTap: () {
-                  NamidaNavigator.inst.navigateDialog(
-                    dialog: Obx(
-                      () => Theme(
-                        data: AppThemes.inst.getAppTheme(),
-                        child: NamidaColorPickerDialog(
-                          doneText: Language.inst.DONE,
-                          onColorChanged: _updateColor,
-                          onDonePressed: NamidaNavigator.inst.closeDialog,
-                          onRefreshButtonPressed: () {
-                            _updateColor(kMainColor);
-                            NamidaNavigator.inst.closeDialog();
-                          },
-                          cancelButton: false,
-                        ),
-                      ),
+            ...[false, true].map(
+              (isDark) => Obx(
+                () {
+                  final darkText = isDark ? " (${Language.inst.THEME_MODE_DARK})" : '';
+                  final color = isDark ? playerStaticColorDark : playerStaticColorLight;
+                  return CustomListTile(
+                    enabled: !SettingsController.inst.autoColor.value,
+                    icon: !isDark ? Broken.bucket : null,
+                    leading: isDark
+                        ? const StackedIcon(
+                            baseIcon: Broken.bucket,
+                            secondaryIcon: Broken.moon,
+                          )
+                        : null,
+                    title: "${Language.inst.DEFAULT_COLOR}$darkText",
+                    subtitle: Language.inst.DEFAULT_COLOR_SUBTITLE,
+                    trailing: CircleAvatar(
+                      minRadius: 12,
+                      backgroundColor: color,
                     ),
+                    onTap: () {
+                      NamidaNavigator.inst.navigateDialog(
+                        dialog: Obx(
+                          () => Theme(
+                            data: AppThemes.inst.getAppTheme(),
+                            child: NamidaColorPickerDialog(
+                              initialColor: color,
+                              doneText: Language.inst.DONE,
+                              onColorChanged: (value) => _updateColor(value, isDark),
+                              onDonePressed: NamidaNavigator.inst.closeDialog,
+                              onRefreshButtonPressed: () {
+                                if (isDark) {
+                                  _updateColor(kMainColorDark, true);
+                                } else {
+                                  _updateColor(kMainColorLight, false);
+                                }
+                                NamidaNavigator.inst.closeDialog();
+                              },
+                              cancelButton: false,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
@@ -159,9 +176,18 @@ class ThemeSetting extends StatelessWidget {
     );
   }
 
-  void _updateColor(Color color) {
-    SettingsController.inst.save(staticColor: color.value);
-    CurrentColor.inst.updatePlayerColorFromColor(color, false);
+  void _updateColor(Color color, bool darkMode) {
+    if (darkMode) {
+      SettingsController.inst.save(staticColorDark: color.value);
+      if (Get.isDarkMode) {
+        CurrentColor.inst.updatePlayerColorFromColor(color, false);
+      }
+    } else {
+      SettingsController.inst.save(staticColor: color.value);
+      if (!Get.isDarkMode) {
+        CurrentColor.inst.updatePlayerColorFromColor(color, false);
+      }
+    }
   }
 }
 
@@ -245,6 +271,7 @@ class NamidaColorPickerDialog extends StatelessWidget {
   final ValueChanged<Color> onColorChanged;
   final VoidCallback onDonePressed;
   final bool cancelButton;
+  final Color initialColor;
 
   const NamidaColorPickerDialog({
     super.key,
@@ -253,6 +280,7 @@ class NamidaColorPickerDialog extends StatelessWidget {
     required this.onColorChanged,
     required this.onDonePressed,
     required this.cancelButton,
+    required this.initialColor,
   });
 
   @override
@@ -272,7 +300,7 @@ class NamidaColorPickerDialog extends StatelessWidget {
         ),
       ],
       child: ColorPicker(
-        pickerColor: playerStaticColor,
+        pickerColor: initialColor,
         onColorChanged: onColorChanged,
       ),
     );

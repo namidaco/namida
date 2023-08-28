@@ -219,6 +219,7 @@ void _showTrackColorPaletteDialog({
     NamidaNavigator.inst.navigateDialog(
       colorScheme: colorScheme,
       dialogBuilder: (theme) => NamidaColorPickerDialog(
+        initialColor: allPaletteColor.lastOrNull ?? Colors.black,
         doneText: Language.inst.ADD,
         onColorChanged: (value) => color = value,
         onDonePressed: () {

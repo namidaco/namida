@@ -19,7 +19,8 @@ class SettingsController {
   final Rx<NamidaLanguage> selectedLanguage = kDefaultLang.obs;
   final Rx<ThemeMode> themeMode = ThemeMode.system.obs;
   final RxBool autoColor = true.obs;
-  final RxInt staticColor = kMainColor.value.obs;
+  final RxInt staticColor = kMainColorLight.value.obs;
+  final RxInt staticColorDark = kMainColorDark.value.obs;
   final Rx<LibraryTab> selectedLibraryTab = LibraryTab.tracks.obs;
   final Rx<LibraryTab> staticLibraryTab = LibraryTab.tracks.obs;
   final RxBool autoLibraryTab = true.obs;
@@ -199,6 +200,7 @@ class SettingsController {
       themeMode.value = ThemeMode.values.getEnum(json['themeMode']) ?? themeMode.value;
       autoColor.value = json['autoColor'] ?? autoColor.value;
       staticColor.value = json['staticColor'] ?? staticColor.value;
+      staticColorDark.value = json['staticColorDark'] ?? staticColorDark.value;
       selectedLibraryTab.value = json['autoLibraryTab'] ?? autoLibraryTab.value
           ? LibraryTab.values.getEnum(json['selectedLibraryTab']) ?? selectedLibraryTab.value
           : LibraryTab.values.getEnum(json['staticLibraryTab']) ?? staticLibraryTab.value;
@@ -368,6 +370,7 @@ class SettingsController {
       'themeMode': themeMode.value.convertToString,
       'autoColor': autoColor.value,
       'staticColor': staticColor.value,
+      'staticColorDark': staticColorDark.value,
       'selectedLibraryTab': selectedLibraryTab.value.convertToString,
       'staticLibraryTab': staticLibraryTab.value.convertToString,
       'autoLibraryTab': autoLibraryTab.value,
@@ -494,6 +497,7 @@ class SettingsController {
     ThemeMode? themeMode,
     bool? autoColor,
     int? staticColor,
+    int? staticColorDark,
     int? searchResultsPlayMode,
     LibraryTab? selectedLibraryTab,
     LibraryTab? staticLibraryTab,
@@ -607,6 +611,9 @@ class SettingsController {
     }
     if (staticColor != null) {
       this.staticColor.value = staticColor;
+    }
+    if (staticColorDark != null) {
+      this.staticColorDark.value = staticColorDark;
     }
     if (selectedLibraryTab != null) {
       this.selectedLibraryTab.value = selectedLibraryTab;

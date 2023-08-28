@@ -16,7 +16,9 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:palette_generator/palette_generator.dart';
 
-Color get playerStaticColor => Color(SettingsController.inst.staticColor.value);
+Color get playerStaticColor => Get.isDarkMode ? playerStaticColorDark : playerStaticColorLight;
+Color get playerStaticColorLight => Color(SettingsController.inst.staticColor.value);
+Color get playerStaticColorDark => Color(SettingsController.inst.staticColorDark.value);
 
 class CurrentColor {
   static CurrentColor get inst => _instance;
@@ -69,12 +71,21 @@ class CurrentColor {
   }
 
   void updateColorAfterThemeModeChange() {
-    final nc = _namidaColor.value;
-    _namidaColor.value = NamidaColor(
-      used: nc.color.withAlpha(colorAlpha),
-      mix: nc.mix,
-      palette: nc.palette,
-    );
+    if (SettingsController.inst.autoColor.value) {
+      final nc = _namidaColor.value;
+      _namidaColor.value = NamidaColor(
+        used: nc.color.withAlpha(colorAlpha),
+        mix: nc.mix,
+        palette: nc.palette,
+      );
+    } else {
+      final nc = playerStaticColor.lighter;
+      _namidaColor.value = NamidaColor(
+        used: nc,
+        mix: nc,
+        palette: [nc],
+      );
+    }
   }
 
   void updatePlayerColorFromColor(Color color, [bool customAlpha = true]) async {
