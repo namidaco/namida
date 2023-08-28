@@ -285,35 +285,35 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                   1
                               ? Language.inst.ARTIST
                               : Language.inst.ARTISTS,
-                          value: trackExt.hasUnknownArtist ? k_UNKNOWN_TRACK_ARTIST : trackExt.originalArtist,
+                          value: trackExt.hasUnknownArtist ? UnknownTags.ARTIST : trackExt.originalArtist,
                           icon: Broken.microphone,
                         ),
 
                       if (shouldShowTheField(trackExt.hasUnknownAlbum))
                         TrackInfoListTile(
                           title: Language.inst.ALBUM,
-                          value: trackExt.hasUnknownAlbum ? k_UNKNOWN_TRACK_ALBUM : trackExt.album,
+                          value: trackExt.hasUnknownAlbum ? UnknownTags.ALBUM : trackExt.album,
                           icon: Broken.music_dashboard,
                         ),
 
                       if (shouldShowTheField(trackExt.hasUnknownAlbumArtist))
                         TrackInfoListTile(
                           title: Language.inst.ALBUM_ARTIST,
-                          value: trackExt.hasUnknownAlbumArtist ? k_UNKNOWN_TRACK_ALBUMARTIST : trackExt.albumArtist,
+                          value: trackExt.hasUnknownAlbumArtist ? UnknownTags.ALBUMARTIST : trackExt.albumArtist,
                           icon: Broken.user,
                         ),
 
                       if (shouldShowTheField(trackExt.hasUnknownGenre))
                         TrackInfoListTile(
                           title: trackExt.genresList.length == 1 ? Language.inst.GENRE : Language.inst.GENRES,
-                          value: trackExt.hasUnknownGenre ? k_UNKNOWN_TRACK_GENRE : trackExt.genresList.join(', '),
+                          value: trackExt.hasUnknownGenre ? UnknownTags.GENRE : trackExt.genresList.join(', '),
                           icon: trackExt.genresList.length == 1 ? Broken.emoji_happy : Broken.smileys,
                         ),
 
                       if (shouldShowTheField(trackExt.hasUnknownComposer))
                         TrackInfoListTile(
                           title: Language.inst.COMPOSER,
-                          value: trackExt.hasUnknownComposer ? k_UNKNOWN_TRACK_COMPOSER : trackExt.composer,
+                          value: trackExt.hasUnknownComposer ? UnknownTags.COMPOSER : trackExt.composer,
                           icon: Broken.profile_2user,
                         ),
 

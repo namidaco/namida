@@ -240,14 +240,14 @@ class Indexer {
       return null;
     }
     final initialTrack = TrackExtended(
-      title: k_UNKNOWN_TRACK_TITLE,
-      originalArtist: k_UNKNOWN_TRACK_ARTIST,
-      artistsList: [k_UNKNOWN_TRACK_ARTIST],
-      album: k_UNKNOWN_TRACK_ALBUM,
-      albumArtist: k_UNKNOWN_TRACK_ALBUMARTIST,
-      originalGenre: k_UNKNOWN_TRACK_GENRE,
-      genresList: [k_UNKNOWN_TRACK_GENRE],
-      composer: k_UNKNOWN_TRACK_COMPOSER,
+      title: UnknownTags.TITLE,
+      originalArtist: UnknownTags.ARTIST,
+      artistsList: [UnknownTags.ARTIST],
+      album: UnknownTags.ALBUM,
+      albumArtist: UnknownTags.ALBUMARTIST,
+      originalGenre: UnknownTags.GENRE,
+      genresList: [UnknownTags.GENRE],
+      composer: UnknownTags.COMPOSER,
       trackNo: 0,
       duration: 0,
       year: 0,
@@ -285,16 +285,18 @@ class Indexer {
       );
 
       String? trimOrNull(String? value) => value == null ? value : value.trimAll();
+      String? nullifyEmpty(String? value) => value == '' ? null : value;
+      String? doMagic(String? value) => nullifyEmpty(trimOrNull(value));
 
       finalTrackExtended = initialTrack.copyWith(
-        title: trimOrNull(trackInfo.title),
-        originalArtist: trimOrNull(trackInfo.artist),
+        title: doMagic(trackInfo.title),
+        originalArtist: doMagic(trackInfo.artist),
         artistsList: artists,
-        album: trimOrNull(trackInfo.album),
-        albumArtist: trimOrNull(trackInfo.albumArtist),
-        originalGenre: trimOrNull(trackInfo.genre),
+        album: doMagic(trackInfo.album),
+        albumArtist: doMagic(trackInfo.albumArtist),
+        originalGenre: doMagic(trackInfo.genre),
         genresList: genres,
-        composer: trimOrNull(trackInfo.composer),
+        composer: doMagic(trackInfo.composer),
         trackNo: trackInfo.trackNumber.getIntValue(),
         duration: duration,
         year: trackInfo.year.getIntValue(),
@@ -309,8 +311,8 @@ class Indexer {
       );
 
       // ----- if the title || artist weren't found in the tag fields
-      final isTitleEmpty = finalTrackExtended.title == k_UNKNOWN_TRACK_TITLE;
-      final isArtistEmpty = finalTrackExtended.originalArtist == k_UNKNOWN_TRACK_ARTIST;
+      final isTitleEmpty = finalTrackExtended.title == UnknownTags.TITLE;
+      final isArtistEmpty = finalTrackExtended.originalArtist == UnknownTags.ARTIST;
       if (isTitleEmpty || isArtistEmpty) {
         final extractedName = getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
         final newTitle = isTitleEmpty ? extractedName.$1 : null;
@@ -697,7 +699,7 @@ class Indexer {
     final artistsOrg = splitBySeparators(
       originalArtist,
       config.separators,
-      k_UNKNOWN_TRACK_ARTIST,
+      UnknownTags.ARTIST,
       config.separatorsBlacklist,
     );
     allArtists.addAll(artistsOrg);
@@ -726,7 +728,7 @@ class Indexer {
     return splitBySeparators(
       originalGenre,
       config.separators,
-      k_UNKNOWN_TRACK_GENRE,
+      UnknownTags.GENRE,
       config.separatorsBlacklist,
     );
   }
@@ -747,7 +749,7 @@ class Indexer {
     /// in case splitting produced 2 entries or more, it means its high likely to be [artist - title]
     /// otherwise [title] will be the [filename] and [artist] will be [Unknown]
     final title = titleAndArtist.length >= 2 ? titleAndArtist[1].trimAll() : filenameWOEx;
-    final artist = titleAndArtist.length >= 2 ? titleAndArtist[0].trimAll() : k_UNKNOWN_TRACK_ARTIST;
+    final artist = titleAndArtist.length >= 2 ? titleAndArtist[0].trimAll() : UnknownTags.ARTIST;
 
     // TODO: split by ( and ) too, but retain Remixes and feat.
     final cleanedUpTitle = title.split('[').first.trimAll();

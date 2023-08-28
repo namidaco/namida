@@ -213,13 +213,15 @@ const kDummyExtendedTrack = TrackExtended(
   lyrics: "",
 );
 
-// Unknown Fields
-const k_UNKNOWN_TRACK_TITLE = '';
-const k_UNKNOWN_TRACK_ALBUM = 'Unknown Album';
-const k_UNKNOWN_TRACK_ALBUMARTIST = '';
-const k_UNKNOWN_TRACK_ARTIST = 'Unknown Artist';
-const k_UNKNOWN_TRACK_GENRE = 'Unknown Genre';
-const k_UNKNOWN_TRACK_COMPOSER = 'Unknown Composer';
+/// Unknown Tag Fields
+class UnknownTags {
+  static const TITLE = '';
+  static const ALBUM = 'Unknown Album';
+  static const ALBUMARTIST = '';
+  static const ARTIST = 'Unknown Artist';
+  static const GENRE = 'Unknown Genre';
+  static const COMPOSER = 'Unknown Composer';
+}
 
 int get currentTimeMS => DateTime.now().millisecondsSinceEpoch;
 

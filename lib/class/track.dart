@@ -283,12 +283,12 @@ class TrackExtended {
 
 extension TrackExtUtils on TrackExtended {
   Track toTrack() => Track(path);
-  bool get hasUnknownTitle => title == k_UNKNOWN_TRACK_TITLE;
-  bool get hasUnknownAlbum => album == '' || album == k_UNKNOWN_TRACK_ALBUM;
-  bool get hasUnknownAlbumArtist => albumArtist == '' || albumArtist == k_UNKNOWN_TRACK_ALBUMARTIST;
-  bool get hasUnknownComposer => composer == '' || composer == k_UNKNOWN_TRACK_COMPOSER;
-  bool get hasUnknownArtist => artistsList.isEmpty || artistsList.firstOrNull == k_UNKNOWN_TRACK_ARTIST;
-  bool get hasUnknownGenre => genresList.isEmpty || genresList.firstOrNull == k_UNKNOWN_TRACK_GENRE;
+  bool get hasUnknownTitle => title == UnknownTags.TITLE;
+  bool get hasUnknownAlbum => album == '' || album == UnknownTags.ALBUM;
+  bool get hasUnknownAlbumArtist => albumArtist == '' || albumArtist == UnknownTags.ALBUMARTIST;
+  bool get hasUnknownComposer => composer == '' || composer == UnknownTags.COMPOSER;
+  bool get hasUnknownArtist => artistsList.isEmpty || artistsList.firstOrNull == UnknownTags.ARTIST;
+  bool get hasUnknownGenre => genresList.isEmpty || genresList.firstOrNull == UnknownTags.GENRE;
 
   String get filename => path.getFilename;
   String get filenameWOExt => path.getFilenameWOExt;
