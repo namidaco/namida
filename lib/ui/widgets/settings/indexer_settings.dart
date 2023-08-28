@@ -108,7 +108,7 @@ class IndexerSettings extends StatelessWidget {
                     () => StatsContainer(
                       icon: Broken.image,
                       title: '${Language.inst.ARTWORKS} :',
-                      value: Indexer.inst.artworksInStorage.value.toString(),
+                      value: Indexer.inst.artworksInStorage.value.formatDecimal(),
                       total: Indexer.inst.allAudioFiles.isEmpty ? null : Indexer.inst.allAudioFiles.length.formatDecimal(),
                     ),
                   ),

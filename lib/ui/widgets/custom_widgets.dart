@@ -260,9 +260,7 @@ class CustomListTile extends StatelessWidget {
         ),
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
-        minVerticalPadding: 16.0,
-        horizontalTitleGap: 16.0,
-        visualDensity: const VisualDensity(horizontal: -1.0, vertical: -1.0),
+        minVerticalPadding: 8.0,
         leading: icon != null
             ? SizedBox(
                 height: double.infinity,
