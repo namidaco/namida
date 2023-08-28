@@ -219,6 +219,7 @@ class Indexer {
     bool deleteOldArtwork = false,
     bool checkForDuplicates = true,
     bool tryExtractingFromFilename = true,
+    bool extractColor = false,
   }) async {
     // -- returns null early depending on size [byte] or duration [seconds]
     final fileStat = await File(trackPath).stat();
@@ -322,7 +323,7 @@ class Indexer {
       }
       // ------------------------------------------------------------
 
-      extractOneArtwork(trackPath, bytes: trackInfo.firstArtwork, forceReExtract: deleteOldArtwork);
+      extractOneArtwork(trackPath, bytes: trackInfo.firstArtwork, forceReExtract: deleteOldArtwork, extractColor: extractColor);
     } else {
       // --- Adding dummy track with info extracted from filename.
       final titleAndArtist = getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
@@ -333,7 +334,7 @@ class Indexer {
         originalArtist: artist,
         artistsList: [artist],
       );
-      extractOneArtwork(trackPath, forceReExtract: deleteOldArtwork);
+      extractOneArtwork(trackPath, forceReExtract: deleteOldArtwork, extractColor: extractColor);
     }
 
     final tr = finalTrackExtended.toTrack();
@@ -361,21 +362,33 @@ class Indexer {
     String pathOfAudio, {
     Uint8List? bytes,
     bool forceReExtract = false,
+    bool extractColor = false,
     String? artworkPath,
   }) async {
+    Future<void> extractColorPlsss(File imageFile) async {
+      if (extractColor) {
+        final tr = Track(pathOfAudio);
+        await CurrentColor.inst.reExtractTrackColorPalette(track: tr, newNC: null, imagePath: imageFile.path);
+      }
+    }
+
     final fileOfFull = File("${AppDirs.ARTWORKS}${pathOfAudio.getFilename}.png");
 
     if (artworkPath != null) {
+      await updateImageSizeInStorage(oldDeletedFile: fileOfFull); // removing old file stats
       final newFile = await File(artworkPath).copy(fileOfFull.path);
+      updateImageSizeInStorage(newImagePath: artworkPath); // adding new file stats
+      extractColorPlsss(File(artworkPath));
       return newFile;
     }
 
     if (!forceReExtract && await fileOfFull.existsAndValid()) {
+      extractColorPlsss(fileOfFull);
       return fileOfFull;
     }
 
     if (forceReExtract) {
-      await fileOfFull.tryDeleting();
+      await fileOfFull.deleteIfExists();
     }
 
     final art = bytes ?? await faudiotagger.readArtwork(path: pathOfAudio);
@@ -383,8 +396,10 @@ class Indexer {
     if (art != null) {
       try {
         final imgFile = await fileOfFull.create(recursive: true);
+        await updateImageSizeInStorage(oldDeletedFile: fileOfFull); // removing old file stats
         await imgFile.writeAsBytes(art);
-        updateImageSizeInStorage(imgFile);
+        updateImageSizeInStorage(newImagePath: imgFile.path); // adding new file stats
+        extractColorPlsss(imgFile);
         return imgFile;
       } catch (e) {
         printy(e, isError: true);
@@ -422,7 +437,11 @@ class Indexer {
       if (tracksExisting[track] == false) {
         onProgress(false);
       } else {
-        final tr = await extractOneTrack(trackPath: track.path, tryExtractingFromFilename: tryExtractingFromFilename);
+        final tr = await extractOneTrack(
+          trackPath: track.path,
+          tryExtractingFromFilename: tryExtractingFromFilename,
+          extractColor: true,
+        );
         onProgress(tr != null);
       }
     });
@@ -874,39 +893,40 @@ class Indexer {
     return allAvailableDirectories;
   }
 
-  Future<void> updateImageSizeInStorage([File? newImgFile, bool decreaseStats = false]) async {
-    if (newImgFile != null) {
-      final size = await newImgFile.stat().then((value) => value.size);
-      if (decreaseStats) {
+  Future<void> updateImageSizeInStorage({String? newImagePath, File? oldDeletedFile}) async {
+    if (newImagePath != null || oldDeletedFile != null) {
+      if (oldDeletedFile != null) {
         artworksInStorage.value--;
-        artworksSizeInStorage.value -= size;
-      } else {
+        artworksSizeInStorage.value -= await oldDeletedFile.sizeInBytes();
+      }
+      if (newImagePath != null) {
         artworksInStorage.value++;
-        artworksSizeInStorage.value += size;
+        artworksSizeInStorage.value += await File(newImagePath).sizeInBytes();
       }
 
       return;
     }
+
     await _updateDirectoryStats(AppDirs.ARTWORKS, artworksInStorage, artworksSizeInStorage);
   }
 
-  Future<void> updateColorPalettesSizeInStorage([File? newPaletteFile]) async {
-    if (newPaletteFile != null) {
+  Future<void> updateColorPalettesSizeInStorage({String? newPalettePath}) async {
+    if (newPalettePath != null) {
       colorPalettesInStorage.value++;
       return;
     }
     await _updateDirectoryStats(AppDirs.PALETTES, colorPalettesInStorage, null);
   }
 
-  Future<void> updateVideosSizeInStorage([File? newVideoFile, bool decreaseStats = false]) async {
-    if (newVideoFile != null) {
-      final size = await newVideoFile.stat().then((value) => value.size);
-      if (decreaseStats) {
+  Future<void> updateVideosSizeInStorage({String? newVideoPath, File? oldDeletedFile}) async {
+    if (newVideoPath != null || oldDeletedFile != null) {
+      if (oldDeletedFile != null) {
         videosInStorage.value--;
-        videosInStorage.value -= size;
-      } else {
+        videosInStorage.value -= await oldDeletedFile.sizeInBytes();
+      }
+      if (newVideoPath != null) {
         videosInStorage.value++;
-        videosInStorage.value += size;
+        videosInStorage.value += await File(newVideoPath).sizeInBytes();
       }
 
       return;

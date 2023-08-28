@@ -129,7 +129,6 @@ class CurrentColor {
 
     NamidaColor? nc = await _extractPaletteFromImage(
       track.pathToImage,
-      fallbackToPlayerStaticColor: fallbackToPlayerStaticColor,
       useIsolate: useIsolate,
     );
 
@@ -169,7 +168,6 @@ class CurrentColor {
 
   Future<NamidaColor?> _extractPaletteFromImage(
     String imagePath, {
-    bool fallbackToPlayerStaticColor = true,
     bool forceReExtract = false,
     bool useIsolate = _defaultUseIsolate,
   }) async {
@@ -194,11 +192,15 @@ class CurrentColor {
     // -- file doesnt exist or couldn't be read or [forceReExtract==true]
     try {
       final pcolors = await _extractPaletteGenerator(imagePath, useIsolate: useIsolate);
-      final nc = NamidaColor(used: null, mix: mixIntColors(pcolors), palette: pcolors.toList());
-      await paletteFile.writeAsJson(nc.toJson());
-      Indexer.inst.updateColorPalettesSizeInStorage(paletteFile);
-      printy("Color Extracted From Image");
-      return nc;
+      if (pcolors.isNotEmpty) {
+        final nc = NamidaColor(used: null, mix: mixIntColors(pcolors), palette: pcolors.toList());
+        await paletteFile.writeAsJson(nc.toJson());
+        Indexer.inst.updateColorPalettesSizeInStorage(newPalettePath: paletteFile.path);
+        printy("Color Extracted From Image");
+        return nc;
+      } else {
+        return null;
+      }
     } catch (e) {
       await File(imagePath).deleteIfExists();
       return null;
@@ -214,7 +216,7 @@ class CurrentColor {
       _updateInColorMap(track.filename, newNC);
     } else if (imagePath != null) {
       final nc = await _extractPaletteFromImage(imagePath, forceReExtract: true);
-      if (nc != null) _updateInColorMap(imagePath.getFilenameWOExt, nc);
+      _updateInColorMap(imagePath.getFilenameWOExt, nc);
     }
     if (Player.inst.nowPlayingTrack == track) {
       updatePlayerColorFromTrack(track, null);
@@ -222,6 +224,7 @@ class CurrentColor {
   }
 
   Future<Iterable<Color>> _extractPaletteGenerator(String imagePath, {bool useIsolate = _defaultUseIsolate}) async {
+    if (await File(imagePath).exists()) return [];
     const defaultTimeout = Duration(seconds: 5);
     if (!useIsolate) {
       final result = await PaletteGenerator.fromImageProvider(FileImage(File(imagePath)), filters: [], maximumColorCount: 28, timeout: defaultTimeout);
@@ -264,8 +267,8 @@ class CurrentColor {
     return result.colors.map((e) => e.value).toList();
   }
 
-  void _updateInColorMap(String filenameWoExt, NamidaColor nc) {
-    colorsMap[filenameWoExt] = nc;
+  void _updateInColorMap(String filenameWoExt, NamidaColor? nc) {
+    if (nc != null) colorsMap[filenameWoExt] = nc;
   }
 
   void _updateCurrentPaletteHalfs(NamidaColor nc) {

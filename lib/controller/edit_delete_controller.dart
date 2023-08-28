@@ -30,15 +30,15 @@ class EditDeleteController {
 
   Future<void> deleteLyrics(List<Selectable> tracks) async {
     await tracks.loopFuture((track, index) async {
-      await File("${AppDirs.LYRICS}${track.track.filename}.txt").delete();
+      await File("${AppDirs.LYRICS}${track.track.filename}.txt").deleteIfExists();
     });
   }
 
   Future<void> deleteArtwork(List<Selectable> tracks) async {
     await tracks.loopFuture((track, index) async {
       final file = File(track.track.pathToImage);
-      await Indexer.inst.updateImageSizeInStorage(file, true);
-      await file.delete();
+      await Indexer.inst.updateImageSizeInStorage(oldDeletedFile: file);
+      await file.deleteIfExists();
     });
 
     await deleteExtractedColor(tracks);
@@ -46,7 +46,7 @@ class EditDeleteController {
 
   Future<void> deleteExtractedColor(List<Selectable> tracks) async {
     await tracks.loopFuture((track, index) async {
-      await File("${AppDirs.PALETTES}${track.track.filename}.palette").delete();
+      await File("${AppDirs.PALETTES}${track.track.filename}.palette").deleteIfExists();
     });
   }
 
