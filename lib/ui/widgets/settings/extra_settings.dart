@@ -149,46 +149,42 @@ class ExtrasSettings extends StatelessWidget {
                               style: context.textTheme.displayMedium,
                             ),
                             const SizedBox(height: 12.0),
-                            SizedBox(
-                              width: Get.width,
-                              height: Get.height * 0.4,
-                              child: NamidaListView(
-                                padding: EdgeInsets.zero,
-                                itemExtents: null,
-                                itemCount: SettingsController.inst.libraryTabs.length,
-                                itemBuilder: (context, i) {
-                                  final tab = SettingsController.inst.libraryTabs[i];
-                                  return Container(
-                                    key: ValueKey(i),
-                                    margin: const EdgeInsets.all(4.0),
-                                    child: ListTileWithCheckMark(
-                                      title: "${i + 1}. ${tab.toText()}",
-                                      icon: tab.toIcon(),
-                                      onTap: () {
-                                        if (SettingsController.inst.libraryTabs.length > 3) {
-                                          SettingsController.inst.removeFromList(libraryTab1: tab);
-                                          SettingsController.inst.save(selectedLibraryTab: SettingsController.inst.libraryTabs[0]);
-                                        } else {
-                                          Get.snackbar(Language.inst.AT_LEAST_THREE_TABS, Language.inst.AT_LEAST_THREE_TABS_SUBTITLE);
-                                        }
-                                      },
-                                      active: SettingsController.inst.libraryTabs.contains(tab),
-                                    ),
-                                  );
-                                },
-                                onReorder: (oldIndex, newIndex) {
-                                  if (newIndex > oldIndex) {
-                                    newIndex -= 1;
-                                  }
-                                  final item = SettingsController.inst.libraryTabs.elementAt(oldIndex);
-                                  SettingsController.inst.removeFromList(
-                                    libraryTab1: item,
-                                  );
-                                  SettingsController.inst.insertInList(newIndex, libraryTab1: item);
-                                },
-                              ),
+                            ReorderableListView.builder(
+                              shrinkWrap: true,
+                              padding: EdgeInsets.zero,
+                              itemCount: SettingsController.inst.libraryTabs.length,
+                              itemBuilder: (context, i) {
+                                final tab = SettingsController.inst.libraryTabs[i];
+                                return Container(
+                                  key: ValueKey(i),
+                                  margin: const EdgeInsets.all(4.0),
+                                  child: ListTileWithCheckMark(
+                                    title: "${i + 1}. ${tab.toText()}",
+                                    icon: tab.toIcon(),
+                                    onTap: () {
+                                      if (SettingsController.inst.libraryTabs.length > 3) {
+                                        SettingsController.inst.removeFromList(libraryTab1: tab);
+                                        SettingsController.inst.save(selectedLibraryTab: SettingsController.inst.libraryTabs[0]);
+                                      } else {
+                                        showMinimumItemsSnack(3);
+                                      }
+                                    },
+                                    active: SettingsController.inst.libraryTabs.contains(tab),
+                                  ),
+                                );
+                              },
+                              onReorder: (oldIndex, newIndex) {
+                                if (newIndex > oldIndex) {
+                                  newIndex -= 1;
+                                }
+                                final item = SettingsController.inst.libraryTabs.elementAt(oldIndex);
+                                SettingsController.inst.removeFromList(
+                                  libraryTab1: item,
+                                );
+                                SettingsController.inst.insertInList(newIndex, libraryTab1: item);
+                              },
                             ),
-                            const NamidaContainerDivider(height: 4.0),
+                            const NamidaContainerDivider(height: 4.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
                             const SizedBox(height: 8.0),
                             ...subList.asMap().entries.map(
                                   (e) => Column(
@@ -412,7 +408,7 @@ class ExtrasSettings extends StatelessWidget {
       if (canRemove) {
         SettingsController.inst.removeFromList(trackSearchFilter1: type);
       } else {
-        Get.snackbar(Language.inst.AT_LEAST_ONE_FILTER, Language.inst.AT_LEAST_ONE_FILTER_SUBTITLE);
+        showMinimumItemsSnack(1);
       }
     } else {
       SettingsController.inst.save(trackSearchFilter: [type]);

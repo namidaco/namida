@@ -182,7 +182,9 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                         child: Obx(
                           () {
                             final tagFields = SettingsController.inst.tagFieldsToEdit;
-                            return NamidaListView(
+                            return ReorderableListView.builder(
+                              padding: const EdgeInsets.only(bottom: 24.0),
+                              itemCount: SettingsController.inst.tagFieldsToEdit.length,
                               onReorder: (oldIndex, newIndex) {
                                 if (newIndex > oldIndex) {
                                   newIndex -= 1;
@@ -202,7 +204,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                                     icon: tf.toIcon(),
                                     onTap: () {
                                       if (SettingsController.inst.tagFieldsToEdit.length <= 3) {
-                                        Get.snackbar(Language.inst.MINIMUM_ONE_FIELD, Language.inst.MINIMUM_ONE_FIELD_SUBTITLE);
+                                        showMinimumItemsSnack(3);
                                         return;
                                       }
                                       SettingsController.inst.removeFromList(tagFieldsToEdit1: tf);
@@ -211,18 +213,17 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                                   ),
                                 );
                               },
-                              itemCount: SettingsController.inst.tagFieldsToEdit.length,
-                              itemExtents: null,
                             );
                           },
                         ),
                       ),
-                      const SizedBox(height: 6.0),
+                      const SizedBox(height: 12.0),
                       Text(Language.inst.NON_ACTIVE, style: Get.textTheme.displayMedium),
                       const SizedBox(height: 6.0),
                       Expanded(
                         child: Obx(
-                          () => NamidaListView(
+                          () => ListView.builder(
+                            padding: const EdgeInsets.only(bottom: 24.0),
                             itemBuilder: (context, i) {
                               final tf = subList[i];
                               return Padding(
@@ -240,7 +241,6 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                               );
                             },
                             itemCount: subList.length,
-                            itemExtents: null,
                           ),
                         ),
                       ),

@@ -94,7 +94,7 @@ class PlaybackSettings extends StatelessWidget {
             void tileOnTap(String val, int index) {
               if (isEnabled(val)) {
                 if (SettingsController.inst.youtubeVideoQualities.length == 1) {
-                  Get.snackbar(Language.inst.MINIMUM_ONE_QUALITY, Language.inst.MINIMUM_ONE_QUALITY_SUBTITLE);
+                  showMinimumItemsSnack(1);
                 } else {
                   SettingsController.inst.removeFromList(youtubeVideoQualities1: val);
                 }

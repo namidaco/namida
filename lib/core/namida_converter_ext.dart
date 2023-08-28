@@ -674,6 +674,14 @@ extension NamidaLanguageRefresher on NamidaLanguage {
   void refreshConverterMaps() => _NamidaConverters.inst.refillMaps();
 }
 
+extension LanguageUtils on Language {
+  String getMinimumItemSubtitle([int minimum = 1]) => Language.inst.MINIMUM_ONE_ITEM_SUBTITLE.replaceFirst('_NUM_', '$minimum');
+}
+
+void showMinimumItemsSnack([int minimum = 1]) {
+  Get.snackbar(Language.inst.MINIMUM_ONE_ITEM, Language.inst.getMinimumItemSubtitle(minimum));
+}
+
 class _NamidaConverters {
   static _NamidaConverters get inst => _instance;
   static final _NamidaConverters _instance = _NamidaConverters._internal();

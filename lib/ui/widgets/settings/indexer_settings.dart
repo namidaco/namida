@@ -291,7 +291,7 @@ class IndexerSettings extends StatelessWidget {
                       onPressed: () {
                         if (SettingsController.inst.directoriesToScan.length == 1) {
                           Get.snackbar(
-                            Language.inst.MINIMUM_ONE_FOLDER,
+                            Language.inst.MINIMUM_ONE_ITEM,
                             Language.inst.MINIMUM_ONE_FOLDER_SUBTITLE,
                             duration: const Duration(seconds: 4),
                           );
