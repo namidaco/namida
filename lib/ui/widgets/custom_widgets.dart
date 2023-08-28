@@ -260,7 +260,9 @@ class CustomListTile extends StatelessWidget {
         ),
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
-        minVerticalPadding: 8.0,
+        minVerticalPadding: 16.0,
+        horizontalTitleGap: 16.0,
+        visualDensity: const VisualDensity(horizontal: -1.0, vertical: -1.0),
         leading: icon != null
             ? SizedBox(
                 height: double.infinity,
@@ -980,7 +982,7 @@ class StackedIcon extends StatelessWidget {
       children: [
         Icon(
           baseIcon,
-          color: baseIconColor,
+          color: baseIconColor ?? context.defaultIconColor(),
           size: iconSize,
         ),
         Positioned(
@@ -995,8 +997,12 @@ class StackedIcon extends StatelessWidget {
             ),
             child: smallChild ??
                 (secondaryText != null
-                    ? Text(secondaryText!, style: context.textTheme.displaySmall?.copyWith(color: context.theme.listTileTheme.iconColor))
-                    : Icon(secondaryIcon, size: 14, color: secondaryIconColor)),
+                    ? Text(secondaryText!, style: context.textTheme.displaySmall?.copyWith(color: context.defaultIconColor()))
+                    : Icon(
+                        secondaryIcon,
+                        size: 14,
+                        color: secondaryIconColor ?? context.defaultIconColor(),
+                      )),
           ),
         )
       ],

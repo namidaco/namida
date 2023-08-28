@@ -75,7 +75,7 @@ class ThemeSetting extends StatelessWidget {
                       NamidaNavigator.inst.navigateDialog(
                         dialog: Obx(
                           () => Theme(
-                            data: AppThemes.inst.getAppTheme(),
+                            data: AppThemes.inst.getAppTheme(color),
                             child: NamidaColorPickerDialog(
                               initialColor: color,
                               doneText: Language.inst.DONE,
