@@ -235,7 +235,7 @@ class CurrentColor {
   }
 
   Future<Iterable<Color>> _extractPaletteGenerator(String imagePath, {bool useIsolate = _defaultUseIsolate}) async {
-    if (await File(imagePath).exists()) return [];
+    if (!await File(imagePath).exists()) return [];
     const defaultTimeout = Duration(seconds: 5);
     if (!useIsolate) {
       final result = await PaletteGenerator.fromImageProvider(FileImage(File(imagePath)), filters: [], maximumColorCount: 28, timeout: defaultTimeout);
