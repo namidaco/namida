@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -115,6 +116,14 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
+  Timer? playErrorSkipTimer;
+  final remainingSecondsToSkip = 0.obs;
+  cancelSkipTimer() {
+    playErrorSkipTimer?.cancel();
+    playErrorSkipTimer = null;
+    remainingSecondsToSkip.value = 0;
+  }
+
   void setMoodsOrTags(List<String> initialMoods, void Function(List<String> moodsFinal) saveFunction, {bool isTags = false}) {
     TextEditingController controller = TextEditingController();
     final currentMoods = initialMoods.join(', ');
@@ -168,6 +177,7 @@ Future<void> showGeneralPopupDialog(
   void setPlaylistMoods() {
     // function button won't be visible if playlistName == null.
     if (!shoulShowPlaylistUtils()) return;
+    cancelSkipTimer();
 
     final pl = PlaylistController.inst.getPlaylist(playlistName!);
     if (pl == null) return;
@@ -189,6 +199,7 @@ Future<void> showGeneralPopupDialog(
   }
 
   void setTrackTags() {
+    cancelSkipTimer();
     setMoodsOrTags(
       stats.value.tags,
       (tagsFinal) async {
@@ -227,6 +238,7 @@ Future<void> showGeneralPopupDialog(
   void renamePlaylist() {
     // function button won't be visible if playlistName == null.
     if (!shoulShowPlaylistUtils()) return;
+    cancelSkipTimer();
 
     TextEditingController controller = TextEditingController(text: playlistName);
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -273,6 +285,7 @@ Future<void> showGeneralPopupDialog(
   Future<void> deletePlaylist() async {
     // function button won't be visible if playlistName == null.
     if (!shoulShowPlaylistUtils()) return;
+    cancelSkipTimer();
 
     NamidaNavigator.inst.closeDialog();
     final pl = PlaylistController.inst.getPlaylist(playlistName!);
@@ -448,11 +461,14 @@ Future<void> showGeneralPopupDialog(
     compact: false,
     title: Language.inst.ADVANCED,
     icon: Broken.code_circle,
-    onTap: () => showTrackAdvancedDialog(
-      tracks: tracksWithDates.isNotEmpty ? tracksWithDates : tracks,
-      colorScheme: colorDelightened,
-      source: source,
-    ),
+    onTap: () {
+      cancelSkipTimer();
+      showTrackAdvancedDialog(
+        tracks: tracksWithDates.isNotEmpty ? tracksWithDates : tracks,
+        colorScheme: colorDelightened,
+        source: source,
+      );
+    },
   );
 
   final Widget? removeFromPlaylistListTile = shoulShowRemoveFromPlaylist()
@@ -463,6 +479,7 @@ Future<void> showGeneralPopupDialog(
           subtitle: playlistName!.translatePlaylistName(),
           icon: Broken.box_remove,
           onTap: () async {
+            cancelSkipTimer();
             NamidaNavigator.inst.closeDialog();
             await NamidaOnTaps.inst.onRemoveTracksFromPlaylist(playlistName, tracksWithDates);
           },
@@ -492,6 +509,7 @@ Future<void> showGeneralPopupDialog(
           title: Language.inst.REMOVE_QUEUE,
           icon: Broken.pen_remove,
           onTap: () {
+            cancelSkipTimer();
             final oldQueue = queue;
             QueueController.inst.removeQueue(oldQueue);
             Get.snackbar(
@@ -515,6 +533,7 @@ Future<void> showGeneralPopupDialog(
     lighterDialogColor: false,
     durationInMs: 400,
     scale: 0.92,
+    onDismissing: cancelSkipTimer,
     dialogBuilder: (theme) => Dialog(
       backgroundColor: theme.dialogBackgroundColor,
       insetPadding: const EdgeInsets.symmetric(horizontal: 34.0, vertical: 24.0),
@@ -644,6 +663,7 @@ Future<void> showGeneralPopupDialog(
                           compact: true,
                           icon: Broken.document_upload,
                           onTap: () async {
+                            cancelSkipTimer();
                             NamidaNavigator.inst.closeDialog();
                             if (Indexer.inst.allAudioFiles.isEmpty) {
                               await Indexer.inst.getAudioFiles();
@@ -674,16 +694,43 @@ Future<void> showGeneralPopupDialog(
                           },
                         ),
                         if (errorPlayingTrack)
-                          SmallListTile(
-                            title: Language.inst.SKIP,
-                            color: colorDelightened,
-                            compact: true,
-                            icon: Broken.next,
-                            onTap: () async {
+                          () {
+                            void onSkip() {
                               NamidaNavigator.inst.closeDialog();
                               Player.inst.next();
-                            },
-                          ),
+                            }
+
+                            cancelSkipTimer();
+                            remainingSecondsToSkip.value = 7;
+
+                            playErrorSkipTimer = Timer.periodic(
+                              const Duration(seconds: 1),
+                              (timer) {
+                                remainingSecondsToSkip.value--;
+                                if (remainingSecondsToSkip.value <= 0) {
+                                  onSkip();
+                                  timer.cancel();
+                                }
+                              },
+                            );
+                            return Obx(
+                              () => SmallListTile(
+                                title: Language.inst.SKIP,
+                                subtitle: remainingSecondsToSkip.value <= 0 ? null : '${remainingSecondsToSkip.value} ${Language.inst.SECONDS}',
+                                color: colorDelightened,
+                                compact: true,
+                                icon: Broken.next,
+                                trailing: remainingSecondsToSkip.value <= 0
+                                    ? null
+                                    : NamidaIconButton(
+                                        icon: Broken.close_circle,
+                                        iconColor: Get.context?.defaultIconColor(colorDelightened, Get.textTheme.displayMedium?.color),
+                                        onPressed: cancelSkipTimer,
+                                      ),
+                                onTap: onSkip,
+                              ),
+                            );
+                          }()
                       ],
                       advancedStuffListTile,
                       if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,

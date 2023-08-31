@@ -662,7 +662,10 @@ extension TrackTileItemExtentExt on Iterable {
 }
 
 extension ThemeDefaultColors on BuildContext {
-  Color defaultIconColor([Color? mainColor]) => Color.alphaBlend((mainColor ?? CurrentColor.inst.color).withAlpha(100), theme.colorScheme.onBackground);
+  Color defaultIconColor([Color? mainColor, Color? secondaryColor]) => Color.alphaBlend(
+        (mainColor ?? CurrentColor.inst.color).withAlpha(120),
+        secondaryColor ?? theme.colorScheme.onBackground,
+      );
 }
 
 extension InterruptionMediaUtils on InterruptionType {

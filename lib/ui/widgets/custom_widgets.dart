@@ -672,7 +672,7 @@ class SmallListTile extends StatelessWidget {
           SizedBox(
             height: double.infinity,
             child: icon != null
-                ? Icon(icon, color: color != null ? Color.alphaBlend(color!.withAlpha(120), context.textTheme.displayMedium!.color!) : null)
+                ? Icon(icon, color: color != null ? context.defaultIconColor(color, context.textTheme.displayMedium?.color) : null)
                 : active
                     ? const Icon(Broken.arrow_circle_right)
                     : const Icon(
