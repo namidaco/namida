@@ -187,6 +187,16 @@ class SettingsController {
     QueueInsertionType.algorithm: const QueueInsertion(numberOfTracks: 20, insertNext: true, sortBy: InsertionSortingType.listenCount),
   }.obs;
 
+  final homePageItems = <HomePageItems>[
+    HomePageItems.mixes,
+    HomePageItems.recentListens,
+    HomePageItems.topRecentListens,
+    HomePageItems.lostMemories,
+    HomePageItems.recentlyAdded,
+    HomePageItems.recentAlbums,
+    HomePageItems.recentArtists,
+  ].obs;
+
   bool didSupportNamida = false;
 
   Future<void> prepareSettingsFile() async {
@@ -207,7 +217,11 @@ class SettingsController {
       staticLibraryTab.value = LibraryTab.values.getEnum(json['staticLibraryTab']) ?? staticLibraryTab.value;
       autoLibraryTab.value = json['autoLibraryTab'] ?? autoLibraryTab.value;
       final libraryListFromStorage = List<String>.from(json['libraryTabs'] ?? []);
-      libraryTabs.value = libraryListFromStorage.isNotEmpty ? List<LibraryTab>.from(libraryListFromStorage.map((e) => LibraryTab.values.getEnum(e))) : libraryTabs;
+      libraryTabs.value = libraryListFromStorage.isNotEmpty ? List<LibraryTab>.from(libraryListFromStorage.map((e) => LibraryTab.values.getEnum(e))) : libraryTabs.toList();
+
+      final homePageItemsFromStorage = List<String>.from(json['homePageItems'] ?? []);
+      homePageItems.value =
+          homePageItemsFromStorage.isNotEmpty ? List<HomePageItems>.from(homePageItemsFromStorage.map((e) => HomePageItems.values.getEnum(e))) : homePageItems.toList();
 
       searchResultsPlayMode.value = json['searchResultsPlayMode'] ?? searchResultsPlayMode.value;
       borderRadiusMultiplier.value = json['borderRadiusMultiplier'] ?? borderRadiusMultiplier.value;
@@ -375,6 +389,7 @@ class SettingsController {
       'staticLibraryTab': staticLibraryTab.value.convertToString,
       'autoLibraryTab': autoLibraryTab.value,
       'libraryTabs': libraryTabs.mapped((element) => element.convertToString),
+      'homePageItems': homePageItems.mapped((element) => element.convertToString),
       'searchResultsPlayMode': searchResultsPlayMode.value,
       'borderRadiusMultiplier': borderRadiusMultiplier.value,
       'fontScaleFactor': fontScaleFactor.value,
@@ -503,6 +518,7 @@ class SettingsController {
     LibraryTab? staticLibraryTab,
     bool? autoLibraryTab,
     List<LibraryTab>? libraryTabs,
+    List<HomePageItems>? homePageItems,
     double? borderRadiusMultiplier,
     double? fontScaleFactor,
     double? trackThumbnailSizeinList,
@@ -628,6 +644,13 @@ class SettingsController {
       libraryTabs.loop((t, index) {
         if (!this.libraryTabs.contains(t)) {
           this.libraryTabs.add(t);
+        }
+      });
+    }
+    if (homePageItems != null) {
+      homePageItems.loop((t, index) {
+        if (!this.homePageItems.contains(t)) {
+          this.homePageItems.add(t);
         }
       });
     }
@@ -963,9 +986,13 @@ class SettingsController {
     LibraryTab? libraryTab1,
     String? youtubeVideoQualities1,
     TagField? tagFieldsToEdit1,
+    HomePageItems? homePageItem1,
   }) {
     if (libraryTab1 != null) {
       libraryTabs.insert(index, libraryTab1);
+    }
+    if (homePageItem1 != null) {
+      homePageItems.insert(index, homePageItem1);
     }
     if (youtubeVideoQualities1 != null) {
       youtubeVideoQualities.insertSafe(index, youtubeVideoQualities1);
@@ -991,6 +1018,8 @@ class SettingsController {
     List<String>? directoriesToExcludeAll,
     LibraryTab? libraryTab1,
     List<LibraryTab>? libraryTabsAll,
+    HomePageItems? homePageItem1,
+    List<HomePageItems>? homePageItemsAll,
     String? backupItemslist1,
     List<String>? backupItemslistAll,
     String? youtubeVideoQualities1,
@@ -1048,6 +1077,14 @@ class SettingsController {
     if (libraryTabsAll != null) {
       libraryTabsAll.loop((t, index) {
         libraryTabs.remove(t);
+      });
+    }
+    if (homePageItem1 != null) {
+      homePageItems.remove(homePageItem1);
+    }
+    if (homePageItemsAll != null) {
+      homePageItemsAll.loop((t, index) {
+        homePageItems.remove(t);
       });
     }
     if (backupItemslist1 != null) {

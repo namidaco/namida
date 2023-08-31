@@ -27,7 +27,7 @@ dependency_overrides:
   dart_extensions:
     git:
       url: https://github.com/MSOB7YY/dart_extensions
-      ref: 347828d5b1b5a62e252fe9c94b47722ffd716e7d
+      ref: f4d8e0090e584bb870f1468f7cd06d8367296277
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -64,6 +64,8 @@ dependencies:
   catcher:
     git:
       url: https://github.com/MSOB7YY/catcher
+  flutter_animate: ^4.2.0+1
+  jiffy: ^6.2.1
 
   queue_manager:
     git:
@@ -111,6 +113,7 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/known_extents_listview_fancy
       ref: 95d9e56403b03f2f176bdceb269119d11cf7a4ef
+  flutter_animate: ^4.2.0+1
 
   # ---- UI Widgets ----
   wheel_slider: ^1.0.1

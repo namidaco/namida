@@ -36,6 +36,9 @@ class ArtworkWidget extends StatefulWidget {
   final Widget? child;
   final List<Widget> onTopWidgets;
   final List<BoxShadow>? boxShadow;
+  final bool forceEnableGlow;
+  final bool displayIcon;
+
   const ArtworkWidget({
     super.key,
     this.bytes,
@@ -58,6 +61,8 @@ class ArtworkWidget extends StatefulWidget {
     this.boxShadow,
     this.onTopWidgets = const <Widget>[],
     this.path,
+    this.forceEnableGlow = false,
+    this.displayIcon = true,
   });
 
   @override
@@ -107,9 +112,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
     super.initState();
   }
 
-  void fillWidgets() {
-    _lastPath = widget.path;
-
+  void fillStockWidget() {
     _stockWidget = Container(
       width: widget.width ?? widget.thumbnailSize,
       height: widget.height ?? widget.thumbnailSize,
@@ -121,14 +124,20 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Icon(
-            Broken.musicnote,
-            size: widget.iconSize ?? widget.thumbnailSize / 2,
-          ),
+          if (widget.displayIcon)
+            Icon(
+              Broken.musicnote,
+              size: widget.iconSize ?? widget.thumbnailSize / 2,
+            ),
           ...widget.onTopWidgets,
         ],
       ),
     );
+  }
+
+  void fillWidgets() {
+    _lastPath = widget.path;
+
     if (widget.forceDummyArtwork) return;
     if (widget.path == null && widget.bytes == null) return;
 
@@ -181,7 +190,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
     _lastCardColor = context.theme.cardColor;
     _lastBorderRadius = widget.borderRadius;
     final finalWidget = widget.child ?? _extImageChild ?? _stockWidget;
-    _finalWidget = SettingsController.inst.enableGlowEffect.value && widget.blur != 0.0
+    _finalWidget = widget.forceEnableGlow || (SettingsController.inst.enableGlowEffect.value && widget.blur != 0.0)
         ? SizedBox(
             width: widget.staggered ? null : widget.width ?? widget.thumbnailSize * widget.scale,
             height: widget.staggered ? null : widget.height ?? widget.thumbnailSize * widget.scale,
@@ -227,10 +236,12 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (_finalWidget == null || _lastPath != widget.path) {
+    if (_finalWidget == null || _lastPath != widget.path || _lastCardColor != context.theme.cardColor) {
+      fillStockWidget();
       fillWidgets();
       rebuildSpecs();
-    } else if (_lastBorderRadius != widget.borderRadius || _lastCardColor != context.theme.cardColor) {
+    } else if (_lastBorderRadius != widget.borderRadius) {
+      fillStockWidget();
       rebuildSpecs();
     }
     return _finalWidget ?? _stockWidget;

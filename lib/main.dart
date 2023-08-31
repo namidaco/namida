@@ -30,7 +30,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:namida/main_page.dart';
+import 'package:namida/main_page_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -87,7 +87,6 @@ void main() async {
   VideoController.inst.initialize();
   await PlaylistController.inst.prepareDefaultPlaylistsFile();
   await QueueController.inst.prepareLatestQueue();
-  CurrentColor.inst.generateAllColorPalettes();
 
   await _initializeIntenties();
 
@@ -98,6 +97,7 @@ void main() async {
 
   _initializeCatcher(() => runApp(const Namida()));
 
+  CurrentColor.inst.generateAllColorPalettes();
   Folders.inst.onFirstLoad();
 }
 

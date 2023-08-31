@@ -314,6 +314,8 @@ extension WidgetsUtils on Widget {
       allCurves: allCurves,
     );
   }
+
+  Widget toSliver() => SliverToBoxAdapter(child: this);
 }
 
 extension CloseDialogIfTrue on bool {

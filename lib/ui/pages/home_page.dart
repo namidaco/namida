@@ -1,0 +1,1185 @@
+// ignore_for_file: unused_element
+
+import 'package:flutter/material.dart';
+
+import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:get/get.dart';
+import 'package:jiffy/jiffy.dart';
+
+import 'package:namida/class/date_range.dart';
+import 'package:namida/class/track.dart';
+import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/generators_controller.dart';
+import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/translations/language.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/widgets/artwork.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/library/album_card.dart';
+import 'package:namida/ui/widgets/library/artist_card.dart';
+import 'package:namida/ui/widgets/library/track_tile.dart';
+
+extension _ListUtilsHomePage<E> on List<E> {
+  void addAllIfEmpty(Iterable<E> iterable) {
+    if (isEmpty) addAll(iterable);
+  }
+}
+
+extension _MapUtilsHomePage<K, V> on Map<K, V> {
+  void addAllIfEmpty(Map<K, V> other) {
+    if (isEmpty) addAll(other);
+  }
+}
+
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
+  final _shimmerList = List.filled(20, null);
+  bool _isLoading = true;
+
+  final _recentlyAddedFull = <Track>[];
+  final _recentlyAdded = <Track>[];
+  final _randomTracks = <Track>[];
+  final _recentListened = <TrackWithDate>[];
+  final _topRecentListened = <MapEntry<Track, List<int>>>[];
+  final _sameTimeYearAgo = <MapEntry<Track, List<int>>>[];
+
+  final _recentAlbums = <String>[];
+  final _recentArtists = <String>[];
+  final _topRecentAlbums = <String, int>{};
+  final _topRecentArtists = <String, int>{};
+
+  final _mixes = <String, List<Track>>{};
+
+  int currentYearLostMemories = 0;
+
+  @override
+  void initState() {
+    _fillLists();
+    super.initState();
+  }
+
+  void _fillLists() async {
+    await HistoryController.inst.waitForHistoryAndMostPlayedLoad;
+    final timeNow = DateTime.now();
+
+    // -- Recently Added --
+    final alltracks = List<Track>.from(allTracksInLibrary);
+
+    alltracks.sortByReverseAlt((e) => e.dateModified, (e) => e.dateAdded);
+    _recentlyAddedFull.addAll(alltracks);
+    _recentlyAdded.addAll(alltracks.take(40));
+
+    // -- Recent Listens --
+    _recentListened.addAllIfEmpty(NamidaGenerator.inst.generateTracksFromHistoryDates(DateTime(timeNow.year, timeNow.month, timeNow.day - 3), timeNow).take(40));
+
+    // -- Top Recents --
+    _topRecentListened.addAllIfEmpty(
+      HistoryController.inst.getMostListensInTimeRange(
+        mptr: MostPlayedTimeRange.day3,
+        isStartOfDay: false,
+      ),
+    );
+
+    // -- Lost Memories --
+    final oldestYear = HistoryController.inst.oldestTrack?.dateAdded.milliSecondsSinceEpoch?.year;
+    final minusYearClamped = (timeNow.year - 1).withMinimum(oldestYear ?? 0);
+    _updateSameTimeNYearsAgo(timeNow, minusYearClamped);
+
+    // -- Recent Albums --
+    _recentAlbums.addAllIfEmpty(_recentListened.mappedUniqued((e) => e.track.album).take(25));
+
+    // -- Recent Artists --
+    _recentArtists.addAllIfEmpty(_recentListened.mappedUniquedList((e) => e.track.artistsList).take(25));
+
+    _topRecentListened.loop((e, _) {
+      // -- Top Recent Albums --
+      _topRecentAlbums.update(e.key.album, (value) => value + 1, ifAbsent: () => 1);
+
+      // -- Top Recent Artists --
+      e.key.artistsList.loop((e, _) => _topRecentArtists.update(e, (value) => value + 1, ifAbsent: () => 1));
+    });
+    _topRecentAlbums.sortByReverse((e) => e.value);
+    _topRecentArtists.sortByReverse((e) => e.value);
+
+    // ==== Mixes ====
+    // -- Random --
+    _randomTracks.addAllIfEmpty(NamidaGenerator.inst.getRandomTracks(24, 25));
+
+    // -- favs --
+    final favs = List<TrackWithDate>.from(PlaylistController.inst.favouritesPlaylist.value.tracks);
+    favs.shuffle();
+
+    // -- supermacy
+    final ct = Player.inst.nowPlayingTrack;
+    final maxCount = SettingsController.inst.queueInsertion[QueueInsertionType.algorithm]?.numberOfTracks ?? 25;
+    final sameAsCurrent = NamidaGenerator.inst.generateRecommendedTrack(ct).take(maxCount);
+
+    _mixes.addAllIfEmpty({
+      Language.inst.TOP_RECENTS: _topRecentListened.map((e) => e.key).toList(),
+      if (sameAsCurrent.isNotEmpty) '"${ct.title}" ${Language.inst.SUPREMACY}': [ct, ...sameAsCurrent],
+      Language.inst.FAVOURITES: favs.take(25).tracks.toList(),
+      Language.inst.RANDOM_PICKS: _randomTracks,
+    });
+
+    _isLoading = false;
+
+    setState(() {});
+  }
+
+  void _updateSameTimeNYearsAgo(DateTime timeNow, int year) {
+    _sameTimeYearAgo
+      ..clear()
+      ..addAll(
+        HistoryController.inst.getMostListensInTimeRange(
+          mptr: MostPlayedTimeRange.custom,
+          customDate: DateRange(
+            oldest: DateTime(year, timeNow.month, timeNow.day - 3),
+            newest: DateTime(year, timeNow.month, timeNow.day + 3),
+          ),
+          isStartOfDay: false,
+        ),
+      );
+    currentYearLostMemories = year;
+  }
+
+  List<E?> _listOrShimmer<E>(List<E> listy) {
+    return _isLoading ? _shimmerList : listy;
+  }
+
+  Widget _getTracksList({
+    required String title,
+    String? subtitle,
+    Widget? thirdWidget,
+    required IconData icon,
+    required List<Selectable> listy,
+    List<MapEntry<Track, List<int>>>? listWithListens,
+    void Function()? onTap,
+    Widget? leading,
+    String? Function(Selectable? track)? topRightText,
+  }) {
+    final finalList = _listOrShimmer(listy);
+    final finalListWithListens = listWithListens == null ? null : _listOrShimmer(listWithListens);
+    final tracksWithListensQueue = listWithListens?.map((e) => e.key);
+    return SliverToBoxAdapter(
+      child: _HorizontalList(
+        title: title,
+        icon: icon,
+        leading: leading,
+        height: 150.0 + 12.0,
+        itemCount: finalListWithListens?.length ?? finalList.length,
+        itemExtent: 98.0 + 8.0,
+        onTap: onTap,
+        subtitle: subtitle,
+        thirdWidget: thirdWidget,
+        itemBuilder: (context, index) {
+          if (finalListWithListens != null) {
+            final twl = finalListWithListens[index];
+            return _TrackCard(
+              title: title,
+              index: index,
+              queue: tracksWithListensQueue ?? <Track>[],
+              width: 98.0,
+              track: twl?.key,
+              listens: twl?.value,
+              topRightText: topRightText == null ? null : topRightText(twl?.key),
+            );
+          } else {
+            final tr = finalList[index];
+            return _TrackCard(
+              title: title,
+              index: index,
+              queue: finalList.whereType<Selectable>(),
+              width: 98.0,
+              track: tr?.track,
+              topRightText: topRightText == null ? null : topRightText(tr),
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _getAlbumsList({
+    required String title,
+    required IconData mainIcon,
+    required int itemCount,
+    required String? Function(int index) album,
+    required int Function(String? album)? listens,
+  }) {
+    final albumDimensions = Dimensions.inst.getAlbumCardDimensions(4);
+    return SliverToBoxAdapter(
+      child: _HorizontalList(
+        title: title,
+        leading: StackedIcon(
+          baseIcon: mainIcon,
+          secondaryIcon: Broken.music_dashboard,
+        ),
+        height: 150.0 + 12.0,
+        itemCount: itemCount,
+        itemExtent: 98.0,
+        itemBuilder: (context, index) {
+          final a = album(index);
+          return ShimmerWrapper(
+            shimmerEnabled: _isLoading,
+            child: AlbumCard(
+              displayIcon: !_isLoading,
+              compact: true,
+              name: a ?? '',
+              album: a?.getAlbumTracks() ?? [],
+              staggered: false,
+              dimensions: albumDimensions,
+              topRightText: listens == null ? null : "${listens(a)}",
+              additionalHeroTag: title,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _getArtistList({
+    required String title,
+    required IconData mainIcon,
+    required int itemCount,
+    required String? Function(int index) artist,
+    required int Function(String? artist)? listens,
+  }) {
+    final artistDimensions = Dimensions.inst.getArtistCardDimensions(5);
+    return SliverToBoxAdapter(
+      child: _HorizontalList(
+        title: title,
+        leading: StackedIcon(
+          baseIcon: mainIcon,
+          secondaryIcon: Broken.user,
+        ),
+        height: 124.0,
+        itemCount: itemCount,
+        itemExtent: 86.0,
+        itemBuilder: (context, index) {
+          final a = artist(index);
+          return ShimmerWrapper(
+            shimmerEnabled: _isLoading,
+            child: ArtistCard(
+              displayIcon: !_isLoading,
+              name: a ?? '',
+              artist: a?.getArtistTracks() ?? [],
+              dimensions: artistDimensions,
+              bottomCenterText: listens == null ? null : "${listens(a)}",
+              additionalHeroTag: title,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void showReorderHomeItemsDialog() {
+    String itemToText(HomePageItems item) {
+      switch (item) {
+        case HomePageItems.mixes:
+          return Language.inst.MIXES;
+        case HomePageItems.recentListens:
+          return Language.inst.RECENT_LISTENS;
+        case HomePageItems.topRecentListens:
+          return Language.inst.TOP_RECENTS;
+        case HomePageItems.lostMemories:
+          return Language.inst.LOST_MEMORIES;
+        case HomePageItems.recentlyAdded:
+          return Language.inst.RECENTLY_ADDED;
+        case HomePageItems.recentAlbums:
+          return Language.inst.RECENT_ALBUMS;
+        case HomePageItems.recentArtists:
+          return Language.inst.RECENT_ARTISTS;
+        case HomePageItems.topRecentAlbums:
+          return Language.inst.TOP_RECENT_ALBUMS;
+        case HomePageItems.topRecentArtists:
+          return Language.inst.TOP_RECENT_ARTISTS;
+        default:
+          return '';
+      }
+    }
+
+    final subList = <HomePageItems>[].obs;
+    HomePageItems.values.loop((e, index) {
+      if (!SettingsController.inst.homePageItems.contains(e)) {
+        subList.add(e);
+      }
+    });
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: Language.inst.CONFIGURE,
+        actions: [
+          NamidaButton(
+            text: Language.inst.DONE,
+            onPressed: NamidaNavigator.inst.closeDialog,
+          ),
+        ],
+        child: SizedBox(
+          width: Get.width,
+          height: Get.height * 0.5,
+          child: Obx(
+            () => Column(
+              children: [
+                Expanded(
+                  child: ReorderableListView.builder(
+                    itemCount: SettingsController.inst.homePageItems.length,
+                    proxyDecorator: (child, index, animation) => child,
+                    itemBuilder: (context, index) {
+                      final item = SettingsController.inst.homePageItems[index];
+                      return Material(
+                        key: ValueKey(index),
+                        type: MaterialType.transparency,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: ListTileWithCheckMark(
+                            active: true,
+                            icon: Broken.recovery_convert,
+                            title: itemToText(item),
+                            onTap: () {
+                              if (SettingsController.inst.homePageItems.length <= 3) {
+                                showMinimumItemsSnack(3);
+                                return;
+                              }
+                              subList.add(item);
+                              SettingsController.inst.removeFromList(homePageItem1: item);
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                    onReorder: (oldIndex, newIndex) {
+                      if (newIndex > oldIndex) newIndex -= 1;
+
+                      final item = SettingsController.inst.homePageItems.elementAt(oldIndex);
+                      SettingsController.inst.removeFromList(homePageItem1: item);
+                      SettingsController.inst.insertInList(newIndex, homePageItem1: item);
+                    },
+                  ),
+                ),
+                const NamidaContainerDivider(height: 4.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
+                ...subList.map(
+                  (item) => Material(
+                    type: MaterialType.transparency,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: ListTileWithCheckMark(
+                        active: false,
+                        icon: Broken.recovery_convert,
+                        title: itemToText(item),
+                        onTap: () {
+                          SettingsController.inst.save(homePageItems: [item]);
+                          subList.remove(item);
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToRecentlyListened() {
+    if (_recentlyAddedFull.isNotEmpty) {
+      NamidaNavigator.inst.navigateTo(
+        RecentlyAddedTracksPage(tracksSorted: _recentlyAddedFull),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BackgroundWrapper(
+      child: CupertinoScrollbar(
+        child: AnimationLimiter(
+          child: Obx(
+            () => CustomScrollView(
+              slivers: [
+                const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
+                SliverPadding(
+                  padding: const EdgeInsets.all(24.0),
+                  sliver: SliverToBoxAdapter(
+                    child: Row(
+                      children: [
+                        Text(
+                          'Namida',
+                          style: context.textTheme.displayLarge?.copyWith(fontSize: 32.0.multipliedFontScale),
+                        ),
+                        const Spacer(),
+                        NamidaIconButton(
+                          icon: Broken.setting_4,
+                          onPressed: showReorderHomeItemsDialog,
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                ...SettingsController.inst.homePageItems.map(
+                  (element) {
+                    switch (element) {
+                      case HomePageItems.mixes:
+                        return SliverToBoxAdapter(
+                          child: _HorizontalList(
+                            title: Language.inst.MIXES,
+                            icon: Broken.scanning,
+                            height: 186.0 + 12.0,
+                            itemCount: _isLoading ? _shimmerList.length : _mixes.length,
+                            itemExtent: 240.0,
+                            itemBuilder: (context, index) {
+                              final entry = _isLoading ? null : _mixes.entries.elementAt(index);
+                              return _MixesCard(
+                                title: entry?.key ?? '',
+                                width: 240.0,
+                                height: 186.0 + 12.0,
+                                index: index,
+                                displayShimmer: _isLoading,
+                                tracks: entry?.value ?? [],
+                              );
+                            },
+                          ),
+                        );
+
+                      case HomePageItems.recentListens:
+                        return _getTracksList(
+                          title: Language.inst.RECENT_LISTENS,
+                          icon: Broken.command_square,
+                          listy: _recentListened,
+                          onTap: NamidaOnTaps.inst.onHistoryPlaylistTap,
+                        );
+
+                      case HomePageItems.topRecentListens:
+                        return _getTracksList(
+                          title: Language.inst.TOP_RECENTS,
+                          icon: Broken.crown_1,
+                          listy: [],
+                          listWithListens: _topRecentListened,
+                          onTap: NamidaOnTaps.inst.onMostPlayedPlaylistTap,
+                        );
+
+                      case HomePageItems.lostMemories:
+                        return _getTracksList(
+                          title: Language.inst.LOST_MEMORIES,
+                          subtitle: () {
+                            final diff = DateTime.now().year - currentYearLostMemories;
+                            return Language.inst.LOST_MEMORIES_SUBTITLE.replaceFirst('_NUM_', '$diff');
+                          }(),
+                          icon: Broken.link_21,
+                          listy: [],
+                          listWithListens: _sameTimeYearAgo,
+                          onTap: NamidaOnTaps.inst.onMostPlayedPlaylistTap,
+                          thirdWidget: SizedBox(
+                            height: 32.0,
+                            width: context.width,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 4.0),
+                                child: Row(
+                                  children: [
+                                    ...() {
+                                      final oldest = DateTime.fromMillisecondsSinceEpoch(HistoryController.inst.oldestTrack?.dateAdded ?? 0);
+                                      final newest = DateTime.fromMillisecondsSinceEpoch(HistoryController.inst.newestTrack?.dateAdded ?? 0);
+
+                                      final years = <int>[];
+                                      final diff = (newest.year - oldest.year).abs();
+                                      for (int i = 1; i <= diff; i++) {
+                                        years.add(newest.year - i);
+                                      }
+                                      return years.map(
+                                        (e) => Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              _updateSameTimeNYearsAgo(DateTime.now(), e);
+                                              setState(() {});
+                                            },
+                                            child: AnimatedContainer(
+                                              duration: const Duration(milliseconds: 250),
+                                              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                              decoration: BoxDecoration(
+                                                color: currentYearLostMemories == e ? CurrentColor.inst.currentColorScheme.withAlpha(160) : context.theme.cardColor,
+                                                borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                                              ),
+                                              child: Text(
+                                                '$e',
+                                                style: context.textTheme.displaySmall?.copyWith(
+                                                  color: currentYearLostMemories == e ? Colors.white.withAlpha(240) : null,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }()
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+
+                      case HomePageItems.recentlyAdded:
+                        return _getTracksList(
+                          title: Language.inst.RECENTLY_ADDED,
+                          icon: Broken.back_square,
+                          listy: _recentlyAdded,
+                          onTap: _navigateToRecentlyListened,
+                          topRightText: (track) {
+                            if (track == null) return null;
+                            return Jiffy.parseFromMillisecondsSinceEpoch(track.track.dateModified).fromNow(
+                              withPrefixAndSuffix: false,
+                            );
+                          },
+                        );
+
+                      case HomePageItems.recentAlbums:
+                        return _getAlbumsList(
+                          title: Language.inst.RECENT_ALBUMS,
+                          mainIcon: Broken.undo,
+                          itemCount: _listOrShimmer(_recentAlbums).length,
+                          album: (index) => _listOrShimmer(_recentAlbums)[index],
+                          listens: null,
+                        );
+
+                      case HomePageItems.topRecentAlbums:
+                        final keys = _topRecentAlbums.keys.toList();
+                        return _getAlbumsList(
+                          title: Language.inst.TOP_RECENT_ALBUMS,
+                          mainIcon: Broken.crown_1,
+                          itemCount: _listOrShimmer(keys).length,
+                          album: (index) => _listOrShimmer(keys)[index],
+                          listens: (album) => _topRecentAlbums[album] ?? 0,
+                        );
+
+                      case HomePageItems.recentArtists:
+                        return _getArtistList(
+                          title: Language.inst.RECENT_ARTISTS,
+                          mainIcon: Broken.undo,
+                          itemCount: _listOrShimmer(_recentArtists).length,
+                          artist: (index) => _listOrShimmer(_recentArtists)[index],
+                          listens: null,
+                        );
+
+                      case HomePageItems.topRecentArtists:
+                        final keys = _topRecentArtists.keys.toList();
+                        return _getArtistList(
+                          title: Language.inst.TOP_RECENT_ARTISTS,
+                          mainIcon: Broken.crown_1,
+                          itemCount: _listOrShimmer(keys).length,
+                          artist: (index) => _listOrShimmer(keys)[index],
+                          listens: (artist) => _topRecentArtists[artist] ?? 0,
+                        );
+
+                      default:
+                        return const SliverPadding(padding: EdgeInsets.zero);
+                    }
+                  },
+                ).addSeparators(
+                  skipFirst: 1,
+                  separator: const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
+                ),
+                const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HorizontalList extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final IconData? icon;
+  final double height;
+  final int? itemCount;
+  final double? itemExtent;
+  final void Function()? onTap;
+  final Widget? trailing;
+  final Widget? thirdWidget;
+  final Widget? leading;
+  final NullableIndexedWidgetBuilder itemBuilder;
+  final Color? iconColor;
+
+  const _HorizontalList({
+    required this.title,
+    this.subtitle,
+    this.icon,
+    required this.itemCount,
+    required this.itemExtent,
+    required this.itemBuilder,
+    this.height = 400,
+    this.onTap,
+    this.trailing,
+    this.thirdWidget,
+    this.leading,
+    this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        NamidaInkWell(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          onTap: onTap,
+          child: Row(
+            children: [
+              const SizedBox(width: 16.0),
+              leading ?? Icon(icon, color: iconColor ?? context.defaultIconColor()),
+              const SizedBox(width: 8.0),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: context.textTheme.displayLarge),
+                    if (subtitle != null)
+                      Text(
+                        subtitle!,
+                        style: context.textTheme.displaySmall,
+                      ),
+                    if (thirdWidget != null) thirdWidget!,
+                  ],
+                ),
+              ),
+              if (onTap != null || trailing != null) ...[
+                const SizedBox(width: 8.0),
+                trailing ?? const Icon(Broken.arrow_right_3, size: 20.0),
+                const SizedBox(width: 12.0),
+              ]
+            ],
+          ),
+        ),
+        SizedBox(
+          height: height,
+          width: context.width,
+          child: ListView.builder(
+            itemExtent: itemExtent,
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+            scrollDirection: Axis.horizontal,
+            itemCount: itemCount,
+            itemBuilder: itemBuilder,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MixesCard extends StatefulWidget {
+  final String title;
+  final double width;
+  final double height;
+  final Color? color;
+  final int index;
+  final List<Track> tracks;
+  final bool displayShimmer;
+
+  const _MixesCard({
+    required this.width,
+    required this.height,
+    required this.title,
+    this.color,
+    required this.index,
+    required this.tracks,
+    required this.displayShimmer,
+  });
+
+  @override
+  State<_MixesCard> createState() => _MixesCardState();
+}
+
+class _MixesCardState extends State<_MixesCard> {
+  Color? _cardColor;
+  Track? track;
+
+  void onMixTap(Widget thumbnailWidget) {
+    NamidaNavigator.inst.navigateDialog(
+      colorScheme: _cardColor,
+      durationInMs: 250,
+      dialogBuilder: (theme) => SafeArea(
+        child: SizedBox(
+          child: CustomScrollView(
+            slivers: [
+              const SliverPadding(padding: EdgeInsets.only(top: kToolbarHeight)),
+              // Text(
+              //   widget.title,
+              //   style: context.textTheme.displayLarge,
+              // ).toSliver(),
+              // const SliverPadding(padding: EdgeInsets.only(top: 24.0)),
+              SliverPadding(
+                padding: const EdgeInsets.all(24.0),
+                sliver: thumbnailWidget.toSliver(),
+              ),
+
+              // SliverToBoxAdapter(
+              //   child: SizedBox(height: widget.height, width: widget.width, child: thumbnailWidget),
+              // ),
+
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                sliver: SliverFillRemaining(
+                  child: Container(
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      color: context.theme.cardColor,
+                      borderRadius: BorderRadius.circular(18.0.multipliedRadius),
+                    ),
+                    child: ListView.builder(
+                      itemCount: widget.tracks.length,
+                      itemBuilder: (context, index) {
+                        final tr = widget.tracks[index];
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(
+                            color: context.theme.scaffoldBackgroundColor,
+                            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                          ),
+                          child: TrackTile(
+                            queueSource: QueueSource.others,
+                            onTap: () {
+                              Player.inst.playOrPause(
+                                index,
+                                widget.tracks,
+                                QueueSource.others,
+                              );
+                            },
+                            trackOrTwd: tr,
+                            index: index,
+                          ),
+                        );
+                      },
+                      itemExtent: Dimensions.inst.trackTileItemExtent,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _assignTrack() {
+    track ??= widget.tracks.trackOfImage;
+  }
+
+  void _extractColor() {
+    if (track != null && _cardColor == null) {
+      CurrentColor.inst.getTrackColors(track!, useIsolate: true).then((value) {
+        setState(() {
+          _cardColor = value.color;
+        });
+      });
+    }
+  }
+
+  Widget getStackedWidget({
+    required double topPadding,
+    required double horizontalPadding,
+    int alpha = 255,
+    double blur = 0.0,
+  }) {
+    return AnimatedContainer(
+      margin: EdgeInsets.only(top: topPadding),
+      duration: const Duration(milliseconds: 300),
+      width: widget.width - horizontalPadding,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        color: _cardColor?.withAlpha(alpha),
+        border: Border.all(color: context.theme.scaffoldBackgroundColor.withAlpha(alpha)),
+        borderRadius: BorderRadius.circular(10.0.multipliedRadius),
+      ),
+      child: NamidaBgBlur(
+        blur: blur,
+        child: Container(
+          color: Colors.transparent,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _assignTrack();
+    _extractColor();
+    final displayShimmer = track == null;
+    Widget artworkWidget(bool titleInside) => NamidaHero(
+          tag: 'mix_thumbnail_${widget.title}${widget.index}',
+          child: ArtworkWidget(
+            blur: 1.5,
+            borderRadius: titleInside ? 12.0 : 8.0,
+            forceSquared: true,
+            path: track?.pathToImage,
+            displayIcon: !displayShimmer,
+            thumbnailSize: widget.width,
+            onTopWidgets: [
+              if (titleInside) ...[
+                Positioned(
+                  top: 12.0,
+                  left: 0.0,
+                  child: ClipRect(
+                    child: NamidaBgBlur(
+                      blur: 2.0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: context.theme.cardColor.withAlpha(50),
+                        ),
+                        padding: const EdgeInsets.all(2.0),
+                        child: NamidaIconButton(
+                          icon: Broken.arrow_left_2,
+                          iconColor: context.theme.cardColor.withAlpha(160),
+                          onPressed: NamidaNavigator.inst.closeDialog,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  child: NamidaInkWell(
+                    borderRadius: 8.0,
+                    margin: const EdgeInsets.all(6.0),
+                    padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
+                    bgColor: context.theme.cardColor.withAlpha(240),
+                    child: Row(
+                      children: [
+                        const Icon(Broken.audio_square, size: 22.0),
+                        const SizedBox(width: 6.0),
+                        Text(
+                          widget.title,
+                          style: context.textTheme.displayLarge?.copyWith(fontSize: 15.0.multipliedFontScale),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              if (!displayShimmer)
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: NamidaInkWell(
+                    onTap: () {
+                      Player.inst.playOrPause(
+                        0,
+                        widget.tracks,
+                        QueueSource.others,
+                      );
+                    },
+                    borderRadius: 8.0,
+                    margin: const EdgeInsets.all(6.0),
+                    padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
+                    bgColor: context.theme.cardColor.withAlpha(240),
+                    child: Row(
+                      children: [
+                        Icon(Broken.play_cricle, size: titleInside ? 22.0 : 16.0),
+                        const SizedBox(width: 4.0),
+                        Text(
+                          "${widget.tracks.length}",
+                          style: (titleInside ? context.textTheme.displayLarge : context.textTheme.displaySmall)?.copyWith(fontSize: 15.0.multipliedFontScale),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+            ],
+          ),
+        );
+    final thumbnailWidget = Stack(
+      alignment: Alignment.topCenter,
+      children: [
+        getStackedWidget(
+          topPadding: 0,
+          horizontalPadding: 36.0,
+          alpha: 100,
+        ),
+        getStackedWidget(
+          topPadding: 2.5,
+          horizontalPadding: 22.0,
+          alpha: 180,
+        ),
+        getStackedWidget(
+          topPadding: 6.0,
+          horizontalPadding: 0.0,
+          alpha: 180,
+          blur: 0.4,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 6.0).add(const EdgeInsets.all(1.0)),
+          child: artworkWidget(false),
+        ),
+      ],
+    );
+
+    return NamidaInkWell(
+      onTap: () => onMixTap(artworkWidget(true)),
+      child: ShimmerWrapper(
+        shimmerEnabled: widget.displayShimmer,
+        child: AnimatedContainer(
+          width: widget.width,
+          margin: const EdgeInsets.symmetric(horizontal: 4.0),
+          duration: const Duration(milliseconds: 300),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Expanded(child: thumbnailWidget),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 4.0),
+                    Text(
+                      widget.title,
+                      style: context.textTheme.displayMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      widget.tracks.map((e) => e.title).join(', '),
+                      style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4.0),
+                  ],
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+(String, int)? _enabledTrack;
+
+class _TrackCard extends StatefulWidget {
+  final String title;
+  final double width;
+  final Color? color;
+  final Track? track;
+  final Iterable<Selectable> queue;
+  final int index;
+  final Iterable<int>? listens;
+  final String? topRightText;
+
+  const _TrackCard({
+    required this.title,
+    required this.width,
+    this.color,
+    required this.track,
+    required this.queue,
+    required this.index,
+    this.listens,
+    this.topRightText,
+  });
+
+  @override
+  State<_TrackCard> createState() => _TrackCardState();
+}
+
+class _TrackCardState extends State<_TrackCard> {
+  Color? _cardColor;
+
+  void _extractColor() {
+    if (widget.track != null && _cardColor == null) {
+      CurrentColor.inst.getTrackColors(widget.track!, useIsolate: true).then((value) {
+        setState(() {
+          _cardColor = value.color;
+        });
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _extractColor();
+    final track = widget.track;
+    final color = Color.alphaBlend((_cardColor ?? context.theme.scaffoldBackgroundColor).withAlpha(50), context.theme.cardColor);
+    final displayShimmer = track == null;
+    return ShimmerWrapper(
+      shimmerEnabled: displayShimmer,
+      child: NamidaInkWell(
+        onTap: () {
+          setState(() {
+            _enabledTrack = (widget.title, widget.index);
+          });
+          Player.inst.playOrPause(
+            widget.index,
+            widget.queue,
+            QueueSource.others,
+          );
+        },
+        onLongPress: displayShimmer
+            ? null
+            : () => NamidaDialogs.inst.showTrackDialog(
+                  track,
+                  source: QueueSource.others,
+                  index: widget.index,
+                ),
+        width: widget.width,
+        bgColor: color,
+        decoration: BoxDecoration(
+          border: _enabledTrack == (widget.title, widget.index)
+              ? Border.all(
+                  color: _cardColor ?? color,
+                  width: 1.5,
+                )
+              : null,
+          borderRadius: BorderRadius.circular(10.0.multipliedRadius),
+        ),
+        margin: const EdgeInsets.symmetric(horizontal: 4.0),
+        animationDurationMS: 200,
+        child: NamidaBgBlur(
+          blur: 20.0,
+          enabled: SettingsController.inst.enableBlurEffect.value,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!displayShimmer)
+                ArtworkWidget(
+                  blur: 0.0,
+                  forceSquared: true,
+                  path: track.pathToImage,
+                  thumbnailSize: widget.width,
+                  onTopWidgets: [
+                    if (widget.topRightText != null)
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(bottomLeft: Radius.circular(6.0.multipliedRadius)),
+                            color: context.theme.scaffoldBackgroundColor,
+                          ),
+                          child: Text(
+                            widget.topRightText!,
+                            style: context.textTheme.displaySmall?.copyWith(
+                              fontSize: 10.5.multipliedFontScale,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    if (widget.listens != null)
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 2.0),
+                          padding: const EdgeInsets.all(6.0),
+                          decoration: BoxDecoration(
+                            color: context.theme.scaffoldBackgroundColor,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            widget.listens!.length.formatDecimal(),
+                            style: context.textTheme.displaySmall,
+                          ),
+                        ),
+                      )
+                  ],
+                ),
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      track?.title ?? '',
+                      style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0.multipliedFontScale, fontWeight: FontWeight.w500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      track?.originalArtist ?? '',
+                      style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale, fontWeight: FontWeight.w400),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class RecentlyAddedTracksPage extends StatelessWidget {
+  final List<Selectable> tracksSorted;
+  const RecentlyAddedTracksPage({super.key, required this.tracksSorted});
+
+  @override
+  Widget build(BuildContext context) {
+    return BackgroundWrapper(
+      child: NamidaTracksList(
+        header: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Row(
+            children: [
+              Icon(
+                Broken.back_square,
+                color: context.defaultIconColor(),
+                size: 32.0,
+              ),
+              const SizedBox(width: 12.0),
+              Text(
+                Language.inst.RECENTLY_ADDED,
+                style: context.textTheme.displayLarge?.copyWith(fontSize: 18.0.multipliedFontScale),
+              )
+            ],
+          ),
+        ),
+        queueLength: tracksSorted.length,
+        queueSource: QueueSource.others,
+        queue: tracksSorted,
+        thirdLineText: (track) {
+          final dateMS = track.track.dateModified;
+          final ago = Jiffy.parseFromMillisecondsSinceEpoch(dateMS).fromNow(withPrefixAndSuffix: true);
+          return "${dateMS.dateAndClockFormattedOriginal} (~$ago)";
+        },
+      ),
+    );
+  }
+}

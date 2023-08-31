@@ -31,7 +31,8 @@ import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/pages/folders_page.dart';
 import 'package:namida/ui/pages/genres_page.dart';
-import 'package:namida/ui/pages/homepage.dart';
+import 'package:namida/ui/pages/home_page.dart';
+import 'package:namida/ui/pages/main_page.dart';
 import 'package:namida/ui/pages/playlists_page.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
@@ -50,7 +51,7 @@ extension LibraryTabToEnum on int {
 }
 
 extension MediaTypeUtils on MediaType {
-  LibraryTab toLibraryTab() {
+  LibraryTab? toLibraryTab() {
     switch (this) {
       case MediaType.track:
         return LibraryTab.tracks;
@@ -63,13 +64,13 @@ extension MediaTypeUtils on MediaType {
       case MediaType.folder:
         return LibraryTab.folders;
       default:
-        return LibraryTab.tracks;
+        return null;
     }
   }
 }
 
 extension LibraryTabUtils on LibraryTab {
-  MediaType toMediaType() {
+  MediaType? toMediaType() {
     switch (this) {
       case LibraryTab.tracks:
         return MediaType.track;
@@ -82,7 +83,7 @@ extension LibraryTabUtils on LibraryTab {
       case LibraryTab.folders:
         return MediaType.folder;
       default:
-        return MediaType.track;
+        return null;
     }
   }
 
@@ -124,6 +125,9 @@ extension LibraryTabUtils on LibraryTab {
         break;
       case LibraryTab.folders:
         page = const FoldersPage();
+        break;
+      case LibraryTab.home:
+        page = const HomePage();
         break;
       default:
         null;
@@ -316,6 +320,9 @@ extension WidgetsPagess on Widget {
         break;
 
       // ----- Subpages -----
+      case RecentlyAddedTracksPage:
+        route = RouteType.SUBPAGE_recentlyAddedTracks;
+        break;
       case AlbumTracksPage:
         route = RouteType.SUBPAGE_albumTracks;
         name = (this as AlbumTracksPage).name;
@@ -611,6 +618,9 @@ extension RouteUtils on NamidaRoute {
       case RouteType.PAGE_playlists:
         tab = LibraryTab.playlists;
         break;
+      case RouteType.PAGE_HOME:
+        tab = LibraryTab.home;
+        break;
       default:
         null;
     }
@@ -717,6 +727,7 @@ class _NamidaConverters {
         LibraryTab.genres: Language.inst.GENRES,
         LibraryTab.playlists: Language.inst.PLAYLISTS,
         LibraryTab.folders: Language.inst.FOLDERS,
+        LibraryTab.home: Language.inst.HOME,
       },
       SortType: {
         SortType.title: Language.inst.TITLE,
@@ -909,6 +920,7 @@ class _NamidaConverters {
         LibraryTab.genres: Broken.smileys,
         LibraryTab.playlists: Broken.music_library_2,
         LibraryTab.folders: Broken.folder,
+        LibraryTab.home: Broken.home_2,
       },
       TagField: {
         TagField.title: Broken.music,

@@ -20,6 +20,9 @@ class AlbumCard extends StatelessWidget {
   final bool staggered;
   final bool compact;
   final (double, double, double) dimensions;
+  final bool displayIcon;
+  final String? topRightText;
+  final String additionalHeroTag;
 
   const AlbumCard({
     super.key,
@@ -28,6 +31,9 @@ class AlbumCard extends StatelessWidget {
     required this.staggered,
     this.compact = false,
     required this.dimensions,
+    this.displayIcon = true,
+    this.topRightText,
+    this.additionalHeroTag = '',
   });
 
   @override
@@ -35,14 +41,15 @@ class AlbumCard extends StatelessWidget {
     // final d = Dimensions.inst.albumCardDimensions;
     final thumbnailSize = dimensions.$1;
     final fontSize = dimensions.$2.multipliedFontScale;
+    final fontSizeBigger = topRightText == null ? null : (dimensions.$2 + (topRightText != null ? 3.0 : 0.0)).multipliedFontScale;
     final sizeAlternative = dimensions.$3;
 
     final finalYear = album.year.yearFormatted;
-    final shouldDisplayTopRightDate = SettingsController.inst.albumCardTopRightDate.value && finalYear != '';
-    final shouldDisplayNormalDate = !SettingsController.inst.albumCardTopRightDate.value && finalYear != '';
+    final shouldDisplayTopRightDate = topRightText != null || (SettingsController.inst.albumCardTopRightDate.value && finalYear != '');
+    final shouldDisplayNormalDate = topRightText == null && !SettingsController.inst.albumCardTopRightDate.value && finalYear != '';
     final shouldDisplayAlbumArtist = album.albumArtist != '';
 
-    final hero = 'album_$name';
+    final hero = 'album_$name$additionalHeroTag';
 
     return GridTile(
       child: Container(
@@ -72,6 +79,7 @@ class AlbumCard extends StatelessWidget {
                   borderRadius: 10.0,
                   blur: 0,
                   iconSize: 32.0,
+                  displayIcon: displayIcon,
                   forceSquared: !staggered,
                   staggered: staggered,
                   onTopWidgets: [
@@ -81,8 +89,8 @@ class AlbumCard extends StatelessWidget {
                         right: 0,
                         child: NamidaBlurryContainer(
                           child: Text(
-                            finalYear,
-                            style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize, fontWeight: FontWeight.bold),
+                            topRightText ?? finalYear,
+                            style: context.textTheme.displaySmall?.copyWith(fontSize: fontSizeBigger ?? fontSize, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),

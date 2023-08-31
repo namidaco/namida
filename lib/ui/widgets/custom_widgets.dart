@@ -5,6 +5,7 @@ import 'package:flutter/material.dart' hide ReorderableDragStartListener;
 
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:checkmark/checkmark.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
@@ -2114,6 +2115,8 @@ class NamidaTracksList extends StatelessWidget {
   final QueueSource queueSource;
   final bool displayTrackNumber;
   final bool shouldAnimate;
+  final String Function(Selectable track)? thirdLineText;
+
   const NamidaTracksList({
     super.key,
     this.queue,
@@ -2130,6 +2133,7 @@ class NamidaTracksList extends StatelessWidget {
     required this.queueSource,
     this.displayTrackNumber = false,
     this.shouldAnimate = true,
+    this.thirdLineText,
   });
 
   @override
@@ -2157,6 +2161,7 @@ class NamidaTracksList extends StatelessWidget {
                   selectable: isTrackSelectable,
                   queueSource: queueSource,
                   displayTrackNumber: displayTrackNumber,
+                  thirdLineText: thirdLineText == null ? '' : thirdLineText!(track),
                 ),
               );
             }
@@ -2206,6 +2211,9 @@ class NamidaInkWell extends StatelessWidget {
   final BoxDecoration decoration;
   final Widget? child;
   final int animationDurationMS;
+  final EdgeInsetsGeometry? margin;
+  final double? width;
+  final double? height;
 
   /// Setting this to [true] will force the [borderRadius] to be [0.0].
   final bool transparentHighlight;
@@ -2220,6 +2228,9 @@ class NamidaInkWell extends StatelessWidget {
     this.child,
     this.transparentHighlight = false,
     this.animationDurationMS = 0,
+    this.margin,
+    this.width,
+    this.height,
   });
 
   @override
@@ -2227,6 +2238,9 @@ class NamidaInkWell extends StatelessWidget {
     final realBorderRadius = transparentHighlight ? 0.0 : borderRadius;
     final borderR = BorderRadius.circular(realBorderRadius.multipliedRadius);
     return AnimatedContainer(
+      height: height,
+      width: width,
+      margin: margin,
       duration: Duration(milliseconds: animationDurationMS),
       decoration: BoxDecoration(
         color: bgColor ?? Colors.transparent,
@@ -2438,3 +2452,36 @@ class NamidaAnimatedSwitcher extends StatelessWidget {
     );
   }
 }
+
+class ShimmerWrapper extends StatelessWidget {
+  final bool shimmerEnabled;
+  final Widget child;
+  final int fadeDurationMS;
+  final int shimmerDelayMS;
+  final int shimmerDurationMS;
+
+  const ShimmerWrapper({
+    super.key,
+    required this.shimmerEnabled,
+    required this.child,
+    this.fadeDurationMS = 600,
+    this.shimmerDelayMS = 300,
+    this.shimmerDurationMS = 600,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: fadeDurationMS.ms,
+      child: shimmerEnabled
+          ? child.animate(
+              onPlay: (controller) => controller.repeat(),
+              effects: [
+                ShimmerEffect(delay: shimmerDelayMS.ms, duration: shimmerDurationMS.ms),
+              ],
+            )
+          : child,
+    );
+  }
+}
+

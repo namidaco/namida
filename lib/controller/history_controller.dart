@@ -303,6 +303,23 @@ class HistoryController {
     }
 
     _latestDateRange.value = customDateRange;
+
+    final sortedEntries = getMostListensInTimeRange(
+      mptr: mptr,
+      isStartOfDay: isStartOfDay,
+      customDate: customDateRange,
+    );
+
+    topTracksMapListensTemp
+      ..clear()
+      ..addEntries(sortedEntries);
+  }
+
+  List<MapEntry<Track, List<int>>> getMostListensInTimeRange({
+    required MostPlayedTimeRange mptr,
+    required bool isStartOfDay,
+    DateRange? customDate,
+  }) {
     final timeNow = DateTime.now();
 
     final varMapOldestDate = isStartOfDay
@@ -315,7 +332,7 @@ class HistoryController {
             MostPlayedTimeRange.month3: DateTime(timeNow.year, timeNow.month - 2),
             MostPlayedTimeRange.month6: DateTime(timeNow.year, timeNow.month - 5),
             MostPlayedTimeRange.year: DateTime(timeNow.year),
-            MostPlayedTimeRange.custom: _latestDateRange.value?.oldest,
+            MostPlayedTimeRange.custom: customDate?.oldest,
           }
         : {
             MostPlayedTimeRange.allTime: null,
@@ -326,12 +343,12 @@ class HistoryController {
             MostPlayedTimeRange.month3: timeNow.subtract(const Duration(days: 30 * 3)),
             MostPlayedTimeRange.month6: timeNow.subtract(const Duration(days: 30 * 6)),
             MostPlayedTimeRange.year: timeNow.subtract(const Duration(days: 365)),
-            MostPlayedTimeRange.custom: _latestDateRange.value?.oldest,
+            MostPlayedTimeRange.custom: customDate?.oldest,
           };
 
     final map = {for (final e in MostPlayedTimeRange.values) e: varMapOldestDate[e]};
 
-    final newDate = mptr == MostPlayedTimeRange.custom ? _latestDateRange.value?.newest : timeNow;
+    final newDate = mptr == MostPlayedTimeRange.custom ? customDate?.newest : timeNow;
     final oldDate = map[mptr];
 
     final betweenDates = NamidaGenerator.inst.generateTracksFromHistoryDates(
@@ -360,9 +377,7 @@ class HistoryController {
         }
         return compare;
       });
-    topTracksMapListensTemp
-      ..clear()
-      ..addEntries(sortedEntries);
+    return sortedEntries;
   }
 
   Future<void> saveHistoryToStorage([List<int>? daysToSave]) async {
@@ -414,6 +429,7 @@ class HistoryController {
     }
     Dimensions.inst.calculateAllItemsExtentsInHistory();
     updateMostPlayedPlaylist();
+    _historyAndMostPlayedLoad.complete(true);
   }
 
   static Future<Map<int, List<TrackWithDate>>> _readHistoryFilesCompute(String path) async {
@@ -439,4 +455,7 @@ class HistoryController {
   final List<TrackWithDate> _tracksToAddAfterHistoryLoad = <TrackWithDate>[];
   bool _isLoadingHistory = true;
   bool get isLoadingHistory => _isLoadingHistory;
+
+  final _historyAndMostPlayedLoad = Completer<bool>();
+  Future<bool> get waitForHistoryAndMostPlayedLoad => _historyAndMostPlayedLoad.future;
 }

@@ -14,12 +14,18 @@ class ArtistCard extends StatelessWidget {
   final String name;
   final List<Track> artist;
   final (double, double, double) dimensions;
+  final bool displayIcon;
+  final String? bottomCenterText;
+  final String additionalHeroTag;
 
   const ArtistCard({
     super.key,
     required this.name,
     required this.artist,
     required this.dimensions,
+    this.displayIcon = true,
+    this.bottomCenterText,
+    this.additionalHeroTag = '',
   });
 
   @override
@@ -27,49 +33,68 @@ class ArtistCard extends StatelessWidget {
     final thumbnailSize = dimensions.$1;
     final fontSize = dimensions.$2.multipliedFontScale;
 
-    final hero = 'artist_$name';
+    final hero = 'artist_$name$additionalHeroTag';
     return GridTile(
       child: NamidaInkWell(
         onTap: () => NamidaOnTaps.inst.onArtistTap(name, artist),
         onLongPress: () => NamidaDialogs.inst.showArtistDialog(name),
         child: Column(
           children: [
-            NamidaHero(
-              tag: hero,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: Dimensions.gridHorizontalPadding),
-                child: ContainerWithBorder(
-                  child: ArtworkWidget(
-                    thumbnailSize: thumbnailSize,
-                    path: artist.pathToImage,
-                    borderRadius: 10.0,
-                    forceSquared: true,
-                    blur: 0,
-                    iconSize: 32.0,
+            Stack(
+              alignment: Alignment.bottomCenter,
+              children: [
+                NamidaHero(
+                  tag: hero,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
+                    child: ContainerWithBorder(
+                      child: ArtworkWidget(
+                        thumbnailSize: thumbnailSize,
+                        path: artist.pathToImage,
+                        borderRadius: 10.0,
+                        forceSquared: true,
+                        blur: 0,
+                        iconSize: 32.0,
+                        displayIcon: displayIcon,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                width: double.infinity,
-                alignment: Alignment.center,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (name != '')
-                      NamidaHero(
-                        tag: 'line1_$hero',
-                        child: Text(
-                          name.overflow,
-                          style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                if (bottomCenterText != null)
+                  Positioned(
+                    bottom: -2.0,
+                    child: Container(
+                      padding: const EdgeInsets.all(6.0),
+                      decoration: BoxDecoration(
+                        color: context.theme.scaffoldBackgroundColor,
+                        shape: BoxShape.circle,
                       ),
-                  ],
-                ),
+                      child: Text(
+                        bottomCenterText!,
+                        style: context.textTheme.displaySmall,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              width: double.infinity,
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (name != '')
+                    NamidaHero(
+                      tag: 'line1_$hero',
+                      child: Text(
+                        name.overflow,
+                        style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
               ),
             ),
           ],

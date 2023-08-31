@@ -16,7 +16,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/inner_drawer.dart';
 import 'package:namida/packages/miniplayer.dart';
-import 'package:namida/ui/pages/homepage.dart';
+import 'package:namida/ui/pages/main_page.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/pages/youtube_page.dart';
@@ -82,7 +82,7 @@ class MainPageWrapper extends StatelessWidget {
                       title: Language.inst.YOUTUBE,
                       icon: Broken.video_square,
                       onTap: () {
-                        YoutubeController.inst.prepareHomePage();
+                        YoutubeController.inst.prepareHomeFeed();
                         NamidaNavigator.inst.navigateTo(const YoutubePage());
                         toggleDrawer();
                       },
@@ -236,7 +236,7 @@ class MainPageWrapper extends StatelessWidget {
       scaffold: Stack(
         alignment: Alignment.bottomCenter,
         children: [
-          const HomePage(),
+          const MainPage(),
           const MiniPlayerParent(),
           Obx(
             () {

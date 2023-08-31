@@ -54,7 +54,7 @@ class SearchSortController {
     _searchMediaType(type: MediaType.artist, text: text, temp: true);
   }
 
-  void searchMedia(String text, MediaType media) {
+  void searchMedia(String text, MediaType? media) {
     switch (media) {
       case MediaType.track:
         _searchTracks(text);
@@ -123,7 +123,7 @@ class SearchSortController {
       if (temp) {
         _searchMapTemp[type]?.clear();
       } else {
-        type.toLibraryTab().textSearchController?.clear();
+        type.toLibraryTab()?.textSearchController?.clear();
         _searchMap[type]
           ?..clear()
           ..addAll(keys);

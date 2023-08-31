@@ -230,7 +230,10 @@ class MostPlayedTracksPage extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              if (trailing != null) trailing(textColor)!,
+              if (trailing != null) ...[
+                const SizedBox(width: 2.0),
+                trailing(textColor)!,
+              ]
             ],
           ),
         ),

@@ -95,6 +95,7 @@ enum TrackSearchFilter {
 }
 
 enum LibraryTab {
+  home,
   albums,
   tracks,
   artists,
@@ -193,6 +194,7 @@ enum WakelockMode {
 
 enum RouteType {
   // ----- Pages -----
+  PAGE_HOME,
   PAGE_allTracks,
   PAGE_albums,
   PAGE_artists,
@@ -203,6 +205,7 @@ enum RouteType {
   PAGE_stats,
 
   // ----- Subpages -----
+  SUBPAGE_recentlyAddedTracks,
   SUBPAGE_albumTracks,
   SUBPAGE_artistTracks,
   SUBPAGE_genreTracks,
@@ -287,4 +290,23 @@ enum LocalVideoMatchingType {
   auto,
   filename,
   titleAndArtist,
+}
+
+enum HomePageItems {
+  mixes,
+  recentListens,
+  topRecentListens,
+  lostMemories,
+  recentlyAdded,
+  recentAlbums,
+  recentArtists,
+  topRecentAlbums,
+  topRecentArtists,
+}
+
+enum MixesItems {
+  topRecents,
+  supremacy,
+  favourites,
+  randomPicks,
 }
