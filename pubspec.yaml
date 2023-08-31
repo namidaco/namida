@@ -64,13 +64,13 @@ dependencies:
   catcher:
     git:
       url: https://github.com/MSOB7YY/catcher
-  flutter_animate: ^4.2.0+1
+  queue: ^3.1.0+2
   jiffy: ^6.2.1
 
   queue_manager:
     git:
       url: https://github.com/MSOB7YY/queue_manager
-      ref: dc636d47c535ccf198e4393aa4869f6da9a17766
+      ref: f4b46745b31cdc2cf0f3d5af1a668a4143b111d3
 
   # ---- Path/File Providers ----
   path_provider: ^2.0.14

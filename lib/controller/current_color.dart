@@ -6,6 +6,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:queue/queue.dart' as qs;
+import 'package:palette_generator/palette_generator.dart';
 
 import 'package:namida/class/color_m.dart';
 import 'package:namida/class/track.dart';
@@ -14,7 +16,6 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:palette_generator/palette_generator.dart';
 
 Color get playerStaticColor => Get.isDarkMode ? playerStaticColorDark : playerStaticColorLight;
 Color get playerStaticColorLight => Color(SettingsController.inst.staticColor.value);
@@ -117,9 +118,13 @@ class CurrentColor {
     bool fallbackToPlayerStaticColor = true,
     bool delightnedAndAlpha = true,
     bool useIsolate = _defaultUseIsolate,
+    bool forceReCheck = false,
   }) async {
+    bool checkDummyColor(NamidaColor value) => value.palette.isEmpty || (value.palette.length == 1 && value.color == value.palette.first && value.color == value.palette.last);
+
     NamidaColor maybeDelightned(NamidaColor? nc) {
-      if (nc == null) {
+      if (nc == null || checkDummyColor(nc)) {
+        // the value is null or dummy color, fetching with current [playerStaticColor].
         final c = fallbackToPlayerStaticColor ? playerStaticColor : currentColorScheme;
         return NamidaColor(
           used: c.lighter,
@@ -127,6 +132,7 @@ class CurrentColor {
           palette: [c.lighter],
         );
       } else {
+        // the value is a normal color
         return NamidaColor(
           used: delightnedAndAlpha ? nc.used?.withAlpha(colorAlpha).delightned : nc.used,
           mix: delightnedAndAlpha ? nc.mix.withAlpha(colorAlpha).delightned : nc.mix,
@@ -136,7 +142,9 @@ class CurrentColor {
     }
 
     final valInMap = colorsMap[track.path.getFilename];
-    if (valInMap != null) return maybeDelightned(valInMap);
+    if (!forceReCheck && valInMap != null) {
+      return maybeDelightned(valInMap);
+    }
 
     NamidaColor? nc = await _extractPaletteFromImage(
       track.pathToImage,
@@ -160,6 +168,7 @@ class CurrentColor {
   }
 
   Color mixIntColors(Iterable<Color> colors) {
+    if (colors.isEmpty) return Colors.transparent;
     int red = 0;
     int green = 0;
     int blue = 0;
@@ -201,22 +210,18 @@ class CurrentColor {
     }
 
     // -- file doesnt exist or couldn't be read or [forceReExtract==true]
+    final pcolors = <Color>[];
     try {
-      final pcolors = await _extractPaletteGenerator(imagePath, useIsolate: useIsolate);
-      if (pcolors.isNotEmpty) {
-        final nc = NamidaColor(used: null, mix: mixIntColors(pcolors), palette: pcolors.toList());
-        await paletteFile.writeAsJson(nc.toJson());
-        Indexer.inst.updateColorPalettesSizeInStorage(newPalettePath: paletteFile.path);
-        printy("Color Extracted From Image");
-        return nc;
-      } else {
-        return null;
-      }
-    } catch (e) {
-      await File(imagePath).deleteIfExists();
-      return null;
-    }
+      pcolors.addAll(await _colorGenerationTasks.add(() async => await _extractPaletteGenerator(imagePath, useIsolate: useIsolate)));
+    } catch (_) {}
+    final nc = NamidaColor(used: null, mix: mixIntColors(pcolors), palette: pcolors.toList());
+    await paletteFile.writeAsJson(nc.toJson()); // writing the file bothways, to prevent reduntant re-extraction.
+    Indexer.inst.updateColorPalettesSizeInStorage(newPalettePath: paletteFile.path);
+    printy("Color Extracted From Image (${pcolors.length})");
+    return pcolors.isEmpty ? null : nc;
   }
+
+  final _colorGenerationTasks = qs.Queue(parallel: 1);
 
   Future<void> reExtractTrackColorPalette({required Track track, required NamidaColor? newNC, required String? imagePath}) async {
     assert(newNC != null || imagePath != null, 'a color or imagePath must be provided');
@@ -236,6 +241,7 @@ class CurrentColor {
 
   Future<Iterable<Color>> _extractPaletteGenerator(String imagePath, {bool useIsolate = _defaultUseIsolate}) async {
     if (!await File(imagePath).exists()) return [];
+
     const defaultTimeout = Duration(seconds: 5);
     if (!useIsolate) {
       final result = await PaletteGenerator.fromImageProvider(FileImage(File(imagePath)), filters: [], maximumColorCount: 28, timeout: defaultTimeout);
@@ -302,7 +308,7 @@ class CurrentColor {
     isGeneratingAllColorPalettes.value = true;
     for (int i = 0; i < allTracksInLibrary.length; i++) {
       if (!isGeneratingAllColorPalettes.value) break; // stops extracting
-      await getTrackColors(allTracksInLibrary[i], useIsolate: true);
+      await getTrackColors(allTracksInLibrary[i], useIsolate: true, forceReCheck: true);
     }
 
     isGeneratingAllColorPalettes.value = false;

@@ -898,7 +898,7 @@ class Indexer {
   Future<void> updateImageSizeInStorage({String? newImagePath, File? oldDeletedFile}) async {
     if (newImagePath != null || oldDeletedFile != null) {
       if (oldDeletedFile != null) {
-        artworksInStorage.value--;
+        if (await oldDeletedFile.exists()) artworksInStorage.value--;
         artworksSizeInStorage.value -= await oldDeletedFile.sizeInBytes();
       }
       if (newImagePath != null) {
@@ -923,7 +923,7 @@ class Indexer {
   Future<void> updateVideosSizeInStorage({String? newVideoPath, File? oldDeletedFile}) async {
     if (newVideoPath != null || oldDeletedFile != null) {
       if (oldDeletedFile != null) {
-        videosInStorage.value--;
+        if (await oldDeletedFile.exists()) videosInStorage.value--;
         videosInStorage.value -= await oldDeletedFile.sizeInBytes();
       }
       if (newVideoPath != null) {

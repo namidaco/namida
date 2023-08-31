@@ -136,6 +136,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
 
     _player.playingStream.listen((event) async {
       _isPlaying.value = event;
+      updateVideoPlayingState();
       CurrentColor.inst.switchColorPalettes(event);
     });
 
@@ -370,7 +371,6 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   Future<void> play() async {
     _wantToPause = false;
 
-    VideoController.vcontroller.play();
     if (SettingsController.inst.enableVolumeFadeOnPlayPause.value && currentPositionMS > 200) {
       await playWithFadeEffect();
     } else {
@@ -388,7 +388,6 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
     } else {
       _player.pause();
     }
-    VideoController.vcontroller.pause();
     AudioSession.instance.then((value) => value.setActive(false)); // deactivaing audio session for other apps to resume.
     _wantToPause = false;
   }

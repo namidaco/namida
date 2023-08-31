@@ -151,6 +151,7 @@ class ExtrasSettings extends StatelessWidget {
                             const SizedBox(height: 12.0),
                             ReorderableListView.builder(
                               shrinkWrap: true,
+                              proxyDecorator: (child, index, animation) => child,
                               padding: EdgeInsets.zero,
                               itemCount: SettingsController.inst.libraryTabs.length,
                               itemBuilder: (context, i) {

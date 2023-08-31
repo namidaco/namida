@@ -248,7 +248,7 @@ class Player {
 
   Future<void> playOrPause(
     int index,
-    List<Selectable> queue,
+    Iterable<Selectable> queue,
     QueueSource source, {
     bool shuffle = false,
     bool startPlaying = true,

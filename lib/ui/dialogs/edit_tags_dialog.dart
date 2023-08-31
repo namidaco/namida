@@ -183,6 +183,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                           () {
                             final tagFields = SettingsController.inst.tagFieldsToEdit;
                             return ReorderableListView.builder(
+                              proxyDecorator: (child, index, animation) => child,
                               padding: const EdgeInsets.only(bottom: 24.0),
                               itemCount: SettingsController.inst.tagFieldsToEdit.length,
                               onReorder: (oldIndex, newIndex) {
