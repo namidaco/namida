@@ -1,15 +1,12 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
-import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:checkmark/checkmark.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:get/get.dart' hide Response;
 
-import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
@@ -582,108 +579,47 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
   }
 }
 
-class _FixYTDLPThumbnailSizeListTile extends StatefulWidget {
+class _FixYTDLPThumbnailSizeListTile extends StatelessWidget {
   const _FixYTDLPThumbnailSizeListTile();
-
-  @override
-  State<_FixYTDLPThumbnailSizeListTile> createState() => __FixYTDLPThumbnailSizeListTileState();
-}
-
-class __FixYTDLPThumbnailSizeListTileState extends State<_FixYTDLPThumbnailSizeListTile> {
-  int _totalAudiosToFix = 0;
-  int _currentProgress = 0;
-  String? _currentAudioPath;
-  int _currentFailed = 0;
 
   Future<void> _onFixYTDLPPress() async {
     if (!await requestManageStoragePermission()) return;
 
-    _currentProgress = 0;
-    _totalAudiosToFix = 0;
-    setState(() {});
     final dir = await FilePicker.platform.getDirectoryPath();
     if (dir == null) return;
-
-    final dio = Dio();
-    final allFiles = Directory(dir).listSync(recursive: true);
-    _totalAudiosToFix = allFiles.length;
-    setState(() {});
-    for (final filee in allFiles) {
-      _currentProgress++;
-      _currentAudioPath = filee.path;
-      setState(() {});
-      if (filee is File) {
-        final tr = await filee.path.toTrackExtOrExtract();
-        final ytId = tr?.youtubeID;
-        if (ytId == null || ytId == '') continue;
-
-        final trackThumbnailCached = "${AppDirs.YT_THUMBNAILS}$ytId.png";
-        String? cachedThumbnailPath;
-        Uint8List? bytes;
-
-        final doesCacheExist = await File(trackThumbnailCached).exists();
-
-        if (doesCacheExist) {
-          cachedThumbnailPath = trackThumbnailCached;
-        } else {
-          bytes = await VideoController.inst.getYoutubeThumbnail(dio, ytId);
-        }
-
-        if (cachedThumbnailPath == null && bytes == null) {
-          setState(() => _currentFailed++);
-          continue;
-        }
-
-        final file = await Indexer.inst.extractOneArtwork(
-          filee.path,
-          forceReExtract: true,
-          bytes: bytes,
-          artworkPath: cachedThumbnailPath,
-        );
-        if (file != null) {
-          final didUpdate = await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: filee.path, thumbnailPath: file.path);
-          if (!didUpdate) setState(() => _currentFailed++);
-        }
-      }
-    }
-    dio.close();
-    _currentAudioPath = null;
-    setState(() {});
+    await NamidaFFMPEG.inst.fixYTDLPBigThumbnailSize(directoryPath: dir);
   }
 
   @override
   Widget build(BuildContext context) {
-    final failedSubtitle = _currentFailed > 0 ? "${Language.inst.FAILED}: $_currentFailed" : null;
-    return CustomListTile(
-      leading: const StackedIcon(
-        baseIcon: Broken.document_code_2,
-        secondaryIcon: Broken.video_square,
-      ),
-      title: Language.inst.FIX_YTDLP_BIG_THUMBNAIL_SIZE,
-      subtitle: _currentAudioPath?.getFilename ?? failedSubtitle,
-      trailingText: _totalAudiosToFix > 0 ? "$_currentProgress/$_totalAudiosToFix" : null,
-      onTap: _onFixYTDLPPress,
+    return Obx(
+      () {
+        final p = NamidaFFMPEG.inst.currentOperations[OperationType.ytdlpThumbnailFix]?.value;
+        final currentAudioPath = p?.currentFilePath;
+        final currentProgress = p?.progress ?? 0;
+        final totalAudiosToFix = p?.totalFiles ?? 0;
+        final totalFailed = p?.totalFailed ?? 0;
+        final failedSubtitle = totalFailed > 0 ? "${Language.inst.FAILED}: $totalFailed" : null;
+        return CustomListTile(
+          leading: const StackedIcon(
+            baseIcon: Broken.document_code_2,
+            secondaryIcon: Broken.video_square,
+          ),
+          title: Language.inst.FIX_YTDLP_BIG_THUMBNAIL_SIZE,
+          subtitle: currentAudioPath?.getFilename ?? failedSubtitle,
+          trailingText: totalAudiosToFix > 0 ? "$currentProgress/$totalAudiosToFix" : null,
+          onTap: _onFixYTDLPPress,
+        );
+      },
     );
   }
 }
 
-class _CompressImagesListTile extends StatefulWidget {
+class _CompressImagesListTile extends StatelessWidget {
   const _CompressImagesListTile();
 
-  @override
-  State<_CompressImagesListTile> createState() => __CompressImagesListTileState();
-}
-
-class __CompressImagesListTileState extends State<_CompressImagesListTile> {
-  int _totalImagesToCompress = 0;
-  int _currentProgress = 0;
-  String? _currentImagePath;
-  int _currentFailed = 0;
-
   Future<void> _onCompressImagePress() async {
-    if (_currentImagePath != null) return; // return if currently compressing.
-    _totalImagesToCompress = 0;
-    _currentProgress = 0;
+    if (NamidaFFMPEG.inst.currentOperations[OperationType.imageCompress]?.value.currentFilePath != null) return; // return if currently compressing.
     final compPerc = 50.obs;
     final keepOriginalFileDates = true.obs;
     final initialDirectories = [AppDirs.ARTWORKS, AppDirs.THUMBNAILS, AppDirs.YT_THUMBNAILS].obs;
@@ -770,49 +706,33 @@ class __CompressImagesListTileState extends State<_CompressImagesListTile> {
   }
 
   Future<void> _startCompressing(Iterable<String> dirs, int compressionPerc, bool keepOriginalFileStats) async {
-    if (!await requestManageStoragePermission()) return;
-
-    setState(() {});
-
-    final dir = await Directory(AppDirs.COMPRESSED_IMAGES).create();
-
-    final dirFiles = <FileSystemEntity>[];
-
-    for (final d in dirs) {
-      dirFiles.addAll(Directory(d).listSync(recursive: true));
-    }
-
-    _totalImagesToCompress = dirFiles.length;
-    setState(() {});
-    for (final f in dirFiles) {
-      _currentProgress++;
-      _currentImagePath = f.path;
-      setState(() {});
-      if (f is File) {
-        final didUpdate = await NamidaFFMPEG.inst.compressImage(
-          path: f.path,
-          saveDir: dir.path,
-          percentage: compressionPerc,
-          keepOriginalFileStats: keepOriginalFileStats,
-        );
-        if (!didUpdate) setState(() => _currentFailed++);
-      }
-    }
-    _currentImagePath = null;
-    setState(() {});
+    await NamidaFFMPEG.inst.compressImageDirectories(
+      dirs: dirs,
+      compressionPerc: compressionPerc,
+      keepOriginalFileStats: keepOriginalFileStats,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return CustomListTile(
-      leading: const StackedIcon(
-        baseIcon: Broken.gallery,
-        secondaryIcon: Broken.magicpen,
-      ),
-      title: Language.inst.COMPRESS_IMAGES,
-      subtitle: _currentImagePath?.getFilename ?? (_currentFailed > 0 ? "${Language.inst.FAILED}: $_currentFailed" : null),
-      trailingText: _totalImagesToCompress > 0 ? "$_currentProgress/$_totalImagesToCompress" : null,
-      onTap: _onCompressImagePress,
+    return Obx(
+      () {
+        final p = NamidaFFMPEG.inst.currentOperations[OperationType.imageCompress]?.value;
+        final currentImagePath = p?.currentFilePath;
+        final currentProgress = p?.progress ?? 0;
+        final totalImagesToCompress = p?.totalFiles ?? 0;
+        final totalFailed = p?.totalFailed ?? 0;
+        return CustomListTile(
+          leading: const StackedIcon(
+            baseIcon: Broken.gallery,
+            secondaryIcon: Broken.magicpen,
+          ),
+          title: Language.inst.COMPRESS_IMAGES,
+          subtitle: currentImagePath?.getFilename ?? (totalFailed > 0 ? "${Language.inst.FAILED}: $totalFailed" : null),
+          trailingText: totalImagesToCompress > 0 ? "$currentProgress/$totalImagesToCompress" : null,
+          onTap: _onCompressImagePress,
+        );
+      },
     );
   }
 }

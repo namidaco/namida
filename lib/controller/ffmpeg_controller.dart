@@ -1,14 +1,21 @@
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:ffmpeg_kit_flutter_min/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_min/ffmpeg_kit_config.dart';
 import 'package:ffmpeg_kit_flutter_min/ffprobe_kit.dart';
 import 'package:ffmpeg_kit_flutter_min/session_state.dart';
+import 'package:get/get_rx/get_rx.dart';
 
 import 'package:namida/class/media_info.dart';
+import 'package:namida/class/track.dart';
+import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/main.dart';
 
 class NamidaFFMPEG {
   static NamidaFFMPEG get inst => _instance;
@@ -16,6 +23,10 @@ class NamidaFFMPEG {
   NamidaFFMPEG._internal() {
     FFmpegKitConfig.disableLogs();
   }
+  final currentOperations = <OperationType, Rx<OperationProgress>>{
+    OperationType.imageCompress: OperationProgress().obs,
+    OperationType.ytdlpThumbnailFix: OperationProgress().obs,
+  };
 
   Future<MediaInfo?> extractMetadata(String path) async {
     final session = await FFprobeKit.getMediaInformation(path);
@@ -147,6 +158,103 @@ class NamidaFFMPEG {
     return didSuccess;
   }
 
+  Future<void> compressImageDirectories({
+    required Iterable<String> dirs,
+    required int compressionPerc,
+    required bool keepOriginalFileStats,
+    bool recursive = true,
+  }) async {
+    if (!await requestManageStoragePermission()) return;
+
+    final dir = await Directory(AppDirs.COMPRESSED_IMAGES).create();
+
+    final dirFiles = <FileSystemEntity>[];
+
+    for (final d in dirs) {
+      dirFiles.addAll(Directory(d).listSync(recursive: recursive));
+    }
+
+    dirFiles.retainWhere((element) => element is File);
+    currentOperations[OperationType.imageCompress]!.value = OperationProgress(); // resetting
+
+    final totalFiles = dirFiles.length;
+    int currentProgress = 0;
+    int currentFailed = 0;
+    for (final f in dirFiles) {
+      final didUpdate = await NamidaFFMPEG.inst.compressImage(
+        path: f.path,
+        saveDir: dir.path,
+        percentage: compressionPerc,
+        keepOriginalFileStats: keepOriginalFileStats,
+      );
+      if (!didUpdate) currentFailed++;
+      currentProgress++;
+      currentOperations[OperationType.imageCompress]!.value = OperationProgress(
+        totalFiles: totalFiles,
+        progress: currentProgress,
+        currentFilePath: f.path,
+        totalFailed: currentFailed,
+      );
+    }
+    currentOperations[OperationType.imageCompress]!.value.currentFilePath = null;
+  }
+
+  Future<void> fixYTDLPBigThumbnailSize({required String directoryPath, bool recursive = true}) async {
+    if (!await requestManageStoragePermission()) return;
+
+    final dio = Dio();
+    final allFiles = Directory(directoryPath).listSync(recursive: recursive);
+    final totalFilesLength = allFiles.length;
+    int currentProgress = 0;
+    int currentFailed = 0;
+
+    currentOperations[OperationType.ytdlpThumbnailFix]!.value = OperationProgress(); // resetting
+    for (final filee in allFiles) {
+      currentProgress++;
+      if (filee is File) {
+        final tr = await filee.path.toTrackExtOrExtract();
+        final ytId = tr?.youtubeID;
+        if (ytId == null || ytId == '') continue;
+
+        final trackThumbnailCached = "${AppDirs.YT_THUMBNAILS}$ytId.png";
+        String? cachedThumbnailPath;
+        Uint8List? bytes;
+
+        final doesCacheExist = await File(trackThumbnailCached).exists();
+
+        if (doesCacheExist) {
+          cachedThumbnailPath = trackThumbnailCached;
+        } else {
+          bytes = await VideoController.inst.getYoutubeThumbnail(dio, ytId);
+        }
+
+        if (cachedThumbnailPath == null && bytes == null) {
+          currentFailed++;
+        } else {
+          final file = await Indexer.inst.extractOneArtwork(
+            filee.path,
+            forceReExtract: true,
+            bytes: bytes,
+            artworkPath: cachedThumbnailPath,
+          );
+          if (file != null) {
+            final didUpdate = await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: filee.path, thumbnailPath: file.path);
+            if (!didUpdate) currentFailed++;
+          }
+        }
+
+        currentOperations[OperationType.ytdlpThumbnailFix]!.value = OperationProgress(
+          totalFiles: totalFilesLength,
+          progress: currentProgress,
+          currentFilePath: filee.path,
+          totalFailed: currentFailed,
+        );
+      }
+    }
+    dio.close();
+    currentOperations[OperationType.ytdlpThumbnailFix]!.value.currentFilePath = null;
+  }
+
   /// * Extracts thumbnail from a given video, usually this tries to get embed thumbnail,
   ///   if failed then it will extract a frame at a given duration.
   /// * [quality] & [atDuration] will not be used in case an embed thumbnail was found
@@ -244,4 +352,23 @@ class NamidaFFMPEG {
     FFMPEGTagField.trackNumber: "track",
     FFMPEGTagField.discNumber: "disc",
   };
+}
+
+class OperationProgress {
+  final int totalFiles;
+  final int progress;
+  String? currentFilePath;
+  final int totalFailed;
+
+  OperationProgress({
+    this.totalFiles = 0,
+    this.progress = 0,
+    this.currentFilePath,
+    this.totalFailed = 0,
+  });
+}
+
+enum OperationType {
+  imageCompress,
+  ytdlpThumbnailFix,
 }
