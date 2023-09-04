@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:checkmark/checkmark.dart';
@@ -89,6 +91,21 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
   );
 }
 
+Widget get _getKeepDatesWidget => NamidaIconButton(
+      tooltip: Language.inst.KEEP_FILE_DATES,
+      icon: SettingsController.inst.editTagsKeepFileDates.value ? Broken.document_code_2 : Broken.calendar_edit,
+      onPressed: () {
+        SettingsController.inst.save(editTagsKeepFileDates: !SettingsController.inst.editTagsKeepFileDates.value);
+      },
+      child: Obx(
+        () => StackedIcon(
+          disableColor: true,
+          baseIcon: Broken.document_code_2,
+          secondaryIcon: SettingsController.inst.editTagsKeepFileDates.value ? Broken.tick_circle : Broken.close_circle,
+        ),
+      ),
+    );
+
 Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
   if (!await requestManageStoragePermission()) {
     return;
@@ -159,6 +176,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
       icon: Broken.edit,
       title: Language.inst.EDIT_TAGS,
       trailingWidgets: [
+        _getKeepDatesWidget,
         NamidaIconButton(
           icon: Broken.edit_2,
           onPressed: () {
@@ -449,6 +467,7 @@ Future<void> _updateTracksMetadata({
   String commentToInsert = '',
   void Function(bool didUpdate, Track track)? onEdit,
   void Function()? onUpdatingTracksStart,
+  bool? keepFileDates,
 }) async {
   tagger ??= FAudioTagger();
 
@@ -488,16 +507,22 @@ Future<void> _updateTracksMetadata({
 
   final tracksMap = <Track, TrackExtended>{};
   await tracks.loopFuture((track, _) async {
-    final didUpdate = await tagger!.writeTags(
-      path: track.path,
-      tag: newTag,
+    final file = File(track.path);
+    await file.executeAndKeepStats(
+      () async {
+        final didUpdate = await tagger!.writeTags(
+          path: track.path,
+          tag: newTag,
+        );
+        if (didUpdate) {
+          final trExt = track.toTrackExt();
+          tracksMap[track] = trExt.copyWithTag(tag: newTag);
+        }
+        printo('Did Update Metadata: $didUpdate', isError: !didUpdate);
+        if (onEdit != null) onEdit(didUpdate, track);
+      },
+      keepStats: keepFileDates ?? SettingsController.inst.editTagsKeepFileDates.value,
     );
-    if (didUpdate) {
-      final trExt = track.toTrackExt();
-      tracksMap[track] = trExt.copyWithTag(tag: newTag);
-    }
-    printo('Did Update Metadata: $didUpdate', isError: !didUpdate);
-    if (onEdit != null) onEdit(didUpdate, track);
   });
 
   if (onUpdatingTracksStart != null) onUpdatingTracksStart();
@@ -607,6 +632,9 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
       scrollable: false,
       icon: Broken.edit,
       title: Language.inst.EDIT_TAGS,
+      trailingWidgets: [
+        _getKeepDatesWidget,
+      ],
       actions: [
         NamidaButton(
           icon: Broken.pen_add,

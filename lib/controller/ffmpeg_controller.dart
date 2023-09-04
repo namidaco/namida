@@ -110,7 +110,7 @@ class NamidaFFMPEG {
     final cacheFile = File("${AppDirs.APP_CACHE}/${audioPath.hashCode}.${audioPath.getExtension}");
     final output = await FFmpegKit.execute('-i "$audioPath" -i "$thumbnailPath" -map 0:a -map 1 -codec copy -disposition:v attached_pic -y "${cacheFile.path}"');
     final didSuccess = await output.getReturnCode().then((value) => value?.isValueSuccess()) ?? false;
-    final canSafelyMoveBack = didSuccess && await cacheFile.stat().then((value) => value.size) > 0;
+    final canSafelyMoveBack = didSuccess && await cacheFile.sizeInBytes() > 0;
     if (canSafelyMoveBack) {
       // only move output file back in case of success.
       await cacheFile.copy(audioPath);
@@ -289,7 +289,6 @@ class NamidaFFMPEG {
   Future<Duration?> getMediaDuration(String path) async {
     final session = await FFprobeKit.execute('-loglevel error -v quiet -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$path"');
     final output = await session.getOutput();
-    print('ffprobeeee objecttt : $output');
     final duration = output == null ? null : double.tryParse(output);
     return duration == null ? null : Duration(microseconds: (duration * 1000 * 1000).floor());
   }

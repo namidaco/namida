@@ -154,6 +154,7 @@ class SettingsController {
   final RxBool displayThirdItemInEachRow = false.obs;
   final RxString trackTileSeparator = '•'.obs;
   final RxBool displayFavouriteIconInListTile = true.obs;
+  final RxBool editTagsKeepFileDates = true.obs;
 
   final RxMap<TrackTilePosition, TrackTileItem> trackItem = {
     TrackTilePosition.row1Item1: TrackTileItem.title,
@@ -331,6 +332,7 @@ class SettingsController {
       displayThirdItemInEachRow.value = json['displayThirdItemInEachRow'] ?? displayThirdItemInEachRow.value;
       trackTileSeparator.value = json['trackTileSeparator'] ?? trackTileSeparator.value;
       displayFavouriteIconInListTile.value = json['displayFavouriteIconInListTile'] ?? displayFavouriteIconInListTile.value;
+      editTagsKeepFileDates.value = json['editTagsKeepFileDates'] ?? editTagsKeepFileDates.value;
 
       trackItem.value = _getEnumMap(
             json['trackItem'],
@@ -489,6 +491,7 @@ class SettingsController {
       'displayThirdItemInEachRow': displayThirdItemInEachRow.value,
       'trackTileSeparator': trackTileSeparator.value,
       'displayFavouriteIconInListTile': displayFavouriteIconInListTile.value,
+      'editTagsKeepFileDates': editTagsKeepFileDates.value,
       'trackItem': trackItem.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
       'playerOnInterrupted': playerOnInterrupted.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
       'queueInsertion': queueInsertion.map((key, value) => MapEntry(key.convertToString, value.toJson())),
@@ -582,6 +585,7 @@ class SettingsController {
     int? isTrackPlayedSecondsCount,
     int? isTrackPlayedPercentageCount,
     bool? displayFavouriteIconInListTile,
+    bool? editTagsKeepFileDates,
     int? waveformTotalBars,
     double? playerVolume,
     int? seekDurationInSeconds,
@@ -874,6 +878,9 @@ class SettingsController {
     }
     if (displayFavouriteIconInListTile != null) {
       this.displayFavouriteIconInListTile.value = displayFavouriteIconInListTile;
+    }
+    if (editTagsKeepFileDates != null) {
+      this.editTagsKeepFileDates.value = editTagsKeepFileDates;
     }
     if (waveformTotalBars != null) {
       this.waveformTotalBars.value = waveformTotalBars;
