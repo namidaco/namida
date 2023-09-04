@@ -535,10 +535,10 @@ class _RefreshLibraryIcon extends StatefulWidget {
   static late AnimationController controller;
 
   @override
-  State<_RefreshLibraryIcon> createState() => __RefreshLibraryIconState();
+  State<_RefreshLibraryIcon> createState() => _RefreshLibraryIconState();
 }
 
-class __RefreshLibraryIconState extends State<_RefreshLibraryIcon> with TickerProviderStateMixin {
+class _RefreshLibraryIconState extends State<_RefreshLibraryIcon> with TickerProviderStateMixin {
   final turnsTween = Tween<double>(begin: 0.0, end: 1.0);
   @override
   void initState() {

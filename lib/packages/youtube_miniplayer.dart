@@ -795,6 +795,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
               ),
       ),
       child: ArtworkWidget(
+        fadeMilliSeconds: 600,
         path: imagePath,
         height: widget.height,
         width: widget.width,

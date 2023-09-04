@@ -466,6 +466,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                           icon: Broken.command_square,
                           listy: _recentListened,
                           onTap: NamidaOnTaps.inst.onHistoryPlaylistTap,
+                          topRightText: (track) {
+                            if (track?.trackWithDate == null) return null;
+                            return Jiffy.parseFromMillisecondsSinceEpoch(track!.trackWithDate!.dateAdded).fromNow(
+                              withPrefixAndSuffix: false,
+                            );
+                          },
                         );
 
                       case HomePageItems.topRecentListens:

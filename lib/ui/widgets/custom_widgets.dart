@@ -962,6 +962,7 @@ class StackedIcon extends StatelessWidget {
   final double? iconSize;
   final double blurRadius;
   final Widget? smallChild;
+  final bool disableColor;
 
   const StackedIcon({
     super.key,
@@ -973,6 +974,7 @@ class StackedIcon extends StatelessWidget {
     this.iconSize,
     this.blurRadius = 3.0,
     this.smallChild,
+    this.disableColor = false,
   });
 
   @override
@@ -981,7 +983,7 @@ class StackedIcon extends StatelessWidget {
       children: [
         Icon(
           baseIcon,
-          color: baseIconColor ?? context.defaultIconColor(),
+          color: disableColor ? null : (baseIconColor ?? context.defaultIconColor()),
           size: iconSize,
         ),
         Positioned(
@@ -1000,7 +1002,7 @@ class StackedIcon extends StatelessWidget {
                     : Icon(
                         secondaryIcon,
                         size: 14,
-                        color: secondaryIconColor ?? context.defaultIconColor(),
+                        color: disableColor ? null : (secondaryIconColor ?? context.defaultIconColor()),
                       )),
           ),
         )
@@ -1299,6 +1301,7 @@ class NamidaIconButton extends StatefulWidget {
   final Color? iconColor;
   final void Function()? onPressed;
   final String? tooltip;
+  final bool disableColor;
   final Widget? child;
 
   const NamidaIconButton({
@@ -1311,6 +1314,7 @@ class NamidaIconButton extends StatefulWidget {
     this.iconSize,
     this.iconColor,
     this.tooltip,
+    this.disableColor = false,
     this.child,
   });
 
@@ -1339,7 +1343,7 @@ class _NamidaIconButtonState extends State<NamidaIconButton> {
                 Icon(
                   widget.icon,
                   size: widget.iconSize,
-                  color: widget.iconColor ?? context.theme.colorScheme.secondary,
+                  color: widget.disableColor ? null : (widget.iconColor ?? context.theme.colorScheme.secondary),
                 ),
           ),
         ),
