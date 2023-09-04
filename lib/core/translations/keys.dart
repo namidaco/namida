@@ -2,8 +2,6 @@
 // AUTO GENERATED FILE
   
 class LanguageKeys {
-  late String A_MINUTE;
-  late String A_MOMENT;
   late String ACTIVE;
   late String ADD_FOLDER;
   late String ADD_MORE_FROM_THIS_ALBUM;
@@ -33,10 +31,6 @@ class LanguageKeys {
   late String ARTISTS;
   late String ARTWORK;
   late String ARTWORKS;
-  late String AT_LEAST_ONE_FILTER_SUBTITLE;
-  late String AT_LEAST_ONE_FILTER;
-  late String AT_LEAST_THREE_TABS_SUBTITLE;
-  late String AT_LEAST_THREE_TABS;
   late String AUDIO;
   late String AUTO_COLORING_SUBTITLE;
   late String AUTO_COLORING;
@@ -192,7 +186,6 @@ class LanguageKeys {
   late String FORCE_SQUARED_TRACK_THUMBNAIL;
   late String FORCE_STOP_COLOR_PALETTE_GENERATION;
   late String FORMAT;
-  late String FROM_NOW;
   late String GENERATE_FROM_DATES_SUBTITLE;
   late String GENERATE_FROM_DATES;
   late String GENERATE;
@@ -242,6 +235,8 @@ class LanguageKeys {
   late String LOADING_FILE;
   late String LOCAL;
   late String LOCAL_VIDEO_MATCHING;
+  late String LOST_MEMORIES;
+  late String LOST_MEMORIES_SUBTITLE;
   late String LYRICIST;
   late String LYRICS;
   late String MAKE_YOUR_FIRST_LISTEN;
@@ -254,6 +249,8 @@ class LanguageKeys {
   late String METADATA_EDIT_FAILED_SUBTITLE;
   late String METADATA_EDIT_FAILED;
   late String METADATA_READ_FAILED;
+  late String MINIMUM_ONE_ITEM;
+  late String MINIMUM_ONE_ITEM_SUBTITLE;
   late String MIN_FILE_DURATION_SUBTITLE;
   late String MIN_FILE_DURATION;
   late String MIN_FILE_SIZE_SUBTITLE;
@@ -261,16 +258,12 @@ class LanguageKeys {
   late String MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION;
   late String MIN_VALUE_CANT_BE_MORE_THAN_MAX;
   late String MIN_VALUE_TO_COUNT_TRACK_LISTEN;
-  late String MINIMUM_ONE_FIELD_SUBTITLE;
-  late String MINIMUM_ONE_FIELD;
   late String MINIMUM_ONE_FOLDER_SUBTITLE;
-  late String MINIMUM_ONE_FOLDER;
-  late String MINIMUM_ONE_QUALITY_SUBTITLE;
-  late String MINIMUM_ONE_QUALITY;
   late String MINIMUM;
   late String MINIPLAYER_CUSTOMIZATION;
   late String MINUTES;
   late String MISSING_ENTRIES;
+  late String MIXES;
   late String MONTH;
   late String MONTHS;
   late String MOODS;
@@ -327,6 +320,7 @@ class LanguageKeys {
   late String PERFORMANCE_NOTE;
   late String PERMISSION_UPDATE;
   late String PICK_FROM_STORAGE;
+  late String PINNED;
   late String PLAY_AFTER_NEXT_PREV;
   late String PLAY_AFTER;
   late String PLAY_ALL;
@@ -351,7 +345,12 @@ class LanguageKeys {
   late String QUEUE;
   late String QUEUES;
   late String RANDOM;
+  late String RANDOM_PICKS;
   late String RATING;
+  late String RECENTLY_ADDED;
+  late String RECENT_ALBUMS;
+  late String RECENT_ARTISTS;
+  late String RECENT_LISTENS;
   late String REPLACE_ALL_LISTENS_WITH_ANOTHER_TRACK;
   late String RE_INDEX_SUBTITLE;
   late String RE_INDEX_WARNING;
@@ -379,8 +378,6 @@ class LanguageKeys {
   late String RESET_TO_DEFAULT;
   late String RESPECT_NO_MEDIA_SUBTITLE;
   late String RESPECT_NO_MEDIA;
-  late String RESTART_TO_APPLY_CHANGES;
-  late String RESTART;
   late String RESTORE_BACKUP;
   late String RESTORE_DEFAULTS;
   late String RESTORED_BACKUP_SUCCESSFULLY_SUB;
@@ -436,6 +433,7 @@ class LanguageKeys {
   late String SUBSCRIBERS;
   late String SUCCEEDED;
   late String SUPPORT;
+  late String SUPREMACY;
   late String SUSSY_BAKA;
   late String TAG_FIELDS;
   late String TAGS;
@@ -446,6 +444,9 @@ class LanguageKeys {
   late String THEME_SETTINGS_SUBTITLE;
   late String THEME_SETTINGS;
   late String TITLE;
+  late String TOP_RECENTS;
+  late String TOP_RECENT_ALBUMS;
+  late String TOP_RECENT_ARTISTS;
   late String TOTAL_LISTEN_TIME;
   late String TOTAL_LISTENS;
   late String TOTAL_TRACKS_DURATION;
