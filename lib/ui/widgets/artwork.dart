@@ -38,6 +38,7 @@ class ArtworkWidget extends StatefulWidget {
   final List<BoxShadow>? boxShadow;
   final bool forceEnableGlow;
   final bool displayIcon;
+  final IconData icon;
 
   const ArtworkWidget({
     super.key,
@@ -63,6 +64,7 @@ class ArtworkWidget extends StatefulWidget {
     this.path,
     this.forceEnableGlow = false,
     this.displayIcon = true,
+    this.icon = Broken.musicnote,
   });
 
   @override
@@ -126,7 +128,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
         children: [
           if (widget.displayIcon)
             Icon(
-              Broken.musicnote,
+              widget.icon,
               size: widget.iconSize ?? widget.thumbnailSize / 2,
             ),
           ...widget.onTopWidgets,

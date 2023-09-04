@@ -83,30 +83,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
-  cached_network_image:
-    dependency: "direct main"
-    description:
-      name: cached_network_image
-      sha256: fd3d0dc1d451f9a252b32d95d3f0c3c487bc41a75eba2e6097cb0b9c71491b15
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.2.3"
-  cached_network_image_platform_interface:
-    dependency: transitive
-    description:
-      name: cached_network_image_platform_interface
-      sha256: bb2b8403b4ccdc60ef5f25c70dead1f3d32d24b9d6117cfc087f496b178594a7
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.0"
-  cached_network_image_web:
-    dependency: transitive
-    description:
-      name: cached_network_image_web
-      sha256: b8eb814ebfcb4dea049680f8c1ffb2df399e4d03bf7a352c775e26fa06e02fa0
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.2"
   calendar_date_picker2:
     dependency: "direct main"
     description:
@@ -216,8 +192,8 @@ packages:
     dependency: "direct overridden"
     description:
       path: "."
-      ref: "347828d5b1b5a62e252fe9c94b47722ffd716e7d"
-      resolved-ref: "347828d5b1b5a62e252fe9c94b47722ffd716e7d"
+      ref: f4d8e0090e584bb870f1468f7cd06d8367296277
+      resolved-ref: f4d8e0090e584bb870f1468f7cd06d8367296277
       url: "https://github.com/MSOB7YY/dart_extensions"
     source: git
     version: "0.0.1"
@@ -302,6 +278,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.2"
+  ffmpeg_kit_flutter_min:
+    dependency: "direct main"
+    description:
+      name: ffmpeg_kit_flutter_min
+      sha256: "103367b415fc19c181f02bf85ba3b932c9599223280d52aeafffd02f979535ea"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.0-LTS"
+  ffmpeg_kit_flutter_platform_interface:
+    dependency: transitive
+    description:
+      name: ffmpeg_kit_flutter_platform_interface
+      sha256: addf046ae44e190ad0101b2fde2ad909a3cd08a2a109f6106d2f7048b7abedee
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.1"
   file:
     dependency: transitive
     description:
@@ -323,6 +315,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_animate:
+    dependency: "direct main"
+    description:
+      name: flutter_animate
+      sha256: "62f346340a96192070e31e3f2a1bd30a28530f1fe8be978821e06cd56b74d6d2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.2.0+1"
   flutter_archive:
     dependency: "direct main"
     description:
@@ -331,14 +331,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.0"
-  flutter_blurhash:
-    dependency: transitive
-    description:
-      name: flutter_blurhash
-      sha256: "05001537bd3fac7644fa6558b09ec8c0a3f2eba78c0765f88912882b1331a5c6"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.7.0"
   flutter_cache_manager:
     dependency: transitive
     description:
@@ -355,6 +347,23 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.3"
+  flutter_html:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: c3b3581510eb3f45667f582b8b7a39428d059b50
+      url: "https://github.com/zhourengui/flutter_html"
+    source: git
+    version: "3.0.0-beta.2"
+  flutter_inappwebview:
+    dependency: transitive
+    description:
+      name: flutter_inappwebview
+      sha256: f73505c792cf083d5566e1a94002311be497d984b5607f25be36d685cf6361cf
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.7.2+3"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -479,14 +488,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "8.2.2"
-  freezed_annotation:
-    dependency: transitive
+  focused_menu:
+    dependency: "direct main"
     description:
-      name: freezed_annotation
-      sha256: aeac15850ef1b38ee368d4c53ba9a847e900bb2c53a4db3f6881cbb3cb684338
+      name: focused_menu
+      sha256: bd06bf580a8573e100571a1d9bc27c2200a38681de30eeda96246df1eac06749
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "1.0.5"
   fwfh_text_style:
     dependency: transitive
     description:
@@ -552,6 +561,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.18.1"
+  jiffy:
+    dependency: "direct main"
+    description:
+      name: jiffy
+      sha256: cc1d4b75016a9156c29b5d61f0c9176c3e0fb0580cc5a0e0422b5d2cab3fbfff
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.2.1"
   js:
     dependency: transitive
     description:
@@ -560,14 +577,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.7"
-  json_annotation:
-    dependency: transitive
-    description:
-      name: json_annotation
-      sha256: b10a7b2ff83d83c777edba3c6a0f97045ddadd56c944e1a23a3fdf43a1bf4467
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.8.1"
   just_audio:
     dependency: "direct main"
     description:
@@ -601,14 +610,6 @@ packages:
       url: "https://github.com/MSOB7YY/known_extents_listview_fancy"
     source: git
     version: "1.1.0"
-  lazy_load_scrollview:
-    dependency: "direct main"
-    description:
-      name: lazy_load_scrollview
-      sha256: "230c827d6f7ec5e461f0674ef332daae2f78190bf1e4cd84977e51de04b231e3"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.3.0"
   like_button:
     dependency: "direct main"
     description:
@@ -625,14 +626,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
-  liquid_pull_to_refresh:
-    dependency: "direct main"
+  list_counter:
+    dependency: transitive
     description:
-      name: liquid_pull_to_refresh
-      sha256: "11e4cd8c5460085a31b479ec4e1cd063eb8e599f35684d57a44dafa1fd1f67f3"
+      name: list_counter
+      sha256: c447ae3dfcd1c55f0152867090e67e219d42fe6d4f2807db4bbe8b8d69912237
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.1"
+    version: "1.0.2"
   logging:
     dependency: transitive
     description:
@@ -665,15 +666,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.0"
-  media_metadata_retriever:
-    dependency: "direct main"
-    description:
-      path: "."
-      ref: HEAD
-      resolved-ref: e83656bc01b629ab89d47ea95cc5141a417ceb13
-      url: "https://github.com/MSOB7YY/media_metadata_retriever"
-    source: git
-    version: "0.0.1"
   meta:
     dependency: transitive
     description:
@@ -698,6 +690,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
+  newpipeextractor_dart:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: cd38c3e9145b6ca3cccc8136056fac38f2b9b4b6
+      resolved-ref: cd38c3e9145b6ca3cccc8136056fac38f2b9b4b6
+      url: "https://github.com/MSOB7YY/NewPipeExtractor_Dart"
+    source: git
+    version: "0.0.1"
   nm:
     dependency: transitive
     description:
@@ -706,14 +707,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.5.0"
-  octo_image:
-    dependency: transitive
-    description:
-      name: octo_image
-      sha256: "107f3ed1330006a3bea63615e81cf637433f5135a52466c7caa0e7152bca9143"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.2"
   package_info_plus:
     dependency: transitive
     description:
@@ -890,12 +883,20 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.2.4"
+  queue:
+    dependency: "direct main"
+    description:
+      name: queue
+      sha256: "9a41ecadc15db79010108c06eae229a45c56b18db699760f34e8c9ac9b831ff9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.0+2"
   queue_manager:
     dependency: "direct main"
     description:
       path: "."
-      ref: HEAD
-      resolved-ref: a8e49d7e4f921b7b5d5964bcb25dd92462411e02
+      ref: f4b46745b31cdc2cf0f3d5af1a668a4143b111d3
+      resolved-ref: f4b46745b31cdc2cf0f3d5af1a668a4143b111d3
       url: "https://github.com/MSOB7YY/queue_manager"
     source: git
     version: "0.0.1"
@@ -947,14 +948,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.3.0"
-  shimmer:
-    dependency: "direct main"
-    description:
-      name: shimmer
-      sha256: "5f88c883a22e9f9f299e5ba0e4f7e6054857224976a5d9f839d4ebdc94a14ac9"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.0"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -1048,14 +1041,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.5.1"
-  timeago:
-    dependency: "direct main"
-    description:
-      name: timeago
-      sha256: a415b9a05ef64b845c859a91161fc9f689f88eaaa4c04759517d201891b99e90
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.4.0"
   timezone:
     dependency: transitive
     description:
@@ -1280,14 +1265,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.2"
-  youtube_explode_dart:
-    dependency: "direct main"
-    description:
-      name: youtube_explode_dart
-      sha256: "07889a6229a63e78f8d45a3b852897c2e0fa42e96c4daa38d411be211575bc38"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.12.4"
 sdks:
   dart: ">=3.0.5 <4.0.0"
   flutter: ">=3.10.0"

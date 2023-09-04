@@ -1,6 +1,8 @@
 // This is originally a part of [Tear Music](https://github.com/tearone/tearmusic), edited to fit Namida.
 // Credits goes for the original author @55nknown
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:animated_background/animated_background.dart';
@@ -9,6 +11,7 @@ import 'package:get/get.dart';
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -32,11 +35,13 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/packages/focused_menu.dart';
 import 'package:namida/packages/youtube_miniplayer.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
 
@@ -200,6 +205,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                     bottomLeft: Radius.circular(20.0.multipliedRadius * (1 - p * 10 + 9).clamp(0, 1)),
                     bottomRight: Radius.circular(20.0.multipliedRadius * (1 - p * 10 + 9).clamp(0, 1)),
                   );
+                  final double slowOpacity = (bcp * 4 - 3).clamp(0, 1);
                   final double opacity = (bcp * 5 - 4).clamp(0, 1);
                   final double fastOpacity = (bcp * 10 - 9).clamp(0, 1);
                   double panelHeight = maxOffset / 1.6;
@@ -572,85 +578,247 @@ class NamidaMiniPlayer extends StatelessWidget {
                               child: SafeArea(
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 12.0),
-                                  child: TextButton(
-                                    onLongPress: () {
-                                      ScrollSearchController.inst.unfocusKeyboard();
-                                      NamidaNavigator.inst.navigateDialog(dialog: const Dialog(child: PlaybackSettings(isInDialog: true)));
-                                    },
-                                    onPressed: () async => await VideoController.inst.toggleVideoPlayback(),
-                                    child: Obx(
-                                      () {
-                                        final videoPlaybackEnabled = SettingsController.inst.enableVideoPlayback.value;
-                                        final downloadedBytes = VideoController.inst.currentDownloadedBytes.value;
-                                        final currentVideo = VideoController.inst.currentVideo.value;
-                                        final videoTotalSize = currentVideo?.sizeInBytes ?? 0;
-                                        final videoQuality = currentVideo?.height ?? 0;
-                                        final videoFramerate = currentVideo?.framerate;
-                                        final markText = VideoController.inst.isNoVideosAvailable.value ? 'x' : '?';
-                                        final fallbackQualityLabel = currentVideo?.nameInCache?.split('_').last;
-                                        // final altText = currentVideo == null
-                                        //     ? '?'
-                                        //     : currentVideo.ytID == null
-                                        //         ? Language.inst.LOCAL
-                                        //         : 'Cache';
-                                        final qualityText = videoQuality == 0 ? fallbackQualityLabel ?? markText : '${videoQuality}p';
-                                        final framerateText = videoFramerate != null && videoFramerate > 30 ? videoFramerate : '';
-                                        Widget getTextWidget(String text, {required bool colored, Color? textColor, double? fontSize}) {
-                                          return Text(
-                                            text,
-                                            style: TextStyle(color: textColor ?? (colored ? onSecondary : null), fontSize: fontSize?.multipliedFontScale),
-                                          );
-                                        }
+                                  child: () {
+                                    final isMenuOpened = false.obs;
+                                    final isLoadingMore = false.obs;
+                                    const animationDuration = Duration(milliseconds: 150);
 
-                                        return Row(
-                                          mainAxisSize: MainAxisSize.min,
+                                    Widget getQualityButton({
+                                      required String title,
+                                      String subtitle = '',
+                                      required IconData icon,
+                                      Color? bgColor,
+                                      Widget? trailing,
+                                      double padding = 4.0,
+                                      required void Function()? onTap,
+                                    }) {
+                                      return NamidaInkWell(
+                                        margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                                        padding: EdgeInsets.all(padding),
+                                        onTap: onTap,
+                                        borderRadius: 8.0,
+                                        width: context.width,
+                                        bgColor: bgColor,
+                                        child: Row(
                                           children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(6.0),
-                                              decoration: BoxDecoration(
-                                                color: context.theme.colorScheme.secondaryContainer,
-                                                shape: BoxShape.circle,
+                                            Icon(icon, size: 18.0),
+                                            const SizedBox(width: 6.0),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    title,
+                                                    style: context.textTheme.displayMedium?.copyWith(
+                                                      fontSize: 13.0.multipliedFontScale,
+                                                    ),
+                                                  ),
+                                                  if (subtitle != '')
+                                                    Text(
+                                                      subtitle,
+                                                      style: context.textTheme.displaySmall?.copyWith(
+                                                        fontSize: 13.0.multipliedFontScale,
+                                                      ),
+                                                    ),
+                                                ],
                                               ),
-                                              child: Icon(videoPlaybackEnabled ? Broken.video : Broken.video_slash, size: 18.0, color: onSecondary),
                                             ),
-                                            const SizedBox(
-                                              width: 8.0,
-                                            ),
-                                            if (!videoPlaybackEnabled) ...[
-                                              getTextWidget(Language.inst.AUDIO, colored: true),
-                                              if (SettingsController.inst.displayAudioInfoMiniplayer.value)
-                                                getTextWidget(
-                                                  " • ${currentTrack.audioInfoFormattedCompact}",
-                                                  colored: true,
-                                                  textColor: context.theme.colorScheme.onPrimaryContainer,
-                                                  fontSize: 10.0,
-                                                ),
+                                            if (trailing != null) ...[
+                                              const SizedBox(width: 4.0),
+                                              trailing,
+                                              const SizedBox(width: 4.0),
                                             ],
-                                            if (videoPlaybackEnabled) ...[
-                                              getTextWidget(Language.inst.VIDEO, colored: true),
-                                              qualityText == '?' && !ConnectivityController.inst.hasConnection
-                                                  ? Row(
-                                                      children: [
-                                                        getTextWidget(" • ", colored: true),
-                                                        Icon(
-                                                          Broken.global,
-                                                          size: 14.0,
-                                                          color: onSecondary,
-                                                        ),
-                                                      ],
-                                                    )
-                                                  : getTextWidget(" • $qualityText$framerateText", colored: false, fontSize: 13.0),
-                                              if (videoTotalSize > 0) ...[
-                                                getTextWidget(" • ", colored: false, fontSize: 13.0),
-                                                if (downloadedBytes != null) getTextWidget("${downloadedBytes.fileSizeFormatted}/", colored: true, fontSize: 10.0),
-                                                getTextWidget(videoTotalSize.fileSizeFormatted, colored: true, fontSize: 10.0),
-                                              ]
-                                            ]
                                           ],
-                                        );
+                                        ),
+                                      );
+                                    }
+
+                                    Widget getTextWidget(String text, {required bool colored, Color? textColor, double? fontSize}) {
+                                      return Text(
+                                        text,
+                                        style: TextStyle(color: textColor ?? (colored ? onSecondary : null), fontSize: fontSize?.multipliedFontScale),
+                                      );
+                                    }
+
+                                    return FocusedMenuHolder(
+                                      menuOpenAlignment: Alignment.bottomLeft,
+                                      bottomOffsetHeight: 12.0,
+                                      leftOffsetHeight: 4.0,
+                                      onMenuOpen: () {
+                                        if (SettingsController.inst.enableVideoPlayback.value) {
+                                          isMenuOpened.value = true;
+                                          return true;
+                                        } else {
+                                          ScrollSearchController.inst.unfocusKeyboard();
+                                          NamidaNavigator.inst.navigateDialog(dialog: const Dialog(child: PlaybackSettings(isInDialog: true)));
+                                          return false;
+                                        }
                                       },
-                                    ),
-                                  ),
+                                      onMenuClose: () => isMenuOpened.value = false,
+                                      blurSize: 2.0,
+                                      duration: animationDuration,
+                                      animateMenuItems: false,
+                                      menuWidth: context.width * 0.5,
+                                      menuBoxDecoration: BoxDecoration(
+                                        color: context.theme.scaffoldBackgroundColor,
+                                        borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                                      ),
+                                      menuWidget: Obx(
+                                        () {
+                                          final availableVideos = VideoController.inst.currentPossibleVideos;
+                                          final ytVideos = VideoController.inst.currentYTQualities;
+                                          return ListView(
+                                            padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                            children: [
+                                              getQualityButton(
+                                                title: 'check for more',
+                                                icon: Broken.chart,
+                                                bgColor: null,
+                                                trailing: isLoadingMore.value ? const LoadingIndicator() : null,
+                                                onTap: () async {
+                                                  isLoadingMore.value = true;
+                                                  await VideoController.inst.fetchYTQualities(currentTrack);
+                                                  isLoadingMore.value = false;
+                                                },
+                                              ),
+                                              ...availableVideos.map(
+                                                (element) {
+                                                  final localOrCache = element.ytID == null ? Language.inst.LOCAL : Language.inst.CACHE;
+                                                  return Obx(
+                                                    () {
+                                                      final currentVideo = VideoController.inst.currentVideo.value;
+                                                      final isCurrent = element.path == currentVideo?.path;
+                                                      return getQualityButton(
+                                                        bgColor: isCurrent ? CurrentColor.inst.color.withAlpha(20) : null,
+                                                        icon: Broken.video,
+                                                        title: [
+                                                          "${element.height}p${element.framerateText()}",
+                                                          localOrCache,
+                                                        ].join(' • '),
+                                                        subtitle: [
+                                                          element.sizeInBytes.fileSizeFormatted,
+                                                          "${element.bitrate ~/ 1000} kb/s",
+                                                        ].join(' • '),
+                                                        trailing: NamidaCheckMark(
+                                                          active: isCurrent,
+                                                          size: 12.0,
+                                                        ),
+                                                        onTap: () {
+                                                          VideoController.inst.playVideoCurrent(video: element, track: currentTrack);
+                                                        },
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                              const NamidaContainerDivider(height: 2.0, margin: EdgeInsets.symmetric(vertical: 6.0)),
+                                              ...ytVideos.map(
+                                                (element) {
+                                                  return Obx(
+                                                    () {
+                                                      final currentVideo = VideoController.inst.currentVideo.value;
+                                                      final cacheFile = File("${AppDirs.VIDEOS_CACHE}${currentVideo?.ytID}_${element.resolution}.${element.formatSuffix}");
+                                                      final cacheExists = currentVideo?.ytID == null ? false : cacheFile.existsSync();
+                                                      return getQualityButton(
+                                                        onTap: () async {
+                                                          if (!cacheExists) await VideoController.inst.getVideoFromYoutubeAndUpdate(currentVideo?.ytID, stream: element);
+                                                          VideoController.inst
+                                                              .playVideoCurrent(video: null, cacheIdAndPath: (currentVideo?.ytID ?? '', cacheFile.path), track: currentTrack);
+                                                        },
+                                                        bgColor: cacheExists ? CurrentColor.inst.color.withAlpha(40) : null,
+                                                        icon: cacheExists ? Broken.tick_circle : Broken.import,
+                                                        title: "${element.resolution} • ${element.sizeInBytes?.fileSizeFormatted}",
+                                                        subtitle: "${element.formatSuffix} • ${(element.bitrate ?? 1000) ~/ 1000} kb/s",
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      ),
+                                      child: Obx(
+                                        () {
+                                          final videoPlaybackEnabled = SettingsController.inst.enableVideoPlayback.value;
+                                          final currentVideo = VideoController.inst.currentVideo.value;
+                                          final downloadedBytes = VideoController.inst.currentDownloadedBytes.value;
+                                          final videoTotalSize = currentVideo?.sizeInBytes ?? 0;
+                                          final videoQuality = currentVideo?.height ?? 0;
+                                          final videoFramerate = currentVideo?.framerateText(30);
+                                          final markText = VideoController.inst.isNoVideosAvailable.value ? 'x' : '?';
+                                          final fallbackQualityLabel = currentVideo?.nameInCache?.split('_').last;
+                                          // final altText = currentVideo == null
+                                          //     ? '?'
+                                          //     : currentVideo.ytID == null
+                                          //         ? Language.inst.LOCAL
+                                          //         : 'Cache';
+                                          final qualityText = videoQuality == 0 ? fallbackQualityLabel ?? markText : '${videoQuality}p';
+                                          final framerateText = videoFramerate ?? '';
+                                          return AnimatedContainer(
+                                            duration: animationDuration,
+                                            decoration: isMenuOpened.value
+                                                ? BoxDecoration(
+                                                    color: context.theme.scaffoldBackgroundColor,
+                                                    borderRadius: BorderRadius.circular(24.0.multipliedRadius),
+                                                  )
+                                                : BoxDecoration(
+                                                    borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                                                  ),
+                                            child: TextButton(
+                                              onPressed: () async => await VideoController.inst.toggleVideoPlayback(),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Container(
+                                                    padding: const EdgeInsets.all(6.0),
+                                                    decoration: BoxDecoration(
+                                                      color: context.theme.colorScheme.secondaryContainer,
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    child: Icon(videoPlaybackEnabled ? Broken.video : Broken.video_slash, size: 18.0, color: onSecondary),
+                                                  ),
+                                                  const SizedBox(
+                                                    width: 8.0,
+                                                  ),
+                                                  if (!videoPlaybackEnabled) ...[
+                                                    getTextWidget(Language.inst.AUDIO, colored: true),
+                                                    if (SettingsController.inst.displayAudioInfoMiniplayer.value)
+                                                      getTextWidget(
+                                                        " • ${currentTrack.audioInfoFormattedCompact}",
+                                                        colored: true,
+                                                        textColor: context.theme.colorScheme.onPrimaryContainer,
+                                                        fontSize: 10.0,
+                                                      ),
+                                                  ],
+                                                  if (videoPlaybackEnabled) ...[
+                                                    getTextWidget(Language.inst.VIDEO, colored: true),
+                                                    qualityText == '?' && !ConnectivityController.inst.hasConnection
+                                                        ? Row(
+                                                            children: [
+                                                              getTextWidget(" • ", colored: true),
+                                                              Icon(
+                                                                Broken.global_refresh,
+                                                                size: 14.0,
+                                                                color: onSecondary,
+                                                              ),
+                                                            ],
+                                                          )
+                                                        : getTextWidget(" • $qualityText$framerateText", colored: false, fontSize: 13.0),
+                                                    if (videoTotalSize > 0) ...[
+                                                      getTextWidget(" • ", colored: false, fontSize: 13.0),
+                                                      if (downloadedBytes != null) getTextWidget("${downloadedBytes.fileSizeFormatted}/", colored: true, fontSize: 10.0),
+                                                      getTextWidget(videoTotalSize.fileSizeFormatted, colored: true, fontSize: 10.0),
+                                                    ]
+                                                  ]
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  }(),
                                 ),
                               ),
                             ),
@@ -865,11 +1033,21 @@ class NamidaMiniPlayer extends StatelessWidget {
                       ),
 
                       /// Slider
-                      if (fastOpacity > 0.0)
+                      if (slowOpacity > 0.0)
                         Opacity(
-                          opacity: fastOpacity,
+                          opacity: slowOpacity,
                           child: Transform.translate(
-                            offset: Offset(0, bottomOffset + (-maxOffset / 4.4 * p)),
+                            offset: Offset(
+                                0,
+                                bottomOffset +
+                                    (-maxOffset / 4.4 * p) +
+                                    ((-maxOffset + topInset) *
+                                        ((!bounceUp
+                                            ? !bounceDown
+                                                ? qp
+                                                : (1 - bp)
+                                            : 0.0)) *
+                                        0.4)),
                             child: Align(
                               alignment: Alignment.bottomLeft,
                               child: Padding(
@@ -1674,7 +1852,7 @@ class _AnimatingTrackImage extends StatelessWidget {
                       borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
                       child: LyricsWrapper(
                         cp: cp,
-                        child: VideoController.inst.getVideoWidget(false),
+                        child: VideoController.inst.getVideoWidget(const Key('video_widget'), false),
                       ),
                     )
                   : LyricsWrapper(

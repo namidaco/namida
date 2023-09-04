@@ -22,6 +22,7 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
+import 'package:namida/controller/youtube_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -527,6 +528,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   Future<void> playFunction(Selectable item, bool startPlaying) async {
     final tr = item.track;
     VideoController.inst.updateCurrentVideo(tr);
+    YoutubeController.inst.updateVideoDetails(tr.youtubeID);
     WaveformController.inst.generateWaveform(tr);
 
     /// The whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture] don't get detected.

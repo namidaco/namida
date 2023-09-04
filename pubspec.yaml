@@ -51,7 +51,6 @@ dependencies:
   connectivity_plus: ^4.0.2
   selectable_autolink_text: ^2.6.0
   share_plus: ^7.1.0
-  timeago: ^3.4.0
   readmore: ^2.2.0
   calendar_date_picker2: ^0.5.2
   wakelock_plus: ^1.1.1
@@ -66,11 +65,13 @@ dependencies:
       url: https://github.com/MSOB7YY/catcher
   queue: ^3.1.0+2
   jiffy: ^6.2.1
-
   queue_manager:
     git:
       url: https://github.com/MSOB7YY/queue_manager
       ref: f4b46745b31cdc2cf0f3d5af1a668a4143b111d3
+  flutter_html:
+    git:
+      url: https://github.com/zhourengui/flutter_html
 
   # ---- Path/File Providers ----
   path_provider: ^2.0.14
@@ -95,13 +96,15 @@ dependencies:
   better_player:
     git:
       url: https://github.com/tintran-dev/betterplayer
-  youtube_explode_dart: ^1.12.4
   ffmpeg_kit_flutter_min: "5.1.0-LTS"
+  newpipeextractor_dart:
+    git:
+      url: https://github.com/MSOB7YY/NewPipeExtractor_Dart
+      ref: cd38c3e9145b6ca3cccc8136056fac38f2b9b4b6
 
   # ---- Image Utilities ----
   extended_image: ^8.0.2
   palette_generator: ^0.3.3+2
-  cached_network_image: ^3.2.3
   photo_view: ^0.14.0
 
   # ---- UI Rendering ----
@@ -125,14 +128,12 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/flutter_scrollbar_modified
   sticky_headers: ^0.3.0+2
+  focused_menu: ^1.0.5
 
   # ---- Under Test ----
   # webview_flutter: ^4.0.7
   # webview_cookie_manager: ^2.0.6
   # google_sign_in: ^6.0.2
-  shimmer: ^3.0.0
-  liquid_pull_to_refresh: ^3.0.1
-  lazy_load_scrollview: ^1.3.0
   # better_player: ^0.0.83
   # git:
   #   url: https://github.com/AnonymHK/betterplayer

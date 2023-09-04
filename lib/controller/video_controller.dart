@@ -1,20 +1,20 @@
-// ignore_for_file: library_private_types_in_public_api
+// ignore_for_file: library_private_types_in_public_api, depend_on_referenced_packages
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
-
-import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 
 import 'package:better_player/better_player.dart';
-import 'package:dio/dio.dart';
-import 'package:get/get_rx/get_rx.dart';
-import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart' hide Response;
+import 'package:namida/ui/widgets/video_widget.dart';
+import 'package:newpipeextractor_dart/models/streams.dart';
 
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -32,25 +32,41 @@ class VideoController {
 
   final RxDouble videoZoomAdditionalScale = 0.0.obs;
 
-  Widget getVideoWidget(bool enableControls) => GestureDetector(
-        behavior: HitTestBehavior.translucent,
+  Widget? videoWidget;
+  Key? _lastKey;
+  Widget getVideoWidget(Key? keyyy, bool enableControls) {
+    final key = Key('video_widget$enableControls');
+    if (videoWidget == null || _lastKey != key) {
+      _lastKey = key;
+      videoWidget = GestureDetector(
+        key: key,
+        behavior: HitTestBehavior.opaque,
         onScaleUpdate: (details) {
           videoZoomAdditionalScale.value = details.scale;
         },
         onScaleEnd: (details) {
           if (videoZoomAdditionalScale.value > 1.1) {
-            vcontroller.enterFullScreen(getVideoWidget(true));
+            vcontroller.enterFullScreen(getVideoWidget(key, true));
           } else {
             vcontroller.exitFullScreen();
           }
         },
         child: AspectRatio(
           aspectRatio: aspectRatio,
-          child: BetterPlayer(
-            controller: playerController!,
+          child: NamidaVideoControls(
+            showControls: enableControls,
+            controller: playerController?.videoPlayerController,
+            child: BetterPlayer(
+              controller: playerController!,
+            ),
           ),
         ),
       );
+    }
+
+    return videoWidget!;
+  }
+
   bool get shouldShowVideo => currentVideo.value != null && _videoController.isInitialized;
 
   double get aspectRatio => _videoController.aspectRatio;
@@ -60,7 +76,7 @@ class VideoController {
 
   final currentVideo = Rxn<NamidaVideo>();
   final currentPossibleVideos = <NamidaVideo>[].obs;
-  final currentYTQualities = <VideoOnlyStreamInfo>[].obs;
+  final currentYTQualities = <VideoOnlyStream>[].obs;
   final currentDownloadedBytes = Rxn<int>();
 
   /// Indicates that [updateCurrentVideo] didn't find any matching video.
@@ -126,45 +142,53 @@ class VideoController {
     if (possibleVideos.isNotEmpty) {
       possibleVideos.sortByReverseAlt(
         (e) {
-          if (e.width == 0 || e.height == 0) {
-            return 0;
-          }
-          return e.height / e.width;
+          if (e.width != 0) return e.width;
+          if (e.height != 0) return e.height;
+          return 0;
         },
-        (e) => e.sizeInBytes,
+        (e) => e.frameratePrecise,
       );
       erabaretaVideo = possibleVideos.firstWhereEff((element) => File(element.path).existsSync());
     }
+
     currentVideo.value = erabaretaVideo;
 
     if (erabaretaVideo == null && vpsInSettings != VideoPlaybackSource.local) {
       if (ConnectivityController.inst.hasConnection) {
-      final downloadedVideo = await fetchVideoFromYoutube(trackYTID);
-      erabaretaVideo = downloadedVideo;
-    }
+        final downloadedVideo = await getVideoFromYoutubeAndUpdate(trackYTID);
+        erabaretaVideo = downloadedVideo;
+      }
     }
 
     if (erabaretaVideo != null) {
-      await playVideoCurrent(path: erabaretaVideo.path, track: track);
+      await playVideoCurrent(video: erabaretaVideo, track: track);
     }
     // saving video thumbnail
     final id = erabaretaVideo?.ytID;
     if (id != null) {
-      await saveYoutubeThumbnail(id: id);
+      await getYoutubeThumbnailAndCache(id: id);
     }
   }
 
   Future<void> playVideoCurrent({
-    required String path,
+    required NamidaVideo? video,
+    (String, String)? cacheIdAndPath,
     required Track track,
   }) async {
+    assert(video != null || cacheIdAndPath != null);
+
     await _executeForCurrentTrackOnly(track, () async {
       const allowance = 5; // seconds
-      await _videoController.setFile(
-          path, (videoDuration) => videoDuration.inSeconds > allowance && videoDuration.inSeconds < track.duration - allowance); // loop only if video duration is less than audio.
-      await _videoController.setVolume(0);
-      await Player.inst.updateVideoPlayingState();
-      currentVideo.refresh();
+      final v = cacheIdAndPath != null ? _videoCacheIDMap[cacheIdAndPath.$1]?.firstWhereEff((e) => e.path == cacheIdAndPath.$2) : video;
+      if (v != null) {
+        await _videoController.setFile(v.path,
+            (videoDuration) => videoDuration.inSeconds > allowance && videoDuration.inSeconds < track.duration - allowance); // loop only if video duration is less than audio.
+      }
+      currentVideo.value = v;
+      await Future.wait([
+        _videoController.setVolume(0),
+        Player.inst.updateVideoPlayingState(),
+      ]);
     });
   }
 
@@ -175,7 +199,7 @@ class VideoController {
       // should close/hide
       currentVideo.value = null;
       _videoController.dispose();
-      YoutubeController.inst.dispose(downloadClientOnly: true);
+      YoutubeController.inst.dispose();
     } else {
       _videoController = _NamidaVideoPlayer.inst;
       await updateCurrentVideo(Player.inst.nowPlayingTrack);
@@ -197,31 +221,72 @@ class VideoController {
     }
   }
 
-  Future<NamidaVideo?> fetchVideoFromYoutube(String id) async {
-    if (id == '') return null;
+  Future<void> fetchYTQualities(Track track) async {
+    final available = await YoutubeController.inst.getAvailableVideosOnly(track.youtubeID);
+    _executeForCurrentTrackOnly(track, () {
+      currentYTQualities.clear();
+      currentYTQualities.addAll(available);
+    });
+  }
+
+  Future<NamidaVideo?> getVideoFromYoutubeAndUpdate(
+    String? id, {
+    VideoStream? stream,
+  }) async {
+    final tr = Player.inst.nowPlayingTrack;
+    final dv = await fetchVideoFromYoutube(id, stream: stream);
+    _executeForCurrentTrackOnly(tr, () {
+      currentVideo.value = dv;
+      currentYTQualities.refresh();
+      if (dv != null) currentPossibleVideos.addNoDuplicates(dv);
+      currentPossibleVideos.sortByReverseAlt(
+        (e) {
+          if (e.width != 0) return e.width;
+          if (e.height != 0) return e.height;
+          return 0;
+        },
+        (e) => e.frameratePrecise,
+      );
+    });
+    return dv;
+  }
+
+  Future<NamidaVideo?> fetchVideoFromYoutube(
+    String? id, {
+    VideoStream? stream,
+  }) async {
+    if (id == null || id == '') return null;
+
     int downloaded = 0;
     _downloadTimerCancel();
-    _downloadTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      currentDownloadedBytes.value = downloaded;
+    void updateCurrentBytes() {
+      currentDownloadedBytes.value = downloaded == 0 ? null : downloaded;
       printy('Video Download: ${currentDownloadedBytes.value?.fileSizeFormatted}');
+    }
+
+    _downloadTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      updateCurrentBytes();
     });
+
     final initialTrack = Player.inst.nowPlayingTrack;
     void updateValuesCT(void Function() execute) => _executeForCurrentTrackOnly(initialTrack, execute);
 
     final downloadedVideo = await YoutubeController.inst.downloadYoutubeVideo(
       id: id,
+      stream: stream,
       onAvailableQualities: (availableStreams) {},
       onChoosingQuality: (choosenStream) {
         updateValuesCT(() {
           currentVideo.value = NamidaVideo(
             path: '',
-            height: choosenStream.videoResolution.height,
-            width: choosenStream.videoResolution.width,
-            sizeInBytes: choosenStream.size.totalBytes,
-            frameratePrecise: choosenStream.framerate.framesPerSecond.toDouble(),
+            ytID: id,
+            height: choosenStream.height ?? 0,
+            width: choosenStream.width ?? 0,
+            sizeInBytes: choosenStream.sizeInBytes ?? 0,
+            frameratePrecise: choosenStream.fps?.toDouble() ?? 0.0,
             creationTimeMS: 0,
-            durationMS: 0,
-            bitrate: choosenStream.bitrate.bitsPerSecond,
+            durationMS: choosenStream.durationMS ?? 0,
+            bitrate: choosenStream.bitrate ?? 0,
           );
         });
       },
@@ -237,11 +302,12 @@ class VideoController {
         });
       },
     );
+    updateCurrentBytes();
     if (downloadedVideo != null) {
-      _videoCacheIDMap.addForce(downloadedVideo.ytID ?? '', downloadedVideo);
+      _videoCacheIDMap.addNoDuplicatesForce(downloadedVideo.ytID ?? '', downloadedVideo);
       await _saveCachedVideosFile();
     }
-    currentDownloadedBytes.value = 0;
+    currentDownloadedBytes.value = null;
     _downloadTimerCancel();
     return downloadedVideo;
   }
@@ -251,6 +317,10 @@ class VideoController {
     final id = link.getYoutubeID;
 
     final possibleCached = _videoCacheIDMap[id] ?? [];
+    possibleCached.sortByReverseAlt(
+      (e) => e.width,
+      (e) => e.frameratePrecise,
+    );
 
     final possibleLocal = <NamidaVideo>[];
     final trExt = track.toTrackExt();
@@ -315,7 +385,7 @@ class VideoController {
 
   Future<void> initialize() async {
     // -- Fetching Cached Videos Info.
-    final file = File(k_FILE_PATH_VIDEOS_CACHE);
+    final file = File(AppPaths.VIDEOS_CACHE);
     final cacheVideosInfoFile = await file.readAsJson() as List?;
     final vl = cacheVideosInfoFile?.mapped((e) => NamidaVideo.fromJson(e));
     _videoCacheIDMap.clear();
@@ -375,7 +445,7 @@ class VideoController {
   }
 
   Future<bool> _saveCachedVideosFile() async {
-    final file = File(k_FILE_PATH_VIDEOS_CACHE);
+    final file = File(AppPaths.VIDEOS_CACHE);
     final mapValuesTotal = <Map<String, dynamic>>[];
     _videoCacheIDMap.values.toList().loop((e, index) {
       mapValuesTotal.addAll(e.map((e) => e.toJson()));
@@ -428,7 +498,7 @@ class VideoController {
   /// - DOES NOT handle: `deleted` & `needs-to-be-updated` files.
   /// - Returns a map with new videos only.
   Future<Map<String, List<NamidaVideo>>> _checkForNewVideosInCache(Map<String, List<NamidaVideo>> idsMap) async {
-    final dir = Directory(k_DIR_VIDEOS_CACHE);
+    final dir = Directory(AppDirs.VIDEOS_CACHE);
     final newIdsMap = <String, List<NamidaVideo>>{};
 
     await for (final df in dir.list()) {
@@ -466,7 +536,7 @@ class VideoController {
     bool forceReScan = false,
     required void Function(bool didExtract, int total) onProgress,
   }) async {
-    final videosFile = File(k_FILE_PATH_VIDEOS_LOCAL);
+    final videosFile = File(AppPaths.VIDEOS_LOCAL);
     final namidaVideos = <NamidaVideo>[];
 
     if (await videosFile.existsAndValid() && !forceReScan) {
@@ -530,37 +600,30 @@ class VideoController {
     );
   }
 
-  Future<Uint8List?> getYoutubeThumbnail(Dio dio, String youtubeId) async {
-    final link = YTThumbnail(youtubeId).maxResUrl;
-    final link2 = YTThumbnail(youtubeId).highResUrl;
+  Future<Uint8List?> getYoutubeThumbnailAsBytes({String? youtubeId, String? url}) async {
+    assert((youtubeId == null && url != null) || (youtubeId != null && url == null));
 
-    Response<List<int>>? response;
-    Future<Response<List<int>>> getImageBytes(String link) async {
-      return await dio.get<List<int>>(
-        link,
-        options: Options(responseType: ResponseType.bytes),
-        // onReceiveProgress: (count, total) => printy('Downloading Thumbnail ${count.fileSizeFormatted}/${total.fileSizeFormatted}'),
-      );
-    }
+    final links = url != null ? [url] : YTThumbnail(youtubeId!).allQualitiesByHighest;
 
-    try {
-      response = await getImageBytes(link);
-    } catch (e) {
-      printy('Error getting maxResUrl, trying again with highRes Image.\n$e', isError: true);
+    for (final link in links) {
       try {
-        response = await getImageBytes(link2);
+        final res = await http.get(Uri.parse(link));
+        final data = res.bodyBytes;
+        if (data.isNotEmpty && res.statusCode != 404) {
+          return data;
+        }
       } catch (e) {
-        printy('Error getting highResUrl.\n$e', isError: true);
+        printy('Error getting thumbnail at $link, trying again with lower quality.\n$e', isError: true);
       }
     }
-    final bytes = response != null && response.data != null ? Uint8List.fromList(response.data!) : null;
-    return bytes;
+
+    return null;
   }
 
-  Future<File?> saveYoutubeThumbnail({
-    required String id,
-  }) async {
-    final file = File("$k_DIR_YT_THUMBNAILS$id.png");
+  Future<File?> getYoutubeThumbnailAndCache({String? id, String? channelUrl}) async {
+    assert((id == null && channelUrl != null) || (id != null && channelUrl == null));
+
+    final file = id != null ? File("${AppDirs.YT_THUMBNAILS}$id.png") : File("${AppDirs.YT_THUMBNAILS_CHANNELS}${channelUrl?.split('/').last}.png");
     if (await file.exists()) {
       printy('Downloading Thumbnail Already Exists');
       return file;
@@ -568,19 +631,29 @@ class VideoController {
 
     printy('Downloading Thumbnail Started');
 
-    final dio = Dio();
-    final bytes = await getYoutubeThumbnail(dio, id);
-    dio.close();
-
+    final bytes = await getYoutubeThumbnailAsBytes(youtubeId: id, url: channelUrl);
     printy('Downloading Thumbnail Finished');
 
-    return await _saveThumbnailToStorage(
-      videoPath: null,
-      bytes: bytes,
-      isLocal: false,
-      idOrFileNameWOExt: id,
-      isExtracted: false,
-    );
+    return id != null
+        ? await _saveThumbnailToStorage(
+            videoPath: null,
+            bytes: bytes,
+            isLocal: false,
+            idOrFileNameWOExt: id,
+            isExtracted: false,
+          )
+        : await _saveChannelThumbnailToStorage(
+            file: file,
+            bytes: bytes,
+          );
+  }
+
+  Future<File?> _saveChannelThumbnailToStorage({
+    required File file,
+    required Uint8List? bytes,
+  }) async {
+    if (bytes != null) await file.writeAsBytes(bytes);
+    return file;
   }
 
   Future<File?> _saveThumbnailToStorage({
@@ -593,12 +666,12 @@ class VideoController {
     assert(bytes != null || videoPath != null);
 
     final prefix = !isLocal && isExtracted ? 'EXT_' : '';
-    final dir = isLocal ? k_DIR_THUMBNAILS : k_DIR_YT_THUMBNAILS;
+    final dir = isLocal ? AppDirs.THUMBNAILS : AppDirs.YT_THUMBNAILS;
     final file = File("$dir$prefix$idOrFileNameWOExt.png");
     if (bytes != null) {
       // if pure yt thumbnail delete the extracted version
       if (!isExtracted) {
-        await File("${k_DIR_YT_THUMBNAILS}EXT_$idOrFileNameWOExt.png").deleteIfExists();
+        await File("${AppDirs.YT_THUMBNAILS}EXT_$idOrFileNameWOExt.png").deleteIfExists();
       }
       return await file.writeAsBytes(bytes);
     } else if (videoPath != null) {

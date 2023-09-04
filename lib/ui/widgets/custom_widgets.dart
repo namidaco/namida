@@ -1299,6 +1299,8 @@ class NamidaIconButton extends StatefulWidget {
   final Color? iconColor;
   final void Function()? onPressed;
   final String? tooltip;
+  final Widget? child;
+
   const NamidaIconButton({
     super.key,
     this.padding,
@@ -1309,6 +1311,7 @@ class NamidaIconButton extends StatefulWidget {
     this.iconSize,
     this.iconColor,
     this.tooltip,
+    this.child,
   });
 
   @override
@@ -1332,11 +1335,12 @@ class _NamidaIconButtonState extends State<NamidaIconButton> {
           opacity: isPressed ? 0.5 : 1.0,
           child: Padding(
             padding: widget.padding ?? EdgeInsets.symmetric(horizontal: widget.horizontalPadding, vertical: widget.verticalPadding),
-            child: Icon(
-              widget.icon,
-              size: widget.iconSize,
-              color: widget.iconColor ?? context.theme.colorScheme.secondary,
-            ),
+            child: widget.child ??
+                Icon(
+                  widget.icon,
+                  size: widget.iconSize,
+                  color: widget.iconColor ?? context.theme.colorScheme.secondary,
+                ),
           ),
         ),
       ),
@@ -2459,6 +2463,7 @@ class ShimmerWrapper extends StatelessWidget {
   final int fadeDurationMS;
   final int shimmerDelayMS;
   final int shimmerDurationMS;
+  final bool transparent;
 
   const ShimmerWrapper({
     super.key,
@@ -2467,17 +2472,27 @@ class ShimmerWrapper extends StatelessWidget {
     this.fadeDurationMS = 600,
     this.shimmerDelayMS = 300,
     this.shimmerDurationMS = 600,
+    this.transparent = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final color = transparent ? Colors.transparent : context.theme.cardColor.withAlpha(120);
     return AnimatedSwitcher(
       duration: fadeDurationMS.ms,
       child: shimmerEnabled
           ? child.animate(
               onPlay: (controller) => controller.repeat(),
               effects: [
-                ShimmerEffect(delay: shimmerDelayMS.ms, duration: shimmerDurationMS.ms),
+                ShimmerEffect(
+                  delay: shimmerDelayMS.ms,
+                  duration: shimmerDurationMS.ms,
+                  colors: [
+                    color,
+                    const Color(0x80FFFFFF),
+                    color,
+                  ],
+                ),
               ],
             )
           : child,
@@ -2485,3 +2500,51 @@ class ShimmerWrapper extends StatelessWidget {
   }
 }
 
+class LazyLoadListView extends StatefulWidget {
+  final Widget Function(ScrollController controller) listview;
+  final Future<void> Function() onReachingEnd;
+  final int extend;
+  final ScrollController? scrollController;
+  const LazyLoadListView({
+    super.key,
+    required this.listview,
+    required this.onReachingEnd,
+    this.extend = 400,
+    this.scrollController,
+  });
+
+  @override
+  _LazyLoadListViewState createState() => _LazyLoadListViewState();
+}
+
+class _LazyLoadListViewState extends State<LazyLoadListView> {
+  late ScrollController controller;
+  bool isExecuting = false;
+
+  void _scrollListener() async {
+    if (isExecuting) return;
+
+    if (controller.offset >= controller.position.maxScrollExtent - widget.extend && !controller.position.outOfRange) {
+      isExecuting = true;
+      await widget.onReachingEnd();
+      isExecuting = false;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    controller = (widget.scrollController ?? ScrollController())..addListener(_scrollListener);
+  }
+
+  @override
+  void dispose() {
+    controller.removeListener(_scrollListener);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.listview(controller);
+  }
+}

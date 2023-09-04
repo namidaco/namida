@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:timeago/timeago.dart' as timeago;
-import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+import 'package:newpipeextractor_dart/models/infoItems/yt_feed.dart';
+import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/youtube_controller.dart';
@@ -11,7 +10,6 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/youtube_miniplayer.dart';
-import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class YoutubePage extends StatelessWidget {
@@ -31,31 +29,19 @@ class YoutubePage extends StatelessWidget {
         ),
         body: Obx(
           () {
-            VideoSearchList? searchList = YoutubeController.inst.currentSearchList.value;
-            YoutubeController.inst.searchChannels;
-            final List<Video?> l = [];
-            if (searchList == null || searchList.isEmpty) {
+            final searchList = YoutubeController.inst.homepageFeed;
+            final List<YoutubeFeed?> l = [];
+            if (searchList.isEmpty) {
               l.addAll(List.filled(20, null));
             } else {
               l.addAll(searchList);
             }
             return NamidaListView(
               itemBuilder: (context, i) {
-                if (searchList == null) {
-                  return YoutubeVideoCard(
-                    index: i,
-                    key: ValueKey(i),
-                    video: null,
-                    searchChannel: null,
-                  );
-                }
-                final v = searchList[i];
-                final searchChannel = YoutubeController.inst.searchChannels.firstWhereEff((element) => element.id.value == v.channelId.value);
+                final feedItem = searchList[i];
                 return YoutubeVideoCard(
-                  index: i,
                   key: ValueKey(i),
-                  video: v,
-                  searchChannel: searchChannel,
+                  video: feedItem is StreamInfoItem ? feedItem : null,
                 );
               },
               itemCount: l.length,
@@ -69,114 +55,108 @@ class YoutubePage extends StatelessWidget {
 }
 
 class YoutubeVideoCard extends StatelessWidget {
-  final Video? video;
-  final Channel? searchChannel;
-  final int index;
-  const YoutubeVideoCard({super.key, required this.video, required this.searchChannel, required this.index});
+  final StreamInfoItem? video;
+  const YoutubeVideoCard({super.key, required this.video});
 
   @override
   Widget build(BuildContext context) {
+    const verticalPadding = 8.0;
+    final thumbnailWidth = context.width * 0.36;
+    final thumbnailHeight = thumbnailWidth * 9 / 16;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: verticalPadding * 0.5, horizontal: 8.0),
       child: NamidaInkWell(
         bgColor: context.theme.cardColor,
         borderRadius: 12.0,
-        onTap: () {},
-        padding: const EdgeInsets.all(4.0).add(const EdgeInsets.symmetric(horizontal: 2.0)),
+        onTap: () {
+          if (video?.id != null) YoutubeController.inst.updateVideoDetails(video!.id!);
+        },
+        height: thumbnailHeight + verticalPadding,
         child: Row(
           children: [
-            video == null
-                ? NamidaBasicShimmer(
-                    index: index,
-                    width: context.width * 0.36,
-                    height: context.width * 0.36 * 9 / 16,
-                  )
-                : YoutubeThumbnail(
-                    url: video!.thumbnails.mediumResUrl,
-                    width: context.width * 0.36,
-                  ),
+            const SizedBox(width: 4.0),
+            NamidaBasicShimmer(
+              width: thumbnailWidth,
+              height: thumbnailHeight,
+              shimmerEnabled: video == null,
+              child: YoutubeThumbnail(
+                videoId: video?.id,
+                width: thumbnailWidth,
+                height: thumbnailHeight,
+                borderRadius: 10.0,
+              ),
+            ),
             const SizedBox(width: 8.0),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  /// First Line
-
+                  const SizedBox(height: 12.0),
+                  NamidaBasicShimmer(
+                    width: context.width,
+                    height: 10.0,
+                    borderRadius: 4.0,
+                    shimmerEnabled: video == null,
+                    child: Text(
+                      video?.name ?? '',
+                      style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0.multipliedFontScale),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                   const SizedBox(height: 2.0),
-                  video == null
-                      ? NamidaBasicShimmer(
-                          index: index,
-                          width: context.width / 2,
-                          height: 8.0,
-                        )
-                      : Text(
-                          video!.title,
-                          style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0.multipliedFontScale),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-
-                  /// Second Line
-                  const SizedBox(height: 2.0),
-                  video == null
-                      ? NamidaBasicShimmer(
-                          index: index,
-                          width: context.width / 2,
-                          height: 8.0,
-                        )
-                      : Text(
-                          [
-                            video!.engagement.viewCount.formatDecimal(),
-                            if (video?.uploadDate != null) '${timeago.format(video!.uploadDate!, locale: 'en_short')} ${Language.inst.AGO}'
-                          ].join(' - '),
-                          style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-
-                  /// Third Line
+                  NamidaBasicShimmer(
+                    width: context.width,
+                    height: 8.0,
+                    borderRadius: 4.0,
+                    shimmerEnabled: video == null,
+                    child: Text(
+                      [
+                        video?.viewCount?.formatDecimalShort() ?? 0,
+                        if (video?.uploadDate != null) video?.uploadDate,
+                      ].join(' - '),
+                      style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                   const SizedBox(height: 4.0),
+                  const Spacer(),
                   Row(
                     children: [
-                      searchChannel == null
-                          ? NamidaBasicShimmer(
-                              index: index,
-                              width: 22.0,
-                              height: 22.0,
-                            )
-                          : YoutubeThumbnail(
-                              url: searchChannel?.logoUrl ?? '',
-                              width: 22.0,
-                              isCircle: true,
-                              errorWidget: (context, url, error) => ArtworkWidget(
-                                thumbnailSize: 22.0,
-                                forceDummyArtwork: true,
-                                borderRadius: 124.0.multipliedRadius,
-                              ),
-                            ),
+                      NamidaBasicShimmer(
+                        width: 20.0,
+                        height: 20.0,
+                        shimmerEnabled: video?.uploaderAvatarUrl == null,
+                        child: YoutubeThumbnail(
+                          channelUrl: video?.uploaderAvatarUrl ?? '',
+                          width: 20.0,
+                          isCircle: true,
+                        ),
+                      ),
                       const SizedBox(width: 6.0),
-                      searchChannel == null
-                          ? NamidaBasicShimmer(
-                              index: index,
-                              width: context.width / 3,
-                              height: 6.0,
-                            )
-                          : Text(
-                              searchChannel?.title ?? '',
-                              style: context.textTheme.displaySmall?.copyWith(
-                                fontWeight: FontWeight.w400,
-                                fontSize: 11.0.multipliedFontScale,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                      NamidaBasicShimmer(
+                        width: context.width * 0.2,
+                        height: 8.0,
+                        shimmerEnabled: video?.uploaderName == null,
+                        child: Text(
+                          video?.uploaderName ?? '',
+                          style: context.textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.w400,
+                            fontSize: 11.0.multipliedFontScale,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 6.0),
+                  const SizedBox(height: 12.0),
                 ],
               ),
             ),
+            const SizedBox(width: 24.0),
           ],
         ),
       ),
@@ -185,28 +165,37 @@ class YoutubeVideoCard extends StatelessWidget {
 }
 
 class NamidaBasicShimmer extends StatelessWidget {
-  final double width;
-  final double height;
+  final double? width;
+  final double? height;
   final double borderRadius;
-  final int index;
-  const NamidaBasicShimmer({super.key, required this.width, required this.height, required this.index, this.borderRadius = 12.0});
+  final Widget? child;
+  final bool shimmerEnabled;
+
+  const NamidaBasicShimmer({
+    super.key,
+    required this.width,
+    required this.height,
+    this.borderRadius = 12.0,
+    required this.child,
+    required this.shimmerEnabled,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Shimmer.fromColors(
-      baseColor: context.theme.colorScheme.onBackground.withAlpha(10),
-      highlightColor: context.theme.colorScheme.onBackground.withAlpha(60),
-      direction: ShimmerDirection.ltr,
-      period: Duration(milliseconds: 1400 + (20 * index)),
-      child: Container(
-        width: width,
-        height: height,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: context.theme.colorScheme.background,
-          borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
-        ),
-      ),
+    return ShimmerWrapper(
+      shimmerEnabled: shimmerEnabled,
+      transparent: false,
+      child: child != null && !shimmerEnabled
+          ? child!
+          : Container(
+              width: width,
+              height: height,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: context.theme.colorScheme.background,
+                borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
+              ),
+            ),
     );
   }
 }

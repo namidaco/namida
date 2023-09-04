@@ -260,11 +260,11 @@ extension ConvertPathToTrack on String {
 
 extension YTLinkToID on String {
   String get getYoutubeID {
-    String videoId = '';
-    if (length >= 11) {
-      videoId = substring(length - 11);
-    }
-    return videoId;
+    final regex = RegExp(r'((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?', caseSensitive: false);
+    final match = regex.firstMatch(this);
+    final idAndMore = match?.group(5);
+    final id = idAndMore?.length == 11 ? idAndMore : null;
+    return id ?? '';
   }
 }
 

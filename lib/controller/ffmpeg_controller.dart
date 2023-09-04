@@ -225,7 +225,7 @@ class NamidaFFMPEG {
         if (doesCacheExist) {
           cachedThumbnailPath = trackThumbnailCached;
         } else {
-          bytes = await VideoController.inst.getYoutubeThumbnail(dio, ytId);
+          bytes = await VideoController.inst.getYoutubeThumbnailAsBytes(youtubeId: ytId);
         }
 
         if (cachedThumbnailPath == null && bytes == null) {

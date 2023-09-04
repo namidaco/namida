@@ -60,9 +60,11 @@ class AppDirs {
   static final VIDEOS_CACHE_TEMP = '$USER_DATA/Videos/Temp/';
   static final THUMBNAILS = '$USER_DATA/Thumbnails/';
   static final YT_THUMBNAILS = '$USER_DATA/YTThumbnails/';
+  static final YT_THUMBNAILS_CHANNELS = '${YT_THUMBNAILS}Channels/';
   static final LYRICS = '$USER_DATA/Lyrics/';
   static final YT_METADATA = '$USER_DATA/Metadata/';
-  static final YT_METADATA_COMMENTS = '$USER_DATA/Metadata/Comments/';
+  static final YT_METADATA_CHANNELS = '${YT_METADATA}Channels/';
+  static final YT_METADATA_COMMENTS = '${YT_METADATA}Comments/';
   static final YOUTUBE_STATS = '$USER_DATA/Youtube Stats/';
   static final COMPRESSED_IMAGES = '$INTERNAL_STORAGE/Compressed/';
 
@@ -76,10 +78,12 @@ class AppDirs {
     VIDEOS_CACHE_TEMP,
     THUMBNAILS,
     YT_THUMBNAILS,
+    YT_THUMBNAILS_CHANNELS,
     LYRICS,
-    YT_METADATA,
-    YT_METADATA_COMMENTS,
     YOUTUBE_STATS,
+    YT_METADATA,
+    YT_METADATA_CHANNELS,
+    YT_METADATA_COMMENTS,
   ];
 }
 
