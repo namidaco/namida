@@ -92,10 +92,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
     // -- Top Recents --
     _topRecentListened.addAllIfEmpty(
-      HistoryController.inst.getMostListensInTimeRange(
-        mptr: MostPlayedTimeRange.day3,
-        isStartOfDay: false,
-      ),
+      HistoryController.inst
+          .getMostListensInTimeRange(
+            mptr: MostPlayedTimeRange.day3,
+            isStartOfDay: false,
+          )
+          .take(50),
     );
 
     // -- Lost Memories --
@@ -151,8 +153,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         HistoryController.inst.getMostListensInTimeRange(
           mptr: MostPlayedTimeRange.custom,
           customDate: DateRange(
-            oldest: DateTime(year, timeNow.month, timeNow.day - 3),
-            newest: DateTime(year, timeNow.month, timeNow.day + 3),
+            oldest: DateTime(year, timeNow.month, timeNow.day - 5),
+            newest: DateTime(year, timeNow.month, timeNow.day + 5),
           ),
           isStartOfDay: false,
         ),
@@ -166,6 +168,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   Widget _getTracksList({
     required String title,
+    required HomePageItems homepageItem,
     String? subtitle,
     Widget? thirdWidget,
     required IconData icon,
@@ -193,6 +196,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           if (finalListWithListens != null) {
             final twl = finalListWithListens[index];
             return _TrackCard(
+              homepageItem: homepageItem,
               title: title,
               index: index,
               queue: tracksWithListensQueue ?? <Track>[],
@@ -204,6 +208,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           } else {
             final tr = finalList[index];
             return _TrackCard(
+              homepageItem: homepageItem,
               title: title,
               index: index,
               queue: finalList.whereType<Selectable>(),
@@ -223,6 +228,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     required int itemCount,
     required String? Function(int index) album,
     required int Function(String? album)? listens,
+    required HomePageItems homepageItem,
   }) {
     final albumDimensions = Dimensions.inst.getAlbumCardDimensions(4);
     return SliverToBoxAdapter(
@@ -240,6 +246,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           return ShimmerWrapper(
             shimmerEnabled: _isLoading,
             child: AlbumCard(
+              homepageItem: homepageItem,
               displayIcon: !_isLoading,
               compact: true,
               name: a ?? '',
@@ -247,7 +254,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               staggered: false,
               dimensions: albumDimensions,
               topRightText: listens == null ? null : "${listens(a)}",
-              additionalHeroTag: title,
+              additionalHeroTag: "$title$index",
             ),
           );
         },
@@ -261,6 +268,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     required int itemCount,
     required String? Function(int index) artist,
     required int Function(String? artist)? listens,
+    required HomePageItems homepageItem,
   }) {
     final artistDimensions = Dimensions.inst.getArtistCardDimensions(5);
     return SliverToBoxAdapter(
@@ -278,12 +286,13 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           return ShimmerWrapper(
             shimmerEnabled: _isLoading,
             child: ArtistCard(
+              homepageItem: homepageItem,
               displayIcon: !_isLoading,
               name: a ?? '',
               artist: a?.getArtistTracks() ?? [],
               dimensions: artistDimensions,
               bottomCenterText: listens == null ? null : "${listens(a)}",
-              additionalHeroTag: title,
+              additionalHeroTag: "$title$index",
             ),
           );
         },
@@ -292,31 +301,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   void showReorderHomeItemsDialog() {
-    String itemToText(HomePageItems item) {
-      switch (item) {
-        case HomePageItems.mixes:
-          return Language.inst.MIXES;
-        case HomePageItems.recentListens:
-          return Language.inst.RECENT_LISTENS;
-        case HomePageItems.topRecentListens:
-          return Language.inst.TOP_RECENTS;
-        case HomePageItems.lostMemories:
-          return Language.inst.LOST_MEMORIES;
-        case HomePageItems.recentlyAdded:
-          return Language.inst.RECENTLY_ADDED;
-        case HomePageItems.recentAlbums:
-          return Language.inst.RECENT_ALBUMS;
-        case HomePageItems.recentArtists:
-          return Language.inst.RECENT_ARTISTS;
-        case HomePageItems.topRecentAlbums:
-          return Language.inst.TOP_RECENT_ALBUMS;
-        case HomePageItems.topRecentArtists:
-          return Language.inst.TOP_RECENT_ARTISTS;
-        default:
-          return '';
-      }
-    }
-
     final subList = <HomePageItems>[].obs;
     HomePageItems.values.loop((e, index) {
       if (!SettingsController.inst.homePageItems.contains(e)) {
@@ -352,7 +336,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                           child: ListTileWithCheckMark(
                             active: true,
                             icon: Broken.recovery_convert,
-                            title: itemToText(item),
+                            title: item.toText(),
                             onTap: () {
                               if (SettingsController.inst.homePageItems.length <= 3) {
                                 showMinimumItemsSnack(3);
@@ -383,7 +367,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       child: ListTileWithCheckMark(
                         active: false,
                         icon: Broken.recovery_convert,
-                        title: itemToText(item),
+                        title: item.toText(),
                         onTap: () {
                           SettingsController.inst.save(homePageItems: [item]);
                           subList.remove(item);
@@ -462,6 +446,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                       case HomePageItems.recentListens:
                         return _getTracksList(
+                          homepageItem: element,
                           title: Language.inst.RECENT_LISTENS,
                           icon: Broken.command_square,
                           listy: _recentListened,
@@ -476,6 +461,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                       case HomePageItems.topRecentListens:
                         return _getTracksList(
+                          homepageItem: element,
                           title: Language.inst.TOP_RECENTS,
                           icon: Broken.crown_1,
                           listy: [],
@@ -485,6 +471,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                       case HomePageItems.lostMemories:
                         return _getTracksList(
+                          homepageItem: element,
                           title: Language.inst.LOST_MEMORIES,
                           subtitle: () {
                             final diff = DateTime.now().year - currentYearLostMemories;
@@ -548,6 +535,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                       case HomePageItems.recentlyAdded:
                         return _getTracksList(
+                          homepageItem: element,
                           title: Language.inst.RECENTLY_ADDED,
                           icon: Broken.back_square,
                           listy: _recentlyAdded,
@@ -562,6 +550,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                       case HomePageItems.recentAlbums:
                         return _getAlbumsList(
+                          homepageItem: element,
                           title: Language.inst.RECENT_ALBUMS,
                           mainIcon: Broken.undo,
                           itemCount: _listOrShimmer(_recentAlbums).length,
@@ -572,6 +561,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       case HomePageItems.topRecentAlbums:
                         final keys = _topRecentAlbums.keys.toList();
                         return _getAlbumsList(
+                          homepageItem: element,
                           title: Language.inst.TOP_RECENT_ALBUMS,
                           mainIcon: Broken.crown_1,
                           itemCount: _listOrShimmer(keys).length,
@@ -581,6 +571,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                       case HomePageItems.recentArtists:
                         return _getArtistList(
+                          homepageItem: element,
                           title: Language.inst.RECENT_ARTISTS,
                           mainIcon: Broken.undo,
                           itemCount: _listOrShimmer(_recentArtists).length,
@@ -591,6 +582,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       case HomePageItems.topRecentArtists:
                         final keys = _topRecentArtists.keys.toList();
                         return _getArtistList(
+                          homepageItem: element,
                           title: Language.inst.TOP_RECENT_ARTISTS,
                           mainIcon: Broken.crown_1,
                           itemCount: _listOrShimmer(keys).length,
@@ -772,6 +764,7 @@ class _MixesCardState extends State<_MixesCard> {
                                 index,
                                 widget.tracks,
                                 QueueSource.others,
+                                homePageItem: HomePageItems.mixes,
                               );
                             },
                             trackOrTwd: tr,
@@ -898,6 +891,7 @@ class _MixesCardState extends State<_MixesCard> {
                         0,
                         widget.tracks,
                         QueueSource.others,
+                        homePageItem: HomePageItems.mixes,
                       );
                     },
                     borderRadius: 8.0,
@@ -991,6 +985,7 @@ class _MixesCardState extends State<_MixesCard> {
 (String, int)? _enabledTrack;
 
 class _TrackCard extends StatefulWidget {
+  final HomePageItems homepageItem;
   final String title;
   final double width;
   final Color? color;
@@ -1001,6 +996,7 @@ class _TrackCard extends StatefulWidget {
   final String? topRightText;
 
   const _TrackCard({
+    required this.homepageItem,
     required this.title,
     required this.width,
     this.color,
@@ -1045,6 +1041,7 @@ class _TrackCardState extends State<_TrackCard> {
             widget.index,
             widget.queue,
             QueueSource.others,
+            homePageItem: widget.homepageItem,
           );
         },
         onLongPress: displayShimmer

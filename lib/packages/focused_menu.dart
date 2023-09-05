@@ -63,7 +63,7 @@ class FocusedMenuHolder extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _FocusedMenuHolderState createState() => _FocusedMenuHolderState();
+  State<FocusedMenuHolder> createState() => _FocusedMenuHolderState();
 }
 
 class _FocusedMenuHolderState extends State<FocusedMenuHolder> {

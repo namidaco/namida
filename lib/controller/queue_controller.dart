@@ -24,6 +24,7 @@ class QueueController {
   /// doesnt save queues with more than 2000 tracks.
   Future<void> addNewQueue({
     required QueueSource source,
+    required HomePageItems? homePageItem,
     int? date,
     List<Track> tracks = const <Track>[],
   }) async {
@@ -37,7 +38,7 @@ class QueueController {
 
     if (_isLoadingQueues) {
       // after queues full load, [addNewQueue] will be called to add Queues inside [_queuesToAddAfterAllQueuesLoad].
-      _queuesToAddAfterAllQueuesLoad.add(Queue(source: source, date: date, isFav: false, tracks: tracks));
+      _queuesToAddAfterAllQueuesLoad.add(Queue(source: source, homePageItem: homePageItem, date: date, isFav: false, tracks: tracks));
       printy("Queue adding suspended until queues full load");
       return;
     }
@@ -50,7 +51,7 @@ class QueueController {
       }
     }
 
-    final q = Queue(source: source, date: date, isFav: false, tracks: tracks);
+    final q = Queue(source: source, homePageItem: homePageItem, date: date, isFav: false, tracks: tracks);
     _updateMap(q);
     printy("Added New Queue");
     await _saveQueueToStorage(q);
@@ -165,7 +166,7 @@ class QueueController {
     // Adding queues that were rejected by [addNewQueue] since Queues wasn't fully loaded.
     if (_queuesToAddAfterAllQueuesLoad.isNotEmpty) {
       await _queuesToAddAfterAllQueuesLoad.loopFuture(
-        (q, index) async => await addNewQueue(source: q.source, date: q.date, tracks: q.tracks),
+        (q, index) async => await addNewQueue(source: q.source, homePageItem: q.homePageItem, date: q.date, tracks: q.tracks),
       );
       printy("Added ${_queuesToAddAfterAllQueuesLoad.length} queue that were suspended");
       _queuesToAddAfterAllQueuesLoad.clear();

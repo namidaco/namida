@@ -748,11 +748,6 @@ class NamidaMiniPlayer extends StatelessWidget {
                                           final videoFramerate = currentVideo?.framerateText(30);
                                           final markText = VideoController.inst.isNoVideosAvailable.value ? 'x' : '?';
                                           final fallbackQualityLabel = currentVideo?.nameInCache?.split('_').last;
-                                          // final altText = currentVideo == null
-                                          //     ? '?'
-                                          //     : currentVideo.ytID == null
-                                          //         ? Language.inst.LOCAL
-                                          //         : 'Cache';
                                           final qualityText = videoQuality == 0 ? fallbackQualityLabel ?? markText : '${videoQuality}p';
                                           final framerateText = videoFramerate ?? '';
                                           return AnimatedContainer(
@@ -1199,6 +1194,8 @@ class NamidaMiniPlayer extends StatelessWidget {
   }
 
   Widget _queueUtilsRow(BuildContext context, Track currentTrack) {
+    const tileHeight = 48.0;
+    const tileVPadding = 3.0;
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -1224,14 +1221,15 @@ class NamidaMiniPlayer extends StatelessWidget {
         const SizedBox(width: 6.0),
         GestureDetector(
           onLongPressStart: (details) async {
-            final left = details.localPosition.dx;
-            final top = details.localPosition.dy;
-            const verticalPadding = 3.0;
-            const totalPadding = verticalPadding * 4;
             void saveSetting(bool shuffleAll) => SettingsController.inst.save(playerShuffleAllTracks: shuffleAll);
             await showMenu(
               context: context,
-              position: RelativeRect.fromLTRB(left, context.height - top - kQueueBottomRowHeight * 3.25, 0, 0),
+              position: RelativeRect.fromLTRB(
+                details.globalPosition.dx,
+                details.globalPosition.dy - kQueueBottomRowHeight - (tileHeight + tileVPadding * 2) * 2,
+                details.globalPosition.dx,
+                details.globalPosition.dy,
+              ),
               items: [
                 ...[
                   (
@@ -1247,17 +1245,20 @@ class NamidaMiniPlayer extends StatelessWidget {
                 ].map(
                   (e) => PopupMenuItem(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: verticalPadding),
+                      padding: const EdgeInsets.symmetric(vertical: tileVPadding),
                       child: Obx(
-                        () => ListTileWithCheckMark(
-                          active: SettingsController.inst.playerShuffleAllTracks.value == e.$3,
-                          leading: StackedIcon(
-                            baseIcon: Broken.shuffle,
-                            secondaryIcon: e.$2,
-                            blurRadius: 8.0,
+                        () => SizedBox(
+                          height: tileHeight,
+                          child: ListTileWithCheckMark(
+                            active: SettingsController.inst.playerShuffleAllTracks.value == e.$3,
+                            leading: StackedIcon(
+                              baseIcon: Broken.shuffle,
+                              secondaryIcon: e.$2,
+                              blurRadius: 8.0,
+                            ),
+                            title: e.$1,
+                            onTap: () => saveSetting(e.$3),
                           ),
-                          title: e.$1,
-                          onTap: () => saveSetting(e.$3),
                         ),
                       ),
                     ),

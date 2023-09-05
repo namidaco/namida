@@ -1591,7 +1591,11 @@ class SubpagesTopContainer extends StatelessWidget {
                               Expanded(
                                 child: ElevatedButton.icon(
                                   onPressed: () => Player.inst.addToQueue(tracks),
-                                  icon: const StackedIcon(baseIcon: Broken.play, secondaryIcon: Broken.add_circle),
+                                  icon: const StackedIcon(
+                                    disableColor: true,
+                                    baseIcon: Broken.play,
+                                    secondaryIcon: Broken.add_circle,
+                                  ),
                                   label: Text(
                                     Language.inst.PLAY_LAST,
                                     softWrap: false,

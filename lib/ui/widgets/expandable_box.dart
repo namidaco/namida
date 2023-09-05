@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -48,7 +49,7 @@ class ExpandableBox extends StatelessWidget {
             duration: const Duration(milliseconds: 400),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 400),
-              height: isBarVisible ? 48.0 : 0.0,
+              height: isBarVisible ? kExpandableBoxHeight : 0.0,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 mainAxisSize: MainAxisSize.max,
@@ -168,7 +169,7 @@ class SortByMenu extends StatelessWidget {
           onPressed: () => showMenu(
             color: context.theme.appBarTheme.backgroundColor,
             context: context,
-            position: RelativeRect.fromLTRB(context.width, 56.0, 20, 0),
+            position: RelativeRect.fromLTRB(context.width, kExpandableBoxHeight + 8.0, 0, 0),
             constraints: BoxConstraints(maxHeight: context.height * 0.6),
             items: [
               PopupMenuItem(

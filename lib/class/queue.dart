@@ -6,12 +6,14 @@ import 'package:namida/core/functions.dart';
 
 class Queue {
   final QueueSource source;
+  final HomePageItems? homePageItem;
   final int date;
   final bool isFav;
   final List<Track> tracks;
 
   const Queue({
     required this.source,
+    required this.homePageItem,
     required this.date,
     required this.isFav,
     required this.tracks,
@@ -28,6 +30,7 @@ class Queue {
     }
     return Queue(
       source: QueueSource.values.getEnum(json['source'] ?? '') ?? QueueSource.others,
+      homePageItem: HomePageItems.values.getEnum(json['homePageItem'] ?? ''),
       date: json['date'] ?? currentTimeMS,
       isFav: json['isFav'] ?? false,
       tracks: finalTracks,
@@ -40,6 +43,7 @@ class Queue {
     final finalTracks = checkIfQueueSameAsAllTracks(tracks) ? <Track>[] : tracks;
     return {
       'source': source.convertToString,
+      'homePageItem': homePageItem?.convertToString,
       'date': date,
       'isFav': isFav,
       'tracks': finalTracks.mapped((e) => e.path),
@@ -48,12 +52,14 @@ class Queue {
 
   Queue copyWith({
     QueueSource? source,
+    HomePageItems? homePageItem,
     int? date,
     bool? isFav,
     List<Track>? tracks,
   }) {
     return Queue(
       source: source ?? this.source,
+      homePageItem: homePageItem ?? this.homePageItem,
       date: date ?? this.date,
       isFav: isFav ?? this.isFav,
       tracks: tracks ?? this.tracks,

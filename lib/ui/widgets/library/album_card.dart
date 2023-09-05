@@ -23,6 +23,7 @@ class AlbumCard extends StatelessWidget {
   final bool displayIcon;
   final String? topRightText;
   final String additionalHeroTag;
+  final HomePageItems? homepageItem;
 
   const AlbumCard({
     super.key,
@@ -34,6 +35,7 @@ class AlbumCard extends StatelessWidget {
     this.displayIcon = true,
     this.topRightText,
     this.additionalHeroTag = '',
+    this.homepageItem,
   });
 
   @override
@@ -108,7 +110,7 @@ class AlbumCard extends StatelessWidget {
                         ),
                         borderRadius: 10.0,
                         bgColor: context.theme.cardColor,
-                        onTap: () => Player.inst.playOrPause(0, album, QueueSource.album),
+                        onTap: () => Player.inst.playOrPause(0, album, QueueSource.album, homePageItem: homepageItem),
                         padding: EdgeInsets.all(2.5 + sizeAlternative),
                         child: Icon(Broken.play, size: 12.5 + 2.0 * sizeAlternative),
                       ),

@@ -141,6 +141,7 @@ enum QueueSource {
   favourites,
   selectedTracks,
   externalFile,
+  homePageItem,
   others,
 }
 

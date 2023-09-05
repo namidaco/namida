@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -17,6 +18,7 @@ class ArtistCard extends StatelessWidget {
   final bool displayIcon;
   final String? bottomCenterText;
   final String additionalHeroTag;
+  final HomePageItems? homepageItem;
 
   const ArtistCard({
     super.key,
@@ -26,6 +28,7 @@ class ArtistCard extends StatelessWidget {
     this.displayIcon = true,
     this.bottomCenterText,
     this.additionalHeroTag = '',
+    this.homepageItem,
   });
 
   @override

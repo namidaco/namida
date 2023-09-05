@@ -105,5 +105,6 @@ const kHistoryDayListTopPadding = 6.0;
 const kHistoryDayListBottomPadding = 12.0;
 
 const kQueueBottomRowHeight = 48.0;
+const kExpandableBoxHeight = 48.0;
 
 const kHistoryDayHeaderHeightWithPadding = kHistoryDayHeaderHeight + kHistoryDayListTopPadding + kHistoryDayListBottomPadding;

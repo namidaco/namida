@@ -250,6 +250,7 @@ class Player {
     int index,
     Iterable<Selectable> queue,
     QueueSource source, {
+    HomePageItems? homePageItem,
     bool shuffle = false,
     bool startPlaying = true,
     bool addAsNewQueue = true,
@@ -262,7 +263,7 @@ class Player {
       onQueueDifferent: (finalizedQueue) {
         if (addAsNewQueue) {
           final trs = finalizedQueue.tracks.toList();
-          QueueController.inst.addNewQueue(source: source, tracks: trs);
+          QueueController.inst.addNewQueue(source: source, homePageItem: homePageItem, tracks: trs);
           QueueController.inst.updateLatestQueue(trs);
         }
       },

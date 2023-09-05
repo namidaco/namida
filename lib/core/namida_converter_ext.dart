@@ -175,6 +175,14 @@ extension TrackItemSubstring on TrackTileItem {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension HomePageGetter on HomePageItems {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
+extension QueueNameGetter on Queue {
+  String toText() => homePageItem?.toText() ?? source.toText();
+}
+
 extension QUEUESOURCEtoTRACKS on QueueSource {
   String toText() => _NamidaConverters.inst.getTitle(this);
 
@@ -872,6 +880,17 @@ class _NamidaConverters {
         MostPlayedTimeRange.month6: "6 ${Language.inst.MONTHS}",
         MostPlayedTimeRange.year: Language.inst.YEAR,
         MostPlayedTimeRange.allTime: Language.inst.ALL_TIME,
+      },
+      HomePageItems: {
+        HomePageItems.mixes: Language.inst.MIXES,
+        HomePageItems.recentListens: Language.inst.RECENT_LISTENS,
+        HomePageItems.topRecentListens: Language.inst.TOP_RECENTS,
+        HomePageItems.lostMemories: Language.inst.LOST_MEMORIES,
+        HomePageItems.recentlyAdded: Language.inst.RECENTLY_ADDED,
+        HomePageItems.recentAlbums: Language.inst.RECENT_ALBUMS,
+        HomePageItems.recentArtists: Language.inst.RECENT_ARTISTS,
+        HomePageItems.topRecentAlbums: Language.inst.TOP_RECENT_ALBUMS,
+        HomePageItems.topRecentArtists: Language.inst.TOP_RECENT_ARTISTS,
       }
     };
 
