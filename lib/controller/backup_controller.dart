@@ -32,14 +32,14 @@ class BackupController {
     final date = format.format(DateTime.now().toLocal());
 
     // creates directories and file
-    await Directory(SettingsController.inst.defaultBackupLocation.value).create();
-    await File("${SettingsController.inst.defaultBackupLocation.value}/Namida Backup - $date.zip").create();
+    final dir = await Directory(AppDirs.BACKUPS).create();
+    await File("${dir.path}/Namida Backup - $date.zip").create();
     final sourceDir = Directory(AppDirs.USER_DATA);
 
     // prepares files
 
-    List<File> filesOnly = [];
-    List<Directory> dirsOnly = [];
+    final List<File> filesOnly = [];
+    final List<Directory> dirsOnly = [];
 
     await SettingsController.inst.backupItemslist.loopFuture((f, index) async {
       if (await FileSystemEntity.type(f) == FileSystemEntityType.file) {
@@ -61,7 +61,7 @@ class BackupController {
         }
       }
 
-      final zipFile = File("${SettingsController.inst.defaultBackupLocation.value}/Namida Backup - $date.zip");
+      final zipFile = File("${AppDirs.BACKUPS}Namida Backup - $date.zip");
       await ZipFile.createFromFiles(sourceDir: sourceDir, files: filesOnly, zipFile: zipFile);
 
       // after finishing
@@ -85,7 +85,7 @@ class BackupController {
     NamidaNavigator.inst.closeDialog();
     File? backupzip;
     if (auto) {
-      final dir = Directory(SettingsController.inst.defaultBackupLocation.value);
+      final dir = Directory(AppDirs.BACKUPS);
       final possibleFiles = dir.listSync();
 
       final List<File> filessss = [];

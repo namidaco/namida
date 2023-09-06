@@ -66,6 +66,8 @@ class AppDirs {
   static final YT_METADATA_CHANNELS = '${YT_METADATA}Channels/';
   static final YT_METADATA_COMMENTS = '${YT_METADATA}Comments/';
   static final YOUTUBE_STATS = '$USER_DATA/Youtube Stats/';
+  static final SAVED_ARTWORKS = '$INTERNAL_STORAGE/Artworks/';
+  static final BACKUPS = '$INTERNAL_STORAGE/Backups/';
   static final COMPRESSED_IMAGES = '$INTERNAL_STORAGE/Compressed/';
 
   static final List<String> values = [

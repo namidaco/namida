@@ -55,7 +55,8 @@ class EditDeleteController {
     if (!await requestManageStoragePermission()) {
       return null;
     }
-    final saveDirPath = SettingsController.inst.defaultBackupLocation.value;
+    final saveDir = await Directory(AppDirs.SAVED_ARTWORKS).create();
+    final saveDirPath = saveDir.path;
     final newPath = "$saveDirPath${Platform.pathSeparator}${track.filenameWOExt}.png";
     final imgFile = await Indexer.inst.extractOneArtwork(track.path);
     if (imgFile != null) {

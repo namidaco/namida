@@ -71,7 +71,7 @@ class SettingsController {
   final RxList<String> directoriesToExclude = <String>[].obs;
   final RxBool preventDuplicatedTracks = false.obs;
   final RxBool respectNoMedia = false.obs;
-  final RxString defaultBackupLocation = AppDirs.INTERNAL_STORAGE.obs;
+  final RxString defaultBackupLocation = AppDirs.BACKUPS.obs;
   final RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
   final RxBool enableFoldersHierarchy = true.obs;
   final RxList<String> backupItemslist = [
