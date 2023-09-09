@@ -170,6 +170,7 @@ class NamidaBasicShimmer extends StatelessWidget {
   final double borderRadius;
   final Widget? child;
   final bool shimmerEnabled;
+  final int fadeDurationMS;
 
   const NamidaBasicShimmer({
     super.key,
@@ -178,11 +179,13 @@ class NamidaBasicShimmer extends StatelessWidget {
     this.borderRadius = 12.0,
     required this.child,
     required this.shimmerEnabled,
+    this.fadeDurationMS = 600,
   });
 
   @override
   Widget build(BuildContext context) {
     return ShimmerWrapper(
+      fadeDurationMS: fadeDurationMS,
       shimmerEnabled: shimmerEnabled,
       transparent: false,
       child: child != null && !shimmerEnabled

@@ -70,6 +70,8 @@ class YoutubeController {
 
   final _downloadClientsMap = <String, Dio>{}; // {nameIdentifier: Dio()}
 
+  final isDownloading = <String, bool>{}.obs;
+
   String getYoutubeLink(String id) => id.toYTUrl();
 
   Future<void> prepareHomeFeed() async {
@@ -253,6 +255,9 @@ class YoutubeController {
     required Future<void> Function(File audioFile) onAudioFileReady,
   }) async {
     if (id == '') return null;
+
+    isDownloading[id] = true;
+
     File? df;
     Future<bool> fileSizeQualified({
       required File file,
@@ -371,6 +376,7 @@ class YoutubeController {
       printy('Error Downloading YT Video: $e', isError: true);
     }
 
+    isDownloading[id] = false;
     return df;
   }
 
@@ -411,6 +417,7 @@ class YoutubeController {
       }
     }
     _downloadClientsMap[filename]?.close();
+    _downloadClientsMap.remove(filename);
     return File(destinationFilePath);
   }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -27,6 +28,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/mp.dart';
+import 'package:namida/packages/dots_triangle.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/pages/youtube_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -319,7 +321,16 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                     final videoPerc = videoProgress == null
                                                         ? null
                                                         : "${lang.VIDEO} ${(videoProgress.progress / videoProgress.totalProgress * 100).toStringAsFixed(0)}%";
+
+                                                    final isDownloading = YoutubeController.inst.isDownloading[currentId] == true;
                                                     return SmallYTActionButton(
+                                                      iconWidget: isDownloading
+                                                          ? DotsTriangle(
+                                                              color: context.defaultIconColor(),
+                                                              size: 24.0,
+                                                            )
+                                                          : null,
+                                                      titleWidget: videoPerc == null && audioPerc == null && isDownloading ? const LoadingIndicator() : null,
                                                       title: videoPerc ?? audioPerc ?? lang.DOWNLOAD,
                                                       icon: false ? Broken.tick_circle : Broken.import, // TODO: check if video already downloaded
                                                       onPressed: () async => await showDownloadVideoBottomSheet(context: context, videoId: currentId),
@@ -750,11 +761,16 @@ class SmallYTActionButton extends StatelessWidget {
   final String? title;
   final IconData icon;
   final void Function()? onPressed;
+  final Widget? iconWidget;
+  final Widget? titleWidget;
+
   const SmallYTActionButton({
     super.key,
     required this.title,
     required this.icon,
     this.onPressed,
+    this.iconWidget,
+    this.titleWidget,
   });
 
   @override
@@ -762,21 +778,24 @@ class SmallYTActionButton extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        NamidaInkWell(
-          borderRadius: 32.0,
-          onTap: onPressed,
-          padding: const EdgeInsets.all(6.0),
-          child: Icon(icon),
-        ),
+        iconWidget ??
+            NamidaInkWell(
+              borderRadius: 32.0,
+              onTap: onPressed,
+              padding: const EdgeInsets.all(6.0),
+              child: Icon(icon),
+            ),
         NamidaBasicShimmer(
           width: 24.0,
           height: 8.0,
           borderRadius: 4.0,
+          fadeDurationMS: titleWidget == null ? 600 : 100,
           shimmerEnabled: title == null,
-          child: Text(
-            title ?? '',
-            style: context.textTheme.displaySmall,
-          ),
+          child: titleWidget ??
+              Text(
+                title ?? '',
+                style: context.textTheme.displaySmall,
+              ),
         ),
       ],
     );
@@ -791,6 +810,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final double borderRadius;
   final bool isCircle;
   final EdgeInsetsGeometry? margin;
+  final void Function(File? imageFile)? onImageReady;
 
   const YoutubeThumbnail({
     super.key,
@@ -801,6 +821,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.borderRadius = 12.0,
     this.isCircle = false,
     this.margin,
+    this.onImageReady,
   });
 
   @override
@@ -817,6 +838,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
 
   Future<void> _getThumbnail() async {
     final res = await VideoController.inst.getYoutubeThumbnailAndCache(id: widget.videoId, channelUrl: widget.channelUrl);
+    widget.onImageReady?.call(res);
     imagePath = res?.path;
     if (mounted) setState(() {});
   }
@@ -857,6 +879,7 @@ Future<void> showDownloadVideoBottomSheet({
   Color? colorScheme,
 }) async {
   colorScheme ??= CurrentColor.inst.color;
+
   final showAudioWebm = false.obs;
   final showVideoWebm = false.obs;
   final video = Rxn<YoutubeVideo>();
@@ -864,6 +887,7 @@ Future<void> showDownloadVideoBottomSheet({
   final selectedVideoOnlyStream = Rxn<VideoOnlyStream>();
   final videoInfo = Rxn<VideoInfo>();
   final videoOutputFilename = ''.obs;
+  final videoThumbnail = Rxn<File>();
 
   void updatefilenameOutput() {
     final videoTitle = videoInfo.value?.name ?? videoId;
@@ -883,6 +907,8 @@ Future<void> showDownloadVideoBottomSheet({
 
   YoutubeController.inst.getAvailableStreams(videoId).then((value) {
     video.value = value;
+    videoInfo.value = video.value?.videoInfo;
+
     selectedAudioOnlyStream.value = video.value?.audioOnlyStreams?.firstWhereEff((e) => e.formatSuffix != 'webm');
 
     selectedVideoOnlyStream.value = video.value?.videoOnlyStreams?.firstWhereEff(
@@ -901,11 +927,6 @@ Future<void> showDownloadVideoBottomSheet({
       },
     );
 
-    updatefilenameOutput();
-  });
-
-  YoutubeController.inst.getVideoInfo(videoId).then((value) {
-    videoInfo.value = value;
     updatefilenameOutput();
   });
 
@@ -1051,9 +1072,55 @@ Future<void> showDownloadVideoBottomSheet({
                     children: [
                       Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          lang.CONFIGURE,
-                          style: context.textTheme.displayLarge,
+                        child: Obx(
+                          () => Row(
+                            children: [
+                              YoutubeThumbnail(
+                                videoId: videoId,
+                                width: context.width * 0.2,
+                                height: context.width * 0.2 * 9 / 16,
+                                onImageReady: (imageFile) {
+                                  videoThumbnail.value = imageFile;
+                                },
+                              ),
+                              const SizedBox(width: 12.0),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    NamidaBasicShimmer(
+                                      borderRadius: 6.0,
+                                      width: context.width,
+                                      height: 18.0,
+                                      shimmerEnabled: videoInfo.value == null,
+                                      child: Text(
+                                        videoInfo.value?.name ?? videoId,
+                                        style: context.textTheme.displayMedium,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2.0),
+                                    NamidaBasicShimmer(
+                                      borderRadius: 4.0,
+                                      width: context.width - 24.0,
+                                      height: 12.0,
+                                      shimmerEnabled: videoInfo.value == null,
+                                      child: () {
+                                        final dateFormatted =
+                                            videoInfo.value?.uploadDate != null ? Jiffy.parse(videoInfo.value!.uploadDate!).millisecondsSinceEpoch.dateFormattedOriginal : null;
+                                        return Text(
+                                          [
+                                            videoInfo.value?.duration?.inSeconds.secondsLabel ?? "00:00",
+                                            if (dateFormatted != null) dateFormatted,
+                                          ].join(' - '),
+                                          style: context.textTheme.displaySmall,
+                                        );
+                                      }(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       Expanded(
@@ -1183,37 +1250,43 @@ Future<void> showDownloadVideoBottomSheet({
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          NamidaButton(
-                            text: lang.CANCEL,
-                            onPressed: () => Navigator.pop(context),
+                          Expanded(
+                            flex: 1,
+                            child: NamidaButton(
+                              text: lang.CANCEL,
+                              onPressed: () => Navigator.pop(context),
+                            ),
                           ),
-                          Obx(
-                            () {
-                              final sizeSum = (selectedVideoOnlyStream.value?.sizeInBytes ?? 0) + (selectedAudioOnlyStream.value?.sizeInBytes ?? 0);
-                              final sizeText = sizeSum > 0 ? "(${sizeSum.fileSizeFormatted})" : '';
-                              return NamidaButton(
-                                enabled: sizeSum > 0,
-                                text: '${lang.DOWNLOAD} $sizeText',
-                                onPressed: () async {
-                                  Navigator.pop(context);
-                                  final id = videoId;
-                                  await YoutubeController.inst.downloadYoutubeVideoRaw(
-                                    id: id,
-                                    useCachedVersionsIfAvailable: true,
-                                    saveDirectory: Directory(AppDirs.INTERNAL_STORAGE),
-                                    filename: videoOutputFilename.value,
-                                    videoStream: selectedVideoOnlyStream.value,
-                                    audioStream: selectedAudioOnlyStream.value,
-                                    merge: true,
-                                    onInitialVideoFileSize: (initialFileSize) {},
-                                    onInitialAudioFileSize: (initialFileSize) {},
-                                    videoDownloadingStream: (downloadedBytes) {},
-                                    audioDownloadingStream: (downloadedBytes) {},
-                                    onAudioFileReady: (audioFile) async {
-                                      final dateTime = DateTime.tryParse(videoInfo.value?.uploadDate ?? '');
-                                      final thumbnail = await VideoController.inst.getYoutubeThumbnailAndCache(id: id);
-                                      if (thumbnail != null) {
-                                        await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: audioFile.path, thumbnailPath: thumbnail.path);
+                          const SizedBox(width: 12.0),
+                          Expanded(
+                            flex: 2,
+                            child: Obx(
+                              () {
+                                final sizeSum = (selectedVideoOnlyStream.value?.sizeInBytes ?? 0) + (selectedAudioOnlyStream.value?.sizeInBytes ?? 0);
+                                final sizeText = sizeSum > 0 ? "(${sizeSum.fileSizeFormatted})" : '';
+                                return NamidaButton(
+                                  enabled: sizeSum > 0,
+                                  text: '${lang.DOWNLOAD} $sizeText',
+                                  onPressed: () async {
+                                    Navigator.pop(context);
+                                    final id = videoId;
+                                    await YoutubeController.inst.downloadYoutubeVideoRaw(
+                                      id: id,
+                                      useCachedVersionsIfAvailable: true,
+                                      saveDirectory: Directory(AppDirs.INTERNAL_STORAGE),
+                                      filename: videoOutputFilename.value,
+                                      videoStream: selectedVideoOnlyStream.value,
+                                      audioStream: selectedAudioOnlyStream.value,
+                                      merge: true,
+                                      onInitialVideoFileSize: (initialFileSize) {},
+                                      onInitialAudioFileSize: (initialFileSize) {},
+                                      videoDownloadingStream: (downloadedBytes) {},
+                                      audioDownloadingStream: (downloadedBytes) {},
+                                      onAudioFileReady: (audioFile) async {
+                                        final dateTime = DateTime.tryParse(videoInfo.value?.uploadDate ?? '');
+                                        if (videoThumbnail.value != null) {
+                                          await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: audioFile.path, thumbnailPath: videoThumbnail.value!.path);
+                                        }
                                         await NamidaFFMPEG.inst.editMetadata(
                                           path: audioFile.path,
                                           tagsMap: {
@@ -1224,13 +1297,13 @@ Future<void> showDownloadVideoBottomSheet({
                                             FFMPEGTagField.synopsis: videoInfo.value?.description == null ? null : HtmlParser.parseHTML(videoInfo.value!.description!).text,
                                           },
                                         );
-                                      }
-                                    },
-                                    onVideoFileReady: (videoFile) async {},
-                                  );
-                                },
-                              );
-                            },
+                                      },
+                                      onVideoFileReady: (videoFile) async {},
+                                    );
+                                  },
+                                );
+                              },
+                            ),
                           ),
                         ],
                       )
