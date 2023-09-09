@@ -47,7 +47,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/stats.dart';
 
 extension LibraryTabToEnum on int {
-  LibraryTab toEnum() => SettingsController.inst.libraryTabs.elementAt(this);
+  LibraryTab toEnum() => settings.libraryTabs.elementAt(this);
 }
 
 extension MediaTypeUtils on MediaType {
@@ -87,7 +87,7 @@ extension LibraryTabUtils on LibraryTab {
     }
   }
 
-  int toInt() => SettingsController.inst.libraryTabs.indexOf(this);
+  int toInt() => settings.libraryTabs.indexOf(this);
 
   Widget toWidget([int? gridCount, bool animateTiles = true, bool enableHero = true]) {
     Widget page = const SizedBox();
@@ -97,28 +97,28 @@ extension LibraryTabUtils on LibraryTab {
         break;
       case LibraryTab.albums:
         page = AlbumsPage(
-          countPerRow: gridCount ?? SettingsController.inst.albumGridCount.value,
+          countPerRow: gridCount ?? settings.albumGridCount.value,
           animateTiles: animateTiles,
           enableHero: enableHero,
         );
         break;
       case LibraryTab.artists:
         page = ArtistsPage(
-          countPerRow: gridCount ?? SettingsController.inst.artistGridCount.value,
+          countPerRow: gridCount ?? settings.artistGridCount.value,
           animateTiles: animateTiles,
           enableHero: enableHero,
         );
         break;
       case LibraryTab.genres:
         page = GenresPage(
-          countPerRow: gridCount ?? SettingsController.inst.genreGridCount.value,
+          countPerRow: gridCount ?? settings.genreGridCount.value,
           animateTiles: animateTiles,
           enableHero: enableHero,
         );
         break;
       case LibraryTab.playlists:
         page = PlaylistsPage(
-          countPerRow: gridCount ?? SettingsController.inst.playlistGridCount.value,
+          countPerRow: gridCount ?? settings.playlistGridCount.value,
           animateTiles: animateTiles,
           enableHero: enableHero,
         );
@@ -284,7 +284,7 @@ extension ThemeUtils on ThemeMode {
 }
 
 extension QueueInsertionTypeToQI on QueueInsertionType {
-  QueueInsertion toQueueInsertion() => SettingsController.inst.queueInsertion[this]!;
+  QueueInsertion toQueueInsertion() => settings.queueInsertion[this]!;
 
   /// NOTE: Modifies the original list.
   List<Selectable> shuffleOrSort(List<Selectable> tracks) {

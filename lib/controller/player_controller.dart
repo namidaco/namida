@@ -57,7 +57,7 @@ class Player {
       },
     );
     prepareTotalListenTime();
-    setSkipSilenceEnabled(SettingsController.inst.playerSkipSilenceEnabled.value);
+    setSkipSilenceEnabled(settings.playerSkipSilenceEnabled.value);
   }
 
   void refreshNotification() {
@@ -236,11 +236,11 @@ class Player {
   int _secondsToSeek([int? seconds]) {
     int? newSeconds = seconds;
     if (newSeconds == null) {
-      if (SettingsController.inst.isSeekDurationPercentage.value) {
-        final sFromP = nowPlayingTrack.track.duration * (SettingsController.inst.seekDurationInPercentage.value / 100);
+      if (settings.isSeekDurationPercentage.value) {
+        final sFromP = nowPlayingTrack.track.duration * (settings.seekDurationInPercentage.value / 100);
         newSeconds = sFromP.toInt();
       } else {
-        newSeconds = SettingsController.inst.seekDurationInSeconds.value;
+        newSeconds = settings.seekDurationInSeconds.value;
       }
     }
     return newSeconds;

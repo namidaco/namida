@@ -52,10 +52,10 @@ class AlbumsPage extends StatelessWidget {
                   enableHero: enableHero,
                   gridWidget: ChangeGridCountWidget(
                     currentCount: countPerRow,
-                    forStaggered: SettingsController.inst.useAlbumStaggeredGridView.value,
+                    forStaggered: settings.useAlbumStaggeredGridView.value,
                     onTap: () {
                       final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.albums, countPerRow, animateTiles: false);
-                      SettingsController.inst.save(albumGridCount: newCount);
+                      settings.save(albumGridCount: newCount);
                     },
                   ),
                   isBarVisible: LibraryTab.albums.isBarVisible,
@@ -64,10 +64,10 @@ class AlbumsPage extends StatelessWidget {
                   onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.albums),
                   onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.albums),
                   sortByMenuWidget: SortByMenu(
-                    title: SettingsController.inst.albumSort.value.toText(),
+                    title: settings.albumSort.value.toText(),
                     popupMenuChild: const SortByMenuAlbums(),
-                    isCurrentlyReversed: SettingsController.inst.albumSortReversed.value,
-                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !SettingsController.inst.albumSortReversed.value),
+                    isCurrentlyReversed: settings.albumSortReversed.value,
+                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
                   ),
                   textField: CustomTextFiled(
                     textFieldController: LibraryTab.albums.textSearchController,
@@ -78,13 +78,13 @@ class AlbumsPage extends StatelessWidget {
               ),
               Obx(
                 () {
-                  SettingsController.inst.albumListTileHeight.value;
+                  settings.albumListTileHeight.value;
                   return countPerRow == 1
                       ? Expanded(
                           child: ListView.builder(
                             controller: scrollController,
                             itemCount: finalAlbums.length,
-                            itemExtent: SettingsController.inst.albumListTileHeight.value + 4.0 * 5,
+                            itemExtent: settings.albumListTileHeight.value + 4.0 * 5,
                             padding: const EdgeInsets.only(bottom: kBottomPadding),
                             itemBuilder: (BuildContext context, int i) {
                               final albumName = finalAlbums[i];
@@ -99,7 +99,7 @@ class AlbumsPage extends StatelessWidget {
                             },
                           ),
                         )
-                      : SettingsController.inst.useAlbumStaggeredGridView.value
+                      : settings.useAlbumStaggeredGridView.value
                           ? Expanded(
                               child: MasonryGridView.builder(
                                 controller: scrollController,

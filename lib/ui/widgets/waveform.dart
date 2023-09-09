@@ -71,7 +71,7 @@ class _WaveformComponentState extends State<WaveformComponent> {
           final waveform = WaveformController.inst.currentWaveform;
           final clamping = waveform.isEqualTo(kDefaultWaveFormData) ? null : widget.barsMaxHeight;
           final downscaled = waveform.changeListSize(
-            targetSize: SettingsController.inst.waveformTotalBars.value,
+            targetSize: settings.waveformTotalBars.value,
             multiplier: 0.9,
             clampToMax: clamping,
             enforceClampToMax: false,

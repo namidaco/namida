@@ -23,7 +23,7 @@ class Lyrics {
 
   Future<void> updateLyrics(Track track) async {
     currentLyrics.value = '';
-    if (SettingsController.inst.enableLyrics.value) {
+    if (settings.enableLyrics.value) {
       final lyricsFile = File("${AppDirs.LYRICS}${track.filename}.txt");
 
       /// get from storage

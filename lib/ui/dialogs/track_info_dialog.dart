@@ -41,7 +41,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
 
   final color = colorScheme ?? await CurrentColor.inst.getTrackDelightnedColor(track);
 
-  bool shouldShowTheField(bool isUnknown) => !isUnknown || (SettingsController.inst.showUnknownFieldsInTrackInfoDialog.value && isUnknown);
+  bool shouldShowTheField(bool isUnknown) => !isUnknown || (settings.showUnknownFieldsInTrackInfoDialog.value && isUnknown);
 
   void showPreviewTrackDialog() async {
     final wasPlaying = Player.inst.isPlaying;
@@ -112,7 +112,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
     child: ArtworkWidget(
       path: trackExt.pathToImage,
       thumbnailSize: 120,
-      forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+      forceSquared: settings.forceSquaredTrackThumbnail.value,
       useTrackTileCacheHeight: true,
       compressed: false,
     ),
@@ -129,9 +129,9 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
         Obx(
           () => NamidaIconButton(
             tooltip: lang.SHOW_HIDE_UNKNOWN_FIELDS,
-            icon: SettingsController.inst.showUnknownFieldsInTrackInfoDialog.value ? Broken.eye : Broken.eye_slash,
+            icon: settings.showUnknownFieldsInTrackInfoDialog.value ? Broken.eye : Broken.eye_slash,
             iconColor: theme.colorScheme.primary,
-            onPressed: () => SettingsController.inst.save(showUnknownFieldsInTrackInfoDialog: !SettingsController.inst.showUnknownFieldsInTrackInfoDialog.value),
+            onPressed: () => settings.save(showUnknownFieldsInTrackInfoDialog: !settings.showUnknownFieldsInTrackInfoDialog.value),
           ),
         ),
         NamidaLikeButton(
@@ -152,7 +152,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
         width: Get.width,
         child: Obx(
           () {
-            SettingsController.inst.showUnknownFieldsInTrackInfoDialog.value;
+            settings.showUnknownFieldsInTrackInfoDialog.value;
             return CustomScrollView(
               slivers: [
                 SliverList(

@@ -41,7 +41,7 @@ class FoldersPage extends StatelessWidget {
           Obx(
             () {
               final mainMapFoldersKeys = Indexer.inst.mainMapFolders.keys.toList();
-              return SettingsController.inst.enableFoldersHierarchy.value
+              return settings.enableFoldersHierarchy.value
 
                   /// Folders in heirarchy
                   ? Column(
@@ -63,9 +63,9 @@ class FoldersPage extends StatelessWidget {
                               final pathOfDefault = Folders.inst.isHome.value ? '' : Folders.inst.currentFolder.value?.path;
                               return NamidaIconButton(
                                 tooltip: lang.SET_AS_DEFAULT,
-                                icon: SettingsController.inst.defaultFolderStartupLocation.value == pathOfDefault ? Broken.archive_tick : Broken.save_2,
+                                icon: settings.defaultFolderStartupLocation.value == pathOfDefault ? Broken.archive_tick : Broken.save_2,
                                 iconSize: 22.0,
-                                onPressed: () => SettingsController.inst.save(
+                                onPressed: () => settings.save(
                                   defaultFolderStartupLocation: Folders.inst.currentFolder.value?.path ?? '',
                                 ),
                               );

@@ -16,14 +16,12 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 
 class TrackTileCustomization extends StatelessWidget {
-  TrackTileCustomization({super.key});
-
-  final SettingsController stg = SettingsController.inst;
+  const TrackTileCustomization({super.key});
 
   @override
   Widget build(BuildContext context) {
     return NamidaExpansionTile(
-      initiallyExpanded: SettingsController.inst.useSettingCollapsedTiles.value,
+      initiallyExpanded: settings.useSettingCollapsedTiles.value,
       leading: const StackedIcon(
         baseIcon: Broken.brush,
         secondaryIcon: Broken.music_circle,
@@ -35,8 +33,8 @@ class TrackTileCustomization extends StatelessWidget {
             icon: Broken.crop,
             title: lang.FORCE_SQUARED_TRACK_THUMBNAIL,
             onChanged: (value) {
-              stg.save(forceSquaredTrackThumbnail: !value);
-              if (!value && stg.trackThumbnailSizeinList.toInt() != stg.trackListTileHeight.toInt()) {
+              settings.save(forceSquaredTrackThumbnail: !value);
+              if (!value && settings.trackThumbnailSizeinList.toInt() != settings.trackListTileHeight.toInt()) {
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
                     normalTitleStyle: true,
@@ -47,7 +45,7 @@ class TrackTileCustomization extends StatelessWidget {
                       NamidaButton(
                         text: lang.CONFIRM,
                         onPressed: () {
-                          stg.save(trackThumbnailSizeinList: stg.trackListTileHeight.value);
+                          settings.save(trackThumbnailSizeinList: settings.trackListTileHeight.value);
                           NamidaNavigator.inst.closeDialog();
                         },
                       ),
@@ -56,14 +54,14 @@ class TrackTileCustomization extends StatelessWidget {
                 );
               }
             },
-            value: stg.forceSquaredTrackThumbnail.value,
+            value: settings.forceSquaredTrackThumbnail.value,
           ),
         ),
         Obx(
           () => CustomListTile(
             icon: Broken.maximize_3,
             title: lang.TRACK_THUMBNAIL_SIZE_IN_LIST,
-            trailingText: "${stg.trackThumbnailSizeinList.toInt()}",
+            trailingText: "${settings.trackThumbnailSizeinList.toInt()}",
             onTap: () {
               showSettingDialogWithTextField(
                 title: lang.TRACK_THUMBNAIL_SIZE_IN_LIST,
@@ -77,7 +75,7 @@ class TrackTileCustomization extends StatelessWidget {
           () => CustomListTile(
             icon: Broken.pharagraphspacing,
             title: lang.HEIGHT_OF_TRACK_TILE,
-            trailingText: "${stg.trackListTileHeight.toInt()}",
+            trailingText: "${settings.trackListTileHeight.toInt()}",
             onTap: () {
               showSettingDialogWithTextField(
                 title: lang.HEIGHT_OF_TRACK_TILE,
@@ -92,10 +90,10 @@ class TrackTileCustomization extends StatelessWidget {
             icon: Broken.chart_1,
             rotateIcon: 1,
             title: lang.DISPLAY_THIRD_ROW_IN_TRACK_TILE,
-            onChanged: (_) => stg.save(
-              displayThirdRow: !stg.displayThirdRow.value,
+            onChanged: (_) => settings.save(
+              displayThirdRow: !settings.displayThirdRow.value,
             ),
-            value: stg.displayThirdRow.value,
+            value: settings.displayThirdRow.value,
           ),
         ),
         Obx(
@@ -103,27 +101,27 @@ class TrackTileCustomization extends StatelessWidget {
             icon: Broken.coin,
             rotateIcon: 3,
             title: lang.DISPLAY_THIRD_ITEM_IN_ROW_IN_TRACK_TILE,
-            onChanged: (_) => stg.save(
-              displayThirdItemInEachRow: !stg.displayThirdItemInEachRow.value,
+            onChanged: (_) => settings.save(
+              displayThirdItemInEachRow: !settings.displayThirdItemInEachRow.value,
             ),
-            value: stg.displayThirdItemInEachRow.value,
+            value: settings.displayThirdItemInEachRow.value,
           ),
         ),
         Obx(
           () => CustomSwitchListTile(
             icon: Broken.heart,
             title: lang.DISPLAY_FAVOURITE_ICON_IN_TRACK_TILE,
-            onChanged: (_) => stg.save(
-              displayFavouriteIconInListTile: !stg.displayFavouriteIconInListTile.value,
+            onChanged: (_) => settings.save(
+              displayFavouriteIconInListTile: !settings.displayFavouriteIconInListTile.value,
             ),
-            value: stg.displayFavouriteIconInListTile.value,
+            value: settings.displayFavouriteIconInListTile.value,
           ),
         ),
         Obx(
           () => CustomListTile(
             icon: Broken.minus_square,
             title: lang.TRACK_TILE_ITEMS_SEPARATOR,
-            trailingText: stg.trackTileSeparator.value,
+            trailingText: settings.trackTileSeparator.value,
             onTap: () => showSettingDialogWithTextField(
               title: lang.TRACK_TILE_ITEMS_SEPARATOR,
               trackTileSeparator: true,
@@ -135,7 +133,7 @@ class TrackTileCustomization extends StatelessWidget {
           () => Container(
             color: context.theme.cardTheme.color,
             width: context.width,
-            height: stg.trackListTileHeight * 1.5,
+            height: settings.trackListTileHeight * 1.5,
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(vertical: 7.0),
             child: Row(
@@ -149,12 +147,12 @@ class TrackTileCustomization extends StatelessWidget {
                   margin: const EdgeInsets.symmetric(
                     horizontal: 0.0,
                   ),
-                  width: SettingsController.inst.trackThumbnailSizeinList.value,
-                  height: SettingsController.inst.trackThumbnailSizeinList.value,
+                  width: settings.trackThumbnailSizeinList.value,
+                  height: settings.trackThumbnailSizeinList.value,
                   child: ArtworkWidget(
-                    thumbnailSize: SettingsController.inst.trackThumbnailSizeinList.value,
+                    thumbnailSize: settings.trackThumbnailSizeinList.value,
                     path: allTracksInLibrary.firstOrNull?.pathToImage,
-                    forceSquared: stg.forceSquaredTrackThumbnail.value,
+                    forceSquared: settings.forceSquaredTrackThumbnail.value,
                   ),
                 ),
                 const SizedBox(
@@ -172,11 +170,11 @@ class TrackTileCustomization extends StatelessWidget {
                           children: [
                             TrackTilePosition.row1Item1,
                             TrackTilePosition.row1Item2,
-                            if (SettingsController.inst.displayThirdItemInEachRow.value) TrackTilePosition.row1Item3,
+                            if (settings.displayThirdItemInEachRow.value) TrackTilePosition.row1Item3,
                           ]
                               .map(
                                 (e) => TrackItemSmallBox(
-                                  text: SettingsController.inst.trackItem[e]?.label,
+                                  text: settings.trackItem[e]?.label,
                                   onTap: () => _showTrackItemsDialog(e),
                                 ),
                               )
@@ -192,11 +190,11 @@ class TrackTileCustomization extends StatelessWidget {
                           children: [
                             TrackTilePosition.row2Item1,
                             TrackTilePosition.row2Item2,
-                            if (SettingsController.inst.displayThirdItemInEachRow.value) TrackTilePosition.row2Item3,
+                            if (settings.displayThirdItemInEachRow.value) TrackTilePosition.row2Item3,
                           ]
                               .map(
                                 (e) => TrackItemSmallBox(
-                                  text: SettingsController.inst.trackItem[e]?.label,
+                                  text: settings.trackItem[e]?.label,
                                   onTap: () => _showTrackItemsDialog(e),
                                 ),
                               )
@@ -207,17 +205,17 @@ class TrackTileCustomization extends StatelessWidget {
                       const SizedBox(
                         height: 4.0,
                       ),
-                      if (SettingsController.inst.displayThirdRow.value)
+                      if (settings.displayThirdRow.value)
                         FittedBox(
                           child: Row(
                             children: [
                               TrackTilePosition.row3Item1,
                               TrackTilePosition.row3Item2,
-                              if (SettingsController.inst.displayThirdItemInEachRow.value) TrackTilePosition.row3Item3,
+                              if (settings.displayThirdItemInEachRow.value) TrackTilePosition.row3Item3,
                             ]
                                 .map(
                                   (e) => TrackItemSmallBox(
-                                    text: SettingsController.inst.trackItem[e]?.label,
+                                    text: settings.trackItem[e]?.label,
                                     onTap: () => _showTrackItemsDialog(e),
                                   ),
                                 )
@@ -241,13 +239,13 @@ class TrackTileCustomization extends StatelessWidget {
                     ]
                         .map(
                           (e) => TrackItemSmallBox(
-                            text: SettingsController.inst.trackItem[e]?.label,
+                            text: settings.trackItem[e]?.label,
                             onTap: () => _showTrackItemsDialog(e),
                           ),
                         )
                         .addSeparators(separator: const SizedBox(height: 3.0))
                         .toList(),
-                    if (SettingsController.inst.displayFavouriteIconInListTile.value) ...[
+                    if (settings.displayFavouriteIconInListTile.value) ...[
                       const SizedBox(height: 3.0),
                       const NamidaLikeButton(
                         track: null,
@@ -286,10 +284,10 @@ class TrackTileCustomization extends StatelessWidget {
                 key: ValueKey(i),
                 title: trItem.toText(),
                 onTap: () {
-                  SettingsController.inst.updateTrackItemList(p, trItem);
+                  settings.updateTrackItemList(p, trItem);
                   NamidaNavigator.inst.closeDialog();
                 },
-                active: SettingsController.inst.trackItem[p] == trItem,
+                active: settings.trackItem[p] == trItem,
               );
             },
             itemCount: TrackTileItem.values.length,

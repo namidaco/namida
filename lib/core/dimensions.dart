@@ -64,12 +64,12 @@ class Dimensions {
   }
 
   void updateTrackTileDimensions() {
-    trackTileItemExtent = SettingsController.inst.trackListTileHeight.value + totalVerticalDistance;
+    trackTileItemExtent = settings.trackListTileHeight.value + totalVerticalDistance;
     calculateAllItemsExtentsInHistory();
   }
 
   void updateAlbumTileDimensions() {
-    albumTileItemExtent = SettingsController.inst.albumListTileHeight.value + totalVerticalDistance;
+    albumTileItemExtent = settings.albumListTileHeight.value + totalVerticalDistance;
   }
 
   (double, double, double) _getSizes(int gridCount, bool biggerFont) {

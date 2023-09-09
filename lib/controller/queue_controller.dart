@@ -200,7 +200,7 @@ class QueueController {
 
     if (latestQueue.isEmpty) return;
 
-    final latestTrack = SettingsController.inst.lastPlayedTrackPath.value.toTrack();
+    final latestTrack = settings.lastPlayedTrackPath.value.toTrack();
 
     final index = latestQueue.indexOf(latestTrack).toIf(0, -1);
 

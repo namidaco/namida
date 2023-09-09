@@ -37,9 +37,9 @@ class ExtrasSettings extends StatelessWidget {
               icon: Broken.direct,
               title: lang.ENABLE_BOTTOM_NAV_BAR,
               subtitle: lang.ENABLE_BOTTOM_NAV_BAR_SUBTITLE,
-              value: SettingsController.inst.enableBottomNavBar.value,
+              value: settings.enableBottomNavBar.value,
               onChanged: (p0) {
-                SettingsController.inst.save(enableBottomNavBar: !p0);
+                settings.save(enableBottomNavBar: !p0);
                 MiniPlayerController.inst.updateBottomNavBarRelatedDimensions(!p0);
               },
             ),
@@ -48,9 +48,9 @@ class ExtrasSettings extends StatelessWidget {
             () => CustomSwitchListTile(
               icon: Broken.video_square,
               title: lang.USE_YOUTUBE_MINIPLAYER,
-              value: SettingsController.inst.useYoutubeMiniplayer.value,
+              value: settings.useYoutubeMiniplayer.value,
               onChanged: (isTrue) {
-                SettingsController.inst.save(useYoutubeMiniplayer: !isTrue);
+                settings.save(useYoutubeMiniplayer: !isTrue);
                 YoutubeController.inst.updateVideoDetails(Player.inst.nowPlayingTrack.youtubeID);
               },
             ),
@@ -59,17 +59,17 @@ class ExtrasSettings extends StatelessWidget {
             () => CustomSwitchListTile(
               icon: Broken.screenmirroring,
               title: "${lang.ENABLE_PICTURE_IN_PICTURE} (${lang.BETA})",
-              value: SettingsController.inst.enablePip.value,
-              onChanged: (isTrue) => SettingsController.inst.save(enablePip: !isTrue),
+              value: settings.enablePip.value,
+              onChanged: (isTrue) => settings.save(enablePip: !isTrue),
             ),
           ),
           Obx(
             () => CustomSwitchListTile(
               icon: Broken.folder_open,
               title: lang.ENABLE_FOLDERS_HIERARCHY,
-              value: SettingsController.inst.enableFoldersHierarchy.value,
+              value: settings.enableFoldersHierarchy.value,
               onChanged: (p0) {
-                SettingsController.inst.save(enableFoldersHierarchy: !p0);
+                settings.save(enableFoldersHierarchy: !p0);
                 Folders.inst.isHome.value = true;
                 Folders.inst.isInside.value = false;
               },
@@ -79,7 +79,7 @@ class ExtrasSettings extends StatelessWidget {
             () => CustomListTile(
               icon: Broken.receipt_1,
               title: lang.DEFAULT_LIBRARY_TAB,
-              trailingText: SettingsController.inst.autoLibraryTab.value ? lang.AUTO : SettingsController.inst.selectedLibraryTab.value.toText(),
+              trailingText: settings.autoLibraryTab.value ? lang.AUTO : settings.selectedLibraryTab.value.toText(),
               onTap: () => NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
                   title: lang.DEFAULT_LIBRARY_TAB,
@@ -99,13 +99,13 @@ class ExtrasSettings extends StatelessWidget {
                             () => ListTileWithCheckMark(
                               title: lang.AUTO,
                               icon: Broken.recovery_convert,
-                              onTap: () => SettingsController.inst.save(autoLibraryTab: true),
-                              active: SettingsController.inst.autoLibraryTab.value,
+                              onTap: () => settings.save(autoLibraryTab: true),
+                              active: settings.autoLibraryTab.value,
                             ),
                           ),
                         ),
                         const SizedBox(height: 12.0),
-                        ...SettingsController.inst.libraryTabs.asMap().entries.map(
+                        ...settings.libraryTabs.asMap().entries.map(
                               (e) => Obx(
                                 () => Container(
                                   margin: const EdgeInsets.all(4.0),
@@ -113,13 +113,13 @@ class ExtrasSettings extends StatelessWidget {
                                     title: "${e.key + 1}. ${e.value.toText()}",
                                     icon: e.value.toIcon(),
                                     onTap: () {
-                                      SettingsController.inst.save(
+                                      settings.save(
                                         selectedLibraryTab: e.value,
                                         staticLibraryTab: e.value,
                                         autoLibraryTab: false,
                                       );
                                     },
-                                    active: SettingsController.inst.selectedLibraryTab.value == e.value,
+                                    active: settings.selectedLibraryTab.value == e.value,
                                   ),
                                 ),
                               ),
@@ -136,7 +136,7 @@ class ExtrasSettings extends StatelessWidget {
               return CustomListTile(
                 icon: Broken.color_swatch,
                 title: lang.LIBRARY_TABS,
-                trailingText: "${SettingsController.inst.libraryTabs.length}",
+                trailingText: "${settings.libraryTabs.length}",
                 onTap: () => NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
                     title: lang.LIBRARY_TABS,
@@ -151,7 +151,7 @@ class ExtrasSettings extends StatelessWidget {
                         final subList = <LibraryTab>[].obs;
 
                         LibraryTab.values.loop((e, index) {
-                          if (!SettingsController.inst.libraryTabs.contains(e)) {
+                          if (!settings.libraryTabs.contains(e)) {
                             subList.add(e);
                           }
                         });
@@ -167,9 +167,9 @@ class ExtrasSettings extends StatelessWidget {
                               shrinkWrap: true,
                               proxyDecorator: (child, index, animation) => child,
                               padding: EdgeInsets.zero,
-                              itemCount: SettingsController.inst.libraryTabs.length,
+                              itemCount: settings.libraryTabs.length,
                               itemBuilder: (context, i) {
-                                final tab = SettingsController.inst.libraryTabs[i];
+                                final tab = settings.libraryTabs[i];
                                 return Container(
                                   key: ValueKey(i),
                                   margin: const EdgeInsets.all(4.0),
@@ -177,14 +177,14 @@ class ExtrasSettings extends StatelessWidget {
                                     title: "${i + 1}. ${tab.toText()}",
                                     icon: tab.toIcon(),
                                     onTap: () {
-                                      if (SettingsController.inst.libraryTabs.length > 3) {
-                                        SettingsController.inst.removeFromList(libraryTab1: tab);
-                                        SettingsController.inst.save(selectedLibraryTab: SettingsController.inst.libraryTabs[0]);
+                                      if (settings.libraryTabs.length > 3) {
+                                        settings.removeFromList(libraryTab1: tab);
+                                        settings.save(selectedLibraryTab: settings.libraryTabs[0]);
                                       } else {
                                         showMinimumItemsSnack(3);
                                       }
                                     },
-                                    active: SettingsController.inst.libraryTabs.contains(tab),
+                                    active: settings.libraryTabs.contains(tab),
                                   ),
                                 );
                               },
@@ -192,11 +192,11 @@ class ExtrasSettings extends StatelessWidget {
                                 if (newIndex > oldIndex) {
                                   newIndex -= 1;
                                 }
-                                final item = SettingsController.inst.libraryTabs.elementAt(oldIndex);
-                                SettingsController.inst.removeFromList(
+                                final item = settings.libraryTabs.elementAt(oldIndex);
+                                settings.removeFromList(
                                   libraryTab1: item,
                                 );
-                                SettingsController.inst.insertInList(newIndex, libraryTab1: item);
+                                settings.insertInList(newIndex, libraryTab1: item);
                               },
                             ),
                             const NamidaContainerDivider(height: 4.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
@@ -208,8 +208,8 @@ class ExtrasSettings extends StatelessWidget {
                                       ListTileWithCheckMark(
                                         title: "${e.key + 1}. ${e.value.toText()}",
                                         icon: e.value.toIcon(),
-                                        onTap: () => SettingsController.inst.save(libraryTabs: [e.value]),
-                                        active: SettingsController.inst.libraryTabs.contains(e.value),
+                                        onTap: () => settings.save(libraryTabs: [e.value]),
+                                        active: settings.libraryTabs.contains(e.value),
                                       ),
                                       const SizedBox(height: 8.0),
                                     ],
@@ -228,7 +228,7 @@ class ExtrasSettings extends StatelessWidget {
             () => CustomListTile(
               icon: Broken.filter_search,
               title: lang.FILTER_TRACKS_BY,
-              trailingText: "${SettingsController.inst.trackSearchFilter.length}",
+              trailingText: "${settings.trackSearchFilter.length}",
               onTap: () => NamidaNavigator.inst.navigateDialog(
                 dialog: Obx(
                   () {
@@ -239,7 +239,7 @@ class ExtrasSettings extends StatelessWidget {
                           icon: const Icon(Broken.refresh),
                           tooltip: lang.RESTORE_DEFAULTS,
                           onPressed: () {
-                            SettingsController.inst.removeFromList(trackSearchFilterAll: [
+                            settings.removeFromList(trackSearchFilterAll: [
                               'title',
                               'album',
                               'albumartist',
@@ -249,7 +249,7 @@ class ExtrasSettings extends StatelessWidget {
                               'year',
                             ]);
 
-                            SettingsController.inst.save(trackSearchFilter: ['title', 'artist', 'album']);
+                            settings.save(trackSearchFilter: ['title', 'artist', 'album']);
                           },
                         ),
                         NamidaButton(
@@ -267,7 +267,7 @@ class ExtrasSettings extends StatelessWidget {
                               onTap: () {
                                 _trackFilterOnTap(TrackSearchFilter.title);
                               },
-                              active: SettingsController.inst.trackSearchFilter.contains('title'),
+                              active: settings.trackSearchFilter.contains('title'),
                             ),
                             const SizedBox(height: 12.0),
                             ListTileWithCheckMark(
@@ -275,7 +275,7 @@ class ExtrasSettings extends StatelessWidget {
                               onTap: () {
                                 _trackFilterOnTap(TrackSearchFilter.album);
                               },
-                              active: SettingsController.inst.trackSearchFilter.contains('album'),
+                              active: settings.trackSearchFilter.contains('album'),
                             ),
                             const SizedBox(height: 12.0),
                             ListTileWithCheckMark(
@@ -283,7 +283,7 @@ class ExtrasSettings extends StatelessWidget {
                               onTap: () {
                                 _trackFilterOnTap(TrackSearchFilter.albumartist);
                               },
-                              active: SettingsController.inst.trackSearchFilter.contains('albumartist'),
+                              active: settings.trackSearchFilter.contains('albumartist'),
                             ),
                             const SizedBox(height: 12.0),
                             ListTileWithCheckMark(
@@ -291,7 +291,7 @@ class ExtrasSettings extends StatelessWidget {
                               onTap: () {
                                 _trackFilterOnTap(TrackSearchFilter.artist);
                               },
-                              active: SettingsController.inst.trackSearchFilter.contains('artist'),
+                              active: settings.trackSearchFilter.contains('artist'),
                             ),
                             const SizedBox(height: 12.0),
                             ListTileWithCheckMark(
@@ -299,7 +299,7 @@ class ExtrasSettings extends StatelessWidget {
                               onTap: () {
                                 _trackFilterOnTap(TrackSearchFilter.genre);
                               },
-                              active: SettingsController.inst.trackSearchFilter.contains('genre'),
+                              active: settings.trackSearchFilter.contains('genre'),
                             ),
                             const SizedBox(height: 12.0),
                             ListTileWithCheckMark(
@@ -307,13 +307,13 @@ class ExtrasSettings extends StatelessWidget {
                               onTap: () {
                                 _trackFilterOnTap(TrackSearchFilter.composer);
                               },
-                              active: SettingsController.inst.trackSearchFilter.contains('composer'),
+                              active: settings.trackSearchFilter.contains('composer'),
                             ),
                             const SizedBox(height: 12.0),
                             ListTileWithCheckMark(
                               title: lang.YEAR,
                               onTap: () => _trackFilterOnTap(TrackSearchFilter.year),
-                              active: SettingsController.inst.trackSearchFilter.contains('year'),
+                              active: settings.trackSearchFilter.contains('year'),
                             ),
                           ],
                         ),
@@ -329,8 +329,8 @@ class ExtrasSettings extends StatelessWidget {
               icon: Broken.document_filter,
               title: lang.ENABLE_SEARCH_CLEANUP,
               subtitle: lang.ENABLE_SEARCH_CLEANUP_SUBTITLE,
-              value: SettingsController.inst.enableSearchCleanup.value,
-              onChanged: (p0) => SettingsController.inst.save(enableSearchCleanup: !p0),
+              value: settings.enableSearchCleanup.value,
+              onChanged: (p0) => settings.save(enableSearchCleanup: !p0),
             ),
           ),
           CustomListTile(
@@ -417,16 +417,16 @@ class ExtrasSettings extends StatelessWidget {
         null;
     }
 
-    final canRemove = SettingsController.inst.trackSearchFilter.length > 1;
+    final canRemove = settings.trackSearchFilter.length > 1;
 
-    if (SettingsController.inst.trackSearchFilter.contains(type)) {
+    if (settings.trackSearchFilter.contains(type)) {
       if (canRemove) {
-        SettingsController.inst.removeFromList(trackSearchFilter1: type);
+        settings.removeFromList(trackSearchFilter1: type);
       } else {
         showMinimumItemsSnack(1);
       }
     } else {
-      SettingsController.inst.save(trackSearchFilter: [type]);
+      settings.save(trackSearchFilter: [type]);
     }
   }
 }

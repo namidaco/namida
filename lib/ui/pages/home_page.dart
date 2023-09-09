@@ -131,7 +131,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
     // -- supermacy
     final ct = Player.inst.nowPlayingTrack;
-    final maxCount = SettingsController.inst.queueInsertion[QueueInsertionType.algorithm]?.numberOfTracks ?? 25;
+    final maxCount = settings.queueInsertion[QueueInsertionType.algorithm]?.numberOfTracks ?? 25;
     final sameAsCurrent = NamidaGenerator.inst.generateRecommendedTrack(ct).take(maxCount);
 
     _mixes.addAllIfEmpty({
@@ -303,7 +303,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   void showReorderHomeItemsDialog() {
     final subList = <HomePageItems>[].obs;
     HomePageItems.values.loop((e, index) {
-      if (!SettingsController.inst.homePageItems.contains(e)) {
+      if (!settings.homePageItems.contains(e)) {
         subList.add(e);
       }
     });
@@ -324,10 +324,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               children: [
                 Expanded(
                   child: ReorderableListView.builder(
-                    itemCount: SettingsController.inst.homePageItems.length,
+                    itemCount: settings.homePageItems.length,
                     proxyDecorator: (child, index, animation) => child,
                     itemBuilder: (context, index) {
-                      final item = SettingsController.inst.homePageItems[index];
+                      final item = settings.homePageItems[index];
                       return Material(
                         key: ValueKey(index),
                         type: MaterialType.transparency,
@@ -338,12 +338,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                             icon: Broken.recovery_convert,
                             title: item.toText(),
                             onTap: () {
-                              if (SettingsController.inst.homePageItems.length <= 3) {
+                              if (settings.homePageItems.length <= 3) {
                                 showMinimumItemsSnack(3);
                                 return;
                               }
                               subList.add(item);
-                              SettingsController.inst.removeFromList(homePageItem1: item);
+                              settings.removeFromList(homePageItem1: item);
                             },
                           ),
                         ),
@@ -352,9 +352,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     onReorder: (oldIndex, newIndex) {
                       if (newIndex > oldIndex) newIndex -= 1;
 
-                      final item = SettingsController.inst.homePageItems.elementAt(oldIndex);
-                      SettingsController.inst.removeFromList(homePageItem1: item);
-                      SettingsController.inst.insertInList(newIndex, homePageItem1: item);
+                      final item = settings.homePageItems.elementAt(oldIndex);
+                      settings.removeFromList(homePageItem1: item);
+                      settings.insertInList(newIndex, homePageItem1: item);
                     },
                   ),
                 ),
@@ -369,7 +369,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                         icon: Broken.recovery_convert,
                         title: item.toText(),
                         onTap: () {
-                          SettingsController.inst.save(homePageItems: [item]);
+                          settings.save(homePageItems: [item]);
                           subList.remove(item);
                         },
                       ),
@@ -419,7 +419,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     ),
                   ),
                 ),
-                ...SettingsController.inst.homePageItems.map(
+                ...settings.homePageItems.map(
                   (element) {
                     switch (element) {
                       case HomePageItems.mixes:
@@ -1066,7 +1066,7 @@ class _TrackCardState extends State<_TrackCard> {
         animationDurationMS: 200,
         child: NamidaBgBlur(
           blur: 20.0,
-          enabled: SettingsController.inst.enableBlurEffect.value,
+          enabled: settings.enableBlurEffect.value,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,

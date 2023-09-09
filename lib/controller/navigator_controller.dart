@@ -50,7 +50,7 @@ class NamidaNavigator {
   }
 
   void onFirstLoad() {
-    final initialTab = SettingsController.inst.selectedLibraryTab.value;
+    final initialTab = settings.selectedLibraryTab.value;
     navigateTo(initialTab.toWidget(), durationInMs: 0);
     Dimensions.inst.updateAllTileDimensions();
   }

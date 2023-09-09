@@ -62,13 +62,13 @@ class BackupAndRestore extends StatelessWidget {
               child: const LoadingIndicator(),
             ),
             onTap: () {
-              bool isActive(List<String> items) => items.every((element) => SettingsController.inst.backupItemslist.contains(element));
+              bool isActive(List<String> items) => items.every((element) => settings.backupItemslist.contains(element));
 
               void onItemTap(List<String> items) {
                 if (isActive(items)) {
-                  SettingsController.inst.removeFromList(backupItemslistAll: items);
+                  settings.removeFromList(backupItemslistAll: items);
                 } else {
-                  SettingsController.inst.save(backupItemslist: items);
+                  settings.save(backupItemslist: items);
                 }
               }
 
@@ -90,7 +90,7 @@ class BackupAndRestore extends StatelessWidget {
                       NamidaButton(
                         text: lang.CREATE_BACKUP,
                         onPressed: () {
-                          if (SettingsController.inst.backupItemslist.isNotEmpty) {
+                          if (settings.backupItemslist.isNotEmpty) {
                             NamidaNavigator.inst.closeDialog();
                             BackupController.inst.createBackupFile();
                           }
@@ -210,12 +210,12 @@ class BackupAndRestore extends StatelessWidget {
             () => CustomListTile(
               title: lang.DEFAULT_BACKUP_LOCATION,
               icon: Broken.direct_inbox,
-              subtitle: SettingsController.inst.defaultBackupLocation.value,
+              subtitle: settings.defaultBackupLocation.value,
               onTap: () async {
                 final path = await FilePicker.platform.getDirectoryPath();
 
                 if (path != null) {
-                  SettingsController.inst.save(defaultBackupLocation: path);
+                  settings.save(defaultBackupLocation: path);
                 }
               },
             ),

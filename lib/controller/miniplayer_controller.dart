@@ -70,7 +70,7 @@ class MiniPlayerController {
       upperBound: 1,
       value: 0.0,
     );
-    updateBottomNavBarRelatedDimensions(SettingsController.inst.enableBottomNavBar.value);
+    updateBottomNavBarRelatedDimensions(settings.enableBottomNavBar.value);
   }
 
   void updateBottomNavBarRelatedDimensions(bool isEnabled) {
@@ -284,10 +284,10 @@ class MiniPlayerController {
   }
 
   void _toggleWakelockOn() {
-    if (SettingsController.inst.wakelockMode.value == WakelockMode.expanded) {
+    if (settings.wakelockMode.value == WakelockMode.expanded) {
       WakelockPlus.enable();
     }
-    if (SettingsController.inst.wakelockMode.value == WakelockMode.expandedAndVideo && VideoController.inst.shouldShowVideo) {
+    if (settings.wakelockMode.value == WakelockMode.expandedAndVideo && VideoController.inst.shouldShowVideo) {
       WakelockPlus.enable();
     }
   }

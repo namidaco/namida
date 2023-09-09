@@ -37,7 +37,7 @@ class NamidaDialogs {
       trExt.title.overflow,
       source,
       thirdLineText: trExt.album.overflow,
-      forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+      forceSquared: settings.forceSquaredTrackThumbnail.value,
       tracksWithDates: trackWithDate == null ? [] : [trackWithDate],
       playlistName: playlistName,
       index: index,

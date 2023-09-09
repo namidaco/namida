@@ -40,9 +40,9 @@ class ThemeSetting extends StatelessWidget {
                 icon: Broken.colorfilter,
                 title: lang.AUTO_COLORING,
                 subtitle: lang.AUTO_COLORING_SUBTITLE,
-                value: SettingsController.inst.autoColor.value,
+                value: settings.autoColor.value,
                 onChanged: (isTrue) async {
-                  SettingsController.inst.save(autoColor: !isTrue);
+                  settings.save(autoColor: !isTrue);
                   if (isTrue) {
                     CurrentColor.inst.updatePlayerColorFromColor(playerStaticColor);
                   } else {
@@ -57,7 +57,7 @@ class ThemeSetting extends StatelessWidget {
                   final darkText = isDark ? " (${lang.THEME_MODE_DARK})" : '';
                   final color = isDark ? playerStaticColorDark : playerStaticColorLight;
                   return CustomListTile(
-                    enabled: !SettingsController.inst.autoColor.value,
+                    enabled: !settings.autoColor.value,
                     icon: !isDark ? Broken.bucket : null,
                     leading: isDark
                         ? const StackedIcon(
@@ -178,12 +178,12 @@ class ThemeSetting extends StatelessWidget {
 
   void _updateColor(Color color, bool darkMode) {
     if (darkMode) {
-      SettingsController.inst.save(staticColorDark: color.value);
+      settings.save(staticColorDark: color.value);
       if (Get.isDarkMode) {
         CurrentColor.inst.updatePlayerColorFromColor(color, false);
       }
     } else {
-      SettingsController.inst.save(staticColor: color.value);
+      settings.save(staticColor: color.value);
       if (!Get.isDarkMode) {
         CurrentColor.inst.updatePlayerColorFromColor(color, false);
       }
@@ -197,7 +197,7 @@ class ToggleThemeModeContainer extends StatelessWidget {
   const ToggleThemeModeContainer({super.key, this.width, this.blurRadius = 6.0});
 
   void onThemeChangeTap(ThemeMode themeMode) async {
-    SettingsController.inst.save(themeMode: themeMode);
+    settings.save(themeMode: themeMode);
     await Future.delayed(const Duration(milliseconds: kThemeAnimationDurationMS));
     CurrentColor.inst.updateColorAfterThemeModeChange();
   }
@@ -207,7 +207,7 @@ class ToggleThemeModeContainer extends StatelessWidget {
     final double containerWidth = width ?? context.width / 2.8;
     return Obx(
       () {
-        final currentTheme = SettingsController.inst.themeMode.value;
+        final currentTheme = settings.themeMode.value;
         return Container(
           decoration: BoxDecoration(
             color: Color.alphaBlend(context.theme.listTileTheme.textColor!.withAlpha(200), Colors.white.withAlpha(160)),

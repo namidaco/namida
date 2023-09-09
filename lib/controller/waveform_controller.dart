@@ -61,7 +61,7 @@ class WaveformController {
   double getCurrentAnimatingScale(int positionInMs) {
     final bitScale = positionInMs ~/ 50 + 0; // TODO: expose this 0 as a calibration
     final dynamicScale = _currentScaleMap[bitScale] ?? 0.01;
-    final intensity = SettingsController.inst.animatingThumbnailIntensity.value;
+    final intensity = settings.animatingThumbnailIntensity.value;
     final finalScale = dynamicScale * intensity * 0.02;
 
     return finalScale.isNaN ? 0.01 : finalScale;

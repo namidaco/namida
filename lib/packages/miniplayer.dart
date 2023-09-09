@@ -112,7 +112,7 @@ class _MiniPlayerSwitchersState extends State<MiniPlayerSwitchers> with SingleTi
     return Obx(
       () {
         // to refresh after toggling [enableBottomNavBar]
-        SettingsController.inst.enableBottomNavBar.value;
+        settings.enableBottomNavBar.value;
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 600),
           child: Player.inst.nowPlayingTrack == kDummyTrack
@@ -121,9 +121,9 @@ class _MiniPlayerSwitchersState extends State<MiniPlayerSwitchers> with SingleTi
                 )
               : Obx(
                   () => PipWidget(
-                    isEnteringHomeOnSuspending: SettingsController.inst.enablePip.value,
+                    isEnteringHomeOnSuspending: settings.enablePip.value,
                     onSuspending: () async {
-                      if (SettingsController.inst.enablePip.value) {
+                      if (settings.enablePip.value) {
                         await VideoController.vcontroller.enablePictureInPicture();
                       }
                     },
@@ -132,7 +132,7 @@ class _MiniPlayerSwitchersState extends State<MiniPlayerSwitchers> with SingleTi
                       alignment: Alignment.topLeft,
                       child: VideoController.inst.videoOrArtworkWidget,
                     ),
-                    child: SettingsController.inst.useYoutubeMiniplayer.value
+                    child: settings.useYoutubeMiniplayer.value
                         ? YoutubeMiniPlayer(key: const Key('ytminiplayer'))
                         : const NamidaMiniPlayer(
                             key: Key('actualminiplayer'),
@@ -231,7 +231,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                     panelHeight = _velpy(a: panelHeight, b: maxOffset / 1.6 - 100.0 - topInset, c: qcp);
                   }
 
-                  final miniplayerbottomnavheight = SettingsController.inst.enableBottomNavBar.value ? 60.0 : 0.0;
+                  final miniplayerbottomnavheight = settings.enableBottomNavBar.value ? 60.0 : 0.0;
                   final double bottomOffset = (-miniplayerbottomnavheight * icp + p.clamp(-1, 0) * -200) - (bottomInset * icp);
 
                   return Stack(
@@ -306,7 +306,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (SettingsController.inst.enablePartyModeInMiniplayer.value) ...[
+                      if (settings.enablePartyModeInMiniplayer.value) ...[
                         NamidaPartyContainer(
                           height: 2,
                           spreadRadiusMultiplier: 0.8,
@@ -663,7 +663,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                       bottomOffsetHeight: 12.0,
                                       leftOffsetHeight: 4.0,
                                       onMenuOpen: () {
-                                        if (SettingsController.inst.enableVideoPlayback.value) {
+                                        if (settings.enableVideoPlayback.value) {
                                           isMenuOpened.value = true;
                                           return true;
                                         } else {
@@ -758,7 +758,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                       ),
                                       child: Obx(
                                         () {
-                                          final videoPlaybackEnabled = SettingsController.inst.enableVideoPlayback.value;
+                                          final videoPlaybackEnabled = settings.enableVideoPlayback.value;
                                           final currentVideo = VideoController.inst.currentVideo.value;
                                           final downloadedBytes = VideoController.inst.currentDownloadedBytes.value;
                                           final videoTotalSize = currentVideo?.sizeInBytes ?? 0;
@@ -796,7 +796,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                   ),
                                                   if (!videoPlaybackEnabled) ...[
                                                     getTextWidget(lang.AUDIO, colored: true),
-                                                    if (SettingsController.inst.displayAudioInfoMiniplayer.value)
+                                                    if (settings.displayAudioInfoMiniplayer.value)
                                                       getTextWidget(
                                                         " • ${currentTrack.audioInfoFormattedCompact}",
                                                         colored: true,
@@ -860,18 +860,18 @@ class NamidaMiniPlayer extends StatelessWidget {
                                           child: Obx(
                                             () => IconButton(
                                               visualDensity: VisualDensity.compact,
-                                              tooltip: SettingsController.inst.playerRepeatMode.value.toText().replaceFirst('_NUM_', Player.inst.numberOfRepeats.toString()),
-                                              onPressed: () => SettingsController.inst.playerRepeatMode.value.toggleSetting(),
+                                              tooltip: settings.playerRepeatMode.value.toText().replaceFirst('_NUM_', Player.inst.numberOfRepeats.toString()),
+                                              onPressed: () => settings.playerRepeatMode.value.toggleSetting(),
                                               padding: const EdgeInsets.all(2.0),
                                               icon: Stack(
                                                 alignment: Alignment.center,
                                                 children: [
                                                   Icon(
-                                                    SettingsController.inst.playerRepeatMode.value.toIcon(),
+                                                    settings.playerRepeatMode.value.toIcon(),
                                                     size: 20.0,
                                                     color: context.theme.colorScheme.onSecondaryContainer,
                                                   ),
-                                                  if (SettingsController.inst.playerRepeatMode.value == RepeatMode.forNtimes)
+                                                  if (settings.playerRepeatMode.value == RepeatMode.forNtimes)
                                                     Text(
                                                       Player.inst.numberOfRepeats.toString(),
                                                       style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSecondaryContainer),
@@ -888,12 +888,12 @@ class NamidaMiniPlayer extends StatelessWidget {
                                             tooltip: lang.LYRICS,
                                             visualDensity: VisualDensity.compact,
                                             onPressed: () {
-                                              SettingsController.inst.save(enableLyrics: !SettingsController.inst.enableLyrics.value);
+                                              settings.save(enableLyrics: !settings.enableLyrics.value);
                                               Lyrics.inst.updateLyrics(currentTrack);
                                             },
                                             padding: const EdgeInsets.all(2.0),
                                             icon: Obx(
-                                              () => SettingsController.inst.enableLyrics.value
+                                              () => settings.enableLyrics.value
                                                   ? Lyrics.inst.currentLyrics.value == ''
                                                       ? StackedIcon(
                                                           baseIcon: Broken.document,
@@ -1239,7 +1239,7 @@ class NamidaMiniPlayer extends StatelessWidget {
         const SizedBox(width: 6.0),
         GestureDetector(
           onLongPressStart: (details) async {
-            void saveSetting(bool shuffleAll) => SettingsController.inst.save(playerShuffleAllTracks: shuffleAll);
+            void saveSetting(bool shuffleAll) => settings.save(playerShuffleAllTracks: shuffleAll);
             await showMenu(
               context: context,
               position: RelativeRect.fromLTRB(
@@ -1268,7 +1268,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                         () => SizedBox(
                           height: tileHeight,
                           child: ListTileWithCheckMark(
-                            active: SettingsController.inst.playerShuffleAllTracks.value == e.$3,
+                            active: settings.playerShuffleAllTracks.value == e.$3,
                             leading: StackedIcon(
                               baseIcon: Broken.shuffle,
                               secondaryIcon: e.$2,
@@ -1288,7 +1288,7 @@ class NamidaMiniPlayer extends StatelessWidget {
           child: NamidaButton(
             text: lang.SHUFFLE,
             icon: Broken.shuffle,
-            onPressed: () => Player.inst.shuffleTracks(SettingsController.inst.playerShuffleAllTracks.value),
+            onPressed: () => Player.inst.shuffleTracks(settings.playerShuffleAllTracks.value),
           ),
         ),
         const SizedBox(width: 8.0),
@@ -1313,7 +1313,7 @@ class NamidaMiniPlayer extends StatelessWidget {
             NamidaButton(
               text: lang.SAVE,
               onPressed: () {
-                SettingsController.inst.updateQueueInsertion(
+                settings.updateQueueInsertion(
                   insertionType,
                   QueueInsertion(
                     numberOfTracks: tracksNo.value,
@@ -1860,7 +1860,7 @@ class _AnimatingTrackImage extends StatelessWidget {
         () {
           final additionalScale = VideoController.inst.videoZoomAdditionalScale.value;
           final finalScale = (additionalScale * 0.02) + WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
-          final isInversed = SettingsController.inst.animatingThumbnailInversed.value;
+          final isInversed = settings.animatingThumbnailInversed.value;
           return AnimatedScale(
             duration: const Duration(milliseconds: 100),
             scale: isInversed ? 1.25 - finalScale : 1.13 + finalScale,
@@ -1906,7 +1906,7 @@ class _TrackImage extends StatelessWidget {
       thumbnailSize: Get.width,
       compressed: false,
       borderRadius: 6.0 + 10.0 * cp,
-      forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+      forceSquared: settings.forceSquaredTrackThumbnail.value,
       boxShadow: [
         BoxShadow(
           color: context.theme.shadowColor.withAlpha(100),
@@ -1973,7 +1973,7 @@ class LyricsWrapper extends StatelessWidget {
     return Obx(
       () => AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
-        child: !SettingsController.inst.enableLyrics.value || Lyrics.inst.currentLyrics.value == ''
+        child: !settings.enableLyrics.value || Lyrics.inst.currentLyrics.value == ''
             ? child
             : Stack(
                 alignment: Alignment.center,
@@ -2056,7 +2056,7 @@ class _WallpaperState extends State<Wallpaper> with TickerProviderStateMixin {
                 ),
               ),
             ),
-          if (SettingsController.inst.enableMiniplayerParticles.value)
+          if (settings.enableMiniplayerParticles.value)
             Obx(
               () {
                 final bpm = 2000 * WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);

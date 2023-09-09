@@ -89,9 +89,9 @@ class TrackTile extends StatelessWidget {
       children: [
         Obx(
           () {
-            // final TrackItem tritem = SettingsController.inst.trackItem.value;
-            final double thumbnailSize = SettingsController.inst.trackThumbnailSizeinList.value;
-            final double trackTileHeight = SettingsController.inst.trackListTileHeight.value;
+            // final TrackItem tritem = settings.trackItem.value;
+            final double thumbnailSize = settings.trackThumbnailSizeinList.value;
+            final double trackTileHeight = settings.trackListTileHeight.value;
             final bool isTrackSelected = SelectedTracksController.inst.isTrackSelected(trackOrTwd);
             final bool isTrackSame = track == CurrentColor.inst.currentPlayingTrack.value?.track;
             final bool isRightHistoryList = queueSource == QueueSource.history ? trackWithDate == CurrentColor.inst.currentPlayingTrack.value?.trackWithDate : true;
@@ -123,8 +123,8 @@ class TrackTile extends StatelessWidget {
                         if (queueSource == QueueSource.search) {
                           ScrollSearchController.inst.unfocusKeyboard();
                           await Player.inst.playOrPause(
-                            SettingsController.inst.trackPlayMode.value.shouldBeIndex0 ? 0 : index,
-                            SettingsController.inst.trackPlayMode.value.getQueue(track),
+                            settings.trackPlayMode.value.shouldBeIndex0 ? 0 : index,
+                            settings.trackPlayMode.value.getQueue(track),
                             queueSource,
                           );
                         } else {
@@ -166,7 +166,7 @@ class TrackTile extends StatelessWidget {
                                     key: Key("$willSleepAfterThis${trackOrTwd.hashCode}"),
                                     thumbnailSize: thumbnailSize,
                                     path: track.pathToImage,
-                                    forceSquared: SettingsController.inst.forceSquaredTrackThumbnail.value,
+                                    forceSquared: settings.forceSquaredTrackThumbnail.value,
                                     useTrackTileCacheHeight: true,
                                     onTopWidgets: [
                                       if (displayTrackNumber)
@@ -246,7 +246,7 @@ class TrackTile extends StatelessWidget {
                                 ),
 
                               // check if third row isnt empty
-                              if (thirdLineText == '' && SettingsController.inst.displayThirdRow.value)
+                              if (thirdLineText == '' && settings.displayThirdRow.value)
                                 if (row3Text != '')
                                   Text(
                                     row3Text,
@@ -268,7 +268,7 @@ class TrackTile extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 6.0),
-                        if (SettingsController.inst.displayFavouriteIconInListTile.value || rightItem1Text != '' || rightItem2Text != '')
+                        if (settings.displayFavouriteIconInListTile.value || rightItem1Text != '' || rightItem2Text != '')
                           Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -290,7 +290,7 @@ class TrackTile extends StatelessWidget {
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                              if (SettingsController.inst.displayFavouriteIconInListTile.value)
+                              if (settings.displayFavouriteIconInListTile.value)
                                 NamidaLikeButton(
                                   track: track,
                                   size: 22.0,
@@ -349,7 +349,7 @@ String _getChoosenTrackTileItem(TrackTilePosition? itemPosition, Track trackPre)
   final track = trackPre.toTrackExt();
   final finalDate = track.dateModified.dateFormatted;
   final finalClock = track.dateModified.clockFormatted;
-  final trackItem = SettingsController.inst.trackItem[itemPosition] ?? TrackTileItem.none;
+  final trackItem = settings.trackItem[itemPosition] ?? TrackTileItem.none;
   final trackItemPlaceV = [
     if (trackItem == TrackTileItem.none) '',
     if (trackItem == TrackTileItem.title) track.title.overflow,
@@ -394,6 +394,6 @@ String _joinTrackItems(TrackTilePosition? p1, TrackTilePosition? p2, TrackTilePo
   return [
     if (i1 != '') i1,
     if (i2 != '') i2,
-    if (i3 != '' && SettingsController.inst.displayThirdItemInEachRow.value) i3,
-  ].join(' ${SettingsController.inst.trackTileSeparator} ');
+    if (i3 != '' && settings.displayThirdItemInEachRow.value) i3,
+  ].join(' ${settings.trackTileSeparator} ');
 }

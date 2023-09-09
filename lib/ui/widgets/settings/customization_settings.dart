@@ -33,23 +33,23 @@ class CustomizationSettings extends StatelessWidget {
               title: lang.ENABLE_BLUR_EFFECT,
               subtitle: lang.PERFORMANCE_NOTE,
               onChanged: (p0) {
-                stg.save(enableBlurEffect: !p0);
+                settings.save(enableBlurEffect: !p0);
               },
-              value: stg.enableBlurEffect.value,
+              value: settings.enableBlurEffect.value,
             ),
             CustomSwitchListTile(
               icon: Broken.sun_1,
               title: lang.ENABLE_GLOW_EFFECT,
               subtitle: lang.PERFORMANCE_NOTE,
               onChanged: (p0) {
-                stg.save(enableGlowEffect: !p0);
+                settings.save(enableGlowEffect: !p0);
               },
-              value: stg.enableGlowEffect.value,
+              value: settings.enableGlowEffect.value,
             ),
             CustomListTile(
               icon: Broken.rotate_left_1,
               title: lang.BORDER_RADIUS_MULTIPLIER,
-              trailingText: "${stg.borderRadiusMultiplier.value}",
+              trailingText: "${settings.borderRadiusMultiplier.value}",
               onTap: () {
                 showSettingDialogWithTextField(
                   title: lang.BORDER_RADIUS_MULTIPLIER,
@@ -61,7 +61,7 @@ class CustomizationSettings extends StatelessWidget {
             CustomListTile(
               icon: Broken.text,
               title: lang.FONT_SCALE,
-              trailingText: "${(stg.fontScaleFactor.value * 100).toInt()}%",
+              trailingText: "${(settings.fontScaleFactor.value * 100).toInt()}%",
               onTap: () {
                 showSettingDialogWithTextField(
                   title: lang.FONT_SCALE,
@@ -74,14 +74,14 @@ class CustomizationSettings extends StatelessWidget {
               icon: Broken.clock,
               title: lang.HOUR_FORMAT_12,
               onChanged: (p0) {
-                stg.save(hourFormat12: !p0);
+                settings.save(hourFormat12: !p0);
               },
-              value: stg.hourFormat12.value,
+              value: settings.hourFormat12.value,
             ),
             CustomListTile(
               icon: Broken.calendar_edit,
               title: lang.DATE_TIME_FORMAT,
-              trailingText: "${stg.dateTimeFormat}",
+              trailingText: "${settings.dateTimeFormat}",
               onTap: () {
                 final ScrollController scrollController = ScrollController();
 
@@ -103,9 +103,9 @@ class CustomizationSettings extends StatelessWidget {
                                   ...kDefaultDateTimeStrings.entries.map(
                                     (e) => SmallListTile(
                                       title: e.value,
-                                      active: stg.dateTimeFormat.value == e.key,
+                                      active: settings.dateTimeFormat.value == e.key,
                                       onTap: () {
-                                        stg.save(dateTimeFormat: e.key);
+                                        settings.save(dateTimeFormat: e.key);
                                         NamidaNavigator.inst.closeDialog();
                                       },
                                     ),
@@ -137,8 +137,8 @@ class CustomizationSettings extends StatelessWidget {
                     ));
               },
             ),
-            AlbumTileCustomization(),
-            TrackTileCustomization(),
+            const AlbumTileCustomization(),
+            const TrackTileCustomization(),
             const MiniplayerCustomization(),
           ],
         ),

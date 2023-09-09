@@ -88,7 +88,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
       gaplessPlayback: true,
       fit: BoxFit.cover,
       cacheHeight: widget.useTrackTileCacheHeight
-          ? SettingsController.inst.trackThumbnailSizeinList.value > 120
+          ? settings.trackThumbnailSizeinList.value > 120
               ? null
               : 60 * pixelRatio
           : widget.cacheHeight * pixelRatio,
@@ -192,12 +192,12 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
     _lastCardColor = context.theme.cardColor;
     _lastBorderRadius = widget.borderRadius;
     final finalWidget = widget.child ?? _extImageChild ?? _stockWidget;
-    _finalWidget = widget.forceEnableGlow || (SettingsController.inst.enableGlowEffect.value && widget.blur != 0.0)
+    _finalWidget = widget.forceEnableGlow || (settings.enableGlowEffect.value && widget.blur != 0.0)
         ? SizedBox(
             width: widget.staggered ? null : widget.width ?? widget.thumbnailSize * widget.scale,
             height: widget.staggered ? null : widget.height ?? widget.thumbnailSize * widget.scale,
             child: Center(
-              child: SettingsController.inst.borderRadiusMultiplier.value == 0.0 || widget.borderRadius == 0
+              child: settings.borderRadiusMultiplier.value == 0.0 || widget.borderRadius == 0
                   ? DropShadow(
                       borderRadius: widget.borderRadius.multipliedRadius,
                       blurRadius: widget.blur,
@@ -225,7 +225,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
             child: Center(
               child: Container(
                 decoration: BoxDecoration(boxShadow: widget.boxShadow),
-                child: SettingsController.inst.borderRadiusMultiplier.value == 0.0
+                child: settings.borderRadiusMultiplier.value == 0.0
                     ? finalWidget
                     : ClipRRect(
                         borderRadius: BorderRadius.circular(widget.borderRadius.multipliedRadius),

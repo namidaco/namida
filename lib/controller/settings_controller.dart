@@ -11,6 +11,8 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
+SettingsController get settings => SettingsController.inst;
+
 class SettingsController {
   static SettingsController get inst => _instance;
   static final SettingsController _instance = SettingsController._internal();

@@ -137,8 +137,8 @@ class IndexerSettings extends StatelessWidget {
               icon: Broken.copy,
               title: lang.PREVENT_DUPLICATED_TRACKS,
               subtitle: "${lang.PREVENT_DUPLICATED_TRACKS_SUBTITLE}. ${lang.INDEX_REFRESH_REQUIRED}",
-              onChanged: (isTrue) => stg.save(preventDuplicatedTracks: !isTrue),
-              value: stg.preventDuplicatedTracks.value,
+              onChanged: (isTrue) => settings.save(preventDuplicatedTracks: !isTrue),
+              value: settings.preventDuplicatedTracks.value,
             ),
           ),
           Obx(
@@ -147,15 +147,15 @@ class IndexerSettings extends StatelessWidget {
               title: lang.RESPECT_NO_MEDIA,
               subtitle: "${lang.RESPECT_NO_MEDIA_SUBTITLE}. ${lang.INDEX_REFRESH_REQUIRED}",
               onChanged: (isTrue) async {
-                if (!stg.respectNoMedia.value) {
+                if (!settings.respectNoMedia.value) {
                   if (await requestManageStoragePermission()) {
-                    stg.save(respectNoMedia: true);
+                    settings.save(respectNoMedia: true);
                   }
                 } else {
-                  stg.save(respectNoMedia: false);
+                  settings.save(respectNoMedia: false);
                 }
               },
-              value: stg.respectNoMedia.value,
+              value: settings.respectNoMedia.value,
             ),
           ),
           Obx(
@@ -164,21 +164,21 @@ class IndexerSettings extends StatelessWidget {
               title: lang.EXTRACT_FEAT_ARTIST,
               subtitle: "${lang.EXTRACT_FEAT_ARTIST_SUBTITLE} ${lang.INSTANTLY_APPLIES}.",
               onChanged: (isTrue) async {
-                stg.save(extractFeatArtistFromTitle: !isTrue);
+                settings.save(extractFeatArtistFromTitle: !isTrue);
                 await Indexer.inst.prepareTracksFile();
               },
-              value: stg.extractFeatArtistFromTitle.value,
+              value: settings.extractFeatArtistFromTitle.value,
             ),
           ),
           CustomListTile(
             icon: Broken.profile_2user,
             title: lang.TRACK_ARTISTS_SEPARATOR,
             subtitle: lang.INSTANTLY_APPLIES,
-            trailingText: "${stg.trackArtistsSeparators.length}",
+            trailingText: "${settings.trackArtistsSeparators.length}",
             onTap: () async {
               await _showSeparatorSymbolsDialog(
                 lang.TRACK_ARTISTS_SEPARATOR,
-                stg.trackArtistsSeparators,
+                settings.trackArtistsSeparators,
                 trackArtistsSeparators: true,
               );
             },
@@ -187,11 +187,11 @@ class IndexerSettings extends StatelessWidget {
             icon: Broken.smileys,
             title: lang.TRACK_GENRES_SEPARATOR,
             subtitle: lang.INSTANTLY_APPLIES,
-            trailingText: "${stg.trackGenresSeparators.length}",
+            trailingText: "${settings.trackGenresSeparators.length}",
             onTap: () async {
               await _showSeparatorSymbolsDialog(
                 lang.TRACK_GENRES_SEPARATOR,
-                stg.trackGenresSeparators,
+                settings.trackGenresSeparators,
                 trackGenresSeparators: true,
               );
             },
@@ -205,13 +205,13 @@ class IndexerSettings extends StatelessWidget {
                 width: 100.0,
                 totalCount: 1024,
                 squeeze: 0.2,
-                initValue: SettingsController.inst.indexMinFileSizeInB.value.toInt() / 1024 ~/ 10,
+                initValue: settings.indexMinFileSizeInB.value.toInt() / 1024 ~/ 10,
                 itemSize: 1,
                 onValueChanged: (val) {
                   final d = (val as int);
-                  SettingsController.inst.save(indexMinFileSizeInB: d * 1024 * 10);
+                  settings.save(indexMinFileSizeInB: d * 1024 * 10);
                 },
-                text: SettingsController.inst.indexMinFileSizeInB.value.fileSizeFormatted,
+                text: settings.indexMinFileSizeInB.value.fileSizeFormatted,
               ),
             ),
           ),
@@ -223,13 +223,13 @@ class IndexerSettings extends StatelessWidget {
               trailing: NamidaWheelSlider(
                 width: 100.0,
                 totalCount: 180,
-                initValue: SettingsController.inst.indexMinDurationInSec.value,
+                initValue: settings.indexMinDurationInSec.value,
                 itemSize: 5,
                 onValueChanged: (val) {
                   final d = (val as int);
-                  SettingsController.inst.save(indexMinDurationInSec: d);
+                  settings.save(indexMinDurationInSec: d);
                 },
-                text: "${SettingsController.inst.indexMinDurationInSec.value} s",
+                text: "${settings.indexMinDurationInSec.value} s",
               ),
             ),
           ),
@@ -274,14 +274,14 @@ class IndexerSettings extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   addFolderButton((dirPath) {
-                    SettingsController.inst.save(directoriesToScan: [dirPath]);
+                    settings.save(directoriesToScan: [dirPath]);
                   }),
                   const SizedBox(width: 8.0),
                   const Icon(Broken.arrow_down_2),
                 ],
               ),
               children: [
-                ...SettingsController.inst.directoriesToScan.map(
+                ...settings.directoriesToScan.map(
                   (e) => ListTile(
                     title: Text(
                       e,
@@ -289,7 +289,7 @@ class IndexerSettings extends StatelessWidget {
                     ),
                     trailing: TextButton(
                       onPressed: () {
-                        if (SettingsController.inst.directoriesToScan.length == 1) {
+                        if (settings.directoriesToScan.length == 1) {
                           Get.snackbar(
                             lang.MINIMUM_ONE_ITEM,
                             lang.MINIMUM_ONE_FOLDER_SUBTITLE,
@@ -305,7 +305,7 @@ class IndexerSettings extends StatelessWidget {
                                 NamidaButton(
                                   text: lang.REMOVE,
                                   onPressed: () {
-                                    SettingsController.inst.removeFromList(directoriesToScan1: e);
+                                    settings.removeFromList(directoriesToScan1: e);
                                     NamidaNavigator.inst.closeDialog();
                                     _showRefreshPromptDialog(true);
                                   },
@@ -332,13 +332,13 @@ class IndexerSettings extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   addFolderButton((dirPath) {
-                    SettingsController.inst.save(directoriesToExclude: [dirPath]);
+                    settings.save(directoriesToExclude: [dirPath]);
                   }),
                   const SizedBox(width: 8.0),
                   const Icon(Broken.arrow_down_2),
                 ],
               ),
-              children: SettingsController.inst.directoriesToExclude.isEmpty
+              children: settings.directoriesToExclude.isEmpty
                   ? [
                       ListTile(
                         title: Text(
@@ -348,7 +348,7 @@ class IndexerSettings extends StatelessWidget {
                       ),
                     ]
                   : [
-                      ...SettingsController.inst.directoriesToExclude.map(
+                      ...settings.directoriesToExclude.map(
                         (e) => ListTile(
                           title: Text(
                             e,
@@ -356,7 +356,7 @@ class IndexerSettings extends StatelessWidget {
                           ),
                           trailing: TextButton(
                             onPressed: () {
-                              SettingsController.inst.removeFromList(directoriesToExclude1: e);
+                              settings.removeFromList(directoriesToExclude1: e);
                               _showRefreshPromptDialog(true);
                             },
                             child: Text(lang.REMOVE.toUpperCase()),
@@ -400,8 +400,7 @@ class IndexerSettings extends StatelessWidget {
           if (!isBlackListDialog)
             NamidaButton(
               textWidget: Obx(() {
-                final blLength =
-                    trackArtistsSeparators ? SettingsController.inst.trackArtistsSeparatorsBlacklist.length : SettingsController.inst.trackGenresSeparatorsBlacklist.length;
+                final blLength = trackArtistsSeparators ? settings.trackArtistsSeparatorsBlacklist.length : settings.trackGenresSeparatorsBlacklist.length;
                 final t = blLength == 0 ? '' : ' ($blLength)';
                 return Text('${lang.BLACKLIST}$t');
               }),
@@ -409,14 +408,14 @@ class IndexerSettings extends StatelessWidget {
                 if (trackArtistsSeparators) {
                   _showSeparatorSymbolsDialog(
                     lang.BLACKLIST,
-                    SettingsController.inst.trackArtistsSeparatorsBlacklist,
+                    settings.trackArtistsSeparatorsBlacklist,
                     trackArtistsSeparatorsBlacklist: true,
                   );
                 }
                 if (trackGenresSeparators) {
                   _showSeparatorSymbolsDialog(
                     lang.BLACKLIST,
-                    SettingsController.inst.trackGenresSeparatorsBlacklist,
+                    settings.trackGenresSeparatorsBlacklist,
                     trackGenresSeparatorsBlacklist: true,
                   );
                 }
@@ -431,16 +430,16 @@ class IndexerSettings extends StatelessWidget {
                     onPressed: () {
                       if (separatorsController.text.isNotEmpty) {
                         if (trackArtistsSeparators) {
-                          stg.save(trackArtistsSeparators: [separatorsController.text]);
+                          settings.save(trackArtistsSeparators: [separatorsController.text]);
                         }
                         if (trackGenresSeparators) {
-                          stg.save(trackGenresSeparators: [separatorsController.text]);
+                          settings.save(trackGenresSeparators: [separatorsController.text]);
                         }
                         if (trackArtistsSeparatorsBlacklist) {
-                          stg.save(trackArtistsSeparatorsBlacklist: [separatorsController.text]);
+                          settings.save(trackArtistsSeparatorsBlacklist: [separatorsController.text]);
                         }
                         if (trackGenresSeparatorsBlacklist) {
-                          stg.save(trackGenresSeparatorsBlacklist: [separatorsController.text]);
+                          settings.save(trackGenresSeparatorsBlacklist: [separatorsController.text]);
                         }
                         separatorsController.clear();
                       } else {
@@ -474,16 +473,16 @@ class IndexerSettings extends StatelessWidget {
                       child: InkWell(
                         onTap: () {
                           if (trackArtistsSeparators) {
-                            stg.removeFromList(trackArtistsSeparator: e);
+                            settings.removeFromList(trackArtistsSeparator: e);
                           }
                           if (trackGenresSeparators) {
-                            stg.removeFromList(trackGenresSeparator: e);
+                            settings.removeFromList(trackGenresSeparator: e);
                           }
                           if (trackArtistsSeparatorsBlacklist) {
-                            stg.removeFromList(trackArtistsSeparatorsBlacklist1: e);
+                            settings.removeFromList(trackArtistsSeparatorsBlacklist1: e);
                           }
                           if (trackGenresSeparatorsBlacklist) {
-                            stg.removeFromList(trackGenresSeparatorsBlacklist1: e);
+                            settings.removeFromList(trackGenresSeparatorsBlacklist1: e);
                           }
                         },
                         child: Row(

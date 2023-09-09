@@ -116,17 +116,17 @@ extension DisplayKeywords on int {
 extension YearDateFormatted on int {
   String get formattedTime => getTimeFormatted(hourChar: 'h', minutesChar: 'min', separator: ' ');
 
-  String get yearFormatted => getYearFormatted(SettingsController.inst.dateTimeFormat.value);
+  String get yearFormatted => getYearFormatted(settings.dateTimeFormat.value);
 
-  String get dateFormatted => formatTimeFromMSSE(SettingsController.inst.dateTimeFormat.value);
+  String get dateFormatted => formatTimeFromMSSE(settings.dateTimeFormat.value);
 
   String get dateFormattedOriginal {
-    final valInSetting = SettingsController.inst.dateTimeFormat.value;
-    return getDateFormatted(format: valInSetting.contains('d') ? SettingsController.inst.dateTimeFormat.value : 'dd MMM yyyy');
+    final valInSetting = settings.dateTimeFormat.value;
+    return getDateFormatted(format: valInSetting.contains('d') ? settings.dateTimeFormat.value : 'dd MMM yyyy');
   }
 
   String dateFormattedOriginalNoYears(DateTime diffDate) {
-    final valInSettingMain = SettingsController.inst.dateTimeFormat.value;
+    final valInSettingMain = settings.dateTimeFormat.value;
     String valInSettingNew = valInSettingMain.contains('d') ? valInSettingMain : 'dd MMM yyyy';
 
     bool lessThan1Year(Duration d) => d.inDays.abs() < 364;
@@ -139,13 +139,13 @@ extension YearDateFormatted on int {
     return getDateFormatted(format: valInSettingNew);
   }
 
-  String get clockFormatted => getClockFormatted(SettingsController.inst.hourFormat12.value);
+  String get clockFormatted => getClockFormatted(settings.hourFormat12.value);
 
   /// this one gurantee that the format will return with the day included, even if the format in setting doesnt have day.
   /// if (valInSet.contains('d')) return userformat;
   /// else return dateFormattedOriginal ('dd MMM yyyy');
   String get dateAndClockFormattedOriginal {
-    final valInSet = SettingsController.inst.dateTimeFormat.value;
+    final valInSet = settings.dateTimeFormat.value;
     if (valInSet.contains('d')) {
       return dateAndClockFormatted;
     }
@@ -157,13 +157,13 @@ extension YearDateFormatted on int {
 
 extension BorderRadiusSetting on double {
   double get multipliedRadius {
-    return this * SettingsController.inst.borderRadiusMultiplier.value;
+    return this * settings.borderRadiusMultiplier.value;
   }
 }
 
 extension FontScaleSetting on double {
   double get multipliedFontScale {
-    return this * SettingsController.inst.fontScaleFactor.value;
+    return this * settings.fontScaleFactor.value;
   }
 }
 
@@ -202,10 +202,10 @@ extension PLNAME on String {
 
 extension TRACKPLAYMODE on TrackPlayMode {
   void toggleSetting() {
-    if (SettingsController.inst.trackPlayMode.value.index + 1 == TrackPlayMode.values.length) {
-      SettingsController.inst.save(trackPlayMode: TrackPlayMode.values[0]);
+    if (settings.trackPlayMode.value.index + 1 == TrackPlayMode.values.length) {
+      settings.save(trackPlayMode: TrackPlayMode.values[0]);
     } else {
-      SettingsController.inst.save(trackPlayMode: TrackPlayMode.values[index + 1]);
+      settings.save(trackPlayMode: TrackPlayMode.values[index + 1]);
     }
   }
 
@@ -239,10 +239,10 @@ extension TRACKPLAYMODE on TrackPlayMode {
 
 extension PlayerRepeatModeUtils on RepeatMode {
   void toggleSetting() {
-    if (SettingsController.inst.playerRepeatMode.value.index + 1 == RepeatMode.values.length) {
-      SettingsController.inst.save(playerRepeatMode: RepeatMode.values[0]);
+    if (settings.playerRepeatMode.value.index + 1 == RepeatMode.values.length) {
+      settings.save(playerRepeatMode: RepeatMode.values[0]);
     } else {
-      SettingsController.inst.save(playerRepeatMode: RepeatMode.values[index + 1]);
+      settings.save(playerRepeatMode: RepeatMode.values[index + 1]);
     }
   }
 }
@@ -274,20 +274,20 @@ extension TagFieldsUtils on TagField {
 
 extension WAKELOCKMODETEXT on WakelockMode {
   void toggleSetting() {
-    if (SettingsController.inst.wakelockMode.value.index + 1 == WakelockMode.values.length) {
-      SettingsController.inst.save(wakelockMode: WakelockMode.values[0]);
+    if (settings.wakelockMode.value.index + 1 == WakelockMode.values.length) {
+      settings.save(wakelockMode: WakelockMode.values[0]);
     } else {
-      SettingsController.inst.save(wakelockMode: WakelockMode.values[index + 1]);
+      settings.save(wakelockMode: WakelockMode.values[index + 1]);
     }
   }
 }
 
 extension LocalVideoMatchingTypeUtils on LocalVideoMatchingType {
   void toggleSetting() {
-    if (SettingsController.inst.localVideoMatchingType.value.index + 1 == LocalVideoMatchingType.values.length) {
-      SettingsController.inst.save(localVideoMatchingType: LocalVideoMatchingType.values[0]);
+    if (settings.localVideoMatchingType.value.index + 1 == LocalVideoMatchingType.values.length) {
+      settings.save(localVideoMatchingType: LocalVideoMatchingType.values[0]);
     } else {
-      SettingsController.inst.save(localVideoMatchingType: LocalVideoMatchingType.values[index + 1]);
+      settings.save(localVideoMatchingType: LocalVideoMatchingType.values[index + 1]);
     }
   }
 }

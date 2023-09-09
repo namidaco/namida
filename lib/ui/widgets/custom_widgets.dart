@@ -715,7 +715,7 @@ class SmallListTile extends StatelessWidget {
                 activeColor: color ?? context.theme.listTileTheme.iconColor!,
                 inactiveColor: color ?? context.theme.listTileTheme.iconColor!,
                 duration: const Duration(milliseconds: 400),
-                active: SettingsController.inst.artistSortReversed.value,
+                active: settings.artistSortReversed.value,
               ),
             )
           : trailingIcon != null
@@ -1071,9 +1071,9 @@ class CollapsedSettingTileWidget extends StatelessWidget {
       () => CustomSwitchListTile(
         icon: Broken.archive,
         title: lang.USE_COLLAPSED_SETTING_TILES,
-        value: SettingsController.inst.useSettingCollapsedTiles.value,
+        value: settings.useSettingCollapsedTiles.value,
         onChanged: (isTrue) async {
-          SettingsController.inst.save(useSettingCollapsedTiles: !isTrue);
+          settings.save(useSettingCollapsedTiles: !isTrue);
           await NamidaNavigator.inst.popPage();
           NamidaNavigator.inst.navigateTo(const SettingsPage());
         },
@@ -1095,7 +1095,7 @@ class NamidaBlurryContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final blurredAlphaLight = context.isDarkMode ? 60 : 140;
     final con = BlurryContainer(
-      disableBlur: !SettingsController.inst.enableBlurEffect.value,
+      disableBlur: !settings.enableBlurEffect.value,
       borderRadius: borderRadius ??
           BorderRadius.only(
             bottomLeft: Radius.circular(8.0.multipliedRadius),
@@ -1105,7 +1105,7 @@ class NamidaBlurryContainer extends StatelessWidget {
           height: height,
           padding: padding ?? EdgeInsets.symmetric(horizontal: 6.0.multipliedRadius, vertical: 2.0),
           decoration: BoxDecoration(
-            color: context.theme.cardColor.withAlpha(SettingsController.inst.enableBlurEffect.value ? blurredAlphaLight : 220),
+            color: context.theme.cardColor.withAlpha(settings.enableBlurEffect.value ? blurredAlphaLight : 220),
             borderRadius: borderRadius ??
                 BorderRadius.only(
                   bottomLeft: Radius.circular(8.0.multipliedRadius),
@@ -1390,7 +1390,7 @@ class NamidaPartyContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!SettingsController.inst.enablePartyModeColorSwap.value) {
+    if (!settings.enablePartyModeColorSwap.value) {
       return Obx(
         () {
           final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);

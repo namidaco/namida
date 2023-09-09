@@ -27,7 +27,7 @@ class TracksPage extends StatelessWidget {
     return BackgroundWrapper(
       child: Obx(
         () {
-          SettingsController.inst.trackListTileHeight.value;
+          settings.trackListTileHeight.value;
           return NamidaTracksList(
             queueLength: SearchSortController.inst.trackSearchList.length,
             queueSource: QueueSource.allTracks,
@@ -74,11 +74,11 @@ class TracksPage extends StatelessWidget {
                   ScrollSearchController.inst.clearSearchTextField(LibraryTab.tracks);
                 },
                 sortByMenuWidget: SortByMenu(
-                  title: SettingsController.inst.tracksSort.value.toText(),
+                  title: settings.tracksSort.value.toText(),
                   popupMenuChild: const SortByMenuTracks(),
-                  isCurrentlyReversed: SettingsController.inst.tracksSortReversed.value,
+                  isCurrentlyReversed: settings.tracksSortReversed.value,
                   onReverseIconTap: () {
-                    SearchSortController.inst.sortMedia(MediaType.track, reverse: !SettingsController.inst.tracksSortReversed.value);
+                    SearchSortController.inst.sortMedia(MediaType.track, reverse: !settings.tracksSortReversed.value);
                   },
                 ),
                 textField: CustomTextFiled(

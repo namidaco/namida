@@ -40,7 +40,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   final _isPlaying = false.obs;
   final _numberOfRepeats = 1.obs;
 
-  final currentVolume = SettingsController.inst.playerVolume.value.obs;
+  final currentVolume = settings.playerVolume.value.obs;
 
   // Sleep Timer related
   final _enableSleepAfterTracks = false.obs;
@@ -94,10 +94,10 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
         }
 
         /// repeat moods
-        final repeat = SettingsController.inst.playerRepeatMode.value;
+        final repeat = settings.playerRepeatMode.value;
         switch (repeat) {
           case RepeatMode.none:
-            if (SettingsController.inst.jumpToFirstTrackAfterFinishingQueue.value) {
+            if (settings.jumpToFirstTrackAfterFinishingQueue.value) {
               await skipToNext(!isLastItem);
             } else {
               await pause();
@@ -110,7 +110,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
 
           case RepeatMode.forNtimes:
             if (numberOfRepeats == 1) {
-              SettingsController.inst.save(playerRepeatMode: RepeatMode.none);
+              settings.save(playerRepeatMode: RepeatMode.none);
             } else {
               _numberOfRepeats.value--;
             }
@@ -142,13 +142,13 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
     });
 
     FlutterVolumeController.addListener((value) async {
-      if (isPlaying && value == 0 && SettingsController.inst.playerPauseOnVolume0.value) {
+      if (isPlaying && value == 0 && settings.playerPauseOnVolume0.value) {
         final ast = await FlutterVolumeController.getAndroidAudioStream();
         if (ast == AudioStream.music) {
           _wasPausedByVolume0 = true;
           await pause();
         }
-      } else if (_wasPausedByVolume0 && SettingsController.inst.playerResumeAfterOnVolume0Pause.value) {
+      } else if (_wasPausedByVolume0 && settings.playerResumeAfterOnVolume0Pause.value) {
         _wasPausedByVolume0 = false;
         await play();
       }
@@ -185,7 +185,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   }
 
   void _onInterruption(InterruptionType type) {
-    final whatToDo = SettingsController.inst.playerOnInterrupted[type] ?? InterruptionAction.pause;
+    final whatToDo = settings.playerOnInterrupted[type] ?? InterruptionAction.pause;
     switch (whatToDo) {
       case InterruptionAction.pause:
         if (isPlaying) {
@@ -274,10 +274,10 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   Future<void> setSkipSilenceEnabled(bool enabled) async => await _player.setSkipSilenceEnabled(enabled);
 
   Future<void> tryRestoringLastPosition(Track trackPre) async {
-    final minValueInSet = SettingsController.inst.minTrackDurationToRestoreLastPosInMinutes.value * 60;
+    final minValueInSet = settings.minTrackDurationToRestoreLastPosInMinutes.value * 60;
 
     if (minValueInSet > 0) {
-      final seekValueInMS = SettingsController.inst.seekDurationInSeconds.value * 1000;
+      final seekValueInMS = settings.seekDurationInSeconds.value * 1000;
       final track = trackPre.toTrackExt();
       final lastPos = track.stats.lastPositionInMs;
       // -- only seek if not at the start of track.
@@ -326,7 +326,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   }
 
   Future<void> playWithFadeEffect() async {
-    final duration = SettingsController.inst.playerPlayFadeDurInMilli.value;
+    final duration = settings.playerPlayFadeDurInMilli.value;
     final interval = (0.05 * duration).toInt();
     final steps = duration ~/ interval;
     double vol = 0.0;
@@ -339,14 +339,14 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
       vol += 1 / steps;
       printy("Fade Volume Play: ${vol.toString()}");
       setVolume(vol);
-      if (vol >= SettingsController.inst.playerVolume.value || _wantToPause) {
+      if (vol >= settings.playerVolume.value || _wantToPause) {
         timer.cancel();
       }
     });
   }
 
   Future<void> pauseWithFadeEffect() async {
-    final duration = SettingsController.inst.playerPauseFadeDurInMilli.value;
+    final duration = settings.playerPauseFadeDurInMilli.value;
     final interval = (0.05 * duration).toInt();
     final steps = duration ~/ interval;
     double vol = currentVolume.value;
@@ -372,11 +372,11 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   Future<void> play() async {
     _wantToPause = false;
 
-    if (SettingsController.inst.enableVolumeFadeOnPlayPause.value && currentPositionMS > 200) {
+    if (settings.enableVolumeFadeOnPlayPause.value && currentPositionMS > 200) {
       await playWithFadeEffect();
     } else {
       _player.play();
-      setVolume(SettingsController.inst.playerVolume.value);
+      setVolume(settings.playerVolume.value);
     }
   }
 
@@ -384,7 +384,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   Future<void> pause() async {
     _updateTrackLastPosition(currentTrack.track, currentPositionMS);
     _wantToPause = true;
-    if (SettingsController.inst.enableVolumeFadeOnPlayPause.value && currentPositionMS > 200) {
+    if (settings.enableVolumeFadeOnPlayPause.value && currentPositionMS > 200) {
       await pauseWithFadeEffect();
     } else {
       _player.pause();
@@ -486,7 +486,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
       MediaControl.skipToNext,
       MediaControl.stop,
     ];
-    if (SettingsController.inst.displayFavouriteButtonInNotification.value) {
+    if (settings.displayFavouriteButtonInNotification.value) {
       fmc.insertSafe(0, Player.inst.nowPlayingTrack.isFavourite ? MediaControl.fastForward : MediaControl.rewind);
       iconsIndexes.assignAll(const [1, 2, 3]);
     }
@@ -552,13 +552,13 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
     if (startPlaying) {
       _player.play();
       VideoController.vcontroller.play();
-      setVolume(SettingsController.inst.playerVolume.value);
+      setVolume(settings.playerVolume.value);
     }
 
     startSleepAfterMinCount(tr);
     HistoryController.inst.startCounterToAListen(tr);
     increaseListenTime(tr);
-    SettingsController.inst.save(lastPlayedTrackPath: tr.path);
+    settings.save(lastPlayedTrackPath: tr.path);
     Lyrics.inst.updateLyrics(tr);
   }
 
@@ -584,7 +584,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   // ==============================================================================================
   //
 
-  bool get defaultShouldStartPlaying => (SettingsController.inst.playerPlayOnNextPrev.value || isPlaying);
+  bool get defaultShouldStartPlaying => (settings.playerPlayOnNextPrev.value || isPlaying);
 
   final _player = AudioPlayer(handleInterruptions: false);
 }

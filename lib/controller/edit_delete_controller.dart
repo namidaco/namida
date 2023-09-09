@@ -94,7 +94,7 @@ class EditDeleteController {
   }
 
   Future<void> updateDirectoryInEveryPartOfNamida(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
-    SettingsController.inst.save(directoriesToScan: [newDir]);
+    settings.save(directoriesToScan: [newDir]);
     await Future.wait([
       PlaylistController.inst.replaceTracksDirectory(oldDir, newDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists),
       QueueController.inst.replaceTracksDirectoryInQueues(oldDir, newDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists),

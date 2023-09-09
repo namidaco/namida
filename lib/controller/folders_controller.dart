@@ -68,7 +68,7 @@ class Folders {
 
   void stepOut() {
     Folder? folder;
-    if (SettingsController.inst.enableFoldersHierarchy.value) {
+    if (settings.enableFoldersHierarchy.value) {
       folder = currentFolder.value?.getParentFolder(fullyFunctional: true);
     }
     indexToScrollTo.value = null;
@@ -76,6 +76,6 @@ class Folders {
   }
 
   void onFirstLoad() {
-    stepIn(Folder(SettingsController.inst.defaultFolderStartupLocation.value));
+    stepIn(Folder(settings.defaultFolderStartupLocation.value));
   }
 }

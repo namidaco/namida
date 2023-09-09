@@ -180,7 +180,7 @@ class MostPlayedTracksPage extends StatelessWidget {
     DateRange? dateCustom,
     bool? isStartOfDay,
   }) {
-    SettingsController.inst.save(
+    settings.save(
       mostPlayedTimeRange: mptr,
       mostPlayedCustomDateRange: dateCustom,
       mostPlayedCustomisStartOfDay: isStartOfDay,
@@ -193,7 +193,7 @@ class MostPlayedTracksPage extends StatelessWidget {
     NamidaNavigator.inst.closeDialog();
   }
 
-  bool _isEnabled(MostPlayedTimeRange type) => type == SettingsController.inst.mostPlayedTimeRange.value;
+  bool _isEnabled(MostPlayedTimeRange type) => type == settings.mostPlayedTimeRange.value;
 
   Widget _getChipChild({
     required BuildContext context,
@@ -309,7 +309,7 @@ class MostPlayedTracksPage extends StatelessWidget {
                           children: [
                             Obx(
                               () {
-                                final dateRange = SettingsController.inst.mostPlayedCustomDateRange.value;
+                                final dateRange = settings.mostPlayedCustomDateRange.value;
                                 return _getChipChild(
                                   context: context,
                                   mptr: MostPlayedTimeRange.custom,

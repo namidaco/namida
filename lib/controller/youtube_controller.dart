@@ -103,7 +103,7 @@ class YoutubeController {
     final cachedFile = File("${AppDirs.YT_METADATA_COMMENTS}$id.txt");
 
     // fetching cache
-    final userForceNewRequest = ConnectivityController.inst.hasConnection && SettingsController.inst.ytCommentsAlwaysLoadNew.value;
+    final userForceNewRequest = ConnectivityController.inst.hasConnection && settings.ytCommentsAlwaysLoadNew.value;
     if (!forceRequest && !userForceNewRequest && await cachedFile.exists()) {
       final res = await cachedFile.readAsJson();
       final commList = (res as List?)?.map((e) => YoutubeComment.fromMap(e));
@@ -157,7 +157,7 @@ class YoutubeController {
   }
 
   Future<void> updateVideoDetails(String id) async {
-    if (!SettingsController.inst.useYoutubeMiniplayer.value) return;
+    if (!settings.useYoutubeMiniplayer.value) return;
 
     if (scrollController.hasClients) scrollController.jumpTo(0);
     updateCurrentVideoMetadata(id);
@@ -442,7 +442,7 @@ class YoutubeController {
         erabaretaStream = availableVideos.last; // worst quality
 
         if (stream == null) {
-          final preferredQualities = SettingsController.inst.youtubeVideoQualities.map((element) => element.settingLabeltoVideoLabel());
+          final preferredQualities = settings.youtubeVideoQualities.map((element) => element.settingLabeltoVideoLabel());
           for (int i = 0; i < availableVideos.length; i++) {
             final q = availableVideos[i];
             if (preferredQualities.contains(q.resolution?.split('p').first)) {

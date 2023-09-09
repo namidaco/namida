@@ -38,7 +38,7 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
           ),
-          SettingsController.inst.useSettingCollapsedTiles.value
+          settings.useSettingCollapsedTiles.value
               ? const CollapsedSettingTiles()
               : ListView(
                   children: const [

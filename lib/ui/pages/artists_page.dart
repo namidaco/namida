@@ -50,10 +50,10 @@ class ArtistsPage extends StatelessWidget {
                 ExpandableBox(
                   enableHero: enableHero,
                   gridWidget: ChangeGridCountWidget(
-                    currentCount: SettingsController.inst.artistGridCount.value,
+                    currentCount: settings.artistGridCount.value,
                     onTap: () {
                       final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.artists, countPerRow);
-                      SettingsController.inst.save(artistGridCount: newCount);
+                      settings.save(artistGridCount: newCount);
                     },
                   ),
                   isBarVisible: LibraryTab.artists.isBarVisible,
@@ -62,10 +62,10 @@ class ArtistsPage extends StatelessWidget {
                   onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.artists),
                   onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.artists),
                   sortByMenuWidget: SortByMenu(
-                    title: SettingsController.inst.artistSort.value.toText(),
+                    title: settings.artistSort.value.toText(),
                     popupMenuChild: const SortByMenuArtists(),
-                    isCurrentlyReversed: SettingsController.inst.artistSortReversed.value,
-                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.artist, reverse: !SettingsController.inst.artistSortReversed.value),
+                    isCurrentlyReversed: settings.artistSortReversed.value,
+                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.artist, reverse: !settings.artistSortReversed.value),
                   ),
                   textField: CustomTextFiled(
                     textFieldController: LibraryTab.artists.textSearchController,

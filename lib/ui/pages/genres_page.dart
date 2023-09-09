@@ -48,10 +48,10 @@ class GenresPage extends StatelessWidget {
                 ExpandableBox(
                   enableHero: enableHero,
                   gridWidget: ChangeGridCountWidget(
-                    currentCount: SettingsController.inst.genreGridCount.value,
+                    currentCount: settings.genreGridCount.value,
                     onTap: () {
                       final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.genres, countPerRow, minimum: 2);
-                      SettingsController.inst.save(genreGridCount: newCount);
+                      settings.save(genreGridCount: newCount);
                     },
                   ),
                   isBarVisible: LibraryTab.genres.isBarVisible,
@@ -60,10 +60,10 @@ class GenresPage extends StatelessWidget {
                   onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.genres),
                   onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.genres),
                   sortByMenuWidget: SortByMenu(
-                    title: SettingsController.inst.genreSort.value.toText(),
+                    title: settings.genreSort.value.toText(),
                     popupMenuChild: const SortByMenuGenres(),
-                    isCurrentlyReversed: SettingsController.inst.genreSortReversed.value,
-                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !SettingsController.inst.genreSortReversed.value),
+                    isCurrentlyReversed: settings.genreSortReversed.value,
+                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !settings.genreSortReversed.value),
                   ),
                   textField: CustomTextFiled(
                     textFieldController: LibraryTab.genres.textSearchController,

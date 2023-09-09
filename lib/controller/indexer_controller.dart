@@ -544,9 +544,9 @@ class Indexer {
       tracksInfoList.removeWhere((tr) => deletedPaths.contains(tr.path));
     }
 
-    final minDur = SettingsController.inst.indexMinDurationInSec.value; // Seconds
-    final minSize = SettingsController.inst.indexMinFileSizeInB.value; // bytes
-    final prevDuplicated = SettingsController.inst.preventDuplicatedTracks.value;
+    final minDur = settings.indexMinDurationInSec.value; // Seconds
+    final minSize = settings.indexMinFileSizeInB.value; // bytes
+    final prevDuplicated = settings.preventDuplicatedTracks.value;
 
     if (audioFiles.isNotEmpty) {
       // -- Extracting All Metadata
@@ -688,7 +688,7 @@ class Indexer {
   }
 
   /// [addArtistsFromTitle] extracts feat artists.
-  /// Defaults to [SettingsController.inst.extractFeatArtistFromTitle]
+  /// Defaults to [settings.extractFeatArtistFromTitle]
   List<String> splitArtist({
     required String? title,
     required String? originalArtist,
@@ -771,7 +771,7 @@ class Indexer {
 
     final parameters = {
       'allAvailableDirectories': allAvailableDirectories,
-      'directoriesToExclude': SettingsController.inst.directoriesToExclude.toList(),
+      'directoriesToExclude': settings.directoriesToExclude.toList(),
     };
 
     final mapResult = await _getAudioFilesIsolate.thready(parameters);
@@ -833,17 +833,17 @@ class Indexer {
   bool? _latestRespectNoMedia;
   Completer<Map<Directory, bool>>? _availableDirs;
   Future<Map<Directory, bool>> getAvailableDirectories({bool strictNoMedia = true, bool forceReCheck = false}) async {
-    if (_availableDirs != null && !forceReCheck && _latestRespectNoMedia == SettingsController.inst.respectNoMedia.value) {
+    if (_availableDirs != null && !forceReCheck && _latestRespectNoMedia == settings.respectNoMedia.value) {
       return await _availableDirs!.future;
     } else {
       _availableDirs = null; // for when forceReCheck enabled.
       _availableDirs = Completer<Map<Directory, bool>>();
 
-      _latestRespectNoMedia = SettingsController.inst.respectNoMedia.value;
+      _latestRespectNoMedia = settings.respectNoMedia.value;
 
       final parameters = {
-        'directoriesToScan': SettingsController.inst.directoriesToScan.toList(),
-        'respectNoMedia': SettingsController.inst.respectNoMedia.value,
+        'directoriesToScan': settings.directoriesToScan.toList(),
+        'respectNoMedia': settings.respectNoMedia.value,
         'strictNoMedia': strictNoMedia, // TODO: expose [strictNoMedia] in settings?
       };
       final allAvailableDirectories = await _getAvailableDirectoriesIsolate.thready(parameters);

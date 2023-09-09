@@ -140,7 +140,7 @@ class VideoController {
     currentYTQualities.clear();
     await vcontroller.dispose();
     if (_isInitializing) return;
-    if (!SettingsController.inst.enableVideoPlayback.value) return;
+    if (!settings.enableVideoPlayback.value) return;
 
     final possibleVideos = _getPossibleVideosFromTrack(track);
     currentPossibleVideos
@@ -150,7 +150,7 @@ class VideoController {
     final trackYTID = track.youtubeID;
     if (possibleVideos.isEmpty && trackYTID == '') isNoVideosAvailable.value = true;
 
-    final vpsInSettings = SettingsController.inst.videoPlaybackSource.value;
+    final vpsInSettings = settings.videoPlaybackSource.value;
     switch (vpsInSettings) {
       case VideoPlaybackSource.local:
         possibleVideos.retainWhere((element) => element.ytID != null); // leave all videos that doesnt have youtube id, i.e: local
@@ -217,8 +217,8 @@ class VideoController {
   }
 
   Future<void> toggleVideoPlayback() async {
-    final currentValue = SettingsController.inst.enableVideoPlayback.value;
-    SettingsController.inst.save(enableVideoPlayback: !currentValue);
+    final currentValue = settings.enableVideoPlayback.value;
+    settings.save(enableVideoPlayback: !currentValue);
     if (currentValue) {
       // should close/hide
       currentVideo.value = null;
@@ -349,8 +349,8 @@ class VideoController {
     final possibleLocal = <NamidaVideo>[];
     final trExt = track.toTrackExt();
 
-    final valInSett = SettingsController.inst.localVideoMatchingType.value;
-    final shouldCheckSameDir = SettingsController.inst.localVideoMatchingCheckSameDir.value;
+    final valInSett = settings.localVideoMatchingType.value;
+    final shouldCheckSameDir = settings.localVideoMatchingCheckSameDir.value;
 
     void matchFileName(String videoName, MapEntry<String, NamidaVideo> vf, bool ensureSameDir) {
       if (ensureSameDir) {
@@ -735,7 +735,7 @@ class VideoController {
     final allAvailableDirectories = await Indexer.inst.getAvailableDirectories(forceReCheck: forceReCheckDir);
     final allVideoPaths = <String>[];
 
-    final dirToExclude = SettingsController.inst.directoriesToExclude;
+    final dirToExclude = settings.directoriesToExclude;
     final dirToLoop = allAvailableDirectories.keys.toList();
     dirToLoop.removeWhere((element) => allAvailableDirectories[element] ?? false);
 

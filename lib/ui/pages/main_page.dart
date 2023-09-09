@@ -107,7 +107,7 @@ class MainPage extends StatelessWidget {
         ],
       ),
       bottomNavigationBar: Obx(
-        () => !SettingsController.inst.enableBottomNavBar.value
+        () => !settings.enableBottomNavBar.value
             ? const SizedBox()
             : Transform.translate(
                 offset: Offset(0, kBottomNavigationBarHeight * MiniPlayerController.inst.miniplayerHP.value),
@@ -117,9 +117,9 @@ class MainPage extends StatelessWidget {
                   labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
                   height: 64.0,
                   onDestinationSelected: (value) => ScrollSearchController.inst.animatePageController(value.toEnum()),
-                  selectedIndex: SettingsController.inst.selectedLibraryTab.value.toInt(),
+                  selectedIndex: settings.selectedLibraryTab.value.toInt(),
                   destinations: [
-                    ...SettingsController.inst.libraryTabs.map(
+                    ...settings.libraryTabs.map(
                       (e) => NavigationDestination(
                         icon: Icon(e.toIcon()),
                         label: e.toText(),
@@ -189,7 +189,7 @@ class AlbumSearchResultsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlbumsPage(
       albums: SearchSortController.inst.albumSearchTemp,
-      countPerRow: SettingsController.inst.albumGridCount.value,
+      countPerRow: settings.albumGridCount.value,
     );
   }
 }
@@ -202,7 +202,7 @@ class ArtistSearchResultsPage extends StatelessWidget {
     return ArtistsPage(
       enableHero: false,
       artists: SearchSortController.inst.artistSearchTemp,
-      countPerRow: SettingsController.inst.artistGridCount.value,
+      countPerRow: settings.artistGridCount.value,
     );
   }
 }

@@ -15,12 +15,12 @@ class SortByMenuTracks extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () {
-        final tracksSort = SettingsController.inst.tracksSort.value;
+        final tracksSort = settings.tracksSort.value;
         return Column(
           children: [
             ListTileWithCheckMark(
-              active: SettingsController.inst.tracksSortReversed.value,
-              onTap: () => SearchSortController.inst.sortMedia(MediaType.track, reverse: !SettingsController.inst.tracksSortReversed.value),
+              active: settings.tracksSortReversed.value,
+              onTap: () => SearchSortController.inst.sortMedia(MediaType.track, reverse: !settings.tracksSortReversed.value),
             ),
             ...[
               SortType.title,
@@ -60,12 +60,12 @@ class SortByMenuAlbums extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () {
-        final albumsort = SettingsController.inst.albumSort.value;
+        final albumsort = settings.albumSort.value;
         return Column(
           children: [
             ListTileWithCheckMark(
-              active: SettingsController.inst.albumSortReversed.value,
-              onTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !SettingsController.inst.albumSortReversed.value),
+              active: settings.albumSortReversed.value,
+              onTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
             ),
             ...[
               GroupSortType.album,
@@ -98,12 +98,12 @@ class SortByMenuArtists extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () {
-        final artistSort = SettingsController.inst.artistSort.value;
+        final artistSort = settings.artistSort.value;
         return Column(
           children: [
             ListTileWithCheckMark(
-              active: SettingsController.inst.artistSortReversed.value,
-              onTap: () => SearchSortController.inst.sortMedia(MediaType.artist, reverse: !SettingsController.inst.artistSortReversed.value),
+              active: settings.artistSortReversed.value,
+              onTap: () => SearchSortController.inst.sortMedia(MediaType.artist, reverse: !settings.artistSortReversed.value),
             ),
             ...[
               GroupSortType.artistsList,
@@ -138,12 +138,12 @@ class SortByMenuGenres extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () {
-        final genreSort = SettingsController.inst.genreSort.value;
+        final genreSort = settings.genreSort.value;
         return Column(
           children: [
             ListTileWithCheckMark(
-              active: SettingsController.inst.genreSortReversed.value,
-              onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !SettingsController.inst.genreSortReversed.value),
+              active: settings.genreSortReversed.value,
+              onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !settings.genreSortReversed.value),
             ),
             ...[
               GroupSortType.genresList,
@@ -177,12 +177,12 @@ class SortByMenuPlaylist extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () {
-        final playlistSort = SettingsController.inst.playlistSort.value;
+        final playlistSort = settings.playlistSort.value;
         return Column(
           children: [
             ListTileWithCheckMark(
-              active: SettingsController.inst.playlistSortReversed.value,
-              onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !SettingsController.inst.playlistSortReversed.value),
+              active: settings.playlistSortReversed.value,
+              onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
             ),
             ...[
               GroupSortType.title,

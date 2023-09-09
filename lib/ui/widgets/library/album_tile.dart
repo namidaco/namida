@@ -23,8 +23,8 @@ class AlbumTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final albumThumbnailSize = SettingsController.inst.albumThumbnailSizeinList.value;
-    final albumTileHeight = SettingsController.inst.albumListTileHeight.value;
+    final albumThumbnailSize = settings.albumThumbnailSizeinList.value;
+    final albumTileHeight = settings.albumListTileHeight.value;
     final finalYear = album.year.yearFormatted;
     final hero = 'album_$name';
 
@@ -59,7 +59,7 @@ class AlbumTile extends StatelessWidget {
                     child: ArtworkWidget(
                       thumbnailSize: albumThumbnailSize,
                       path: album.pathToImage,
-                      forceSquared: SettingsController.inst.forceSquaredAlbumThumbnail.value,
+                      forceSquared: settings.forceSquaredAlbumThumbnail.value,
                     ),
                   ),
                 ),

@@ -67,7 +67,7 @@ void main() async {
   kDirectoriesPaths.add('${paths[0]}/Download/');
   AppDirs.INTERNAL_STORAGE = "${paths[0]}/Namida";
 
-  await SettingsController.inst.prepareSettingsFile();
+  await settings.prepareSettingsFile();
   await Future.wait([
     Indexer.inst.prepareTracksFile(),
     Language.initialize(),
@@ -160,7 +160,7 @@ Future<bool> playExternalFiles(Iterable<String> paths) async {
 }
 
 Future<bool> requestManageStoragePermission() async {
-  Future<void> createDir() async => await Directory(SettingsController.inst.defaultBackupLocation.value).create(recursive: true);
+  Future<void> createDir() async => await Directory(settings.defaultBackupLocation.value).create(recursive: true);
   if (kSdkVersion < 30) {
     await createDir();
     return true;
@@ -185,7 +185,7 @@ class Namida extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () {
-        final locale = SettingsController.inst.selectedLanguage.value.code.split('_');
+        final locale = settings.selectedLanguage.value.code.split('_');
         return GetMaterialApp(
           key: Key(locale.join()),
           themeAnimationDuration: const Duration(milliseconds: kThemeAnimationDurationMS),
@@ -194,7 +194,7 @@ class Namida extends StatelessWidget {
           restorationScopeId: 'Namida',
           theme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, true),
           darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, false),
-          themeMode: SettingsController.inst.themeMode.value,
+          themeMode: settings.themeMode.value,
           builder: (context, widget) {
             return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
           },

@@ -47,8 +47,8 @@ class AlbumCard extends StatelessWidget {
     final sizeAlternative = dimensions.$3;
 
     final finalYear = album.year.yearFormatted;
-    final shouldDisplayTopRightDate = topRightText != null || (SettingsController.inst.albumCardTopRightDate.value && finalYear != '');
-    final shouldDisplayNormalDate = topRightText == null && !SettingsController.inst.albumCardTopRightDate.value && finalYear != '';
+    final shouldDisplayTopRightDate = topRightText != null || (settings.albumCardTopRightDate.value && finalYear != '');
+    final shouldDisplayNormalDate = topRightText == null && !settings.albumCardTopRightDate.value && finalYear != '';
     final shouldDisplayAlbumArtist = album.albumArtist != '';
 
     final hero = 'album_$name$additionalHeroTag';
@@ -139,7 +139,7 @@ class AlbumCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (!SettingsController.inst.albumCardTopRightDate.value || album.albumArtist != '') ...[
+                          if (!settings.albumCardTopRightDate.value || album.albumArtist != '') ...[
                             // if (!compact) const SizedBox(height: 2.0),
                             if (shouldDisplayNormalDate || shouldDisplayAlbumArtist)
                               NamidaHero(

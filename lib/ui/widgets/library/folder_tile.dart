@@ -46,14 +46,14 @@ class FolderTile extends StatelessWidget {
                 Stack(
                   children: [
                     SizedBox(
-                      width: SettingsController.inst.trackThumbnailSizeinList.value,
-                      height: SettingsController.inst.trackThumbnailSizeinList.value,
+                      width: settings.trackThumbnailSizeinList.value,
+                      height: settings.trackThumbnailSizeinList.value,
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
                           Icon(
                             Broken.folder,
-                            size: (SettingsController.inst.trackThumbnailSizeinList.value / 1.35).clamp(0, SettingsController.inst.trackListTileHeight.value),
+                            size: (settings.trackThumbnailSizeinList.value / 1.35).clamp(0, settings.trackListTileHeight.value),
                           ),
                           Positioned(
                             child: Padding(
@@ -62,7 +62,7 @@ class FolderTile extends StatelessWidget {
                                 key: ValueKey(tracks.firstOrNull),
                                 blur: 0,
                                 borderRadius: 6,
-                                thumbnailSize: (SettingsController.inst.trackThumbnailSizeinList.value / 2.6).clamp(0, SettingsController.inst.trackListTileHeight.value * 0.5),
+                                thumbnailSize: (settings.trackThumbnailSizeinList.value / 2.6).clamp(0, settings.trackListTileHeight.value * 0.5),
                                 path: tracks.firstOrNull?.pathToImage,
                                 forceSquared: true,
                               ),

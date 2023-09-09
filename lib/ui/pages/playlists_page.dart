@@ -69,10 +69,10 @@ class PlaylistsPage extends StatelessWidget {
                   gridWidget: isInsideDialog
                       ? null
                       : ChangeGridCountWidget(
-                          currentCount: SettingsController.inst.playlistGridCount.value,
+                          currentCount: settings.playlistGridCount.value,
                           onTap: () {
                             final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.playlists, countPerRow);
-                            SettingsController.inst.save(playlistGridCount: newCount);
+                            settings.save(playlistGridCount: newCount);
                           },
                         ),
                   isBarVisible: LibraryTab.playlists.isBarVisible,
@@ -81,10 +81,10 @@ class PlaylistsPage extends StatelessWidget {
                   onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.playlists),
                   onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.playlists),
                   sortByMenuWidget: SortByMenu(
-                    title: SettingsController.inst.playlistSort.value.toText(),
+                    title: settings.playlistSort.value.toText(),
                     popupMenuChild: const SortByMenuPlaylist(),
-                    isCurrentlyReversed: SettingsController.inst.playlistSortReversed.value,
-                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !SettingsController.inst.playlistSortReversed.value),
+                    isCurrentlyReversed: settings.playlistSortReversed.value,
+                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
                   ),
                   textField: CustomTextFiled(
                     textFieldController: LibraryTab.playlists.textSearchController,

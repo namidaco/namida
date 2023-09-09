@@ -888,7 +888,7 @@ Future<void> showDownloadVideoBottomSheet({
     selectedVideoOnlyStream.value = video.value?.videoOnlyStreams?.firstWhereEff(
           (e) =>
               e.formatSuffix != 'webm' &&
-              SettingsController.inst.youtubeVideoQualities.contains(
+              settings.youtubeVideoQualities.contains(
                 e.resolution?.videoLabelToSettingLabel(),
               ),
         ) ??

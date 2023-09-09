@@ -16,7 +16,7 @@ class MiniplayerCustomization extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NamidaExpansionTile(
-      initiallyExpanded: SettingsController.inst.useSettingCollapsedTiles.value,
+      initiallyExpanded: settings.useSettingCollapsedTiles.value,
       leading: const StackedIcon(
         baseIcon: Broken.brush,
         secondaryIcon: Broken.external_drive,
@@ -31,12 +31,12 @@ class MiniplayerCustomization extends StatelessWidget {
             onChanged: (value) {
               // disable
               if (value) {
-                SettingsController.inst.save(enablePartyModeInMiniplayer: false);
+                settings.save(enablePartyModeInMiniplayer: false);
               }
               // pls lemme enable
               if (!value) {
-                if (SettingsController.inst.didSupportNamida) {
-                  SettingsController.inst.save(enablePartyModeInMiniplayer: true);
+                if (settings.didSupportNamida) {
+                  settings.save(enablePartyModeInMiniplayer: true);
                 } else {
                   NamidaNavigator.inst.navigateDialog(
                     dialog: CustomBlurryDialog(
@@ -48,7 +48,7 @@ class MiniplayerCustomization extends StatelessWidget {
                         children: [
                           GestureDetector(
                             onDoubleTap: () {
-                              SettingsController.inst.save(didSupportNamida: true);
+                              settings.save(didSupportNamida: true);
                             },
                             child: const Text('a- ano...'),
                           ),
@@ -78,7 +78,7 @@ class MiniplayerCustomization extends StatelessWidget {
                                                 text: lang.UNLOCK.toUpperCase(),
                                                 onPressed: () {
                                                   NamidaNavigator.inst.closeDialog();
-                                                  SettingsController.inst.save(enablePartyModeInMiniplayer: true);
+                                                  settings.save(enablePartyModeInMiniplayer: true);
                                                 },
                                               ),
                                               NamidaButton(
@@ -106,26 +106,26 @@ class MiniplayerCustomization extends StatelessWidget {
                 }
               }
             },
-            value: SettingsController.inst.enablePartyModeInMiniplayer.value,
+            value: settings.enablePartyModeInMiniplayer.value,
           ),
         ),
         Obx(
           () => CustomSwitchListTile(
-            enabled: SettingsController.inst.enablePartyModeInMiniplayer.value,
+            enabled: settings.enablePartyModeInMiniplayer.value,
             icon: Broken.colors_square,
             title: lang.EDGE_COLORS_SWITCHING,
             onChanged: (value) {
-              SettingsController.inst.save(enablePartyModeColorSwap: !value);
+              settings.save(enablePartyModeColorSwap: !value);
             },
-            value: SettingsController.inst.enablePartyModeColorSwap.value,
+            value: settings.enablePartyModeColorSwap.value,
           ),
         ),
         Obx(
           () => CustomSwitchListTile(
             icon: Broken.buy_crypto,
             title: lang.ENABLE_MINIPLAYER_PARTICLES,
-            onChanged: (value) => SettingsController.inst.save(enableMiniplayerParticles: !value),
-            value: SettingsController.inst.enableMiniplayerParticles.value,
+            onChanged: (value) => settings.save(enableMiniplayerParticles: !value),
+            value: settings.enableMiniplayerParticles.value,
           ),
         ),
         Obx(
@@ -134,12 +134,12 @@ class MiniplayerCustomization extends StatelessWidget {
             title: lang.ANIMATING_THUMBNAIL_INTENSITY,
             trailing: NamidaWheelSlider(
               totalCount: 25,
-              initValue: SettingsController.inst.animatingThumbnailIntensity.value,
+              initValue: settings.animatingThumbnailIntensity.value,
               itemSize: 6,
               onValueChanged: (val) {
-                SettingsController.inst.save(animatingThumbnailIntensity: val as int);
+                settings.save(animatingThumbnailIntensity: val as int);
               },
-              text: "${(SettingsController.inst.animatingThumbnailIntensity.value * 4).toStringAsFixed(0)}%",
+              text: "${(settings.animatingThumbnailIntensity.value * 4).toStringAsFixed(0)}%",
             ),
           ),
         ),
@@ -149,9 +149,9 @@ class MiniplayerCustomization extends StatelessWidget {
             title: lang.ANIMATING_THUMBNAIL_INVERSED,
             subtitle: lang.ANIMATING_THUMBNAIL_INVERSED_SUBTITLE,
             onChanged: (value) {
-              SettingsController.inst.save(animatingThumbnailInversed: !value);
+              settings.save(animatingThumbnailInversed: !value);
             },
-            value: SettingsController.inst.animatingThumbnailInversed.value,
+            value: settings.animatingThumbnailInversed.value,
           ),
         ),
         Obx(
@@ -164,13 +164,13 @@ class MiniplayerCustomization extends StatelessWidget {
                 children: [
                   NamidaWheelSlider(
                     totalCount: 360,
-                    initValue: SettingsController.inst.waveformTotalBars.value - 40,
+                    initValue: settings.waveformTotalBars.value - 40,
                     itemSize: 6,
                     onValueChanged: (val) {
                       final v = (val + 40) as int;
-                      SettingsController.inst.save(waveformTotalBars: v);
+                      settings.save(waveformTotalBars: v);
                     },
-                    text: SettingsController.inst.waveformTotalBars.value.toString(),
+                    text: settings.waveformTotalBars.value.toString(),
                   ),
                 ],
               ),
@@ -181,8 +181,8 @@ class MiniplayerCustomization extends StatelessWidget {
           () => CustomSwitchListTile(
             icon: Broken.text_block,
             title: lang.DISPLAY_AUDIO_INFO_IN_MINIPLAYER,
-            onChanged: (value) => SettingsController.inst.save(displayAudioInfoMiniplayer: !value),
-            value: SettingsController.inst.displayAudioInfoMiniplayer.value,
+            onChanged: (value) => settings.save(displayAudioInfoMiniplayer: !value),
+            value: settings.displayAudioInfoMiniplayer.value,
           ),
         ),
       ],

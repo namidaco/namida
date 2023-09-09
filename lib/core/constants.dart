@@ -98,8 +98,7 @@ const k_PLAYLIST_NAME_AUTO_GENERATED = '_AUTO_GENERATED_';
 List<Track> get allTracksInLibrary => UnmodifiableListView(Indexer.inst.tracksInfoList);
 
 bool get shouldAlbumBeSquared =>
-    (SettingsController.inst.albumGridCount.value > 1 && !SettingsController.inst.useAlbumStaggeredGridView.value) ||
-    (SettingsController.inst.albumGridCount.value == 1 && SettingsController.inst.forceSquaredAlbumThumbnail.value);
+    (settings.albumGridCount.value > 1 && !settings.useAlbumStaggeredGridView.value) || (settings.albumGridCount.value == 1 && settings.forceSquaredAlbumThumbnail.value);
 
 /// Stock Video Qualities List
 final List<String> kStockVideoQualities = [

@@ -38,7 +38,7 @@ class HistoryController {
   final RxMap<Track, List<int>> topTracksMapListensTemp = <Track, List<int>>{}.obs;
   Iterable<Track> get currentMostPlayedTracks => currentTopTracksMapListens.keys;
   RxMap<Track, List<int>> get currentTopTracksMapListens {
-    final isAll = SettingsController.inst.mostPlayedTimeRange.value == MostPlayedTimeRange.allTime;
+    final isAll = settings.mostPlayedTimeRange.value == MostPlayedTimeRange.allTime;
     return isAll ? topTracksMapListens : topTracksMapListensTemp;
   }
 
@@ -57,8 +57,8 @@ class HistoryController {
 
     int currentListenedSeconds = 0;
 
-    final sec = SettingsController.inst.isTrackPlayedSecondsCount.value;
-    final perSett = SettingsController.inst.isTrackPlayedPercentageCount.value;
+    final sec = settings.isTrackPlayedSecondsCount.value;
+    final perSett = settings.isTrackPlayedPercentageCount.value;
     final trDurInSec = Player.inst.nowPlayingTrack.duration;
 
     _historyTimer?.cancel();
@@ -293,9 +293,9 @@ class HistoryController {
     MostPlayedTimeRange? mptr,
     bool? isStartOfDay,
   }) {
-    mptr ??= SettingsController.inst.mostPlayedTimeRange.value;
-    customDateRange ??= SettingsController.inst.mostPlayedCustomDateRange.value;
-    isStartOfDay ??= SettingsController.inst.mostPlayedCustomisStartOfDay.value;
+    mptr ??= settings.mostPlayedTimeRange.value;
+    customDateRange ??= settings.mostPlayedCustomDateRange.value;
+    isStartOfDay ??= settings.mostPlayedCustomisStartOfDay.value;
 
     if (mptr == MostPlayedTimeRange.allTime) {
       topTracksMapListensTemp.clear();

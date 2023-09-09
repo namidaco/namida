@@ -15,9 +15,9 @@ class ArtistsSplitConfig extends _SplitterConfig {
     final List<String>? separatorsBlacklist,
   }) {
     return ArtistsSplitConfig(
-      addFeatArtist: addFeatArtist ?? SettingsController.inst.extractFeatArtistFromTitle.value,
-      separators: separators ?? SettingsController.inst.trackArtistsSeparators.toList(),
-      separatorsBlacklist: separatorsBlacklist ?? SettingsController.inst.trackArtistsSeparatorsBlacklist.toList(),
+      addFeatArtist: addFeatArtist ?? settings.extractFeatArtistFromTitle.value,
+      separators: separators ?? settings.trackArtistsSeparators.toList(),
+      separatorsBlacklist: separatorsBlacklist ?? settings.trackArtistsSeparatorsBlacklist.toList(),
     );
   }
 
@@ -49,8 +49,8 @@ class GenresSplitConfig extends _SplitterConfig {
     final List<String>? separatorsBlacklist,
   }) {
     return GenresSplitConfig(
-      separators: separators ?? SettingsController.inst.trackGenresSeparators.toList(),
-      separatorsBlacklist: separatorsBlacklist ?? SettingsController.inst.trackGenresSeparatorsBlacklist.toList(),
+      separators: separators ?? settings.trackGenresSeparators.toList(),
+      separatorsBlacklist: separatorsBlacklist ?? settings.trackGenresSeparatorsBlacklist.toList(),
     );
   }
 

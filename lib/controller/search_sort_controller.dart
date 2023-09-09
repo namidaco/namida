@@ -89,8 +89,8 @@ class SearchSortController {
       return;
     }
 
-    final tsf = SettingsController.inst.trackSearchFilter;
-    final cleanup = SettingsController.inst.enableSearchCleanup.value;
+    final tsf = settings.trackSearchFilter;
+    final cleanup = settings.enableSearchCleanup.value;
     final result = await _searchTracksIsolate.thready({
       'tsf': tsf,
       'cleanup': cleanup,
@@ -159,7 +159,7 @@ class SearchSortController {
     }
 
     // TODO(MSOB7YY): expose in settings
-    final psf = SettingsController.inst.playlistSearchFilter;
+    final psf = settings.playlistSearchFilter;
 
     final cleanupFunction = _functionOfCleanup(_shouldCleanup);
     String textCleanedForSearch(String textToClean) => cleanupFunction(textToClean);
@@ -222,8 +222,8 @@ class SearchSortController {
 
   /// Sorts Tracks and Saves automatically to settings
   void _sortTracks({SortType? sortBy, bool? reverse}) {
-    sortBy ??= SettingsController.inst.tracksSort.value;
-    reverse ??= SettingsController.inst.tracksSortReversed.value;
+    sortBy ??= settings.tracksSort.value;
+    reverse ??= settings.tracksSortReversed.value;
 
     void sortThis(Comparable Function(Track tr) comparable) => reverse! ? tracksInfoList.sortByReverse(comparable) : tracksInfoList.sortBy(comparable);
 
@@ -283,14 +283,14 @@ class SearchSortController {
         null;
     }
 
-    SettingsController.inst.save(tracksSort: sortBy, tracksSortReversed: reverse);
+    settings.save(tracksSort: sortBy, tracksSortReversed: reverse);
     _searchTracks(LibraryTab.tracks.textSearchController?.text ?? '');
   }
 
   /// Sorts Albums and Saves automatically to settings
   void _sortAlbums({GroupSortType? sortBy, bool? reverse}) {
-    sortBy ??= SettingsController.inst.albumSort.value;
-    reverse ??= SettingsController.inst.albumSortReversed.value;
+    sortBy ??= settings.albumSort.value;
+    reverse ??= settings.albumSortReversed.value;
 
     final albumsList = mainMapAlbums.value.entries.toList();
     void sortThis(Comparable Function(MapEntry<String, List<Track>> e) comparable) => reverse! ? albumsList.sortByReverse(comparable) : albumsList.sortBy(comparable);
@@ -332,15 +332,15 @@ class SearchSortController {
       ..clear()
       ..addEntries(albumsList);
 
-    SettingsController.inst.save(albumSort: sortBy, albumSortReversed: reverse);
+    settings.save(albumSort: sortBy, albumSortReversed: reverse);
 
     _searchMediaType(type: MediaType.album, text: LibraryTab.albums.textSearchController?.text ?? '');
   }
 
   /// Sorts Artists and Saves automatically to settings
   void _sortArtists({GroupSortType? sortBy, bool? reverse}) {
-    sortBy ??= SettingsController.inst.artistSort.value;
-    reverse ??= SettingsController.inst.artistSortReversed.value;
+    sortBy ??= settings.artistSort.value;
+    reverse ??= settings.artistSortReversed.value;
 
     final artistsList = mainMapArtists.value.entries.toList();
     void sortThis(Comparable Function(MapEntry<String, List<Track>> e) comparable) => reverse! ? artistsList.sortByReverse(comparable) : artistsList.sortBy(comparable);
@@ -386,15 +386,15 @@ class SearchSortController {
       ..clear()
       ..addEntries(artistsList);
 
-    SettingsController.inst.save(artistSort: sortBy, artistSortReversed: reverse);
+    settings.save(artistSort: sortBy, artistSortReversed: reverse);
 
     _searchMediaType(type: MediaType.artist, text: LibraryTab.artists.textSearchController?.text ?? '');
   }
 
   /// Sorts Genres and Saves automatically to settings
   void _sortGenres({GroupSortType? sortBy, bool? reverse}) {
-    sortBy ??= SettingsController.inst.genreSort.value;
-    reverse ??= SettingsController.inst.genreSortReversed.value;
+    sortBy ??= settings.genreSort.value;
+    reverse ??= settings.genreSortReversed.value;
 
     final genresList = mainMapGenres.value.entries.toList();
     void sortThis(Comparable Function(MapEntry<String, List<Track>> e) comparable) => reverse! ? genresList.sortByReverse(comparable) : genresList.sortBy(comparable);
@@ -438,14 +438,14 @@ class SearchSortController {
       ..clear()
       ..addEntries(genresList);
 
-    SettingsController.inst.save(genreSort: sortBy, genreSortReversed: reverse);
+    settings.save(genreSort: sortBy, genreSortReversed: reverse);
     _searchMediaType(type: MediaType.genre, text: LibraryTab.genres.textSearchController?.text ?? '');
   }
 
   /// Sorts Playlists and Saves automatically to settings
   void _sortPlaylists({GroupSortType? sortBy, bool? reverse}) {
-    sortBy ??= SettingsController.inst.playlistSort.value;
-    reverse ??= SettingsController.inst.playlistSortReversed.value;
+    sortBy ??= settings.playlistSort.value;
+    reverse ??= settings.playlistSortReversed.value;
 
     final playlistList = playlistsMap.entries.toList();
     void sortThis(Comparable Function(MapEntry<String, Playlist> p) comparable) => reverse! ? playlistList.sortByReverse(comparable) : playlistList.sortBy(comparable);
@@ -478,7 +478,7 @@ class SearchSortController {
       ..clear()
       ..addEntries(playlistList);
 
-    SettingsController.inst.save(playlistSort: sortBy, playlistSortReversed: reverse);
+    settings.save(playlistSort: sortBy, playlistSortReversed: reverse);
 
     _searchPlaylists(LibraryTab.playlists.textSearchController?.text ?? '');
   }
@@ -564,7 +564,7 @@ class SearchSortController {
     return results;
   }
 
-  bool get _shouldCleanup => SettingsController.inst.enableSearchCleanup.value;
+  bool get _shouldCleanup => settings.enableSearchCleanup.value;
 
   static String Function(String text) _functionOfCleanup(bool enableSearchCleanup) {
     return (String textToClean) => enableSearchCleanup ? textToClean.cleanUpForComparison : textToClean.toLowerCase();

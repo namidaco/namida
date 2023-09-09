@@ -58,7 +58,7 @@ class MainPageWrapper extends StatelessWidget {
                     const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
                     ...LibraryTab.values.map(
                       (e) => NamidaDrawerListTile(
-                        enabled: SettingsController.inst.selectedLibraryTab.value == e,
+                        enabled: settings.selectedLibraryTab.value == e,
                         title: e.toText(),
                         icon: e.toIcon(),
                         onTap: () async {
@@ -244,7 +244,7 @@ class MainPageWrapper extends StatelessWidget {
               final queueHeight = MiniPlayerController.inst.miniplayerQueueHP.value;
               if (miniHeight == 1.0 && queueHeight == 0.0) return const SizedBox();
 
-              final navHeight = (SettingsController.inst.enableBottomNavBar.value ? kBottomNavigationBarHeight : -4.0) - 10.0;
+              final navHeight = (settings.enableBottomNavBar.value ? kBottomNavigationBarHeight : -4.0) - 10.0;
               final isInQueue = queueHeight > 0.0;
               final initH = isInQueue ? kQueueBottomRowHeight : 12.0 + (miniHeight * 24.0);
 

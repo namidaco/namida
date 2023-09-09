@@ -18,8 +18,8 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
 Color get playerStaticColor => Get.isDarkMode ? playerStaticColorDark : playerStaticColorLight;
-Color get playerStaticColorLight => Color(SettingsController.inst.staticColor.value);
-Color get playerStaticColorDark => Color(SettingsController.inst.staticColorDark.value);
+Color get playerStaticColorLight => Color(settings.staticColor.value);
+Color get playerStaticColorDark => Color(settings.staticColorDark.value);
 
 class CurrentColor {
   static CurrentColor get inst => _instance;
@@ -56,7 +56,7 @@ class CurrentColor {
     _colorsSwitchTimer = null;
     final durms = isPlaying ? 500 : 2000;
     _colorsSwitchTimer = Timer.periodic(Duration(milliseconds: durms), (timer) {
-      if (SettingsController.inst.enablePartyModeColorSwap.value) {
+      if (settings.enablePartyModeColorSwap.value) {
         if (paletteFirstHalf.isEmpty) return;
 
         final lastItem1 = paletteFirstHalf.last;
@@ -72,7 +72,7 @@ class CurrentColor {
   }
 
   void updateColorAfterThemeModeChange() {
-    if (SettingsController.inst.autoColor.value) {
+    if (settings.autoColor.value) {
       final nc = _namidaColor.value;
       _namidaColor.value = NamidaColor(
         used: nc.color.withAlpha(colorAlpha),
@@ -99,7 +99,7 @@ class CurrentColor {
   }
 
   Future<void> updatePlayerColorFromTrack(Selectable? track, int? index, {bool updateIndexOnly = false}) async {
-    if (!updateIndexOnly && track != null && SettingsController.inst.autoColor.value) {
+    if (!updateIndexOnly && track != null && settings.autoColor.value) {
       final color = await getTrackColors(track.track);
       _namidaColor.value = color;
       _updateCurrentPaletteHalfs(color);

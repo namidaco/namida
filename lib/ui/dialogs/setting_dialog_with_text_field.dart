@@ -26,12 +26,11 @@ void showSettingDialogWithTextField({
   bool trackTileSeparator = false,
   bool addNewPlaylist = false,
 }) async {
-  final SettingsController stg = SettingsController.inst;
   final TextEditingController controller = TextEditingController();
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   if (dateTimeFormat) {
-    controller.text = stg.dateTimeFormat.value;
+    controller.text = settings.dateTimeFormat.value;
   }
   void showSnackBarWithTitle(
     String message, {
@@ -70,42 +69,42 @@ void showSettingDialogWithTextField({
               tooltip: lang.RESTORE_DEFAULTS,
               onPressed: () {
                 if (trackThumbnailSizeinList) {
-                  stg.save(trackThumbnailSizeinList: 70.0);
-                  showSnackBarWithTitle("${stg.trackThumbnailSizeinList.value}", title: title, iconWidget: iconWidget);
+                  settings.save(trackThumbnailSizeinList: 70.0);
+                  showSnackBarWithTitle("${settings.trackThumbnailSizeinList.value}", title: title, iconWidget: iconWidget);
                 }
                 if (trackListTileHeight) {
-                  stg.save(trackListTileHeight: 70.0);
-                  showSnackBarWithTitle("${stg.trackListTileHeight.value}", title: title, iconWidget: iconWidget);
+                  settings.save(trackListTileHeight: 70.0);
+                  showSnackBarWithTitle("${settings.trackListTileHeight.value}", title: title, iconWidget: iconWidget);
                   Dimensions.inst.updateTrackTileDimensions();
                 }
                 if (albumThumbnailSizeinList) {
-                  stg.save(albumThumbnailSizeinList: 90.0);
-                  showSnackBarWithTitle("${stg.albumThumbnailSizeinList.value}", title: title, iconWidget: iconWidget);
+                  settings.save(albumThumbnailSizeinList: 90.0);
+                  showSnackBarWithTitle("${settings.albumThumbnailSizeinList.value}", title: title, iconWidget: iconWidget);
                 }
                 if (albumListTileHeight) {
-                  stg.save(albumListTileHeight: 90.0);
-                  showSnackBarWithTitle("${stg.albumListTileHeight.value}", title: title, iconWidget: iconWidget);
+                  settings.save(albumListTileHeight: 90.0);
+                  showSnackBarWithTitle("${settings.albumListTileHeight.value}", title: title, iconWidget: iconWidget);
                   Dimensions.inst.updateAlbumTileDimensions();
                 }
                 if (nowPlayingImageContainerHeight) {
-                  stg.save(nowPlayingImageContainerHeight: 400.0);
-                  showSnackBarWithTitle("${stg.nowPlayingImageContainerHeight.value}", title: title, iconWidget: iconWidget);
+                  settings.save(nowPlayingImageContainerHeight: 400.0);
+                  showSnackBarWithTitle("${settings.nowPlayingImageContainerHeight.value}", title: title, iconWidget: iconWidget);
                 }
                 if (borderRadiusMultiplier) {
-                  stg.save(borderRadiusMultiplier: 1.0);
-                  showSnackBarWithTitle("${stg.borderRadiusMultiplier.value}", title: title, iconWidget: iconWidget);
+                  settings.save(borderRadiusMultiplier: 1.0);
+                  showSnackBarWithTitle("${settings.borderRadiusMultiplier.value}", title: title, iconWidget: iconWidget);
                 }
                 if (fontScaleFactor) {
-                  stg.save(fontScaleFactor: 0.9);
-                  showSnackBarWithTitle("${stg.fontScaleFactor.value.toInt() * 100}%", title: title, iconWidget: iconWidget);
+                  settings.save(fontScaleFactor: 0.9);
+                  showSnackBarWithTitle("${settings.fontScaleFactor.value.toInt() * 100}%", title: title, iconWidget: iconWidget);
                 }
                 if (dateTimeFormat) {
-                  stg.save(dateTimeFormat: 'MMM yyyy');
-                  showSnackBarWithTitle("${stg.dateTimeFormat}", title: title, iconWidget: iconWidget);
+                  settings.save(dateTimeFormat: 'MMM yyyy');
+                  showSnackBarWithTitle("${settings.dateTimeFormat}", title: title, iconWidget: iconWidget);
                 }
                 if (trackTileSeparator) {
-                  stg.save(trackTileSeparator: '•');
-                  showSnackBarWithTitle("${stg.trackTileSeparator}", title: title, iconWidget: iconWidget);
+                  settings.save(trackTileSeparator: '•');
+                  showSnackBarWithTitle("${settings.trackTileSeparator}", title: title, iconWidget: iconWidget);
                 }
                 NamidaNavigator.inst.closeDialog();
               },
@@ -117,34 +116,34 @@ void showSettingDialogWithTextField({
             onPressed: () {
               if (formKey.currentState!.validate()) {
                 if (trackThumbnailSizeinList) {
-                  stg.save(trackThumbnailSizeinList: double.parse(controller.text));
+                  settings.save(trackThumbnailSizeinList: double.parse(controller.text));
                 }
                 if (trackListTileHeight) {
-                  stg.save(trackListTileHeight: double.parse(controller.text));
+                  settings.save(trackListTileHeight: double.parse(controller.text));
                   Dimensions.inst.updateTrackTileDimensions();
                 }
                 if (albumThumbnailSizeinList) {
-                  stg.save(albumThumbnailSizeinList: double.parse(controller.text));
+                  settings.save(albumThumbnailSizeinList: double.parse(controller.text));
                 }
                 if (albumListTileHeight) {
-                  stg.save(albumListTileHeight: double.parse(controller.text));
+                  settings.save(albumListTileHeight: double.parse(controller.text));
                   Dimensions.inst.updateAlbumTileDimensions();
                 }
 
                 if (nowPlayingImageContainerHeight) {
-                  stg.save(nowPlayingImageContainerHeight: double.parse(controller.text));
+                  settings.save(nowPlayingImageContainerHeight: double.parse(controller.text));
                 }
                 if (borderRadiusMultiplier) {
-                  stg.save(borderRadiusMultiplier: double.parse(controller.text));
+                  settings.save(borderRadiusMultiplier: double.parse(controller.text));
                 }
                 if (fontScaleFactor) {
-                  stg.save(fontScaleFactor: double.parse(controller.text) / 100);
+                  settings.save(fontScaleFactor: double.parse(controller.text) / 100);
                 }
                 if (dateTimeFormat) {
-                  stg.save(dateTimeFormat: controller.text);
+                  settings.save(dateTimeFormat: controller.text);
                 }
                 if (trackTileSeparator) {
-                  stg.save(trackTileSeparator: controller.text);
+                  settings.save(trackTileSeparator: controller.text);
                 }
                 if (addNewPlaylist) {
                   PlaylistController.inst.addNewPlaylist(controller.text);

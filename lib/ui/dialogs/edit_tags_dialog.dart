@@ -93,15 +93,15 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
 
 Widget get _getKeepDatesWidget => NamidaIconButton(
       tooltip: lang.KEEP_FILE_DATES,
-      icon: SettingsController.inst.editTagsKeepFileDates.value ? Broken.document_code_2 : Broken.calendar_edit,
+      icon: settings.editTagsKeepFileDates.value ? Broken.document_code_2 : Broken.calendar_edit,
       onPressed: () {
-        SettingsController.inst.save(editTagsKeepFileDates: !SettingsController.inst.editTagsKeepFileDates.value);
+        settings.save(editTagsKeepFileDates: !settings.editTagsKeepFileDates.value);
       },
       child: Obx(
         () => StackedIcon(
           disableColor: true,
           baseIcon: Broken.document_code_2,
-          secondaryIcon: SettingsController.inst.editTagsKeepFileDates.value ? Broken.tick_circle : Broken.close_circle,
+          secondaryIcon: settings.editTagsKeepFileDates.value ? Broken.tick_circle : Broken.close_circle,
         ),
       ),
     );
@@ -181,7 +181,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
           icon: Broken.edit_2,
           onPressed: () {
             final subList = List<TagField>.from(TagField.values).obs;
-            subList.removeWhere((element) => SettingsController.inst.tagFieldsToEdit.contains(element));
+            subList.removeWhere((element) => settings.tagFieldsToEdit.contains(element));
 
             NamidaNavigator.inst.navigateDialog(
               scale: 0.94,
@@ -199,18 +199,18 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                       Expanded(
                         child: Obx(
                           () {
-                            final tagFields = SettingsController.inst.tagFieldsToEdit;
+                            final tagFields = settings.tagFieldsToEdit;
                             return ReorderableListView.builder(
                               proxyDecorator: (child, index, animation) => child,
                               padding: const EdgeInsets.only(bottom: 24.0),
-                              itemCount: SettingsController.inst.tagFieldsToEdit.length,
+                              itemCount: settings.tagFieldsToEdit.length,
                               onReorder: (oldIndex, newIndex) {
                                 if (newIndex > oldIndex) {
                                   newIndex -= 1;
                                 }
                                 final tfOld = tagFields[oldIndex];
-                                SettingsController.inst.removeFromList(tagFieldsToEdit1: tfOld);
-                                SettingsController.inst.insertInList(newIndex, tagFieldsToEdit1: tfOld);
+                                settings.removeFromList(tagFieldsToEdit1: tfOld);
+                                settings.insertInList(newIndex, tagFieldsToEdit1: tfOld);
                               },
                               itemBuilder: (context, i) {
                                 final tf = tagFields[i];
@@ -222,11 +222,11 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                                     title: tf.toText(),
                                     icon: tf.toIcon(),
                                     onTap: () {
-                                      if (SettingsController.inst.tagFieldsToEdit.length <= 3) {
+                                      if (settings.tagFieldsToEdit.length <= 3) {
                                         showMinimumItemsSnack(3);
                                         return;
                                       }
-                                      SettingsController.inst.removeFromList(tagFieldsToEdit1: tf);
+                                      settings.removeFromList(tagFieldsToEdit1: tf);
                                       subList.add(tf);
                                     },
                                   ),
@@ -253,7 +253,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                                   title: tf.toText(),
                                   icon: tf.toIcon(),
                                   onTap: () {
-                                    SettingsController.inst.save(tagFieldsToEdit: [tf]);
+                                    settings.save(tagFieldsToEdit: [tf]);
                                     subList.remove(tf);
                                   },
                                 ),
@@ -328,7 +328,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
       ],
       child: Obx(
         () {
-          SettingsController.inst.tagFieldsToEdit;
+          settings.tagFieldsToEdit;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -378,7 +378,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              ...SettingsController.inst.tagFieldsToEdit.take(2).map(
+                              ...settings.tagFieldsToEdit.take(2).map(
                                     (e) => Padding(
                                       padding: const EdgeInsets.only(top: 10.0),
                                       child: getTagTextField(e),
@@ -390,7 +390,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                       ],
                     ),
                     const SizedBox(height: 8.0),
-                    ...SettingsController.inst.tagFieldsToEdit.sublist(2).map(
+                    ...settings.tagFieldsToEdit.sublist(2).map(
                           (e) => Padding(
                             padding: const EdgeInsets.only(top: 12.0),
                             child: getTagTextField(e),
@@ -521,7 +521,7 @@ Future<void> _updateTracksMetadata({
         printo('Did Update Metadata: $didUpdate', isError: !didUpdate);
         if (onEdit != null) onEdit(didUpdate, track);
       },
-      keepStats: keepFileDates ?? SettingsController.inst.editTagsKeepFileDates.value,
+      keepStats: keepFileDates ?? settings.editTagsKeepFileDates.value,
     );
   });
 
