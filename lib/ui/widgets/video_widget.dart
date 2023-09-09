@@ -57,7 +57,7 @@ class _NamidaVideoControlsState extends State<NamidaVideoControls> {
     if (_isVisible) {
       _hideTimer = Timer(hideDuration, () {
         _isVisible = false;
-        setState(() {});
+        if (mounted) setState(() {});
       });
     }
   }

@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:jiffy/jiffy.dart';
+import 'package:newpipeextractor_dart/models/videoInfo.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:readmore/readmore.dart';
 import 'package:share_plus/share_plus.dart';
@@ -10,16 +14,20 @@ import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/youtube_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/mp.dart';
+import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/pages/youtube_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -264,16 +272,15 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                           child: SizedBox(
                                             height: 60.0,
                                             child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                               // shrinkWrap: true,
                                               // scrollDirection: Axis.horizontal,
                                               children: [
                                                 const SizedBox(width: 18.0),
                                                 SmallYTActionButton(
-                                                  title: ytvideo == null
-                                                      ? null
-                                                      : (ytvideo.video.likeCount ?? 0) < 1
-                                                          ? Language.inst.LIKE
-                                                          : ytvideo.video.likeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
+                                                  title: (ytvideo?.video.likeCount ?? 0) < 1
+                                                      ? Language.inst.LIKE
+                                                      : ytvideo?.video.likeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
                                                   icon: Broken.like_1,
                                                   onPressed: () {},
                                                 ),
@@ -292,7 +299,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                   title: Language.inst.SHARE,
                                                   icon: Broken.share,
                                                   onPressed: () {
-                                                    if (ytvideo != null) Share.share(ytvideo.video.url ?? '');
+                                                    final url = ytvideo?.video.url;
+                                                    if (url != null) Share.share(url);
                                                   },
                                                 ),
                                                 const SizedBox(width: 18.0),
@@ -300,6 +308,30 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                   title: Language.inst.REFRESH,
                                                   icon: Broken.refresh,
                                                   onPressed: () async => await YoutubeController.inst.updateVideoDetails(currentId),
+                                                ),
+                                                const SizedBox(width: 18.0),
+                                                Obx(
+                                                  () {
+                                                    final audioProgress = YoutubeController.inst.downloadsAudioProgressMap[currentId];
+                                                    final audioPerc = audioProgress == null
+                                                        ? null
+                                                        : "${Language.inst.AUDIO} ${(audioProgress.progress / audioProgress.totalProgress * 100).toStringAsFixed(0)}%";
+                                                    final videoProgress = YoutubeController.inst.downloadsVideoProgressMap[currentId];
+                                                    final videoPerc = videoProgress == null
+                                                        ? null
+                                                        : "${Language.inst.VIDEO} ${(videoProgress.progress / videoProgress.totalProgress * 100).toStringAsFixed(0)}%";
+                                                    return SmallYTActionButton(
+                                                      title: videoPerc ?? audioPerc ?? Language.inst.DOWNLOAD,
+                                                      icon: false ? Broken.tick_circle : Broken.import, // TODO: check if video already downloaded
+                                                      onPressed: () async => await showDownloadVideoBottomSheet(context: context, videoId: currentId),
+                                                    );
+                                                  },
+                                                ),
+                                                const SizedBox(width: 18.0),
+                                                SmallYTActionButton(
+                                                  title: Language.inst.SAVE,
+                                                  icon: Broken.music_playlist,
+                                                  onPressed: () {},
                                                 ),
                                                 const SizedBox(width: 18.0),
                                               ],
@@ -354,6 +386,18 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                   ),
                                                 ],
                                               ),
+                                              const Spacer(),
+                                              TextButton(
+                                                child: Row(
+                                                  children: [
+                                                    const Icon(Broken.video, size: 20.0),
+                                                    const SizedBox(width: 8.0),
+                                                    Text(Language.inst.SUBSCRIBE),
+                                                  ],
+                                                ),
+                                                onPressed: () {},
+                                              ),
+                                              const SizedBox(width: 24.0),
                                             ],
                                           ),
                                         ),
@@ -667,9 +711,9 @@ class YoutubeMiniPlayer extends StatelessWidget {
     );
   }
 
-  ///TODO: view channel details.
+  // TODO: view channel details.
   _showCommentMenu(BuildContext context, TapDownDetails details, YoutubeComment? comment) {
-    Widget _getItem({
+    Widget getItem({
       required String title,
       required IconData icon,
     }) {
@@ -692,7 +736,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
       ),
       items: [
         PopupMenuItem(
-          child: _getItem(
+          child: getItem(
             icon: Broken.copy,
             title: Language.inst.COPY,
           ),
@@ -775,7 +819,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
   Future<void> _getThumbnail() async {
     final res = await VideoController.inst.getYoutubeThumbnailAndCache(id: widget.videoId, channelUrl: widget.channelUrl);
     imagePath = res?.path;
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   @override
@@ -806,4 +850,397 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
       ),
     );
   }
+}
+
+Future<void> showDownloadVideoBottomSheet({
+  required BuildContext context,
+  required String videoId,
+  Color? colorScheme,
+}) async {
+  colorScheme ??= CurrentColor.inst.color;
+  final showAudioWebm = false.obs;
+  final showVideoWebm = false.obs;
+  final video = Rxn<YoutubeVideo>();
+  final selectedAudioOnlyStream = Rxn<AudioOnlyStream>();
+  final selectedVideoOnlyStream = Rxn<VideoOnlyStream>();
+  final videoInfo = Rxn<VideoInfo>();
+  final videoOutputFilename = ''.obs;
+
+  void updatefilenameOutput() {
+    final videoTitle = videoInfo.value?.name ?? videoId;
+    if (selectedAudioOnlyStream.value == null && selectedVideoOnlyStream.value == null) {
+      videoOutputFilename.value = videoTitle;
+    } else {
+      final audioOnly = selectedAudioOnlyStream.value != null && selectedVideoOnlyStream.value == null;
+      if (audioOnly) {
+        final filenameRealAudio = "$videoTitle.${selectedAudioOnlyStream.value?.formatSuffix}";
+        videoOutputFilename.value = filenameRealAudio;
+      } else {
+        final filenameRealVideo = "${videoTitle}_${selectedVideoOnlyStream.value?.resolution}.${selectedVideoOnlyStream.value?.formatSuffix}";
+        videoOutputFilename.value = filenameRealVideo;
+      }
+    }
+  }
+
+  YoutubeController.inst.getAvailableStreams(videoId).then((value) {
+    video.value = value;
+    selectedAudioOnlyStream.value = video.value?.audioOnlyStreams?.firstWhereEff((e) => e.formatSuffix != 'webm');
+
+    selectedVideoOnlyStream.value = video.value?.videoOnlyStreams?.firstWhereEff(
+          (e) =>
+              e.formatSuffix != 'webm' &&
+              SettingsController.inst.youtubeVideoQualities.contains(
+                e.resolution?.videoLabelToSettingLabel(),
+              ),
+        ) ??
+        video.value?.videoOnlyStreams?.firstWhereEff((e) => e.formatSuffix != 'webm');
+    video.value?.videoStreams?.loopFuture(
+      (e, index) async {
+        final size = await YoutubeController.inst.getContentSize(e.url ?? '');
+        e.sizeInBytes = size;
+        video.refresh();
+      },
+    );
+
+    updatefilenameOutput();
+  });
+
+  YoutubeController.inst.getVideoInfo(videoId).then((value) {
+    videoInfo.value = value;
+    updatefilenameOutput();
+  });
+
+  Widget getQualityButton({
+    required final String title,
+    final String subtitle = '',
+    required final bool cacheExists,
+    required final bool selected,
+    final double horizontalPadding = 8.0,
+    final double verticalPadding = 8.0,
+    required void Function() onTap,
+  }) {
+    final selectedColor = colorScheme!;
+    return NamidaInkWell(
+      decoration: selected
+          ? BoxDecoration(
+              border: Border.all(
+                color: selectedColor,
+              ),
+            )
+          : const BoxDecoration(),
+      animationDurationMS: 100,
+      margin: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 4.0),
+      padding: EdgeInsets.symmetric(vertical: verticalPadding),
+      onTap: () {
+        onTap();
+        updatefilenameOutput();
+      },
+      borderRadius: 8.0,
+      bgColor: selected ? Color.alphaBlend(selectedColor.withAlpha(40), context.theme.cardTheme.color!) : context.theme.cardTheme.color,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(width: horizontalPadding),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: context.textTheme.displayMedium?.copyWith(
+                  fontSize: 12.0.multipliedFontScale,
+                ),
+              ),
+              if (subtitle != '')
+                Text(
+                  subtitle,
+                  style: context.textTheme.displaySmall?.copyWith(
+                    fontSize: 12.0.multipliedFontScale,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 6.0),
+          Icon(cacheExists ? Broken.tick_circle : Broken.import, size: 18.0),
+          SizedBox(width: horizontalPadding),
+        ],
+      ),
+    );
+  }
+
+  Widget getTextWidget({
+    required final String title,
+    required final String? subtitle,
+    final IconData? icon,
+    final Widget? leading,
+    final TextStyle? style,
+    required final void Function()? onSussyIconTap,
+    required final void Function() onCloseIconTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          leading ?? Icon(icon),
+          const SizedBox(width: 8.0),
+          Text(
+            title,
+            style: style ?? context.textTheme.displayMedium,
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(width: 8.0),
+            Text(
+              '• $subtitle',
+              style: style ?? context.textTheme.displaySmall,
+            ),
+          ],
+          const Spacer(),
+          NamidaIconButton(
+            tooltip: Language.inst.SHOW_WEBM,
+            horizontalPadding: 0.0,
+            iconSize: 20.0,
+            icon: Broken.video_octagon,
+            onPressed: onSussyIconTap,
+          ),
+          const SizedBox(width: 12.0),
+          NamidaIconButton(
+            horizontalPadding: 0.0,
+            iconSize: 20.0,
+            icon: Broken.close_circle,
+            onPressed: () {
+              onCloseIconTap();
+              updatefilenameOutput();
+            },
+          ),
+          const SizedBox(width: 12.0),
+        ],
+      ),
+    );
+  }
+
+  Widget getDivider() => const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 8.0));
+
+  Widget getPopupItem<T>({
+    required List<T> items,
+    required Widget Function(T item) itemBuilder,
+  }) {
+    return Wrap(
+      children: [
+        ...items.map((element) => itemBuilder(element)).toList(),
+      ],
+    );
+  }
+
+  showModalBottomSheet(
+    context: context,
+    builder: (context) {
+      return SizedBox(
+        width: context.width,
+        child: Padding(
+          padding: const EdgeInsets.all(18.0),
+          child: Obx(
+            () => video.value == null
+                ? Center(
+                    child: ThreeArchedCircle(
+                      color: colorScheme!,
+                      size: context.width * 0.4,
+                    ),
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          Language.inst.CONFIGURE,
+                          style: context.textTheme.displayLarge,
+                        ),
+                      ),
+                      Expanded(
+                        child: ListView(
+                          shrinkWrap: true,
+                          children: [
+                            Obx(
+                              () {
+                                final e = selectedAudioOnlyStream.value;
+                                final subtitle = e == null ? null : "${e.bitrateText} • ${e.formatSuffix} • ${e.sizeInBytes?.fileSizeFormatted}";
+                                return getTextWidget(
+                                  title: Language.inst.AUDIO,
+                                  subtitle: subtitle,
+                                  icon: Broken.audio_square,
+                                  onCloseIconTap: () => selectedAudioOnlyStream.value = null,
+                                  onSussyIconTap: () {
+                                    showAudioWebm.value = !showAudioWebm.value;
+                                    if (showAudioWebm.value == false && selectedAudioOnlyStream.value?.formatSuffix == 'webm') {
+                                      selectedAudioOnlyStream.value = video.value?.audioOnlyStreams?.firstOrNull;
+                                    }
+                                  },
+                                );
+                              },
+                            ),
+                            if (video.value!.audioOnlyStreams != null)
+                              Obx(
+                                () => getPopupItem(
+                                  items: showAudioWebm.value
+                                      ? video.value!.audioOnlyStreams!
+                                      : video.value!.audioOnlyStreams!.where((element) => element.formatSuffix != 'webm').toList(),
+                                  itemBuilder: (element) {
+                                    return Obx(
+                                      () {
+                                        return getQualityButton(
+                                          selected: selectedAudioOnlyStream.value == element,
+                                          cacheExists: false,
+                                          title: "${element.codec} • ${element.sizeInBytes?.fileSizeFormatted}",
+                                          subtitle: "${element.formatSuffix} • ${element.bitrateText}",
+                                          onTap: () => selectedAudioOnlyStream.value = element,
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                            getDivider(),
+                            Obx(
+                              () {
+                                final e = selectedVideoOnlyStream.value;
+                                final subtitle = e == null ? null : "${e.resolution} • ${e.sizeInBytes?.fileSizeFormatted}";
+                                return getTextWidget(
+                                  title: Language.inst.VIDEO,
+                                  subtitle: subtitle,
+                                  icon: Broken.video_square,
+                                  onCloseIconTap: () => selectedVideoOnlyStream.value = null,
+                                  onSussyIconTap: () {
+                                    showVideoWebm.value = !showVideoWebm.value;
+                                    if (showVideoWebm.value == false && selectedVideoOnlyStream.value?.formatSuffix == 'webm') {
+                                      selectedVideoOnlyStream.value = video.value?.videoOnlyStreams?.firstOrNull;
+                                    }
+                                  },
+                                );
+                              },
+                            ),
+                            if (video.value!.videoOnlyStreams != null)
+                              Obx(
+                                () {
+                                  return getPopupItem(
+                                    items: showVideoWebm.value
+                                        ? video.value!.videoOnlyStreams!
+                                        : video.value!.videoOnlyStreams!.where((element) => element.formatSuffix != 'webm').toList(),
+                                    itemBuilder: (element) {
+                                      return Obx(
+                                        () {
+                                          final cacheFile = VideoController.inst.videoInCacheRealCheck(videoId, element);
+                                          return getQualityButton(
+                                            selected: selectedVideoOnlyStream.value == element,
+                                            cacheExists: cacheFile != null,
+                                            title: "${element.resolution} • ${element.sizeInBytes?.fileSizeFormatted}",
+                                            subtitle: "${element.formatSuffix} • ${element.bitrateText}",
+                                            onTap: () => selectedVideoOnlyStream.value = element,
+                                          );
+                                        },
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12.0),
+                      Obx(() {
+                        final videoOnly = selectedVideoOnlyStream.value != null && selectedAudioOnlyStream.value == null ? "Video Only" : null;
+                        final audioOnly = selectedVideoOnlyStream.value == null && selectedAudioOnlyStream.value != null ? "Audio Only" : null;
+                        final audioAndVideo =
+                            selectedVideoOnlyStream.value != null && selectedAudioOnlyStream.value != null ? "${Language.inst.VIDEO} + ${Language.inst.AUDIO}" : null;
+
+                        return RichText(
+                          text: TextSpan(
+                            text: "${Language.inst.OUTPUT}: ",
+                            style: context.textTheme.displaySmall,
+                            children: [
+                              TextSpan(
+                                text: videoOnly ?? audioOnly ?? audioAndVideo ?? Language.inst.NONE,
+                                style: context.textTheme.displayMedium?.copyWith(color: videoOnly != null ? Colors.red : null),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 6.0),
+                      Obx(() {
+                        return RichText(
+                          text: TextSpan(
+                            text: "${Language.inst.FILE_NAME}: ",
+                            style: context.textTheme.displaySmall,
+                            children: [
+                              TextSpan(
+                                text: videoOutputFilename.value,
+                                style: context.textTheme.displayMedium,
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 12.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          NamidaButton(
+                            text: Language.inst.CANCEL,
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          Obx(
+                            () {
+                              final sizeSum = (selectedVideoOnlyStream.value?.sizeInBytes ?? 0) + (selectedAudioOnlyStream.value?.sizeInBytes ?? 0);
+                              final sizeText = sizeSum > 0 ? "(${sizeSum.fileSizeFormatted})" : '';
+                              return NamidaButton(
+                                enabled: sizeSum > 0,
+                                text: '${Language.inst.DOWNLOAD} $sizeText',
+                                onPressed: () async {
+                                  Navigator.pop(context);
+                                  final id = videoId;
+                                  await YoutubeController.inst.downloadYoutubeVideoRaw(
+                                    id: id,
+                                    useCachedVersionsIfAvailable: true,
+                                    saveDirectory: Directory(AppDirs.INTERNAL_STORAGE),
+                                    filename: videoOutputFilename.value,
+                                    videoStream: selectedVideoOnlyStream.value,
+                                    audioStream: selectedAudioOnlyStream.value,
+                                    merge: true,
+                                    onInitialVideoFileSize: (initialFileSize) {},
+                                    onInitialAudioFileSize: (initialFileSize) {},
+                                    videoDownloadingStream: (downloadedBytes) {},
+                                    audioDownloadingStream: (downloadedBytes) {},
+                                    onAudioFileReady: (audioFile) async {
+                                      final dateTime = DateTime.tryParse(videoInfo.value?.uploadDate ?? '');
+                                      final thumbnail = await VideoController.inst.getYoutubeThumbnailAndCache(id: id);
+                                      if (thumbnail != null) {
+                                        await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: audioFile.path, thumbnailPath: thumbnail.path);
+                                        await NamidaFFMPEG.inst.editMetadata(
+                                          path: audioFile.path,
+                                          tagsMap: {
+                                            FFMPEGTagField.title: videoInfo.value?.name,
+                                            FFMPEGTagField.artist: videoInfo.value?.uploaderName,
+                                            FFMPEGTagField.comment: YoutubeController.inst.getYoutubeLink(id),
+                                            FFMPEGTagField.year: dateTime == null ? null : DateFormat('yyyyMMdd').format(dateTime),
+                                            FFMPEGTagField.synopsis: videoInfo.value?.description == null ? null : HtmlParser.parseHTML(videoInfo.value!.description!).text,
+                                          },
+                                        );
+                                      }
+                                    },
+                                    onVideoFileReady: (videoFile) async {},
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+          ),
+        ),
+      );
+    },
+  );
 }

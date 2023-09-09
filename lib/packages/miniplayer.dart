@@ -728,7 +728,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                         bgColor: cacheExists ? CurrentColor.inst.color.withAlpha(40) : null,
                                                         icon: cacheExists ? Broken.tick_circle : Broken.import,
                                                         title: "${element.resolution} • ${element.sizeInBytes?.fileSizeFormatted}",
-                                                        subtitle: "${element.formatSuffix} • ${(element.bitrate ?? 1000) ~/ 1000} kb/s",
+                                                        subtitle: "${element.formatSuffix} • ${element.bitrateText}",
                                                       );
                                                     },
                                                   );

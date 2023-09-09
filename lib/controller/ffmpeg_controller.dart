@@ -37,13 +37,13 @@ class NamidaFFMPEG {
   Future<bool> editMetadata({
     required String path,
     MIFormatTags? oldTags,
-    required Map<FFMPEGTagField, String> tagsMap,
+    required Map<FFMPEGTagField, String?> tagsMap,
     bool keepFileStats = true,
   }) async {
     final originalFile = File(path);
     final originalStats = keepFileStats ? await originalFile.stat() : null;
     final tempFile = await originalFile.copy("${AppDirs.INTERNAL_STORAGE}/.temp_${path.hashCode}");
-    final tagsMapToEditConverted = <String, String>{};
+    final tagsMapToEditConverted = <String, String?>{};
     for (final t in tagsMap.entries) {
       final fieldName = _defaultTagsMap[t.key];
       if (fieldName != null) tagsMapToEditConverted[fieldName] = t.value;
@@ -71,7 +71,7 @@ class NamidaFFMPEG {
       plsAddDT("disc", (tagsMapToEditConverted["disc"] ?? discNT?.$1 ?? "0", trackNT?.$2));
     }
 
-    final tagsString = tagsMapToEditConverted.entries.map((e) => '-metadata ${e.key}="${e.value}"').join(' '); // check if need to remove empty value tag
+    final tagsString = tagsMapToEditConverted.entries.map((e) => e.value == null ? '' : '-metadata ${e.key}="${e.value}"').join(' '); // check if need to remove empty value tag
     final didExecute = await _ffmpegExecute('-i "${tempFile.path}" $tagsString -c copy -y "$path"');
     printy('tags:1::: $tagsMapToEditConverted');
     printy('tags:::: $tagsString');
@@ -299,14 +299,26 @@ class NamidaFFMPEG {
   //   return output.split('\n');
   // }
 
+  Future<bool> mergeAudioAndVideo({
+    required String videoPath,
+    required String audioPath,
+    required String outputPath,
+    bool override = true,
+  }) async {
+    final ovrr = override ? '-y' : '';
+    final res = await FFmpegKit.execute(' -i "$videoPath" -i "$audioPath" -c copy $ovrr "$outputPath"');
+    return res.getState().then((value) => value == SessionState.completed);
+  }
+
   Future<bool> _ffmpegExecute(String command) async {
     final res = await FFmpegKit.execute(command);
-    return res.getState().then((value) => value == SessionState.completed);
+    final state = await res.getState();
+    return state == SessionState.completed;
   }
 
   Future<bool> _ffprobeExecute(String command) async {
     final res = await FFprobeKit.execute(command);
-    return res.getState().then((value) => value == SessionState.completed);
+    return await res.getState().then((value) => value == SessionState.completed);
   }
 
   /// First field is track/disc number, can be 0 or more.

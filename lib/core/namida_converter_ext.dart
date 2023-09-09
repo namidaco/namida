@@ -164,6 +164,22 @@ extension YTVideoQuality on String {
         }[val] ??
         '144';
   }
+
+  String videoLabelToSettingLabel() {
+    final val = split('p').first;
+    return <String, String>{
+          '144': '144p',
+          '240': '240p',
+          '360': '360p',
+          '480': '480p',
+          '720': '720p',
+          '1080': '1080p',
+          '1440': '2k',
+          '2160': '4k',
+          '4320': '8k',
+        }[val] ??
+        '144';
+  }
 }
 
 extension VideoSource on VideoPlaybackSource {

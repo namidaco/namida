@@ -7,20 +7,24 @@ import 'package:flutter/widgets.dart';
 
 import 'package:dio/dio.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
-import 'package:newpipeextractor_dart/models/videoInfo.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
-import 'package:newpipeextractor_dart/utils/thumbnails.dart';
 import 'package:newpipeextractor_dart/extractors/channels.dart';
 import 'package:newpipeextractor_dart/extractors/comments.dart';
 import 'package:newpipeextractor_dart/extractors/trending.dart';
 import 'package:newpipeextractor_dart/extractors/videos.dart';
 import 'package:newpipeextractor_dart/models/infoItems/yt_feed.dart';
+import 'package:newpipeextractor_dart/models/videoInfo.dart';
+import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:newpipeextractor_dart/utils/httpClient.dart';
+import 'package:newpipeextractor_dart/utils/thumbnails.dart';
 
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/connectivity.dart';
+import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 
 class YTThumbnail {
   final String id;
@@ -31,6 +35,16 @@ class YTThumbnail {
   String get sddefault => StreamThumbnail(id).sddefault;
   String get lowres => StreamThumbnail(id).lowres;
   List<String> get allQualitiesByHighest => [maxResUrl, hqdefault, mqdefault, sddefault, lowres];
+}
+
+class DownloadProgress {
+  final int progress;
+  final int totalProgress;
+
+  const DownloadProgress({
+    required this.progress,
+    required this.totalProgress,
+  });
 }
 
 class YoutubeController {
@@ -47,6 +61,16 @@ class YoutubeController {
   final currentComments = <YoutubeComment?>[].obs;
   final currentTotalCommentsCount = Rxn<int>();
   final isLoadingComments = false.obs;
+
+  /// {id: DownloadProgress()}
+  final downloadsVideoProgressMap = <String, DownloadProgress>{}.obs;
+
+  /// {id: DownloadProgress()}
+  final downloadsAudioProgressMap = <String, DownloadProgress>{}.obs;
+
+  final _downloadClientsMap = <String, Dio>{}; // {nameIdentifier: Dio()}
+
+  String getYoutubeLink(String id) => id.toYTUrl();
 
   Future<void> prepareHomeFeed() async {
     homepageFeed.clear();
@@ -79,7 +103,8 @@ class YoutubeController {
     final cachedFile = File("${AppDirs.YT_METADATA_COMMENTS}$id.txt");
 
     // fetching cache
-    if (!forceRequest && await cachedFile.exists()) {
+    final userForceNewRequest = ConnectivityController.inst.hasConnection && SettingsController.inst.ytCommentsAlwaysLoadNew.value;
+    if (!forceRequest && !userForceNewRequest && await cachedFile.exists()) {
       final res = await cachedFile.readAsJson();
       final commList = (res as List?)?.map((e) => YoutubeComment.fromMap(e));
       if (commList != null && commList.isNotEmpty) {
@@ -178,7 +203,9 @@ class YoutubeController {
     return vi;
   }
 
-  Future<List<VideoOnlyStream>> getAvailableVideosOnly(String id) async {
+  Future<int?> getContentSize(String url) async => await ExtractorHttpClient.getContentLength(url);
+
+  Future<List<VideoOnlyStream>> getAvailableVideoStreamsOnly(String id) async {
     final videos = await VideoExtractor.getVideoOnlyStreams(id.toYTUrl());
     videos.sortByReverseAlt(
       (e) => e.width ?? (int.tryParse(e.resolution?.split('p').firstOrNull ?? '') ?? 0),
@@ -187,7 +214,207 @@ class YoutubeController {
     return videos;
   }
 
-  Dio? _downloadClient;
+  Future<YoutubeVideo> getAvailableStreams(String id) async {
+    final url = id.toYTUrl();
+    final video = await VideoExtractor.getStream(url);
+    video.videoOnlyStreams?.sortByReverseAlt(
+      (e) => e.width ?? (int.tryParse(e.resolution?.split('p').firstOrNull ?? '') ?? 0),
+      (e) => e.fps ?? 0,
+    );
+    video.videoStreams?.sortByReverseAlt(
+      (e) => e.width ?? (int.tryParse(e.resolution?.split('p').firstOrNull ?? '') ?? 0),
+      (e) => e.fps ?? 0,
+    );
+
+    video.audioOnlyStreams?.sortByReverseAlt(
+      (e) => e.bitrate ?? 0,
+      (e) => e.sizeInBytes ?? 0,
+    );
+    return video;
+  }
+
+  Future<VideoInfo?> getVideoInfo(String id) async {
+    return await VideoExtractor.getInfo(id.toYTUrl());
+  }
+
+  Future<File?> downloadYoutubeVideoRaw({
+    required String id,
+    required bool useCachedVersionsIfAvailable, // TODO: implement for audios too.
+    required Directory saveDirectory,
+    required String filename,
+    required VideoStream? videoStream,
+    required AudioOnlyStream? audioStream,
+    required bool merge,
+    required void Function(List<int> downloadedBytes) videoDownloadingStream,
+    required void Function(List<int> downloadedBytes) audioDownloadingStream,
+    required void Function(int initialFileSize) onInitialVideoFileSize,
+    required void Function(int initialFileSize) onInitialAudioFileSize,
+    required Future<void> Function(File videoFile) onVideoFileReady,
+    required Future<void> Function(File audioFile) onAudioFileReady,
+  }) async {
+    if (id == '') return null;
+    File? df;
+    Future<bool> fileSizeQualified({
+      required File file,
+      required int targetSize,
+      int allowanceBytes = 1024,
+    }) async {
+      final fileStats = await file.stat();
+      final ok = fileStats.size >= targetSize - allowanceBytes;
+      return ok;
+    }
+
+    File? videoFile;
+    File? audioFile;
+
+    try {
+      // --------- Downloading Choosen Video.
+      if (videoStream != null) {
+        final filecache = VideoController.inst.videoInCacheRealCheck(id, videoStream);
+        if (useCachedVersionsIfAvailable && filecache != null) {
+          videoFile = filecache;
+        } else {
+          String getVPath(bool isTemp) {
+            final prefix = isTemp ? '.tempv_' : '';
+            return "${saveDirectory.path}/$prefix$filename";
+          }
+
+          if (videoStream.sizeInBytes == 0) {
+            videoStream.sizeInBytes = await ExtractorHttpClient.getContentLength(videoStream.url ?? '');
+          }
+          int bytesLength = 0;
+
+          final downloadedFile = await _checkFileAndDownload(
+            url: videoStream.url ?? '',
+            targetSize: videoStream.sizeInBytes ?? 0,
+            filename: filename,
+            destinationFilePath: getVPath(true),
+            onInitialFileSize: (initialFileSize) {
+              onInitialVideoFileSize(initialFileSize);
+              bytesLength = initialFileSize;
+            },
+            downloadingStream: (downloadedBytes) {
+              videoDownloadingStream(downloadedBytes);
+              bytesLength += downloadedBytes.length;
+              downloadsVideoProgressMap[id] = DownloadProgress(
+                progress: bytesLength,
+                totalProgress: videoStream.sizeInBytes ?? 0,
+              );
+            },
+          );
+          downloadsVideoProgressMap.remove(id);
+          final qualified = await fileSizeQualified(file: downloadedFile, targetSize: videoStream.sizeInBytes ?? 0);
+          if (qualified) {
+            videoFile = downloadedFile;
+            await onVideoFileReady(videoFile);
+          }
+        }
+      }
+      // -----------------------------------
+
+      // --------- Downloading Choosen Audio.
+      if (audioStream != null) {
+        String getAPath(bool isTemp) {
+          final prefix = isTemp ? '.tempa_' : '';
+          return "${saveDirectory.path}/$prefix$filename";
+        }
+
+        int bytesLength = 0;
+
+        final downloadedFile = await _checkFileAndDownload(
+          url: audioStream.url ?? '',
+          targetSize: audioStream.sizeInBytes ?? 0,
+          filename: filename,
+          destinationFilePath: getAPath(true),
+          onInitialFileSize: (initialFileSize) {
+            onInitialAudioFileSize(initialFileSize);
+            bytesLength = initialFileSize;
+          },
+          downloadingStream: (downloadedBytes) {
+            audioDownloadingStream(downloadedBytes);
+            bytesLength += downloadedBytes.length;
+            downloadsAudioProgressMap[id] = DownloadProgress(
+              progress: bytesLength,
+              totalProgress: audioStream.sizeInBytes ?? 0,
+            );
+          },
+        );
+        downloadsAudioProgressMap.remove(id);
+        final qualified = await fileSizeQualified(file: downloadedFile, targetSize: audioStream.sizeInBytes ?? 0);
+
+        if (qualified) {
+          audioFile = downloadedFile;
+          await onAudioFileReady(audioFile);
+        }
+      }
+      // -----------------------------------
+
+      // ----- merging if both video & audio were downloaded
+      if (merge && videoFile != null && audioFile != null) {
+        final output = "${saveDirectory.path}/$filename";
+        final didMerge = await NamidaFFMPEG.inst.mergeAudioAndVideo(
+          videoPath: videoFile.path,
+          audioPath: audioFile.path,
+          outputPath: output,
+        );
+        if (didMerge) Future.wait([videoFile.tryDeleting(), audioFile.tryDeleting()]); // deleting temp files since they got merged
+        df = File(output);
+      } else {
+        // -- renaming files
+        await Future.wait([
+          if (videoFile != null && videoStream != null) videoFile.rename("${saveDirectory.path}/$filename"),
+          if (audioFile != null && audioStream != null) audioFile.rename("${saveDirectory.path}/$filename"),
+        ]);
+        df = videoFile ?? audioFile;
+      }
+    } catch (e) {
+      printy('Error Downloading YT Video: $e', isError: true);
+    }
+
+    return df;
+  }
+
+  /// the file returned may not be complete if the client was closed.
+  Future<File> _checkFileAndDownload({
+    required String url,
+    required int targetSize,
+    required String filename,
+    required String destinationFilePath,
+    required void Function(int initialFileSize) onInitialFileSize,
+    required void Function(List<int> downloadedBytes) downloadingStream,
+  }) async {
+    int downloadStartRange = 0;
+
+    final file = await File(destinationFilePath).create(); // retrieving the temp file (or creating a new one).
+    final initialFileSizeOnDisk = await file.sizeInBytes(); // fetching current size to be used as a range bytes for download request
+    onInitialFileSize(initialFileSizeOnDisk);
+    // only download if the download is incomplete, useful sometimes when file 'moving' fails.
+    if (initialFileSizeOnDisk < targetSize) {
+      downloadStartRange = initialFileSizeOnDisk;
+
+      _downloadClientsMap[filename] = Dio(BaseOptions(headers: {HttpHeaders.rangeHeader: 'bytes=$downloadStartRange-'}));
+      final downloadStream = await _downloadClientsMap[filename]!
+          .get<ResponseBody>(
+            url,
+            options: Options(responseType: ResponseType.stream),
+          )
+          .then((value) => value.data);
+
+      if (downloadStream != null) {
+        final fileStream = file.openWrite(mode: FileMode.append);
+        await for (final data in downloadStream.stream) {
+          fileStream.add(data);
+          downloadingStream(data);
+        }
+        await fileStream.flush();
+        await fileStream.close(); // closing file.
+      }
+    }
+    _downloadClientsMap[filename]?.close();
+    return File(destinationFilePath);
+  }
+
+  Dio? downloadClient;
   Future<NamidaVideo?> downloadYoutubeVideo({
     required String id,
     VideoStream? stream,
@@ -204,7 +431,7 @@ class YoutubeController {
       if (stream != null) {
         erabaretaStream = stream;
       } else {
-        final availableVideos = await getAvailableVideosOnly(id);
+        final availableVideos = await getAvailableVideoStreamsOnly(id);
 
         availableVideos.sortByReverseAlt(
           (e) => e.width ?? (int.tryParse(e.resolution?.split('p').firstOrNull ?? '') ?? 0),
@@ -245,8 +472,8 @@ class YoutubeController {
       if (initialFileSizeOnDisk < erabaretaStreamSizeInBytes) {
         downloadStartRange = initialFileSizeOnDisk;
 
-        _downloadClient = Dio(BaseOptions(headers: {HttpHeaders.rangeHeader: 'bytes=$downloadStartRange-'}));
-        final downloadStream = await _downloadClient!
+        downloadClient = Dio(BaseOptions(headers: {HttpHeaders.rangeHeader: 'bytes=$downloadStartRange-'}));
+        final downloadStream = await downloadClient!
             .get<ResponseBody>(
               erabaretaStream.url ?? '',
               options: Options(responseType: ResponseType.stream),
@@ -291,9 +518,17 @@ class YoutubeController {
     return dv;
   }
 
-  void dispose() {
-    _downloadClient?.close();
-    _downloadClient = null;
+  void dispose({bool closeCurrentDownloadClient = true, bool closeAllClients = false}) {
+    if (closeCurrentDownloadClient) {
+      downloadClient?.close();
+      downloadClient = null;
+    }
+
+    if (closeAllClients) {
+      for (final c in _downloadClientsMap.values) {
+        c.close();
+      }
+    }
   }
 }
 

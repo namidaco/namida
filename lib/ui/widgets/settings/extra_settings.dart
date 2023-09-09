@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/youtube_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -46,7 +49,10 @@ class ExtrasSettings extends StatelessWidget {
               icon: Broken.video_square,
               title: Language.inst.USE_YOUTUBE_MINIPLAYER,
               value: SettingsController.inst.useYoutubeMiniplayer.value,
-              onChanged: (p0) => SettingsController.inst.save(useYoutubeMiniplayer: !p0),
+              onChanged: (isTrue) {
+                SettingsController.inst.save(useYoutubeMiniplayer: !isTrue);
+                YoutubeController.inst.updateVideoDetails(Player.inst.nowPlayingTrack.youtubeID);
+              },
             ),
           ),
           Obx(

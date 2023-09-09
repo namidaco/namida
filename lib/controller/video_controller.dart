@@ -90,6 +90,14 @@ class VideoController {
 
   List<NamidaVideo> get videosInCache => _videoCacheIDMap.values.reduce((value, element) => [...value, ...element]);
   bool doesVideoExistsInCache(String youtubeId) => _videoCacheIDMap[youtubeId]?.isNotEmpty ?? false;
+
+  File? videoInCacheRealCheck(String youtubeId, VideoStream? stream) {
+    if (stream == null) return null;
+    final cacheFile = File("${AppDirs.VIDEOS_CACHE}${youtubeId}_${stream.resolution}.${stream.formatSuffix}");
+    final doesExist = cacheFile.existsSync();
+    return doesExist ? cacheFile : null;
+  }
+
   List<NamidaVideo> getNVFromID(String youtubeId) => _videoCacheIDMap[youtubeId] ?? [];
   List<NamidaVideo> getCurrentVideosInCache() {
     final videos = <NamidaVideo>[];
@@ -222,7 +230,7 @@ class VideoController {
   }
 
   Future<void> fetchYTQualities(Track track) async {
-    final available = await YoutubeController.inst.getAvailableVideosOnly(track.youtubeID);
+    final available = await YoutubeController.inst.getAvailableVideoStreamsOnly(track.youtubeID);
     _executeForCurrentTrackOnly(track, () {
       currentYTQualities.clear();
       currentYTQualities.addAll(available);
