@@ -35,6 +35,9 @@ class Player {
   bool get enableSleepAfterMins => _audioHandler.enableSleepAfterMins;
   int get sleepAfterMin => _audioHandler.sleepAfterMin;
   int get sleepAfterTracks => _audioHandler.sleepAfterTracks;
+  bool get isLastItem => _audioHandler.isLastItem;
+  bool get canJumpToNext => !isLastItem || settings.playerInfiniyQueueOnNextPrevious.value;
+  bool get canJumpToPrevious => currentIndex != 0 || settings.playerInfiniyQueueOnNextPrevious.value;
 
   int get totalListenedTimeInSec => _audioHandler.totalListenedTimeInSec;
 

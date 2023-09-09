@@ -159,6 +159,7 @@ class SettingsController {
   final RxBool editTagsKeepFileDates = true.obs;
   final RxBool ytCommentsAlwaysLoadNew = false.obs;
   final RxBool enablePip = true.obs;
+  final RxBool playerInfiniyQueueOnNextPrevious = true.obs;
 
   final RxMap<TrackTilePosition, TrackTileItem> trackItem = {
     TrackTilePosition.row1Item1: TrackTileItem.title,
@@ -339,6 +340,7 @@ class SettingsController {
       editTagsKeepFileDates.value = json['editTagsKeepFileDates'] ?? editTagsKeepFileDates.value;
       ytCommentsAlwaysLoadNew.value = json['ytCommentsAlwaysLoadNew'] ?? ytCommentsAlwaysLoadNew.value;
       enablePip.value = json['enablePip'] ?? enablePip.value;
+      playerInfiniyQueueOnNextPrevious.value = json['playerInfiniyQueueOnNextPrevious'] ?? playerInfiniyQueueOnNextPrevious.value;
 
       trackItem.value = _getEnumMap(
             json['trackItem'],
@@ -500,6 +502,7 @@ class SettingsController {
       'editTagsKeepFileDates': editTagsKeepFileDates.value,
       'ytCommentsAlwaysLoadNew': ytCommentsAlwaysLoadNew.value,
       'enablePip': enablePip.value,
+      'playerInfiniyQueueOnNextPrevious': playerInfiniyQueueOnNextPrevious.value,
       'trackItem': trackItem.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
       'playerOnInterrupted': playerOnInterrupted.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
       'queueInsertion': queueInsertion.map((key, value) => MapEntry(key.convertToString, value.toJson())),
@@ -596,6 +599,7 @@ class SettingsController {
     bool? editTagsKeepFileDates,
     bool? ytCommentsAlwaysLoadNew,
     bool? enablePip,
+    bool? playerInfiniyQueueOnNextPrevious,
     int? waveformTotalBars,
     double? playerVolume,
     int? seekDurationInSeconds,
@@ -897,6 +901,9 @@ class SettingsController {
     }
     if (enablePip != null) {
       this.enablePip.value = enablePip;
+    }
+    if (playerInfiniyQueueOnNextPrevious != null) {
+      this.playerInfiniyQueueOnNextPrevious.value = playerInfiniyQueueOnNextPrevious;
     }
     if (waveformTotalBars != null) {
       this.waveformTotalBars.value = waveformTotalBars;

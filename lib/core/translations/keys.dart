@@ -219,6 +219,8 @@ class LanguageKeys {
   late String INDEXER_NOTE;
   late String INDEXER_SUBTITLE;
   late String INDEXER;
+  late String INFINITY_QUEUE_ON_NEXT_PREV;
+  late String INFINITY_QUEUE_ON_NEXT_PREV_SUBTITLE;
   late String INSERTED;
   late String INSTANTLY_APPLIES;
   late String ITEM;

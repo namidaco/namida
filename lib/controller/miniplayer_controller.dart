@@ -356,13 +356,15 @@ class MiniPlayerController {
   }
 
   Future<void> snapToPrev() async {
-    _sOffset = -sMaxOffset;
-    await sAnim.animateTo(-1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
-    await Player.inst.previous();
-    _sOffset = 0;
-    await sAnim.animateTo(0.0, duration: Duration.zero);
+    if (Player.inst.canJumpToPrevious) {
+      _sOffset = -sMaxOffset;
+      await sAnim.animateTo(-1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
+      await Player.inst.previous();
+      _sOffset = 0;
+      await sAnim.animateTo(0.0, duration: Duration.zero);
 
-    if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) HapticFeedback.lightImpact();
+      if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) HapticFeedback.lightImpact();
+    }
   }
 
   void _snapToCurrent() {
@@ -372,12 +374,14 @@ class MiniPlayerController {
   }
 
   Future<void> snapToNext() async {
-    _sOffset = sMaxOffset;
-    await sAnim.animateTo(1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
-    await Player.inst.next();
-    _sOffset = 0;
-    await sAnim.animateTo(0.0, duration: Duration.zero);
+    if (Player.inst.canJumpToNext) {
+      _sOffset = sMaxOffset;
+      await sAnim.animateTo(1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
+      await Player.inst.next();
+      _sOffset = 0;
+      await sAnim.animateTo(0.0, duration: Duration.zero);
 
-    if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) HapticFeedback.lightImpact();
+      if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) HapticFeedback.lightImpact();
+    }
   }
 }

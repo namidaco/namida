@@ -294,6 +294,15 @@ class PlaybackSettings extends StatelessWidget {
           value: settings.playerPlayOnNextPrev.value,
         ),
       ),
+      Obx(
+        () => CustomSwitchListTile(
+          icon: Broken.repeat,
+          title: lang.INFINITY_QUEUE_ON_NEXT_PREV,
+          subtitle: lang.INFINITY_QUEUE_ON_NEXT_PREV_SUBTITLE,
+          onChanged: (value) => settings.save(playerInfiniyQueueOnNextPrevious: !value),
+          value: settings.playerInfiniyQueueOnNextPrevious.value,
+        ),
+      ),
       NamidaExpansionTile(
         childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
         iconColor: context.defaultIconColor(),

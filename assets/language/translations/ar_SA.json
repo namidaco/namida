@@ -18,6 +18,8 @@
   "FIX_YTDLP_BIG_THUMBNAIL_SIZE": "Fix yt-dlp big thumbnail size",
   "HISTORY_IMPORT_MISSING_ENTRIES_NOTE": "These entries couldn't be found inside library, if you believe they exist, please consider adding them manually",
   "HISTORY_LISTENS_REPLACE_WARNING": "_LISTENS_COUNT_ listens for _OLD_TRACK_INFO_ will be replaced with _NEW_TRACK_INFO_, confirm?",
+  "INFINITY_QUEUE_ON_NEXT_PREV": "Infinity Queue on Next/Previous",
+  "INFINITY_QUEUE_ON_NEXT_PREV_SUBTITLE": "pressing next while playing the last item will jump to first, and vice versa",
   "KEEP_FILE_DATES": "Keep file dates",
   "LANGUAGE": "اللغة",
   "LOCAL_VIDEO_MATCHING": "Local Video Matching",

@@ -420,7 +420,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   @override
   Future<void> skipToNext([bool? andPlay]) async {
     if (isLastItem) {
-      await skipToQueueItem(0, andPlay);
+      if (settings.playerInfiniyQueueOnNextPrevious.value) await skipToQueueItem(0, andPlay);
     } else {
       await skipToQueueItem(currentIndex + 1);
     }
@@ -429,7 +429,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   @override
   Future<void> skipToPrevious() async {
     if (currentIndex == 0) {
-      await skipToQueueItem(currentQueue.length - 1);
+      if (settings.playerInfiniyQueueOnNextPrevious.value) await skipToQueueItem(currentQueue.length - 1);
     } else {
       await skipToQueueItem(currentIndex - 1);
     }

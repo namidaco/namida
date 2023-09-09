@@ -216,6 +216,8 @@
   "INDEXER_NOTE": "Note: Incomplete Number of Artworks refers to the duplicated & not found Artworks",
   "INDEXER_SUBTITLE": "Manage your music Library",
   "INDEX_REFRESH_REQUIRED": "Do a Refresh after changing this",
+  "INFINITY_QUEUE_ON_NEXT_PREV": "Infinity Queue on Next/Previous",
+  "INFINITY_QUEUE_ON_NEXT_PREV_SUBTITLE": "pressing next while playing the last item will jump to first, and vice versa",
   "INSERTED": "inserted",
   "INSTANTLY_APPLIES": "Instantly Applies",
   "ITEM": "Item",
