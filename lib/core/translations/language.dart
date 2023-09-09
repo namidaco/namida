@@ -106,6 +106,7 @@ class Language extends LanguageKeys {
 			AUTOMATIC_BACKUP = getKey("AUTOMATIC_BACKUP");
 			BACKUP_AND_RESTORE_SUBTITLE = getKey("BACKUP_AND_RESTORE_SUBTITLE");
 			BACKUP_AND_RESTORE = getKey("BACKUP_AND_RESTORE");
+			BETA = getKey("BETA");
 			BETWEEN_DATES = getKey("BETWEEN_DATES");
 			BITRATE = getKey("BITRATE");
 			BLACKLIST = getKey("BLACKLIST");
@@ -114,6 +115,7 @@ class Language extends LanguageKeys {
 			CANCEL = getKey("CANCEL");
 			CHANGED = getKey("CHANGED");
 			CHANNELS = getKey("CHANNELS");
+			CHECK_FOR_MORE = getKey("CHECK_FOR_MORE");
 			CHECK_LIST = getKey("CHECK_LIST");
 			CHOOSE_WHAT_TO_CLEAR = getKey("CHOOSE_WHAT_TO_CLEAR");
 			CHOOSE = getKey("CHOOSE");
@@ -188,6 +190,7 @@ class Language extends LanguageKeys {
 			DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE = getKey("DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE");
 			DONE = getKey("DONE");
 			DONT_RESTORE_POSITION = getKey("DONT_RESTORE_POSITION");
+			DOWNLOAD = getKey("DOWNLOAD");
 			DO_NOTHING = getKey("DO_NOTHING");
 			DUCK_AUDIO = getKey("DUCK_AUDIO");
 			DUPLICATED_TRACKS = getKey("DUPLICATED_TRACKS");
@@ -206,6 +209,7 @@ class Language extends LanguageKeys {
 			ENABLE_MINIPLAYER_PARTICLES = getKey("ENABLE_MINIPLAYER_PARTICLES");
 			ENABLE_PARTY_MODE_SUBTITLE = getKey("ENABLE_PARTY_MODE_SUBTITLE");
 			ENABLE_PARTY_MODE = getKey("ENABLE_PARTY_MODE");
+			ENABLE_PICTURE_IN_PICTURE = getKey("ENABLE_PICTURE_IN_PICTURE");
 			ENABLE_REORDERING = getKey("ENABLE_REORDERING");
 			ENABLE_SEARCH_CLEANUP_SUBTITLE = getKey("ENABLE_SEARCH_CLEANUP_SUBTITLE");
 			ENABLE_SEARCH_CLEANUP = getKey("ENABLE_SEARCH_CLEANUP");
@@ -373,6 +377,7 @@ class Language extends LanguageKeys {
 			OPEN_YOUTUBE_LINK = getKey("OPEN_YOUTUBE_LINK");
 			OR = getKey("OR");
 			OTHERS = getKey("OTHERS");
+			OUTPUT = getKey("OUTPUT");
 			PALETTE = getKey("PALETTE");
 			PALETTE_MIX = getKey("PALETTE_MIX");
 			PALETTE_NEW_MIX = getKey("PALETTE_NEW_MIX");
@@ -476,6 +481,7 @@ class Language extends LanguageKeys {
 			SHOULD_PAUSE_NOTE = getKey("SHOULD_PAUSE_NOTE");
 			SHOW_HIDE_UNKNOWN_FIELDS = getKey("SHOW_HIDE_UNKNOWN_FIELDS");
 			SHOW_MORE = getKey("SHOW_MORE");
+			SHOW_WEBM = getKey("SHOW_WEBM");
 			SHUFFLE = getKey("SHUFFLE");
 			SHUFFLE_ALL = getKey("SHUFFLE_ALL");
 			SHUFFLE_NEXT = getKey("SHUFFLE_NEXT");
@@ -494,6 +500,8 @@ class Language extends LanguageKeys {
 			STOP = getKey("STOP");
 			STORAGE_PERMISSION_DENIED_SUBTITLE = getKey("STORAGE_PERMISSION_DENIED_SUBTITLE");
 			STORAGE_PERMISSION_DENIED = getKey("STORAGE_PERMISSION_DENIED");
+			SUBSCRIBE = getKey("SUBSCRIBE");
+			SUBSCRIBED = getKey("SUBSCRIBED");
 			SUBSCRIBER = getKey("SUBSCRIBER");
 			SUBSCRIBERS = getKey("SUBSCRIBERS");
 			SUCCEEDED = getKey("SUCCEEDED");
@@ -589,6 +597,14 @@ class Language extends LanguageKeys {
     }
   }
 }
+
+
+
+
+
+
+
+
 
 
 

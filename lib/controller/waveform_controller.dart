@@ -21,8 +21,6 @@ class WaveformController {
   int retryNumber = 0;
 
   /// Extracts waveform data from a given track, or immediately read from .wave file if exists, then assigns wavedata to [currentWaveform].
-  ///
-  /// Has a timeout of 3 minutes, otherwise it will assign [kDefaultWaveFormData] permanently.
   Future<void> generateWaveform(Track track) async {
     currentWaveform
       ..clear()

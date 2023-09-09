@@ -41,6 +41,7 @@ class LanguageKeys {
   late String AUTOMATIC_BACKUP;
   late String BACKUP_AND_RESTORE_SUBTITLE;
   late String BACKUP_AND_RESTORE;
+  late String BETA;
   late String BETWEEN_DATES;
   late String BITRATE;
   late String BLACKLIST;
@@ -49,6 +50,7 @@ class LanguageKeys {
   late String CANCEL;
   late String CHANGED;
   late String CHANNELS;
+  late String CHECK_FOR_MORE;
   late String CHECK_LIST;
   late String CHOOSE_WHAT_TO_CLEAR;
   late String CHOOSE;
@@ -123,6 +125,7 @@ class LanguageKeys {
   late String DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE;
   late String DONE;
   late String DONT_RESTORE_POSITION;
+  late String DOWNLOAD;
   late String DO_NOTHING;
   late String DUCK_AUDIO;
   late String DUPLICATED_TRACKS;
@@ -141,6 +144,7 @@ class LanguageKeys {
   late String ENABLE_MINIPLAYER_PARTICLES;
   late String ENABLE_PARTY_MODE_SUBTITLE;
   late String ENABLE_PARTY_MODE;
+  late String ENABLE_PICTURE_IN_PICTURE;
   late String ENABLE_REORDERING;
   late String ENABLE_SEARCH_CLEANUP_SUBTITLE;
   late String ENABLE_SEARCH_CLEANUP;
@@ -308,6 +312,7 @@ class LanguageKeys {
   late String OPEN_YOUTUBE_LINK;
   late String OR;
   late String OTHERS;
+  late String OUTPUT;
   late String PALETTE;
   late String PALETTE_MIX;
   late String PALETTE_NEW_MIX;
@@ -411,6 +416,7 @@ class LanguageKeys {
   late String SHOULD_PAUSE_NOTE;
   late String SHOW_HIDE_UNKNOWN_FIELDS;
   late String SHOW_MORE;
+  late String SHOW_WEBM;
   late String SHUFFLE;
   late String SHUFFLE_ALL;
   late String SHUFFLE_NEXT;
@@ -429,6 +435,8 @@ class LanguageKeys {
   late String STOP;
   late String STORAGE_PERMISSION_DENIED_SUBTITLE;
   late String STORAGE_PERMISSION_DENIED;
+  late String SUBSCRIBE;
+  late String SUBSCRIBED;
   late String SUBSCRIBER;
   late String SUBSCRIBERS;
   late String SUCCEEDED;
