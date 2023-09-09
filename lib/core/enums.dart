@@ -311,3 +311,9 @@ enum MixesItems {
   favourites,
   randomPicks,
 }
+
+enum NotificationTapAction {
+  openApp,
+  openMiniplayer,
+  openQueue,
+}

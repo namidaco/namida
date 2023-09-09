@@ -200,6 +200,14 @@ extension PLNAME on String {
       .replaceFirst(k_PLAYLIST_NAME_MOST_PLAYED, lang.MOST_PLAYED);
 }
 
+extension EnumUtils<E extends Enum> on E {
+  E nextElement(List<E> enumsList) {
+    final newIndex = (index + 1) % enumsList.length;
+    final val = enumsList[newIndex];
+    return val;
+  }
+}
+
 extension TRACKPLAYMODE on TrackPlayMode {
   void toggleSetting() {
     if (settings.trackPlayMode.value.index + 1 == TrackPlayMode.values.length) {
@@ -272,7 +280,7 @@ extension TagFieldsUtils on TagField {
   bool get isNumeric => this == TagField.trackNumber || this == TagField.trackTotal || this == TagField.discNumber || this == TagField.discTotal || this == TagField.year;
 }
 
-extension WAKELOCKMODETEXT on WakelockMode {
+extension WAKELOCKMODESTG on WakelockMode {
   void toggleSetting() {
     if (settings.wakelockMode.value.index + 1 == WakelockMode.values.length) {
       settings.save(wakelockMode: WakelockMode.values[0]);

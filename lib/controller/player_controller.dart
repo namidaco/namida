@@ -61,6 +61,22 @@ class Player {
     );
     prepareTotalListenTime();
     setSkipSilenceEnabled(settings.playerSkipSilenceEnabled.value);
+    AudioService.notificationClicked.listen((clicked) {
+      if (clicked) {
+        switch (settings.onNotificationTapAction.value) {
+          case NotificationTapAction.openApp:
+            break;
+          case NotificationTapAction.openMiniplayer:
+            MiniPlayerController.inst.snapToExpanded();
+            break;
+          case NotificationTapAction.openQueue:
+            MiniPlayerController.inst.snapToQueue();
+            break;
+          default:
+            null;
+        }
+      }
+    });
   }
 
   void refreshNotification() {

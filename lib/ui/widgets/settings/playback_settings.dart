@@ -222,6 +222,17 @@ class PlaybackSettings extends StatelessWidget {
         ),
       ),
       Obx(
+        () => CustomListTile(
+          title: lang.ON_NOTIFICATION_TAP,
+          trailingText: settings.onNotificationTapAction.value.toText(),
+          icon: Broken.card,
+          onTap: () {
+            final element = settings.onNotificationTapAction.value.nextElement(NotificationTapAction.values);
+            settings.save(onNotificationTapAction: element);
+          },
+        ),
+      ),
+      Obx(
         () => CustomSwitchListTile(
           icon: Broken.forward,
           title: lang.SKIP_SILENCE,

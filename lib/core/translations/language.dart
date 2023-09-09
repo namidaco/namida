@@ -377,7 +377,11 @@ class Language extends LanguageKeys {
 			OLD_DIRECTORY = getKey("OLD_DIRECTORY");
 			OLD_DIRECTORY_STILL_HAS_TRACKS = getKey("OLD_DIRECTORY_STILL_HAS_TRACKS");
 			ON_INTERRUPTION = getKey("ON_INTERRUPTION");
+			ON_NOTIFICATION_TAP = getKey("ON_NOTIFICATION_TAP");
 			ON_VOLUME_ZERO = getKey("ON_VOLUME_ZERO");
+			OPEN_APP = getKey("OPEN_APP");
+			OPEN_MINIPLAYER = getKey("OPEN_MINIPLAYER");
+			OPEN_QUEUE = getKey("OPEN_QUEUE");
 			OPEN_YOUTUBE_LINK = getKey("OPEN_YOUTUBE_LINK");
 			OR = getKey("OR");
 			OTHERS = getKey("OTHERS");
@@ -601,5 +605,9 @@ class Language extends LanguageKeys {
     }
   }
 }
+
+
+
+
 
 

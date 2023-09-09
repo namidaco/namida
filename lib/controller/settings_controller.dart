@@ -160,6 +160,7 @@ class SettingsController {
   final RxBool ytCommentsAlwaysLoadNew = false.obs;
   final RxBool enablePip = true.obs;
   final RxBool playerInfiniyQueueOnNextPrevious = true.obs;
+  final onNotificationTapAction = NotificationTapAction.openApp.obs;
 
   final RxMap<TrackTilePosition, TrackTileItem> trackItem = {
     TrackTilePosition.row1Item1: TrackTileItem.title,
@@ -341,6 +342,7 @@ class SettingsController {
       ytCommentsAlwaysLoadNew.value = json['ytCommentsAlwaysLoadNew'] ?? ytCommentsAlwaysLoadNew.value;
       enablePip.value = json['enablePip'] ?? enablePip.value;
       playerInfiniyQueueOnNextPrevious.value = json['playerInfiniyQueueOnNextPrevious'] ?? playerInfiniyQueueOnNextPrevious.value;
+      onNotificationTapAction.value = NotificationTapAction.values.getEnum(json['onNotificationTapAction']) ?? onNotificationTapAction.value;
 
       trackItem.value = _getEnumMap(
             json['trackItem'],
@@ -491,6 +493,7 @@ class SettingsController {
       'playerRepeatMode': playerRepeatMode.value.convertToString,
       'trackPlayMode': trackPlayMode.value.convertToString,
       'mostPlayedTimeRange': mostPlayedTimeRange.value.convertToString,
+      'onNotificationTapAction': onNotificationTapAction.value.convertToString,
       'mostPlayedCustomDateRange': mostPlayedCustomDateRange.value.toJson(),
       'mostPlayedCustomisStartOfDay': mostPlayedCustomisStartOfDay.value,
 
@@ -630,6 +633,7 @@ class SettingsController {
     RepeatMode? playerRepeatMode,
     TrackPlayMode? trackPlayMode,
     MostPlayedTimeRange? mostPlayedTimeRange,
+    NotificationTapAction? onNotificationTapAction,
     DateRange? mostPlayedCustomDateRange,
     bool? mostPlayedCustomisStartOfDay,
     bool? didSupportNamida,
@@ -998,6 +1002,9 @@ class SettingsController {
     }
     if (mostPlayedTimeRange != null) {
       this.mostPlayedTimeRange.value = mostPlayedTimeRange;
+    }
+    if (onNotificationTapAction != null) {
+      this.onNotificationTapAction.value = onNotificationTapAction;
     }
     if (mostPlayedCustomDateRange != null) {
       this.mostPlayedCustomDateRange.value = mostPlayedCustomDateRange;

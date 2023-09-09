@@ -261,6 +261,10 @@ extension WAKELOCKMODETEXT on WakelockMode {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension NotificationTapActionTEXT on NotificationTapAction {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension LocalVideoMatchingTypeText on LocalVideoMatchingType {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
@@ -907,6 +911,11 @@ class _NamidaConverters {
         HomePageItems.recentArtists: lang.RECENT_ARTISTS,
         HomePageItems.topRecentAlbums: lang.TOP_RECENT_ALBUMS,
         HomePageItems.topRecentArtists: lang.TOP_RECENT_ARTISTS,
+      },
+      NotificationTapAction: {
+        NotificationTapAction.openApp: lang.OPEN_APP,
+        NotificationTapAction.openMiniplayer: lang.OPEN_MINIPLAYER,
+        NotificationTapAction.openQueue: lang.OPEN_QUEUE,
       }
     };
 

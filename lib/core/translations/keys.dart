@@ -310,7 +310,11 @@ class LanguageKeys {
   late String OLD_DIRECTORY;
   late String OLD_DIRECTORY_STILL_HAS_TRACKS;
   late String ON_INTERRUPTION;
+  late String ON_NOTIFICATION_TAP;
   late String ON_VOLUME_ZERO;
+  late String OPEN_APP;
+  late String OPEN_MINIPLAYER;
+  late String OPEN_QUEUE;
   late String OPEN_YOUTUBE_LINK;
   late String OR;
   late String OTHERS;
