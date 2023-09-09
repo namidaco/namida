@@ -861,7 +861,10 @@ class NamidaMiniPlayer extends StatelessWidget {
                                             () => IconButton(
                                               visualDensity: VisualDensity.compact,
                                               tooltip: settings.playerRepeatMode.value.toText().replaceFirst('_NUM_', Player.inst.numberOfRepeats.toString()),
-                                              onPressed: () => settings.playerRepeatMode.value.toggleSetting(),
+                                              onPressed: () {
+                                                final e = settings.playerRepeatMode.value.nextElement(RepeatMode.values);
+                                                settings.save(playerRepeatMode: e);
+                                              },
                                               padding: const EdgeInsets.all(2.0),
                                               icon: Stack(
                                                 alignment: Alignment.center,

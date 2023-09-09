@@ -181,7 +181,10 @@ class PlaybackSettings extends StatelessWidget {
                         icon: Broken.video_tick,
                         title: lang.MATCHING_TYPE,
                         trailingText: settings.localVideoMatchingType.value.toText(),
-                        onTap: settings.localVideoMatchingType.value.toggleSetting,
+                        onTap: () {
+                          final e = settings.localVideoMatchingType.value.nextElement(LocalVideoMatchingType.values);
+                          settings.save(localVideoMatchingType: e);
+                        },
                       ),
                     ),
                     Obx(
@@ -204,7 +207,10 @@ class PlaybackSettings extends StatelessWidget {
           title: '${lang.KEEP_SCREEN_AWAKE_WHEN}:',
           subtitle: settings.wakelockMode.value.toText(),
           icon: Broken.external_drive,
-          onTap: () => settings.wakelockMode.value.toggleSetting(),
+          onTap: () {
+            final e = settings.wakelockMode.value.nextElement(WakelockMode.values);
+            settings.save(wakelockMode: e);
+          },
         ),
       ),
       Obx(

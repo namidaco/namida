@@ -209,14 +209,6 @@ extension EnumUtils<E extends Enum> on E {
 }
 
 extension TRACKPLAYMODE on TrackPlayMode {
-  void toggleSetting() {
-    if (settings.trackPlayMode.value.index + 1 == TrackPlayMode.values.length) {
-      settings.save(trackPlayMode: TrackPlayMode.values[0]);
-    } else {
-      settings.save(trackPlayMode: TrackPlayMode.values[index + 1]);
-    }
-  }
-
   bool get shouldBeIndex0 => this == TrackPlayMode.selectedTrack || this == TrackPlayMode.trackAlbum || this == TrackPlayMode.trackArtist || this == TrackPlayMode.trackGenre;
 
   List<Track> getQueue(Track trackPre, {List<Track>? searchQueue}) {
@@ -245,16 +237,6 @@ extension TRACKPLAYMODE on TrackPlayMode {
   }
 }
 
-extension PlayerRepeatModeUtils on RepeatMode {
-  void toggleSetting() {
-    if (settings.playerRepeatMode.value.index + 1 == RepeatMode.values.length) {
-      settings.save(playerRepeatMode: RepeatMode.values[0]);
-    } else {
-      settings.save(playerRepeatMode: RepeatMode.values[index + 1]);
-    }
-  }
-}
-
 extension ConvertPathToTrack on String {
   Future<TrackExtended?> toTrackExtOrExtract() async => toTrackExtOrNull() ?? (await Indexer.inst.extractOneTrack(trackPath: this));
   Track toTrack() => Track(this);
@@ -278,26 +260,6 @@ extension YTLinkToID on String {
 
 extension TagFieldsUtils on TagField {
   bool get isNumeric => this == TagField.trackNumber || this == TagField.trackTotal || this == TagField.discNumber || this == TagField.discTotal || this == TagField.year;
-}
-
-extension WAKELOCKMODESTG on WakelockMode {
-  void toggleSetting() {
-    if (settings.wakelockMode.value.index + 1 == WakelockMode.values.length) {
-      settings.save(wakelockMode: WakelockMode.values[0]);
-    } else {
-      settings.save(wakelockMode: WakelockMode.values[index + 1]);
-    }
-  }
-}
-
-extension LocalVideoMatchingTypeUtils on LocalVideoMatchingType {
-  void toggleSetting() {
-    if (settings.localVideoMatchingType.value.index + 1 == LocalVideoMatchingType.values.length) {
-      settings.save(localVideoMatchingType: LocalVideoMatchingType.values[0]);
-    } else {
-      settings.save(localVideoMatchingType: LocalVideoMatchingType.values[index + 1]);
-    }
-  }
 }
 
 extension WidgetsUtils on Widget {

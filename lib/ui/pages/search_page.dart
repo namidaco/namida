@@ -154,7 +154,10 @@ class SearchPage extends StatelessWidget {
                                 icon: Broken.music_circle,
                                 buttonIcon: Broken.play,
                                 buttonText: settings.trackPlayMode.value.toText(),
-                                onPressed: () => settings.trackPlayMode.value.toggleSetting(),
+                                onPressed: () {
+                                  final element = settings.trackPlayMode.value.nextElement(TrackPlayMode.values);
+                                  settings.save(trackPlayMode: element);
+                                },
                               ),
                             ),
                           ),
