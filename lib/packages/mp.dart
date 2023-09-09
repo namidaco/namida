@@ -3,14 +3,11 @@ library miniplayer;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:miniplayer/src/miniplayer_will_pop_scope.dart';
-
-export 'package:miniplayer/src/miniplayer_will_pop_scope.dart';
 
 ///Type definition for the builder function
 typedef MiniplayerBuilder = Widget Function(double height, double percentage);
 
-///Type definition for onDismiss. Will be used in a future version.
+///Type definition for ondismiss. Will be used in a future version.
 typedef DismissCallback = void Function(double percentage);
 
 ///Miniplayer class
@@ -39,11 +36,11 @@ class Miniplayer extends StatefulWidget {
   final ValueNotifier<double>? valueNotifier;
 
   ///Deprecated
-  @Deprecated("Migrate onDismiss to onDismissed as onDismiss will be used differently in a future version.")
-  final Function? onDismiss;
+  @Deprecated("Migrate ondismiss to ondismissed as ondismiss will be used differently in a future version.")
+  final Function? ondismiss;
 
-  ///If onDismissed is set, the miniplayer can be dismissed
-  final Function? onDismissed;
+  ///If ondismissed is set, the miniplayer can be dismissed
+  final Function? ondismissed;
 
   //Allows you to manually control the miniplayer in code
   final MiniplayerController? controller;
@@ -58,21 +55,21 @@ class Miniplayer extends StatefulWidget {
     this.decoration,
     this.valueNotifier,
     this.duration = const Duration(milliseconds: 300),
-    this.onDismiss,
-    this.onDismissed,
+    this.ondismiss,
+    this.ondismissed,
     this.controller,
   }) : super(key: key);
 
   @override
-  _MiniplayerState createState() => _MiniplayerState();
+  State<Miniplayer> createState() => _MiniplayerState();
 }
 
 class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
   late ValueNotifier<double> heightNotifier;
   ValueNotifier<double> dragDownPercentage = ValueNotifier(0);
 
-  ///Temporary variable as long as onDismiss is deprecated. Will be removed in a future version.
-  Function? onDismissed;
+  ///Temporary variable as long as ondismiss is deprecated. Will be removed in a future version.
+  Function? ondismissed;
 
   ///Current y position of drag gesture
   late double _dragHeight;
@@ -120,11 +117,11 @@ class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
       widget.controller!.addListener(controllerListener);
     }
 
-    if (widget.onDismissed != null) {
-      onDismissed = widget.onDismissed;
+    if (widget.ondismissed != null) {
+      ondismissed = widget.ondismissed;
     } else {
       // ignore: deprecated_member_use_from_same_package
-      onDismissed = widget.onDismiss;
+      ondismissed = widget.ondismiss;
     }
 
     super.initState();
@@ -146,10 +143,10 @@ class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     if (dismissed) return Container();
 
-    return MiniplayerWillPopScope(
+    return WillPopScope(
       onWillPop: () async {
         if (heightNotifier.value > widget.minHeight) {
-          _snapToPosition(PanelState.MIN);
+          _snapToPosition(PanelState.min);
           return false;
         }
         return true;
@@ -197,7 +194,7 @@ class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
                         ),
                       ),
                     ),
-                    onTap: () => _snapToPosition(_dragHeight != widget.maxHeight ? PanelState.MAX : PanelState.MIN),
+                    onTap: () => _snapToPosition(_dragHeight != widget.maxHeight ? PanelState.max : PanelState.min),
                     onPanStart: (details) {
                       _startHeight = _dragHeight;
                       updateCount = 0;
@@ -219,26 +216,26 @@ class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
                       }
 
                       ///Determine to which SnapPosition the widget should snap
-                      PanelState snap = PanelState.MIN;
+                      PanelState snap = PanelState.min;
 
                       final percentageMax = percentageFromValueInRange(min: widget.minHeight, max: widget.maxHeight, value: _dragHeight);
 
                       ///Started from expanded state
                       if (_startHeight > widget.minHeight) {
                         if (percentageMax > 1 - snapPercentage) {
-                          snap = PanelState.MAX;
+                          snap = PanelState.max;
                         }
                       }
 
                       ///Started from minified state
                       else {
                         if (percentageMax > snapPercentage) {
-                          snap = PanelState.MAX;
+                          snap = PanelState.max;
                         } else
 
-                        ///DismissedPercentage > 0.2 -> dismiss
-                        if (onDismissed != null && percentageFromValueInRange(min: widget.minHeight, max: 0, value: _dragHeight) > snapPercentage) {
-                          snap = PanelState.DISMISS;
+                        ///dismissedPercentage > 0.2 -> dismiss
+                        if (ondismissed != null && percentageFromValueInRange(min: widget.minHeight, max: 0, value: _dragHeight) > snapPercentage) {
+                          snap = PanelState.dismiss;
                         }
                       }
 
@@ -275,7 +272,7 @@ class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
     }
 
     ///Drag below minHeight
-    else if (onDismissed != null) {
+    else if (ondismissed != null) {
       var percentageDown = borderDouble(minRange: 0.0, maxRange: 1.0, value: percentageFromValueInRange(min: widget.minHeight, max: 0, value: _dragHeight));
 
       if (dragDownPercentage.value != percentageDown) {
@@ -283,7 +280,7 @@ class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
       }
 
       if (percentageDown >= 1 && animation && !dismissed) {
-        if (onDismissed != null) onDismissed!();
+        if (ondismissed != null) ondismissed!();
         setState(() {
           dismissed = true;
         });
@@ -294,13 +291,13 @@ class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
   ///Animates the panel height according to a SnapPoint
   void _snapToPosition(PanelState snapPosition) {
     switch (snapPosition) {
-      case PanelState.MAX:
+      case PanelState.max:
         _animateToHeight(widget.maxHeight);
         return;
-      case PanelState.MIN:
+      case PanelState.min:
         _animateToHeight(widget.minHeight);
         return;
-      case PanelState.DISMISS:
+      case PanelState.dismiss:
         _animateToHeight(0);
         return;
     }
@@ -364,8 +361,8 @@ class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
   }
 }
 
-///-1 Min, -2 Max, -3 Dismiss
-enum PanelState { MAX, MIN, DISMISS }
+///-1 Min, -2 Max, -3 dismiss
+enum PanelState { max, min, dismiss }
 
 //ControllerData class. Used for the controller
 class ControllerData {
@@ -406,11 +403,11 @@ class MiniplayerController extends ValueNotifier<ControllerData?> {
 extension SelectedColorExtension on PanelState {
   int get heightCode {
     switch (this) {
-      case PanelState.MIN:
+      case PanelState.min:
         return -1;
-      case PanelState.MAX:
+      case PanelState.max:
         return -2;
-      case PanelState.DISMISS:
+      case PanelState.dismiss:
         return -3;
       default:
         return -1;

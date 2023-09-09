@@ -590,14 +590,6 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
 }
 
 // ----------------------- Extensions --------------------------
-extension _MediaItemToAudioSource on MediaItem {
-  AudioSource toAudioSource() => AudioSource.uri(Uri.parse(id));
-}
-
-extension _MediaItemsListToAudioSources on Iterable<MediaItem> {
-  Iterable<AudioSource> toAudioSources() => map((e) => e.toAudioSource());
-}
-
 extension TrackToAudioSourceMediaItem on Selectable {
   UriAudioSource toAudioSource(int currentIndex, int queueLength) {
     return AudioSource.uri(

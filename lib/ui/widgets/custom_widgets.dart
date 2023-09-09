@@ -2522,7 +2522,7 @@ class LazyLoadListView extends StatefulWidget {
   });
 
   @override
-  _LazyLoadListViewState createState() => _LazyLoadListViewState();
+  State<LazyLoadListView> createState() => _LazyLoadListViewState();
 }
 
 class _LazyLoadListViewState extends State<LazyLoadListView> {

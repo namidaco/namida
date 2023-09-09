@@ -66,7 +66,6 @@ class NamidaFFMPEG {
 
       final trackNT = _trackAndDiscSplitter(oldTags?.track);
       final discNT = _trackAndDiscSplitter(oldTags?.disc);
-      print('tags:11:  ${oldTags?.track} | ${oldTags?.disc}');
       plsAddDT("track", (tagsMapToEditConverted["track"] ?? trackNT?.$1 ?? "0", trackNT?.$2));
       plsAddDT("disc", (tagsMapToEditConverted["disc"] ?? discNT?.$1 ?? "0", trackNT?.$2));
     }

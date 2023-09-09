@@ -665,7 +665,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                       final RxBool finishedEditing = false.obs;
                       final RxString updatingLibrary = '?'.obs;
 
-                      void _showFailedTracksDialogs() {
+                      void showFailedTracksDialogs() {
                         NamidaNavigator.inst.navigateDialog(
                           dialog: CustomBlurryDialog(
                             contentPadding: EdgeInsets.zero,
@@ -714,7 +714,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                             trailingWidgets: [
                               NamidaIconButton(
                                 icon: Broken.activity,
-                                onPressed: _showFailedTracksDialogs,
+                                onPressed: showFailedTracksDialogs,
                               ),
                             ],
                             actions: [
@@ -740,7 +740,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                         const SizedBox(width: 4.0),
                                         if (failedEditsTracks.isNotEmpty)
                                           GestureDetector(
-                                            onTap: _showFailedTracksDialogs,
+                                            onTap: showFailedTracksDialogs,
                                             child: getText(
                                               lang.CHECK_LIST,
                                               style: Get.textTheme.displaySmall?.copyWith(

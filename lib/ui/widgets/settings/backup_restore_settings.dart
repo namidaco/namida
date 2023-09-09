@@ -50,7 +50,6 @@ class BackupAndRestore extends StatelessWidget {
       icon: Broken.refresh_circle,
       child: Column(
         children: [
-          // TODO(feat): change specific file/folder new path.
           // TODO(feat): option inside namida to move track in android.
 
           // -- Create Backup
