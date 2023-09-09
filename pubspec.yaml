@@ -43,6 +43,7 @@ dependencies:
   get:
     git:
       url: https://github.com/MSOB7YY/getx
+      ref: 394a27955890a98a53d4219e912ed22c614543f0
   permission_handler: ^10.4.3
   device_info_plus: ^8.1.0
   intl: ^0.18.0
@@ -68,7 +69,7 @@ dependencies:
   queue_manager:
     git:
       url: https://github.com/MSOB7YY/queue_manager
-      ref: f4b46745b31cdc2cf0f3d5af1a668a4143b111d3
+      ref: b28b8de5133cef0c07937680e45e1fb580be5004
   flutter_html:
     git:
       url: https://github.com/zhourengui/flutter_html
@@ -134,10 +135,11 @@ dependencies:
   # webview_flutter: ^4.0.7
   # webview_cookie_manager: ^2.0.6
   # google_sign_in: ^6.0.2
-  # better_player: ^0.0.83
-  # git:
-  #   url: https://github.com/AnonymHK/betterplayer
   dio: ^5.3.1
+  picture_in_picture:
+    git:
+      url: https://github.com/MSOB7YY/picture_in_picture
+      ref: 53ef5a4d91b1d0df948851359b80fbda342dd29b
 
 dev_dependencies:
   flutter_test:

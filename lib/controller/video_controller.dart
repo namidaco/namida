@@ -4,12 +4,12 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:better_player/better_player.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide Response;
-import 'package:namida/ui/widgets/video_widget.dart';
+import 'package:http/http.dart' as http;
 import 'package:newpipeextractor_dart/models/streams.dart';
+import 'package:picture_in_picture/picture_in_picture.dart';
 
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/track.dart';
@@ -24,6 +24,8 @@ import 'package:namida/controller/youtube_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/ui/widgets/artwork.dart';
+import 'package:namida/ui/widgets/video_widget.dart';
 
 class VideoController {
   static VideoController get inst => _instance;
@@ -31,7 +33,20 @@ class VideoController {
   VideoController._internal();
 
   final RxDouble videoZoomAdditionalScale = 0.0.obs;
+  final isInPip = false.obs;
 
+  Widget get videoOrArtworkWidget => AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: Obx(
+          () => VideoController.inst.shouldShowVideo
+              ? VideoController.inst.getVideoWidget(null, false)
+              : ArtworkWidget(
+                  thumbnailSize: 9999,
+                  iconSize: 32.0,
+                  path: Player.inst.nowPlayingTrack.pathToImage,
+                ),
+        ),
+      );
   Widget? videoWidget;
   Key? _lastKey;
   Widget getVideoWidget(Key? keyyy, bool enableControls) {
@@ -57,6 +72,7 @@ class VideoController {
             showControls: enableControls,
             controller: playerController?.videoPlayerController,
             child: BetterPlayer(
+              // key: _videoController._betterPlayerKey,
               controller: playerController!,
             ),
           ),
@@ -761,7 +777,8 @@ class _NamidaVideoPlayer {
         useRootNavigator: true,
         fit: BoxFit.contain,
         controlsConfiguration: BetterPlayerControlsConfiguration(
-          showControls: false,
+          // showControls: false,
+          playerTheme: BetterPlayerTheme.custom,
         )),
   );
 
@@ -770,16 +787,36 @@ class _NamidaVideoPlayer {
     await play();
   }
 
+  Future<void> setNetworkSource(String url, bool Function(Duration videoDuration) looping) async {
+    _initializedVideo = false;
+    await _execute(() async {
+      await dispose();
+      await _videoController.setupDataSource(
+        BetterPlayerDataSource.network(
+          url,
+          cacheConfiguration: const BetterPlayerCacheConfiguration(
+            useCache: true,
+            maxCacheFileSize: 60 * 1024 * 1024,
+            maxCacheSize: 1 * 1024 * 1024 * 1024,
+          ),
+        ),
+      );
+      _initializedVideo = true;
+      _videoController.setLooping(looping(_videoController.videoPlayerController?.value.duration ?? Duration.zero));
+      _videoController.setControlsEnabled(_videoController.isFullScreen);
+    });
+  }
+
   Future<void> setFile(String path, bool Function(Duration videoDuration) looping) async {
     _initializedVideo = false;
-    try {
+    await _execute(() async {
       await dispose();
       await _videoController.setupDataSource(BetterPlayerDataSource.file(path));
       _initializedVideo = true;
       _videoController.setLooping(looping(_videoController.videoPlayerController?.value.duration ?? Duration.zero));
-    } catch (e) {
-      printy(e, isError: true);
-    }
+      _videoController.setControlsEnabled(_videoController.isFullScreen);
+    });
+
     try {
       File(path).setLastAccessedSync(DateTime.now());
     } catch (e) {
@@ -803,12 +840,24 @@ class _NamidaVideoPlayer {
 
   Future<void> setVolume(double volume) async => _execute(() async => await _videoController.setVolume(volume));
 
-  Future<void> enablePictureInPicture() async {}
-  Future<void> disablePictureInPicture() async {}
+  Future<bool> enablePictureInPicture() async {
+    final res = await PictureInPicture.enterPip(
+      width: _videoController.videoPlayerController?.value.size?.width.toInt(),
+      height: _videoController.videoPlayerController?.value.size?.height.toInt(),
+    );
+    return res;
+  }
 
-  void enterFullScreen(Widget widget) => NamidaNavigator.inst.enterFullScreen(widget);
+  void enterFullScreen(Widget widget) {
+    NamidaNavigator.inst.enterFullScreen(widget);
+    _videoController.setControlsEnabled(true);
+    _videoController.setControlsVisibility(false);
+  }
 
-  void exitFullScreen() => NamidaNavigator.inst.exitFullScreen();
+  void exitFullScreen() {
+    NamidaNavigator.inst.exitFullScreen();
+    _videoController.setControlsEnabled(false);
+  }
 
   Future<void> dispose() async {
     if (_initializedVideo && (videoController?.isVideoInitialized() ?? false)) {

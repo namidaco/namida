@@ -4,7 +4,9 @@ import 'package:get/get.dart';
 class ConnectivityController {
   static ConnectivityController get inst => _instance;
   static final ConnectivityController _instance = ConnectivityController._internal();
-  ConnectivityController._internal() {
+  ConnectivityController._internal();
+
+  void initialize() {
     _connectivity.onConnectivityChanged.listen((connection) {
       _connectionType.value = connection;
       _hasConnection.value = connection != ConnectivityResult.none;

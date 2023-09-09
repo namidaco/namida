@@ -155,6 +155,8 @@ class SettingsController {
   final RxString trackTileSeparator = '•'.obs;
   final RxBool displayFavouriteIconInListTile = true.obs;
   final RxBool editTagsKeepFileDates = true.obs;
+  final RxBool ytCommentsAlwaysLoadNew = false.obs;
+  final RxBool enablePip = true.obs;
 
   final RxMap<TrackTilePosition, TrackTileItem> trackItem = {
     TrackTilePosition.row1Item1: TrackTileItem.title,
@@ -333,6 +335,8 @@ class SettingsController {
       trackTileSeparator.value = json['trackTileSeparator'] ?? trackTileSeparator.value;
       displayFavouriteIconInListTile.value = json['displayFavouriteIconInListTile'] ?? displayFavouriteIconInListTile.value;
       editTagsKeepFileDates.value = json['editTagsKeepFileDates'] ?? editTagsKeepFileDates.value;
+      ytCommentsAlwaysLoadNew.value = json['ytCommentsAlwaysLoadNew'] ?? ytCommentsAlwaysLoadNew.value;
+      enablePip.value = json['enablePip'] ?? enablePip.value;
 
       trackItem.value = _getEnumMap(
             json['trackItem'],
@@ -492,6 +496,8 @@ class SettingsController {
       'trackTileSeparator': trackTileSeparator.value,
       'displayFavouriteIconInListTile': displayFavouriteIconInListTile.value,
       'editTagsKeepFileDates': editTagsKeepFileDates.value,
+      'ytCommentsAlwaysLoadNew': ytCommentsAlwaysLoadNew.value,
+      'enablePip': enablePip.value,
       'trackItem': trackItem.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
       'playerOnInterrupted': playerOnInterrupted.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
       'queueInsertion': queueInsertion.map((key, value) => MapEntry(key.convertToString, value.toJson())),
@@ -586,6 +592,8 @@ class SettingsController {
     int? isTrackPlayedPercentageCount,
     bool? displayFavouriteIconInListTile,
     bool? editTagsKeepFileDates,
+    bool? ytCommentsAlwaysLoadNew,
+    bool? enablePip,
     int? waveformTotalBars,
     double? playerVolume,
     int? seekDurationInSeconds,
@@ -881,6 +889,12 @@ class SettingsController {
     }
     if (editTagsKeepFileDates != null) {
       this.editTagsKeepFileDates.value = editTagsKeepFileDates;
+    }
+    if (ytCommentsAlwaysLoadNew != null) {
+      this.ytCommentsAlwaysLoadNew.value = ytCommentsAlwaysLoadNew;
+    }
+    if (enablePip != null) {
+      this.enablePip.value = enablePip;
     }
     if (waveformTotalBars != null) {
       this.waveformTotalBars.value = waveformTotalBars;

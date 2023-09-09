@@ -57,6 +57,14 @@ class ExtrasSettings extends StatelessWidget {
           ),
           Obx(
             () => CustomSwitchListTile(
+              icon: Broken.screenmirroring,
+              title: "${Language.inst.ENABLE_PICTURE_IN_PICTURE} (${Language.inst.BETA})",
+              value: SettingsController.inst.enablePip.value,
+              onChanged: (isTrue) => SettingsController.inst.save(enablePip: !isTrue),
+            ),
+          ),
+          Obx(
+            () => CustomSwitchListTile(
               icon: Broken.folder_open,
               title: Language.inst.ENABLE_FOLDERS_HIERARCHY,
               value: SettingsController.inst.enableFoldersHierarchy.value,

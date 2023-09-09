@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import 'package:animated_background/animated_background.dart';
 import 'package:get/get.dart';
+import 'package:picture_in_picture/picture_in_picture.dart';
 
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/track.dart';
@@ -118,9 +119,26 @@ class _MiniPlayerSwitchersState extends State<MiniPlayerSwitchers> with SingleTi
               ? const SizedBox(
                   key: Key('emptyminiplayer'),
                 )
-              : SettingsController.inst.useYoutubeMiniplayer.value
-                  ? YoutubeMiniPlayer(key: const Key('ytminiplayer'))
-                  : const NamidaMiniPlayer(key: Key('actualminiplayer')),
+              : Obx(
+                  () => PipWidget(
+                    isEnteringHomeOnSuspending: SettingsController.inst.enablePip.value,
+                    onSuspending: () async {
+                      if (SettingsController.inst.enablePip.value) {
+                        await VideoController.vcontroller.enablePictureInPicture();
+                      }
+                    },
+                    pipChild: Container(
+                      color: Colors.black,
+                      alignment: Alignment.topLeft,
+                      child: VideoController.inst.videoOrArtworkWidget,
+                    ),
+                    child: SettingsController.inst.useYoutubeMiniplayer.value
+                        ? YoutubeMiniPlayer(key: const Key('ytminiplayer'))
+                        : const NamidaMiniPlayer(
+                            key: Key('actualminiplayer'),
+                          ),
+                  ),
+                ),
         );
       },
     );
@@ -671,7 +689,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                             padding: const EdgeInsets.symmetric(vertical: 12.0),
                                             children: [
                                               getQualityButton(
-                                                title: 'check for more',
+                                                title: Language.inst.CHECK_FOR_MORE,
                                                 icon: Broken.chart,
                                                 bgColor: null,
                                                 trailing: isLoadingMore.value ? const LoadingIndicator() : null,

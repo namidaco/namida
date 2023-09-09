@@ -508,8 +508,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: HEAD
-      resolved-ref: "148cf404a6dc77a1347d6d82e23eb907aad056b0"
+      ref: "394a27955890a98a53d4219e912ed22c614543f0"
+      resolved-ref: "394a27955890a98a53d4219e912ed22c614543f0"
       url: "https://github.com/MSOB7YY/getx"
     source: git
     version: "4.6.5"
@@ -694,8 +694,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: cd38c3e9145b6ca3cccc8136056fac38f2b9b4b6
-      resolved-ref: cd38c3e9145b6ca3cccc8136056fac38f2b9b4b6
+      ref: "9f9bd008abfc073cce3d0e6211c447aa02d84e83"
+      resolved-ref: "9f9bd008abfc073cce3d0e6211c447aa02d84e83"
       url: "https://github.com/MSOB7YY/NewPipeExtractor_Dart"
     source: git
     version: "0.0.1"
@@ -851,6 +851,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.14.0"
+  picture_in_picture:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: "53ef5a4d91b1d0df948851359b80fbda342dd29b"
+      resolved-ref: "53ef5a4d91b1d0df948851359b80fbda342dd29b"
+      url: "https://github.com/MSOB7YY/picture_in_picture"
+    source: git
+    version: "0.0.1"
   platform:
     dependency: transitive
     description:
@@ -895,8 +904,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: f4b46745b31cdc2cf0f3d5af1a668a4143b111d3
-      resolved-ref: f4b46745b31cdc2cf0f3d5af1a668a4143b111d3
+      ref: b28b8de5133cef0c07937680e45e1fb580be5004
+      resolved-ref: b28b8de5133cef0c07937680e45e1fb580be5004
       url: "https://github.com/MSOB7YY/queue_manager"
     source: git
     version: "0.0.1"

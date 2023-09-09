@@ -1,13 +1,12 @@
 // ignore_for_file: depend_on_referenced_packages
 
+import 'dart:async';
 import 'dart:io';
 
+import 'package:catcher/catcher.dart';
+import 'package:external_path/external_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import 'package:catcher/catcher.dart';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:external_path/external_path.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
@@ -15,7 +14,9 @@ import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:picture_in_picture/picture_in_picture.dart';
 
+import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -37,8 +38,7 @@ void main() async {
   Paint.enableDithering = true; // for smooth gradient effect.
 
   /// Getting Device info
-  final androidInfo = await DeviceInfoPlugin().androidInfo;
-  kSdkVersion = androidInfo.version.sdkInt;
+  kSdkVersion = await PictureInPicture.getPlatformSdk();
 
   /// Granting Storage Permission.
   /// Requesting Granular media permissions for Android 13 (API 33) doesnt work for some reason.
@@ -72,6 +72,7 @@ void main() async {
     Indexer.inst.prepareTracksFile(),
     Language.initialize(),
   ]);
+  ConnectivityController.inst.initialize();
 
   /// updates values on startup
   Indexer.inst.updateImageSizeInStorage();
@@ -133,7 +134,7 @@ Future<void> _initializeIntenties() async {
 
   Future<void> playFiles(List<SharedFile> files) async {
     if (files.isNotEmpty) {
-      final paths = files.map((e) => e.realPath ?? e.value).whereType<String>();
+      final paths = files.map((e) => e.realPath?.replaceAll('\\', '') ?? e.value).whereType<String>();
       (await playExternalFiles(paths)).executeIfFalse(showErrorPlayingFileSnackbar);
     }
   }
