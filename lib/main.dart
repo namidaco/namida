@@ -32,6 +32,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/main_page_wrapper.dart';
+import 'package:namida/packages/youtube_miniplayer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -133,10 +134,20 @@ Future<void> _initializeIntenties() async {
   }
 
   Future<void> playFiles(List<SharedFile> files) async {
-    if (files.isNotEmpty) {
-      final paths = files.map((e) => e.realPath?.replaceAll('\\', '') ?? e.value).whereType<String>();
-      (await playExternalFiles(paths)).executeIfFalse(showErrorPlayingFileSnackbar);
-    }
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      if (files.isNotEmpty) {
+        final paths = files.map((e) => e.realPath?.replaceAll('\\', '') ?? e.value).whereType<String>();
+        if (paths.isNotEmpty) {
+          final youtubeId = paths.firstOrNull?.getYoutubeID;
+          if (youtubeId != null && youtubeId != '') {
+            await _waitForFirstBuildContext.future;
+            showDownloadVideoBottomSheet(context: _initialContext.value!, videoId: youtubeId);
+          } else {
+            (await playExternalFiles(paths)).executeIfFalse(showErrorPlayingFileSnackbar);
+          }
+        }
+      }
+    });
   }
 
   // -- Recieving Initial Android Shared Intent.
@@ -155,8 +166,9 @@ Future<bool> playExternalFiles(Iterable<String> paths) async {
   if (trs.isNotEmpty) {
     await Player.inst.playOrPause(0, trs, QueueSource.externalFile);
     return true;
+  } else {
+    return false;
   }
-  return false;
 }
 
 Future<bool> requestManageStoragePermission() async {
@@ -178,6 +190,9 @@ Future<bool> requestManageStoragePermission() async {
   return true;
 }
 
+final _initialContext = Rxn<BuildContext>();
+final _waitForFirstBuildContext = Completer<bool>();
+
 class Namida extends StatelessWidget {
   const Namida({super.key});
 
@@ -198,7 +213,12 @@ class Namida extends StatelessWidget {
           builder: (context, widget) {
             return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
           },
-          home: const MainPageWrapper(),
+          home: MainPageWrapper(
+            onContextAvailable: (ctx) {
+              _initialContext.value = ctx;
+              _waitForFirstBuildContext.isCompleted ? null : _waitForFirstBuildContext.complete(true);
+            },
+          ),
         );
       },
     );

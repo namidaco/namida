@@ -25,8 +25,32 @@ import 'package:namida/ui/widgets/selected_tracks_preview.dart';
 import 'package:namida/ui/widgets/settings/customization_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 
-class MainPageWrapper extends StatelessWidget {
-  const MainPageWrapper({super.key});
+class MainPageWrapper extends StatefulWidget {
+  final void Function(BuildContext context) onContextAvailable;
+  const MainPageWrapper({super.key, required this.onContextAvailable});
+
+  @override
+  State<MainPageWrapper> createState() => _MainPageWrapperState();
+}
+
+class _MainPageWrapperState extends State<MainPageWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    widget.onContextAvailable(context);
+  }
+
+  @override
+  void didChangeDependencies() {
+    widget.onContextAvailable(context);
+    super.didChangeDependencies();
+  }
+
+  @override
+  void didUpdateWidget(covariant MainPageWrapper oldWidget) {
+    widget.onContextAvailable(context);
+    super.didUpdateWidget(oldWidget);
+  }
 
   void toggleDrawer() => NamidaNavigator.inst.toggleDrawer();
 
