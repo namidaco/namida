@@ -25,7 +25,7 @@ class BackupAndRestore extends StatelessWidget {
 
   bool _canDoImport() {
     if (JsonToHistoryParser.inst.isParsing.value || HistoryController.inst.isLoadingHistory) {
-      Get.snackbar(Language.inst.NOTE, Language.inst.ANOTHER_PROCESS_IS_RUNNING);
+      Get.snackbar(lang.NOTE, lang.ANOTHER_PROCESS_IS_RUNNING);
       return false;
     }
     return true;
@@ -35,8 +35,8 @@ class BackupAndRestore extends StatelessWidget {
 
   Widget matchAllTracksListTile({required bool active, required void Function() onTap, required bool displayPerfWarning}) {
     return ListTileWithCheckMark(
-      title: Language.inst.MATCH_ALL_TRACKS,
-      subtitle: displayPerfWarning ? '${Language.inst.NOTE}: ${Language.inst.MATCH_ALL_TRACKS_NOTE}' : '',
+      title: lang.MATCH_ALL_TRACKS,
+      subtitle: displayPerfWarning ? '${lang.NOTE}: ${lang.MATCH_ALL_TRACKS_NOTE}' : '',
       active: active,
       onTap: onTap,
     );
@@ -45,8 +45,8 @@ class BackupAndRestore extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
-      title: Language.inst.BACKUP_AND_RESTORE,
-      subtitle: Language.inst.BACKUP_AND_RESTORE_SUBTITLE,
+      title: lang.BACKUP_AND_RESTORE,
+      subtitle: lang.BACKUP_AND_RESTORE_SUBTITLE,
       icon: Broken.refresh_circle,
       child: Column(
         children: [
@@ -55,7 +55,7 @@ class BackupAndRestore extends StatelessWidget {
 
           // -- Create Backup
           CustomListTile(
-            title: Language.inst.CREATE_BACKUP,
+            title: lang.CREATE_BACKUP,
             icon: Broken.box_add,
             trailingRaw: ObxShow(
               showIf: BackupController.inst.isCreatingBackup,
@@ -84,11 +84,11 @@ class BackupAndRestore extends StatelessWidget {
               NamidaNavigator.inst.navigateDialog(
                 dialog: Obx(
                   () => CustomBlurryDialog(
-                    title: Language.inst.CREATE_BACKUP,
+                    title: lang.CREATE_BACKUP,
                     actions: [
                       const CancelButton(),
                       NamidaButton(
-                        text: Language.inst.CREATE_BACKUP,
+                        text: lang.CREATE_BACKUP,
                         onPressed: () {
                           if (SettingsController.inst.backupItemslist.isNotEmpty) {
                             NamidaNavigator.inst.closeDialog();
@@ -102,7 +102,7 @@ class BackupAndRestore extends StatelessWidget {
                       child: SingleChildScrollView(
                         child: Column(
                           children: [
-                            getItemWidget(title: Language.inst.DATABASE, icon: Broken.box_1, items: [
+                            getItemWidget(title: lang.DATABASE, icon: Broken.box_1, items: [
                               AppPaths.TRACKS,
                               AppPaths.TRACKS_STATS,
                               AppPaths.TOTAL_LISTEN_TIME,
@@ -111,49 +111,49 @@ class BackupAndRestore extends StatelessWidget {
                             ]),
                             const SizedBox(height: 12.0),
                             getItemWidget(
-                              title: Language.inst.PLAYLISTS,
+                              title: lang.PLAYLISTS,
                               icon: Broken.music_library_2,
                               items: [AppDirs.PLAYLISTS, AppPaths.FAVOURITES_PLAYLIST],
                             ),
                             const SizedBox(height: 12.0),
                             getItemWidget(
-                              title: Language.inst.HISTORY,
+                              title: lang.HISTORY,
                               icon: Broken.refresh,
                               items: [AppDirs.HISTORY_PLAYLIST],
                             ),
                             const SizedBox(height: 12.0),
                             getItemWidget(
-                              title: Language.inst.SETTINGS,
+                              title: lang.SETTINGS,
                               icon: Broken.setting,
                               items: [AppPaths.SETTINGS],
                             ),
                             const SizedBox(height: 12.0),
                             getItemWidget(
-                              title: Language.inst.LYRICS,
+                              title: lang.LYRICS,
                               icon: Broken.document,
                               items: [AppDirs.LYRICS],
                             ),
                             const SizedBox(height: 12.0),
                             getItemWidget(
-                              title: Language.inst.QUEUES,
+                              title: lang.QUEUES,
                               icon: Broken.driver,
                               items: [AppDirs.QUEUES, AppPaths.LATEST_QUEUE],
                             ),
                             const SizedBox(height: 12.0),
                             getItemWidget(
-                              title: Language.inst.COLOR_PALETTES,
+                              title: lang.COLOR_PALETTES,
                               icon: Broken.colorfilter,
                               items: [AppDirs.PALETTES],
                             ),
                             const SizedBox(height: 12.0),
                             getItemWidget(
-                              title: Language.inst.VIDEO_CACHE,
+                              title: lang.VIDEO_CACHE,
                               icon: Broken.video,
                               items: [AppDirs.VIDEOS_CACHE],
                             ),
                             const SizedBox(height: 12.0),
                             getItemWidget(
-                              title: Language.inst.ARTWORKS,
+                              title: lang.ARTWORKS,
                               icon: Broken.image,
                               items: [AppDirs.ARTWORKS],
                             ),
@@ -169,7 +169,7 @@ class BackupAndRestore extends StatelessWidget {
 
           // -- Restore Backup
           CustomListTile(
-            title: Language.inst.RESTORE_BACKUP,
+            title: lang.RESTORE_BACKUP,
             icon: Broken.back_square,
             trailingRaw: ObxShow(
               showIf: BackupController.inst.isRestoringBackup,
@@ -179,20 +179,20 @@ class BackupAndRestore extends StatelessWidget {
               NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
                   normalTitleStyle: true,
-                  title: Language.inst.RESTORE_BACKUP,
+                  title: lang.RESTORE_BACKUP,
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
                         CustomListTile(
-                          title: Language.inst.AUTOMATIC_BACKUP,
-                          subtitle: Language.inst.AUTOMATIC_BACKUP_SUBTITLE,
+                          title: lang.AUTOMATIC_BACKUP,
+                          subtitle: lang.AUTOMATIC_BACKUP_SUBTITLE,
                           icon: Broken.autobrightness,
                           maxSubtitleLines: 22,
                           onTap: () => BackupController.inst.restoreBackupOnTap(true),
                         ),
                         CustomListTile(
-                          title: Language.inst.MANUAL_BACKUP,
-                          subtitle: Language.inst.MANUAL_BACKUP_SUBTITLE,
+                          title: lang.MANUAL_BACKUP,
+                          subtitle: lang.MANUAL_BACKUP_SUBTITLE,
                           maxSubtitleLines: 22,
                           icon: Broken.hashtag,
                           onTap: () => BackupController.inst.restoreBackupOnTap(false),
@@ -208,7 +208,7 @@ class BackupAndRestore extends StatelessWidget {
           // -- Default Backup Location
           Obx(
             () => CustomListTile(
-              title: Language.inst.DEFAULT_BACKUP_LOCATION,
+              title: lang.DEFAULT_BACKUP_LOCATION,
               icon: Broken.direct_inbox,
               subtitle: SettingsController.inst.defaultBackupLocation.value,
               onTap: () async {
@@ -223,7 +223,7 @@ class BackupAndRestore extends StatelessWidget {
 
           // -- Import Youtube History
           CustomListTile(
-            title: Language.inst.IMPORT_YOUTUBE_HISTORY,
+            title: lang.IMPORT_YOUTUBE_HISTORY,
             leading: StackedIcon(
               baseIcon: Broken.import_2,
               smallChild: ClipRRect(
@@ -249,10 +249,10 @@ class BackupAndRestore extends StatelessWidget {
 
               NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
-                  title: Language.inst.GUIDE,
+                  title: lang.GUIDE,
                   actions: [
                     NamidaButton(
-                      text: Language.inst.CONFIRM,
+                      text: lang.CONFIRM,
                       onPressed: () async {
                         NamidaNavigator.inst.closeDialog();
 
@@ -271,10 +271,10 @@ class BackupAndRestore extends StatelessWidget {
                           DateTime? newestDate;
                           NamidaNavigator.inst.navigateDialog(
                             dialog: CustomBlurryDialog(
-                              title: Language.inst.CONFIGURE,
+                              title: lang.CONFIGURE,
                               actions: [
                                 NamidaButton(
-                                  textWidget: Obx(() => Text(oldestDate.value != null ? Language.inst.IMPORT_TIME_RANGE : Language.inst.IMPORT_ALL)),
+                                  textWidget: Obx(() => Text(oldestDate.value != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
                                   onPressed: () async {
                                     NamidaNavigator.inst.closeDialog();
                                     await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
@@ -293,11 +293,11 @@ class BackupAndRestore extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  getTitleText(Language.inst.SOURCE),
+                                  getTitleText(lang.SOURCE),
                                   Obx(
                                     () => ListTileWithCheckMark(
                                       active: matchYT.value,
-                                      title: Language.inst.YOUTUBE,
+                                      title: lang.YOUTUBE,
                                       onTap: () => matchYT.value = !matchYT.value,
                                     ),
                                   ),
@@ -305,16 +305,16 @@ class BackupAndRestore extends StatelessWidget {
                                   Obx(
                                     () => ListTileWithCheckMark(
                                       active: matchYTMusic.value,
-                                      title: Language.inst.YOUTUBE_MUSIC,
+                                      title: lang.YOUTUBE_MUSIC,
                                       onTap: () => matchYTMusic.value = !matchYTMusic.value,
                                     ),
                                   ),
                                   getDivider(),
-                                  getTitleText(Language.inst.MATCHING_TYPE),
+                                  getTitleText(lang.MATCHING_TYPE),
                                   Obx(
                                     () => ListTileWithCheckMark(
                                       active: !isMatchingTypeLink.value,
-                                      title: [Language.inst.TITLE, Language.inst.ARTIST].join(' & '),
+                                      title: [lang.TITLE, lang.ARTIST].join(' & '),
                                       onTap: () => isMatchingTypeLink.value = !isMatchingTypeLink.value,
                                     ),
                                   ),
@@ -322,7 +322,7 @@ class BackupAndRestore extends StatelessWidget {
                                   Obx(
                                     () => ListTileWithCheckMark(
                                       active: isMatchingTypeLink.value,
-                                      title: Language.inst.LINK,
+                                      title: lang.LINK,
                                       onTap: () => isMatchingTypeLink.value = !isMatchingTypeLink.value,
                                     ),
                                   ),
@@ -353,7 +353,7 @@ class BackupAndRestore extends StatelessWidget {
                     ),
                   ],
                   child: NamidaSelectableAutoLinkText(
-                    text: Language.inst.IMPORT_YOUTUBE_HISTORY_GUIDE.replaceFirst('_TAKEOUT_LINK_', 'https://takeout.google.com'),
+                    text: lang.IMPORT_YOUTUBE_HISTORY_GUIDE.replaceFirst('_TAKEOUT_LINK_', 'https://takeout.google.com'),
                   ),
                 ),
               );
@@ -362,7 +362,7 @@ class BackupAndRestore extends StatelessWidget {
 
           // -- Import last.fm History
           CustomListTile(
-            title: Language.inst.IMPORT_LAST_FM_HISTORY,
+            title: lang.IMPORT_LAST_FM_HISTORY,
             leading: StackedIcon(
               baseIcon: Broken.import_2,
               smallChild: ClipRRect(
@@ -388,10 +388,10 @@ class BackupAndRestore extends StatelessWidget {
 
               NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
-                  title: Language.inst.GUIDE,
+                  title: lang.GUIDE,
                   actions: [
                     NamidaButton(
-                      text: Language.inst.CONFIRM,
+                      text: lang.CONFIRM,
                       onPressed: () async {
                         NamidaNavigator.inst.closeDialog();
 
@@ -404,11 +404,11 @@ class BackupAndRestore extends StatelessWidget {
                           NamidaNavigator.inst.navigateDialog(
                             dialog: CustomBlurryDialog(
                               insetPadding: const EdgeInsets.all(38.0),
-                              title: Language.inst.CONFIGURE,
+                              title: lang.CONFIGURE,
                               actions: [
                                 const CancelButton(),
                                 NamidaButton(
-                                  textWidget: Obx(() => Text(oldestDate.value != null ? Language.inst.IMPORT_TIME_RANGE : Language.inst.IMPORT_ALL)),
+                                  textWidget: Obx(() => Text(oldestDate.value != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
                                   onPressed: () async {
                                     NamidaNavigator.inst.closeDialog();
                                     await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
@@ -450,7 +450,7 @@ class BackupAndRestore extends StatelessWidget {
                     ),
                   ],
                   child: NamidaSelectableAutoLinkText(
-                    text: Language.inst.IMPORT_LAST_FM_HISTORY_GUIDE.replaceFirst('_LASTFM_CSV_LINK_', 'https://benjaminbenben.com/lastfm-to-csv/'),
+                    text: lang.IMPORT_LAST_FM_HISTORY_GUIDE.replaceFirst('_LASTFM_CSV_LINK_', 'https://benjaminbenben.com/lastfm-to-csv/'),
                   ),
                 ),
               );

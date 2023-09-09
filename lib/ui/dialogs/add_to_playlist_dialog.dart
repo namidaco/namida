@@ -29,7 +29,7 @@ void showAddToPlaylistDialog(List<Track> tracks) {
               width: 12.0,
             ),
             Text(
-              Language.inst.ADD_TO_PLAYLIST,
+              lang.ADD_TO_PLAYLIST,
               style: Get.theme.textTheme.displayMedium,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -39,7 +39,7 @@ void showAddToPlaylistDialog(List<Track> tracks) {
       ),
       leftAction: Obx(
         () => Text(
-          "${PlaylistController.inst.playlistsMap.length.formatDecimal()} ${Language.inst.PLAYLISTS}",
+          "${PlaylistController.inst.playlistsMap.length.formatDecimal()} ${lang.PLAYLISTS}",
           style: Get.theme.textTheme.displayMedium,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,

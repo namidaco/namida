@@ -28,12 +28,12 @@ class TrackTileCustomization extends StatelessWidget {
         baseIcon: Broken.brush,
         secondaryIcon: Broken.music_circle,
       ),
-      titleText: Language.inst.TRACK_TILE_CUSTOMIZATION,
+      titleText: lang.TRACK_TILE_CUSTOMIZATION,
       children: [
         Obx(
           () => CustomSwitchListTile(
             icon: Broken.crop,
-            title: Language.inst.FORCE_SQUARED_TRACK_THUMBNAIL,
+            title: lang.FORCE_SQUARED_TRACK_THUMBNAIL,
             onChanged: (value) {
               stg.save(forceSquaredTrackThumbnail: !value);
               if (!value && stg.trackThumbnailSizeinList.toInt() != stg.trackListTileHeight.toInt()) {
@@ -41,11 +41,11 @@ class TrackTileCustomization extends StatelessWidget {
                   dialog: CustomBlurryDialog(
                     normalTitleStyle: true,
                     isWarning: true,
-                    bodyText: Language.inst.FORCE_SQUARED_THUMBNAIL_NOTE,
+                    bodyText: lang.FORCE_SQUARED_THUMBNAIL_NOTE,
                     actions: [
                       const CancelButton(),
                       NamidaButton(
-                        text: Language.inst.CONFIRM,
+                        text: lang.CONFIRM,
                         onPressed: () {
                           stg.save(trackThumbnailSizeinList: stg.trackListTileHeight.value);
                           NamidaNavigator.inst.closeDialog();
@@ -62,11 +62,11 @@ class TrackTileCustomization extends StatelessWidget {
         Obx(
           () => CustomListTile(
             icon: Broken.maximize_3,
-            title: Language.inst.TRACK_THUMBNAIL_SIZE_IN_LIST,
+            title: lang.TRACK_THUMBNAIL_SIZE_IN_LIST,
             trailingText: "${stg.trackThumbnailSizeinList.toInt()}",
             onTap: () {
               showSettingDialogWithTextField(
-                title: Language.inst.TRACK_THUMBNAIL_SIZE_IN_LIST,
+                title: lang.TRACK_THUMBNAIL_SIZE_IN_LIST,
                 trackThumbnailSizeinList: true,
                 iconWidget: const Icon(Broken.maximize_3),
               );
@@ -76,11 +76,11 @@ class TrackTileCustomization extends StatelessWidget {
         Obx(
           () => CustomListTile(
             icon: Broken.pharagraphspacing,
-            title: Language.inst.HEIGHT_OF_TRACK_TILE,
+            title: lang.HEIGHT_OF_TRACK_TILE,
             trailingText: "${stg.trackListTileHeight.toInt()}",
             onTap: () {
               showSettingDialogWithTextField(
-                title: Language.inst.HEIGHT_OF_TRACK_TILE,
+                title: lang.HEIGHT_OF_TRACK_TILE,
                 trackListTileHeight: true,
                 iconWidget: const Icon(Broken.pharagraphspacing),
               );
@@ -91,7 +91,7 @@ class TrackTileCustomization extends StatelessWidget {
           () => CustomSwitchListTile(
             icon: Broken.chart_1,
             rotateIcon: 1,
-            title: Language.inst.DISPLAY_THIRD_ROW_IN_TRACK_TILE,
+            title: lang.DISPLAY_THIRD_ROW_IN_TRACK_TILE,
             onChanged: (_) => stg.save(
               displayThirdRow: !stg.displayThirdRow.value,
             ),
@@ -102,7 +102,7 @@ class TrackTileCustomization extends StatelessWidget {
           () => CustomSwitchListTile(
             icon: Broken.coin,
             rotateIcon: 3,
-            title: Language.inst.DISPLAY_THIRD_ITEM_IN_ROW_IN_TRACK_TILE,
+            title: lang.DISPLAY_THIRD_ITEM_IN_ROW_IN_TRACK_TILE,
             onChanged: (_) => stg.save(
               displayThirdItemInEachRow: !stg.displayThirdItemInEachRow.value,
             ),
@@ -112,7 +112,7 @@ class TrackTileCustomization extends StatelessWidget {
         Obx(
           () => CustomSwitchListTile(
             icon: Broken.heart,
-            title: Language.inst.DISPLAY_FAVOURITE_ICON_IN_TRACK_TILE,
+            title: lang.DISPLAY_FAVOURITE_ICON_IN_TRACK_TILE,
             onChanged: (_) => stg.save(
               displayFavouriteIconInListTile: !stg.displayFavouriteIconInListTile.value,
             ),
@@ -122,10 +122,10 @@ class TrackTileCustomization extends StatelessWidget {
         Obx(
           () => CustomListTile(
             icon: Broken.minus_square,
-            title: Language.inst.TRACK_TILE_ITEMS_SEPARATOR,
+            title: lang.TRACK_TILE_ITEMS_SEPARATOR,
             trailingText: stg.trackTileSeparator.value,
             onTap: () => showSettingDialogWithTextField(
-              title: Language.inst.TRACK_TILE_ITEMS_SEPARATOR,
+              title: lang.TRACK_TILE_ITEMS_SEPARATOR,
               trackTileSeparator: true,
               iconWidget: const Icon(Broken.minus_square),
             ),
@@ -272,7 +272,7 @@ class TrackTileCustomization extends StatelessWidget {
   _showTrackItemsDialog(TrackTilePosition p) {
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
-        title: Language.inst.CHOOSE,
+        title: lang.CHOOSE,
         normalTitleStyle: true,
         insetPadding: const EdgeInsets.all(64.0),
         child: SizedBox(

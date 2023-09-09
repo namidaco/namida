@@ -71,7 +71,7 @@ class AlbumsPage extends StatelessWidget {
                   ),
                   textField: CustomTextFiled(
                     textFieldController: LibraryTab.albums.textSearchController,
-                    textFieldHintText: Language.inst.FILTER_ALBUMS,
+                    textFieldHintText: lang.FILTER_ALBUMS,
                     onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.album),
                   ),
                 ),

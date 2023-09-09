@@ -53,7 +53,7 @@ void showTrackAdvancedDialog({
     dialogBuilder: (theme) => CustomBlurryDialog(
       theme: theme,
       normalTitleStyle: true,
-      title: Language.inst.ADVANCED,
+      title: lang.ADVANCED,
       child: Column(
         children: [
           Opacity(
@@ -62,8 +62,8 @@ void showTrackAdvancedDialog({
               ignoring: !canShowClearDialog,
               child: CustomListTile(
                 passedColor: colorScheme,
-                title: Language.inst.CLEAR,
-                subtitle: Language.inst.CHOOSE_WHAT_TO_CLEAR,
+                title: lang.CLEAR,
+                subtitle: lang.CHOOSE_WHAT_TO_CLEAR,
                 icon: Broken.trash,
                 onTap: () => showTrackClearDialog(tracks, colorScheme),
               ),
@@ -72,7 +72,7 @@ void showTrackAdvancedDialog({
           if (sourcesMap.isNotEmpty)
             CustomListTile(
               passedColor: colorScheme,
-              title: Language.inst.SOURCE,
+              title: lang.SOURCE,
               subtitle: isSingle ? sourcesMap.keys.first.convertToString : sourcesMap.entries.map((e) => '${e.key.convertToString}: ${e.value.formatDecimal()}').join('\n'),
               icon: Broken.attach_circle,
               onTap: () {},
@@ -89,18 +89,18 @@ void showTrackAdvancedDialog({
             () {
               final shouldShow = shouldShowReIndexProgress.value;
               final errors = reIndexedTracksFailed.value;
-              final secondLine = errors > 0 ? '\n${Language.inst.ERROR}: $errors' : '';
+              final secondLine = errors > 0 ? '\n${lang.ERROR}: $errors' : '';
               return CustomListTile(
                 enabled: shouldReIndexEnabled.value,
                 passedColor: colorScheme,
-                title: Language.inst.RE_INDEX,
+                title: lang.RE_INDEX,
                 icon: Broken.direct_inbox,
                 subtitle: shouldShow ? "${reIndexedTracksSuccessful.value}/${tracksUniqued.length}$secondLine" : null,
                 trailing: NamidaInkWell(
                   padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
                   bgColor: theme.cardColor,
                   onTap: () => willUpdateArtwork.value = !willUpdateArtwork.value,
-                  child: Obx(() => Text('${Language.inst.ARTWORK}  ${willUpdateArtwork.value ? '✓' : 'x'}')),
+                  child: Obx(() => Text('${lang.ARTWORK}  ${willUpdateArtwork.value ? '✓' : 'x'}')),
                 ),
                 onTap: () async {
                   await Indexer.inst.reindexTracks(
@@ -126,7 +126,7 @@ void showTrackAdvancedDialog({
           if (source == QueueSource.history && isSingle)
             CustomListTile(
               passedColor: colorScheme,
-              title: Language.inst.REPLACE_ALL_LISTENS_WITH_ANOTHER_TRACK,
+              title: lang.REPLACE_ALL_LISTENS_WITH_ANOTHER_TRACK,
               icon: Broken.convert_card,
               onTap: () async {
                 void showWarningAboutTrackListens(Track trackWillBeReplaced, Track newTrack) {
@@ -139,13 +139,13 @@ void showTrackAdvancedDialog({
                       actions: [
                         const CancelButton(),
                         NamidaButton(
-                            text: Language.inst.CONFIRM,
+                            text: lang.CONFIRM,
                             onPressed: () async {
                               await HistoryController.inst.replaceAllTracksInsideHistory(trackWillBeReplaced, newTrack);
                               NamidaNavigator.inst.closeDialog(3);
                             })
                       ],
-                      bodyText: Language.inst.HISTORY_LISTENS_REPLACE_WARNING
+                      bodyText: lang.HISTORY_LISTENS_REPLACE_WARNING
                           .replaceFirst('_LISTENS_COUNT_', listens.length.formatDecimal())
                           .replaceFirst('_OLD_TRACK_INFO_', '"${trackWillBeReplaced.originalArtist} - ${trackWillBeReplaced.title}"')
                           .replaceFirst('_NEW_TRACK_INFO_', '"${newTrack.originalArtist} - ${newTrack.title}"'),
@@ -162,7 +162,7 @@ void showTrackAdvancedDialog({
           if (isSingle)
             CustomListTile(
               passedColor: colorScheme,
-              title: Language.inst.COLOR_PALETTE,
+              title: lang.COLOR_PALETTE,
               icon: Broken.color_swatch,
               trailing: CircleAvatar(
                 backgroundColor: trackColor.used,
@@ -220,7 +220,7 @@ void _showTrackColorPaletteDialog({
       colorScheme: colorScheme,
       dialogBuilder: (theme) => NamidaColorPickerDialog(
         initialColor: allPaletteColor.lastOrNull ?? Colors.black,
-        doneText: Language.inst.ADD,
+        doneText: lang.ADD,
         onColorChanged: (value) => color = value,
         onDonePressed: () {
           if (color != null) {
@@ -311,16 +311,16 @@ void _showTrackColorPaletteDialog({
     dialogBuilder: (theme) {
       return CustomBlurryDialog(
         normalTitleStyle: true,
-        title: Language.inst.COLOR_PALETTE,
+        title: lang.COLOR_PALETTE,
         leftAction: NamidaIconButton(
-          tooltip: Language.inst.RESTORE_DEFAULTS,
+          tooltip: lang.RESTORE_DEFAULTS,
           onPressed: onRestoreDefaults,
           icon: Broken.refresh,
         ),
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: Language.inst.CONFIRM,
+            text: lang.CONFIRM,
             onPressed: () => onFinalColor(allPaletteColor, finalColorToBeUsed.value),
           ),
         ],
@@ -328,8 +328,8 @@ void _showTrackColorPaletteDialog({
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            getText('- ${Language.inst.COLOR_PALETTE_NOTE_1}'),
-            getText('- ${Language.inst.COLOR_PALETTE_NOTE_2}\n'),
+            getText('- ${lang.COLOR_PALETTE_NOTE_1}'),
+            getText('- ${lang.COLOR_PALETTE_NOTE_2}\n'),
 
             // --- Removed Colors
             Obx(
@@ -337,7 +337,7 @@ void _showTrackColorPaletteDialog({
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        getText(Language.inst.REMOVED),
+                        getText(lang.REMOVED),
                         const SizedBox(height: 8.0),
                         getPalettesWidget(
                           palette: removedColors,
@@ -356,7 +356,7 @@ void _showTrackColorPaletteDialog({
             ),
 
             // --- Actual Palette
-            getText(Language.inst.PALETTE),
+            getText(lang.PALETTE),
             const SizedBox(height: 8.0),
             Obx(
               () => getPalettesWidget(
@@ -393,17 +393,17 @@ void _showTrackColorPaletteDialog({
                 runSpacing: 6.0,
                 children: [
                   mixWidget(
-                    title: Language.inst.PALETTE_MIX,
+                    title: lang.PALETTE_MIX,
                     colors: trackColor.palette,
                   ),
                   if (didChangeOriginalPalette.value)
                     mixWidget(
-                      title: Language.inst.PALETTE_NEW_MIX,
+                      title: lang.PALETTE_NEW_MIX,
                       colors: allPaletteColor,
                     ),
                   if (selectedColors.isNotEmpty)
                     mixWidget(
-                      title: Language.inst.PALETTE_SELECTED_MIX,
+                      title: lang.PALETTE_SELECTED_MIX,
                       colors: selectedColors,
                     ),
                 ],
@@ -415,7 +415,7 @@ void _showTrackColorPaletteDialog({
             ),
             Row(
               children: [
-                getText('${Language.inst.USED} : ', style: Get.textTheme.displayMedium),
+                getText('${lang.USED} : ', style: Get.textTheme.displayMedium),
                 const SizedBox(width: 12.0),
                 Expanded(
                   child: Obx(
@@ -461,7 +461,7 @@ void showLibraryTracksChooseDialog({
   NamidaNavigator.inst.navigateDialog(
     colorScheme: colorScheme,
     dialogBuilder: (theme) => CustomBlurryDialog(
-      title: Language.inst.CHOOSE,
+      title: lang.CHOOSE,
       normalTitleStyle: true,
       contentPadding: EdgeInsets.zero,
       insetPadding: const EdgeInsets.all(32.0),
@@ -470,7 +470,7 @@ void showLibraryTracksChooseDialog({
         Obx(
           () => NamidaButton(
             enabled: selectedTrack.value != null,
-            text: Language.inst.CONFIRM,
+            text: lang.CONFIRM,
             onPressed: () => onChoose(selectedTrack.value!),
           ),
         )
@@ -490,7 +490,7 @@ void showLibraryTracksChooseDialog({
                     child: CustomTextFiled(
                       focusNode: focusNode,
                       textFieldController: searchController,
-                      textFieldHintText: Language.inst.SEARCH,
+                      textFieldHintText: lang.SEARCH,
                       onTextFieldValueChanged: (value) {
                         final matched = allTracksInLibrary.where((element) {
                           final titleMatch = element.title.cleanUpForComparison.contains(value);

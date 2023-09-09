@@ -21,13 +21,13 @@ class MiniplayerCustomization extends StatelessWidget {
         baseIcon: Broken.brush,
         secondaryIcon: Broken.external_drive,
       ),
-      titleText: Language.inst.MINIPLAYER_CUSTOMIZATION,
+      titleText: lang.MINIPLAYER_CUSTOMIZATION,
       children: [
         Obx(
           () => CustomSwitchListTile(
             icon: Broken.slider_horizontal_1,
-            title: Language.inst.ENABLE_PARTY_MODE,
-            subtitle: Language.inst.ENABLE_PARTY_MODE_SUBTITLE,
+            title: lang.ENABLE_PARTY_MODE,
+            subtitle: lang.ENABLE_PARTY_MODE_SUBTITLE,
             onChanged: (value) {
               // disable
               if (value) {
@@ -64,9 +64,9 @@ class MiniplayerCustomization extends StatelessWidget {
                                   title: '!!',
                                   bodyText: "EH? YOU DON'T WANT TO SUPPORT?",
                                   actions: [
-                                    NamidaSupportButton(title: Language.inst.YES),
+                                    NamidaSupportButton(title: lang.YES),
                                     NamidaButton(
-                                      text: Language.inst.NO,
+                                      text: lang.NO,
                                       onPressed: () {
                                         NamidaNavigator.inst.closeDialog();
                                         NamidaNavigator.inst.navigateDialog(
@@ -75,14 +75,14 @@ class MiniplayerCustomization extends StatelessWidget {
                                             bodyText: 'hidoii ಥ_ಥ here use it as much as u can, dw im not upset or anything ^^, or am i?',
                                             actions: [
                                               NamidaButton(
-                                                text: Language.inst.UNLOCK.toUpperCase(),
+                                                text: lang.UNLOCK.toUpperCase(),
                                                 onPressed: () {
                                                   NamidaNavigator.inst.closeDialog();
                                                   SettingsController.inst.save(enablePartyModeInMiniplayer: true);
                                                 },
                                               ),
                                               NamidaButton(
-                                                text: Language.inst.SUPPORT.toUpperCase(),
+                                                text: lang.SUPPORT.toUpperCase(),
                                                 onPressed: () {
                                                   NamidaNavigator.inst.closeDialog();
                                                   launchUrlString(k_NAMIDA_SUPPORT_LINK);
@@ -113,7 +113,7 @@ class MiniplayerCustomization extends StatelessWidget {
           () => CustomSwitchListTile(
             enabled: SettingsController.inst.enablePartyModeInMiniplayer.value,
             icon: Broken.colors_square,
-            title: Language.inst.EDGE_COLORS_SWITCHING,
+            title: lang.EDGE_COLORS_SWITCHING,
             onChanged: (value) {
               SettingsController.inst.save(enablePartyModeColorSwap: !value);
             },
@@ -123,7 +123,7 @@ class MiniplayerCustomization extends StatelessWidget {
         Obx(
           () => CustomSwitchListTile(
             icon: Broken.buy_crypto,
-            title: Language.inst.ENABLE_MINIPLAYER_PARTICLES,
+            title: lang.ENABLE_MINIPLAYER_PARTICLES,
             onChanged: (value) => SettingsController.inst.save(enableMiniplayerParticles: !value),
             value: SettingsController.inst.enableMiniplayerParticles.value,
           ),
@@ -131,7 +131,7 @@ class MiniplayerCustomization extends StatelessWidget {
         Obx(
           () => CustomListTile(
             icon: Broken.flash,
-            title: Language.inst.ANIMATING_THUMBNAIL_INTENSITY,
+            title: lang.ANIMATING_THUMBNAIL_INTENSITY,
             trailing: NamidaWheelSlider(
               totalCount: 25,
               initValue: SettingsController.inst.animatingThumbnailIntensity.value,
@@ -146,8 +146,8 @@ class MiniplayerCustomization extends StatelessWidget {
         Obx(
           () => CustomSwitchListTile(
             icon: Broken.arrange_circle_2,
-            title: Language.inst.ANIMATING_THUMBNAIL_INVERSED,
-            subtitle: Language.inst.ANIMATING_THUMBNAIL_INVERSED_SUBTITLE,
+            title: lang.ANIMATING_THUMBNAIL_INVERSED,
+            subtitle: lang.ANIMATING_THUMBNAIL_INVERSED_SUBTITLE,
             onChanged: (value) {
               SettingsController.inst.save(animatingThumbnailInversed: !value);
             },
@@ -157,7 +157,7 @@ class MiniplayerCustomization extends StatelessWidget {
         Obx(
           () => CustomListTile(
             icon: Broken.sound,
-            title: Language.inst.WAVEFORM_BARS_COUNT,
+            title: lang.WAVEFORM_BARS_COUNT,
             trailing: SizedBox(
               width: 80,
               child: Column(
@@ -180,7 +180,7 @@ class MiniplayerCustomization extends StatelessWidget {
         Obx(
           () => CustomSwitchListTile(
             icon: Broken.text_block,
-            title: Language.inst.DISPLAY_AUDIO_INFO_IN_MINIPLAYER,
+            title: lang.DISPLAY_AUDIO_INFO_IN_MINIPLAYER,
             onChanged: (value) => SettingsController.inst.save(displayAudioInfoMiniplayer: !value),
             value: SettingsController.inst.displayAudioInfoMiniplayer.value,
           ),

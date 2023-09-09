@@ -104,13 +104,13 @@ extension TracksUtils on List<Track> {
 }
 
 extension DisplayKeywords on int {
-  String get displayTrackKeyword => displayKeyword(Language.inst.TRACK, Language.inst.TRACKS);
-  String get displayDayKeyword => displayKeyword(Language.inst.DAY, Language.inst.DAYS);
-  String get displayAlbumKeyword => displayKeyword(Language.inst.ALBUM, Language.inst.ALBUMS);
-  String get displayArtistKeyword => displayKeyword(Language.inst.ARTIST, Language.inst.ARTISTS);
-  String get displayGenreKeyword => displayKeyword(Language.inst.GENRE, Language.inst.GENRES);
-  String get displayFolderKeyword => displayKeyword(Language.inst.FOLDER, Language.inst.FOLDERS);
-  String get displayPlaylistKeyword => displayKeyword(Language.inst.PLAYLIST, Language.inst.PLAYLISTS);
+  String get displayTrackKeyword => displayKeyword(lang.TRACK, lang.TRACKS);
+  String get displayDayKeyword => displayKeyword(lang.DAY, lang.DAYS);
+  String get displayAlbumKeyword => displayKeyword(lang.ALBUM, lang.ALBUMS);
+  String get displayArtistKeyword => displayKeyword(lang.ARTIST, lang.ARTISTS);
+  String get displayGenreKeyword => displayKeyword(lang.GENRE, lang.GENRES);
+  String get displayFolderKeyword => displayKeyword(lang.FOLDER, lang.FOLDERS);
+  String get displayPlaylistKeyword => displayKeyword(lang.PLAYLIST, lang.PLAYLISTS);
 }
 
 extension YearDateFormatted on int {
@@ -194,10 +194,10 @@ extension FavouriteTrack on Track {
 }
 
 extension PLNAME on String {
-  String translatePlaylistName() => replaceFirst(k_PLAYLIST_NAME_AUTO_GENERATED, Language.inst.AUTO_GENERATED)
-      .replaceFirst(k_PLAYLIST_NAME_FAV, Language.inst.FAVOURITES)
-      .replaceFirst(k_PLAYLIST_NAME_HISTORY, Language.inst.HISTORY)
-      .replaceFirst(k_PLAYLIST_NAME_MOST_PLAYED, Language.inst.MOST_PLAYED);
+  String translatePlaylistName() => replaceFirst(k_PLAYLIST_NAME_AUTO_GENERATED, lang.AUTO_GENERATED)
+      .replaceFirst(k_PLAYLIST_NAME_FAV, lang.FAVOURITES)
+      .replaceFirst(k_PLAYLIST_NAME_HISTORY, lang.HISTORY)
+      .replaceFirst(k_PLAYLIST_NAME_MOST_PLAYED, lang.MOST_PLAYED);
 }
 
 extension TRACKPLAYMODE on TrackPlayMode {

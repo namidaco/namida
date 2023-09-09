@@ -51,7 +51,7 @@ class FoldersPage extends StatelessWidget {
                           title: Obx(
                             () => Text(
                               //todo .formatPath()
-                              Folders.inst.currentFolder.value?.path ?? Language.inst.HOME,
+                              Folders.inst.currentFolder.value?.path ?? lang.HOME,
                               style: context.textTheme.displaySmall,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -62,7 +62,7 @@ class FoldersPage extends StatelessWidget {
                             () {
                               final pathOfDefault = Folders.inst.isHome.value ? '' : Folders.inst.currentFolder.value?.path;
                               return NamidaIconButton(
-                                tooltip: Language.inst.SET_AS_DEFAULT,
+                                tooltip: lang.SET_AS_DEFAULT,
                                 icon: SettingsController.inst.defaultFolderStartupLocation.value == pathOfDefault ? Broken.archive_tick : Broken.save_2,
                                 iconSize: 22.0,
                                 onPressed: () => SettingsController.inst.save(
@@ -131,7 +131,7 @@ class FoldersPage extends StatelessWidget {
                           leading: iconWidget,
                           title: Obx(
                             () => Text(
-                              Folders.inst.currentFolder.value?.path.formatPath() ?? Language.inst.HOME,
+                              Folders.inst.currentFolder.value?.path.formatPath() ?? lang.HOME,
                               style: context.textTheme.displaySmall,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,

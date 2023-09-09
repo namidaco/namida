@@ -51,12 +51,12 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
     dialog: Form(
       key: formKey,
       child: CustomBlurryDialog(
-        title: Language.inst.SET_YOUTUBE_LINK,
+        title: lang.SET_YOUTUBE_LINK,
         contentPadding: const EdgeInsets.all(12.0).add(const EdgeInsets.only(top: 12.0)),
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: Language.inst.SAVE,
+            text: lang.SAVE,
             onPressed: () async {
               if (formKey.currentState!.validate()) {
                 await _updateTracksMetadata(
@@ -74,14 +74,14 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
         child: CustomTagTextField(
           controller: controller,
           hintText: ytlink.overflow,
-          labelText: Language.inst.LINK,
+          labelText: lang.LINK,
           keyboardType: TextInputType.url,
           validator: (value) {
             if (value!.isEmpty) {
-              return Language.inst.PLEASE_ENTER_A_NAME;
+              return lang.PLEASE_ENTER_A_NAME;
             }
             if ((kYoutubeRegex.firstMatch(value) ?? '') == '') {
-              return Language.inst.PLEASE_ENTER_A_LINK_SUBTITLE;
+              return lang.PLEASE_ENTER_A_LINK_SUBTITLE;
             }
             return null;
           },
@@ -92,7 +92,7 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
 }
 
 Widget get _getKeepDatesWidget => NamidaIconButton(
-      tooltip: Language.inst.KEEP_FILE_DATES,
+      tooltip: lang.KEEP_FILE_DATES,
       icon: SettingsController.inst.editTagsKeepFileDates.value ? Broken.document_code_2 : Broken.calendar_edit,
       onPressed: () {
         SettingsController.inst.save(editTagsKeepFileDates: !SettingsController.inst.editTagsKeepFileDates.value);
@@ -115,7 +115,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
 
   final info = await tagger.readAllData(path: track.path);
   if (info == null) {
-    Get.snackbar(Language.inst.ERROR, Language.inst.METADATA_READ_FAILED);
+    Get.snackbar(lang.ERROR, lang.METADATA_READ_FAILED);
     return;
   }
 
@@ -174,7 +174,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
       normalTitleStyle: true,
       scrollable: false,
       icon: Broken.edit,
-      title: Language.inst.EDIT_TAGS,
+      title: lang.EDIT_TAGS,
       trailingWidgets: [
         _getKeepDatesWidget,
         NamidaIconButton(
@@ -186,7 +186,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
             NamidaNavigator.inst.navigateDialog(
               scale: 0.94,
               dialog: CustomBlurryDialog(
-                title: Language.inst.TAG_FIELDS,
+                title: lang.TAG_FIELDS,
                 child: SizedBox(
                   width: Get.width,
                   height: Get.height * 0.7,
@@ -194,7 +194,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 6.0),
-                      Text('${Language.inst.ACTIVE} (${Language.inst.REORDERABLE})', style: Get.textTheme.displayMedium),
+                      Text('${lang.ACTIVE} (${lang.REORDERABLE})', style: Get.textTheme.displayMedium),
                       const SizedBox(height: 6.0),
                       Expanded(
                         child: Obx(
@@ -237,7 +237,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                         ),
                       ),
                       const SizedBox(height: 12.0),
-                      Text(Language.inst.NON_ACTIVE, style: Get.textTheme.displayMedium),
+                      Text(lang.NON_ACTIVE, style: Get.textTheme.displayMedium),
                       const SizedBox(height: 6.0),
                       Expanded(
                         child: Obx(
@@ -295,7 +295,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
               width: 8.0,
             ),
             Text(
-              Language.inst.REMOVE_WHITESPACES,
+              lang.REMOVE_WHITESPACES,
               style: Get.textTheme.displaySmall,
             ),
           ],
@@ -306,7 +306,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
           () => NamidaButton(
             enabled: canEditTags.value,
             icon: Broken.pen_add,
-            text: Language.inst.SAVE,
+            text: lang.SAVE,
             onPressed: () async {
               await _updateTracksMetadata(
                 tagger: tagger,
@@ -316,7 +316,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                 trimWhiteSpaces: trimWhiteSpaces.value,
                 onEdit: (didUpdate, track) {
                   if (!didUpdate) {
-                    Get.snackbar(Language.inst.METADATA_EDIT_FAILED, Language.inst.METADATA_EDIT_FAILED_SUBTITLE);
+                    Get.snackbar(lang.METADATA_EDIT_FAILED, lang.METADATA_EDIT_FAILED_SUBTITLE);
                   }
                 },
               );
@@ -441,7 +441,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                     const Icon(Broken.magicpen, size: 14.0),
                     const SizedBox(width: 4.0),
                     Text(
-                      "${Language.inst.AUTO_EXTRACT_TAGS_FROM_FILENAME} ${didAutoExtractFromFilename.value ? '✓' : ''}",
+                      "${lang.AUTO_EXTRACT_TAGS_FROM_FILENAME} ${didAutoExtractFromFilename.value ? '✓' : ''}",
                       style: Get.textTheme.displaySmall?.copyWith(
                         decoration: TextDecoration.underline,
                         decorationStyle: TextDecorationStyle.dashed,
@@ -546,7 +546,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
         child: Text(
-          Language.inst.MULTIPLE_TRACKS_TAGS_EDIT_NOTE,
+          lang.MULTIPLE_TRACKS_TAGS_EDIT_NOTE,
           style: Get.textTheme.displayMedium,
         ),
       ),
@@ -631,29 +631,29 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
       normalTitleStyle: true,
       scrollable: false,
       icon: Broken.edit,
-      title: Language.inst.EDIT_TAGS,
+      title: lang.EDIT_TAGS,
       trailingWidgets: [
         _getKeepDatesWidget,
       ],
       actions: [
         NamidaButton(
           icon: Broken.pen_add,
-          text: Language.inst.SAVE,
+          text: lang.SAVE,
           onPressed: () {
             NamidaNavigator.inst.navigateDialog(
               dialog: CustomBlurryDialog(
-                title: Language.inst.NOTE,
+                title: lang.NOTE,
                 insetPadding: const EdgeInsets.all(42.0),
                 contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
                 isWarning: true,
                 normalTitleStyle: true,
                 actions: [
                   NamidaButton(
-                    text: Language.inst.CANCEL,
+                    text: lang.CANCEL,
                     onPressed: () => NamidaNavigator.inst.closeDialog(),
                   ),
                   NamidaButton(
-                    text: Language.inst.CONFIRM,
+                    text: lang.CONFIRM,
                     onPressed: () async {
                       NamidaNavigator.inst.closeDialog();
                       if (trimWhiteSpaces.value) {
@@ -669,11 +669,11 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                         NamidaNavigator.inst.navigateDialog(
                           dialog: CustomBlurryDialog(
                             contentPadding: EdgeInsets.zero,
-                            title: Language.inst.FAILED_EDITS,
+                            title: lang.FAILED_EDITS,
                             actions: [
                               NamidaButton(
                                 onPressed: NamidaNavigator.inst.closeDialog,
-                                text: Language.inst.CONFIRM,
+                                text: lang.CONFIRM,
                               )
                             ],
                             child: SizedBox(
@@ -709,7 +709,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                         tapToDismiss: false,
                         dialog: Obx(
                           () => CustomBlurryDialog(
-                            title: Language.inst.PROGRESS,
+                            title: lang.PROGRESS,
                             normalTitleStyle: true,
                             trailingWidgets: [
                               NamidaIconButton(
@@ -721,7 +721,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                               Obx(
                                 () => NamidaButton(
                                   enabled: finishedEditing.value,
-                                  text: Language.inst.DONE,
+                                  text: lang.DONE,
                                   onPressed: () => NamidaNavigator.inst.closeDialog(),
                                 ),
                               )
@@ -731,18 +731,18 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  getText('${Language.inst.SUCCEEDED}: ${successfullEdits.value}'),
+                                  getText('${lang.SUCCEEDED}: ${successfullEdits.value}'),
                                   const SizedBox(height: 8.0),
                                   Obx(
                                     () => Row(
                                       children: [
-                                        getText('${Language.inst.FAILED}: ${failedEditsTracks.length}'),
+                                        getText('${lang.FAILED}: ${failedEditsTracks.length}'),
                                         const SizedBox(width: 4.0),
                                         if (failedEditsTracks.isNotEmpty)
                                           GestureDetector(
                                             onTap: _showFailedTracksDialogs,
                                             child: getText(
-                                              Language.inst.CHECK_LIST,
+                                              lang.CHECK_LIST,
                                               style: Get.textTheme.displaySmall?.copyWith(
                                                 color: Get.theme.colorScheme.secondary,
                                                 decoration: TextDecoration.underline,
@@ -754,7 +754,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                     ),
                                   ),
                                   const SizedBox(height: 8.0),
-                                  getText('${Language.inst.UPDATING} ${updatingLibrary.value}'),
+                                  getText('${lang.UPDATING} ${updatingLibrary.value}'),
                                   const SizedBox(height: 8.0),
                                 ],
                               ),
@@ -781,7 +781,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                       );
 
                       if (failedEditsTracks.isNotEmpty) {
-                        Get.snackbar('${Language.inst.METADATA_EDIT_FAILED} (${failedEditsTracks.length})', Language.inst.METADATA_EDIT_FAILED_SUBTITLE);
+                        Get.snackbar('${lang.METADATA_EDIT_FAILED} (${failedEditsTracks.length})', lang.METADATA_EDIT_FAILED_SUBTITLE);
                       }
                       updatingLibrary.value = '✓';
                       finishedEditing.value = true;
@@ -818,7 +818,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
               width: 8.0,
             ),
             Text(
-              Language.inst.REMOVE_WHITESPACES,
+              lang.REMOVE_WHITESPACES,
               style: Get.textTheme.displaySmall,
             ),
           ],
@@ -832,7 +832,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                   onPressed: () {
                     NamidaNavigator.inst.navigateDialog(
                       dialog: CustomBlurryDialog(
-                        title: Language.inst.NOTE,
+                        title: lang.NOTE,
                         insetPadding: const EdgeInsets.all(42.0),
                         contentPadding: EdgeInsets.zero,
                         child: toBeEditedTracksColumn,
@@ -906,12 +906,12 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                       onPressed: () {
                                         NamidaNavigator.inst.navigateDialog(
                                           dialog: CustomBlurryDialog(
-                                            title: Language.inst.NOTE,
+                                            title: lang.NOTE,
                                             insetPadding: const EdgeInsets.all(42.0),
                                             contentPadding: EdgeInsets.zero,
                                             actions: [
                                               NamidaButton(
-                                                text: Language.inst.CONFIRM,
+                                                text: lang.CONFIRM,
                                                 onPressed: NamidaNavigator.inst.closeDialog,
                                               )
                                             ],
@@ -930,7 +930,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                   SizedBox(
                                     width: Get.width,
                                     child: NamidaButton(
-                                      text: Language.inst.EDIT_ARTWORK,
+                                      text: lang.EDIT_ARTWORK,
                                       onPressed: () async {
                                         final pickedFile = await FilePicker.platform.pickFiles(type: FileType.image);
                                         final path = pickedFile?.files.first.path ?? '';
@@ -985,9 +985,9 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                         ? RichText(
                             text: TextSpan(
                               children: [
-                                TextSpan(text: "${Language.inst.WARNING}: ", style: Get.textTheme.displayMedium),
+                                TextSpan(text: "${lang.WARNING}: ", style: Get.textTheme.displayMedium),
                                 TextSpan(
-                                  text: Language.inst.EMPTY_NON_MEANINGFUL_TAG_FIELDS,
+                                  text: lang.EMPTY_NON_MEANINGFUL_TAG_FIELDS,
                                   style: Get.textTheme.displaySmall,
                                 ),
                               ],
@@ -1053,7 +1053,7 @@ class CustomTagTextField extends StatelessWidget {
           label: labelText != ''
               ? Obx(() {
                   final reallyChanged = (didChange.value || (didEditField?.value ?? false));
-                  return Text('$labelText ${reallyChanged ? '(${Language.inst.CHANGED})' : ''}');
+                  return Text('$labelText ${reallyChanged ? '(${lang.CHANGED})' : ''}');
                 })
               : null,
           floatingLabelBehavior: FloatingLabelBehavior.always,

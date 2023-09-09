@@ -69,7 +69,7 @@ class ArtistsPage extends StatelessWidget {
                   ),
                   textField: CustomTextFiled(
                     textFieldController: LibraryTab.artists.textSearchController,
-                    textFieldHintText: Language.inst.FILTER_ARTISTS,
+                    textFieldHintText: lang.FILTER_ARTISTS,
                     onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.artist),
                   ),
                 ),

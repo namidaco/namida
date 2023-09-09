@@ -145,7 +145,7 @@ class NamidaSearchBar extends StatelessWidget {
       enableKeyboardFocus: true,
       isOriginalAnimation: false,
       textEditingController: ScrollSearchController.inst.searchTextEditingController,
-      hintText: Language.inst.SEARCH,
+      hintText: lang.SEARCH,
       searchBoxWidth: context.width / 1.2,
       buttonColour: Colors.transparent,
       enableBoxShadow: false,

@@ -65,7 +65,7 @@ class JsonToHistoryParser {
         normalTitleStyle: true,
         titleWidgetInPadding: Obx(
           () {
-            final title = '${isParsing.value ? Language.inst.EXTRACTING_INFO : Language.inst.DONE} ($parsedProgressPercentage)';
+            final title = '${isParsing.value ? lang.EXTRACTING_INFO : lang.DONE} ($parsedProgressPercentage)';
             return Text(
               "$title ${isParsing.value ? '' : ' ✓'}",
               style: Get.textTheme.displayLarge,
@@ -74,7 +74,7 @@ class JsonToHistoryParser {
         ),
         actions: [
           TextButton(
-            child: Text(Language.inst.CONFIRM),
+            child: Text(lang.CONFIRM),
             onPressed: () {
               _hideParsingDialog();
               NamidaNavigator.inst.closeDialog();
@@ -86,11 +86,11 @@ class JsonToHistoryParser {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Obx(() => getTextWidget('${Language.inst.LOADING_FILE}... ${isLoadingFile.value ? '' : Language.inst.DONE}')),
+              Obx(() => getTextWidget('${lang.LOADING_FILE}... ${isLoadingFile.value ? '' : lang.DONE}')),
               const SizedBox(height: 10.0),
-              Obx(() => getTextWidget('$parsedProgress ${Language.inst.PARSED}')),
+              Obx(() => getTextWidget('$parsedProgress ${lang.PARSED}')),
               const SizedBox(height: 10.0),
-              Obx(() => getTextWidget('$addedHistoryJson ${Language.inst.ADDED}')),
+              Obx(() => getTextWidget('$addedHistoryJson ${lang.ADDED}')),
               const SizedBox(height: 4.0),
               if (dateText != '') ...[
                 getTextWidget(dateText, style: Get.textTheme.displaySmall),
@@ -99,9 +99,7 @@ class JsonToHistoryParser {
               const SizedBox(height: 4.0),
               Obx(() {
                 final shouldShow = currentParsingSource.value == TrackSource.youtube || currentParsingSource.value == TrackSource.youtubeMusic;
-                return shouldShow
-                    ? getTextWidget('${Language.inst.STATS}: ${_updatingYoutubeStatsDirectoryProgress.value}/${_updatingYoutubeStatsDirectoryTotal.value}')
-                    : const SizedBox();
+                return shouldShow ? getTextWidget('${lang.STATS}: ${_updatingYoutubeStatsDirectoryProgress.value}/${_updatingYoutubeStatsDirectoryTotal.value}') : const SizedBox();
               }),
             ],
           ),
@@ -136,7 +134,7 @@ class JsonToHistoryParser {
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         normalTitleStyle: true,
-        title: Language.inst.MISSING_ENTRIES,
+        title: lang.MISSING_ENTRIES,
         child: SizedBox(
           width: Get.width,
           height: Get.height * 0.6,
@@ -147,7 +145,7 @@ class JsonToHistoryParser {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
-                    Language.inst.HISTORY_IMPORT_MISSING_ENTRIES_NOTE,
+                    lang.HISTORY_IMPORT_MISSING_ENTRIES_NOTE,
                     style: Get.textTheme.displaySmall,
                   ),
                 ),

@@ -70,7 +70,7 @@ class MainPageWrapper extends StatelessWidget {
                     ),
                     NamidaDrawerListTile(
                       enabled: false,
-                      title: Language.inst.QUEUES,
+                      title: lang.QUEUES,
                       icon: Broken.driver,
                       onTap: () {
                         NamidaNavigator.inst.navigateTo(const QueuesPage());
@@ -79,7 +79,7 @@ class MainPageWrapper extends StatelessWidget {
                     ),
                     NamidaDrawerListTile(
                       enabled: false,
-                      title: Language.inst.YOUTUBE,
+                      title: lang.YOUTUBE,
                       icon: Broken.video_square,
                       onTap: () {
                         YoutubeController.inst.prepareHomeFeed();
@@ -103,7 +103,7 @@ class MainPageWrapper extends StatelessWidget {
             NamidaDrawerListTile(
               margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 12.0),
               enabled: false,
-              title: Language.inst.SLEEP_TIMER,
+              title: lang.SLEEP_TIMER,
               icon: Broken.timer_1,
               onTap: () {
                 toggleDrawer();
@@ -111,7 +111,7 @@ class MainPageWrapper extends StatelessWidget {
                 final tracks = Player.inst.sleepAfterTracks.obs;
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
-                    title: Language.inst.SLEEP_AFTER,
+                    title: lang.SLEEP_AFTER,
                     icon: Broken.timer_1,
                     normalTitleStyle: true,
                     actions: [
@@ -120,7 +120,7 @@ class MainPageWrapper extends StatelessWidget {
                         () => Player.inst.enableSleepAfterMins || Player.inst.enableSleepAfterTracks
                             ? NamidaButton(
                                 icon: Broken.timer_pause,
-                                text: Language.inst.STOP,
+                                text: lang.STOP,
                                 onPressed: () {
                                   Player.inst.resetSleepAfterTimer();
                                   NamidaNavigator.inst.closeDialog();
@@ -128,7 +128,7 @@ class MainPageWrapper extends StatelessWidget {
                               )
                             : NamidaButton(
                                 icon: Broken.timer_start,
-                                text: Language.inst.START,
+                                text: lang.START,
                                 onPressed: () {
                                   if (minutes.value > 0 || tracks.value > 0) {
                                     Player.inst.updateSleepTimerValues(
@@ -159,12 +159,12 @@ class MainPageWrapper extends StatelessWidget {
                                 itemSize: 6,
                                 onValueChanged: (val) => minutes.value = val,
                                 text: "${minutes.value}m",
-                                topText: Language.inst.MINUTES.capitalizeFirst,
+                                topText: lang.MINUTES.capitalizeFirst,
                                 textPadding: 8.0,
                               ),
                             ),
                             Text(
-                              Language.inst.OR,
+                              lang.OR,
                               style: context.textTheme.displayMedium,
                             ),
                             // tracks
@@ -174,8 +174,8 @@ class MainPageWrapper extends StatelessWidget {
                                 initValue: tracks.value,
                                 itemSize: 6,
                                 onValueChanged: (val) => tracks.value = val,
-                                text: "${tracks.value} ${Language.inst.TRACK}",
-                                topText: Language.inst.TRACKS,
+                                text: "${tracks.value} ${lang.TRACK}",
+                                topText: lang.TRACKS,
                                 textPadding: 8.0,
                               ),
                             ),
@@ -202,7 +202,7 @@ class MainPageWrapper extends StatelessWidget {
                     onTap: () {
                       NamidaNavigator.inst.navigateTo(
                         SettingsSubPage(
-                          title: Language.inst.CUSTOMIZATIONS,
+                          title: lang.CUSTOMIZATIONS,
                           child: const CustomizationSettings(),
                         ),
                       );

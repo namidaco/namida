@@ -70,10 +70,10 @@ class SearchPage extends StatelessWidget {
                         if (SearchSortController.inst.albumSearchTemp.isNotEmpty) ...[
                           SliverToBoxAdapter(
                             child: SearchPageTitleRow(
-                              title: '${Language.inst.ALBUMS} • ${SearchSortController.inst.albumSearchTemp.length}',
+                              title: '${lang.ALBUMS} • ${SearchSortController.inst.albumSearchTemp.length}',
                               icon: Broken.music_dashboard,
                               buttonIcon: Broken.category,
-                              buttonText: Language.inst.VIEW_ALL,
+                              buttonText: lang.VIEW_ALL,
                               onPressed: () => NamidaNavigator.inst.navigateTo(const AlbumSearchResultsPage()),
                             ),
                           ),
@@ -107,10 +107,10 @@ class SearchPage extends StatelessWidget {
                         if (SearchSortController.inst.artistSearchTemp.isNotEmpty) ...[
                           SliverToBoxAdapter(
                             child: SearchPageTitleRow(
-                              title: '${Language.inst.ARTISTS} • ${SearchSortController.inst.artistSearchTemp.length}',
+                              title: '${lang.ARTISTS} • ${SearchSortController.inst.artistSearchTemp.length}',
                               icon: Broken.profile_2user,
                               buttonIcon: Broken.category,
-                              buttonText: Language.inst.VIEW_ALL,
+                              buttonText: lang.VIEW_ALL,
                               onPressed: () => NamidaNavigator.inst.navigateTo(const ArtistSearchResultsPage()),
                             ),
                           ),
@@ -148,9 +148,9 @@ class SearchPage extends StatelessWidget {
                         if (SearchSortController.inst.trackSearchTemp.isNotEmpty) ...[
                           SliverToBoxAdapter(
                             child: Tooltip(
-                              message: Language.inst.TRACK_PLAY_MODE,
+                              message: lang.TRACK_PLAY_MODE,
                               child: SearchPageTitleRow(
-                                title: '${Language.inst.TRACKS} • ${SearchSortController.inst.trackSearchTemp.length}',
+                                title: '${lang.TRACKS} • ${SearchSortController.inst.trackSearchTemp.length}',
                                 icon: Broken.music_circle,
                                 buttonIcon: Broken.play,
                                 buttonText: SettingsController.inst.trackPlayMode.value.toText(),

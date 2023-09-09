@@ -67,7 +67,7 @@ class GenresPage extends StatelessWidget {
                   ),
                   textField: CustomTextFiled(
                     textFieldController: LibraryTab.genres.textSearchController,
-                    textFieldHintText: Language.inst.FILTER_GENRES,
+                    textFieldHintText: lang.FILTER_GENRES,
                     onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.genre),
                   ),
                 ),

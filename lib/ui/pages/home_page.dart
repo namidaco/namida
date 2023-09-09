@@ -135,10 +135,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     final sameAsCurrent = NamidaGenerator.inst.generateRecommendedTrack(ct).take(maxCount);
 
     _mixes.addAllIfEmpty({
-      Language.inst.TOP_RECENTS: _topRecentListened.map((e) => e.key).toList(),
-      if (sameAsCurrent.isNotEmpty) '"${ct.title}" ${Language.inst.SUPREMACY}': [ct, ...sameAsCurrent],
-      Language.inst.FAVOURITES: favs.take(25).tracks.toList(),
-      Language.inst.RANDOM_PICKS: _randomTracks,
+      lang.TOP_RECENTS: _topRecentListened.map((e) => e.key).toList(),
+      if (sameAsCurrent.isNotEmpty) '"${ct.title}" ${lang.SUPREMACY}': [ct, ...sameAsCurrent],
+      lang.FAVOURITES: favs.take(25).tracks.toList(),
+      lang.RANDOM_PICKS: _randomTracks,
     });
 
     _isLoading = false;
@@ -309,10 +309,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     });
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
-        title: Language.inst.CONFIGURE,
+        title: lang.CONFIGURE,
         actions: [
           NamidaButton(
-            text: Language.inst.DONE,
+            text: lang.DONE,
             onPressed: NamidaNavigator.inst.closeDialog,
           ),
         ],
@@ -425,7 +425,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       case HomePageItems.mixes:
                         return SliverToBoxAdapter(
                           child: _HorizontalList(
-                            title: Language.inst.MIXES,
+                            title: lang.MIXES,
                             icon: Broken.scanning,
                             height: 186.0 + 12.0,
                             itemCount: _isLoading ? _shimmerList.length : _mixes.length,
@@ -447,7 +447,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       case HomePageItems.recentListens:
                         return _getTracksList(
                           homepageItem: element,
-                          title: Language.inst.RECENT_LISTENS,
+                          title: lang.RECENT_LISTENS,
                           icon: Broken.command_square,
                           listy: _recentListened,
                           onTap: NamidaOnTaps.inst.onHistoryPlaylistTap,
@@ -462,7 +462,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       case HomePageItems.topRecentListens:
                         return _getTracksList(
                           homepageItem: element,
-                          title: Language.inst.TOP_RECENTS,
+                          title: lang.TOP_RECENTS,
                           icon: Broken.crown_1,
                           listy: [],
                           listWithListens: _topRecentListened,
@@ -472,10 +472,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       case HomePageItems.lostMemories:
                         return _getTracksList(
                           homepageItem: element,
-                          title: Language.inst.LOST_MEMORIES,
+                          title: lang.LOST_MEMORIES,
                           subtitle: () {
                             final diff = DateTime.now().year - currentYearLostMemories;
-                            return Language.inst.LOST_MEMORIES_SUBTITLE.replaceFirst('_NUM_', '$diff');
+                            return lang.LOST_MEMORIES_SUBTITLE.replaceFirst('_NUM_', '$diff');
                           }(),
                           icon: Broken.link_21,
                           listy: [],
@@ -536,7 +536,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       case HomePageItems.recentlyAdded:
                         return _getTracksList(
                           homepageItem: element,
-                          title: Language.inst.RECENTLY_ADDED,
+                          title: lang.RECENTLY_ADDED,
                           icon: Broken.back_square,
                           listy: _recentlyAdded,
                           onTap: _navigateToRecentlyListened,
@@ -551,7 +551,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       case HomePageItems.recentAlbums:
                         return _getAlbumsList(
                           homepageItem: element,
-                          title: Language.inst.RECENT_ALBUMS,
+                          title: lang.RECENT_ALBUMS,
                           mainIcon: Broken.undo,
                           itemCount: _listOrShimmer(_recentAlbums).length,
                           album: (index) => _listOrShimmer(_recentAlbums)[index],
@@ -562,7 +562,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                         final keys = _topRecentAlbums.keys.toList();
                         return _getAlbumsList(
                           homepageItem: element,
-                          title: Language.inst.TOP_RECENT_ALBUMS,
+                          title: lang.TOP_RECENT_ALBUMS,
                           mainIcon: Broken.crown_1,
                           itemCount: _listOrShimmer(keys).length,
                           album: (index) => _listOrShimmer(keys)[index],
@@ -572,7 +572,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       case HomePageItems.recentArtists:
                         return _getArtistList(
                           homepageItem: element,
-                          title: Language.inst.RECENT_ARTISTS,
+                          title: lang.RECENT_ARTISTS,
                           mainIcon: Broken.undo,
                           itemCount: _listOrShimmer(_recentArtists).length,
                           artist: (index) => _listOrShimmer(_recentArtists)[index],
@@ -583,7 +583,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                         final keys = _topRecentArtists.keys.toList();
                         return _getArtistList(
                           homepageItem: element,
-                          title: Language.inst.TOP_RECENT_ARTISTS,
+                          title: lang.TOP_RECENT_ARTISTS,
                           mainIcon: Broken.crown_1,
                           itemCount: _listOrShimmer(keys).length,
                           artist: (index) => _listOrShimmer(keys)[index],
@@ -1168,7 +1168,7 @@ class RecentlyAddedTracksPage extends StatelessWidget {
               ),
               const SizedBox(width: 12.0),
               Text(
-                Language.inst.RECENTLY_ADDED,
+                lang.RECENTLY_ADDED,
                 style: context.textTheme.displayLarge?.copyWith(fontSize: 18.0.multipliedFontScale),
               )
             ],

@@ -127,19 +127,19 @@ class PlaylistController {
     value ??= '';
 
     if (value.isEmpty) {
-      return Language.inst.PLEASE_ENTER_A_NAME;
+      return lang.PLEASE_ENTER_A_NAME;
     }
     if (isOneOfDefaultPlaylists(value)) {
-      return Language.inst.PLEASE_ENTER_A_NAME;
+      return lang.PLEASE_ENTER_A_NAME;
     }
 
     final illegalChar = Platform.pathSeparator;
     if (value.contains(illegalChar)) {
-      return "${Language.inst.NAME_CONTAINS_BAD_CHARACTER} $illegalChar";
+      return "${lang.NAME_CONTAINS_BAD_CHARACTER} $illegalChar";
     }
 
     if (playlistsMap.keyExists(value) || File('${AppDirs.PLAYLISTS}/$value.json').existsSync()) {
-      return Language.inst.PLEASE_ENTER_A_DIFFERENT_NAME;
+      return lang.PLEASE_ENTER_A_DIFFERENT_NAME;
     }
     return null;
   }

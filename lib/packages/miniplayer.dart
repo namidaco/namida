@@ -689,7 +689,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                             padding: const EdgeInsets.symmetric(vertical: 12.0),
                                             children: [
                                               getQualityButton(
-                                                title: Language.inst.CHECK_FOR_MORE,
+                                                title: lang.CHECK_FOR_MORE,
                                                 icon: Broken.chart,
                                                 bgColor: null,
                                                 trailing: isLoadingMore.value ? const LoadingIndicator() : null,
@@ -701,7 +701,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                               ),
                                               ...availableVideos.map(
                                                 (element) {
-                                                  final localOrCache = element.ytID == null ? Language.inst.LOCAL : Language.inst.CACHE;
+                                                  final localOrCache = element.ytID == null ? lang.LOCAL : lang.CACHE;
                                                   return Obx(
                                                     () {
                                                       final currentVideo = VideoController.inst.currentVideo.value;
@@ -795,7 +795,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                     width: 8.0,
                                                   ),
                                                   if (!videoPlaybackEnabled) ...[
-                                                    getTextWidget(Language.inst.AUDIO, colored: true),
+                                                    getTextWidget(lang.AUDIO, colored: true),
                                                     if (SettingsController.inst.displayAudioInfoMiniplayer.value)
                                                       getTextWidget(
                                                         " • ${currentTrack.audioInfoFormattedCompact}",
@@ -805,7 +805,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                       ),
                                                   ],
                                                   if (videoPlaybackEnabled) ...[
-                                                    getTextWidget(Language.inst.VIDEO, colored: true),
+                                                    getTextWidget(lang.VIDEO, colored: true),
                                                     qualityText == '?' && !ConnectivityController.inst.hasConnection
                                                         ? Row(
                                                             children: [
@@ -885,7 +885,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                           width: 34,
                                           height: 34,
                                           child: IconButton(
-                                            tooltip: Language.inst.LYRICS,
+                                            tooltip: lang.LYRICS,
                                             visualDensity: VisualDensity.compact,
                                             onPressed: () {
                                               SettingsController.inst.save(enableLyrics: !SettingsController.inst.enableLyrics.value);
@@ -919,7 +919,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                           width: 34,
                                           height: 34,
                                           child: IconButton(
-                                            tooltip: Language.inst.QUEUE,
+                                            tooltip: lang.QUEUE,
                                             visualDensity: VisualDensity.compact,
                                             onPressed: MiniPlayerController.inst.snapToQueue,
                                             padding: const EdgeInsets.all(2.0),
@@ -1220,11 +1220,11 @@ class NamidaMiniPlayer extends StatelessWidget {
         SizedBox(width: context.width * 0.23),
         const SizedBox(width: 6.0),
         NamidaButton(
-          tooltip: Language.inst.REMOVE_DUPLICATES,
+          tooltip: lang.REMOVE_DUPLICATES,
           icon: Broken.trash,
           onPressed: () {
             final removed = Player.inst.removeDuplicatesFromQueue();
-            Get.snackbar(Language.inst.NOTE, "${Language.inst.REMOVED} ${removed.displayTrackKeyword}");
+            Get.snackbar(lang.NOTE, "${lang.REMOVED} ${removed.displayTrackKeyword}");
           },
         ),
         const SizedBox(width: 6.0),
@@ -1251,12 +1251,12 @@ class NamidaMiniPlayer extends StatelessWidget {
               items: [
                 ...[
                   (
-                    Language.inst.SHUFFLE_NEXT,
+                    lang.SHUFFLE_NEXT,
                     Broken.forward,
                     false,
                   ),
                   (
-                    Language.inst.SHUFFLE_ALL,
+                    lang.SHUFFLE_ALL,
                     Broken.task,
                     true,
                   ),
@@ -1286,7 +1286,7 @@ class NamidaMiniPlayer extends StatelessWidget {
             );
           },
           child: NamidaButton(
-            text: Language.inst.SHUFFLE,
+            text: lang.SHUFFLE,
             icon: Broken.shuffle,
             onPressed: () => Player.inst.shuffleTracks(SettingsController.inst.playerShuffleAllTracks.value),
           ),
@@ -1307,11 +1307,11 @@ class NamidaMiniPlayer extends StatelessWidget {
       final maxCount = 200.withMaximum(allTracksInLibrary.length);
       NamidaNavigator.inst.navigateDialog(
         dialog: CustomBlurryDialog(
-          title: Language.inst.CONFIGURE,
+          title: lang.CONFIGURE,
           actions: [
             const CancelButton(),
             NamidaButton(
-              text: Language.inst.SAVE,
+              text: lang.SAVE,
               onPressed: () {
                 SettingsController.inst.updateQueueInsertion(
                   insertionType,
@@ -1335,8 +1335,8 @@ class NamidaMiniPlayer extends StatelessWidget {
               const SizedBox(height: 24.0),
               CustomListTile(
                 icon: Broken.computing,
-                title: Language.inst.NUMBER_OF_TRACKS,
-                subtitle: "${Language.inst.UNLIMITED}-$maxCount",
+                title: lang.NUMBER_OF_TRACKS,
+                subtitle: "${lang.UNLIMITED}-$maxCount",
                 trailing: Obx(
                   () => NamidaWheelSlider(
                     totalCount: maxCount,
@@ -1344,21 +1344,21 @@ class NamidaMiniPlayer extends StatelessWidget {
                     itemSize: 1,
                     squeeze: 0.3,
                     onValueChanged: (val) => tracksNo.value = val,
-                    text: tracksNo.value == 0 ? Language.inst.UNLIMITED : '${tracksNo.value}',
+                    text: tracksNo.value == 0 ? lang.UNLIMITED : '${tracksNo.value}',
                   ),
                 ),
               ),
               Obx(
                 () => CustomSwitchListTile(
                   icon: Broken.next,
-                  title: Language.inst.PLAY_NEXT,
+                  title: lang.PLAY_NEXT,
                   value: insertN.value,
                   onChanged: (isTrue) => insertN.value = !isTrue,
                 ),
               ),
               CustomListTile(
                 icon: Broken.sort,
-                title: Language.inst.SORT_BY,
+                title: lang.SORT_BY,
                 trailingRaw: PopupMenuButton<InsertionSortingType>(
                   child: Obx(
                     () => Row(
@@ -1428,49 +1428,49 @@ class NamidaMiniPlayer extends StatelessWidget {
     }
 
     return NamidaButton(
-      tooltip: Language.inst.NEW_TRACKS_ADD,
+      tooltip: lang.NEW_TRACKS_ADD,
       icon: Broken.add_circle,
       onPressed: () {
         NamidaNavigator.inst.navigateDialog(
           dialog: CustomBlurryDialog(
             normalTitleStyle: true,
-            title: Language.inst.NEW_TRACKS_ADD,
+            title: lang.NEW_TRACKS_ADD,
             trailingWidgets: [
               NamidaIconButton(
                 icon: Broken.setting_3,
-                tooltip: Language.inst.CONFIGURE,
+                tooltip: lang.CONFIGURE,
                 onPressed: () => shouldShowConfigureIcon.value = !shouldShowConfigureIcon.value,
               ),
             ],
             child: Column(
               children: [
                 getAddTracksTile(
-                  title: Language.inst.NEW_TRACKS_RANDOM,
-                  subtitle: Language.inst.NEW_TRACKS_RANDOM_SUBTITLE,
+                  title: lang.NEW_TRACKS_RANDOM,
+                  subtitle: lang.NEW_TRACKS_RANDOM_SUBTITLE,
                   icon: Broken.format_circle,
                   insertionType: QueueInsertionType.random,
                   onTap: (insertionType) {
                     final config = insertionType.toQueueInsertion();
                     final count = config.numberOfTracks;
                     final rt = NamidaGenerator.inst.getRandomTracks(count - 1, count);
-                    Player.inst.addToQueue(rt, insertionType: insertionType, emptyTracksMessage: Language.inst.NO_ENOUGH_TRACKS).closeDialog();
+                    Player.inst.addToQueue(rt, insertionType: insertionType, emptyTracksMessage: lang.NO_ENOUGH_TRACKS).closeDialog();
                   },
                 ),
                 getAddTracksTile(
-                  title: Language.inst.GENERATE_FROM_DATES,
-                  subtitle: Language.inst.GENERATE_FROM_DATES_SUBTITLE,
+                  title: lang.GENERATE_FROM_DATES,
+                  subtitle: lang.GENERATE_FROM_DATES_SUBTITLE,
                   icon: Broken.calendar,
                   insertionType: QueueInsertionType.listenTimeRange,
                   onTap: (insertionType) {
                     NamidaNavigator.inst.closeDialog();
                     final historyTracks = HistoryController.inst.historyTracks;
                     if (historyTracks.isEmpty) {
-                      Get.snackbar(Language.inst.NOTE, Language.inst.NO_TRACKS_IN_HISTORY);
+                      Get.snackbar(lang.NOTE, lang.NO_TRACKS_IN_HISTORY);
                       return;
                     }
                     showCalendarDialog(
-                      title: Language.inst.GENERATE_FROM_DATES,
-                      buttonText: Language.inst.GENERATE,
+                      title: lang.GENERATE_FROM_DATES,
+                      buttonText: lang.GENERATE,
                       useHistoryDates: true,
                       onGenerate: (dates) {
                         final tracks = NamidaGenerator.inst.generateTracksFromHistoryDates(dates.firstOrNull, dates.lastOrNull);
@@ -1478,7 +1478,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                             .addToQueue(
                               tracks,
                               insertionType: insertionType,
-                              emptyTracksMessage: Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES,
+                              emptyTracksMessage: lang.NO_TRACKS_FOUND_BETWEEN_DATES,
                             )
                             .closeDialog();
                       },
@@ -1486,8 +1486,8 @@ class NamidaMiniPlayer extends StatelessWidget {
                   },
                 ),
                 getAddTracksTile(
-                  title: Language.inst.NEW_TRACKS_MOODS,
-                  subtitle: Language.inst.NEW_TRACKS_MOODS_SUBTITLE,
+                  title: lang.NEW_TRACKS_MOODS,
+                  subtitle: lang.NEW_TRACKS_MOODS_SUBTITLE,
                   icon: Broken.emoji_happy,
                   insertionType: QueueInsertionType.mood,
                   onTap: (insertionType) {
@@ -1509,7 +1509,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                     }
 
                     if (allAvailableMoodsPlaylists.isEmpty && allAvailableMoodsTracks.isEmpty) {
-                      Get.snackbar(Language.inst.ERROR, Language.inst.NO_MOODS_AVAILABLE);
+                      Get.snackbar(lang.ERROR, lang.NO_MOODS_AVAILABLE);
                       return;
                     }
 
@@ -1523,11 +1523,11 @@ class NamidaMiniPlayer extends StatelessWidget {
                       dialog: CustomBlurryDialog(
                         normalTitleStyle: true,
                         insetPadding: const EdgeInsets.symmetric(horizontal: 48.0),
-                        title: Language.inst.MOODS,
+                        title: lang.MOODS,
                         actions: [
                           const CancelButton(),
                           NamidaButton(
-                            text: Language.inst.GENERATE,
+                            text: lang.GENERATE,
                             onPressed: () {
                               final finalTracks = <Track>[];
                               selectedmoodsPlaylists.loop((m, _) {
@@ -1553,7 +1553,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                 SliverToBoxAdapter(
                                   child: Padding(
                                     padding: const EdgeInsets.all(12.0),
-                                    child: Text(Language.inst.PLAYLISTS, style: context.textTheme.displayMedium),
+                                    child: Text(lang.PLAYLISTS, style: context.textTheme.displayMedium),
                                   ),
                                 ),
                                 SliverList.separated(
@@ -1575,7 +1575,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                 SliverToBoxAdapter(
                                   child: Padding(
                                     padding: const EdgeInsets.all(12.0),
-                                    child: Text(Language.inst.TRACKS, style: context.textTheme.displayMedium),
+                                    child: Text(lang.TRACKS, style: context.textTheme.displayMedium),
                                   ),
                                 ),
                                 SliverList.separated(
@@ -1600,8 +1600,8 @@ class NamidaMiniPlayer extends StatelessWidget {
                   },
                 ),
                 getAddTracksTile(
-                  title: Language.inst.NEW_TRACKS_RATINGS,
-                  subtitle: Language.inst.NEW_TRACKS_RATINGS_SUBTITLE,
+                  title: lang.NEW_TRACKS_RATINGS,
+                  subtitle: lang.NEW_TRACKS_RATINGS_SUBTITLE,
                   icon: Broken.happyemoji,
                   insertionType: QueueInsertionType.rating,
                   onTap: (insertionType) {
@@ -1612,14 +1612,14 @@ class NamidaMiniPlayer extends StatelessWidget {
                     NamidaNavigator.inst.navigateDialog(
                       dialog: CustomBlurryDialog(
                         normalTitleStyle: true,
-                        title: Language.inst.NEW_TRACKS_RATINGS,
+                        title: lang.NEW_TRACKS_RATINGS,
                         actions: [
                           const CancelButton(),
                           NamidaButton(
-                            text: Language.inst.GENERATE,
+                            text: lang.GENERATE,
                             onPressed: () {
                               if (minRating.value > maxRating.value) {
-                                Get.snackbar(Language.inst.ERROR, Language.inst.MIN_VALUE_CANT_BE_MORE_THAN_MAX);
+                                Get.snackbar(lang.ERROR, lang.MIN_VALUE_CANT_BE_MORE_THAN_MAX);
                                 return;
                               }
                               final tracks = NamidaGenerator.inst.generateTracksFromRatings(
@@ -1638,7 +1638,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                               children: [
                                 Column(
                                   children: [
-                                    Text(Language.inst.MINIMUM),
+                                    Text(lang.MINIMUM),
                                     const SizedBox(height: 24.0),
                                     NamidaWheelSlider(
                                       totalCount: 100,
@@ -1660,7 +1660,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                 ),
                                 Column(
                                   children: [
-                                    Text(Language.inst.MAXIMUM),
+                                    Text(lang.MAXIMUM),
                                     const SizedBox(height: 24.0),
                                     NamidaWheelSlider(
                                       totalCount: 100,
@@ -1690,8 +1690,8 @@ class NamidaMiniPlayer extends StatelessWidget {
                 ),
                 const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 4.0)),
                 getAddTracksTile(
-                  title: Language.inst.NEW_TRACKS_SIMILARR_RELEASE_DATE,
-                  subtitle: Language.inst.NEW_TRACKS_SIMILARR_RELEASE_DATE_SUBTITLE.replaceFirst(
+                  title: lang.NEW_TRACKS_SIMILARR_RELEASE_DATE,
+                  subtitle: lang.NEW_TRACKS_SIMILARR_RELEASE_DATE_SUBTITLE.replaceFirst(
                     '_CURRENT_TRACK_',
                     currentTrack.title.addDQuotation(),
                   ),
@@ -1700,7 +1700,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                   onTap: (insertionType) {
                     final year = currentTrack.year;
                     if (year == 0) {
-                      Get.snackbar(Language.inst.ERROR, Language.inst.NEW_TRACKS_UNKNOWN_YEAR);
+                      Get.snackbar(lang.ERROR, lang.NEW_TRACKS_UNKNOWN_YEAR);
                       return;
                     }
                     final tracks = NamidaGenerator.inst.generateTracksFromSameEra(year, currentTrack: currentTrack);
@@ -1708,14 +1708,14 @@ class NamidaMiniPlayer extends StatelessWidget {
                         .addToQueue(
                           tracks,
                           insertionType: insertionType,
-                          emptyTracksMessage: Language.inst.NO_TRACKS_FOUND_BETWEEN_DATES,
+                          emptyTracksMessage: lang.NO_TRACKS_FOUND_BETWEEN_DATES,
                         )
                         .closeDialog();
                   },
                 ),
                 getAddTracksTile(
-                  title: Language.inst.NEW_TRACKS_RECOMMENDED,
-                  subtitle: Language.inst.NEW_TRACKS_RECOMMENDED_SUBTITLE.replaceFirst(
+                  title: lang.NEW_TRACKS_RECOMMENDED,
+                  subtitle: lang.NEW_TRACKS_RECOMMENDED_SUBTITLE.replaceFirst(
                     '_CURRENT_TRACK_',
                     currentTrack.title.addDQuotation(),
                   ),
@@ -1729,7 +1729,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                           gentracks,
                           insertionType: insertionType,
                           insertNext: true,
-                          emptyTracksMessage: Language.inst.NO_TRACKS_IN_HISTORY,
+                          emptyTracksMessage: lang.NO_TRACKS_IN_HISTORY,
                         )
                         .closeDialog();
                   },

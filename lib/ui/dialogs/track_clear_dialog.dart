@@ -16,13 +16,13 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) {
       theme: theme,
       normalTitleStyle: true,
       icon: Broken.trash,
-      title: isSingle ? Language.inst.CLEAR_TRACK_ITEM : Language.inst.CLEAR_TRACK_ITEM_MULTIPLE.replaceFirst('_NUMBER_', tracks.length.formatDecimal()),
+      title: isSingle ? lang.CLEAR_TRACK_ITEM : lang.CLEAR_TRACK_ITEM_MULTIPLE.replaceFirst('_NUMBER_', tracks.length.formatDecimal()),
       child: Column(
         children: [
           if (tracks.hasVideoCached)
             CustomListTile(
               passedColor: colorScheme,
-              title: isSingle ? Language.inst.VIDEO_CACHE_FILE : Language.inst.VIDEO_CACHE_FILES,
+              title: isSingle ? lang.VIDEO_CACHE_FILE : lang.VIDEO_CACHE_FILES,
               icon: Broken.video,
               onTap: () async {
                 await EditDeleteController.inst.deleteCachedVideos(tracks);
@@ -32,7 +32,7 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) {
           if (tracks.hasLyricsCached)
             CustomListTile(
               passedColor: colorScheme,
-              title: Language.inst.LYRICS,
+              title: lang.LYRICS,
               icon: Broken.document,
               onTap: () async {
                 await EditDeleteController.inst.deleteLyrics(tracks);
@@ -42,7 +42,7 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) {
           if (tracks.hasArtworkCached)
             CustomListTile(
               passedColor: colorScheme,
-              title: isSingle ? Language.inst.ARTWORK : Language.inst.ARTWORKS,
+              title: isSingle ? lang.ARTWORK : lang.ARTWORKS,
               icon: Broken.image,
               onTap: () async {
                 await EditDeleteController.inst.deleteArtwork(tracks);

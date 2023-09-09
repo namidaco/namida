@@ -23,8 +23,8 @@ class ThemeSetting extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
-      title: Language.inst.THEME_SETTINGS,
-      subtitle: Language.inst.THEME_SETTINGS_SUBTITLE,
+      title: lang.THEME_SETTINGS,
+      subtitle: lang.THEME_SETTINGS_SUBTITLE,
       icon: Broken.brush_2,
       child: SizedBox(
         width: context.width,
@@ -32,14 +32,14 @@ class ThemeSetting extends StatelessWidget {
           children: [
             CustomListTile(
               icon: Broken.brush_4,
-              title: Language.inst.THEME_MODE,
+              title: lang.THEME_MODE,
               trailing: const ToggleThemeModeContainer(),
             ),
             Obx(
               () => CustomSwitchListTile(
                 icon: Broken.colorfilter,
-                title: Language.inst.AUTO_COLORING,
-                subtitle: Language.inst.AUTO_COLORING_SUBTITLE,
+                title: lang.AUTO_COLORING,
+                subtitle: lang.AUTO_COLORING_SUBTITLE,
                 value: SettingsController.inst.autoColor.value,
                 onChanged: (isTrue) async {
                   SettingsController.inst.save(autoColor: !isTrue);
@@ -54,7 +54,7 @@ class ThemeSetting extends StatelessWidget {
             ...[false, true].map(
               (isDark) => Obx(
                 () {
-                  final darkText = isDark ? " (${Language.inst.THEME_MODE_DARK})" : '';
+                  final darkText = isDark ? " (${lang.THEME_MODE_DARK})" : '';
                   final color = isDark ? playerStaticColorDark : playerStaticColorLight;
                   return CustomListTile(
                     enabled: !SettingsController.inst.autoColor.value,
@@ -65,8 +65,8 @@ class ThemeSetting extends StatelessWidget {
                             secondaryIcon: Broken.moon,
                           )
                         : null,
-                    title: "${Language.inst.DEFAULT_COLOR}$darkText",
-                    subtitle: Language.inst.DEFAULT_COLOR_SUBTITLE,
+                    title: "${lang.DEFAULT_COLOR}$darkText",
+                    subtitle: lang.DEFAULT_COLOR_SUBTITLE,
                     trailing: CircleAvatar(
                       minRadius: 12,
                       backgroundColor: color,
@@ -78,7 +78,7 @@ class ThemeSetting extends StatelessWidget {
                             data: AppThemes.inst.getAppTheme(color),
                             child: NamidaColorPickerDialog(
                               initialColor: color,
-                              doneText: Language.inst.DONE,
+                              doneText: lang.DONE,
                               onColorChanged: (value) => _updateColor(value, isDark),
                               onDonePressed: NamidaNavigator.inst.closeDialog,
                               onRefreshButtonPressed: () {
@@ -102,19 +102,19 @@ class ThemeSetting extends StatelessWidget {
             Obx(
               () => CustomListTile(
                 icon: Broken.language_square,
-                title: Language.inst.LANGUAGE,
-                subtitle: Language.inst.currentLanguage.name,
+                title: lang.LANGUAGE,
+                subtitle: lang.currentLanguage.name,
                 onTap: () {
-                  final Rx<NamidaLanguage> selectedLang = Language.inst.currentLanguage.obs;
+                  final Rx<NamidaLanguage> selectedLang = lang.currentLanguage.obs;
                   NamidaNavigator.inst.navigateDialog(
                     dialog: CustomBlurryDialog(
-                      title: Language.inst.LANGUAGE,
+                      title: lang.LANGUAGE,
                       normalTitleStyle: true,
                       actions: [
                         const CancelButton(),
                         NamidaButton(
-                          onPressed: () async => (await Language.inst.update(lang: selectedLang.value)).closeDialog(),
-                          text: Language.inst.CONFIRM,
+                          onPressed: () async => (await lang.update(lang: selectedLang.value)).closeDialog(),
+                          text: lang.CONFIRM,
                         )
                       ],
                       child: SizedBox(
@@ -290,7 +290,7 @@ class NamidaColorPickerDialog extends StatelessWidget {
         if (onRefreshButtonPressed != null)
           IconButton(
             icon: const Icon(Broken.refresh),
-            tooltip: Language.inst.RESTORE_DEFAULTS,
+            tooltip: lang.RESTORE_DEFAULTS,
             onPressed: onRefreshButtonPressed,
           ),
         if (cancelButton) const CancelButton(),

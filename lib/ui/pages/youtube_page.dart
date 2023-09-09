@@ -25,7 +25,7 @@ class YoutubePage extends StatelessWidget {
             icon: Broken.arrow_left_2,
             onPressed: () => NamidaNavigator.inst.popPage(),
           ),
-          title: Text(Language.inst.YOUTUBE),
+          title: Text(lang.YOUTUBE),
         ),
         body: Obx(
           () {

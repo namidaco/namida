@@ -88,7 +88,7 @@ class PlaylistsPage extends StatelessWidget {
                   ),
                   textField: CustomTextFiled(
                     textFieldController: LibraryTab.playlists.textSearchController,
-                    textFieldHintText: Language.inst.FILTER_PLAYLISTS,
+                    textFieldHintText: lang.FILTER_PLAYLISTS,
                     onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.playlist),
                   ),
                 ),
@@ -149,7 +149,7 @@ class PlaylistsPage extends StatelessWidget {
                                           () => DefaultPlaylistCard(
                                             colorScheme: Colors.grey,
                                             icon: Broken.refresh,
-                                            title: Language.inst.HISTORY,
+                                            title: lang.HISTORY,
                                             displayLoadingIndicator: HistoryController.inst.isLoadingHistory,
                                             text: HistoryController.inst.historyTracksLength.formatDecimal(),
                                             onTap: () => NamidaOnTaps.inst.onHistoryPlaylistTap(),
@@ -165,7 +165,7 @@ class PlaylistsPage extends StatelessWidget {
                                           () => DefaultPlaylistCard(
                                             colorScheme: Colors.green,
                                             icon: Broken.award,
-                                            title: Language.inst.MOST_PLAYED,
+                                            title: lang.MOST_PLAYED,
                                             displayLoadingIndicator: HistoryController.inst.isLoadingHistory,
                                             text: HistoryController.inst.topTracksMapListens.length.formatDecimal(),
                                             onTap: () => NamidaOnTaps.inst.onMostPlayedPlaylistTap(),
@@ -187,7 +187,7 @@ class PlaylistsPage extends StatelessWidget {
                                           () => DefaultPlaylistCard(
                                             colorScheme: Colors.red,
                                             icon: Broken.heart,
-                                            title: Language.inst.FAVOURITES,
+                                            title: lang.FAVOURITES,
                                             text: PlaylistController.inst.favouritesPlaylist.value.tracks.length.formatDecimal(),
                                             onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(k_PLAYLIST_NAME_FAV),
                                           ),
@@ -202,7 +202,7 @@ class PlaylistsPage extends StatelessWidget {
                                           () => DefaultPlaylistCard(
                                             colorScheme: Colors.blue,
                                             icon: Broken.driver,
-                                            title: Language.inst.QUEUES,
+                                            title: lang.QUEUES,
                                             displayLoadingIndicator: QueueController.inst.isLoadingQueues,
                                             text: QueueController.inst.queuesMap.value.length.formatDecimal(),
                                             onTap: () => NamidaNavigator.inst.navigateTo(const QueuesPage()),

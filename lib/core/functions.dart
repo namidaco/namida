@@ -117,14 +117,14 @@ class NamidaOnTaps {
   Future<void> onRemoveTracksFromPlaylist(String name, List<TrackWithDate> tracksWithDates) async {
     void snackyy({required void Function() whatDoYouWant}) {
       Get.snackbar(
-        Language.inst.UNDO_CHANGES,
-        Language.inst.UNDO_CHANGES_DELETED_TRACK,
+        lang.UNDO_CHANGES,
+        lang.UNDO_CHANGES_DELETED_TRACK,
         mainButton: TextButton(
           onPressed: () {
             Get.closeAllSnackbars();
             whatDoYouWant();
           },
-          child: Text(Language.inst.UNDO),
+          child: Text(lang.UNDO),
         ),
       );
     }

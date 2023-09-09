@@ -22,16 +22,16 @@ class CustomizationSettings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
-      title: Language.inst.CUSTOMIZATIONS,
-      subtitle: Language.inst.CUSTOMIZATIONS_SUBTITLE,
+      title: lang.CUSTOMIZATIONS,
+      subtitle: lang.CUSTOMIZATIONS_SUBTITLE,
       icon: Broken.brush_1,
       child: Obx(
         () => Column(
           children: [
             CustomSwitchListTile(
               icon: Broken.drop,
-              title: Language.inst.ENABLE_BLUR_EFFECT,
-              subtitle: Language.inst.PERFORMANCE_NOTE,
+              title: lang.ENABLE_BLUR_EFFECT,
+              subtitle: lang.PERFORMANCE_NOTE,
               onChanged: (p0) {
                 stg.save(enableBlurEffect: !p0);
               },
@@ -39,8 +39,8 @@ class CustomizationSettings extends StatelessWidget {
             ),
             CustomSwitchListTile(
               icon: Broken.sun_1,
-              title: Language.inst.ENABLE_GLOW_EFFECT,
-              subtitle: Language.inst.PERFORMANCE_NOTE,
+              title: lang.ENABLE_GLOW_EFFECT,
+              subtitle: lang.PERFORMANCE_NOTE,
               onChanged: (p0) {
                 stg.save(enableGlowEffect: !p0);
               },
@@ -48,11 +48,11 @@ class CustomizationSettings extends StatelessWidget {
             ),
             CustomListTile(
               icon: Broken.rotate_left_1,
-              title: Language.inst.BORDER_RADIUS_MULTIPLIER,
+              title: lang.BORDER_RADIUS_MULTIPLIER,
               trailingText: "${stg.borderRadiusMultiplier.value}",
               onTap: () {
                 showSettingDialogWithTextField(
-                  title: Language.inst.BORDER_RADIUS_MULTIPLIER,
+                  title: lang.BORDER_RADIUS_MULTIPLIER,
                   borderRadiusMultiplier: true,
                   iconWidget: const Icon(Broken.rotate_left_1),
                 );
@@ -60,11 +60,11 @@ class CustomizationSettings extends StatelessWidget {
             ),
             CustomListTile(
               icon: Broken.text,
-              title: Language.inst.FONT_SCALE,
+              title: lang.FONT_SCALE,
               trailingText: "${(stg.fontScaleFactor.value * 100).toInt()}%",
               onTap: () {
                 showSettingDialogWithTextField(
-                  title: Language.inst.FONT_SCALE,
+                  title: lang.FONT_SCALE,
                   fontScaleFactor: true,
                   iconWidget: const Icon(Broken.text),
                 );
@@ -72,7 +72,7 @@ class CustomizationSettings extends StatelessWidget {
             ),
             CustomSwitchListTile(
               icon: Broken.clock,
-              title: Language.inst.HOUR_FORMAT_12,
+              title: lang.HOUR_FORMAT_12,
               onChanged: (p0) {
                 stg.save(hourFormat12: !p0);
               },
@@ -80,13 +80,13 @@ class CustomizationSettings extends StatelessWidget {
             ),
             CustomListTile(
               icon: Broken.calendar_edit,
-              title: Language.inst.DATE_TIME_FORMAT,
+              title: lang.DATE_TIME_FORMAT,
               trailingText: "${stg.dateTimeFormat}",
               onTap: () {
                 final ScrollController scrollController = ScrollController();
 
                 showSettingDialogWithTextField(
-                    title: Language.inst.DATE_TIME_FORMAT,
+                    title: lang.DATE_TIME_FORMAT,
                     iconWidget: const Icon(Broken.calendar_edit),
                     dateTimeFormat: true,
                     topWidget: SizedBox(

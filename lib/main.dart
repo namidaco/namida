@@ -128,7 +128,7 @@ Future<void> _initializeIntenties() async {
   void showErrorPlayingFileSnackbar({String? error}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final errorMessage = error != null ? '($error)' : '';
-      Get.snackbar(Language.inst.ERROR, '${Language.inst.COULDNT_PLAY_FILE} $errorMessage');
+      Get.snackbar(lang.ERROR, '${lang.COULDNT_PLAY_FILE} $errorMessage');
     });
   }
 
@@ -171,7 +171,7 @@ Future<bool> requestManageStoragePermission() async {
   }
 
   if (!await Permission.manageExternalStorage.isGranted || await Permission.manageExternalStorage.isDenied) {
-    Get.snackbar(Language.inst.STORAGE_PERMISSION_DENIED, Language.inst.STORAGE_PERMISSION_DENIED_SUBTITLE);
+    Get.snackbar(lang.STORAGE_PERMISSION_DENIED, lang.STORAGE_PERMISSION_DENIED_SUBTITLE);
     return false;
   }
   await createDir();

@@ -92,7 +92,7 @@ class Indexer {
 
     _afterIndexing();
     isIndexing.value = false;
-    Get.snackbar(Language.inst.DONE, Language.inst.FINISHED_UPDATING_LIBRARY);
+    Get.snackbar(lang.DONE, lang.FINISHED_UPDATING_LIBRARY);
   }
 
   /// Adds all tracks inside [tracksInfoList] to their respective album, artist, etc..

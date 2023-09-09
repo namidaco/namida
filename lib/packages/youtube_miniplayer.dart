@@ -278,9 +278,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                               children: [
                                                 const SizedBox(width: 18.0),
                                                 SmallYTActionButton(
-                                                  title: (ytvideo?.video.likeCount ?? 0) < 1
-                                                      ? Language.inst.LIKE
-                                                      : ytvideo?.video.likeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
+                                                  title:
+                                                      (ytvideo?.video.likeCount ?? 0) < 1 ? lang.LIKE : ytvideo?.video.likeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
                                                   icon: Broken.like_1,
                                                   onPressed: () {},
                                                 ),
@@ -289,14 +288,14 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                   title: ytvideo == null
                                                       ? null
                                                       : (ytvideo.video.dislikeCount ?? 0) < 1
-                                                          ? Language.inst.DISLIKE
+                                                          ? lang.DISLIKE
                                                           : ytvideo.video.dislikeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
                                                   icon: Broken.dislike,
                                                   onPressed: () {},
                                                 ),
                                                 const SizedBox(width: 18.0),
                                                 SmallYTActionButton(
-                                                  title: Language.inst.SHARE,
+                                                  title: lang.SHARE,
                                                   icon: Broken.share,
                                                   onPressed: () {
                                                     final url = ytvideo?.video.url;
@@ -305,7 +304,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                 ),
                                                 const SizedBox(width: 18.0),
                                                 SmallYTActionButton(
-                                                  title: Language.inst.REFRESH,
+                                                  title: lang.REFRESH,
                                                   icon: Broken.refresh,
                                                   onPressed: () async => await YoutubeController.inst.updateVideoDetails(currentId),
                                                 ),
@@ -315,13 +314,13 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                     final audioProgress = YoutubeController.inst.downloadsAudioProgressMap[currentId];
                                                     final audioPerc = audioProgress == null
                                                         ? null
-                                                        : "${Language.inst.AUDIO} ${(audioProgress.progress / audioProgress.totalProgress * 100).toStringAsFixed(0)}%";
+                                                        : "${lang.AUDIO} ${(audioProgress.progress / audioProgress.totalProgress * 100).toStringAsFixed(0)}%";
                                                     final videoProgress = YoutubeController.inst.downloadsVideoProgressMap[currentId];
                                                     final videoPerc = videoProgress == null
                                                         ? null
-                                                        : "${Language.inst.VIDEO} ${(videoProgress.progress / videoProgress.totalProgress * 100).toStringAsFixed(0)}%";
+                                                        : "${lang.VIDEO} ${(videoProgress.progress / videoProgress.totalProgress * 100).toStringAsFixed(0)}%";
                                                     return SmallYTActionButton(
-                                                      title: videoPerc ?? audioPerc ?? Language.inst.DOWNLOAD,
+                                                      title: videoPerc ?? audioPerc ?? lang.DOWNLOAD,
                                                       icon: false ? Broken.tick_circle : Broken.import, // TODO: check if video already downloaded
                                                       onPressed: () async => await showDownloadVideoBottomSheet(context: context, videoId: currentId),
                                                     );
@@ -329,7 +328,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                 ),
                                                 const SizedBox(width: 18.0),
                                                 SmallYTActionButton(
-                                                  title: Language.inst.SAVE,
+                                                  title: lang.SAVE,
                                                   icon: Broken.music_playlist,
                                                   onPressed: () {},
                                                 ),
@@ -379,7 +378,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                     child: Text(
                                                       [
                                                         ytvideo?.channel.subscriberCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
-                                                        (ytvideo?.channel.subscriberCount ?? 0) < 2 ? Language.inst.SUBSCRIBER : Language.inst.SUBSCRIBERS
+                                                        (ytvideo?.channel.subscriberCount ?? 0) < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS
                                                       ].join(' '),
                                                       style: context.textTheme.displaySmall,
                                                     ),
@@ -392,7 +391,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                   children: [
                                                     const Icon(Broken.video, size: 20.0),
                                                     const SizedBox(width: 8.0),
-                                                    Text(Language.inst.SUBSCRIBE),
+                                                    Text(lang.SUBSCRIBE),
                                                   ],
                                                 ),
                                                 onPressed: () {},
@@ -476,7 +475,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                               const SizedBox(width: 8.0),
                                               Text(
                                                 [
-                                                  Language.inst.COMMENTS,
+                                                  lang.COMMENTS,
                                                   if (totalCommentsCount != null) totalCommentsCount.formatDecimalShort(),
                                                 ].join(' • '),
                                                 style: context.textTheme.displayLarge,
@@ -484,7 +483,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                               ),
                                               const Spacer(),
                                               NamidaIconButton(
-                                                tooltip: YoutubeController.inst.isCurrentCommentsFromCache ? Language.inst.CACHE : null,
+                                                tooltip: YoutubeController.inst.isCurrentCommentsFromCache ? lang.CACHE : null,
                                                 icon: Broken.refresh,
                                                 iconSize: 22.0,
                                                 onPressed: () async => await YoutubeController.inst.updateCurrentComments(currentId, forceRequest: true),
@@ -565,7 +564,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                                 ),
                                                                 const SizedBox(width: 4.0),
                                                                 Text(
-                                                                  Language.inst.PINNED,
+                                                                  lang.PINNED,
                                                                   style: context.textTheme.displaySmall,
                                                                 ),
                                                               ],
@@ -624,7 +623,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                                     trimLines: 5,
                                                                     colorClickableText: context.theme.colorScheme.primary.withAlpha(200),
                                                                     trimMode: TrimMode.Line,
-                                                                    trimCollapsedText: Language.inst.SHOW_MORE,
+                                                                    trimCollapsedText: lang.SHOW_MORE,
                                                                     trimExpandedText: '',
                                                                     style: context.textTheme.displaySmall?.copyWith(
                                                                       fontSize: 13.5.multipliedFontScale,
@@ -662,7 +661,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                                   icon: const Icon(Broken.document, size: 16.0),
                                                                   label: Text(
                                                                     [
-                                                                      Language.inst.REPLIES,
+                                                                      lang.REPLIES,
                                                                       if (repliesCount != null) repliesCount,
                                                                     ].join(' • '),
                                                                     style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w300),
@@ -738,7 +737,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
         PopupMenuItem(
           child: getItem(
             icon: Broken.copy,
-            title: Language.inst.COPY,
+            title: lang.COPY,
           ),
           onTap: () => comment?.commentText != null ? Clipboard.setData(ClipboardData(text: comment!.commentText!)) : null,
         ),
@@ -996,7 +995,7 @@ Future<void> showDownloadVideoBottomSheet({
           ],
           const Spacer(),
           NamidaIconButton(
-            tooltip: Language.inst.SHOW_WEBM,
+            tooltip: lang.SHOW_WEBM,
             horizontalPadding: 0.0,
             iconSize: 20.0,
             icon: Broken.video_octagon,
@@ -1053,7 +1052,7 @@ Future<void> showDownloadVideoBottomSheet({
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          Language.inst.CONFIGURE,
+                          lang.CONFIGURE,
                           style: context.textTheme.displayLarge,
                         ),
                       ),
@@ -1066,7 +1065,7 @@ Future<void> showDownloadVideoBottomSheet({
                                 final e = selectedAudioOnlyStream.value;
                                 final subtitle = e == null ? null : "${e.bitrateText} • ${e.formatSuffix} • ${e.sizeInBytes?.fileSizeFormatted}";
                                 return getTextWidget(
-                                  title: Language.inst.AUDIO,
+                                  title: lang.AUDIO,
                                   subtitle: subtitle,
                                   icon: Broken.audio_square,
                                   onCloseIconTap: () => selectedAudioOnlyStream.value = null,
@@ -1106,7 +1105,7 @@ Future<void> showDownloadVideoBottomSheet({
                                 final e = selectedVideoOnlyStream.value;
                                 final subtitle = e == null ? null : "${e.resolution} • ${e.sizeInBytes?.fileSizeFormatted}";
                                 return getTextWidget(
-                                  title: Language.inst.VIDEO,
+                                  title: lang.VIDEO,
                                   subtitle: subtitle,
                                   icon: Broken.video_square,
                                   onCloseIconTap: () => selectedVideoOnlyStream.value = null,
@@ -1150,16 +1149,15 @@ Future<void> showDownloadVideoBottomSheet({
                       Obx(() {
                         final videoOnly = selectedVideoOnlyStream.value != null && selectedAudioOnlyStream.value == null ? "Video Only" : null;
                         final audioOnly = selectedVideoOnlyStream.value == null && selectedAudioOnlyStream.value != null ? "Audio Only" : null;
-                        final audioAndVideo =
-                            selectedVideoOnlyStream.value != null && selectedAudioOnlyStream.value != null ? "${Language.inst.VIDEO} + ${Language.inst.AUDIO}" : null;
+                        final audioAndVideo = selectedVideoOnlyStream.value != null && selectedAudioOnlyStream.value != null ? "${lang.VIDEO} + ${lang.AUDIO}" : null;
 
                         return RichText(
                           text: TextSpan(
-                            text: "${Language.inst.OUTPUT}: ",
+                            text: "${lang.OUTPUT}: ",
                             style: context.textTheme.displaySmall,
                             children: [
                               TextSpan(
-                                text: videoOnly ?? audioOnly ?? audioAndVideo ?? Language.inst.NONE,
+                                text: videoOnly ?? audioOnly ?? audioAndVideo ?? lang.NONE,
                                 style: context.textTheme.displayMedium?.copyWith(color: videoOnly != null ? Colors.red : null),
                               ),
                             ],
@@ -1170,7 +1168,7 @@ Future<void> showDownloadVideoBottomSheet({
                       Obx(() {
                         return RichText(
                           text: TextSpan(
-                            text: "${Language.inst.FILE_NAME}: ",
+                            text: "${lang.FILE_NAME}: ",
                             style: context.textTheme.displaySmall,
                             children: [
                               TextSpan(
@@ -1186,7 +1184,7 @@ Future<void> showDownloadVideoBottomSheet({
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           NamidaButton(
-                            text: Language.inst.CANCEL,
+                            text: lang.CANCEL,
                             onPressed: () => Navigator.pop(context),
                           ),
                           Obx(
@@ -1195,7 +1193,7 @@ Future<void> showDownloadVideoBottomSheet({
                               final sizeText = sizeSum > 0 ? "(${sizeSum.fileSizeFormatted})" : '';
                               return NamidaButton(
                                 enabled: sizeSum > 0,
-                                text: '${Language.inst.DOWNLOAD} $sizeText',
+                                text: '${lang.DOWNLOAD} $sizeText',
                                 onPressed: () async {
                                   Navigator.pop(context);
                                   final id = videoId;

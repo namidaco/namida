@@ -16,8 +16,8 @@ class StatsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
-      title: Language.inst.STATS,
-      subtitle: Language.inst.STATS_SUBTITLE,
+      title: lang.STATS,
+      subtitle: lang.STATS_SUBTITLE,
       icon: Broken.chart_21,
       child: SizedBox(
         width: context.width,
@@ -27,33 +27,33 @@ class StatsSection extends StatelessWidget {
             children: [
               StatsContainer(
                 icon: Broken.music_circle,
-                title: '${Language.inst.TRACKS} :',
+                title: '${lang.TRACKS} :',
                 value: allTracksInLibrary.length.formatDecimal(),
               ),
               StatsContainer(
                 icon: Broken.music_dashboard,
-                title: '${Language.inst.ALBUMS} :',
+                title: '${lang.ALBUMS} :',
                 value: Indexer.inst.mainMapAlbums.value.keys.length.formatDecimal(),
               ),
               StatsContainer(
                 icon: Broken.microphone,
-                title: '${Language.inst.ARTISTS} :',
+                title: '${lang.ARTISTS} :',
                 value: Indexer.inst.mainMapArtists.value.length.formatDecimal(),
               ),
               StatsContainer(
                 icon: Broken.smileys,
-                title: '${Language.inst.GENRES} :',
+                title: '${lang.GENRES} :',
                 value: Indexer.inst.mainMapGenres.value.length.formatDecimal(),
               ),
               StatsContainer(
                 icon: Broken.music_library_2,
-                title: '${Language.inst.TOTAL_TRACKS_DURATION} :',
+                title: '${lang.TOTAL_TRACKS_DURATION} :',
                 value: allTracksInLibrary.totalDurationFormatted,
               ),
               Obx(
                 () => StatsContainer(
                   icon: Broken.timer_1,
-                  title: '${Language.inst.TOTAL_LISTEN_TIME} :',
+                  title: '${lang.TOTAL_LISTEN_TIME} :',
                   value: Player.inst.totalListenedTimeInSec.formattedTime,
                 ),
               ),

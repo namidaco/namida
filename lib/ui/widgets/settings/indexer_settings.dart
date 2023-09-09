@@ -27,12 +27,12 @@ class IndexerSettings extends StatelessWidget {
     final newPathsLength = Indexer.inst.getNewFoundPaths(currentFiles).length;
     final deletedPathLength = Indexer.inst.getDeletedPaths(currentFiles).length;
     if (newPathsLength == 0 && deletedPathLength == 0) {
-      Get.snackbar(Language.inst.NOTE, Language.inst.NO_CHANGES_FOUND);
+      Get.snackbar(lang.NOTE, lang.NO_CHANGES_FOUND);
     } else {
       NamidaNavigator.inst.navigateDialog(
         dialog: CustomBlurryDialog(
-          title: Language.inst.NOTE,
-          bodyText: Language.inst.PROMPT_INDEXING_REFRESH
+          title: lang.NOTE,
+          bodyText: lang.PROMPT_INDEXING_REFRESH
               .replaceFirst(
                 '_NEW_FILES_',
                 newPathsLength.toString(),
@@ -44,7 +44,7 @@ class IndexerSettings extends StatelessWidget {
           actions: [
             const CancelButton(),
             NamidaButton(
-              text: Language.inst.REFRESH,
+              text: lang.REFRESH,
               onPressed: () async {
                 NamidaNavigator.inst.closeDialog();
                 await Future.delayed(const Duration(milliseconds: 300));
@@ -63,11 +63,11 @@ class IndexerSettings extends StatelessWidget {
   Widget addFolderButton(void Function(String dirPath) onSuccessChoose) {
     return NamidaButton(
       icon: Broken.folder_add,
-      text: Language.inst.ADD,
+      text: lang.ADD,
       onPressed: () async {
         final path = await FilePicker.platform.getDirectoryPath();
         if (path == null) {
-          Get.snackbar(Language.inst.NOTE, Language.inst.NO_FOLDER_CHOSEN);
+          Get.snackbar(lang.NOTE, lang.NO_FOLDER_CHOSEN);
           return;
         }
 
@@ -80,8 +80,8 @@ class IndexerSettings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
-      title: Language.inst.INDEXER,
-      subtitle: Language.inst.INDEXER_SUBTITLE,
+      title: lang.INDEXER,
+      subtitle: lang.INDEXER_SUBTITLE,
       icon: Broken.component,
       trailing: const SizedBox(
         height: 48.0,
@@ -99,7 +99,7 @@ class IndexerSettings extends StatelessWidget {
                   Obx(
                     () => StatsContainer(
                       icon: Broken.info_circle,
-                      title: '${Language.inst.TRACKS_INFO} :',
+                      title: '${lang.TRACKS_INFO} :',
                       value: allTracksInLibrary.length.formatDecimal(),
                       total: Indexer.inst.allAudioFiles.isEmpty ? null : Indexer.inst.allAudioFiles.length.formatDecimal(),
                     ),
@@ -107,7 +107,7 @@ class IndexerSettings extends StatelessWidget {
                   Obx(
                     () => StatsContainer(
                       icon: Broken.image,
-                      title: '${Language.inst.ARTWORKS} :',
+                      title: '${lang.ARTWORKS} :',
                       value: Indexer.inst.artworksInStorage.value.formatDecimal(),
                       total: Indexer.inst.allAudioFiles.isEmpty ? null : Indexer.inst.allAudioFiles.length.formatDecimal(),
                     ),
@@ -119,7 +119,7 @@ class IndexerSettings extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Text(
-              Language.inst.INDEXER_NOTE,
+              lang.INDEXER_NOTE,
               style: context.textTheme.displaySmall,
             ),
           ),
@@ -127,7 +127,7 @@ class IndexerSettings extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Obx(
               () => Text(
-                '${Language.inst.DUPLICATED_TRACKS}: ${Indexer.inst.duplicatedTracksLength.value}\n${Language.inst.TRACKS_EXCLUDED_BY_NOMEDIA}: ${Indexer.inst.tracksExcludedByNoMedia.value}\n${Language.inst.FILTERED_BY_SIZE_AND_DURATION}: ${Indexer.inst.filteredForSizeDurationTracks.value}',
+                '${lang.DUPLICATED_TRACKS}: ${Indexer.inst.duplicatedTracksLength.value}\n${lang.TRACKS_EXCLUDED_BY_NOMEDIA}: ${Indexer.inst.tracksExcludedByNoMedia.value}\n${lang.FILTERED_BY_SIZE_AND_DURATION}: ${Indexer.inst.filteredForSizeDurationTracks.value}',
                 style: context.textTheme.displaySmall,
               ),
             ),
@@ -135,8 +135,8 @@ class IndexerSettings extends StatelessWidget {
           Obx(
             () => CustomSwitchListTile(
               icon: Broken.copy,
-              title: Language.inst.PREVENT_DUPLICATED_TRACKS,
-              subtitle: "${Language.inst.PREVENT_DUPLICATED_TRACKS_SUBTITLE}. ${Language.inst.INDEX_REFRESH_REQUIRED}",
+              title: lang.PREVENT_DUPLICATED_TRACKS,
+              subtitle: "${lang.PREVENT_DUPLICATED_TRACKS_SUBTITLE}. ${lang.INDEX_REFRESH_REQUIRED}",
               onChanged: (isTrue) => stg.save(preventDuplicatedTracks: !isTrue),
               value: stg.preventDuplicatedTracks.value,
             ),
@@ -144,8 +144,8 @@ class IndexerSettings extends StatelessWidget {
           Obx(
             () => CustomSwitchListTile(
               icon: Broken.cd,
-              title: Language.inst.RESPECT_NO_MEDIA,
-              subtitle: "${Language.inst.RESPECT_NO_MEDIA_SUBTITLE}. ${Language.inst.INDEX_REFRESH_REQUIRED}",
+              title: lang.RESPECT_NO_MEDIA,
+              subtitle: "${lang.RESPECT_NO_MEDIA_SUBTITLE}. ${lang.INDEX_REFRESH_REQUIRED}",
               onChanged: (isTrue) async {
                 if (!stg.respectNoMedia.value) {
                   if (await requestManageStoragePermission()) {
@@ -161,8 +161,8 @@ class IndexerSettings extends StatelessWidget {
           Obx(
             () => CustomSwitchListTile(
               icon: Broken.microphone,
-              title: Language.inst.EXTRACT_FEAT_ARTIST,
-              subtitle: "${Language.inst.EXTRACT_FEAT_ARTIST_SUBTITLE} ${Language.inst.INSTANTLY_APPLIES}.",
+              title: lang.EXTRACT_FEAT_ARTIST,
+              subtitle: "${lang.EXTRACT_FEAT_ARTIST_SUBTITLE} ${lang.INSTANTLY_APPLIES}.",
               onChanged: (isTrue) async {
                 stg.save(extractFeatArtistFromTitle: !isTrue);
                 await Indexer.inst.prepareTracksFile();
@@ -172,12 +172,12 @@ class IndexerSettings extends StatelessWidget {
           ),
           CustomListTile(
             icon: Broken.profile_2user,
-            title: Language.inst.TRACK_ARTISTS_SEPARATOR,
-            subtitle: Language.inst.INSTANTLY_APPLIES,
+            title: lang.TRACK_ARTISTS_SEPARATOR,
+            subtitle: lang.INSTANTLY_APPLIES,
             trailingText: "${stg.trackArtistsSeparators.length}",
             onTap: () async {
               await _showSeparatorSymbolsDialog(
-                Language.inst.TRACK_ARTISTS_SEPARATOR,
+                lang.TRACK_ARTISTS_SEPARATOR,
                 stg.trackArtistsSeparators,
                 trackArtistsSeparators: true,
               );
@@ -185,12 +185,12 @@ class IndexerSettings extends StatelessWidget {
           ),
           CustomListTile(
             icon: Broken.smileys,
-            title: Language.inst.TRACK_GENRES_SEPARATOR,
-            subtitle: Language.inst.INSTANTLY_APPLIES,
+            title: lang.TRACK_GENRES_SEPARATOR,
+            subtitle: lang.INSTANTLY_APPLIES,
             trailingText: "${stg.trackGenresSeparators.length}",
             onTap: () async {
               await _showSeparatorSymbolsDialog(
-                Language.inst.TRACK_GENRES_SEPARATOR,
+                lang.TRACK_GENRES_SEPARATOR,
                 stg.trackGenresSeparators,
                 trackGenresSeparators: true,
               );
@@ -199,8 +199,8 @@ class IndexerSettings extends StatelessWidget {
           Obx(
             () => CustomListTile(
               icon: Broken.unlimited,
-              title: Language.inst.MIN_FILE_SIZE,
-              subtitle: Language.inst.INDEX_REFRESH_REQUIRED,
+              title: lang.MIN_FILE_SIZE,
+              subtitle: lang.INDEX_REFRESH_REQUIRED,
               trailing: NamidaWheelSlider(
                 width: 100.0,
                 totalCount: 1024,
@@ -218,8 +218,8 @@ class IndexerSettings extends StatelessWidget {
           Obx(
             () => CustomListTile(
               icon: Broken.timer_1,
-              title: Language.inst.MIN_FILE_DURATION,
-              subtitle: Language.inst.INDEX_REFRESH_REQUIRED,
+              title: lang.MIN_FILE_DURATION,
+              subtitle: lang.INDEX_REFRESH_REQUIRED,
               trailing: NamidaWheelSlider(
                 width: 100.0,
                 totalCount: 180,
@@ -235,8 +235,8 @@ class IndexerSettings extends StatelessWidget {
           ),
           CustomListTile(
             icon: Broken.refresh,
-            title: Language.inst.RE_INDEX,
-            subtitle: Language.inst.RE_INDEX_SUBTITLE,
+            title: lang.RE_INDEX,
+            subtitle: lang.RE_INDEX_SUBTITLE,
             onTap: () async {
               NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
@@ -245,7 +245,7 @@ class IndexerSettings extends StatelessWidget {
                   actions: [
                     const CancelButton(),
                     NamidaButton(
-                      text: Language.inst.RE_INDEX,
+                      text: lang.RE_INDEX,
                       onPressed: () async {
                         NamidaNavigator.inst.closeDialog();
                         Future.delayed(const Duration(milliseconds: 500), () {
@@ -254,21 +254,21 @@ class IndexerSettings extends StatelessWidget {
                       },
                     ),
                   ],
-                  bodyText: Language.inst.RE_INDEX_WARNING,
+                  bodyText: lang.RE_INDEX_WARNING,
                 ),
               );
             },
           ),
           CustomListTile(
             leading: const _RefreshLibraryIcon(),
-            title: Language.inst.REFRESH_LIBRARY,
-            subtitle: Language.inst.REFRESH_LIBRARY_SUBTITLE,
+            title: lang.REFRESH_LIBRARY,
+            subtitle: lang.REFRESH_LIBRARY_SUBTITLE,
             onTap: () => _showRefreshPromptDialog(false),
           ),
           Obx(
             () => NamidaExpansionTile(
               icon: Broken.folder,
-              titleText: Language.inst.LIST_OF_FOLDERS,
+              titleText: lang.LIST_OF_FOLDERS,
               textColor: context.textTheme.displayLarge!.color,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -291,8 +291,8 @@ class IndexerSettings extends StatelessWidget {
                       onPressed: () {
                         if (SettingsController.inst.directoriesToScan.length == 1) {
                           Get.snackbar(
-                            Language.inst.MINIMUM_ONE_ITEM,
-                            Language.inst.MINIMUM_ONE_FOLDER_SUBTITLE,
+                            lang.MINIMUM_ONE_ITEM,
+                            lang.MINIMUM_ONE_FOLDER_SUBTITLE,
                             duration: const Duration(seconds: 4),
                           );
                         } else {
@@ -303,7 +303,7 @@ class IndexerSettings extends StatelessWidget {
                               actions: [
                                 const CancelButton(),
                                 NamidaButton(
-                                  text: Language.inst.REMOVE,
+                                  text: lang.REMOVE,
                                   onPressed: () {
                                     SettingsController.inst.removeFromList(directoriesToScan1: e);
                                     NamidaNavigator.inst.closeDialog();
@@ -311,12 +311,12 @@ class IndexerSettings extends StatelessWidget {
                                   },
                                 ),
                               ],
-                              bodyText: "${Language.inst.REMOVE} \"$e\"?",
+                              bodyText: "${lang.REMOVE} \"$e\"?",
                             ),
                           );
                         }
                       },
-                      child: Text(Language.inst.REMOVE.toUpperCase()),
+                      child: Text(lang.REMOVE.toUpperCase()),
                     ),
                   ),
                 ),
@@ -326,7 +326,7 @@ class IndexerSettings extends StatelessWidget {
           Obx(
             () => NamidaExpansionTile(
               icon: Broken.folder_minus,
-              titleText: Language.inst.EXCLUDED_FODLERS,
+              titleText: lang.EXCLUDED_FODLERS,
               textColor: context.textTheme.displayLarge!.color,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -342,7 +342,7 @@ class IndexerSettings extends StatelessWidget {
                   ? [
                       ListTile(
                         title: Text(
-                          Language.inst.NO_EXCLUDED_FOLDERS,
+                          lang.NO_EXCLUDED_FOLDERS,
                           style: context.textTheme.displayMedium,
                         ),
                       ),
@@ -359,7 +359,7 @@ class IndexerSettings extends StatelessWidget {
                               SettingsController.inst.removeFromList(directoriesToExclude1: e);
                               _showRefreshPromptDialog(true);
                             },
-                            child: Text(Language.inst.REMOVE.toUpperCase()),
+                            child: Text(lang.REMOVE.toUpperCase()),
                           ),
                         ),
                       ),
@@ -403,19 +403,19 @@ class IndexerSettings extends StatelessWidget {
                 final blLength =
                     trackArtistsSeparators ? SettingsController.inst.trackArtistsSeparatorsBlacklist.length : SettingsController.inst.trackGenresSeparatorsBlacklist.length;
                 final t = blLength == 0 ? '' : ' ($blLength)';
-                return Text('${Language.inst.BLACKLIST}$t');
+                return Text('${lang.BLACKLIST}$t');
               }),
               onPressed: () {
                 if (trackArtistsSeparators) {
                   _showSeparatorSymbolsDialog(
-                    Language.inst.BLACKLIST,
+                    lang.BLACKLIST,
                     SettingsController.inst.trackArtistsSeparatorsBlacklist,
                     trackArtistsSeparatorsBlacklist: true,
                   );
                 }
                 if (trackGenresSeparators) {
                   _showSeparatorSymbolsDialog(
-                    Language.inst.BLACKLIST,
+                    lang.BLACKLIST,
                     SettingsController.inst.trackGenresSeparatorsBlacklist,
                     trackGenresSeparatorsBlacklist: true,
                   );
@@ -427,7 +427,7 @@ class IndexerSettings extends StatelessWidget {
             () => updatingLibrary.value
                 ? const LoadingIndicator()
                 : NamidaButton(
-                    text: Language.inst.ADD,
+                    text: lang.ADD,
                     onPressed: () {
                       if (separatorsController.text.isNotEmpty) {
                         if (trackArtistsSeparators) {
@@ -444,7 +444,7 @@ class IndexerSettings extends StatelessWidget {
                         }
                         separatorsController.clear();
                       } else {
-                        Get.snackbar(Language.inst.EMPTY_VALUE, Language.inst.ENTER_SYMBOL, forwardAnimationCurve: Curves.fastLinearToSlowEaseIn);
+                        Get.snackbar(lang.EMPTY_VALUE, lang.ENTER_SYMBOL, forwardAnimationCurve: Curves.fastLinearToSlowEaseIn);
                       }
                     },
                   ),
@@ -454,7 +454,7 @@ class IndexerSettings extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              isBlackListDialog ? Language.inst.SEPARATORS_BLACKLIST_SUBTITLE : Language.inst.SEPARATORS_MESSAGE,
+              isBlackListDialog ? lang.SEPARATORS_BLACKLIST_SUBTITLE : lang.SEPARATORS_MESSAGE,
               style: Get.textTheme.displaySmall,
             ),
             const SizedBox(
@@ -519,7 +519,7 @@ class IndexerSettings extends StatelessWidget {
                   borderRadius: BorderRadius.circular(18.0.multipliedRadius),
                   borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 1.0),
                 ),
-                hintText: Language.inst.VALUE,
+                hintText: lang.VALUE,
               ),
               controller: separatorsController,
             )

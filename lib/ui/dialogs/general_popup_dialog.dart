@@ -129,15 +129,15 @@ Future<void> showGeneralPopupDialog(
     final currentMoods = initialMoods.join(', ');
     controller.text = currentMoods;
 
-    final title = isTags ? Language.inst.SET_TAGS : Language.inst.SET_MOODS;
-    final subtitle = Language.inst.SET_MOODS_SUBTITLE;
+    final title = isTags ? lang.SET_TAGS : lang.SET_MOODS;
+    final subtitle = lang.SET_MOODS_SUBTITLE;
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         title: title,
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: Language.inst.SAVE,
+            text: lang.SAVE,
             onPressed: () async {
               List<String> moodsPre = controller.text.split(',');
               List<String> moodsFinal = [];
@@ -213,11 +213,11 @@ Future<void> showGeneralPopupDialog(
     final c = TextEditingController();
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
-        title: Language.inst.SET_RATING,
+        title: lang.SET_RATING,
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: Language.inst.SAVE,
+            text: lang.SAVE,
             onPressed: () async {
               NamidaNavigator.inst.closeDialog();
               final val = int.tryParse(c.text) ?? 0;
@@ -228,7 +228,7 @@ Future<void> showGeneralPopupDialog(
         child: CustomTagTextField(
           controller: c,
           hintText: stats.value.rating.toString(),
-          labelText: Language.inst.SET_RATING,
+          labelText: lang.SET_RATING,
           keyboardType: TextInputType.number,
         ),
       ),
@@ -246,18 +246,18 @@ Future<void> showGeneralPopupDialog(
       dialog: Form(
         key: formKey,
         child: CustomBlurryDialog(
-          title: Language.inst.RENAME_PLAYLIST,
+          title: lang.RENAME_PLAYLIST,
           actions: [
             const CancelButton(),
             NamidaButton(
-              text: Language.inst.SAVE,
+              text: lang.SAVE,
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   final didRename = await PlaylistController.inst.renamePlaylist(playlistName!, controller.text);
                   if (didRename) {
                     NamidaNavigator.inst.closeDialog();
                   } else {
-                    Get.snackbar(Language.inst.ERROR, Language.inst.COULDNT_RENAME_PLAYLIST);
+                    Get.snackbar(lang.ERROR, lang.COULDNT_RENAME_PLAYLIST);
                   }
                 }
               },
@@ -272,7 +272,7 @@ Future<void> showGeneralPopupDialog(
               CustomTagTextField(
                 controller: controller,
                 hintText: playlistName!,
-                labelText: Language.inst.NAME,
+                labelText: lang.NAME,
                 validator: (value) => PlaylistController.inst.validatePlaylistName(value),
               ),
             ],
@@ -293,14 +293,14 @@ Future<void> showGeneralPopupDialog(
 
     await PlaylistController.inst.removePlaylist(pl);
     Get.snackbar(
-      Language.inst.UNDO_CHANGES,
-      Language.inst.UNDO_CHANGES_DELETED_PLAYLIST,
+      lang.UNDO_CHANGES,
+      lang.UNDO_CHANGES_DELETED_PLAYLIST,
       mainButton: TextButton(
         onPressed: () async {
           await PlaylistController.inst.reAddPlaylist(pl, pl.modifiedDate);
           Get.closeAllSnackbars();
         },
-        child: Text(Language.inst.UNDO),
+        child: Text(lang.UNDO),
       ),
     );
   }
@@ -310,11 +310,11 @@ Future<void> showGeneralPopupDialog(
       dialog: CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
-        bodyText: Language.inst.TRACK_PATH_OLD_NEW.replaceFirst('_OLD_NAME_', tracks.first.filenameWOExt).replaceFirst('_NEW_NAME_', newPath.getFilenameWOExt),
+        bodyText: lang.TRACK_PATH_OLD_NEW.replaceFirst('_OLD_NAME_', tracks.first.filenameWOExt).replaceFirst('_NEW_NAME_', newPath.getFilenameWOExt),
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: Language.inst.CONFIRM,
+            text: lang.CONFIRM,
             onPressed: () {
               NamidaNavigator.inst.closeDialog(2);
               EditDeleteController.inst.updateTrackPathInEveryPartOfNamida(tracks.first, newPath);
@@ -330,7 +330,7 @@ Future<void> showGeneralPopupDialog(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          Language.inst.HIGH_MATCHES,
+          lang.HIGH_MATCHES,
           style: Get.textTheme.displayMedium,
         ),
         const SizedBox(height: 8.0),
@@ -358,7 +358,7 @@ Future<void> showGeneralPopupDialog(
     final files = Directory(dirPath).listSync();
     files.removeWhere((element) => element is! File);
     if (files.isEmpty) {
-      Get.snackbar(Language.inst.ERROR, Language.inst.NO_TRACKS_FOUND_IN_DIRECTORY);
+      Get.snackbar(lang.ERROR, lang.NO_TRACKS_FOUND_IN_DIRECTORY);
       return;
     }
 
@@ -375,11 +375,11 @@ Future<void> showGeneralPopupDialog(
 
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
-        title: Language.inst.CHOOSE,
+        title: lang.CHOOSE,
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: Language.inst.PICK_FROM_STORAGE,
+            text: lang.PICK_FROM_STORAGE,
             onPressed: () {
               NamidaNavigator.inst.closeDialog();
               pickDirectoryToUpdateTrack();
@@ -396,7 +396,7 @@ Future<void> showGeneralPopupDialog(
                   Expanded(
                     child: CustomTagTextField(
                       controller: txtc,
-                      hintText: Language.inst.SEARCH,
+                      hintText: lang.SEARCH,
                       labelText: '',
                       onChanged: (value) {
                         final matches = value == ''
@@ -410,7 +410,7 @@ Future<void> showGeneralPopupDialog(
                   ),
                   Obx(
                     () => NamidaIconButton(
-                      tooltip: shouldCleanUp.value ? Language.inst.DISABLE_SEARCH_CLEANUP : Language.inst.ENABLE_SEARCH_CLEANUP,
+                      tooltip: shouldCleanUp.value ? lang.DISABLE_SEARCH_CLEANUP : lang.ENABLE_SEARCH_CLEANUP,
                       icon: shouldCleanUp.value ? Broken.shield_cross : Broken.shield_search,
                       onPressed: () => shouldCleanUp.value = !shouldCleanUp.value,
                     ),
@@ -447,7 +447,7 @@ Future<void> showGeneralPopupDialog(
   void openYoutubeLink() {
     final link = tracks.first.youtubeLink;
     if (link == '') {
-      Get.snackbar(Language.inst.COULDNT_OPEN, Language.inst.COULDNT_OPEN_YT_LINK);
+      Get.snackbar(lang.COULDNT_OPEN, lang.COULDNT_OPEN_YT_LINK);
       return;
     }
     launchUrlString(
@@ -459,7 +459,7 @@ Future<void> showGeneralPopupDialog(
   final advancedStuffListTile = SmallListTile(
     color: colorDelightened,
     compact: false,
-    title: Language.inst.ADVANCED,
+    title: lang.ADVANCED,
     icon: Broken.code_circle,
     onTap: () {
       cancelSkipTimer();
@@ -475,7 +475,7 @@ Future<void> showGeneralPopupDialog(
       ? SmallListTile(
           color: colorDelightened,
           compact: true,
-          title: Language.inst.REMOVE_FROM_PLAYLIST,
+          title: lang.REMOVE_FROM_PLAYLIST,
           subtitle: playlistName!.translatePlaylistName(),
           icon: Broken.box_remove,
           onTap: () async {
@@ -492,11 +492,11 @@ Future<void> showGeneralPopupDialog(
           child: Row(
             children: [
               const SizedBox(width: 24.0),
-              Expanded(child: bigIcon(Broken.smileys, Language.inst.SET_MOODS, setPlaylistMoods)),
+              Expanded(child: bigIcon(Broken.smileys, lang.SET_MOODS, setPlaylistMoods)),
               const SizedBox(width: 8.0),
-              Expanded(child: bigIcon(Broken.edit_2, Language.inst.RENAME_PLAYLIST, renamePlaylist)),
+              Expanded(child: bigIcon(Broken.edit_2, lang.RENAME_PLAYLIST, renamePlaylist)),
               const SizedBox(width: 8.0),
-              Expanded(child: bigIcon(Broken.pen_remove, Language.inst.DELETE_PLAYLIST, deletePlaylist)),
+              Expanded(child: bigIcon(Broken.pen_remove, lang.DELETE_PLAYLIST, deletePlaylist)),
               const SizedBox(width: 24.0),
             ],
           ),
@@ -506,21 +506,21 @@ Future<void> showGeneralPopupDialog(
       ? SmallListTile(
           color: colorDelightened,
           compact: false,
-          title: Language.inst.REMOVE_QUEUE,
+          title: lang.REMOVE_QUEUE,
           icon: Broken.pen_remove,
           onTap: () {
             cancelSkipTimer();
             final oldQueue = queue;
             QueueController.inst.removeQueue(oldQueue);
             Get.snackbar(
-              Language.inst.UNDO_CHANGES,
-              Language.inst.UNDO_CHANGES_DELETED_QUEUE,
+              lang.UNDO_CHANGES,
+              lang.UNDO_CHANGES_DELETED_QUEUE,
               mainButton: TextButton(
                 onPressed: () {
                   QueueController.inst.reAddQueue(oldQueue);
                   Get.closeAllSnackbars();
                 },
-                child: Text(Language.inst.UNDO),
+                child: Text(lang.UNDO),
               ),
             );
             NamidaNavigator.inst.closeDialog();
@@ -651,13 +651,13 @@ Future<void> showGeneralPopupDialog(
                       Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Text(
-                          '${errorPlayingTrack ? Language.inst.ERROR_PLAYING_TRACK : Language.inst.TRACK_NOT_FOUND}.\n${Language.inst.PROMPT_TO_CHANGE_TRACK_PATH}',
+                          '${errorPlayingTrack ? lang.ERROR_PLAYING_TRACK : lang.TRACK_NOT_FOUND}.\n${lang.PROMPT_TO_CHANGE_TRACK_PATH}',
                           style: Get.textTheme.displayMedium,
                         ),
                       ),
                       if (isSingle) ...[
                         SmallListTile(
-                          title: Language.inst.UPDATE,
+                          title: lang.UPDATE,
                           subtitle: tracks.first.path,
                           color: colorDelightened,
                           compact: true,
@@ -674,11 +674,11 @@ Future<void> showGeneralPopupDialog(
                             if (firstHighMatchesFiles.isNotEmpty) {
                               NamidaNavigator.inst.navigateDialog(
                                 dialog: CustomBlurryDialog(
-                                  title: Language.inst.CHOOSE,
+                                  title: lang.CHOOSE,
                                   actions: [
                                     const CancelButton(),
                                     NamidaButton(
-                                      text: Language.inst.PICK_FROM_STORAGE,
+                                      text: lang.PICK_FROM_STORAGE,
                                       onPressed: () {
                                         NamidaNavigator.inst.closeDialog();
                                         pickDirectoryToUpdateTrack();
@@ -715,8 +715,8 @@ Future<void> showGeneralPopupDialog(
                             );
                             return Obx(
                               () => SmallListTile(
-                                title: Language.inst.SKIP,
-                                subtitle: remainingSecondsToSkip.value <= 0 ? null : '${remainingSecondsToSkip.value} ${Language.inst.SECONDS}',
+                                title: lang.SKIP,
+                                subtitle: remainingSecondsToSkip.value <= 0 ? null : '${remainingSecondsToSkip.value} ${lang.SECONDS}',
                                 color: colorDelightened,
                                 compact: true,
                                 icon: Broken.next,
@@ -749,12 +749,12 @@ Future<void> showGeneralPopupDialog(
                         SmallListTile(
                           color: colorDelightened,
                           compact: true,
-                          title: Language.inst.GO_TO_ALBUM,
+                          title: lang.GO_TO_ALBUM,
                           subtitle: availableAlbums.first,
                           icon: Broken.music_dashboard,
                           onTap: () => NamidaOnTaps.inst.onAlbumTap(availableAlbums.first),
                           trailing: IconButton(
-                            tooltip: Language.inst.ADD_MORE_FROM_THIS_ALBUM,
+                            tooltip: lang.ADD_MORE_FROM_THIS_ALBUM,
                             onPressed: () {
                               NamidaNavigator.inst.closeDialog();
                               final tracks = availableAlbums.first.getAlbumTracks();
@@ -767,7 +767,7 @@ Future<void> showGeneralPopupDialog(
                         SmallListTile(
                           color: colorDelightened,
                           compact: true,
-                          title: Language.inst.ADD_MORE_FROM_TO_QUEUE.replaceFirst('_MEDIA_', '"$albumToAddFrom"'),
+                          title: lang.ADD_MORE_FROM_TO_QUEUE.replaceFirst('_MEDIA_', '"$albumToAddFrom"'),
                           icon: Broken.music_dashboard,
                           onTap: () {
                             final tracks = availableAlbums.first.getAlbumTracks();
@@ -785,7 +785,7 @@ Future<void> showGeneralPopupDialog(
                         NamidaExpansionTile(
                           icon: Broken.music_dashboard,
                           iconColor: iconColor,
-                          titleText: Language.inst.GO_TO_ALBUM,
+                          titleText: lang.GO_TO_ALBUM,
                           textColorScheme: colorDelightened,
                           childrenPadding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 12.0, top: 0),
                           children: [
@@ -812,7 +812,7 @@ Future<void> showGeneralPopupDialog(
                         SmallListTile(
                           color: colorDelightened,
                           compact: true,
-                          title: Language.inst.ADD_MORE_FROM_TO_QUEUE.replaceFirst('_MEDIA_', '"$artistToAddFrom"'),
+                          title: lang.ADD_MORE_FROM_TO_QUEUE.replaceFirst('_MEDIA_', '"$artistToAddFrom"'),
                           icon: Broken.microphone,
                           onTap: () {
                             NamidaNavigator.inst.closeDialog();
@@ -830,12 +830,12 @@ Future<void> showGeneralPopupDialog(
                         SmallListTile(
                           color: colorDelightened,
                           compact: true,
-                          title: Language.inst.GO_TO_ARTIST,
+                          title: lang.GO_TO_ARTIST,
                           subtitle: availableArtists.first,
                           icon: Broken.microphone,
                           onTap: () => NamidaOnTaps.inst.onArtistTap(availableArtists.first),
                           trailing: IconButton(
-                            tooltip: Language.inst.ADD_MORE_FROM_THIS_ARTIST,
+                            tooltip: lang.ADD_MORE_FROM_THIS_ARTIST,
                             onPressed: () {
                               final tracks = availableArtists.first.getArtistTracks();
                               Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreArtist);
@@ -848,7 +848,7 @@ Future<void> showGeneralPopupDialog(
                         NamidaExpansionTile(
                           icon: Broken.profile_2user,
                           iconColor: iconColor,
-                          titleText: Language.inst.GO_TO_ARTIST,
+                          titleText: lang.GO_TO_ARTIST,
                           textColorScheme: colorDelightened,
                           childrenPadding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 12.0, top: 0),
                           children: [
@@ -881,7 +881,7 @@ Future<void> showGeneralPopupDialog(
                         SmallListTile(
                           color: colorDelightened,
                           compact: true,
-                          title: Language.inst.GO_TO_FOLDER,
+                          title: lang.GO_TO_FOLDER,
                           subtitle: availableFolders.first.folderName,
                           icon: Broken.folder,
                           onTap: () {
@@ -890,7 +890,7 @@ Future<void> showGeneralPopupDialog(
                             NamidaOnTaps.inst.onFolderTap(availableFolders.first, trackToScrollTo: tracks.first);
                           },
                           trailing: IconButton(
-                            tooltip: Language.inst.ADD_MORE_FROM_THIS_FOLDER,
+                            tooltip: lang.ADD_MORE_FROM_THIS_FOLDER,
                             onPressed: () {
                               final tracks = availableFolders.first.tracks;
                               Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreFolder);
@@ -902,7 +902,7 @@ Future<void> showGeneralPopupDialog(
                       SmallListTile(
                         color: colorDelightened,
                         compact: false,
-                        title: Language.inst.SHARE,
+                        title: lang.SHARE,
                         icon: Broken.share,
                         trailing: Obx(() => isLoadingFilesToShare.value ? const LoadingIndicator() : const SizedBox()),
                         onTap: () async {
@@ -921,7 +921,7 @@ Future<void> showGeneralPopupDialog(
                                 child: SmallListTile(
                                   color: colorDelightened,
                                   compact: false,
-                                  title: Language.inst.STOP_AFTER_THIS_TRACK,
+                                  title: lang.STOP_AFTER_THIS_TRACK,
                                   icon: Broken.pause,
                                   onTap: () {
                                     NamidaNavigator.inst.closeDialog();
@@ -933,7 +933,7 @@ Future<void> showGeneralPopupDialog(
                           : SmallListTile(
                               color: colorDelightened,
                               compact: false,
-                              title: isSingle ? Language.inst.PLAY : Language.inst.PLAY_ALL,
+                              title: isSingle ? lang.PLAY : lang.PLAY_ALL,
                               icon: Broken.play,
                               onTap: () {
                                 NamidaNavigator.inst.closeDialog();
@@ -945,7 +945,7 @@ Future<void> showGeneralPopupDialog(
                         SmallListTile(
                           color: colorDelightened,
                           compact: false,
-                          title: Language.inst.SHUFFLE,
+                          title: lang.SHUFFLE,
                           icon: Broken.shuffle,
                           onTap: () {
                             NamidaNavigator.inst.closeDialog();
@@ -956,7 +956,7 @@ Future<void> showGeneralPopupDialog(
                       SmallListTile(
                         color: colorDelightened,
                         compact: false,
-                        title: Language.inst.ADD_TO_PLAYLIST,
+                        title: lang.ADD_TO_PLAYLIST,
                         icon: Broken.music_library_2,
                         onTap: () {
                           NamidaNavigator.inst.closeDialog();
@@ -966,7 +966,7 @@ Future<void> showGeneralPopupDialog(
                       SmallListTile(
                         color: colorDelightened,
                         compact: false,
-                        title: Language.inst.EDIT_TAGS,
+                        title: lang.EDIT_TAGS,
                         icon: Broken.edit,
                         onTap: () {
                           NamidaNavigator.inst.closeDialog();
@@ -982,7 +982,7 @@ Future<void> showGeneralPopupDialog(
                         SmallListTile(
                           color: colorDelightened,
                           compact: true,
-                          title: '${Language.inst.PLAY_AFTER} "${Player.inst.currentQueue.elementAt(Player.inst.latestInsertedIndex).track.title}"',
+                          title: '${lang.PLAY_AFTER} "${Player.inst.currentQueue.elementAt(Player.inst.latestInsertedIndex).track.title}"',
                           subtitle: (Player.inst.latestInsertedIndex - Player.inst.currentIndex).displayTrackKeyword,
                           icon: Broken.hierarchy_square,
                           onTap: () {
@@ -995,7 +995,7 @@ Future<void> showGeneralPopupDialog(
                           () => SmallListTile(
                             color: colorDelightened,
                             compact: true,
-                            title: Language.inst.REPEAT_FOR_N_TIMES.replaceFirst('_NUM_', numberOfRepeats.value.toString()),
+                            title: lang.REPEAT_FOR_N_TIMES.replaceFirst('_NUM_', numberOfRepeats.value.toString()),
                             icon: Broken.cd,
                             onTap: () {
                               NamidaNavigator.inst.closeDialog();
@@ -1032,15 +1032,15 @@ Future<void> showGeneralPopupDialog(
                         Row(
                           children: [
                             const SizedBox(width: 24.0),
-                            Expanded(child: bigIcon(Broken.smileys, Language.inst.SET_MOODS, setTrackMoods)),
+                            Expanded(child: bigIcon(Broken.smileys, lang.SET_MOODS, setTrackMoods)),
                             const SizedBox(width: 8.0),
-                            Expanded(child: bigIcon(Broken.ticket_discount, Language.inst.SET_TAGS, setTrackTags)),
+                            Expanded(child: bigIcon(Broken.ticket_discount, lang.SET_TAGS, setTrackTags)),
                             const SizedBox(width: 8.0),
                             Expanded(
                               child: Obx(
                                 () => bigIcon(
                                   Broken.grammerly,
-                                  Language.inst.SET_RATING,
+                                  lang.SET_RATING,
                                   setTrackRating,
                                   subtitle: stats.value.rating == 0 ? '' : ' ${stats.value.rating}%',
                                 ),
@@ -1051,7 +1051,7 @@ Future<void> showGeneralPopupDialog(
                               Expanded(
                                 child: bigIcon(
                                   Broken.edit_2,
-                                  Language.inst.SET_YOUTUBE_LINK,
+                                  lang.SET_YOUTUBE_LINK,
                                   () => showSetYTLinkCommentDialog(tracks, colorDelightened),
                                   iconWidget: StackedIcon(
                                     baseIcon: Broken.edit_2,
@@ -1065,7 +1065,7 @@ Future<void> showGeneralPopupDialog(
                               Expanded(
                                 child: bigIcon(
                                   Broken.login_1,
-                                  Language.inst.OPEN_YOUTUBE_LINK,
+                                  lang.OPEN_YOUTUBE_LINK,
                                   openYoutubeLink,
                                 ),
                               ),
@@ -1088,7 +1088,7 @@ Future<void> showGeneralPopupDialog(
                             child: SmallListTile(
                               color: colorDelightened,
                               compact: false,
-                              title: Language.inst.PLAY_NEXT,
+                              title: lang.PLAY_NEXT,
                               icon: Broken.next,
                               onTap: () {
                                 NamidaNavigator.inst.closeDialog();
@@ -1105,7 +1105,7 @@ Future<void> showGeneralPopupDialog(
                             child: SmallListTile(
                               color: colorDelightened,
                               compact: false,
-                              title: Language.inst.PLAY_LAST,
+                              title: lang.PLAY_LAST,
                               icon: Broken.play_cricle,
                               onTap: () {
                                 NamidaNavigator.inst.closeDialog();

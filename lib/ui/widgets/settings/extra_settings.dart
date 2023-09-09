@@ -26,8 +26,8 @@ class ExtrasSettings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
-      title: Language.inst.EXTRAS,
-      subtitle: Language.inst.EXTRAS_SUBTITLE,
+      title: lang.EXTRAS,
+      subtitle: lang.EXTRAS_SUBTITLE,
       icon: Broken.command_square,
       child: Column(
         children: [
@@ -35,8 +35,8 @@ class ExtrasSettings extends StatelessWidget {
           Obx(
             () => CustomSwitchListTile(
               icon: Broken.direct,
-              title: Language.inst.ENABLE_BOTTOM_NAV_BAR,
-              subtitle: Language.inst.ENABLE_BOTTOM_NAV_BAR_SUBTITLE,
+              title: lang.ENABLE_BOTTOM_NAV_BAR,
+              subtitle: lang.ENABLE_BOTTOM_NAV_BAR_SUBTITLE,
               value: SettingsController.inst.enableBottomNavBar.value,
               onChanged: (p0) {
                 SettingsController.inst.save(enableBottomNavBar: !p0);
@@ -47,7 +47,7 @@ class ExtrasSettings extends StatelessWidget {
           Obx(
             () => CustomSwitchListTile(
               icon: Broken.video_square,
-              title: Language.inst.USE_YOUTUBE_MINIPLAYER,
+              title: lang.USE_YOUTUBE_MINIPLAYER,
               value: SettingsController.inst.useYoutubeMiniplayer.value,
               onChanged: (isTrue) {
                 SettingsController.inst.save(useYoutubeMiniplayer: !isTrue);
@@ -58,7 +58,7 @@ class ExtrasSettings extends StatelessWidget {
           Obx(
             () => CustomSwitchListTile(
               icon: Broken.screenmirroring,
-              title: "${Language.inst.ENABLE_PICTURE_IN_PICTURE} (${Language.inst.BETA})",
+              title: "${lang.ENABLE_PICTURE_IN_PICTURE} (${lang.BETA})",
               value: SettingsController.inst.enablePip.value,
               onChanged: (isTrue) => SettingsController.inst.save(enablePip: !isTrue),
             ),
@@ -66,7 +66,7 @@ class ExtrasSettings extends StatelessWidget {
           Obx(
             () => CustomSwitchListTile(
               icon: Broken.folder_open,
-              title: Language.inst.ENABLE_FOLDERS_HIERARCHY,
+              title: lang.ENABLE_FOLDERS_HIERARCHY,
               value: SettingsController.inst.enableFoldersHierarchy.value,
               onChanged: (p0) {
                 SettingsController.inst.save(enableFoldersHierarchy: !p0);
@@ -78,14 +78,14 @@ class ExtrasSettings extends StatelessWidget {
           Obx(
             () => CustomListTile(
               icon: Broken.receipt_1,
-              title: Language.inst.DEFAULT_LIBRARY_TAB,
-              trailingText: SettingsController.inst.autoLibraryTab.value ? Language.inst.AUTO : SettingsController.inst.selectedLibraryTab.value.toText(),
+              title: lang.DEFAULT_LIBRARY_TAB,
+              trailingText: SettingsController.inst.autoLibraryTab.value ? lang.AUTO : SettingsController.inst.selectedLibraryTab.value.toText(),
               onTap: () => NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
-                  title: Language.inst.DEFAULT_LIBRARY_TAB,
+                  title: lang.DEFAULT_LIBRARY_TAB,
                   actions: [
                     NamidaButton(
-                      text: Language.inst.DONE,
+                      text: lang.DONE,
                       onPressed: NamidaNavigator.inst.closeDialog,
                     ),
                   ],
@@ -97,7 +97,7 @@ class ExtrasSettings extends StatelessWidget {
                           margin: const EdgeInsets.all(4.0),
                           child: Obx(
                             () => ListTileWithCheckMark(
-                              title: Language.inst.AUTO,
+                              title: lang.AUTO,
                               icon: Broken.recovery_convert,
                               onTap: () => SettingsController.inst.save(autoLibraryTab: true),
                               active: SettingsController.inst.autoLibraryTab.value,
@@ -135,14 +135,14 @@ class ExtrasSettings extends StatelessWidget {
             () {
               return CustomListTile(
                 icon: Broken.color_swatch,
-                title: Language.inst.LIBRARY_TABS,
+                title: lang.LIBRARY_TABS,
                 trailingText: "${SettingsController.inst.libraryTabs.length}",
                 onTap: () => NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
-                    title: Language.inst.LIBRARY_TABS,
+                    title: lang.LIBRARY_TABS,
                     actions: [
                       NamidaButton(
-                        text: Language.inst.DONE,
+                        text: lang.DONE,
                         onPressed: NamidaNavigator.inst.closeDialog,
                       ),
                     ],
@@ -159,7 +159,7 @@ class ExtrasSettings extends StatelessWidget {
                         return Column(
                           children: [
                             Text(
-                              Language.inst.LIBRARY_TABS_REORDER,
+                              lang.LIBRARY_TABS_REORDER,
                               style: context.textTheme.displayMedium,
                             ),
                             const SizedBox(height: 12.0),
@@ -227,17 +227,17 @@ class ExtrasSettings extends StatelessWidget {
           Obx(
             () => CustomListTile(
               icon: Broken.filter_search,
-              title: Language.inst.FILTER_TRACKS_BY,
+              title: lang.FILTER_TRACKS_BY,
               trailingText: "${SettingsController.inst.trackSearchFilter.length}",
               onTap: () => NamidaNavigator.inst.navigateDialog(
                 dialog: Obx(
                   () {
                     return CustomBlurryDialog(
-                      title: Language.inst.FILTER_TRACKS_BY,
+                      title: lang.FILTER_TRACKS_BY,
                       actions: [
                         IconButton(
                           icon: const Icon(Broken.refresh),
-                          tooltip: Language.inst.RESTORE_DEFAULTS,
+                          tooltip: lang.RESTORE_DEFAULTS,
                           onPressed: () {
                             SettingsController.inst.removeFromList(trackSearchFilterAll: [
                               'title',
@@ -253,7 +253,7 @@ class ExtrasSettings extends StatelessWidget {
                           },
                         ),
                         NamidaButton(
-                          text: Language.inst.SAVE,
+                          text: lang.SAVE,
                           onPressed: NamidaNavigator.inst.closeDialog,
                         ),
                       ],
@@ -263,7 +263,7 @@ class ExtrasSettings extends StatelessWidget {
                           children: [
                             const SizedBox(height: 12.0),
                             ListTileWithCheckMark(
-                              title: Language.inst.TITLE,
+                              title: lang.TITLE,
                               onTap: () {
                                 _trackFilterOnTap(TrackSearchFilter.title);
                               },
@@ -271,7 +271,7 @@ class ExtrasSettings extends StatelessWidget {
                             ),
                             const SizedBox(height: 12.0),
                             ListTileWithCheckMark(
-                              title: Language.inst.ALBUM,
+                              title: lang.ALBUM,
                               onTap: () {
                                 _trackFilterOnTap(TrackSearchFilter.album);
                               },
@@ -279,7 +279,7 @@ class ExtrasSettings extends StatelessWidget {
                             ),
                             const SizedBox(height: 12.0),
                             ListTileWithCheckMark(
-                              title: Language.inst.ALBUM_ARTIST,
+                              title: lang.ALBUM_ARTIST,
                               onTap: () {
                                 _trackFilterOnTap(TrackSearchFilter.albumartist);
                               },
@@ -287,7 +287,7 @@ class ExtrasSettings extends StatelessWidget {
                             ),
                             const SizedBox(height: 12.0),
                             ListTileWithCheckMark(
-                              title: Language.inst.ARTIST,
+                              title: lang.ARTIST,
                               onTap: () {
                                 _trackFilterOnTap(TrackSearchFilter.artist);
                               },
@@ -295,7 +295,7 @@ class ExtrasSettings extends StatelessWidget {
                             ),
                             const SizedBox(height: 12.0),
                             ListTileWithCheckMark(
-                              title: Language.inst.GENRE,
+                              title: lang.GENRE,
                               onTap: () {
                                 _trackFilterOnTap(TrackSearchFilter.genre);
                               },
@@ -303,7 +303,7 @@ class ExtrasSettings extends StatelessWidget {
                             ),
                             const SizedBox(height: 12.0),
                             ListTileWithCheckMark(
-                              title: Language.inst.COMPOSER,
+                              title: lang.COMPOSER,
                               onTap: () {
                                 _trackFilterOnTap(TrackSearchFilter.composer);
                               },
@@ -311,7 +311,7 @@ class ExtrasSettings extends StatelessWidget {
                             ),
                             const SizedBox(height: 12.0),
                             ListTileWithCheckMark(
-                              title: Language.inst.YEAR,
+                              title: lang.YEAR,
                               onTap: () => _trackFilterOnTap(TrackSearchFilter.year),
                               active: SettingsController.inst.trackSearchFilter.contains('year'),
                             ),
@@ -327,15 +327,15 @@ class ExtrasSettings extends StatelessWidget {
           Obx(
             () => CustomSwitchListTile(
               icon: Broken.document_filter,
-              title: Language.inst.ENABLE_SEARCH_CLEANUP,
-              subtitle: Language.inst.ENABLE_SEARCH_CLEANUP_SUBTITLE,
+              title: lang.ENABLE_SEARCH_CLEANUP,
+              subtitle: lang.ENABLE_SEARCH_CLEANUP_SUBTITLE,
               value: SettingsController.inst.enableSearchCleanup.value,
               onChanged: (p0) => SettingsController.inst.save(enableSearchCleanup: !p0),
             ),
           ),
           CustomListTile(
             icon: Broken.colorfilter,
-            title: Language.inst.EXTRACT_ALL_COLOR_PALETTES,
+            title: lang.EXTRACT_ALL_COLOR_PALETTES,
             trailing: Obx(
               () => Column(
                 children: [
@@ -348,12 +348,12 @@ class ExtrasSettings extends StatelessWidget {
               if (CurrentColor.inst.isGeneratingAllColorPalettes.value) {
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
-                    title: Language.inst.NOTE,
-                    bodyText: Language.inst.FORCE_STOP_COLOR_PALETTE_GENERATION,
+                    title: lang.NOTE,
+                    bodyText: lang.FORCE_STOP_COLOR_PALETTE_GENERATION,
                     actions: [
                       const CancelButton(),
                       NamidaButton(
-                        text: Language.inst.STOP,
+                        text: lang.STOP,
                         onPressed: () {
                           CurrentColor.inst.stopGeneratingColorPalettes();
                           NamidaNavigator.inst.closeDialog();
@@ -365,13 +365,13 @@ class ExtrasSettings extends StatelessWidget {
               } else {
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
-                    title: Language.inst.NOTE,
-                    bodyText: Language.inst.EXTRACT_ALL_COLOR_PALETTES_SUBTITLE
+                    title: lang.NOTE,
+                    bodyText: lang.EXTRACT_ALL_COLOR_PALETTES_SUBTITLE
                         .replaceFirst('_REMAINING_COLOR_PALETTES_', '${allTracksInLibrary.length - Indexer.inst.colorPalettesInStorage.value}'),
                     actions: [
                       const CancelButton(),
                       NamidaButton(
-                        text: Language.inst.EXTRACT,
+                        text: lang.EXTRACT,
                         onPressed: () {
                           CurrentColor.inst.generateAllColorPalettes();
                           NamidaNavigator.inst.closeDialog();

@@ -154,12 +154,12 @@ class NamidaDialogs {
   void showDeletePlaylistDialog(Playlist playlist) {
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
-        title: Language.inst.WARNING,
-        bodyText: '${Language.inst.DELETE_PLAYLIST}: "${playlist.name}"?',
+        title: lang.WARNING,
+        bodyText: '${lang.DELETE_PLAYLIST}: "${playlist.name}"?',
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: Language.inst.DELETE.toUpperCase(),
+            text: lang.DELETE.toUpperCase(),
             onPressed: () {
               PlaylistController.inst.removePlaylist(playlist);
               NamidaNavigator.inst.closeDialog();

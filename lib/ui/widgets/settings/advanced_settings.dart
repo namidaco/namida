@@ -35,8 +35,8 @@ class AdvancedSettings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
-      title: Language.inst.ADVANCED_SETTINGS,
-      subtitle: Language.inst.ADVANCED_SETTINGS_SUBTITLE,
+      title: lang.ADVANCED_SETTINGS,
+      subtitle: lang.ADVANCED_SETTINGS_SUBTITLE,
       icon: Broken.hierarchy_3,
       // icon: Broken.danger,
       child: Column(
@@ -62,10 +62,10 @@ class AdvancedSettings extends StatelessWidget {
                 );
               },
             ),
-            title: Language.inst.RESCAN_VIDEOS,
+            title: lang.RESCAN_VIDEOS,
             onTap: () async {
               await VideoController.inst.scanLocalVideos(forceReScan: true);
-              Get.snackbar(Language.inst.DONE, Language.inst.FINISHED_UPDATING_LIBRARY);
+              Get.snackbar(lang.DONE, lang.FINISHED_UPDATING_LIBRARY);
             },
           ),
           CustomListTile(
@@ -73,7 +73,7 @@ class AdvancedSettings extends StatelessWidget {
               baseIcon: Broken.trash,
               secondaryIcon: Broken.refresh,
             ),
-            title: Language.inst.REMOVE_SOURCE_FROM_HISTORY,
+            title: lang.REMOVE_SOURCE_FROM_HISTORY,
             onTap: () async {
               final RxList<TrackSource> sourcesToDelete = <TrackSource>[].obs;
               bool isActive(TrackSource e) => sourcesToDelete.contains(e);
@@ -125,11 +125,11 @@ class AdvancedSettings extends StatelessWidget {
 
               NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
-                  title: Language.inst.CHOOSE,
+                  title: lang.CHOOSE,
                   actions: [
                     const CancelButton(),
                     NamidaButton(
-                      text: Language.inst.REMOVE,
+                      text: lang.REMOVE,
                       onPressed: () async {
                         final removedNum = await HistoryController.inst.removeSourcesTracksFromHistory(
                           sourcesToDelete,
@@ -137,7 +137,7 @@ class AdvancedSettings extends StatelessWidget {
                           newestDate: newestDate,
                         );
                         NamidaNavigator.inst.closeDialog();
-                        Get.snackbar(Language.inst.NOTE, "${Language.inst.REMOVED} ${removedNum.displayTrackKeyword}");
+                        Get.snackbar(lang.NOTE, "${lang.REMOVED} ${removedNum.displayTrackKeyword}");
                       },
                     )
                   ],
@@ -152,7 +152,7 @@ class AdvancedSettings extends StatelessWidget {
                             const Icon(Broken.danger),
                             const SizedBox(width: 8.0),
                             Obx(() => Text(
-                                  '${Language.inst.TOTAL_TRACKS}: ${totalTracksToBeRemoved.value}',
+                                  '${lang.TOTAL_TRACKS}: ${totalTracksToBeRemoved.value}',
                                   style: context.textTheme.displayMedium,
                                 )),
                           ],
@@ -210,18 +210,18 @@ class AdvancedSettings extends StatelessWidget {
                 baseIcon: Broken.image,
                 secondaryIcon: Broken.close_circle,
               ),
-              title: Language.inst.CLEAR_IMAGE_CACHE,
+              title: lang.CLEAR_IMAGE_CACHE,
               trailingText: Indexer.inst.artworksSizeInStorage.value.fileSizeFormatted,
               onTap: () {
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
                     isWarning: true,
                     normalTitleStyle: true,
-                    bodyText: Language.inst.CLEAR_IMAGE_CACHE_WARNING,
+                    bodyText: lang.CLEAR_IMAGE_CACHE_WARNING,
                     actions: [
                       const CancelButton(),
                       NamidaButton(
-                        text: Language.inst.CLEAR.toUpperCase(),
+                        text: lang.CLEAR.toUpperCase(),
                         onPressed: () async {
                           NamidaNavigator.inst.closeDialog();
                           await Indexer.inst.clearImageCache();
@@ -239,7 +239,7 @@ class AdvancedSettings extends StatelessWidget {
                 baseIcon: Broken.video,
                 secondaryIcon: Broken.close_circle,
               ),
-              title: Language.inst.CLEAR_VIDEO_CACHE,
+              title: lang.CLEAR_VIDEO_CACHE,
               trailingText: Indexer.inst.videosSizeInStorage.value.fileSizeFormatted,
               onTap: () async {
                 final allvideo = VideoController.inst.getCurrentVideosInCache();
@@ -249,11 +249,11 @@ class AdvancedSettings extends StatelessWidget {
                   dialog: CustomBlurryDialog(
                     isWarning: true,
                     normalTitleStyle: true,
-                    bodyText: "${_getVideoSubtitleText(allvideo)}\n${Language.inst.CLEAR_VIDEO_CACHE_NOTE}",
+                    bodyText: "${_getVideoSubtitleText(allvideo)}\n${lang.CLEAR_VIDEO_CACHE_NOTE}",
                     actions: [
                       /// Pressing Choose
                       NamidaButton(
-                        text: Language.inst.CHOOSE,
+                        text: lang.CHOOSE,
                         onPressed: () {
                           NamidaNavigator.inst.closeDialog();
                           _showChooseVideosToDeleteDialog(allvideo);
@@ -261,7 +261,7 @@ class AdvancedSettings extends StatelessWidget {
                       ),
                       const CancelButton(),
                       NamidaButton(
-                        text: Language.inst.DELETE.toUpperCase(),
+                        text: lang.DELETE.toUpperCase(),
                         onPressed: () async {
                           NamidaNavigator.inst.closeDialog();
                           await Indexer.inst.clearVideoCache();
@@ -279,7 +279,7 @@ class AdvancedSettings extends StatelessWidget {
   }
 
   String _getVideoSubtitleText(List<NamidaVideo> videos) {
-    return Language.inst.CLEAR_VIDEO_CACHE_SUBTITLE
+    return lang.CLEAR_VIDEO_CACHE_SUBTITLE
         .replaceFirst('_CURRENT_VIDEOS_COUNT_', videos.length.formatDecimal())
         .replaceFirst('_TOTAL_SIZE_', videos.fold(0, (previousValue, element) => previousValue + element.sizeInBytes).fileSizeFormatted);
   }
@@ -345,7 +345,7 @@ class AdvancedSettings extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
         isWarning: true,
         normalTitleStyle: true,
-        title: Language.inst.CHOOSE,
+        title: lang.CHOOSE,
         actions: [
           const CancelButton(),
 
@@ -353,7 +353,7 @@ class AdvancedSettings extends StatelessWidget {
           Obx(
             () => NamidaButton(
               enabled: videosToDelete.isNotEmpty,
-              text: Language.inst.DELETE.toUpperCase(),
+              text: lang.DELETE.toUpperCase(),
               onPressed: () async {
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
@@ -364,7 +364,7 @@ class AdvancedSettings extends StatelessWidget {
 
                       /// final clear confirm
                       NamidaButton(
-                        text: Language.inst.DELETE.toUpperCase(),
+                        text: lang.DELETE.toUpperCase(),
                         onPressed: () async {
                           NamidaNavigator.inst.closeDialog(2);
                           await Indexer.inst.clearVideoCache(videosToDelete);
@@ -390,9 +390,9 @@ class AdvancedSettings extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       const SizedBox(width: 24.0),
-                      getChipButton(title: Language.inst.SIZE, icon: Broken.size, enabled: isSortTypeSize.value),
+                      getChipButton(title: lang.SIZE, icon: Broken.size, enabled: isSortTypeSize.value),
                       const SizedBox(width: 12.0),
-                      getChipButton(title: Language.inst.OLDEST_WATCH, icon: Broken.sort, enabled: !isSortTypeSize.value),
+                      getChipButton(title: lang.OLDEST_WATCH, icon: Broken.sort, enabled: !isSortTypeSize.value),
                       const SizedBox(width: 24.0),
                     ],
                   ),
@@ -459,7 +459,7 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
         baseIcon: Broken.folder,
         secondaryIcon: Broken.music,
       ),
-      title: Language.inst.UPDATE_DIRECTORY_PATH,
+      title: lang.UPDATE_DIRECTORY_PATH,
       subtitle: oldPath,
       onTap: () {
         final oldDirController = TextEditingController(text: oldPath);
@@ -472,11 +472,11 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
             dialogBuilder: (theme) => Form(
                   key: formKey,
                   child: CustomBlurryDialog(
-                    title: Language.inst.UPDATE_DIRECTORY_PATH,
+                    title: lang.UPDATE_DIRECTORY_PATH,
                     actions: [
                       const CancelButton(),
                       NamidaButton(
-                        text: Language.inst.UPDATE,
+                        text: lang.UPDATE,
                         onPressed: () async {
                           Future<void> okUpdate() async {
                             await EditDeleteController.inst.updateDirectoryInEveryPartOfNamida(
@@ -498,14 +498,14 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                                   actions: [
                                     const CancelButton(),
                                     NamidaButton(
-                                      text: Language.inst.CONFIRM,
+                                      text: lang.CONFIRM,
                                       onPressed: () async {
                                         NamidaNavigator.inst.closeDialog();
                                         await okUpdate();
                                       },
                                     )
                                   ],
-                                  bodyText: Language.inst.OLD_DIRECTORY_STILL_HAS_TRACKS,
+                                  bodyText: lang.OLD_DIRECTORY_STILL_HAS_TRACKS,
                                 ),
                               );
                             } else {
@@ -521,11 +521,11 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                         CustomTagTextField(
                           controller: oldDirController,
                           hintText: '',
-                          labelText: Language.inst.OLD_DIRECTORY,
+                          labelText: lang.OLD_DIRECTORY,
                           validator: (value) {
                             value ??= '';
                             if (value.isEmpty) {
-                              return Language.inst.PLEASE_ENTER_A_NAME;
+                              return lang.PLEASE_ENTER_A_NAME;
                             }
 
                             return null;
@@ -538,14 +538,14 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                               child: CustomTagTextField(
                                 controller: newDirController,
                                 hintText: '',
-                                labelText: Language.inst.NEW_DIRECTORY,
+                                labelText: lang.NEW_DIRECTORY,
                                 validator: (value) {
                                   value ??= '';
                                   if (value.isEmpty) {
-                                    return Language.inst.PLEASE_ENTER_A_NAME;
+                                    return lang.PLEASE_ENTER_A_NAME;
                                   }
                                   if (!Directory(value).existsSync()) {
-                                    return Language.inst.DIRECTORY_DOESNT_EXIST;
+                                    return lang.DIRECTORY_DOESNT_EXIST;
                                   }
                                   return null;
                                 },
@@ -565,7 +565,7 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                         Obx(
                           () => CustomSwitchListTile(
                             passedColor: colorScheme,
-                            title: Language.inst.UPDATE_MISSING_TRACKS_ONLY,
+                            title: lang.UPDATE_MISSING_TRACKS_ONLY,
                             value: updateMissingOnly.value,
                             onChanged: (isTrue) => updateMissingOnly.value = !updateMissingOnly.value,
                           ),
@@ -599,13 +599,13 @@ class _FixYTDLPThumbnailSizeListTile extends StatelessWidget {
         final currentProgress = p?.progress ?? 0;
         final totalAudiosToFix = p?.totalFiles ?? 0;
         final totalFailed = p?.totalFailed ?? 0;
-        final failedSubtitle = totalFailed > 0 ? "${Language.inst.FAILED}: $totalFailed" : null;
+        final failedSubtitle = totalFailed > 0 ? "${lang.FAILED}: $totalFailed" : null;
         return CustomListTile(
           leading: const StackedIcon(
             baseIcon: Broken.document_code_2,
             secondaryIcon: Broken.video_square,
           ),
-          title: Language.inst.FIX_YTDLP_BIG_THUMBNAIL_SIZE,
+          title: lang.FIX_YTDLP_BIG_THUMBNAIL_SIZE,
           subtitle: currentAudioPath?.getFilename ?? failedSubtitle,
           trailingText: totalAudiosToFix > 0 ? "$currentProgress/$totalAudiosToFix" : null,
           onTap: _onFixYTDLPPress,
@@ -627,11 +627,11 @@ class _CompressImagesListTile extends StatelessWidget {
 
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
-        title: Language.inst.CONFIGURE,
+        title: lang.CONFIGURE,
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: Language.inst.COMPRESS,
+            text: lang.COMPRESS,
             onPressed: () {
               NamidaNavigator.inst.closeDialog();
               _startCompressing(dirsToCompress, compPerc.value, keepOriginalFileDates.value);
@@ -667,7 +667,7 @@ class _CompressImagesListTile extends StatelessWidget {
             ),
             const SizedBox(height: 12.0),
             CustomListTile(
-              title: Language.inst.COMPRESSION_PERCENTAGE,
+              title: lang.COMPRESSION_PERCENTAGE,
               trailing: Obx(
                 () => NamidaWheelSlider(
                   totalCount: 100,
@@ -683,7 +683,7 @@ class _CompressImagesListTile extends StatelessWidget {
             ),
             CustomListTile(
               icon: Broken.folder_add,
-              title: Language.inst.PICK_FROM_STORAGE,
+              title: lang.PICK_FROM_STORAGE,
               onTap: () async {
                 final dirPath = await FilePicker.platform.getDirectoryPath();
                 if (dirPath == null) return;
@@ -694,7 +694,7 @@ class _CompressImagesListTile extends StatelessWidget {
             Obx(
               () => CustomSwitchListTile(
                 icon: Broken.document_code_2,
-                title: Language.inst.KEEP_FILE_DATES,
+                title: lang.KEEP_FILE_DATES,
                 value: keepOriginalFileDates.value,
                 onChanged: (isTrue) => keepOriginalFileDates.value = !isTrue,
               ),
@@ -727,8 +727,8 @@ class _CompressImagesListTile extends StatelessWidget {
             baseIcon: Broken.gallery,
             secondaryIcon: Broken.magicpen,
           ),
-          title: Language.inst.COMPRESS_IMAGES,
-          subtitle: currentImagePath?.getFilename ?? (totalFailed > 0 ? "${Language.inst.FAILED}: $totalFailed" : null),
+          title: lang.COMPRESS_IMAGES,
+          subtitle: currentImagePath?.getFilename ?? (totalFailed > 0 ? "${lang.FAILED}: $totalFailed" : null),
           trailingText: totalImagesToCompress > 0 ? "$currentProgress/$totalImagesToCompress" : null,
           onTap: _onCompressImagePress,
         );

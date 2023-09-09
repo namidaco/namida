@@ -280,7 +280,7 @@ class NamidaNavigator {
       Get.showSnackbar(
         GetSnackBar(
           messageText: Text(
-            Language.inst.EXIT_APP_SUBTITLE,
+            lang.EXIT_APP_SUBTITLE,
             style: Get.textTheme.displayMedium?.copyWith(color: tcolor),
           ),
           icon: Icon(

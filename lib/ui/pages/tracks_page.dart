@@ -83,7 +83,7 @@ class TracksPage extends StatelessWidget {
                 ),
                 textField: CustomTextFiled(
                   textFieldController: LibraryTab.tracks.textSearchController,
-                  textFieldHintText: Language.inst.FILTER_TRACKS,
+                  textFieldHintText: lang.FILTER_TRACKS,
                   onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.track),
                 ),
               ),

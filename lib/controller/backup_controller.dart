@@ -74,7 +74,7 @@ class BackupController {
     } catch (e) {
       printy(e, isError: true);
     }
-    Get.snackbar(Language.inst.CREATED_BACKUP_SUCCESSFULLY, Language.inst.CREATED_BACKUP_SUCCESSFULLY_SUB);
+    Get.snackbar(lang.CREATED_BACKUP_SUCCESSFULLY, lang.CREATED_BACKUP_SUCCESSFULLY_SUB);
     isCreatingBackup.value = false;
   }
 
@@ -129,7 +129,7 @@ class BackupController {
     Indexer.inst.refreshLibraryAndCheckForDiff();
     Indexer.inst.updateImageSizeInStorage();
     Indexer.inst.updateVideosSizeInStorage();
-    Get.snackbar(Language.inst.RESTORED_BACKUP_SUCCESSFULLY, Language.inst.RESTORED_BACKUP_SUCCESSFULLY_SUB);
+    Get.snackbar(lang.RESTORED_BACKUP_SUCCESSFULLY, lang.RESTORED_BACKUP_SUCCESSFULLY_SUB);
     isRestoringBackup.value = false;
   }
 }

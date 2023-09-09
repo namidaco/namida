@@ -24,7 +24,7 @@ class PlaybackSettings extends StatelessWidget {
     final children = <Widget>[
       Obx(
         () => CustomSwitchListTile(
-          title: Language.inst.ENABLE_VIDEO_PLAYBACK,
+          title: lang.ENABLE_VIDEO_PLAYBACK,
           icon: Broken.video,
           value: SettingsController.inst.enableVideoPlayback.value,
           onChanged: (p0) async => await VideoController.inst.toggleVideoPlayback(),
@@ -33,7 +33,7 @@ class PlaybackSettings extends StatelessWidget {
       Obx(
         () => CustomListTile(
           enabled: SettingsController.inst.enableVideoPlayback.value,
-          title: Language.inst.VIDEO_PLAYBACK_SOURCE,
+          title: lang.VIDEO_PLAYBACK_SOURCE,
           icon: Broken.scroll,
           trailingText: SettingsController.inst.videoPlaybackSource.value.toText(),
           onTap: () {
@@ -47,14 +47,14 @@ class PlaybackSettings extends StatelessWidget {
 
             NamidaNavigator.inst.navigateDialog(
               dialog: CustomBlurryDialog(
-                title: Language.inst.VIDEO_PLAYBACK_SOURCE,
+                title: lang.VIDEO_PLAYBACK_SOURCE,
                 actions: [
                   IconButton(
                     onPressed: () => tileOnTap(VideoPlaybackSource.auto),
                     icon: const Icon(Broken.refresh),
                   ),
                   NamidaButton(
-                    text: Language.inst.DONE,
+                    text: lang.DONE,
                     onPressed: NamidaNavigator.inst.closeDialog,
                   ),
                 ],
@@ -85,7 +85,7 @@ class PlaybackSettings extends StatelessWidget {
       Obx(
         () => CustomListTile(
           enabled: SettingsController.inst.enableVideoPlayback.value,
-          title: Language.inst.VIDEO_QUALITY,
+          title: lang.VIDEO_QUALITY,
           icon: Broken.story,
           trailingText: SettingsController.inst.youtubeVideoQualities.first,
           onTap: () {
@@ -108,14 +108,14 @@ class PlaybackSettings extends StatelessWidget {
 
             NamidaNavigator.inst.navigateDialog(
               dialog: CustomBlurryDialog(
-                title: Language.inst.VIDEO_QUALITY,
+                title: lang.VIDEO_QUALITY,
                 actions: [
                   // IconButton(
                   //   onPressed: () => tileOnTap(0),
                   //   icon: const Icon(Broken.refresh),
                   // ),
                   NamidaButton(
-                    text: Language.inst.DONE,
+                    text: lang.DONE,
                     onPressed: NamidaNavigator.inst.closeDialog,
                   ),
                 ],
@@ -124,11 +124,11 @@ class PlaybackSettings extends StatelessWidget {
                   child: Obx(
                     () => Column(
                       children: [
-                        Text(Language.inst.VIDEO_QUALITY_SUBTITLE),
+                        Text(lang.VIDEO_QUALITY_SUBTITLE),
                         const SizedBox(
                           height: 12.0,
                         ),
-                        Text("${Language.inst.NOTE}: ${Language.inst.VIDEO_QUALITY_SUBTITLE_NOTE}"),
+                        Text("${lang.NOTE}: ${lang.VIDEO_QUALITY_SUBTITLE_NOTE}"),
                         const SizedBox(height: 18.0),
                         SizedBox(
                           width: Get.width,
@@ -162,15 +162,15 @@ class PlaybackSettings extends StatelessWidget {
         () => CustomListTile(
           enabled: SettingsController.inst.enableVideoPlayback.value,
           icon: Broken.video_tick,
-          title: Language.inst.LOCAL_VIDEO_MATCHING,
+          title: lang.LOCAL_VIDEO_MATCHING,
           trailingText: SettingsController.inst.localVideoMatchingType.value.toText(),
           onTap: () {
             NamidaNavigator.inst.navigateDialog(
               dialog: CustomBlurryDialog(
-                title: Language.inst.LOCAL_VIDEO_MATCHING,
+                title: lang.LOCAL_VIDEO_MATCHING,
                 actions: [
                   NamidaButton(
-                    text: Language.inst.DONE,
+                    text: lang.DONE,
                     onPressed: NamidaNavigator.inst.closeDialog,
                   ),
                 ],
@@ -179,7 +179,7 @@ class PlaybackSettings extends StatelessWidget {
                     Obx(
                       () => CustomListTile(
                         icon: Broken.video_tick,
-                        title: Language.inst.MATCHING_TYPE,
+                        title: lang.MATCHING_TYPE,
                         trailingText: SettingsController.inst.localVideoMatchingType.value.toText(),
                         onTap: SettingsController.inst.localVideoMatchingType.value.toggleSetting,
                       ),
@@ -187,7 +187,7 @@ class PlaybackSettings extends StatelessWidget {
                     Obx(
                       () => CustomSwitchListTile(
                         icon: Broken.folder,
-                        title: Language.inst.SAME_DIRECTORY_ONLY,
+                        title: lang.SAME_DIRECTORY_ONLY,
                         value: SettingsController.inst.localVideoMatchingCheckSameDir.value,
                         onChanged: (isTrue) => SettingsController.inst.save(localVideoMatchingCheckSameDir: !isTrue),
                       ),
@@ -201,7 +201,7 @@ class PlaybackSettings extends StatelessWidget {
       ),
       Obx(
         () => CustomListTile(
-          title: '${Language.inst.KEEP_SCREEN_AWAKE_WHEN}:',
+          title: '${lang.KEEP_SCREEN_AWAKE_WHEN}:',
           subtitle: SettingsController.inst.wakelockMode.value.toText(),
           icon: Broken.external_drive,
           onTap: () => SettingsController.inst.wakelockMode.value.toggleSetting(),
@@ -209,14 +209,14 @@ class PlaybackSettings extends StatelessWidget {
       ),
       Obx(
         () => CustomSwitchListTile(
-          title: Language.inst.DISPLAY_FAV_BUTTON_IN_NOTIFICATION,
+          title: lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION,
           icon: Broken.heart_tick,
           value: SettingsController.inst.displayFavouriteButtonInNotification.value,
           onChanged: (val) {
             SettingsController.inst.save(displayFavouriteButtonInNotification: !val);
             Player.inst.refreshNotification();
             if (!val && kSdkVersion < 31) {
-              Get.snackbar(Language.inst.NOTE, Language.inst.DISPLAY_FAV_BUTTON_IN_NOTIFICATION_SUBTITLE);
+              Get.snackbar(lang.NOTE, lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION_SUBTITLE);
             }
           },
         ),
@@ -224,7 +224,7 @@ class PlaybackSettings extends StatelessWidget {
       Obx(
         () => CustomSwitchListTile(
           icon: Broken.forward,
-          title: Language.inst.SKIP_SILENCE,
+          title: lang.SKIP_SILENCE,
           onChanged: (value) async {
             final willBeTrue = !value;
             SettingsController.inst.save(playerSkipSilenceEnabled: willBeTrue);
@@ -239,7 +239,7 @@ class PlaybackSettings extends StatelessWidget {
             baseIcon: Broken.play,
             secondaryIcon: Broken.pause,
           ),
-          title: Language.inst.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE,
+          title: lang.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE,
           onChanged: (value) {
             SettingsController.inst.save(enableVolumeFadeOnPlayPause: !value);
             Player.inst.setVolume(SettingsController.inst.playerVolume.value);
@@ -251,7 +251,7 @@ class PlaybackSettings extends StatelessWidget {
         () => CustomListTile(
           enabled: SettingsController.inst.enableVolumeFadeOnPlayPause.value,
           icon: Broken.play,
-          title: Language.inst.PLAY_FADE_DURATION,
+          title: lang.PLAY_FADE_DURATION,
           trailing: NamidaWheelSlider(
             totalCount: 1900 ~/ 50,
             initValue: SettingsController.inst.playerPlayFadeDurInMilli.value ~/ 50,
@@ -269,7 +269,7 @@ class PlaybackSettings extends StatelessWidget {
         () => CustomListTile(
           enabled: SettingsController.inst.enableVolumeFadeOnPlayPause.value,
           icon: Broken.pause,
-          title: Language.inst.PAUSE_FADE_DURATION,
+          title: lang.PAUSE_FADE_DURATION,
           trailing: NamidaWheelSlider(
             totalCount: 1900 ~/ 50,
             initValue: SettingsController.inst.playerPauseFadeDurInMilli.value ~/ 50,
@@ -289,7 +289,7 @@ class PlaybackSettings extends StatelessWidget {
             baseIcon: Broken.play,
             secondaryIcon: Broken.record,
           ),
-          title: Language.inst.PLAY_AFTER_NEXT_PREV,
+          title: lang.PLAY_AFTER_NEXT_PREV,
           onChanged: (value) => SettingsController.inst.save(playerPlayOnNextPrev: !value),
           value: SettingsController.inst.playerPlayOnNextPrev.value,
         ),
@@ -298,12 +298,12 @@ class PlaybackSettings extends StatelessWidget {
         childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
         iconColor: context.defaultIconColor(),
         icon: Broken.volume_slash,
-        titleText: Language.inst.ON_VOLUME_ZERO,
+        titleText: lang.ON_VOLUME_ZERO,
         children: [
           Obx(
             () => CustomSwitchListTile(
               icon: Broken.pause_circle,
-              title: Language.inst.PAUSE_PLAYBACK,
+              title: lang.PAUSE_PLAYBACK,
               onChanged: (value) => SettingsController.inst.save(playerPauseOnVolume0: !value),
               value: SettingsController.inst.playerPauseOnVolume0.value,
             ),
@@ -311,7 +311,7 @@ class PlaybackSettings extends StatelessWidget {
           Obx(
             () => CustomSwitchListTile(
               icon: Broken.play_circle,
-              title: Language.inst.RESUME_IF_WAS_PAUSED_BY_VOLUME,
+              title: lang.RESUME_IF_WAS_PAUSED_BY_VOLUME,
               onChanged: (value) => SettingsController.inst.save(playerResumeAfterOnVolume0Pause: !value),
               value: SettingsController.inst.playerResumeAfterOnVolume0Pause.value,
             ),
@@ -322,7 +322,7 @@ class PlaybackSettings extends StatelessWidget {
         childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
         iconColor: context.defaultIconColor(),
         icon: Broken.notification_bing,
-        titleText: Language.inst.ON_INTERRUPTION,
+        titleText: lang.ON_INTERRUPTION,
         children: [
           ...InterruptionType.values.map(
             (type) {
@@ -372,7 +372,7 @@ class PlaybackSettings extends StatelessWidget {
               icon: Broken.play_circle,
               value: SettingsController.inst.playerResumeAfterWasInterrupted.value,
               onChanged: (isTrue) => SettingsController.inst.save(playerResumeAfterWasInterrupted: !isTrue),
-              title: Language.inst.RESUME_IF_WAS_INTERRUPTED,
+              title: lang.RESUME_IF_WAS_INTERRUPTED,
             ),
           ),
           const SizedBox(height: 6.0),
@@ -381,7 +381,7 @@ class PlaybackSettings extends StatelessWidget {
       Obx(
         () => CustomSwitchListTile(
           icon: Broken.rotate_left,
-          title: Language.inst.JUMP_TO_FIRST_TRACK_AFTER_QUEUE_FINISH,
+          title: lang.JUMP_TO_FIRST_TRACK_AFTER_QUEUE_FINISH,
           onChanged: (value) => SettingsController.inst.save(jumpToFirstTrackAfterFinishingQueue: !value),
           value: SettingsController.inst.jumpToFirstTrackAfterFinishingQueue.value,
         ),
@@ -389,8 +389,8 @@ class PlaybackSettings extends StatelessWidget {
       Obx(
         () => CustomListTile(
           icon: Broken.forward_5_seconds,
-          title: "${Language.inst.SEEK_DURATION} (${SettingsController.inst.isSeekDurationPercentage.value ? Language.inst.PERCENTAGE : Language.inst.SECONDS})",
-          subtitle: Language.inst.SEEK_DURATION_INFO,
+          title: "${lang.SEEK_DURATION} (${SettingsController.inst.isSeekDurationPercentage.value ? lang.PERCENTAGE : lang.SECONDS})",
+          subtitle: lang.SEEK_DURATION_INFO,
           onTap: () => SettingsController.inst.save(isSeekDurationPercentage: !SettingsController.inst.isSeekDurationPercentage.value),
           trailing: SettingsController.inst.isSeekDurationPercentage.value
               ? NamidaWheelSlider(
@@ -422,7 +422,7 @@ class PlaybackSettings extends StatelessWidget {
           final valInSet = SettingsController.inst.minTrackDurationToRestoreLastPosInMinutes.value;
           return CustomListTile(
             icon: Broken.refresh_left_square,
-            title: Language.inst.MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION,
+            title: lang.MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION,
             trailing: NamidaWheelSlider(
               totalCount: 120,
               initValue: valInSet,
@@ -432,7 +432,7 @@ class PlaybackSettings extends StatelessWidget {
                 final v = (val) as int;
                 SettingsController.inst.save(minTrackDurationToRestoreLastPosInMinutes: v);
               },
-              text: valInSet == 0 ? Language.inst.DONT_RESTORE_POSITION : "${valInSet}m",
+              text: valInSet == 0 ? lang.DONT_RESTORE_POSITION : "${valInSet}m",
             ),
           );
         },
@@ -440,14 +440,14 @@ class PlaybackSettings extends StatelessWidget {
       Obx(
         () => CustomListTile(
           icon: Broken.timer,
-          title: Language.inst.MIN_VALUE_TO_COUNT_TRACK_LISTEN,
+          title: lang.MIN_VALUE_TO_COUNT_TRACK_LISTEN,
           onTap: () => NamidaNavigator.inst.navigateDialog(
             dialog: CustomBlurryDialog(
-              title: Language.inst.CHOOSE,
+              title: lang.CHOOSE,
               child: Column(
                 children: [
                   Text(
-                    Language.inst.MIN_VALUE_TO_COUNT_TRACK_LISTEN,
+                    lang.MIN_VALUE_TO_COUNT_TRACK_LISTEN,
                     style: context.textTheme.displayLarge,
                   ),
                   const SizedBox(
@@ -466,11 +466,11 @@ class PlaybackSettings extends StatelessWidget {
                             SettingsController.inst.save(isTrackPlayedSecondsCount: v);
                           },
                           text: "${SettingsController.inst.isTrackPlayedSecondsCount.value}s",
-                          topText: Language.inst.SECONDS.capitalizeFirst,
+                          topText: lang.SECONDS.capitalizeFirst,
                           textPadding: 8.0,
                         ),
                         Text(
-                          Language.inst.OR,
+                          lang.OR,
                           style: context.textTheme.displayMedium,
                         ),
                         NamidaWheelSlider(
@@ -482,7 +482,7 @@ class PlaybackSettings extends StatelessWidget {
                             SettingsController.inst.save(isTrackPlayedPercentageCount: v);
                           },
                           text: "${SettingsController.inst.isTrackPlayedPercentageCount.value}%",
-                          topText: Language.inst.PERCENTAGE,
+                          topText: lang.PERCENTAGE,
                           textPadding: 8.0,
                         ),
                       ],
@@ -497,8 +497,8 @@ class PlaybackSettings extends StatelessWidget {
       ),
     ];
     return SettingsCard(
-      title: Language.inst.PLAYBACK_SETTING,
-      subtitle: isInDialog ? null : Language.inst.PLAYBACK_SETTING_SUBTITLE,
+      title: lang.PLAYBACK_SETTING,
+      subtitle: isInDialog ? null : lang.PLAYBACK_SETTING_SUBTITLE,
       icon: Broken.play_cricle,
       child: isInDialog
           ? SizedBox(

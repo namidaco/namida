@@ -47,7 +47,7 @@ void showSettingDialogWithTextField({
         style: Get.textTheme.displayLarge,
       ),
       messageText: Text(
-        "${Language.inst.RESET_TO_DEFAULT}: $message",
+        "${lang.RESET_TO_DEFAULT}: $message",
         style: Get.textTheme.displayMedium,
       ),
       duration: duration ?? const Duration(seconds: 2),
@@ -67,7 +67,7 @@ void showSettingDialogWithTextField({
         actions: [
           if (!addNewPlaylist)
             IconButton(
-              tooltip: Language.inst.RESTORE_DEFAULTS,
+              tooltip: lang.RESTORE_DEFAULTS,
               onPressed: () {
                 if (trackThumbnailSizeinList) {
                   stg.save(trackThumbnailSizeinList: 70.0);
@@ -113,7 +113,7 @@ void showSettingDialogWithTextField({
             ),
           const CancelButton(),
           NamidaButton(
-            text: Language.inst.SAVE,
+            text: lang.SAVE,
             onPressed: () {
               if (formKey.currentState!.validate()) {
                 if (trackThumbnailSizeinList) {
@@ -187,12 +187,12 @@ void showSettingDialogWithTextField({
                     borderRadius: BorderRadius.circular(16.0.multipliedRadius),
                     borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
                   ),
-                  hintText: addNewPlaylist ? Language.inst.NAME : Language.inst.VALUE,
+                  hintText: addNewPlaylist ? lang.NAME : lang.VALUE,
                 ),
                 validator: (value) {
                   if (fontScaleFactor) {
                     if ((double.parse(value!) < 50 || double.parse(value) > 200)) {
-                      return Language.inst.VALUE_BETWEEN_50_200;
+                      return lang.VALUE_BETWEEN_50_200;
                     }
                   }
                   if (addNewPlaylist) {

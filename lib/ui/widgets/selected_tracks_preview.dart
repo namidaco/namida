@@ -172,19 +172,19 @@ class SelectedTracksRow extends StatelessWidget {
                   Player.inst.addToQueue(selectedTracks);
                 },
                 icon: const Icon(Broken.play_cricle),
-                tooltip: Language.inst.PLAY_LAST,
+                tooltip: lang.PLAY_LAST,
               ),
             ),
           ),
         ),
         IconButton(
           onPressed: () => showEditTracksTagsDialog(selectedTracks, null),
-          tooltip: Language.inst.EDIT_TAGS,
+          tooltip: lang.EDIT_TAGS,
           icon: const Icon(Broken.edit),
         ),
         IconButton(
           onPressed: () => showAddToPlaylistDialog(selectedTracks),
-          tooltip: Language.inst.ADD_TO_PLAYLIST,
+          tooltip: lang.ADD_TO_PLAYLIST,
           icon: const Icon(Broken.music_playlist),
         ),
         IconButton(
@@ -212,13 +212,13 @@ class SelectedTracksRow extends StatelessWidget {
               playlistName: selectedPl.length == 1 ? selectedPl.first : null,
             );
           },
-          tooltip: Language.inst.MORE,
+          tooltip: lang.MORE,
           icon: const RotatedBox(quarterTurns: 1, child: Icon(Broken.more)),
         ),
         IconButton(
           onPressed: () => SelectedTracksController.inst.selectAllTracks(),
           icon: const Icon(Broken.category),
-          tooltip: Language.inst.SELECT_ALL,
+          tooltip: lang.SELECT_ALL,
         ),
         SelectedTracksController.inst.isMenuMinimized.value ? const Icon(Broken.arrow_up_3) : const Icon(Broken.arrow_down_2)
       ],

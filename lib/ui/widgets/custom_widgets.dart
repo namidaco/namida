@@ -409,7 +409,7 @@ class CustomBlurryDialog extends StatelessWidget {
                                 ],
                                 Expanded(
                                   child: Text(
-                                    isWarning ? Language.inst.WARNING : title ?? '',
+                                    isWarning ? lang.WARNING : title ?? '',
                                     style: ctxth.textTheme.displayLarge,
                                   ),
                                 ),
@@ -620,7 +620,7 @@ class StatsContainer extends StatelessWidget {
                 width: 8.0,
               ),
               Text(value ?? ''),
-              if (total != null) Text(" ${Language.inst.OF} $total")
+              if (total != null) Text(" ${lang.OF} $total")
             ],
           ),
     );
@@ -766,7 +766,7 @@ class ListTileWithCheckMark extends StatelessWidget {
             ),
         title: titleWidget ??
             Text(
-              title ?? Language.inst.REVERSE_ORDER,
+              title ?? lang.REVERSE_ORDER,
               style: context.textTheme.displayMedium,
             ),
         subtitle: subtitle != null
@@ -898,9 +898,9 @@ class CreatePlaylistButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaButton(
       icon: Broken.add,
-      text: Language.inst.CREATE,
+      text: lang.CREATE,
       onPressed: () => showSettingDialogWithTextField(
-        title: Language.inst.CREATE_NEW_PLAYLIST,
+        title: lang.CREATE_NEW_PLAYLIST,
         addNewPlaylist: true,
       ),
     );
@@ -914,11 +914,11 @@ class GeneratePlaylistButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaButton(
       icon: Broken.shuffle,
-      text: Language.inst.RANDOM,
+      text: lang.RANDOM,
       onPressed: () {
         final numbers = PlaylistController.inst.generateRandomPlaylist();
         if (numbers == 0) {
-          Get.snackbar(Language.inst.ERROR, Language.inst.NO_ENOUGH_TRACKS);
+          Get.snackbar(lang.ERROR, lang.NO_ENOUGH_TRACKS);
         }
       },
     );
@@ -1057,7 +1057,7 @@ class CancelButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextButton(
       onPressed: () => NamidaNavigator.inst.closeDialog(),
-      child: Text(Language.inst.CANCEL),
+      child: Text(lang.CANCEL),
     );
   }
 }
@@ -1070,7 +1070,7 @@ class CollapsedSettingTileWidget extends StatelessWidget {
     return Obx(
       () => CustomSwitchListTile(
         icon: Broken.archive,
-        title: Language.inst.USE_COLLAPSED_SETTING_TILES,
+        title: lang.USE_COLLAPSED_SETTING_TILES,
         value: SettingsController.inst.useSettingCollapsedTiles.value,
         onChanged: (isTrue) async {
           SettingsController.inst.save(useSettingCollapsedTiles: !isTrue);
@@ -1597,7 +1597,7 @@ class SubpagesTopContainer extends StatelessWidget {
                                     secondaryIcon: Broken.add_circle,
                                   ),
                                   label: Text(
-                                    Language.inst.PLAY_LAST,
+                                    lang.PLAY_LAST,
                                     softWrap: false,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(fontSize: (constraints.maxWidth * 0.1).clamp(10.0, 14.0).multipliedFontScale),
@@ -2192,7 +2192,7 @@ class NamidaSupportButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaButton(
       icon: Broken.heart,
-      text: title ?? Language.inst.SUPPORT,
+      text: title ?? lang.SUPPORT,
       onPressed: () {
         closeDialog.closeDialog();
         launchUrlString(k_NAMIDA_SUPPORT_LINK);
@@ -2286,11 +2286,11 @@ class HistoryJumpToDayIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaAppBarIcon(
       icon: Broken.calendar,
-      tooltip: Language.inst.JUMP_TO_DAY,
+      tooltip: lang.JUMP_TO_DAY,
       onPressed: () {
         showCalendarDialog(
-          title: Language.inst.JUMP_TO_DAY,
-          buttonText: Language.inst.JUMP,
+          title: lang.JUMP_TO_DAY,
+          buttonText: lang.JUMP,
           calendarType: CalendarDatePicker2Type.single,
           useHistoryDates: true,
           onGenerate: (dates) {
@@ -2333,15 +2333,15 @@ class _BetweenDatesTextButtonState extends State<BetweenDatesTextButton> {
 
   @override
   Widget build(BuildContext context) {
-    final textWidget = Text(Language.inst.BETWEEN_DATES);
+    final textWidget = Text(lang.BETWEEN_DATES);
 
     return TextButton.icon(
       onPressed: () {
         showCalendarDialog(
           useHistoryDates: widget.useHistoryDates,
           lastDate: widget.maxToday ? DateTime.now() : null,
-          title: Language.inst.BETWEEN_DATES,
-          buttonText: Language.inst.CONFIRM,
+          title: lang.BETWEEN_DATES,
+          buttonText: lang.CONFIRM,
           onGenerate: (dates) {
             oldestDate = dates.firstOrNull;
             newestDate = dates.lastOrNull;

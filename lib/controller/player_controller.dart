@@ -139,7 +139,7 @@ class Player {
     insertionType?.shuffleOrSort(finalTracks);
 
     if (showSnackBar && finalTracks.isEmpty) {
-      Get.snackbar(Language.inst.NOTE, emptyTracksMessage ?? Language.inst.NO_TRACKS_FOUND);
+      Get.snackbar(lang.NOTE, emptyTracksMessage ?? lang.NO_TRACKS_FOUND);
       return false;
     }
     _audioHandler.addToQueue(
@@ -148,8 +148,8 @@ class Player {
       insertAfterLatest: insertAfterLatest,
     );
     if (showSnackBar) {
-      final addins = shouldInsertNext ? Language.inst.INSERTED : Language.inst.ADDED;
-      Get.snackbar(Language.inst.NOTE, '${addins.capitalizeFirst} ${finalTracks.displayTrackKeyword}');
+      final addins = shouldInsertNext ? lang.INSERTED : lang.ADDED;
+      Get.snackbar(lang.NOTE, '${addins.capitalizeFirst} ${finalTracks.displayTrackKeyword}');
     }
     return true;
   }

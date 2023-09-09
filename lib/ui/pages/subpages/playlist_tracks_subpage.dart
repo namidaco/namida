@@ -291,8 +291,8 @@ class MostPlayedTracksPage extends StatelessWidget {
                       ),
                       onTap: () {
                         showCalendarDialog(
-                          title: Language.inst.CHOOSE,
-                          buttonText: Language.inst.CONFIRM,
+                          title: lang.CHOOSE,
+                          buttonText: lang.CONFIRM,
                           useHistoryDates: true,
                           onGenerate: (dates) => _onSelectingTimeRange(
                             dateCustom: DateRange(oldest: dates.first, newest: dates.last),
@@ -406,7 +406,7 @@ class EmptyPlaylistSubpage extends StatelessWidget {
               child: NamidaButton(
                 icon: Broken.trash,
                 onPressed: () => NamidaDialogs.inst.showDeletePlaylistDialog(playlist),
-                text: Language.inst.DELETE_PLAYLIST,
+                text: lang.DELETE_PLAYLIST,
               ),
             ),
           ),
@@ -416,7 +416,7 @@ class EmptyPlaylistSubpage extends StatelessWidget {
           sliver: SliverToBoxAdapter(
             child: NamidaExpansionTile(
               initiallyExpanded: isExpanded.value,
-              titleText: Language.inst.ADD,
+              titleText: lang.ADD,
               icon: Broken.add_circle,
               onExpansionChanged: (value) => isExpanded.value = value,
               children: [
@@ -465,7 +465,7 @@ class EmptyPlaylistSubpage extends StatelessWidget {
                   return NamidaButton(
                     enabled: trl > 0,
                     icon: Broken.add,
-                    text: '${Language.inst.ADD} ${trl.displayTrackKeyword}',
+                    text: '${lang.ADD} ${trl.displayTrackKeyword}',
                     onPressed: () => PlaylistController.inst.addTracksToPlaylist(playlist, tracksToAddMap.keys.toList()),
                   );
                 },

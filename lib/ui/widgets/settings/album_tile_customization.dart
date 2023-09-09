@@ -22,14 +22,14 @@ class AlbumTileCustomization extends StatelessWidget {
         baseIcon: Broken.brush,
         secondaryIcon: Broken.music_dashboard,
       ),
-      titleText: Language.inst.ALBUM_TILE_CUSTOMIZATION,
+      titleText: lang.ALBUM_TILE_CUSTOMIZATION,
       children: [
         /// Track Number in a small Box
         Obx(
           () => CustomSwitchListTile(
             icon: Broken.card_remove,
-            title: Language.inst.DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE,
-            subtitle: Language.inst.DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE_SUBTITLE,
+            title: lang.DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE,
+            subtitle: lang.DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE_SUBTITLE,
             value: stg.displayTrackNumberinAlbumPage.value,
             onChanged: (p0) => stg.save(displayTrackNumberinAlbumPage: !p0),
           ),
@@ -39,8 +39,8 @@ class AlbumTileCustomization extends StatelessWidget {
         Obx(
           () => CustomSwitchListTile(
             icon: Broken.notification_status,
-            title: Language.inst.DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE,
-            subtitle: Language.inst.DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE_SUBTITLE,
+            title: lang.DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE,
+            subtitle: lang.DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE_SUBTITLE,
             onChanged: (p0) => stg.save(albumCardTopRightDate: !p0),
             value: stg.albumCardTopRightDate.value,
           ),
@@ -50,7 +50,7 @@ class AlbumTileCustomization extends StatelessWidget {
         Obx(
           () => CustomSwitchListTile(
             icon: Broken.crop,
-            title: Language.inst.FORCE_SQUARED_ALBUM_THUMBNAIL,
+            title: lang.FORCE_SQUARED_ALBUM_THUMBNAIL,
             value: stg.forceSquaredAlbumThumbnail.value,
             onChanged: (p0) {
               stg.save(forceSquaredAlbumThumbnail: !p0);
@@ -59,11 +59,11 @@ class AlbumTileCustomization extends StatelessWidget {
                   dialog: CustomBlurryDialog(
                     normalTitleStyle: true,
                     isWarning: true,
-                    bodyText: Language.inst.FORCE_SQUARED_THUMBNAIL_NOTE,
+                    bodyText: lang.FORCE_SQUARED_THUMBNAIL_NOTE,
                     actions: [
                       const CancelButton(),
                       NamidaButton(
-                        text: Language.inst.CONFIRM,
+                        text: lang.CONFIRM,
                         onPressed: () {
                           stg.save(albumThumbnailSizeinList: stg.albumListTileHeight.value);
                           NamidaNavigator.inst.closeDialog();
@@ -81,7 +81,7 @@ class AlbumTileCustomization extends StatelessWidget {
         Obx(
           () => CustomSwitchListTile(
             icon: Broken.element_4,
-            title: Language.inst.STAGGERED_ALBUM_GRID_VIEW,
+            title: lang.STAGGERED_ALBUM_GRID_VIEW,
             value: stg.useAlbumStaggeredGridView.value,
             onChanged: (p0) => stg.save(useAlbumStaggeredGridView: !p0),
           ),
@@ -91,11 +91,11 @@ class AlbumTileCustomization extends StatelessWidget {
         Obx(
           () => CustomListTile(
             icon: Broken.maximize_3,
-            title: Language.inst.ALBUM_THUMBNAIL_SIZE_IN_LIST,
+            title: lang.ALBUM_THUMBNAIL_SIZE_IN_LIST,
             trailingText: "${stg.albumThumbnailSizeinList.toInt()}",
             onTap: () {
               showSettingDialogWithTextField(
-                title: Language.inst.ALBUM_THUMBNAIL_SIZE_IN_LIST,
+                title: lang.ALBUM_THUMBNAIL_SIZE_IN_LIST,
                 albumThumbnailSizeinList: true,
                 iconWidget: const Icon(Broken.maximize_3),
               );
@@ -107,11 +107,11 @@ class AlbumTileCustomization extends StatelessWidget {
         Obx(
           () => CustomListTile(
             icon: Broken.pharagraphspacing,
-            title: Language.inst.HEIGHT_OF_ALBUM_TILE,
+            title: lang.HEIGHT_OF_ALBUM_TILE,
             trailingText: "${stg.albumListTileHeight.toInt()}",
             onTap: () {
               showSettingDialogWithTextField(
-                title: Language.inst.HEIGHT_OF_ALBUM_TILE,
+                title: lang.HEIGHT_OF_ALBUM_TILE,
                 albumListTileHeight: true,
                 iconWidget: const Icon(Broken.pharagraphspacing),
               );
