@@ -730,7 +730,7 @@ class ListTileWithCheckMark extends StatelessWidget {
   final bool active;
   final void Function()? onTap;
   final String? title;
-  final String? subtitle;
+  final String subtitle;
   final IconData? icon;
   final Color? tileColor;
   final Widget? titleWidget;
@@ -742,7 +742,7 @@ class ListTileWithCheckMark extends StatelessWidget {
     required this.active,
     this.onTap,
     this.title,
-    this.subtitle,
+    this.subtitle = '',
     this.icon,
     this.tileColor,
     this.titleWidget,
@@ -769,9 +769,9 @@ class ListTileWithCheckMark extends StatelessWidget {
               title ?? lang.REVERSE_ORDER,
               style: context.textTheme.displayMedium,
             ),
-        subtitle: subtitle != null
+        subtitle: subtitle != ''
             ? Text(
-                subtitle!,
+                subtitle,
                 style: context.textTheme.displaySmall,
               )
             : null,

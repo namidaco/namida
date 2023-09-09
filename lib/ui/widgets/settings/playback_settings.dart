@@ -69,7 +69,7 @@ class PlaybackSettings extends StatelessWidget {
                           child: ListTileWithCheckMark(
                             active: isEnabled(e),
                             title: e.toText(),
-                            subtitle: e.toSubtitle(),
+                            subtitle: e.toSubtitle() ?? '',
                             onTap: () => tileOnTap(e),
                           ),
                         ),

@@ -263,6 +263,7 @@ class BackupAndRestore extends StatelessWidget {
                         final jsonfile = await FilePicker.platform.pickFiles(allowedExtensions: ['json'], type: FileType.custom);
                         if (jsonfile != null) {
                           final RxBool isMatchingTypeLink = true.obs;
+                          final RxBool isMatchingTypeTitleAndArtist = false.obs;
                           final RxBool matchYT = true.obs;
                           final RxBool matchYTMusic = true.obs;
                           final RxBool matchAll = false.obs;
@@ -272,21 +273,25 @@ class BackupAndRestore extends StatelessWidget {
                             dialog: CustomBlurryDialog(
                               title: lang.CONFIGURE,
                               actions: [
-                                NamidaButton(
-                                  textWidget: Obx(() => Text(oldestDate.value != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
-                                  onPressed: () async {
-                                    NamidaNavigator.inst.closeDialog();
-                                    await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
-                                      File(jsonfile.files.first.path!),
-                                      TrackSource.youtube,
-                                      isMatchingTypeLink: isMatchingTypeLink.value,
-                                      matchYT: matchYT.value,
-                                      matchYTMusic: matchYTMusic.value,
-                                      oldestDate: oldestDate.value,
-                                      newestDate: newestDate,
-                                      matchAll: matchAll.value,
-                                    );
-                                  },
+                                Obx(
+                                  () => NamidaButton(
+                                    enabled: isMatchingTypeLink.value || isMatchingTypeTitleAndArtist.value,
+                                    textWidget: Obx(() => Text(oldestDate.value != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
+                                    onPressed: () async {
+                                      NamidaNavigator.inst.closeDialog();
+                                      await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
+                                        file: File(jsonfile.files.first.path!),
+                                        source: TrackSource.youtube,
+                                        ytIsMatchingTypeLink: isMatchingTypeLink.value,
+                                        isMatchingTypeTitleAndArtist: isMatchingTypeTitleAndArtist.value,
+                                        ytMatchYT: matchYT.value,
+                                        ytMatchYTMusic: matchYTMusic.value,
+                                        oldestDate: oldestDate.value,
+                                        newestDate: newestDate,
+                                        matchAll: matchAll.value,
+                                      );
+                                    },
+                                  ),
                                 )
                               ],
                               child: Column(
@@ -312,17 +317,17 @@ class BackupAndRestore extends StatelessWidget {
                                   getTitleText(lang.MATCHING_TYPE),
                                   Obx(
                                     () => ListTileWithCheckMark(
-                                      active: !isMatchingTypeLink.value,
-                                      title: [lang.TITLE, lang.ARTIST].join(' & '),
+                                      active: isMatchingTypeLink.value,
+                                      title: lang.LINK,
                                       onTap: () => isMatchingTypeLink.value = !isMatchingTypeLink.value,
                                     ),
                                   ),
                                   const SizedBox(height: 8.0),
                                   Obx(
                                     () => ListTileWithCheckMark(
-                                      active: isMatchingTypeLink.value,
-                                      title: lang.LINK,
-                                      onTap: () => isMatchingTypeLink.value = !isMatchingTypeLink.value,
+                                      active: isMatchingTypeTitleAndArtist.value,
+                                      title: [lang.TITLE, lang.ARTIST].join(' & '),
+                                      onTap: () => isMatchingTypeTitleAndArtist.value = !isMatchingTypeTitleAndArtist.value,
                                     ),
                                   ),
                                   getDivider(),
@@ -330,7 +335,7 @@ class BackupAndRestore extends StatelessWidget {
                                     () => matchAllTracksListTile(
                                       active: matchAll.value,
                                       onTap: () => matchAll.value = !matchAll.value,
-                                      displayPerfWarning: !isMatchingTypeLink.value,
+                                      displayPerfWarning: isMatchingTypeTitleAndArtist.value, // link matching wont result in perf issue
                                     ),
                                   ),
                                   getDivider(),
@@ -352,7 +357,7 @@ class BackupAndRestore extends StatelessWidget {
                     ),
                   ],
                   child: NamidaSelectableAutoLinkText(
-                    text: lang.IMPORT_YOUTUBE_HISTORY_GUIDE.replaceFirst('_TAKEOUT_LINK_', 'https://takeout.google.com'),
+                    text: lang.IMPORT_YOUTUBE_HISTORY_GUIDE.replaceFirst('_TAKEOUT_LINK_', 'https://takeout.google.com/takeout/custom/youtube'),
                   ),
                 ),
               );
@@ -411,8 +416,8 @@ class BackupAndRestore extends StatelessWidget {
                                   onPressed: () async {
                                     NamidaNavigator.inst.closeDialog();
                                     await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
-                                      File(csvFilePath),
-                                      TrackSource.lastfm,
+                                      file: File(csvFilePath),
+                                      source: TrackSource.lastfm,
                                       oldestDate: oldestDate.value,
                                       newestDate: newestDate,
                                       matchAll: matchAll.value,

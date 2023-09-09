@@ -138,22 +138,22 @@ class JsonToHistoryParser {
         child: SizedBox(
           width: Get.width,
           height: Get.height * 0.6,
-          child: CupertinoScrollbar(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    lang.HISTORY_IMPORT_MISSING_ENTRIES_NOTE,
-                    style: Get.textTheme.displaySmall,
-                  ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  lang.HISTORY_IMPORT_MISSING_ENTRIES_NOTE,
+                  style: Get.textTheme.displaySmall,
                 ),
-                Expanded(
-                  child: Obx(
-                    () {
-                      final missing = _latestMissingMap.entries.toList()..sortByReverse((e) => e.value.length);
-                      return ListView.separated(
+              ),
+              Expanded(
+                child: Obx(
+                  () {
+                    final missing = _latestMissingMap.entries.toList()..sortByReverse((e) => e.value.length);
+                    return CupertinoScrollbar(
+                      child: ListView.separated(
                         separatorBuilder: (context, index) => const SizedBox(height: 8.0),
                         itemCount: missing.length,
                         itemBuilder: (context, index) {
@@ -225,12 +225,12 @@ class JsonToHistoryParser {
                             },
                           );
                         },
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -249,16 +249,18 @@ class JsonToHistoryParser {
 
   Timer? _notificationTimer;
 
-  Future<void> addFileSourceToNamidaHistory(
-    File file,
-    TrackSource source, {
+  Future<void> addFileSourceToNamidaHistory({
+    required File file,
+    required TrackSource source,
     bool matchAll = false,
-    bool isMatchingTypeLink = true,
-    bool matchYT = true,
-    bool matchYTMusic = true,
+    bool ytIsMatchingTypeLink = true,
+    bool isMatchingTypeTitleAndArtist = false,
+    bool ytMatchYT = true,
+    bool ytMatchYTMusic = true,
     DateTime? oldestDate,
     DateTime? newestDate,
   }) async {
+    final start = DateTime.now();
     _resetValues();
     isParsing.value = true;
     isLoadingFile.value = true;
@@ -299,9 +301,10 @@ class JsonToHistoryParser {
       currentParsingSource.value = TrackSource.youtube;
       final res = await _parseYTHistoryJsonAndAdd(
         file: file,
-        isMatchingTypeLink: isMatchingTypeLink,
-        matchYT: matchYT,
-        matchYTMusic: matchYTMusic,
+        isMatchingTypeLink: ytIsMatchingTypeLink,
+        isMatchingTypeTitleAndArtist: isMatchingTypeTitleAndArtist,
+        matchYT: ytMatchYT,
+        matchYTMusic: ytMatchYTMusic,
         oldestDate: oldestDate,
         newestDate: newestDate,
         matchAll: matchAll,
@@ -335,6 +338,8 @@ class JsonToHistoryParser {
       ..addAll(allMissingEntries);
     _latestMissingMapAddedStatus.clear();
     showMissingEntriesDialog();
+    final end = DateTime.now();
+    print('IMPORT TIME: ${start.difference(end)}');
   }
 
   /// Returns a map of {`trackYTID`: `List<Track>`}
@@ -350,6 +355,7 @@ class JsonToHistoryParser {
   Future<List<int>> _parseYTHistoryJsonAndAdd({
     required File file,
     required bool isMatchingTypeLink,
+    required bool isMatchingTypeTitleAndArtist,
     required bool matchYT,
     required bool matchYTMusic,
     required DateTime? oldestDate,
@@ -406,6 +412,7 @@ class JsonToHistoryParser {
             newestDate: newestDate,
             matchAll: matchAll,
             tracksIdsMap: tracksIdsMap,
+            matchByTitleAndArtistIfNotFoundInMap: isMatchingTypeTitleAndArtist,
             onMissingEntry: onMissingEntry,
           );
           datesToSave.addAll(addedDates);
@@ -439,19 +446,22 @@ class JsonToHistoryParser {
     required DateTime? newestDate,
     required bool matchAll,
     required Map<String, List<Track>>? tracksIdsMap,
+    required bool matchByTitleAndArtistIfNotFoundInMap,
     required void Function(List<_MissingListenEntry> missingEntry) onMissingEntry,
   }) {
     final oldestDay = oldestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
     final newestDay = newestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
-    late Iterable<Track> tracks;
+
+    Iterable<Track> tracks = <Track>[];
+
     if (tracksIdsMap != null) {
       final match = tracksIdsMap[vh.id] ?? [];
       if (match.isNotEmpty) {
         tracks = matchAll ? match : [match.first];
-      } else {
-        tracks = [];
       }
-    } else {
+    }
+
+    if (tracks.isEmpty && matchByTitleAndArtistIfNotFoundInMap) {
       tracks = allTracksInLibrary.firstWhereOrWhere(matchAll, (trPre) {
         final element = trPre.toTrackExt();
 
