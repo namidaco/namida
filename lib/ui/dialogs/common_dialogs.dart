@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:namida/class/playlist.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';

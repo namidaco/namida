@@ -85,7 +85,7 @@ void main() async {
   QueueController.inst.prepareAllQueuesFile();
 
   await Player.inst.initializePlayer();
-  PlaylistController.inst.prepareAllPlaylistsFile();
+  PlaylistController.inst.prepareAllPlaylists();
   VideoController.inst.initialize();
   await PlaylistController.inst.prepareDefaultPlaylistsFile();
   await QueueController.inst.prepareLatestQueue();

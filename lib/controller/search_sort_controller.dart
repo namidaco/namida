@@ -1,8 +1,7 @@
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:namida/class/playlist.dart';
-import 'package:namida/controller/indexer_controller.dart';
 
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';

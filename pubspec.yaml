@@ -43,7 +43,6 @@ dependencies:
   get:
     git:
       url: https://github.com/MSOB7YY/getx
-      ref: 394a27955890a98a53d4219e912ed22c614543f0
   permission_handler: ^10.4.3
   device_info_plus: ^8.1.0
   intl: ^0.18.0
@@ -69,7 +68,10 @@ dependencies:
   queue_manager:
     git:
       url: https://github.com/MSOB7YY/queue_manager
-      ref: b28b8de5133cef0c07937680e45e1fb580be5004
+      ref: 93d9436a1b22627423bd2a162856276f2d003f4c
+  playlist_manager:
+    git:
+      url: https://github.com/namidaco/playlist_manager
   flutter_html:
     git:
       url: https://github.com/zhourengui/flutter_html
