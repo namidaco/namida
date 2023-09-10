@@ -913,8 +913,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "93d9436a1b22627423bd2a162856276f2d003f4c"
-      resolved-ref: "93d9436a1b22627423bd2a162856276f2d003f4c"
+      ref: "7c6ec7edaf7bc4a0e294108245e2e29ed7f0d654"
+      resolved-ref: "7c6ec7edaf7bc4a0e294108245e2e29ed7f0d654"
       url: "https://github.com/MSOB7YY/queue_manager"
     source: git
     version: "0.0.1"
