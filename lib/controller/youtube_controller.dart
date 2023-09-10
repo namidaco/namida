@@ -272,12 +272,16 @@ class YoutubeController {
     File? videoFile;
     File? audioFile;
 
+    bool isVideoFileCached = false;
+    bool isAudioFileCached = false;
+
     try {
       // --------- Downloading Choosen Video.
       if (videoStream != null) {
         final filecache = VideoController.inst.videoInCacheRealCheck(id, videoStream);
         if (useCachedVersionsIfAvailable && filecache != null) {
           videoFile = filecache;
+          isVideoFileCached = true;
         } else {
           String getVPath(bool isTemp) {
             final prefix = isTemp ? '.tempv_' : '';
@@ -362,13 +366,18 @@ class YoutubeController {
           audioPath: audioFile.path,
           outputPath: output,
         );
-        if (didMerge) Future.wait([videoFile.tryDeleting(), audioFile.tryDeleting()]); // deleting temp files since they got merged
+        if (didMerge) {
+          Future.wait([
+            if (isVideoFileCached == false) videoFile.tryDeleting(),
+            if (isAudioFileCached == false) audioFile.tryDeleting(),
+          ]); // deleting temp files since they got merged
+        }
         df = File(output);
       } else {
         // -- renaming files
         await Future.wait([
-          if (videoFile != null && videoStream != null) videoFile.rename("${saveDirectory.path}/$filename"),
-          if (audioFile != null && audioStream != null) audioFile.rename("${saveDirectory.path}/$filename"),
+          if (isVideoFileCached == false && videoFile != null && videoStream != null) videoFile.rename("${saveDirectory.path}/$filename"),
+          if (isAudioFileCached == false && audioFile != null && audioStream != null) audioFile.rename("${saveDirectory.path}/$filename"),
         ]);
         df = videoFile ?? audioFile;
       }
