@@ -121,9 +121,9 @@ class _MiniPlayerSwitchersState extends State<MiniPlayerSwitchers> with SingleTi
                 )
               : Obx(
                   () => PipWidget(
-                    isEnteringHomeOnSuspending: settings.enablePip.value && Player.inst.isPlaying,
+                    isEnteringHomeOnSuspending: settings.enablePip.value && Player.inst.isPlaying && VideoController.inst.currentVideo.value != null,
                     onSuspending: () async {
-                      if (settings.enablePip.value && Player.inst.isPlaying) {
+                      if (settings.enablePip.value && Player.inst.isPlaying && VideoController.inst.currentVideo.value != null) {
                         await VideoController.vcontroller.enablePictureInPicture();
                       }
                     },
