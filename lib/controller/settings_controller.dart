@@ -104,6 +104,8 @@ class SettingsController {
   final RxInt isTrackPlayedPercentageCount = 40.obs;
   final RxInt waveformTotalBars = 140.obs;
   final RxDouble playerVolume = 1.0.obs;
+  final RxDouble playerSpeed = 1.0.obs;
+  final RxDouble playerPitch = 1.0.obs;
   final RxInt seekDurationInSeconds = 5.obs;
   final RxInt seekDurationInPercentage = 2.obs;
   final RxBool isSeekDurationPercentage = false.obs;
@@ -296,6 +298,8 @@ class SettingsController {
       isTrackPlayedPercentageCount.value = json['isTrackPlayedPercentageCount'] ?? isTrackPlayedPercentageCount.value;
       waveformTotalBars.value = json['waveformTotalBars'] ?? waveformTotalBars.value;
       playerVolume.value = json['playerVolume'] ?? playerVolume.value;
+      playerSpeed.value = json['playerSpeed'] ?? playerSpeed.value;
+      playerPitch.value = json['playerPitch'] ?? playerPitch.value;
       seekDurationInSeconds.value = json['seekDurationInSeconds'] ?? seekDurationInSeconds.value;
       seekDurationInPercentage.value = json['seekDurationInPercentage'] ?? seekDurationInPercentage.value;
       isSeekDurationPercentage.value = json['isSeekDurationPercentage'] ?? isSeekDurationPercentage.value;
@@ -465,6 +469,8 @@ class SettingsController {
       'isTrackPlayedPercentageCount': isTrackPlayedPercentageCount.value,
       'waveformTotalBars': waveformTotalBars.value,
       'playerVolume': playerVolume.value,
+      'playerSpeed': playerSpeed.value,
+      'playerPitch': playerPitch.value,
       'seekDurationInSeconds': seekDurationInSeconds.value,
       'seekDurationInPercentage': seekDurationInPercentage.value,
       'isSeekDurationPercentage': isSeekDurationPercentage.value,
@@ -605,6 +611,8 @@ class SettingsController {
     bool? playerInfiniyQueueOnNextPrevious,
     int? waveformTotalBars,
     double? playerVolume,
+    double? playerSpeed,
+    double? playerPitch,
     int? seekDurationInSeconds,
     int? seekDurationInPercentage,
     bool? isSeekDurationPercentage,
@@ -914,6 +922,12 @@ class SettingsController {
     }
     if (playerVolume != null) {
       this.playerVolume.value = playerVolume;
+    }
+    if (playerSpeed != null) {
+      this.playerSpeed.value = playerSpeed;
+    }
+    if (playerPitch != null) {
+      this.playerPitch.value = playerPitch;
     }
     if (seekDurationInSeconds != null) {
       this.seekDurationInSeconds.value = seekDurationInSeconds;

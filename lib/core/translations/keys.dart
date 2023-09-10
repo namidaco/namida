@@ -332,6 +332,7 @@ class LanguageKeys {
   late String PERMISSION_UPDATE;
   late String PICK_FROM_STORAGE;
   late String PINNED;
+  late String PITCH;
   late String PLAY_AFTER_NEXT_PREV;
   late String PLAY_AFTER;
   late String PLAY_ALL;
@@ -433,6 +434,7 @@ class LanguageKeys {
   late String SLEEP_TIMER;
   late String SORT_BY;
   late String SOURCE;
+  late String SPEED;
   late String STAGGERED_ALBUM_GRID_VIEW;
   late String START;
   late String STATS_SUBTITLE;
@@ -517,6 +519,7 @@ class LanguageKeys {
   late String VIDEO_QUALITY;
   late String VIDEO;
   late String VIEW_ALL;
+  late String VOLUME;
   late String WARNING;
   late String WAVEFORM_BARS_COUNT;
   late String WAVEFORMS;

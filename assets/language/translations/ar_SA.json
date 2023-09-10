@@ -51,6 +51,7 @@
   "PALETTE_SELECTED_MIX": "Selected Mix",
   "PAUSE_PLAYBACK": "Pause playback",
   "PINNED": "Pinned",
+  "PITCH": "Pitch",
   "RANDOM_PICKS": "Random Picks",
   "RECENTLY_ADDED": "Recently Added",
   "RECENT_ALBUMS": "Recent Albums",
@@ -68,6 +69,7 @@
   "SHUFFLE_ALL": "Shuffle All",
   "SHUFFLE_NEXT": "Shuffle Next",
   "SORT_BY": "Sort by",
+  "SPEED": "Speed",
   "SUBSCRIBE": "Subscribe",
   "SUBSCRIBED": "Subscribed",
   "SUPREMACY": "Supremacy",
@@ -81,5 +83,6 @@
   "UPDATE_DIRECTORY_PATH": "Update directory path",
   "UPDATE_MISSING_TRACKS_ONLY": "Update missing tracks only",
   "USED": "Used",
+  "VOLUME": "Volume",
   "WEEK": "Week"
 }

@@ -399,6 +399,7 @@ class Language extends LanguageKeys {
 			PERMISSION_UPDATE = getKey("PERMISSION_UPDATE");
 			PICK_FROM_STORAGE = getKey("PICK_FROM_STORAGE");
 			PINNED = getKey("PINNED");
+			PITCH = getKey("PITCH");
 			PLAY_AFTER_NEXT_PREV = getKey("PLAY_AFTER_NEXT_PREV");
 			PLAY_AFTER = getKey("PLAY_AFTER");
 			PLAY_ALL = getKey("PLAY_ALL");
@@ -500,6 +501,7 @@ class Language extends LanguageKeys {
 			SLEEP_TIMER = getKey("SLEEP_TIMER");
 			SORT_BY = getKey("SORT_BY");
 			SOURCE = getKey("SOURCE");
+			SPEED = getKey("SPEED");
 			STAGGERED_ALBUM_GRID_VIEW = getKey("STAGGERED_ALBUM_GRID_VIEW");
 			START = getKey("START");
 			STATS_SUBTITLE = getKey("STATS_SUBTITLE");
@@ -584,6 +586,7 @@ class Language extends LanguageKeys {
 			VIDEO_QUALITY = getKey("VIDEO_QUALITY");
 			VIDEO = getKey("VIDEO");
 			VIEW_ALL = getKey("VIEW_ALL");
+			VOLUME = getKey("VOLUME");
 			WARNING = getKey("WARNING");
 			WAVEFORM_BARS_COUNT = getKey("WAVEFORM_BARS_COUNT");
 			WAVEFORMS = getKey("WAVEFORMS");
@@ -605,6 +608,9 @@ class Language extends LanguageKeys {
     }
   }
 }
+
+
+
 
 
 

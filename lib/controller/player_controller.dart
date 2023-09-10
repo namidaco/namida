@@ -87,6 +87,18 @@ class Player {
     await _audioHandler.setSkipSilenceEnabled(enabled);
   }
 
+  Future<void> setPlayerPitch(double value) async {
+    await _audioHandler.setPlayerPitch(value);
+  }
+
+  Future<void> setPlayerSpeed(double value) async {
+    await _audioHandler.setPlayerSpeed(value);
+  }
+
+  Future<void> setPlayerVolume(double value) async {
+    await _audioHandler.setPlayerVolume(value);
+  }
+
   void refreshRxVariables() {
     _audioHandler.refreshRxVariables();
   }

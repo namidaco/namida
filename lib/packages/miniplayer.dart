@@ -789,7 +789,122 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                       color: context.theme.colorScheme.secondaryContainer,
                                                       shape: BoxShape.circle,
                                                     ),
-                                                    child: Icon(videoPlaybackEnabled ? Broken.video : Broken.video_slash, size: 18.0, color: onSecondary),
+                                                    child: NamidaIconButton(
+                                                      horizontalPadding: 0.0,
+                                                      onPressed: () {
+                                                        String toPercentage(double val) => "${(val * 100).toStringAsFixed(0)}%";
+
+                                                        Widget getTextWidget(IconData icon, String title, double value) {
+                                                          return Row(
+                                                            children: [
+                                                              Icon(icon, color: context.defaultIconColor()),
+                                                              const SizedBox(width: 12.0),
+                                                              Text(
+                                                                title,
+                                                                style: context.textTheme.displayLarge,
+                                                              ),
+                                                              const SizedBox(width: 8.0),
+                                                              Text(
+                                                                toPercentage(value),
+                                                                style: context.textTheme.displayMedium,
+                                                              )
+                                                            ],
+                                                          );
+                                                        }
+
+                                                        Widget getSlider({
+                                                          double min = 0.0,
+                                                          double max = 2.0,
+                                                          required double value,
+                                                          required void Function(double newValue)? onChanged,
+                                                        }) {
+                                                          return Slider.adaptive(
+                                                            min: min,
+                                                            max: max,
+                                                            value: value.clamp(min, max),
+                                                            onChanged: onChanged,
+                                                            divisions: 100,
+                                                            label: "${(value * 100).toStringAsFixed(0)}%",
+                                                          );
+                                                        }
+
+                                                        NamidaNavigator.inst.navigateDialog(
+                                                          dialog: CustomBlurryDialog(
+                                                            title: lang.CONFIGURE,
+                                                            actions: [
+                                                              NamidaIconButton(
+                                                                icon: Broken.refresh,
+                                                                onPressed: () {
+                                                                  const val = 1.0;
+                                                                  Player.inst.setPlayerPitch(val);
+                                                                  Player.inst.setPlayerSpeed(val);
+                                                                  Player.inst.setPlayerVolume(val);
+                                                                  settings.save(
+                                                                    playerPitch: val,
+                                                                    playerSpeed: val,
+                                                                    playerVolume: val,
+                                                                  );
+                                                                },
+                                                              ),
+                                                              NamidaButton(
+                                                                text: lang.DONE,
+                                                                onPressed: () {
+                                                                  NamidaNavigator.inst.closeDialog();
+                                                                },
+                                                              )
+                                                            ],
+                                                            child: ListView(
+                                                              padding: const EdgeInsets.all(12.0),
+                                                              shrinkWrap: true,
+                                                              children: [
+                                                                Obx(() => getTextWidget(Broken.airpods, lang.PITCH, settings.playerPitch.value)),
+                                                                Obx(
+                                                                  () => getSlider(
+                                                                    value: settings.playerPitch.value,
+                                                                    onChanged: (value) {
+                                                                      Player.inst.setPlayerPitch(value);
+                                                                      settings.save(playerPitch: value);
+                                                                    },
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(height: 12.0),
+                                                                Obx(
+                                                                  () => getTextWidget(Broken.forward, lang.SPEED, settings.playerSpeed.value),
+                                                                ),
+                                                                Obx(
+                                                                  () => getSlider(
+                                                                    value: settings.playerSpeed.value,
+                                                                    onChanged: (value) {
+                                                                      Player.inst.setPlayerSpeed(value);
+                                                                      settings.save(playerSpeed: value);
+                                                                    },
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(height: 12.0),
+                                                                Obx(
+                                                                  () => getTextWidget(settings.playerVolume.value > 0 ? Broken.volume_high : Broken.volume_slash, lang.VOLUME,
+                                                                      settings.playerVolume.value),
+                                                                ),
+                                                                Obx(
+                                                                  () => getSlider(
+                                                                    max: 1.0,
+                                                                    value: settings.playerVolume.value,
+                                                                    onChanged: (value) {
+                                                                      Player.inst.setPlayerVolume(value);
+                                                                      settings.save(playerVolume: value);
+                                                                    },
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(height: 12.0),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        );
+                                                      },
+                                                      icon: videoPlaybackEnabled ? Broken.video : Broken.music_play,
+                                                      iconSize: 18.0,
+                                                      iconColor: onSecondary,
+                                                    ),
                                                   ),
                                                   const SizedBox(
                                                     width: 8.0,

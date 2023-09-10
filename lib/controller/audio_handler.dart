@@ -271,6 +271,18 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
     _totalListenedTimeInSec.value = listenTime ?? 0;
   }
 
+  Future<void> setPlayerPitch(double value) async {
+    await _player.setPitch(value);
+  }
+
+  Future<void> setPlayerSpeed(double value) async {
+    await _player.setSpeed(value);
+  }
+
+  Future<void> setPlayerVolume(double value) async {
+    await _player.setVolume(value);
+  }
+
   Future<void> setSkipSilenceEnabled(bool enabled) async => await _player.setSkipSilenceEnabled(enabled);
 
   Future<void> tryRestoringLastPosition(Track trackPre) async {
