@@ -91,39 +91,38 @@ class _NamidaVideoControlsState extends State<NamidaVideoControls> {
           if (widget.showControls)
             Positioned.fill(
               key: const Key('sussyChild'),
-              child: AnimatedSwitcher(
+              child: AnimatedOpacity(
+                opacity: _isVisible ? 1.0 : 0.0,
                 duration: transitionDuration,
-                reverseDuration: transitionDuration,
-                child: AnimatedOpacity(
-                  opacity: _isVisible ? 1.0 : 0.0,
-                  duration: transitionDuration,
-                  child: Container(
-                    color: Colors.black.withOpacity(0.25),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 4.0),
-                        Row(
-                          children: [
-                            NamidaIconButton(
-                              horizontalPadding: 12.0,
-                              verticalPadding: 6.0,
-                              onPressed: widget.onMinimizeTap,
-                              icon: Broken.arrow_down_2,
-                              iconColor: itemsColor,
-                              iconSize: 20.0,
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 1200),
-                              child: NamidaBgBlur(
-                                blur: 5.0,
-                                child: Container(
+                child: Container(
+                  color: Colors.black.withOpacity(0.25),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 4.0),
+                      Row(
+                        children: [
+                          NamidaIconButton(
+                            horizontalPadding: 12.0,
+                            verticalPadding: 6.0,
+                            onPressed: widget.onMinimizeTap,
+                            icon: Broken.arrow_down_2,
+                            iconColor: itemsColor,
+                            iconSize: 20.0,
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                          child: TweenAnimationBuilder<double>(
+                              duration: transitionDuration,
+                              tween: Tween<double>(begin: 0, end: 5.0),
+                              builder: (context, value, _) {
+                                return NamidaBgBlur(
+                                  blur: value,
+                                  child: Container(
                                     padding: const EdgeInsets.all(12.0),
                                     decoration: BoxDecoration(
                                       color: Colors.white30,
@@ -226,13 +225,13 @@ class _NamidaVideoControlsState extends State<NamidaVideoControls> {
                                           );
                                         },
                                       );
-                                    }()),
-                              ),
-                            ),
-                          ),
+                                    }(),
+                                  ),
+                                );
+                              }),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),

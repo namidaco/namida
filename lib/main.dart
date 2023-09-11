@@ -26,6 +26,7 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
+import 'package:namida/controller/youtube_playlist_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -89,6 +90,9 @@ void main() async {
   VideoController.inst.initialize();
   await PlaylistController.inst.prepareDefaultPlaylistsFile();
   await QueueController.inst.prepareLatestQueue();
+
+  YoutubePlaylistController.inst.prepareAllPlaylists();
+  await YoutubePlaylistController.inst.prepareDefaultPlaylistsFile();
 
   await _initializeIntenties();
 

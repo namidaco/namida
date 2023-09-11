@@ -503,6 +503,7 @@ class LanguageKeys {
   late String USE_YOUTUBE_MINIPLAYER;
   late String VALUE_BETWEEN_50_200;
   late String VALUE;
+  late String VIDEOS;
   late String VIDEO_CACHE_FILE;
   late String VIDEO_CACHE_FILES;
   late String VIDEO_CACHE;

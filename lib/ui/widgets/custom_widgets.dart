@@ -1051,12 +1051,13 @@ class BlurryContainer extends StatelessWidget {
 }
 
 class CancelButton extends StatelessWidget {
-  const CancelButton({super.key});
+  final void Function()? onPressed;
+  const CancelButton({super.key, this.onPressed});
 
   @override
   Widget build(BuildContext context) {
     return TextButton(
-      onPressed: () => NamidaNavigator.inst.closeDialog(),
+      onPressed: onPressed ?? () => NamidaNavigator.inst.closeDialog(),
       child: Text(lang.CANCEL),
     );
   }
@@ -2478,8 +2479,8 @@ class ShimmerWrapper extends StatelessWidget {
     required this.shimmerEnabled,
     required this.child,
     this.fadeDurationMS = 600,
-    this.shimmerDelayMS = 300,
-    this.shimmerDurationMS = 600,
+    this.shimmerDelayMS = 400,
+    this.shimmerDurationMS = 700,
     this.transparent = true,
   });
 

@@ -112,7 +112,12 @@ class BackupAndRestore extends StatelessWidget {
                             getItemWidget(
                               title: lang.PLAYLISTS,
                               icon: Broken.music_library_2,
-                              items: [AppDirs.PLAYLISTS, AppPaths.FAVOURITES_PLAYLIST],
+                              items: [
+                                AppDirs.PLAYLISTS,
+                                AppPaths.FAVOURITES_PLAYLIST,
+                                AppDirs.YOUTUBE_PLAYLISTS,
+                                AppPaths.YT_FAVOURITES_PLAYLIST,
+                              ],
                             ),
                             const SizedBox(height: 12.0),
                             getItemWidget(

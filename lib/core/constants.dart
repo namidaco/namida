@@ -43,6 +43,8 @@ class AppPaths {
   static final TOTAL_LISTEN_TIME = '$_USER_DATA/total_listen.txt';
   static final FAVOURITES_PLAYLIST = '$_USER_DATA/favs.json';
   static final NAMIDA_LOGO = '${AppDirs.ARTWORKS}.ARTWORKS.NAMIDA_DEFAULT_ARTWORK.PNG';
+
+  static final YT_FAVOURITES_PLAYLIST = '$_USER_DATA/ytfavs.json';
 }
 
 /// Directories used by Namida
@@ -69,6 +71,7 @@ class AppDirs {
   static final SAVED_ARTWORKS = '$INTERNAL_STORAGE/Artworks/';
   static final BACKUPS = '$INTERNAL_STORAGE/Backups/';
   static final COMPRESSED_IMAGES = '$INTERNAL_STORAGE/Compressed/';
+  static final YOUTUBE_PLAYLISTS = '$USER_DATA/Youtube Playlists/';
 
   static final List<String> values = [
     HISTORY_PLAYLIST,
@@ -86,6 +89,7 @@ class AppDirs {
     YT_METADATA,
     YT_METADATA_CHANNELS,
     YT_METADATA_COMMENTS,
+    YOUTUBE_PLAYLISTS,
   ];
 }
 

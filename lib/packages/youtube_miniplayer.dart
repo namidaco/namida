@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -17,29 +18,124 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/youtube_controller.dart';
+import 'package:namida/controller/youtube_playlist_controller.dart' as pc;
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:namida/packages/mp.dart';
 import 'package:namida/packages/dots_triangle.dart';
+import 'package:namida/packages/mp.dart';
 import 'package:namida/packages/three_arched_circle.dart';
+import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/pages/youtube_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/ui/widgets/youtube_playlists_view.dart';
 
 class YoutubeMiniPlayer extends StatelessWidget {
   YoutubeMiniPlayer({super.key});
   final MiniplayerController minicontroller = MiniplayerController();
   final RxDouble minioffset = 0.0.obs;
   final isTitleExpanded = false.obs;
+
+  void _showAddToPlaylistSheet(BuildContext context, List<String> ids, Map<String, String?> idsNamesLookup) {
+    final pcontroller = pc.YoutubePlaylistController.inst;
+
+    final TextEditingController controller = TextEditingController();
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 24.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Text(
+                  lang.PLAYLISTS,
+                  style: context.textTheme.displayLarge,
+                ),
+              ),
+              const SizedBox(height: 6.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Text(
+                  ids.map((e) => idsNamesLookup[e]).join(', '),
+                  style: context.textTheme.displaySmall,
+                ),
+              ),
+              const SizedBox(height: 6.0),
+              Expanded(
+                child: YoutubePlaylistsView(idsToAdd: ids),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const SizedBox(width: 24.0),
+                  CancelButton(
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const SizedBox(width: 12.0),
+                  NamidaButton(
+                    text: lang.CREATE,
+                    onPressed: () {
+                      NamidaNavigator.inst.navigateDialog(
+                        dialog: Form(
+                          key: formKey,
+                          child: CustomBlurryDialog(
+                            title: lang.CONFIGURE,
+                            actions: [
+                              const CancelButton(),
+                              NamidaButton(
+                                text: lang.ADD,
+                                onPressed: () async {
+                                  if (formKey.currentState!.validate()) {
+                                    pcontroller.addNewPlaylist(controller.text);
+                                    NamidaNavigator.inst.closeDialog();
+                                  }
+                                },
+                              ),
+                            ],
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(
+                                  height: 20.0,
+                                ),
+                                CustomTagTextField(
+                                  controller: controller,
+                                  hintText: '',
+                                  labelText: lang.NAME,
+                                  validator: (value) => pcontroller.validatePlaylistName(value),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 24.0),
+                ],
+              )
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -343,7 +439,13 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                   SmallYTActionButton(
                                                     title: lang.SAVE,
                                                     icon: Broken.music_playlist,
-                                                    onPressed: () {},
+                                                    onPressed: () => _showAddToPlaylistSheet(
+                                                      context,
+                                                      [currentId],
+                                                      {
+                                                        currentId: ytvideo?.video.name ?? '',
+                                                      },
+                                                    ),
                                                   ),
                                                   const SizedBox(width: 18.0),
                                                 ],
@@ -769,6 +871,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final EdgeInsetsGeometry? margin;
   final void Function(File? imageFile)? onImageReady;
   final List<Widget> onTopWidgets;
+  final String? smallBoxText;
 
   const YoutubeThumbnail({
     super.key,
@@ -781,6 +884,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.margin,
     this.onImageReady,
     this.onTopWidgets = const <Widget>[],
+    this.smallBoxText,
   });
 
   @override
@@ -789,28 +893,32 @@ class YoutubeThumbnail extends StatefulWidget {
 
 class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
   String? imagePath;
-  @override
-  void initState() {
-    super.initState();
-    _getThumbnail();
-  }
+  Color? smallBoxDynamicColor;
 
   Future<void> _getThumbnail() async {
     final res = await VideoController.inst.getYoutubeThumbnailAndCache(id: widget.videoId, channelUrl: widget.channelUrl);
     widget.onImageReady?.call(res);
     imagePath = res?.path;
     if (mounted) setState(() {});
+    if (imagePath != null) {
+      final c = await CurrentColor.inst.extractPaletteFromImage(imagePath!, useIsolate: true);
+      smallBoxDynamicColor = c?.color.withAlpha(140);
+      if (mounted) setState(() {});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (imagePath == null) {
+      _getThumbnail();
+    }
     return Container(
       clipBehavior: Clip.antiAlias,
       margin: widget.margin,
       height: widget.height,
       width: widget.width,
       decoration: BoxDecoration(
-        color: context.theme.cardColor.withAlpha(100),
+        color: context.theme.cardColor.withAlpha(60),
         shape: widget.isCircle ? BoxShape.circle : BoxShape.rectangle,
         borderRadius: widget.isCircle
             ? null
@@ -818,16 +926,43 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
                 widget.borderRadius.multipliedRadius,
               ),
       ),
-      child: ArtworkWidget(
-        fadeMilliSeconds: 600,
-        path: imagePath,
-        height: widget.height,
-        width: widget.width,
-        thumbnailSize: widget.width,
-        icon: widget.channelUrl != null ? Broken.user : Broken.video,
-        iconSize: widget.channelUrl != null ? null : widget.width * 0.3,
-        forceSquared: true,
-        onTopWidgets: widget.onTopWidgets,
+      child: Stack(
+        children: [
+          ArtworkWidget(
+            key: UniqueKey(),
+            fadeMilliSeconds: 600,
+            path: imagePath,
+            height: widget.height,
+            width: widget.width,
+            thumbnailSize: widget.width,
+            icon: widget.channelUrl != null ? Broken.user : Broken.video,
+            iconSize: widget.channelUrl != null ? null : widget.width * 0.3,
+            forceSquared: true,
+            onTopWidgets: widget.onTopWidgets,
+          ),
+          if (widget.smallBoxText != null)
+            Positioned(
+              bottom: 0.0,
+              right: 0.0,
+              child: NamidaInkWell(
+                animationDurationMS: 300,
+                borderRadius: 6.0,
+                bgColor: smallBoxDynamicColor ?? context.theme.cardColor.withAlpha(130),
+                padding: const EdgeInsets.all(2.0),
+                margin: const EdgeInsets.all(4.0),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Broken.play_cricle,
+                      size: 18.0,
+                    ),
+                    const SizedBox(width: 4.0),
+                    Text(widget.smallBoxText!),
+                  ],
+                ),
+              ),
+            )
+        ],
       ),
     );
   }
@@ -1212,8 +1347,7 @@ Future<void> showDownloadVideoBottomSheet({
                         children: [
                           Expanded(
                             flex: 1,
-                            child: NamidaButton(
-                              text: lang.CANCEL,
+                            child: CancelButton(
                               onPressed: () => Navigator.pop(context),
                             ),
                           ),

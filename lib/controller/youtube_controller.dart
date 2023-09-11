@@ -169,14 +169,14 @@ class YoutubeController {
 
   Future<void> updateCurrentVideoMetadata(String id) async {
     currentYoutubeMetadata.value = null;
-    final info = await _fetchVideoDetails(id);
+    final info = await fetchVideoDetails(id);
     inspect(info);
     final channel = await _fetchChannelDetails(info?.uploaderUrl);
     inspect(channel);
     currentYoutubeMetadata.value = info == null ? null : YTLVideo(video: info, channel: channel);
   }
 
-  Future<VideoInfo?> _fetchVideoDetails(String id) async {
+  Future<VideoInfo?> fetchVideoDetails(String id) async {
     final cachedFile = File("${AppDirs.YT_METADATA}$id.txt");
     VideoInfo? vi;
     if (await cachedFile.exists()) {

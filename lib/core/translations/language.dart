@@ -570,6 +570,7 @@ class Language extends LanguageKeys {
 			USE_YOUTUBE_MINIPLAYER = getKey("USE_YOUTUBE_MINIPLAYER");
 			VALUE_BETWEEN_50_200 = getKey("VALUE_BETWEEN_50_200");
 			VALUE = getKey("VALUE");
+			VIDEOS = getKey("VIDEOS");
 			VIDEO_CACHE_FILE = getKey("VIDEO_CACHE_FILE");
 			VIDEO_CACHE_FILES = getKey("VIDEO_CACHE_FILES");
 			VIDEO_CACHE = getKey("VIDEO_CACHE");
@@ -608,6 +609,7 @@ class Language extends LanguageKeys {
     }
   }
 }
+
 
 
 

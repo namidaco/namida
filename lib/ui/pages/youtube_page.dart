@@ -38,7 +38,7 @@ class YoutubePage extends StatelessWidget {
             }
             return NamidaListView(
               itemBuilder: (context, i) {
-                final feedItem = searchList[i];
+                final feedItem = l[i];
                 return YoutubeVideoCard(
                   key: ValueKey(i),
                   video: feedItem is StreamInfoItem ? feedItem : null,
@@ -97,27 +97,7 @@ class YoutubePlaylistCard extends StatelessWidget {
       onTap: () {},
       displayChannelThumbnail: false,
       displaythirdLineText: false,
-      onTopWidgets: [
-        Positioned(
-          bottom: 2.0,
-          right: 2.0,
-          child: NamidaInkWell(
-            borderRadius: 6.0,
-            bgColor: context.theme.cardColor.withAlpha(130),
-            padding: const EdgeInsets.all(2.0),
-            child: const Row(
-              children: [
-                Icon(
-                  Broken.play_cricle,
-                  size: 18.0,
-                ),
-                SizedBox(width: 4.0),
-                Text('+25'),
-              ],
-            ),
-          ),
-        )
-      ],
+      smallBoxText: '+25',
     );
   }
 }
@@ -135,6 +115,9 @@ class YoutubeCard extends StatelessWidget {
   final bool displayChannelThumbnail;
   final bool displaythirdLineText;
   final List<Widget> onTopWidgets;
+  final String? smallBoxText;
+  final bool? checkmarkStatus;
+  final double thumbnailWidthPercentage;
 
   const YoutubeCard({
     super.key,
@@ -150,12 +133,15 @@ class YoutubeCard extends StatelessWidget {
     this.displayChannelThumbnail = true,
     this.displaythirdLineText = true,
     this.onTopWidgets = const <Widget>[],
+    this.smallBoxText,
+    this.checkmarkStatus,
+    this.thumbnailWidthPercentage = 1.0,
   });
 
   @override
   Widget build(BuildContext context) {
     const verticalPadding = 8.0;
-    final thumbnailWidth = context.width * 0.36;
+    final thumbnailWidth = thumbnailWidthPercentage * context.width * 0.36;
     final thumbnailHeight = thumbnailWidth * 9 / 16;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: verticalPadding * 0.5, horizontal: 8.0),
@@ -178,6 +164,7 @@ class YoutubeCard extends StatelessWidget {
                 height: thumbnailHeight,
                 borderRadius: 10.0,
                 onTopWidgets: onTopWidgets,
+                smallBoxText: smallBoxText,
               ),
             ),
             const SizedBox(width: 8.0),
@@ -217,17 +204,19 @@ class YoutubeCard extends StatelessWidget {
                   if (displayChannelThumbnail || displaythirdLineText)
                     Row(
                       children: [
-                        NamidaBasicShimmer(
-                          width: 20.0,
-                          height: 20.0,
-                          shimmerEnabled: channelThumbnailUrl == null || !displayChannelThumbnail,
-                          child: YoutubeThumbnail(
-                            channelUrl: channelThumbnailUrl ?? '',
+                        if (displayChannelThumbnail) ...[
+                          NamidaBasicShimmer(
                             width: 20.0,
-                            isCircle: true,
+                            height: 20.0,
+                            shimmerEnabled: channelThumbnailUrl == null || !displayChannelThumbnail,
+                            child: YoutubeThumbnail(
+                              channelUrl: channelThumbnailUrl ?? '',
+                              width: 20.0,
+                              isCircle: true,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 6.0),
+                          const SizedBox(width: 6.0),
+                        ],
                         NamidaBasicShimmer(
                           width: context.width * 0.2,
                           height: 8.0,
@@ -242,6 +231,10 @@ class YoutubeCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        if (checkmarkStatus != null) ...[
+                          const Spacer(),
+                          NamidaCheckMark(size: 12.0, active: checkmarkStatus!),
+                        ],
                       ],
                     ),
                   const SizedBox(height: 12.0),

@@ -146,7 +146,7 @@ class CurrentColor {
       return maybeDelightned(valInMap);
     }
 
-    NamidaColor? nc = await _extractPaletteFromImage(
+    NamidaColor? nc = await extractPaletteFromImage(
       track.pathToImage,
       useIsolate: useIsolate,
     );
@@ -186,7 +186,7 @@ class CurrentColor {
     return Color.fromARGB(255, red, green, blue);
   }
 
-  Future<NamidaColor?> _extractPaletteFromImage(
+  Future<NamidaColor?> extractPaletteFromImage(
     String imagePath, {
     bool forceReExtract = false,
     bool useIsolate = _defaultUseIsolate,
@@ -231,7 +231,7 @@ class CurrentColor {
       await paletteFile.writeAsJson(newNC.toJson());
       _updateInColorMap(track.filename, newNC);
     } else if (imagePath != null) {
-      final nc = await _extractPaletteFromImage(imagePath, forceReExtract: true);
+      final nc = await extractPaletteFromImage(imagePath, forceReExtract: true);
       _updateInColorMap(imagePath.getFilenameWOExt, nc);
     }
     if (Player.inst.nowPlayingTrack == track) {
