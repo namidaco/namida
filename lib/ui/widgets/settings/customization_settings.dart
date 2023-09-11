@@ -17,8 +17,6 @@ import 'package:namida/ui/widgets/settings_card.dart';
 class CustomizationSettings extends StatelessWidget {
   const CustomizationSettings({super.key});
 
-  SettingsController get stg => SettingsController.inst;
-
   @override
   Widget build(BuildContext context) {
     return SettingsCard(

@@ -14,12 +14,14 @@ class NamidaVideoControls extends StatefulWidget {
   final VideoPlayerController? controller;
   final Widget child;
   final bool showControls;
+  final VoidCallback? onMinimizeTap;
 
   const NamidaVideoControls({
     super.key,
     required this.controller,
     required this.child,
     required this.showControls,
+    required this.onMinimizeTap,
   });
 
   @override
@@ -105,7 +107,7 @@ class _NamidaVideoControlsState extends State<NamidaVideoControls> {
                             NamidaIconButton(
                               horizontalPadding: 12.0,
                               verticalPadding: 6.0,
-                              onPressed: () {},
+                              onPressed: widget.onMinimizeTap,
                               icon: Broken.arrow_down_2,
                               iconColor: itemsColor,
                               iconSize: 20.0,

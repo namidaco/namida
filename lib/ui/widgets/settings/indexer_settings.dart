@@ -19,8 +19,6 @@ import 'package:namida/ui/widgets/settings_card.dart';
 class IndexerSettings extends StatelessWidget {
   const IndexerSettings({super.key});
 
-  SettingsController get stg => SettingsController.inst;
-
   Future<void> _showRefreshPromptDialog(bool didModifyFolder) async {
     _RefreshLibraryIcon.controller.repeat();
     final currentFiles = await Indexer.inst.getAudioFiles(forceReCheckDirs: didModifyFolder);

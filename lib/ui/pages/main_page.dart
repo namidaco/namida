@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -18,7 +17,8 @@ import 'package:namida/ui/pages/search_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class MainPage extends StatelessWidget {
-  const MainPage({super.key});
+  final AnimationController animation;
+  const MainPage({super.key, required this.animation});
 
   @override
   Widget build(BuildContext context) {
@@ -26,50 +26,56 @@ class MainPage extends StatelessWidget {
       resizeToAvoidBottomInset: false,
       appBar: PreferredSize(
         preferredSize: const Size(0, 56.0),
-        child: Obx(
-          () => AppBar(
-            toolbarHeight: 56.0 * (1 - MiniPlayerController.inst.miniplayerHP.value * 0.3),
-            leading: NamidaNavigator.inst.currentWidgetStack.length > 1
-                ? NamidaAppBarIcon(
-                    icon: Broken.arrow_left_2,
-                    onPressed: NamidaNavigator.inst.popPage,
-                  )
-                : NamidaAppBarIcon(
-                    icon: Broken.menu_1,
-                    onPressed: NamidaNavigator.inst.toggleDrawer,
-                  ),
-            titleSpacing: 0,
-            automaticallyImplyLeading: false,
-            title: NamidaNavigator.inst.currentRoute?.toTitle(),
-            actions: NamidaNavigator.inst.currentRoute?.toActions(),
-          ),
+        child: AnimatedBuilder(
+          animation: animation,
+          builder: (context, child) {
+            return AppBar(
+              toolbarHeight: 56.0 * (1 - animation.value * 0.3),
+              leading: NamidaNavigator.inst.currentWidgetStack.length > 1
+                  ? NamidaAppBarIcon(
+                      icon: Broken.arrow_left_2,
+                      onPressed: NamidaNavigator.inst.popPage,
+                    )
+                  : NamidaAppBarIcon(
+                      icon: Broken.menu_1,
+                      onPressed: NamidaNavigator.inst.toggleDrawer,
+                    ),
+              titleSpacing: 0,
+              automaticallyImplyLeading: false,
+              title: NamidaNavigator.inst.currentRoute?.toTitle(),
+              actions: NamidaNavigator.inst.currentRoute?.toActions(),
+            );
+          },
         ),
       ),
       body: Stack(
         alignment: Alignment.bottomCenter,
         children: [
-          Obx(
-            () => Transform.scale(
-              scale: 1 - (MiniPlayerController.inst.miniplayerHP.value * 0.05),
-              child: WillPopScope(
-                onWillPop: () async {
-                  await NamidaNavigator.inst.popPage();
-                  return false;
-                },
-                child: Navigator(
-                  key: NamidaNavigator.inst.navKey,
-                  restorationScopeId: 'namida',
-                  requestFocus: false,
-                  observers: [NamidaNavigator.inst.heroController],
-                  onGenerateRoute: (settings) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      NamidaNavigator.inst.onFirstLoad();
-                    });
-                    return GetPageRoute(page: () => const SizedBox());
+          AnimatedBuilder(
+            animation: animation,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: 1 - (animation.value * 0.05),
+                child: WillPopScope(
+                  onWillPop: () async {
+                    await NamidaNavigator.inst.popPage();
+                    return false;
                   },
+                  child: Navigator(
+                    key: NamidaNavigator.inst.navKey,
+                    restorationScopeId: 'namida',
+                    requestFocus: false,
+                    observers: [NamidaNavigator.inst.heroController],
+                    onGenerateRoute: (settings) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        NamidaNavigator.inst.onFirstLoad();
+                      });
+                      return GetPageRoute(page: () => const SizedBox());
+                    },
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
 
           /// Search Box
@@ -109,25 +115,29 @@ class MainPage extends StatelessWidget {
       bottomNavigationBar: Obx(
         () => !settings.enableBottomNavBar.value
             ? const SizedBox()
-            : Transform.translate(
-                offset: Offset(0, kBottomNavigationBarHeight * MiniPlayerController.inst.miniplayerHP.value),
-                child: NavigationBar(
-                  animationDuration: const Duration(seconds: 1),
-                  elevation: 22,
-                  labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-                  height: 64.0,
-                  onDestinationSelected: (value) => ScrollSearchController.inst.animatePageController(value.toEnum()),
-                  selectedIndex: settings.selectedLibraryTab.value.toInt(),
-                  destinations: [
-                    ...settings.libraryTabs.map(
-                      (e) => NavigationDestination(
-                        icon: Icon(e.toIcon()),
-                        label: e.toText(),
-                      ),
+            : AnimatedBuilder(
+                animation: animation,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, kBottomNavigationBarHeight * animation.value),
+                    child: NavigationBar(
+                      animationDuration: const Duration(seconds: 1),
+                      elevation: 22,
+                      labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+                      height: 64.0,
+                      onDestinationSelected: (value) => ScrollSearchController.inst.animatePageController(value.toEnum()),
+                      selectedIndex: settings.selectedLibraryTab.value.toInt(),
+                      destinations: [
+                        ...settings.libraryTabs.map(
+                          (e) => NavigationDestination(
+                            icon: Icon(e.toIcon()),
+                            label: e.toText(),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  );
+                }),
       ),
     );
   }

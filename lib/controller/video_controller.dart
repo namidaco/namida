@@ -39,7 +39,7 @@ class VideoController {
         duration: const Duration(milliseconds: 300),
         child: Obx(
           () => VideoController.inst.shouldShowVideo
-              ? VideoController.inst.getVideoWidget(null, false)
+              ? VideoController.inst.getVideoWidget(null, false, null)
               : ArtworkWidget(
                   thumbnailSize: 9999,
                   iconSize: 32.0,
@@ -49,7 +49,7 @@ class VideoController {
       );
   Widget? videoWidget;
   Key? _lastKey;
-  Widget getVideoWidget(Key? keyyy, bool enableControls) {
+  Widget getVideoWidget(Key? keyyy, bool enableControls, VoidCallback? onMinimizeTap) {
     final key = Key('video_widget$enableControls');
     if (videoWidget == null || _lastKey != key) {
       _lastKey = key;
@@ -61,7 +61,7 @@ class VideoController {
         },
         onScaleEnd: (details) {
           if (videoZoomAdditionalScale.value > 1.1) {
-            vcontroller.enterFullScreen(getVideoWidget(key, true));
+            vcontroller.enterFullScreen(getVideoWidget(key, true, onMinimizeTap));
           } else {
             vcontroller.exitFullScreen();
           }
@@ -69,6 +69,7 @@ class VideoController {
         child: AspectRatio(
           aspectRatio: aspectRatio,
           child: NamidaVideoControls(
+            onMinimizeTap: onMinimizeTap,
             showControls: enableControls,
             controller: playerController?.videoPlayerController,
             child: BetterPlayer(

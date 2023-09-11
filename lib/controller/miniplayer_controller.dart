@@ -13,18 +13,13 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 
 class MiniPlayerController {
   static MiniPlayerController get inst => _instance;
   static final MiniPlayerController _instance = MiniPlayerController._internal();
   MiniPlayerController._internal();
-
-  /// Height percentage for miniplayer
-  final RxDouble miniplayerHP = 0.0.obs;
-
-  /// Height percentage for miniplayer queue
-  final RxDouble miniplayerQueueHP = 0.0.obs;
 
   /// Used to temporarily hold the seek value.
   final RxInt seekValue = 0.obs;
@@ -40,7 +35,7 @@ class MiniPlayerController {
 
   final ScrollController queueScrollController = ScrollController();
 
-  void initialize(TickerProvider ticker) {
+  AnimationController initialize(TickerProvider ticker) {
     animation = AnimationController(
       vsync: ticker,
       duration: const Duration(milliseconds: 500),
@@ -48,16 +43,10 @@ class MiniPlayerController {
       lowerBound: -0.1,
       value: 0.0,
     );
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      animation.addListener(() {
-        final p = animation.value;
-        miniplayerHP.value = p.clamp(0.0, 1.0);
-        miniplayerQueueHP.value = (p.clamp(1.0, 3.0) - 1.0).clamp(0.0, 1.0);
-      });
-    });
+    return animation;
   }
 
-  void initializeSAnim(TickerProvider ticker) {
+  AnimationController initializeSAnim(TickerProvider ticker) {
     final media = MediaQueryData.fromView(window);
     topInset = media.padding.top;
     bottomInset = media.padding.bottom;
@@ -71,6 +60,7 @@ class MiniPlayerController {
       value: 0.0,
     );
     updateBottomNavBarRelatedDimensions(settings.enableBottomNavBar.value);
+    return sAnim;
   }
 
   void updateBottomNavBarRelatedDimensions(bool isEnabled) {

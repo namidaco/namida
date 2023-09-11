@@ -13,7 +13,6 @@ import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -29,8 +28,6 @@ import 'package:namida/ui/widgets/settings_card.dart';
 
 class AdvancedSettings extends StatelessWidget {
   const AdvancedSettings({super.key});
-
-  SettingsController get stg => SettingsController.inst;
 
   @override
   Widget build(BuildContext context) {

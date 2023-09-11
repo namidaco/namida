@@ -367,6 +367,8 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
     double vol = currentVolume.value;
     final numSteps = (duration / 10).ceil();
     final volumeStep = vol / numSteps;
+    _pauseFadeTimer?.cancel();
+    _pauseFadeTimer = null;
     _pauseFadeTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
       vol -= volumeStep;
       printy("Fade Volume Pause ${vol.toString()}");

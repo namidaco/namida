@@ -8,7 +8,6 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/youtube_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -257,33 +256,35 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
           ],
         ),
       ),
-      scaffold: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          const MainPage(),
-          const MiniPlayerParent(),
-          Obx(
-            () {
-              final miniHeight = MiniPlayerController.inst.miniplayerHP.value;
-              final queueHeight = MiniPlayerController.inst.miniplayerQueueHP.value;
-              if (miniHeight == 1.0 && queueHeight == 0.0) return const SizedBox();
+      scaffold: const MainScreenStack(),
+    );
+  }
+}
 
-              final navHeight = (settings.enableBottomNavBar.value ? kBottomNavigationBarHeight : -4.0) - 10.0;
-              final isInQueue = queueHeight > 0.0;
-              final initH = isInQueue ? kQueueBottomRowHeight : 12.0 + (miniHeight * 24.0);
+class MainScreenStack extends StatefulWidget {
+  const MainScreenStack({super.key});
 
-              return AnimatedPositioned(
-                duration: const Duration(milliseconds: 100),
-                bottom: initH + (navHeight * (1 - queueHeight)),
-                child: Opacity(
-                  opacity: isInQueue ? queueHeight : 1.0 - miniHeight,
-                  child: const SelectedTracksPreviewContainer(),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+  @override
+  State<MainScreenStack> createState() => _MainScreenStackState();
+}
+
+class _MainScreenStackState extends State<MainScreenStack> with SingleTickerProviderStateMixin {
+  late AnimationController animation;
+  @override
+  void initState() {
+    super.initState();
+    animation = MiniPlayerController.inst.initialize(this);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.bottomCenter,
+      children: [
+        MainPage(animation: animation),
+        MiniPlayerParent(animation: animation),
+        SelectedTracksPreviewContainer(animation: animation),
+      ],
     );
   }
 }

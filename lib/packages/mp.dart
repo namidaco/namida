@@ -37,6 +37,8 @@ class Miniplayer extends StatefulWidget {
   ///This can be used to hide the BottomNavigationBar.
   final ValueNotifier<double>? valueNotifier;
 
+  final AnimationController? animationController;
+
   ///Deprecated
   @Deprecated("Migrate ondismiss to ondismissed as ondismiss will be used differently in a future version.")
   final Function? ondismiss;
@@ -48,6 +50,8 @@ class Miniplayer extends StatefulWidget {
   final MiniplayerController? controller;
 
   final void Function(double percentage)? onHeightChange;
+
+  final double navBarHeight;
 
   const Miniplayer({
     Key? key,
@@ -63,6 +67,8 @@ class Miniplayer extends StatefulWidget {
     this.ondismissed,
     this.controller,
     this.onHeightChange,
+    this.animationController,
+    this.navBarHeight = 0.0,
   }) : super(key: key);
 
   @override
@@ -97,11 +103,12 @@ class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
   }
 
   void _resetAnimationController({Duration? duration}) {
-    if (_animationController != null) _animationController!.dispose();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: duration ?? widget.duration,
-    );
+    // if (_animationController != null) _animationController!.dispose();
+    _animationController = widget.animationController ??
+        AnimationController(
+          vsync: this,
+          duration: duration ?? widget.duration,
+        );
     _animationController!.addStatusListener(_statusListener);
     animating = false;
   }
@@ -131,7 +138,7 @@ class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
   @override
   void dispose() {
     _heightController.close();
-    if (_animationController != null) _animationController!.dispose();
+    // if (_animationController != null) _animationController!.dispose();
 
     if (widget.controller != null) {
       widget.controller!.removeListener(controllerListener);
@@ -156,105 +163,107 @@ class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
         valueListenable: heightNotifier,
         builder: (BuildContext context, double height, Widget? _) {
           final percentage = ((height - widget.minHeight)) / (widget.maxHeight - widget.minHeight);
-
-          return Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              if (percentage > 0)
-                GestureDetector(
-                  onTap: () => _animateToHeight(widget.minHeight),
-                  child: Opacity(
-                    opacity: borderDouble(minRange: 0.0, maxRange: 1.0, value: percentage),
-                    child: Container(color: widget.decoration?.color ?? Colors.transparent),
+          return Transform.translate(
+            offset: widget.navBarHeight == 0 ? const Offset(0, 0) : Offset(0.0, -64.0 * (1.0 - percentage)),
+            child: Stack(
+              alignment: Alignment.bottomCenter,
+              children: [
+                if (percentage > 0)
+                  GestureDetector(
+                    onTap: () => _animateToHeight(widget.minHeight),
+                    child: Opacity(
+                      opacity: borderDouble(minRange: 0.0, maxRange: 1.0, value: percentage),
+                      child: Container(color: widget.decoration?.color ?? Colors.transparent),
+                    ),
                   ),
-                ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: SizedBox(
-                  height: height,
-                  child: GestureDetector(
-                    child: ValueListenableBuilder(
-                      valueListenable: dragDownPercentage,
-                      builder: (BuildContext context, double value, Widget? child) {
-                        if (value == 0) return child!;
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: SizedBox(
+                    height: height,
+                    child: GestureDetector(
+                      child: ValueListenableBuilder(
+                        valueListenable: dragDownPercentage,
+                        builder: (BuildContext context, double value, Widget? child) {
+                          if (value == 0) return child!;
 
-                        return Opacity(
-                          opacity: borderDouble(minRange: 0.0, maxRange: 1.0, value: 1 - value * 0.8),
-                          child: Transform.translate(
-                            offset: Offset(0.0, widget.minHeight * value * 0.5),
-                            child: child,
+                          return Opacity(
+                            opacity: borderDouble(minRange: 0.0, maxRange: 1.0, value: 1 - value * 0.8),
+                            child: Transform.translate(
+                              offset: Offset(0.0, widget.minHeight * value * 0.5),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: Container(
+                            constraints: const BoxConstraints.expand(),
+                            decoration: widget.decoration,
+                            child: widget.builder(height, percentage),
                           ),
-                        );
-                      },
-                      child: Material(
-                        type: MaterialType.transparency,
-                        child: Container(
-                          constraints: const BoxConstraints.expand(),
-                          decoration: widget.decoration,
-                          child: widget.builder(height, percentage),
                         ),
                       ),
+                      onTap: () => _snapToPosition(_dragHeight != widget.maxHeight ? PanelState.max : PanelState.min),
+                      onPanStart: (details) {
+                        _startHeight = _dragHeight;
+                        updateCount = 0;
+
+                        if (animating) _resetAnimationController();
+                      },
+                      onPanEnd: (details) async {
+                        ///Calculates drag speed
+                        double speed = (_dragHeight - _startHeight * _dragHeight < _startHeight ? 1 : -1) / updateCount * 100;
+
+                        ///Define the percentage distance depending on the speed with which the widget should snap
+                        double snapPercentage = 0.005;
+                        if (speed <= 4) {
+                          snapPercentage = 0.2;
+                        } else if (speed <= 9) {
+                          snapPercentage = 0.08;
+                        } else if (speed <= 50) {
+                          snapPercentage = 0.01;
+                        }
+
+                        ///Determine to which SnapPosition the widget should snap
+                        PanelState snap = PanelState.min;
+
+                        final percentageMax = percentageFromValueInRange(min: widget.minHeight, max: widget.maxHeight, value: _dragHeight);
+
+                        ///Started from expanded state
+                        if (_startHeight > widget.minHeight) {
+                          if (percentageMax > 1 - snapPercentage) {
+                            snap = PanelState.max;
+                          }
+                        }
+
+                        ///Started from minified state
+                        else {
+                          if (percentageMax > snapPercentage) {
+                            snap = PanelState.max;
+                          } else
+
+                          ///dismissedPercentage > 0.2 -> dismiss
+                          if (ondismissed != null && percentageFromValueInRange(min: widget.minHeight, max: 0, value: _dragHeight) > snapPercentage) {
+                            snap = PanelState.dismiss;
+                          }
+                        }
+
+                        ///Snap to position
+                        _snapToPosition(snap);
+                      },
+                      onPanUpdate: (details) {
+                        if (dismissed) return;
+
+                        _dragHeight -= details.delta.dy;
+                        updateCount++;
+
+                        _handleHeightChange();
+                      },
                     ),
-                    onTap: () => _snapToPosition(_dragHeight != widget.maxHeight ? PanelState.max : PanelState.min),
-                    onPanStart: (details) {
-                      _startHeight = _dragHeight;
-                      updateCount = 0;
-
-                      if (animating) _resetAnimationController();
-                    },
-                    onPanEnd: (details) async {
-                      ///Calculates drag speed
-                      double speed = (_dragHeight - _startHeight * _dragHeight < _startHeight ? 1 : -1) / updateCount * 100;
-
-                      ///Define the percentage distance depending on the speed with which the widget should snap
-                      double snapPercentage = 0.005;
-                      if (speed <= 4) {
-                        snapPercentage = 0.2;
-                      } else if (speed <= 9) {
-                        snapPercentage = 0.08;
-                      } else if (speed <= 50) {
-                        snapPercentage = 0.01;
-                      }
-
-                      ///Determine to which SnapPosition the widget should snap
-                      PanelState snap = PanelState.min;
-
-                      final percentageMax = percentageFromValueInRange(min: widget.minHeight, max: widget.maxHeight, value: _dragHeight);
-
-                      ///Started from expanded state
-                      if (_startHeight > widget.minHeight) {
-                        if (percentageMax > 1 - snapPercentage) {
-                          snap = PanelState.max;
-                        }
-                      }
-
-                      ///Started from minified state
-                      else {
-                        if (percentageMax > snapPercentage) {
-                          snap = PanelState.max;
-                        } else
-
-                        ///dismissedPercentage > 0.2 -> dismiss
-                        if (ondismissed != null && percentageFromValueInRange(min: widget.minHeight, max: 0, value: _dragHeight) > snapPercentage) {
-                          snap = PanelState.dismiss;
-                        }
-                      }
-
-                      ///Snap to position
-                      _snapToPosition(snap);
-                    },
-                    onPanUpdate: (details) {
-                      if (dismissed) return;
-
-                      _dragHeight -= details.delta.dy;
-                      updateCount++;
-
-                      _handleHeightChange();
-                    },
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),
