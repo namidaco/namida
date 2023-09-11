@@ -67,10 +67,10 @@ class YoutubeMiniPlayer extends StatelessWidget {
                   context.isDarkMode ? const Color.fromARGB(255, 30, 30, 30) : const Color.fromARGB(255, 250, 250, 250),
                 ),
               ),
+              onHeightChange: (percentage) {
+                MiniPlayerController.inst.miniplayerHP.value = percentage.withMinimum(0);
+              },
               builder: (height, percentage) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  MiniPlayerController.inst.miniplayerHP.value = percentage;
-                });
                 final currentTrack = Player.inst.nowPlayingTrack;
                 final currentId = currentTrack.youtubeID;
                 final inversePerc = 1 - percentage;
@@ -421,54 +421,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                               final item = YoutubeController.inst.currentRelatedVideos[index];
                                               if (item is StreamInfoItem || item == null) {
                                                 return YoutubeVideoCard(video: item as StreamInfoItem?);
-                                              } else {
-                                                if (item is YoutubePlaylist) {
-                                                  return Container(
-                                                    margin: const EdgeInsets.all(8.0),
-                                                    padding: const EdgeInsets.all(12.0),
-                                                    decoration: BoxDecoration(
-                                                      color: context.theme.cardColor,
-                                                      border: Border.all(color: context.theme.cardTheme.color!),
-                                                      borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                                                    ),
-                                                    child: Row(
-                                                      children: [
-                                                        YoutubeThumbnail(
-                                                          channelUrl: item.thumbnailUrl,
-                                                          width: context.width * 0.4,
-                                                          height: context.width * 0.4 * 9 / 16,
-                                                          borderRadius: 12.0,
-                                                        ),
-                                                        const SizedBox(width: 8.0),
-                                                        Expanded(
-                                                          child: Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: [
-                                                              Text(
-                                                                item.playlistType?.convertToString ?? '',
-                                                              ),
-                                                              Text(
-                                                                item.name ?? 'name',
-                                                              ),
-                                                              Text(
-                                                                item.streamCount.toString(),
-                                                              ),
-                                                              Text(
-                                                                item.description.toString(),
-                                                              ),
-                                                              Text(
-                                                                item.uploaderName.toString(),
-                                                              ),
-                                                              Text(
-                                                                (item.isUploaderVerified ?? false) ? 'Verified' : '',
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                }
+                                              } else if (item is YoutubePlaylist) {
+                                                return YoutubePlaylistCard(playlist: item);
                                               }
                                               return const SizedBox();
                                             },
@@ -811,6 +765,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final bool isCircle;
   final EdgeInsetsGeometry? margin;
   final void Function(File? imageFile)? onImageReady;
+  final List<Widget> onTopWidgets;
 
   const YoutubeThumbnail({
     super.key,
@@ -822,6 +777,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.isCircle = false,
     this.margin,
     this.onImageReady,
+    this.onTopWidgets = const <Widget>[],
   });
 
   @override
@@ -868,6 +824,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
         icon: widget.channelUrl != null ? Broken.user : Broken.video,
         iconSize: widget.channelUrl != null ? null : widget.width * 0.3,
         forceSquared: true,
+        onTopWidgets: widget.onTopWidgets,
       ),
     );
   }

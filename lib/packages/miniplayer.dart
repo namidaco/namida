@@ -133,11 +133,14 @@ class _MiniPlayerSwitchersState extends State<MiniPlayerSwitchers> with SingleTi
                       alignment: Alignment.topLeft,
                       child: VideoController.inst.videoOrArtworkWidget,
                     ),
-                    child: settings.useYoutubeMiniplayer.value
-                        ? YoutubeMiniPlayer(key: const Key('ytminiplayer'))
-                        : const NamidaMiniPlayer(
-                            key: Key('actualminiplayer'),
-                          ),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 600),
+                      child: settings.useYoutubeMiniplayer.value
+                          ? YoutubeMiniPlayer(key: const Key('ytminiplayer'))
+                          : const NamidaMiniPlayer(
+                              key: Key('actualminiplayer'),
+                            ),
+                    ),
                   ),
                 ),
         );

@@ -60,6 +60,100 @@ class YoutubeVideoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return YoutubeCard(
+      borderRadius: 12.0,
+      videoId: video?.id,
+      thumbnailUrl: null,
+      shimmerEnabled: video == null,
+      title: video?.name ?? '',
+      subtitle: [
+        video?.viewCount?.formatDecimalShort() ?? 0,
+        if (video?.uploadDate != null) video?.uploadDate,
+      ].join(' - '),
+      thirdLineText: video?.uploaderName ?? '',
+      onTap: () {
+        if (video?.id != null) YoutubeController.inst.updateVideoDetails(video!.id!);
+      },
+      channelThumbnailUrl: video?.uploaderAvatarUrl,
+      displayChannelThumbnail: true,
+    );
+  }
+}
+
+class YoutubePlaylistCard extends StatelessWidget {
+  final YoutubePlaylist? playlist;
+  const YoutubePlaylistCard({super.key, required this.playlist});
+
+  @override
+  Widget build(BuildContext context) {
+    return YoutubeCard(
+      borderRadius: 12.0,
+      videoId: null,
+      thumbnailUrl: playlist?.thumbnailUrl ?? '',
+      shimmerEnabled: playlist == null,
+      title: playlist?.name ?? '',
+      subtitle: playlist?.uploaderName ?? '',
+      thirdLineText: '',
+      onTap: () {},
+      displayChannelThumbnail: false,
+      displaythirdLineText: false,
+      onTopWidgets: [
+        Positioned(
+          bottom: 2.0,
+          right: 2.0,
+          child: NamidaInkWell(
+            borderRadius: 6.0,
+            bgColor: context.theme.cardColor.withAlpha(130),
+            padding: const EdgeInsets.all(2.0),
+            child: const Row(
+              children: [
+                Icon(
+                  Broken.play_cricle,
+                  size: 18.0,
+                ),
+                SizedBox(width: 4.0),
+                Text('+25'),
+              ],
+            ),
+          ),
+        )
+      ],
+    );
+  }
+}
+
+class YoutubeCard extends StatelessWidget {
+  final String? videoId;
+  final String? thumbnailUrl;
+  final void Function()? onTap;
+  final double borderRadius;
+  final bool shimmerEnabled;
+  final String title;
+  final String subtitle;
+  final String thirdLineText;
+  final String? channelThumbnailUrl;
+  final bool displayChannelThumbnail;
+  final bool displaythirdLineText;
+  final List<Widget> onTopWidgets;
+
+  const YoutubeCard({
+    super.key,
+    required this.videoId,
+    required this.thumbnailUrl,
+    this.onTap,
+    this.borderRadius = 12.0,
+    required this.shimmerEnabled,
+    this.title = '',
+    this.subtitle = '',
+    required this.thirdLineText,
+    this.channelThumbnailUrl,
+    this.displayChannelThumbnail = true,
+    this.displaythirdLineText = true,
+    this.onTopWidgets = const <Widget>[],
+  });
+
+  @override
+  Widget build(BuildContext context) {
     const verticalPadding = 8.0;
     final thumbnailWidth = context.width * 0.36;
     final thumbnailHeight = thumbnailWidth * 9 / 16;
@@ -68,9 +162,7 @@ class YoutubeVideoCard extends StatelessWidget {
       child: NamidaInkWell(
         bgColor: context.theme.cardColor,
         borderRadius: 12.0,
-        onTap: () {
-          if (video?.id != null) YoutubeController.inst.updateVideoDetails(video!.id!);
-        },
+        onTap: onTap,
         height: thumbnailHeight + verticalPadding,
         child: Row(
           children: [
@@ -78,12 +170,14 @@ class YoutubeVideoCard extends StatelessWidget {
             NamidaBasicShimmer(
               width: thumbnailWidth,
               height: thumbnailHeight,
-              shimmerEnabled: video == null,
+              shimmerEnabled: shimmerEnabled,
               child: YoutubeThumbnail(
-                videoId: video?.id,
+                videoId: videoId,
+                channelUrl: thumbnailUrl,
                 width: thumbnailWidth,
                 height: thumbnailHeight,
                 borderRadius: 10.0,
+                onTopWidgets: onTopWidgets,
               ),
             ),
             const SizedBox(width: 8.0),
@@ -97,9 +191,9 @@ class YoutubeVideoCard extends StatelessWidget {
                     width: context.width,
                     height: 10.0,
                     borderRadius: 4.0,
-                    shimmerEnabled: video == null,
+                    shimmerEnabled: shimmerEnabled || title == '',
                     child: Text(
-                      video?.name ?? '',
+                      title,
                       style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0.multipliedFontScale),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -110,12 +204,9 @@ class YoutubeVideoCard extends StatelessWidget {
                     width: context.width,
                     height: 8.0,
                     borderRadius: 4.0,
-                    shimmerEnabled: video == null,
+                    shimmerEnabled: shimmerEnabled || subtitle == '',
                     child: Text(
-                      [
-                        video?.viewCount?.formatDecimalShort() ?? 0,
-                        if (video?.uploadDate != null) video?.uploadDate,
-                      ].join(' - '),
+                      subtitle,
                       style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -123,35 +214,36 @@ class YoutubeVideoCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4.0),
                   const Spacer(),
-                  Row(
-                    children: [
-                      NamidaBasicShimmer(
-                        width: 20.0,
-                        height: 20.0,
-                        shimmerEnabled: video?.uploaderAvatarUrl == null,
-                        child: YoutubeThumbnail(
-                          channelUrl: video?.uploaderAvatarUrl ?? '',
+                  if (displayChannelThumbnail || displaythirdLineText)
+                    Row(
+                      children: [
+                        NamidaBasicShimmer(
                           width: 20.0,
-                          isCircle: true,
-                        ),
-                      ),
-                      const SizedBox(width: 6.0),
-                      NamidaBasicShimmer(
-                        width: context.width * 0.2,
-                        height: 8.0,
-                        shimmerEnabled: video?.uploaderName == null,
-                        child: Text(
-                          video?.uploaderName ?? '',
-                          style: context.textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.w400,
-                            fontSize: 11.0.multipliedFontScale,
+                          height: 20.0,
+                          shimmerEnabled: channelThumbnailUrl == null || !displayChannelThumbnail,
+                          child: YoutubeThumbnail(
+                            channelUrl: channelThumbnailUrl ?? '',
+                            width: 20.0,
+                            isCircle: true,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: 6.0),
+                        NamidaBasicShimmer(
+                          width: context.width * 0.2,
+                          height: 8.0,
+                          shimmerEnabled: thirdLineText == '' || !displaythirdLineText,
+                          child: Text(
+                            thirdLineText,
+                            style: context.textTheme.displaySmall?.copyWith(
+                              fontWeight: FontWeight.w400,
+                              fontSize: 11.0.multipliedFontScale,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   const SizedBox(height: 12.0),
                 ],
               ),

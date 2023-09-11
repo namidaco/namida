@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api
+
 library miniplayer;
 
 import 'dart:async';
@@ -45,6 +47,8 @@ class Miniplayer extends StatefulWidget {
   //Allows you to manually control the miniplayer in code
   final MiniplayerController? controller;
 
+  final void Function(double percentage)? onHeightChange;
+
   const Miniplayer({
     Key? key,
     required this.minHeight,
@@ -58,6 +62,7 @@ class Miniplayer extends StatefulWidget {
     this.ondismiss,
     this.ondismissed,
     this.controller,
+    this.onHeightChange,
   }) : super(key: key);
 
   @override
@@ -103,11 +108,7 @@ class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    if (widget.valueNotifier == null) {
-      heightNotifier = ValueNotifier(widget.minHeight);
-    } else {
-      heightNotifier = widget.valueNotifier!;
-    }
+    heightNotifier = widget.valueNotifier ?? ValueNotifier(widget.minHeight);
 
     _resetAnimationController();
 
@@ -143,7 +144,7 @@ class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     if (dismissed) return Container();
 
-    return WillPopScope(
+    return MiniplayerWillPopScope(
       onWillPop: () async {
         if (heightNotifier.value > widget.minHeight) {
           _snapToPosition(PanelState.min);
@@ -154,7 +155,7 @@ class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
       child: ValueListenableBuilder(
         valueListenable: heightNotifier,
         builder: (BuildContext context, double height, Widget? _) {
-          var percentage = ((height - widget.minHeight)) / (widget.maxHeight - widget.minHeight);
+          final percentage = ((height - widget.minHeight)) / (widget.maxHeight - widget.minHeight);
 
           return Stack(
             alignment: Alignment.bottomCenter,
@@ -262,6 +263,11 @@ class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
 
   ///Determines whether the panel should be updated in height or discarded
   void _handleHeightChange({bool animation = false}) {
+    if (widget.onHeightChange != null) {
+      final percentage = ((_dragHeight - widget.minHeight)) / (widget.maxHeight - widget.minHeight);
+      widget.onHeightChange!(percentage);
+    }
+
     ///Drag above minHeight
     if (_dragHeight >= widget.minHeight) {
       if (dragDownPercentage.value != 0) dragDownPercentage.value = 0;
@@ -273,7 +279,7 @@ class _MiniplayerState extends State<Miniplayer> with TickerProviderStateMixin {
 
     ///Drag below minHeight
     else if (ondismissed != null) {
-      var percentageDown = borderDouble(minRange: 0.0, maxRange: 1.0, value: percentageFromValueInRange(min: widget.minHeight, max: 0, value: _dragHeight));
+      final percentageDown = borderDouble(minRange: 0.0, maxRange: 1.0, value: percentageFromValueInRange(min: widget.minHeight, max: 0, value: _dragHeight));
 
       if (dragDownPercentage.value != percentageDown) {
         dragDownPercentage.value = percentageDown;
@@ -424,4 +430,69 @@ double borderDouble({required double minRange, required double maxRange, require
   if (value > maxRange) return maxRange;
   if (value < minRange) return minRange;
   return value;
+}
+
+class MiniplayerWillPopScope extends StatefulWidget {
+  const MiniplayerWillPopScope({
+    Key? key,
+    required this.child,
+    required this.onWillPop,
+  }) : super(key: key);
+
+  final Widget child;
+  final WillPopCallback onWillPop;
+
+  @override
+  _MiniplayerWillPopScopeState createState() => _MiniplayerWillPopScopeState();
+
+  static _MiniplayerWillPopScopeState? of(BuildContext context) {
+    return context.findAncestorStateOfType<_MiniplayerWillPopScopeState>();
+  }
+}
+
+class _MiniplayerWillPopScopeState extends State<MiniplayerWillPopScope> {
+  ModalRoute<dynamic>? _route;
+
+  _MiniplayerWillPopScopeState? _descendant;
+
+  set descendant(state) {
+    _descendant = state;
+    updateRouteCallback();
+  }
+
+  Future<bool> onWillPop() async {
+    bool? willPop;
+    if (_descendant != null) {
+      willPop = await _descendant!.onWillPop();
+    }
+    if (willPop == null || willPop) {
+      willPop = await widget.onWillPop();
+    }
+    return willPop;
+  }
+
+  void updateRouteCallback() {
+    _route?.removeScopedWillPopCallback(onWillPop);
+    _route = ModalRoute.of(context);
+    _route?.addScopedWillPopCallback(onWillPop);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    var parentGuard = MiniplayerWillPopScope.of(context);
+    if (parentGuard != null) {
+      parentGuard.descendant = this;
+    }
+    updateRouteCallback();
+  }
+
+  @override
+  void dispose() {
+    _route?.removeScopedWillPopCallback(onWillPop);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
