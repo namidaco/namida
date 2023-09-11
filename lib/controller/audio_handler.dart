@@ -337,18 +337,21 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
     }
   }
 
+  /// Has a delay of ~200ms, prolly nothing to do with it.
   Future<void> playWithFadeEffect() async {
     final duration = settings.playerPlayFadeDurInMilli.value;
-    final interval = (0.05 * duration).toInt();
-    final steps = duration ~/ interval;
-    double vol = 0.0;
-    await setVolume(0.0);
+    if (_player.volume > 0) await setVolume(0.0);
+
     _player.play();
 
     _playFadeTimer?.cancel();
     _playFadeTimer = null;
-    _playFadeTimer = Timer.periodic(Duration(milliseconds: interval), (timer) {
-      vol += 1 / steps;
+    final numSteps = (duration / 10).ceil();
+    final volumeStep = settings.playerVolume.value / numSteps;
+
+    double vol = 0.0;
+    _playFadeTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
+      vol += volumeStep;
       printy("Fade Volume Play: ${vol.toString()}");
       setVolume(vol);
       if (vol >= settings.playerVolume.value || _wantToPause) {
@@ -358,17 +361,14 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
   }
 
   Future<void> pauseWithFadeEffect() async {
-    final duration = settings.playerPauseFadeDurInMilli.value;
-    final interval = (0.05 * duration).toInt();
-    final steps = duration ~/ interval;
-    double vol = currentVolume.value;
-
     final didPause = Completer<bool>();
 
-    _pauseFadeTimer?.cancel();
-    _pauseFadeTimer = null;
-    _pauseFadeTimer = Timer.periodic(Duration(milliseconds: interval), (timer) {
-      vol -= 1 / steps;
+    final duration = settings.playerPauseFadeDurInMilli.value;
+    double vol = currentVolume.value;
+    final numSteps = (duration / 10).ceil();
+    final volumeStep = vol / numSteps;
+    _pauseFadeTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
+      vol -= volumeStep;
       printy("Fade Volume Pause ${vol.toString()}");
       setVolume(vol);
       if (vol <= 0.0) {
@@ -377,6 +377,7 @@ class NamidaAudioVideoHandler extends BaseAudioHandler with QueueManager<Selecta
         didPause.complete(true);
       }
     });
+
     await didPause.future;
   }
 
