@@ -124,6 +124,7 @@ class _MiniPlayerSwitchersState extends State<MiniPlayerSwitchers> with SingleTi
                     isEnteringHomeOnSuspending: settings.enablePip.value && Player.inst.isPlaying && VideoController.inst.currentVideo.value != null,
                     onSuspending: () async {
                       if (settings.enablePip.value && Player.inst.isPlaying && VideoController.inst.currentVideo.value != null) {
+                        NamidaNavigator.inst.closeAllDialogs();
                         await VideoController.vcontroller.enablePictureInPicture();
                       }
                     },
