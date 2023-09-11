@@ -29,21 +29,23 @@ class MainPage extends StatelessWidget {
         child: AnimatedBuilder(
           animation: animation,
           builder: (context, child) {
-            return AppBar(
-              toolbarHeight: 56.0 * (1 - animation.value * 0.3),
-              leading: NamidaNavigator.inst.currentWidgetStack.length > 1
-                  ? NamidaAppBarIcon(
-                      icon: Broken.arrow_left_2,
-                      onPressed: NamidaNavigator.inst.popPage,
-                    )
-                  : NamidaAppBarIcon(
-                      icon: Broken.menu_1,
-                      onPressed: NamidaNavigator.inst.toggleDrawer,
-                    ),
-              titleSpacing: 0,
-              automaticallyImplyLeading: false,
-              title: NamidaNavigator.inst.currentRoute?.toTitle(),
-              actions: NamidaNavigator.inst.currentRoute?.toActions(),
+            return Obx(
+              () => AppBar(
+                toolbarHeight: 56.0 * (1 - animation.value * 0.3),
+                leading: NamidaNavigator.inst.currentWidgetStack.length > 1
+                    ? NamidaAppBarIcon(
+                        icon: Broken.arrow_left_2,
+                        onPressed: NamidaNavigator.inst.popPage,
+                      )
+                    : NamidaAppBarIcon(
+                        icon: Broken.menu_1,
+                        onPressed: NamidaNavigator.inst.toggleDrawer,
+                      ),
+                titleSpacing: 0,
+                automaticallyImplyLeading: false,
+                title: NamidaNavigator.inst.currentRoute?.toTitle(),
+                actions: NamidaNavigator.inst.currentRoute?.toActions(),
+              ),
             );
           },
         ),

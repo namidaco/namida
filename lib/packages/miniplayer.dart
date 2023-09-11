@@ -118,7 +118,18 @@ class MiniPlayerSwitchers extends StatelessWidget {
                       if (settings.enablePip.value && Player.inst.isPlaying && VideoController.inst.currentVideo.value != null) {
                         NamidaNavigator.inst.closeAllDialogs();
                         await VideoController.vcontroller.enablePictureInPicture();
+                        NamidaNavigator.inst.enterFullScreen(
+                          Container(
+                            color: Colors.black,
+                            alignment: Alignment.topLeft,
+                            child: VideoController.inst.videoOrArtworkWidget,
+                          ),
+                          setOrientations: false,
+                        );
                       }
+                    },
+                    onResume: () async {
+                      NamidaNavigator.inst.exitFullScreen(setOrientations: false);
                     },
                     pipChild: Container(
                       color: Colors.black,

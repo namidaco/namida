@@ -61,7 +61,7 @@ class NamidaNavigator {
 
   bool get isInFullScreen => _isInFullScreen;
   bool _isInFullScreen = false;
-  Future<void> enterFullScreen(Widget widget) async {
+  Future<void> enterFullScreen(Widget widget, {bool setOrientations = true}) async {
     if (_isInFullScreen) return;
 
     _isInFullScreen = true;
@@ -82,19 +82,23 @@ class NamidaNavigator {
       opaque: true,
       fullscreenDialog: false,
     );
-    await Future.wait([
-      _setOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]),
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky),
-    ]);
+    if (setOrientations) {
+      await Future.wait([
+        _setOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]),
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky),
+      ]);
+    }
   }
 
-  Future<void> exitFullScreen() async {
+  Future<void> exitFullScreen({bool setOrientations = true}) async {
     if (!_isInFullScreen) return;
     Get.close(1);
-    await Future.wait([
-      _setOrientations(kDefaultOrientations),
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values),
-    ]);
+    if (setOrientations) {
+      await Future.wait([
+        _setOrientations(kDefaultOrientations),
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values),
+      ]);
+    }
     _isInFullScreen = false;
   }
 
