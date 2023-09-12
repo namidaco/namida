@@ -146,11 +146,13 @@ class MainPage extends StatelessWidget {
 }
 
 class NamidaSearchBar extends StatelessWidget {
-  const NamidaSearchBar({super.key});
+  final GlobalKey<SearchBarAnimationState> searchBarKey;
+  const NamidaSearchBar({super.key, required this.searchBarKey});
 
   @override
   Widget build(BuildContext context) {
     return SearchBarAnimation(
+      key: searchBarKey,
       isSearchBoxOnRightSide: true,
       textAlignToRight: false,
       durationInMilliSeconds: 300,
@@ -184,7 +186,10 @@ class NamidaSearchBar extends StatelessWidget {
         iconSize: 22,
         onPressed: ScrollSearchController.inst.resetSearch,
       ),
-      onTap: ScrollSearchController.inst.showSearchMenu,
+      onTap: () {
+        searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
+        ScrollSearchController.inst.showSearchMenu();
+      },
       onPressButton: (isOpen) {
         ScrollSearchController.inst.showSearchMenu(isOpen);
         ScrollSearchController.inst.resetSearch();

@@ -502,7 +502,7 @@ extension RouteUtils on NamidaRoute {
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 400),
-      child: finalWidget ?? const NamidaSearchBar(),
+      child: finalWidget ?? NamidaSearchBar(searchBarKey: GlobalKey()),
     );
   }
 

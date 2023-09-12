@@ -125,7 +125,7 @@ Future<void> showGeneralPopupDialog(
   }
 
   void setMoodsOrTags(List<String> initialMoods, void Function(List<String> moodsFinal) saveFunction, {bool isTags = false}) {
-    TextEditingController controller = TextEditingController();
+    final controller = TextEditingController();
     final currentMoods = initialMoods.join(', ');
     controller.text = currentMoods;
 
@@ -240,7 +240,7 @@ Future<void> showGeneralPopupDialog(
     if (!shoulShowPlaylistUtils()) return;
     cancelSkipTimer();
 
-    TextEditingController controller = TextEditingController(text: playlistName);
+    final controller = TextEditingController(text: playlistName);
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
     NamidaNavigator.inst.navigateDialog(
       dialog: Form(
