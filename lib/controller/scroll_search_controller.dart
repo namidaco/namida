@@ -10,11 +10,15 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/packages/searchbar_animation.dart';
+import 'package:namida/ui/pages/main_page.dart';
 
 class ScrollSearchController {
   static ScrollSearchController get inst => _instance;
   static final ScrollSearchController _instance = ScrollSearchController._internal();
-  ScrollSearchController._internal();
+  ScrollSearchController._internal() {
+    searchBarWidget = NamidaSearchBar(searchBarKey: searchBarKey);
+  }
 
   final RxBool isGlobalSearchMenuShown = false.obs;
   final TextEditingController searchTextEditingController = TextEditingController();
@@ -28,6 +32,10 @@ class ScrollSearchController {
   final Map<LibraryTab, TextEditingController> textSearchControllers = {};
 
   final FocusNode focusNode = FocusNode();
+
+  final searchBarKey = GlobalKey<SearchBarAnimationState>();
+
+  late final NamidaSearchBar searchBarWidget;
 
   void animatePageController(LibraryTab tab) {
     final w = tab.toWidget();

@@ -16,6 +16,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -502,7 +503,7 @@ extension RouteUtils on NamidaRoute {
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 400),
-      child: finalWidget ?? NamidaSearchBar(searchBarKey: GlobalKey()),
+      child: finalWidget ?? ScrollSearchController.inst.searchBarWidget,
     );
   }
 
@@ -758,6 +759,7 @@ class _NamidaConverters {
         LibraryTab.playlists: lang.PLAYLISTS,
         LibraryTab.folders: lang.FOLDERS,
         LibraryTab.home: lang.HOME,
+        LibraryTab.search: lang.SEARCH,
       },
       SortType: {
         SortType.title: lang.TITLE,
@@ -967,6 +969,7 @@ class _NamidaConverters {
         LibraryTab.playlists: Broken.music_library_2,
         LibraryTab.folders: Broken.folder,
         LibraryTab.home: Broken.home_2,
+        LibraryTab.search: Broken.search_normal_1,
       },
       TagField: {
         TagField.title: Broken.music,

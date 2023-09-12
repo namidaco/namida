@@ -7,6 +7,7 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
@@ -43,7 +44,7 @@ class MainPage extends StatelessWidget {
                       ),
                 titleSpacing: 0,
                 automaticallyImplyLeading: false,
-                title: NamidaNavigator.inst.currentRoute?.toTitle(),
+                title: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? ScrollSearchController.inst.searchBarWidget : NamidaNavigator.inst.currentRoute?.toTitle(),
                 actions: NamidaNavigator.inst.currentRoute?.toActions(),
               ),
             );
@@ -122,21 +123,32 @@ class MainPage extends StatelessWidget {
                 builder: (context, child) {
                   return Transform.translate(
                     offset: Offset(0, kBottomNavigationBarHeight * animation.value),
-                    child: NavigationBar(
-                      animationDuration: const Duration(seconds: 1),
-                      elevation: 22,
-                      labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-                      height: 64.0,
-                      onDestinationSelected: (value) => ScrollSearchController.inst.animatePageController(value.toEnum()),
-                      selectedIndex: settings.selectedLibraryTab.value.toInt(),
-                      destinations: [
-                        ...settings.libraryTabs.map(
-                          (e) => NavigationDestination(
-                            icon: Icon(e.toIcon()),
-                            label: e.toText(),
+                    child: Obx(
+                      () => NavigationBar(
+                        animationDuration: const Duration(seconds: 1),
+                        elevation: 22,
+                        labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+                        height: 64.0,
+                        onDestinationSelected: (value) async {
+                          final tab = value.toEnum();
+                          if (tab == LibraryTab.search) {
+                            ScrollSearchController.inst.showSearchMenu();
+                            await Future.delayed(const Duration(milliseconds: 100));
+                            ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
+                          } else {
+                            ScrollSearchController.inst.animatePageController(tab);
+                          }
+                        },
+                        selectedIndex: settings.selectedLibraryTab.value.toInt(),
+                        destinations: [
+                          ...settings.libraryTabs.map(
+                            (e) => NavigationDestination(
+                              icon: Icon(e.toIcon()),
+                              label: e.toText(),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 }),
@@ -187,7 +199,7 @@ class NamidaSearchBar extends StatelessWidget {
         onPressed: ScrollSearchController.inst.resetSearch,
       ),
       onTap: () {
-        searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
+        ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
         ScrollSearchController.inst.showSearchMenu();
       },
       onPressButton: (isOpen) {
