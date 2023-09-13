@@ -11,7 +11,6 @@ import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
-import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -44,7 +43,6 @@ class NamidaOnTaps {
   }
 
   Future<void> onAlbumTap(String album) async {
-    ScrollSearchController.inst.isGlobalSearchMenuShown.value = false;
     final tracks = album.getAlbumTracks();
 
     NamidaNavigator.inst.navigateTo(

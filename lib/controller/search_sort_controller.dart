@@ -15,7 +15,7 @@ class SearchSortController {
   static final SearchSortController _instance = SearchSortController._internal();
   SearchSortController._internal();
 
-  RxBool get isSearching => (trackSearchTemp.isNotEmpty || albumSearchTemp.isNotEmpty || artistSearchTemp.isNotEmpty).obs;
+  bool get isSearching => (trackSearchTemp.isNotEmpty || albumSearchTemp.isNotEmpty || artistSearchTemp.isNotEmpty);
 
   final RxList<Track> trackSearchList = <Track>[].obs;
   RxList<String> get albumSearchList => _searchMap[MediaType.album]!;

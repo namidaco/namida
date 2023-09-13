@@ -287,7 +287,10 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                           child: DecoratedBoxTransition(
                             decoration: decorationTween.animate(_animationController),
                             child: GestureDetector(
-                              onTap: _onTapFunctionOriginalAnim,
+                              onTap: () {
+                                widget.onPressButton?.call(!switcher);
+                                _onTapFunctionOriginalAnim();
+                              },
                               child: CircleAvatar(
                                 backgroundColor: widget.buttonColour,
                                 child: switcher ? widget.secondaryButtonWidget : widget.buttonWidget,
@@ -313,7 +316,10 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                                 : null,
                           ),
                           child: GestureDetector(
-                            onTap: _onTapFunction,
+                            onTap: () {
+                              widget.onPressButton?.call(!switcher);
+                              _onTapFunction();
+                            },
                             child: CircleAvatar(
                               backgroundColor: widget.buttonColour,
                               child: switcher ? widget.secondaryButtonWidget : widget.buttonWidget,
@@ -340,7 +346,6 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
   /// This is the tap function for the animation style not for the original animation style.
   void _onTapFunction({bool forceOpen = false}) {
     _isAnimationOn = true;
-    widget.onPressButton?.call(!switcher);
     setState(
       () {
         if (forceOpen || !switcher) {
@@ -377,7 +382,6 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
   /// This is the tap function for the original animation style.
   void _onTapFunctionOriginalAnim({bool forceOpen = false}) {
     _isAnimationOn = true;
-    widget.onPressButton?.call(!switcher);
     setState(
       () {
         if (forceOpen || !switcher) {

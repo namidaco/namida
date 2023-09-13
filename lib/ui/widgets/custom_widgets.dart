@@ -1298,7 +1298,7 @@ class NamidaIconButton extends StatefulWidget {
   final double horizontalPadding;
   final double verticalPadding;
   final double? iconSize;
-  final IconData icon;
+  final IconData? icon;
   final Color? iconColor;
   final void Function()? onPressed;
   final String? tooltip;

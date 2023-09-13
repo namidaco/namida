@@ -59,7 +59,6 @@ class MiniplayerRaw extends StatelessWidget {
     final child = AnimatedBuilder(
       animation: MiniPlayerController.inst.animation,
       builder: (context, child) {
-        printy('AAAAA: ${MiniPlayerController.inst.animation.value}');
         final Color onSecondary = context.theme.colorScheme.onSecondaryContainer;
         final maxOffset = MiniPlayerController.inst.maxOffset;
         final bounceUp = MiniPlayerController.inst.bounceUp;

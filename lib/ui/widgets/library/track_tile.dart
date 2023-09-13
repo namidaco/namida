@@ -82,13 +82,13 @@ class TrackTile extends StatelessWidget {
         queueSource == QueueSource.history;
     final isInSelectedTracksPreview = queueSource == QueueSource.selectedTracks;
 
-    final willSleepAfterThis = queueSource == QueueSource.playerQueue && Player.inst.isSleepingTrack(index);
-
     return Stack(
       alignment: Alignment.centerRight,
       children: [
         Obx(
           () {
+            final willSleepAfterThis = queueSource == QueueSource.playerQueue && Player.inst.enableSleepAfterTracks && Player.inst.sleepingTrackIndex == index;
+
             // final TrackItem tritem = settings.trackItem.value;
             final double thumbnailSize = settings.trackThumbnailSizeinList.value;
             final double trackTileHeight = settings.trackListTileHeight.value;

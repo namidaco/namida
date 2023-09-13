@@ -23,18 +23,18 @@ import 'package:namida/ui/widgets/library/artist_card.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class SearchPage extends StatelessWidget {
-  SearchPage({super.key});
+  const SearchPage({super.key});
 
-  final ScrollController _scrollController = ScrollController();
   @override
   Widget build(BuildContext context) {
+    final ScrollController scrollController = ScrollController();
     final albumDimensions = Dimensions.inst.getAlbumCardDimensions(Dimensions.albumSearchGridCount);
     final artistDimensions = Dimensions.inst.getArtistCardDimensions(Dimensions.artistSearchGridCount);
     return BackgroundWrapper(
       child: Obx(
         () => AnimatedSwitcher(
           duration: const Duration(milliseconds: 400),
-          child: !SearchSortController.inst.isSearching.value
+          child: !SearchSortController.inst.isSearching
               ? Container(
                   key: const Key('emptysearch'),
                   padding: const EdgeInsets.all(64.0).add(const EdgeInsets.only(bottom: 64.0)),
@@ -58,9 +58,9 @@ class SearchPage extends StatelessWidget {
               : AnimationLimiter(
                   key: const Key('fullsearch'),
                   child: CupertinoScrollbar(
-                    controller: _scrollController,
+                    controller: scrollController,
                     child: CustomScrollView(
-                      controller: _scrollController,
+                      controller: scrollController,
                       slivers: [
                         const SliverPadding(
                           padding: EdgeInsets.only(bottom: 8.0),

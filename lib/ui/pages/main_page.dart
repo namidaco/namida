@@ -86,7 +86,7 @@ class MainPage extends StatelessWidget {
             child: Obx(
               () => AnimatedSwitcher(
                 duration: const Duration(milliseconds: 400),
-                child: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? SearchPage() : null,
+                child: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? const SearchPage() : null,
               ),
             ),
           ),
@@ -132,7 +132,7 @@ class MainPage extends StatelessWidget {
                         onDestinationSelected: (value) async {
                           final tab = value.toEnum();
                           if (tab == LibraryTab.search) {
-                            ScrollSearchController.inst.showSearchMenu();
+                            ScrollSearchController.inst.showSearchMenu(true);
                             await Future.delayed(const Duration(milliseconds: 100));
                             ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
                           } else {
