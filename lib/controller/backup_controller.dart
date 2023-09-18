@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
@@ -21,7 +20,7 @@ class BackupController {
   final RxBool isCreatingBackup = false.obs;
   final RxBool isRestoringBackup = false.obs;
 
-  Future<void> createBackupFile() async {
+  Future<void> createBackupFile(List<String> backupItemsPaths) async {
     if (!await requestManageStoragePermission()) {
       return;
     }
@@ -38,12 +37,16 @@ class BackupController {
 
     // prepares files
 
-    final List<File> filesOnly = [];
+    final List<File> localFilesOnly = [];
+    final List<File> youtubeFilesOnly = [];
+    final List<File> compressedDirectories = [];
     final List<Directory> dirsOnly = [];
+    File? tempAllLocal;
+    File? tempAllYoutube;
 
-    await settings.backupItemslist.loopFuture((f, index) async {
+    await backupItemsPaths.loopFuture((f, index) async {
       if (await FileSystemEntity.type(f) == FileSystemEntityType.file) {
-        filesOnly.add(File(f));
+        f.startsWith(AppDirs.YOUTUBE_MAIN_DIRECTORY) ? youtubeFilesOnly.add(File(f)) : localFilesOnly.add(File(f));
       }
       if (await FileSystemEntity.type(f) == FileSystemEntityType.directory) {
         dirsOnly.add(Directory(f));
@@ -53,28 +56,46 @@ class BackupController {
     try {
       for (final d in dirsOnly) {
         try {
-          final dirZipFile = File("${AppDirs.USER_DATA}/TEMPDIR_${d.path.getFilename}.zip");
+          final prefix = d.path.startsWith(AppDirs.YOUTUBE_MAIN_DIRECTORY) ? 'YOUTUBE_' : '';
+          final dirZipFile = File("${AppDirs.USER_DATA}/${prefix}TEMPDIR_${d.path.getFilename}.zip");
           await ZipFile.createFromDirectory(sourceDir: d, zipFile: dirZipFile);
-          filesOnly.add(dirZipFile);
+          compressedDirectories.add(dirZipFile);
         } catch (e) {
           continue;
         }
       }
 
-      final zipFile = File("${AppDirs.BACKUPS}Namida Backup - $date.zip");
-      await ZipFile.createFromFiles(sourceDir: sourceDir, files: filesOnly, zipFile: zipFile);
+      if (localFilesOnly.isNotEmpty) {
+        tempAllLocal = await File("${AppDirs.USER_DATA}/LOCAL_FILES.zip").create();
+        await ZipFile.createFromFiles(sourceDir: sourceDir, files: localFilesOnly, zipFile: tempAllLocal);
+      }
 
-      // after finishing
-      final all = sourceDir.listSync();
-      await all.loopFuture((one, index) async {
-        if (one.path.getFilename.startsWith('TEMPDIR_')) {
-          await one.delete();
-        }
-      });
+      if (youtubeFilesOnly.isNotEmpty) {
+        tempAllYoutube = await File("${AppDirs.USER_DATA}/YOUTUBE_FILES.zip").create();
+        await ZipFile.createFromFiles(sourceDir: sourceDir, files: youtubeFilesOnly, zipFile: tempAllYoutube);
+      }
+
+      final zipFile = File("${AppDirs.BACKUPS}Namida Backup - $date.zip");
+      final allFiles = [
+        if (tempAllLocal != null) tempAllLocal,
+        if (tempAllYoutube != null) tempAllYoutube,
+        ...compressedDirectories,
+      ];
+      await ZipFile.createFromFiles(sourceDir: sourceDir, files: allFiles, zipFile: zipFile);
+
+      Get.snackbar(lang.CREATED_BACKUP_SUCCESSFULLY, lang.CREATED_BACKUP_SUCCESSFULLY_SUB);
     } catch (e) {
       printy(e, isError: true);
+      Get.snackbar(lang.ERROR, e.toString());
     }
-    Get.snackbar(lang.CREATED_BACKUP_SUCCESSFULLY, lang.CREATED_BACKUP_SUCCESSFULLY_SUB);
+
+    // Cleaning up
+    tempAllLocal?.tryDeleting();
+    tempAllYoutube?.tryDeleting();
+    for (final d in compressedDirectories) {
+      d.tryDeleting();
+    }
+
     isCreatingBackup.value = false;
   }
 
@@ -115,16 +136,37 @@ class BackupController {
     await ZipFile.extractToDirectory(zipFile: backupzip, destinationDir: Directory(AppDirs.USER_DATA));
 
     // after finishing, extracts zip files inside the main zip
-    final all = Directory(AppDirs.USER_DATA).listSync();
-    await all.loopFuture((one, index) async {
-      if (one.path.getFilename.startsWith('TEMPDIR_')) {
-        if (one is File) {
+    await for (final backupItem in Directory(AppDirs.USER_DATA).list()) {
+      if (backupItem is File) {
+        final filename = backupItem.path.getFilename;
+        if (filename == 'LOCAL_FILES.zip') {
           await ZipFile.extractToDirectory(
-              zipFile: one, destinationDir: Directory("${AppDirs.USER_DATA}/${one.path.getFilename.replaceFirst('TEMPDIR_', '').replaceFirst('.zip', '')}"));
-          await one.delete();
+            zipFile: backupItem,
+            destinationDir: Directory(AppDirs.USER_DATA),
+          );
+          await backupItem.tryDeleting();
+        } else if (filename == 'YOUTUBE_FILES.zip') {
+          await ZipFile.extractToDirectory(
+            zipFile: backupItem,
+            destinationDir: Directory(AppDirs.USER_DATA), // since the zipped file has the directory 'AppDirs.YOUTUBE_MAIN_DIRECTORY/'
+          );
+          await backupItem.tryDeleting();
+        } else {
+          final isLocalTemp = filename.startsWith('TEMPDIR_');
+          final isYoutubeTemp = filename.startsWith('YOUTUBE_TEMPDIR_');
+          if (isLocalTemp || isYoutubeTemp) {
+            final dir = isYoutubeTemp ? AppDirs.YOUTUBE_MAIN_DIRECTORY : AppDirs.USER_DATA;
+            final prefixToReplace = isYoutubeTemp ? 'YOUTUBE_TEMPDIR_' : 'TEMPDIR_';
+
+            await ZipFile.extractToDirectory(
+              zipFile: backupItem,
+              destinationDir: Directory("$dir/${filename.replaceFirst(prefixToReplace, '').replaceFirst('.zip', '')}"),
+            );
+            await backupItem.tryDeleting();
+          }
         }
       }
-    });
+    }
 
     Indexer.inst.refreshLibraryAndCheckForDiff();
     Indexer.inst.updateImageSizeInStorage();

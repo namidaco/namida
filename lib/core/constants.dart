@@ -31,6 +31,7 @@ const Color kMainColorDark = Color.fromARGB(255, 139, 149, 241);
 class AppPaths {
   static final _USER_DATA = AppDirs.USER_DATA;
 
+  // ================= User Data =================
   static final SETTINGS = '$_USER_DATA/namida_settings.json';
   static final TRACKS = '$_USER_DATA/tracks.json';
   static final VIDEOS_LOCAL = '$_USER_DATA/local_videos.json';
@@ -44,7 +45,8 @@ class AppPaths {
   static final FAVOURITES_PLAYLIST = '$_USER_DATA/favs.json';
   static final NAMIDA_LOGO = '${AppDirs.ARTWORKS}.ARTWORKS.NAMIDA_DEFAULT_ARTWORK.PNG';
 
-  static final YT_FAVOURITES_PLAYLIST = '$_USER_DATA/ytfavs.json';
+  // ================= Youtube =================
+  static final YT_FAVOURITES_PLAYLIST = '${AppDirs.YOUTUBE_MAIN_DIRECTORY}/ytfavs.json';
 }
 
 /// Directories used by Namida
@@ -53,28 +55,37 @@ class AppDirs {
   static String APP_CACHE = '';
   static String INTERNAL_STORAGE = '';
 
+  // ================= User Data =================
   static final HISTORY_PLAYLIST = '$USER_DATA/History/';
   static final PLAYLISTS = '$USER_DATA/Playlists/';
   static final QUEUES = '$USER_DATA/Queues/';
-  static final ARTWORKS = '$USER_DATA/Artworks/';
+  static final ARTWORKS = '$USER_DATA/Artworks/'; // extracted audio artworks
   static final PALETTES = '$USER_DATA/Palettes/';
   static final VIDEOS_CACHE = '$USER_DATA/Videos/';
   static final AUDIOS_CACHE = '$USER_DATA/Audios/';
   static final VIDEOS_CACHE_TEMP = '$USER_DATA/Videos/Temp/';
-  static final THUMBNAILS = '$USER_DATA/Thumbnails/';
-  static final YT_THUMBNAILS = '$USER_DATA/YTThumbnails/';
-  static final YT_THUMBNAILS_CHANNELS = '${YT_THUMBNAILS}Channels/';
+  static final THUMBNAILS = '$USER_DATA/Thumbnails/'; // extracted video thumbnails
   static final LYRICS = '$USER_DATA/Lyrics/';
-  static final YT_METADATA = '$USER_DATA/Metadata/';
-  static final YT_METADATA_CHANNELS = '${YT_METADATA}Channels/';
-  static final YT_METADATA_COMMENTS = '${YT_METADATA}Comments/';
-  static final YOUTUBE_STATS = '$USER_DATA/Youtube Stats/';
+
+  // ================= Internal Storage =================
   static final SAVED_ARTWORKS = '$INTERNAL_STORAGE/Artworks/';
   static final BACKUPS = '$INTERNAL_STORAGE/Backups/';
   static final COMPRESSED_IMAGES = '$INTERNAL_STORAGE/Compressed/';
-  static final YOUTUBE_PLAYLISTS = '$USER_DATA/Youtube Playlists/';
 
+  // ================= Youtube =================
+  static final YOUTUBE_MAIN_DIRECTORY = '$USER_DATA/Youtube';
+
+  static final YT_PLAYLISTS = '$YOUTUBE_MAIN_DIRECTORY/Youtube Playlists/';
+  static final YT_THUMBNAILS = '$YOUTUBE_MAIN_DIRECTORY/YTThumbnails/';
+  static final YT_THUMBNAILS_CHANNELS = '$YOUTUBE_MAIN_DIRECTORY/YTThumbnails Channels/';
+  static final YT_METADATA = '$YOUTUBE_MAIN_DIRECTORY/Metadata Videos/';
+  static final YT_METADATA_CHANNELS = '$YOUTUBE_MAIN_DIRECTORY/Metadata Channels/';
+  static final YT_METADATA_COMMENTS = '$YOUTUBE_MAIN_DIRECTORY/Metadata Comments/';
+  static final YT_STATS = '$YOUTUBE_MAIN_DIRECTORY/Youtube Stats/';
+
+  // ===========================================
   static final List<String> values = [
+    // -- User Data
     HISTORY_PLAYLIST,
     PLAYLISTS,
     QUEUES,
@@ -84,14 +95,17 @@ class AppDirs {
     VIDEOS_CACHE_TEMP,
     AUDIOS_CACHE,
     THUMBNAILS,
+    LYRICS,
+    // -- Youtube
+    YOUTUBE_MAIN_DIRECTORY,
+    YT_PLAYLISTS,
     YT_THUMBNAILS,
     YT_THUMBNAILS_CHANNELS,
-    LYRICS,
-    YOUTUBE_STATS,
     YT_METADATA,
     YT_METADATA_CHANNELS,
     YT_METADATA_COMMENTS,
-    YOUTUBE_PLAYLISTS,
+    YT_STATS,
+    // Internal Storage Directories are created on demand
   ];
 }
 

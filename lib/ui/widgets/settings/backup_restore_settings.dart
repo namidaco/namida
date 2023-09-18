@@ -71,12 +71,103 @@ class BackupAndRestore extends StatelessWidget {
                 }
               }
 
-              Widget getItemWidget({required String title, required IconData icon, required List<String> items}) {
-                return ListTileWithCheckMark(
-                  active: isActive(items),
-                  title: title,
-                  icon: icon,
-                  onTap: () => onItemTap(items),
+              Widget getItemWidget({
+                required String title,
+                required IconData icon,
+                required List<String> items,
+                required bool youtubeAvailable,
+                bool youtubeForceFollowItems = false,
+                required List<String> youtubeItems,
+              }) {
+                int doIt(List<String> forWhat) {
+                  int totalSize = 0;
+                  forWhat.loop((e, _) {
+                    if (FileSystemEntity.typeSync(e) == FileSystemEntityType.file) {
+                      totalSize += File(e).sizeInBytesSync();
+                    } else if (FileSystemEntity.typeSync(e) == FileSystemEntityType.directory) {
+                      int size = 0;
+                      Directory(e).listSync().loop((e, index) {
+                        size += (e is File ? File(e.path).sizeInBytesSync() : 0);
+                      });
+                      totalSize += size;
+                    }
+                  });
+                  return totalSize;
+                }
+
+                final totalSizeLocal = doIt(items);
+                final totalSizeYoutube = doIt(youtubeItems);
+                final isLocalIconChecked = isActive(items);
+                final isYoutubeIconChecked = youtubeForceFollowItems
+                    ? isActive(items)
+                    : !youtubeAvailable
+                        ? false
+                        : youtubeItems.isEmpty
+                            ? false
+                            : isActive(youtubeItems);
+                return Row(
+                  children: [
+                    Expanded(
+                      child: ListTileWithCheckMark(
+                        active: isLocalIconChecked,
+                        titleWidget: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: context.textTheme.displayMedium,
+                            ),
+                            Row(
+                              children: [
+                                AnimatedOpacity(
+                                  duration: const Duration(milliseconds: 200),
+                                  opacity: isLocalIconChecked ? 1.0 : 0.5,
+                                  child: Text(
+                                    "(${totalSizeLocal.fileSizeFormatted})",
+                                    style: context.textTheme.displaySmall,
+                                  ),
+                                ),
+                                if (totalSizeYoutube > 0)
+                                  AnimatedOpacity(
+                                    duration: const Duration(milliseconds: 200),
+                                    opacity: isYoutubeIconChecked ? 1.0 : 0.5,
+                                    child: Text(
+                                      " + (${totalSizeYoutube.fileSizeFormatted})",
+                                      style: context.textTheme.displaySmall,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        icon: icon,
+                        onTap: () => onItemTap(items),
+                      ),
+                    ),
+                    const SizedBox(width: 8.0),
+                    IgnorePointer(
+                      ignoring: !youtubeAvailable,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        opacity: youtubeAvailable ? 1.0 : 0.6,
+                        child: NamidaIconButton(
+                          tooltip: lang.YOUTUBE,
+                          horizontalPadding: 0.0,
+                          icon: null,
+                          onPressed: () => onItemTap(youtubeItems),
+                          child: StackedIcon(
+                            iconSize: 28.0,
+                            baseIcon: Broken.video_square,
+                            smallChild: NamidaCheckMark(
+                              size: 12.0,
+                              active: isYoutubeIconChecked,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8.0),
+                  ],
                 );
               }
 
@@ -91,7 +182,7 @@ class BackupAndRestore extends StatelessWidget {
                         onPressed: () {
                           if (settings.backupItemslist.isNotEmpty) {
                             NamidaNavigator.inst.closeDialog();
-                            BackupController.inst.createBackupFile();
+                            BackupController.inst.createBackupFile(settings.backupItemslist);
                           }
                         },
                       ),
@@ -101,13 +192,21 @@ class BackupAndRestore extends StatelessWidget {
                       child: SingleChildScrollView(
                         child: Column(
                           children: [
-                            getItemWidget(title: lang.DATABASE, icon: Broken.box_1, items: [
-                              AppPaths.TRACKS,
-                              AppPaths.TRACKS_STATS,
-                              AppPaths.TOTAL_LISTEN_TIME,
-                              AppPaths.VIDEOS_CACHE,
-                              AppPaths.VIDEOS_LOCAL,
-                            ]),
+                            getItemWidget(
+                              title: lang.DATABASE,
+                              icon: Broken.box_1,
+                              items: [
+                                AppPaths.TRACKS,
+                                AppPaths.TRACKS_STATS,
+                                AppPaths.TOTAL_LISTEN_TIME,
+                                AppPaths.VIDEOS_CACHE,
+                                AppPaths.VIDEOS_LOCAL,
+                              ],
+                              youtubeAvailable: true,
+                              youtubeItems: [
+                                AppDirs.YT_STATS,
+                              ],
+                            ),
                             const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.PLAYLISTS,
@@ -115,7 +214,10 @@ class BackupAndRestore extends StatelessWidget {
                               items: [
                                 AppDirs.PLAYLISTS,
                                 AppPaths.FAVOURITES_PLAYLIST,
-                                AppDirs.YOUTUBE_PLAYLISTS,
+                              ],
+                              youtubeAvailable: true,
+                              youtubeItems: [
+                                AppDirs.YT_PLAYLISTS,
                                 AppPaths.YT_FAVOURITES_PLAYLIST,
                               ],
                             ),
@@ -123,43 +225,110 @@ class BackupAndRestore extends StatelessWidget {
                             getItemWidget(
                               title: lang.HISTORY,
                               icon: Broken.refresh,
-                              items: [AppDirs.HISTORY_PLAYLIST],
+                              items: [
+                                AppDirs.HISTORY_PLAYLIST,
+                              ],
+                              youtubeAvailable: false,
+                              youtubeItems: [],
                             ),
                             const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.SETTINGS,
                               icon: Broken.setting,
-                              items: [AppPaths.SETTINGS],
+                              items: [
+                                AppPaths.SETTINGS,
+                              ],
+                              youtubeAvailable: false,
+                              youtubeItems: [],
                             ),
                             const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.LYRICS,
                               icon: Broken.document,
-                              items: [AppDirs.LYRICS],
+                              items: [
+                                AppDirs.LYRICS,
+                              ],
+                              youtubeAvailable: false,
+                              youtubeItems: [],
                             ),
                             const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.QUEUES,
                               icon: Broken.driver,
-                              items: [AppDirs.QUEUES, AppPaths.LATEST_QUEUE],
+                              items: [
+                                AppDirs.QUEUES,
+                                AppPaths.LATEST_QUEUE,
+                              ],
+                              youtubeAvailable: false,
+                              youtubeItems: [],
                             ),
                             const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.COLOR_PALETTES,
                               icon: Broken.colorfilter,
-                              items: [AppDirs.PALETTES],
+                              items: [
+                                AppDirs.PALETTES,
+                              ],
+                              youtubeAvailable: false,
+                              youtubeForceFollowItems: true,
+                              youtubeItems: [],
                             ),
                             const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.VIDEO_CACHE,
                               icon: Broken.video,
-                              items: [AppDirs.VIDEOS_CACHE],
+                              items: [
+                                AppDirs.VIDEOS_CACHE,
+                              ],
+                              youtubeAvailable: false,
+                              youtubeItems: [],
+                            ),
+                            const SizedBox(height: 12.0),
+                            getItemWidget(
+                              title: lang.AUDIO_CACHE,
+                              icon: Broken.audio_square,
+                              items: [
+                                AppDirs.AUDIOS_CACHE,
+                              ],
+                              youtubeAvailable: false,
+                              youtubeForceFollowItems: true,
+                              youtubeItems: [],
                             ),
                             const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.ARTWORKS,
                               icon: Broken.image,
-                              items: [AppDirs.ARTWORKS],
+                              items: [
+                                AppDirs.ARTWORKS,
+                              ],
+                              youtubeAvailable: false,
+                              youtubeItems: [],
+                            ),
+                            const SizedBox(height: 12.0),
+                            getItemWidget(
+                              title: lang.THUMBNAILS,
+                              icon: Broken.image,
+                              items: [
+                                AppDirs.THUMBNAILS,
+                              ],
+                              youtubeAvailable: true,
+                              youtubeItems: [
+                                AppDirs.YT_THUMBNAILS,
+                                AppDirs.YT_THUMBNAILS_CHANNELS,
+                              ],
+                            ),
+                            const SizedBox(height: 12.0),
+                            getItemWidget(
+                              title: lang.METADATA_CACHE,
+                              icon: Broken.message_text,
+                              items: [
+                                AppDirs.YT_METADATA,
+                                AppDirs.YT_METADATA_CHANNELS,
+                                AppDirs.YT_METADATA_COMMENTS,
+                              ],
+                              youtubeAvailable: true,
+                              youtubeForceFollowItems: true,
+                              youtubeItems: [],
                             ),
                           ],
                         ),

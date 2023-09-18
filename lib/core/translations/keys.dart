@@ -32,6 +32,7 @@ class LanguageKeys {
   late String ARTWORK;
   late String ARTWORKS;
   late String AUDIO;
+  late String AUDIO_CACHE;
   late String AUTO_COLORING_SUBTITLE;
   late String AUTO_COLORING;
   late String AUTO_EXTRACT_TAGS_FROM_FILENAME;
@@ -252,6 +253,7 @@ class LanguageKeys {
   late String MATCH_ALL_TRACKS;
   late String MATCH_ALL_TRACKS_NOTE;
   late String MAXIMUM;
+  late String METADATA_CACHE;
   late String METADATA_EDIT_FAILED_SUBTITLE;
   late String METADATA_EDIT_FAILED;
   late String METADATA_READ_FAILED;
@@ -460,6 +462,7 @@ class LanguageKeys {
   late String THEME_MODE;
   late String THEME_SETTINGS_SUBTITLE;
   late String THEME_SETTINGS;
+  late String THUMBNAILS;
   late String TITLE;
   late String TOP_RECENTS;
   late String TOP_RECENT_ALBUMS;

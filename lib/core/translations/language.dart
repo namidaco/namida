@@ -99,6 +99,7 @@ class Language extends LanguageKeys {
 			ARTWORK = getKey("ARTWORK");
 			ARTWORKS = getKey("ARTWORKS");
 			AUDIO = getKey("AUDIO");
+			AUDIO_CACHE = getKey("AUDIO_CACHE");
 			AUTO_COLORING_SUBTITLE = getKey("AUTO_COLORING_SUBTITLE");
 			AUTO_COLORING = getKey("AUTO_COLORING");
 			AUTO_EXTRACT_TAGS_FROM_FILENAME = getKey("AUTO_EXTRACT_TAGS_FROM_FILENAME");
@@ -319,6 +320,7 @@ class Language extends LanguageKeys {
 			MATCH_ALL_TRACKS = getKey("MATCH_ALL_TRACKS");
 			MATCH_ALL_TRACKS_NOTE = getKey("MATCH_ALL_TRACKS_NOTE");
 			MAXIMUM = getKey("MAXIMUM");
+			METADATA_CACHE = getKey("METADATA_CACHE");
 			METADATA_EDIT_FAILED_SUBTITLE = getKey("METADATA_EDIT_FAILED_SUBTITLE");
 			METADATA_EDIT_FAILED = getKey("METADATA_EDIT_FAILED");
 			METADATA_READ_FAILED = getKey("METADATA_READ_FAILED");
@@ -527,6 +529,7 @@ class Language extends LanguageKeys {
 			THEME_MODE = getKey("THEME_MODE");
 			THEME_SETTINGS_SUBTITLE = getKey("THEME_SETTINGS_SUBTITLE");
 			THEME_SETTINGS = getKey("THEME_SETTINGS");
+			THUMBNAILS = getKey("THUMBNAILS");
 			TITLE = getKey("TITLE");
 			TOP_RECENTS = getKey("TOP_RECENTS");
 			TOP_RECENT_ALBUMS = getKey("TOP_RECENT_ALBUMS");
@@ -610,6 +613,9 @@ class Language extends LanguageKeys {
     }
   }
 }
+
+
+
 
 
 

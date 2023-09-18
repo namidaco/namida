@@ -1,5 +1,6 @@
 {
   "ALL_TIME": "All time",
+  "AUDIO_CACHE": "Audio Cache",
   "BETA": "Beta",
   "CACHE": "Cache",
   "CHECK_FOR_MORE": "Check for more",
@@ -27,6 +28,7 @@
   "LOST_MEMORIES_SUBTITLE": "around this time, _NUM_ years ago",
   "MATCH_ALL_TRACKS": "Match All Tracks",
   "MATCH_ALL_TRACKS_NOTE": "this can have an impact on the matching speed, as it will check all tracks in your library",
+  "METADATA_CACHE": "Metadata Cache",
   "MINIMUM_ONE_ITEM": "Couldn't remove item",
   "MINIMUM_ONE_ITEM_SUBTITLE": "At least _NUM_ items should remain",
   "MISSING_ENTRIES": "Missing Entries",
@@ -76,6 +78,7 @@
   "SUPREMACY": "Supremacy",
   "THEME_SETTINGS": "المظهر",
   "THEME_SETTINGS_SUBTITLE": "الشكل العام لمشغل الموسيقى خاصتك",
+  "THUMBNAILS": "Thumbnails",
   "TOP_RECENTS": "Top Recents",
   "TOP_RECENT_ALBUMS": "Top Recent Albums",
   "TOP_RECENT_ARTISTS": "Top Recent Artists",

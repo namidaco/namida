@@ -643,7 +643,7 @@ class JsonToHistoryParser {
       final filename = entry.key; // id[0]
       final videos = entry.value; // {id: YoutubeVideoHistory}
 
-      final file = File('${AppDirs.YOUTUBE_STATS}$filename.json');
+      final file = File('${AppDirs.YT_STATS}$filename.json');
       final res = await file.readAsJson();
       final videosInStorage = (res as List?)?.map((e) => YoutubeVideoHistory.fromJson(e)) ?? [];
       final videosMapInStorage = <String, YoutubeVideoHistory>{};

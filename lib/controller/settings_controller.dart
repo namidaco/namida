@@ -91,7 +91,7 @@ class SettingsController {
     AppDirs.QUEUES,
     AppPaths.LATEST_QUEUE,
     AppPaths.YT_FAVOURITES_PLAYLIST,
-    AppDirs.YOUTUBE_PLAYLISTS,
+    AppDirs.YT_PLAYLISTS,
   ].obs;
   final RxBool enableVideoPlayback = true.obs;
   final RxBool enableLyrics = false.obs;

@@ -109,7 +109,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
   String get favouritePlaylistPath => AppPaths.YT_FAVOURITES_PLAYLIST;
 
   @override
-  String get playlistsDirectory => AppDirs.YOUTUBE_PLAYLISTS;
+  String get playlistsDirectory => AppDirs.YT_PLAYLISTS;
 
   @override
   Future<Map<String, YoutubePlaylist>> prepareAllPlaylistsFunction() async {

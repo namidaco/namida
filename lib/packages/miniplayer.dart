@@ -128,12 +128,12 @@ class MiniPlayerSwitchers extends StatelessWidget {
             onResume: () async => await NamidaNavigator.inst.exitFullScreen(setOrientations: false),
             child: Obx(
               () => AnimatedSwitcher(
-                duration: const Duration(milliseconds: 600),
+                duration: const Duration(milliseconds: 500),
                 child: Player.inst.nowPlayingTrack == kDummyTrack
-                    ? const YoutubeMiniPlayer(key: Key('ytminiplayer'))
-                    : const NamidaMiniPlayer(
-                        key: Key('actualminiplayer'),
-                      ),
+                    ? Player.inst.currentQueueYoutube.isNotEmpty
+                        ? const YoutubeMiniPlayer(key: Key('ytminiplayer'))
+                        : const SizedBox(key: Key('empty_miniplayer'))
+                    : const NamidaMiniPlayer(key: Key('actualminiplayer')),
               ),
             ),
           ),
