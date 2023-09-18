@@ -5,7 +5,7 @@ import 'package:newpipeextractor_dart/models/videoInfo.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/video_controller.dart';
-import 'package:namida/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 
 class YoutubeID implements Playable {
   final String id;

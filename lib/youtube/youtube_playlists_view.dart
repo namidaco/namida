@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:get/get.dart';
 
-import 'package:namida/controller/youtube_playlist_controller.dart';
+import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/ui/pages/youtube_page.dart';
+import 'package:namida/youtube/widgets/yt_card.dart';
 
 class YoutubePlaylistsView extends StatelessWidget {
   final Iterable<String> idsToAdd;

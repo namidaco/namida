@@ -2559,10 +2559,22 @@ class _LazyLoadListViewState extends State<LazyLoadListView> {
   }
 }
 
+class NamidaPopupItem {
+  final IconData icon;
+  final String title;
+  final void Function() onTap;
+
+  const NamidaPopupItem({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
+}
+
 class NamidaPopupWrapper extends StatelessWidget {
   final Widget child;
   final List<Widget> children;
-  final List<(IconData, String, void Function())> childrenDefault;
+  final List<NamidaPopupItem> childrenDefault;
   final VoidCallback? onTap;
   final VoidCallback? onPop;
   final bool canOpenMenu;
@@ -2595,13 +2607,13 @@ class NamidaPopupWrapper extends StatelessWidget {
         ...childrenDefault.map(
           (e) => PopupMenuItem(
             height: 42.0,
-            onTap: e.$3,
+            onTap: e.onTap,
             child: Row(
               children: [
-                Icon(e.$1, size: 20.0),
+                Icon(e.icon, size: 20.0),
                 const SizedBox(width: 6.0),
                 Text(
-                  e.$2,
+                  e.title,
                   style: context.textTheme.displayMedium,
                 ),
               ],

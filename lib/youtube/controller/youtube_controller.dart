@@ -41,9 +41,17 @@ class DownloadProgress {
 class YoutubeController {
   static YoutubeController get inst => _instance;
   static final YoutubeController _instance = YoutubeController._internal();
-  YoutubeController._internal();
+  YoutubeController._internal() {
+    scrollController.addListener(() {
+      final pixels = scrollController.positions.lastOrNull?.pixels;
+      final hasScrolledEnough = pixels != null && pixels > 40;
+      _shouldShowGlowUnderVideo.value = hasScrolledEnough;
+    });
+  }
 
   final scrollController = ScrollController();
+  bool get shouldShowGlowUnderVideo => _shouldShowGlowUnderVideo.value;
+  final _shouldShowGlowUnderVideo = false.obs;
 
   final homepageFeed = <YoutubeFeed>[].obs;
 

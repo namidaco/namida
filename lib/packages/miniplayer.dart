@@ -34,7 +34,7 @@ import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/focused_menu.dart';
 import 'package:namida/packages/miniplayer_raw.dart';
-import 'package:namida/packages/youtube_miniplayer.dart';
+import 'package:namida/youtube/youtube_miniplayer.dart';
 
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -646,7 +646,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                 menuWidget: Obx(
                                   () {
                                     final availableVideos = VideoController.inst.currentPossibleVideos;
-                                    final ytVideos = VideoController.inst.currentYTQualities;
+                                    final ytVideos = VideoController.inst.currentYTQualities.where((s) => s.formatSuffix != 'webm');
                                     return ListView(
                                       padding: const EdgeInsets.symmetric(vertical: 12.0),
                                       children: [

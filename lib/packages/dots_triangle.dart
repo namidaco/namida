@@ -1,3 +1,5 @@
+/// source: https://github.com/watery-desert/loading_animation_widget
+
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 

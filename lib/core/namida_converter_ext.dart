@@ -45,10 +45,11 @@ import 'package:namida/ui/pages/subpages/genre_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 import 'package:namida/ui/pages/tracks_page.dart';
-import 'package:namida/ui/pages/youtube_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/stats.dart';
+import 'package:namida/youtube/pages/youtube_page.dart';
+import 'package:namida/youtube/widgets/yt_search_bar.dart';
 
 extension LibraryTabToEnum on int {
   LibraryTab toEnum() => settings.libraryTabs.elementAt(this);

@@ -679,8 +679,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "8c9aa4b3d3b0a113f70c7e1d951dd1f7013e25d2"
-      resolved-ref: "8c9aa4b3d3b0a113f70c7e1d951dd1f7013e25d2"
+      ref: a547bd20bb48b5ed4d0835827025a906f85b09a1
+      resolved-ref: a547bd20bb48b5ed4d0835827025a906f85b09a1
       url: "https://github.com/MSOB7YY/NewPipeExtractor_Dart"
     source: git
     version: "0.0.1"

@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:http/http.dart' as http;
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:newpipeextractor_dart/models/streams.dart';
 import 'package:picture_in_picture/picture_in_picture.dart';
 
@@ -20,7 +21,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -50,7 +51,14 @@ class VideoController {
   Widget? videoWidget;
   String? _lastKey;
 
-  Widget getVideoWidget(String? key, bool enableControls, VoidCallback? onMinimizeTap, {Widget? fallbackChild, bool fullscreen = false}) {
+  Widget getVideoWidget(
+    String? key,
+    bool enableControls,
+    VoidCallback? onMinimizeTap, {
+    Widget? fallbackChild,
+    bool fullscreen = false,
+    List<NamidaPopupItem> qualityItems = const [],
+  }) {
     final finalKey = 'video_widget$key$enableControls';
     _videoControlsKeys[finalKey] ??= GlobalKey<NamidaVideoControlsState>();
     if (videoWidget == null || _lastKey != finalKey) {
@@ -69,6 +77,8 @@ class VideoController {
                 true,
                 onMinimizeTap,
                 fullscreen: true,
+                fallbackChild: fallbackChild,
+                qualityItems: qualityItems,
               ),
             );
           }
@@ -83,6 +93,7 @@ class VideoController {
               controller: playerController,
               fallbackChild: fallbackChild,
               isFullScreen: fullscreen,
+              qualityItems: qualityItems,
               child: vcontroller.videoWidget?.value,
             ),
           ),
