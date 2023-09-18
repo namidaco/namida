@@ -145,7 +145,7 @@ Future<void> _initializeIntenties() async {
           final youtubeId = paths.firstOrNull?.getYoutubeID;
           if (youtubeId != null && youtubeId != '') {
             await _waitForFirstBuildContext.future;
-            showDownloadVideoBottomSheet(context: _initialContext.value!, videoId: youtubeId);
+            showDownloadVideoBottomSheet(videoId: youtubeId);
           } else {
             (await playExternalFiles(paths)).executeIfFalse(showErrorPlayingFileSnackbar);
           }
@@ -194,7 +194,8 @@ Future<bool> requestManageStoragePermission() async {
   return true;
 }
 
-final _initialContext = Rxn<BuildContext>();
+BuildContext get rootContext => _initialContext;
+late BuildContext _initialContext;
 final _waitForFirstBuildContext = Completer<bool>();
 
 class Namida extends StatelessWidget {
@@ -219,7 +220,7 @@ class Namida extends StatelessWidget {
           },
           home: MainPageWrapper(
             onContextAvailable: (ctx) {
-              _initialContext.value = ctx;
+              _initialContext = ctx;
               _waitForFirstBuildContext.isCompleted ? null : _waitForFirstBuildContext.complete(true);
             },
           ),

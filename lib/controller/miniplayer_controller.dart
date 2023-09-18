@@ -15,11 +15,16 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/packages/mp.dart';
 
 class MiniPlayerController {
   static MiniPlayerController get inst => _instance;
   static final MiniPlayerController _instance = MiniPlayerController._internal();
   MiniPlayerController._internal();
+
+  final ytMiniplayerKey = GlobalKey<NamidaYTMiniplayerState>();
+
+  bool get isInQueue => animation.value > 1.0;
 
   /// Used to temporarily hold the seek value.
   final RxInt seekValue = 0.obs;
@@ -163,7 +168,7 @@ class MiniPlayerController {
     _offset -= event.delta.dy;
     _offset = _offset.clamp(-_headRoom, maxOffset * 2);
 
-    animation.animateTo(_offset / maxOffset, duration: Duration.zero);
+    animateMiniplayer(_offset / maxOffset);
   }
 
   void onPointerUp(PointerUpEvent event) {
@@ -187,7 +192,7 @@ class MiniPlayerController {
     _offset -= details.primaryDelta ?? 0;
     _offset = _offset.clamp(-_headRoom, maxOffset * 2 + _headRoom / 2);
 
-    animation.animateTo(_offset / maxOffset, duration: Duration.zero);
+    animateMiniplayer(_offset / maxOffset);
   }
 
   void gestureDetectorOnHorizontalDragStart(DragStartDetails details) {
@@ -335,8 +340,21 @@ class MiniPlayerController {
     await _snap(haptic: haptic);
   }
 
-  Future<void> _snap({bool haptic = true}) async {
+  Future<void> animateMiniplayer(
+    double target, {
+    Duration duration = Duration.zero,
+    Curve curve = Curves.linear,
+  }) async {
     await animation.animateTo(
+      target,
+      curve: curve,
+      duration: duration,
+    );
+    VideoController.inst.updateShouldShowControls(animation.value);
+  }
+
+  Future<void> _snap({bool haptic = true}) async {
+    await animateMiniplayer(
       _offset / maxOffset,
       curve: _bouncingCurve,
       duration: const Duration(milliseconds: 300),

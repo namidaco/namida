@@ -59,6 +59,7 @@ class AppDirs {
   static final ARTWORKS = '$USER_DATA/Artworks/';
   static final PALETTES = '$USER_DATA/Palettes/';
   static final VIDEOS_CACHE = '$USER_DATA/Videos/';
+  static final AUDIOS_CACHE = '$USER_DATA/Audios/';
   static final VIDEOS_CACHE_TEMP = '$USER_DATA/Videos/Temp/';
   static final THUMBNAILS = '$USER_DATA/Thumbnails/';
   static final YT_THUMBNAILS = '$USER_DATA/YTThumbnails/';
@@ -81,6 +82,7 @@ class AppDirs {
     PALETTES,
     VIDEOS_CACHE,
     VIDEOS_CACHE_TEMP,
+    AUDIOS_CACHE,
     THUMBNAILS,
     YT_THUMBNAILS,
     YT_THUMBNAILS_CHANNELS,

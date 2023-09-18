@@ -3,59 +3,14 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:newpipeextractor_dart/models/videoInfo.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
-import 'package:namida/controller/youtube_controller.dart';
+import 'package:namida/class/youtube_id.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 
 typedef YoutubePlaylist = GeneralPlaylist<YoutubeID>;
-
-class YoutubeID {
-  final String id;
-  final DateTime addedDate;
-
-  const YoutubeID({
-    required this.id,
-    required this.addedDate,
-  });
-
-  factory YoutubeID.fromJson(Map<String, dynamic> json) {
-    return YoutubeID(
-      id: json['id'] ?? '',
-      addedDate: DateTime.fromMillisecondsSinceEpoch(json['addedDate'] ?? 0),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      "id": id,
-      "addedDate": addedDate.millisecondsSinceEpoch,
-    };
-  }
-
-  @override
-  bool operator ==(other) {
-    if (other is YoutubeID) {
-      return id == other.id && addedDate.millisecondsSinceEpoch == other.addedDate.millisecondsSinceEpoch;
-    }
-    return false;
-  }
-
-  @override
-  int get hashCode => id.hashCode;
-
-  @override
-  String toString() => "YoutubeID(id: $id, addedDate: $addedDate)";
-}
-
-extension YoutubeIDUtils on YoutubeID {
-  Future<VideoInfo?> toVideoInfo() async {
-    return await YoutubeController.inst.fetchVideoDetails(id);
-  }
-}
 
 class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
   static YoutubePlaylistController get inst => _instance;
@@ -86,8 +41,21 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
     );
   }
 
-  void addTracksToPlaylist(YoutubePlaylist playlist, Iterable<String> videoIds) async {
-    final newtracks = videoIds
+  /// Returns added ids, when [preventDuplicates] is true;
+  Future<Iterable<YoutubeID>> addTracksToPlaylist(YoutubePlaylist playlist, Iterable<String> videoIds, {bool preventDuplicates = true}) async {
+    late Iterable<String> idsToAdd;
+
+    if (preventDuplicates) {
+      final existingIds = <String, bool>{};
+      playlist.tracks.loop((e, index) {
+        existingIds[e.id] = true;
+      });
+      // only add ids that doesnt exist inside playlist.
+      idsToAdd = videoIds.where((element) => existingIds[element] == null);
+    } else {
+      idsToAdd = videoIds;
+    }
+    final newtracks = idsToAdd
         .map(
           (id) => YoutubeID(
             id: id,
@@ -95,7 +63,8 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
           ),
         )
         .toList();
-    super.addTracksToPlaylistRaw(playlist, newtracks);
+    await super.addTracksToPlaylistRaw(playlist, newtracks);
+    return newtracks;
   }
 
   Future<void> favouriteButtonOnPressed(String id) async {

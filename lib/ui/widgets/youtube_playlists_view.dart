@@ -28,26 +28,40 @@ class YoutubePlaylistsView extends StatelessWidget {
               final name = playlistsNames[index];
               final playlist = pcontroller.playlistsMap[name]!;
               return Obx(
-                () => YoutubeCard(
-                  thumbnailWidthPercentage: 0.8,
-                  videoId: playlist.tracks.firstOrNull?.id,
-                  thumbnailUrl: null,
-                  shimmerEnabled: false,
-                  title: playlist.name,
-                  subtitle: playlist.creationDate.dateFormattedOriginal,
-                  thirdLineText: playlist.tracks.length.displayVideoKeyword,
-                  displayChannelThumbnail: false,
-                  channelThumbnailUrl: '',
-                  onTap: () {
-                    if (idsToAdd.isNotEmpty) {
-                      YoutubePlaylistController.inst.addTracksToPlaylist(playlist, idsToAdd);
-                    } else {
-                      // navigate
-                    }
-                  },
-                  smallBoxText: playlist.tracks.length.formatDecimal(),
-                  checkmarkStatus: idsToAdd.isEmpty ? null : playlist.tracks.firstWhereEff((e) => e.id == idsToAdd.firstOrNull) != null,
-                ),
+                () {
+                  final idsExist = idsToAdd.isEmpty ? null : playlist.tracks.firstWhereEff((e) => e.id == idsToAdd.firstOrNull) != null;
+                  return YoutubeCard(
+                    extractColor: true,
+                    thumbnailWidthPercentage: 0.8,
+                    videoId: playlist.tracks.firstOrNull?.id,
+                    thumbnailUrl: null,
+                    shimmerEnabled: false,
+                    title: playlist.name,
+                    subtitle: playlist.creationDate.dateFormattedOriginal,
+                    thirdLineText: playlist.tracks.length.displayVideoKeyword,
+                    displayChannelThumbnail: false,
+                    channelThumbnailUrl: '',
+                    onTap: () {
+                      if (idsToAdd.isNotEmpty) {
+                        if (idsExist == true) {
+                          final indexes = <int>[];
+                          playlist.tracks.loop((e, index) {
+                            if (idsToAdd.contains(e.id)) {
+                              indexes.add(index);
+                            }
+                          });
+                          YoutubePlaylistController.inst.removeTracksFromPlaylist(playlist, indexes);
+                        } else {
+                          YoutubePlaylistController.inst.addTracksToPlaylist(playlist, idsToAdd);
+                        }
+                      } else {
+                        // navigate
+                      }
+                    },
+                    smallBoxText: playlist.tracks.length.formatDecimal(),
+                    checkmarkStatus: idsExist,
+                  );
+                },
               );
             },
           );

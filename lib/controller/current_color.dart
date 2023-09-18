@@ -113,6 +113,8 @@ class CurrentColor {
     }
   }
 
+  void resetCurrentPlayingTrack() => currentPlayingTrack.value = null;
+
   Future<NamidaColor> getTrackColors(
     Track track, {
     bool fallbackToPlayerStaticColor = true,

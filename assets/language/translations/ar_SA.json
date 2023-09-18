@@ -61,6 +61,7 @@
   "RESUME_IF_WAS_INTERRUPTED": "Resume if was paused by interruption",
   "RESUME_IF_WAS_PAUSED_BY_VOLUME": "Resume if was paused by volume",
   "SAME_DIRECTORY_ONLY": "Same directory only",
+  "SEARCH_YOUTUBE": "Search YouTube",
   "SHOULD_DUCK": "Should duck",
   "SHOULD_DUCK_NOTE": "Indicates that the volume should be lowered. ex: notification",
   "SHOULD_PAUSE": "Should pause",

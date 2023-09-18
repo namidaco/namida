@@ -95,7 +95,7 @@ class MainPage extends StatelessWidget {
           Obx(
             () => AnimatedSwitcher(
               duration: const Duration(milliseconds: 600),
-              child: Player.inst.nowPlayingTrack == kDummyTrack
+              child: Player.inst.nowPlayingTrack == kDummyTrack && Player.inst.currentQueueYoutube.isEmpty
                   ? const SizedBox(key: Key('emptyglow'))
                   : Container(
                       key: const Key('actualglow'),

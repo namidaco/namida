@@ -27,7 +27,7 @@ dependency_overrides:
   dart_extensions:
     git:
       url: https://github.com/MSOB7YY/dart_extensions
-      ref: f4d8e0090e584bb870f1468f7cd06d8367296277
+      ref: 291440bb57a4173e0c7af2678b94eb34668972e1
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -55,7 +55,6 @@ dependencies:
   calendar_date_picker2: ^0.5.2
   wakelock_plus: ^1.1.1
   flutter_local_notifications: ^15.1.0
-  flutter_volume_controller: ^1.2.7
   flutter_sharing_intent:
     git:
       url: https://github.com/MSOB7YY/flutter_sharing_intent
@@ -65,16 +64,17 @@ dependencies:
       url: https://github.com/MSOB7YY/catcher
   queue: ^3.1.0+2
   jiffy: ^6.2.1
-  queue_manager:
-    git:
-      url: https://github.com/MSOB7YY/queue_manager
-      ref: 7c6ec7edaf7bc4a0e294108245e2e29ed7f0d654
   playlist_manager:
     git:
       url: https://github.com/namidaco/playlist_manager
+      ref: 289719270fe535625725c29ffeff2fe81703dc0c
   flutter_html:
     git:
       url: https://github.com/zhourengui/flutter_html
+  picture_in_picture:
+    git:
+      url: https://github.com/MSOB7YY/picture_in_picture
+      ref: 8989afc0e8b854819d79ace61da9b9544ad6068f
 
   # ---- Path/File Providers ----
   path_provider: ^2.0.14
@@ -83,7 +83,6 @@ dependencies:
 
   # ----Audio Indexing & Playback ----
   just_audio: ^0.9.34
-  audio_session: ^0.1.16
   audio_service:
     git:
       url: https://github.com/MSOB7YY/audio_service
@@ -94,16 +93,20 @@ dependencies:
       url: https://github.com/MSOB7YY/faudiotagger
       ref: 454f4357840eebae5c3ec1f91345257c858caf93
   waveform_extractor: ^1.0.1
+  basic_audio_handler:
+    git:
+      url: https://github.com/namidaco/basic_audio_handler
 
   # ---- Video Indexing & Playback ----
-  better_player:
+  cached_video_player:
     git:
-      url: https://github.com/tintran-dev/betterplayer
+      url: https://github.com/MSOB7YY/flutter_cached_video_player
+      ref: c699b628117e152c4a8a5494b805716cac7f9357
   ffmpeg_kit_flutter_min: "5.1.0-LTS"
   newpipeextractor_dart:
     git:
       url: https://github.com/MSOB7YY/NewPipeExtractor_Dart
-      ref: 9f9bd008abfc073cce3d0e6211c447aa02d84e83
+      ref: 8c9aa4b3d3b0a113f70c7e1d951dd1f7013e25d2
 
   # ---- Image Utilities ----
   extended_image: ^8.0.2
@@ -138,10 +141,6 @@ dependencies:
   # webview_cookie_manager: ^2.0.6
   # google_sign_in: ^6.0.2
   dio: ^5.3.1
-  picture_in_picture:
-    git:
-      url: https://github.com/MSOB7YY/picture_in_picture
-      ref: 53ef5a4d91b1d0df948851359b80fbda342dd29b
 
 dev_dependencies:
   flutter_test:

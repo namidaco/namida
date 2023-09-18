@@ -259,6 +259,53 @@ extension YTLinkToID on String {
   }
 }
 
+extension TitleAndArtistUtils on String {
+  (String?, String?) splitArtistAndTitle() {
+    final input = this;
+    if (input == '') return (null, null);
+    final regexCareForSpaces = RegExp(
+      r'^(.*?)(?:\s+-\s+|\s+\|\s+|\s+by\s+|\s+["「]|-\||-\s+|」)(.*?)(?:"|」)?$',
+      caseSensitive: false,
+    );
+    final match2 = regexCareForSpaces.firstMatch(input);
+    if (match2 != null) {
+      final artist = match2.group(1)?.trim();
+      final title = match2.group(2)?.trim();
+      if (artist != null && title != null) {
+        final a = artist.startsWith('「') ? artist.replaceRange(0, 1, '') : artist;
+        return (a, title);
+      }
+    }
+    final regexDoesntCareAboutSpaces = RegExp(
+      r'^(.*?)(?:\s?-\s?|\s?\|\s?|\s?by\s|\s?["「])(.*?)(?:"|」)?$',
+      caseSensitive: false,
+    );
+    final match = regexDoesntCareAboutSpaces.firstMatch(input);
+    if (match != null) {
+      final artist = match.group(1)?.trim();
+      final title = match.group(2)?.trim();
+      if (artist != null && title != null) {
+        final a = artist.startsWith('「') ? artist.replaceRange(0, 1, '') : artist;
+        return (a, title);
+      }
+    }
+    return (null, null);
+  }
+
+  String keepFeatKeywordsOnly() {
+    if (this == '') return '';
+    final regex = RegExp(
+      r'\s*\((?!remix|featured|ft\.|feat\.|featuring)(?!.*Remix)[^)]*\)|\s*\[(?!remix|featured|ft\.|feat\.|featuring)(?!.*Remix)[^\]]*\]',
+      caseSensitive: false,
+    );
+    String res = replaceAll(regex, '').trimAll();
+    while (res.trim().endsWith(' -')) {
+      res = res.substring(0, res.length - 2);
+    }
+    return res.trim();
+  }
+}
+
 extension TagFieldsUtils on TagField {
   bool get isNumeric => this == TagField.trackNumber || this == TagField.trackTotal || this == TagField.discNumber || this == TagField.discTotal || this == TagField.year;
 }

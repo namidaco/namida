@@ -2,6 +2,10 @@
   "dart.lineLength": 180,
   "java.configuration.updateBuildConfiguration": "interactive",
   "workbench.colorCustomizations": {
+    "[GitHub Dark]": {
+      "editor.background": "#1e1c25",
+      "editorSuggestWidget.background": "#201e1e"
+    },
     "activityBar.activeBackground": "#1a1a1a",
     "activityBar.background": "#1a1a1a",
     "activityBar.foreground": "#e7e7e7",

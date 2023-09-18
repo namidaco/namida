@@ -260,7 +260,6 @@ class JsonToHistoryParser {
     DateTime? oldestDate,
     DateTime? newestDate,
   }) async {
-    final start = DateTime.now();
     _resetValues();
     isParsing.value = true;
     isLoadingFile.value = true;
@@ -338,8 +337,6 @@ class JsonToHistoryParser {
       ..addAll(allMissingEntries);
     _latestMissingMapAddedStatus.clear();
     showMissingEntriesDialog();
-    final end = DateTime.now();
-    print('IMPORT TIME: ${start.difference(end)}');
   }
 
   /// Returns a map of {`trackYTID`: `List<Track>`}

@@ -402,6 +402,7 @@ class LanguageKeys {
   late String SAVE;
   late String SAVED_IN;
   late String SEARCH;
+  late String SEARCH_YOUTUBE;
   late String SECONDS;
   late String SEEK_DURATION_INFO;
   late String SEEK_DURATION;

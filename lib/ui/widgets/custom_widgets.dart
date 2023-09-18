@@ -12,6 +12,7 @@ import 'package:get/get.dart';
 import 'package:known_extents_list_view_builder/known_extents_reorderable_list_view_builder.dart';
 import 'package:known_extents_list_view_builder/known_extents_sliver_reorderable_list.dart';
 import 'package:like_button/like_button.dart';
+import 'package:picture_in_picture/widgets/lifecycle_handler.dart';
 import 'package:selectable_autolink_text/selectable_autolink_text.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -2555,5 +2556,128 @@ class _LazyLoadListViewState extends State<LazyLoadListView> {
   @override
   Widget build(BuildContext context) {
     return widget.listview(controller);
+  }
+}
+
+class NamidaPopupWrapper extends StatelessWidget {
+  final Widget child;
+  final List<Widget> children;
+  final List<(IconData, String, void Function())> childrenDefault;
+  final VoidCallback? onTap;
+  final VoidCallback? onPop;
+  final bool canOpenMenu;
+
+  const NamidaPopupWrapper({
+    super.key,
+    this.child = const MoreIcon(),
+    this.children = const [],
+    this.childrenDefault = const [],
+    this.onTap,
+    this.onPop,
+    this.canOpenMenu = true,
+  });
+
+  _showPopupMenu(BuildContext context) async {
+    final RenderBox button = context.findRenderObject()! as RenderBox;
+    final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
+    const Offset offset = Offset.zero;
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(offset, ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(Offset.zero) + offset, ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
+    await showMenu(
+      context: context,
+      position: position,
+      items: [
+        ...childrenDefault.map(
+          (e) => PopupMenuItem(
+            height: 42.0,
+            onTap: e.$3,
+            child: Row(
+              children: [
+                Icon(e.$1, size: 20.0),
+                const SizedBox(width: 6.0),
+                Text(
+                  e.$2,
+                  style: context.textTheme.displayMedium,
+                ),
+              ],
+            ),
+          ),
+        ),
+        ...children.map(
+          (e) => PopupMenuItem(
+            onTap: null,
+            height: 32.0,
+            padding: EdgeInsets.zero,
+            child: e,
+          ),
+        ),
+      ],
+    );
+    onPop?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      child: child,
+      onTap: () {
+        if (onTap != null) onTap!();
+        if (canOpenMenu) {
+          _showPopupMenu(context);
+        }
+      },
+    );
+  }
+}
+
+class NamidaLifeCycleWrapper extends StatefulWidget {
+  final Widget child;
+  final Future<void> Function()? onResume;
+  final Future<void> Function()? onSuspending;
+
+  const NamidaLifeCycleWrapper({
+    super.key,
+    required this.child,
+    this.onResume,
+    this.onSuspending,
+  });
+
+  @override
+  State<NamidaLifeCycleWrapper> createState() => _NamidaLifeCycleWrapperState();
+}
+
+class _NamidaLifeCycleWrapperState extends State<NamidaLifeCycleWrapper> with WidgetsBindingObserver {
+  bool isInPip = false;
+
+  late WidgetsBindingObserver observer;
+
+  @override
+  void initState() {
+    super.initState();
+    observer = LifecycleEventHandler(
+      resumeCallBack: () async {
+        await widget.onResume?.call();
+      },
+      suspendingCallBack: () async {
+        await widget.onSuspending?.call();
+      },
+    );
+    WidgetsBinding.instance.addObserver(observer);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(observer);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
 }

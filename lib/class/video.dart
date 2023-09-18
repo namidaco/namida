@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:newpipeextractor_dart/models/videoInfo.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 /// used for stats.

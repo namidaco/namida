@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/core/enums.dart';
@@ -25,6 +27,8 @@ class SelectedTracksController {
   List<Selectable> get currentAllTracks {
     if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
       return SearchSortController.inst.trackSearchTemp;
+    } else if (MiniPlayerController.inst.isInQueue) {
+      return Player.inst.currentQueue;
     }
 
     return NamidaNavigator.inst.currentRoute?.tracksInside ?? [];

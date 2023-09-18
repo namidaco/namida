@@ -469,6 +469,7 @@ class Language extends LanguageKeys {
 			SAVE = getKey("SAVE");
 			SAVED_IN = getKey("SAVED_IN");
 			SEARCH = getKey("SEARCH");
+			SEARCH_YOUTUBE = getKey("SEARCH_YOUTUBE");
 			SECONDS = getKey("SECONDS");
 			SEEK_DURATION_INFO = getKey("SEEK_DURATION_INFO");
 			SEEK_DURATION = getKey("SEEK_DURATION");
@@ -609,6 +610,7 @@ class Language extends LanguageKeys {
     }
   }
 }
+
 
 
 

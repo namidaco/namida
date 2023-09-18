@@ -55,8 +55,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     super.addTracksToPlaylistRaw(playlist, newtracks);
   }
 
-  Future<void> favouriteButtonOnPressed(Track track) async {
-    await super.toggleTrackFavourite(
+  Future<bool> favouriteButtonOnPressed(Track track) async {
+    return await super.toggleTrackFavourite(
       newTrack: TrackWithDate(dateAdded: currentTimeMS, track: track, source: TrackSource.local),
       identifyBy: (tr) => tr.track == track,
     );

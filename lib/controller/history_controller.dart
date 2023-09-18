@@ -9,7 +9,6 @@ import 'package:get/get.dart';
 import 'package:namida/class/date_range.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/generators_controller.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -48,41 +47,6 @@ class HistoryController {
   final ScrollController scrollController = ScrollController();
   final Rxn<int> indexToHighlight = Rxn<int>();
   final Rxn<int> dayOfHighLight = Rxn<int>();
-  Timer? _historyTimer;
-
-  /// Starts counting seconds listened, counter only increases when [isPlaying] is true.
-  /// When the user seeks backwards by percentage >= 20%, a new counter starts.
-  void startCounterToAListen(Track track) {
-    printy("Started a new counter");
-
-    int currentListenedSeconds = 0;
-
-    final sec = settings.isTrackPlayedSecondsCount.value;
-    final perSett = settings.isTrackPlayedPercentageCount.value;
-    final trDurInSec = Player.inst.nowPlayingTrack.duration;
-
-    _historyTimer?.cancel();
-    _historyTimer = null;
-    _historyTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      final per = currentListenedSeconds / trDurInSec * 100;
-
-      if (Player.inst.isPlaying) {
-        printy("Current percentage $per", dumpshit: true);
-        currentListenedSeconds++;
-      }
-
-      if (!per.isNaN && (currentListenedSeconds >= sec || per.toInt() >= perSett)) {
-        timer.cancel();
-        final newTrackWithDate = TrackWithDate(
-          dateAdded: currentTimeMS,
-          track: track,
-          source: TrackSource.local,
-        );
-        addTracksToHistory([newTrackWithDate]);
-        return;
-      }
-    });
-  }
 
   Future<void> addTracksToHistory(List<TrackWithDate> tracks) async {
     if (_isLoadingHistory) {

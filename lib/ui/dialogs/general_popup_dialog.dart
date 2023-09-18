@@ -978,7 +978,7 @@ Future<void> showGeneralPopupDialog(
 
                       if (removeQueueTile != null) removeQueueTile,
 
-                      if (Player.inst.latestInsertedIndex != Player.inst.currentIndex)
+                      if (Player.inst.currentQueue.isNotEmpty && Player.inst.latestInsertedIndex != Player.inst.currentIndex)
                         SmallListTile(
                           color: colorDelightened,
                           compact: true,

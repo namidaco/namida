@@ -59,22 +59,22 @@ packages:
     source: hosted
     version: "0.1.1"
   audio_session:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: audio_session
       sha256: "8a2bc5e30520e18f3fb0e366793d78057fb64cd5287862c76af0c8771f2a52ad"
       url: "https://pub.dev"
     source: hosted
     version: "0.1.16"
-  better_player:
+  basic_audio_handler:
     dependency: "direct main"
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "91a9625524cdff448e0a9deb5047bcf20cc8dcf1"
-      url: "https://github.com/tintran-dev/betterplayer"
+      resolved-ref: "1954fe5226f90e34200bf9ac83303cf7633338a2"
+      url: "https://github.com/namidaco/basic_audio_handler"
     source: git
-    version: "0.0.83"
+    version: "0.0.1"
   boolean_selector:
     dependency: transitive
     description:
@@ -83,6 +83,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
+  cached_video_player:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: c699b628117e152c4a8a5494b805716cac7f9357
+      resolved-ref: c699b628117e152c4a8a5494b805716cac7f9357
+      url: "https://github.com/MSOB7YY/flutter_cached_video_player"
+    source: git
+    version: "2.0.4"
   calendar_date_picker2:
     dependency: "direct main"
     description:
@@ -180,20 +189,12 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.17.3"
-  cupertino_icons:
-    dependency: transitive
-    description:
-      name: cupertino_icons
-      sha256: e35129dc44c9118cee2a5603506d823bab99c68393879edb440e0090d07586be
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.5"
   dart_extensions:
     dependency: "direct overridden"
     description:
       path: "."
-      ref: f4d8e0090e584bb870f1468f7cd06d8367296277
-      resolved-ref: f4d8e0090e584bb870f1468f7cd06d8367296277
+      ref: "291440bb57a4173e0c7af2678b94eb34668972e1"
+      resolved-ref: "291440bb57a4173e0c7af2678b94eb34668972e1"
       url: "https://github.com/MSOB7YY/dart_extensions"
     source: git
     version: "0.0.1"
@@ -460,7 +461,7 @@ packages:
     source: sdk
     version: "0.0.0"
   flutter_volume_controller:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: flutter_volume_controller
       sha256: "7f88cb046b00fd80e98bcb7926b9e3879f004f30905109fdf6c5d09b8d28eb2e"
@@ -472,14 +473,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_widget_from_html_core:
-    dependency: transitive
-    description:
-      name: flutter_widget_from_html_core
-      sha256: e8f4f8b461a140ffb7c71f938bc76efc758893e7468843d9dbf70cb0b9e900cb
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.8.5+3"
   fluttertoast:
     dependency: transitive
     description:
@@ -496,14 +489,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.5"
-  fwfh_text_style:
-    dependency: transitive
-    description:
-      name: fwfh_text_style
-      sha256: f0883ccb64b7bb3f2a7a091542c2e834fc3e2a6aa54158f46b3c43b55675d8f7
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.22.8+3"
   get:
     dependency: "direct main"
     description:
@@ -694,8 +679,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "9f9bd008abfc073cce3d0e6211c447aa02d84e83"
-      resolved-ref: "9f9bd008abfc073cce3d0e6211c447aa02d84e83"
+      ref: "8c9aa4b3d3b0a113f70c7e1d951dd1f7013e25d2"
+      resolved-ref: "8c9aa4b3d3b0a113f70c7e1d951dd1f7013e25d2"
       url: "https://github.com/MSOB7YY/NewPipeExtractor_Dart"
     source: git
     version: "0.0.1"
@@ -855,8 +840,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "53ef5a4d91b1d0df948851359b80fbda342dd29b"
-      resolved-ref: "53ef5a4d91b1d0df948851359b80fbda342dd29b"
+      ref: "8989afc0e8b854819d79ace61da9b9544ad6068f"
+      resolved-ref: "8989afc0e8b854819d79ace61da9b9544ad6068f"
       url: "https://github.com/MSOB7YY/picture_in_picture"
     source: git
     version: "0.0.1"
@@ -872,8 +857,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: HEAD
-      resolved-ref: d4c77cb92cecc5f50ff8e7252dbbb7566522b6a3
+      ref: "289719270fe535625725c29ffeff2fe81703dc0c"
+      resolved-ref: "289719270fe535625725c29ffeff2fe81703dc0c"
       url: "https://github.com/namidaco/playlist_manager"
     source: git
     version: "0.0.1"
@@ -910,12 +895,12 @@ packages:
     source: hosted
     version: "3.1.0+2"
   queue_manager:
-    dependency: "direct main"
+    dependency: transitive
     description:
       path: "."
-      ref: "7c6ec7edaf7bc4a0e294108245e2e29ed7f0d654"
-      resolved-ref: "7c6ec7edaf7bc4a0e294108245e2e29ed7f0d654"
-      url: "https://github.com/MSOB7YY/queue_manager"
+      ref: HEAD
+      resolved-ref: "7047a352f5a84647547c2ed886d90c3cc23fae0c"
+      url: "https://github.com/namidaco/queue_manager"
     source: git
     version: "0.0.1"
   readmore:
@@ -1163,38 +1148,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.4"
-  visibility_detector:
+  video_player_platform_interface:
     dependency: transitive
     description:
-      name: visibility_detector
-      sha256: "15c54a459ec2c17b4705450483f3d5a2858e733aee893dcee9d75fd04814940d"
+      name: video_player_platform_interface
+      sha256: "318a6d20577e1c78cf0bf40670883cc571ea860c72a4f7426d7dacce4bdd4343"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.3"
-  wakelock:
+    version: "5.1.4"
+  video_player_web:
     dependency: transitive
     description:
-      name: wakelock
-      sha256: "769ecf42eb2d07128407b50cb93d7c10bd2ee48f0276ef0119db1d25cc2f87db"
+      name: video_player_web
+      sha256: fb3bbeaf0302cb0c31340ebd6075487939aa1fe3b379d1a8784ef852b679940e
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.2"
-  wakelock_macos:
-    dependency: transitive
-    description:
-      name: wakelock_macos
-      sha256: "047c6be2f88cb6b76d02553bca5a3a3b95323b15d30867eca53a19a0a319d4cd"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.4.0"
-  wakelock_platform_interface:
-    dependency: transitive
-    description:
-      name: wakelock_platform_interface
-      sha256: "1f4aeb81fb592b863da83d2d0f7b8196067451e4df91046c26b54a403f9de621"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.3.0"
+    version: "2.0.15"
   wakelock_plus:
     dependency: "direct main"
     description:
@@ -1211,22 +1180,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
-  wakelock_web:
-    dependency: transitive
-    description:
-      name: wakelock_web
-      sha256: "1b256b811ee3f0834888efddfe03da8d18d0819317f20f6193e2922b41a501b5"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.4.0"
-  wakelock_windows:
-    dependency: transitive
-    description:
-      name: wakelock_windows
-      sha256: "857f77b3fe6ae82dd045455baa626bc4b93cb9bb6c86bf3f27c182167c3a5567"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.1"
   waveform_extractor:
     dependency: "direct main"
     description:

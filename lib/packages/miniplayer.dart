@@ -1,14 +1,10 @@
 // This is originally a part of [Tear Music](https://github.com/tearone/tearmusic), edited to fit Namida.
 // Credits goes for the original author @55nknown
 
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import 'package:animated_background/animated_background.dart';
 import 'package:get/get.dart';
-import 'package:picture_in_picture/picture_in_picture.dart';
-
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -39,6 +35,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/focused_menu.dart';
 import 'package:namida/packages/miniplayer_raw.dart';
 import 'package:namida/packages/youtube_miniplayer.dart';
+
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -107,45 +104,39 @@ class MiniPlayerSwitchers extends StatelessWidget {
         settings.enableBottomNavBar.value;
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 600),
-          child: Player.inst.nowPlayingTrack == kDummyTrack
-              ? const SizedBox(
-                  key: Key('emptyminiplayer'),
-                )
-              : Obx(
-                  () => PipWidget(
-                    isEnteringHomeOnSuspending: settings.enablePip.value && Player.inst.isPlaying && VideoController.inst.currentVideo.value != null,
-                    onSuspending: () async {
-                      if (settings.enablePip.value && Player.inst.isPlaying && VideoController.inst.currentVideo.value != null) {
-                        NamidaNavigator.inst.closeAllDialogs();
-                        await VideoController.vcontroller.enablePictureInPicture();
-                        NamidaNavigator.inst.enterFullScreen(
-                          Container(
-                            color: Colors.black,
-                            alignment: Alignment.topLeft,
-                            child: VideoController.inst.videoOrArtworkWidget,
-                          ),
-                          setOrientations: false,
-                        );
-                      }
-                    },
-                    onResume: () async {
-                      NamidaNavigator.inst.exitFullScreen(setOrientations: false);
-                    },
-                    pipChild: Container(
-                      color: Colors.black,
-                      alignment: Alignment.topLeft,
-                      child: VideoController.inst.videoOrArtworkWidget,
-                    ),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 600),
-                      child: settings.useYoutubeMiniplayer.value
-                          ? YoutubeMiniPlayer(key: const Key('ytminiplayer'))
-                          : const NamidaMiniPlayer(
-                              key: Key('actualminiplayer'),
-                            ),
-                    ),
+          child: NamidaLifeCycleWrapper(
+            onSuspending: () async {
+              if (settings.enablePip.value && Player.inst.isPlaying && VideoController.inst.currentVideo.value != null) {
+                NamidaNavigator.inst.closeAllDialogs();
+                await VideoController.vcontroller.enablePictureInPicture();
+                await NamidaNavigator.inst.enterFullScreen(
+                  Container(
+                    color: Colors.black,
+                    alignment: Alignment.topLeft,
+                    child: VideoController.inst.getVideoWidget('pip_widget_child', false, null, fullscreen: true),
                   ),
-                ),
+                  setOrientations: false,
+                );
+                VideoController.inst.isCurrentlyInBackground = false; // since the pip needs the video
+              } else {
+                VideoController.inst.isCurrentlyInBackground = true;
+                if (VideoController.vcontroller.isBuffering) {
+                  Player.inst.play();
+                }
+              }
+            },
+            onResume: () async => await NamidaNavigator.inst.exitFullScreen(setOrientations: false),
+            child: Obx(
+              () => AnimatedSwitcher(
+                duration: const Duration(milliseconds: 600),
+                child: Player.inst.nowPlayingTrack == kDummyTrack
+                    ? const YoutubeMiniPlayer(key: Key('ytminiplayer'))
+                    : const NamidaMiniPlayer(
+                        key: Key('actualminiplayer'),
+                      ),
+              ),
+            ),
+          ),
         );
       },
     );
@@ -201,11 +192,11 @@ class NamidaMiniPlayer extends StatelessWidget {
         return Obx(
           () {
             final currentIndex = Player.inst.currentIndex;
-            final indminus = refine(currentIndex - 1);
-            final indplus = refine(currentIndex + 1);
-            final prevTrack = Player.inst.currentQueue[indminus];
+            // final indminus = refine(currentIndex - 1);
+            // final indplus = refine(currentIndex + 1);
+            // final prevTrack = Player.inst.currentQueue[indminus];
             final currentTrack = Player.inst.nowPlayingTrack;
-            final nextTrack = Player.inst.currentQueue[indplus];
+            // final nextTrack = Player.inst.currentQueue[indplus];
             final currentDuration = currentTrack.duration;
             final currentDurationInMS = currentDuration * 1000;
             return Stack(
@@ -510,7 +501,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                 ),
                                                 child: IconButton(
                                                   highlightColor: Colors.transparent,
-                                                  onPressed: () => Player.inst.playOrPause(currentIndex, [], QueueSource.playerQueue),
+                                                  onPressed: () => Player.inst.togglePlayPause(),
                                                   icon: Padding(
                                                     padding: EdgeInsets.all(6.0 * cp * rcp),
                                                     child: Obx(
@@ -706,13 +697,13 @@ class NamidaMiniPlayer extends StatelessWidget {
                                             return Obx(
                                               () {
                                                 final currentVideo = VideoController.inst.currentVideo.value;
-                                                final cacheFile = File("${AppDirs.VIDEOS_CACHE}${currentVideo?.ytID}_${element.resolution}.${element.formatSuffix}");
-                                                final cacheExists = currentVideo?.ytID == null ? false : cacheFile.existsSync();
+                                                final cacheFile = currentVideo?.ytID == null ? null : element.getCachedFile(currentVideo!.ytID!);
+                                                final cacheExists = cacheFile != null;
                                                 return getQualityButton(
                                                   onTap: () async {
                                                     if (!cacheExists) await VideoController.inst.getVideoFromYoutubeAndUpdate(currentVideo?.ytID, stream: element);
                                                     VideoController.inst
-                                                        .playVideoCurrent(video: null, cacheIdAndPath: (currentVideo?.ytID ?? '', cacheFile.path), track: currentTrack);
+                                                        .playVideoCurrent(video: null, cacheIdAndPath: (currentVideo?.ytID ?? '', cacheFile?.path ?? ''), track: currentTrack);
                                                   },
                                                   bgColor: cacheExists ? CurrentColor.inst.color.withAlpha(40) : null,
                                                   icon: cacheExists ? Broken.tick_circle : Broken.import,
@@ -872,7 +863,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                     ),
                                                   );
                                                 },
-                                                icon: videoPlaybackEnabled ? Broken.video : Broken.music_play,
+                                                icon: videoPlaybackEnabled ? Broken.video : Broken.headphone,
                                                 iconSize: 18.0,
                                                 iconColor: onSecondary,
                                               ),
@@ -1957,7 +1948,7 @@ class _AnimatingTrackImage extends StatelessWidget {
                       borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
                       child: LyricsWrapper(
                         cp: cp,
-                        child: VideoController.inst.getVideoWidget(const Key('video_widget'), false, null),
+                        child: VideoController.inst.getVideoWidget('video_widget', false, null),
                       ),
                     )
                   : LyricsWrapper(

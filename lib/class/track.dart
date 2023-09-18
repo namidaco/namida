@@ -14,7 +14,7 @@ class TrackWithDate extends Selectable {
   final Track track;
   final TrackSource source;
 
-  TrackWithDate({
+  const TrackWithDate({
     required this.dateAdded,
     required this.track,
     required this.source,
@@ -100,7 +100,11 @@ class TrackStats {
   String toString() => '${track.toString()}, rating: $rating, tags: $tags, moods: $moods, lastPositionInMs: $lastPositionInMs';
 }
 
-abstract class Selectable {
+abstract class Playable {
+  const Playable();
+}
+
+abstract class Selectable extends Playable {
   const Selectable();
 
   @override

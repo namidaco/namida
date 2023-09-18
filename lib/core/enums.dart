@@ -1,5 +1,8 @@
 // ignore_for_file: constant_identifier_names
 
+// exporting playback enums
+export 'package:basic_audio_handler/basic_audio_handler.dart' show RepeatMode, InterruptionType, InterruptionAction;
+
 enum SortType {
   title,
   album,
@@ -113,13 +116,6 @@ enum TrackPlayMode {
   trackGenre,
 }
 
-enum RepeatMode {
-  none,
-  one,
-  forNtimes,
-  all,
-}
-
 enum TrackSource {
   local,
   youtube,
@@ -224,6 +220,9 @@ enum RouteType {
   SEARCH_albumResults,
   SEARCH_artistResults,
 
+  // ----- Youtube -----
+  YOUTUBE_HOME,
+
   /// others
   UNKNOWN,
 }
@@ -244,18 +243,6 @@ enum VideoPlaybackSource {
   auto,
   local,
   youtube,
-}
-
-enum InterruptionType {
-  shouldPause,
-  shouldDuck,
-  unknown,
-}
-
-enum InterruptionAction {
-  pause,
-  duckAudio,
-  doNothing,
 }
 
 enum QueueInsertionType {

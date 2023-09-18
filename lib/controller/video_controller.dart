@@ -3,7 +3,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:better_player/better_player.dart';
+import 'package:cached_video_player/cached_video_player.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide Response;
@@ -24,7 +24,6 @@ import 'package:namida/controller/youtube_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
 
 class VideoController {
@@ -32,49 +31,59 @@ class VideoController {
   static final VideoController _instance = VideoController._internal();
   VideoController._internal();
 
-  final RxDouble videoZoomAdditionalScale = 0.0.obs;
-  final isInPip = false.obs;
+  /// Used mainly to determine wether to pause playback whenever video buffers or not.
+  bool isCurrentlyInBackground = false;
 
-  Widget get videoOrArtworkWidget => AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: Obx(
-          () => VideoController.inst.shouldShowVideo
-              ? VideoController.inst.getVideoWidget(null, false, null)
-              : ArtworkWidget(
-                  thumbnailSize: 9999,
-                  iconSize: 32.0,
-                  path: Player.inst.nowPlayingTrack.pathToImage,
-                ),
-        ),
-      );
+  final videoZoomAdditionalScale = 0.0.obs;
+
+  void updateShouldShowControls(double value) {
+    final shouldShowControls = value == 1.0;
+    if (!shouldShowControls) {
+      for (final c in _videoControlsKeys.values) {
+        c.currentState?.setControlsVisibily(false);
+      }
+    }
+  }
+
+  final _videoControlsKeys = <String, GlobalKey<NamidaVideoControlsState>>{};
+
   Widget? videoWidget;
-  Key? _lastKey;
-  Widget getVideoWidget(Key? keyyy, bool enableControls, VoidCallback? onMinimizeTap) {
-    final key = Key('video_widget$enableControls');
-    if (videoWidget == null || _lastKey != key) {
-      _lastKey = key;
+  String? _lastKey;
+
+  Widget getVideoWidget(String? key, bool enableControls, VoidCallback? onMinimizeTap, {Widget? fallbackChild, bool fullscreen = false}) {
+    final finalKey = 'video_widget$key$enableControls';
+    _videoControlsKeys[finalKey] ??= GlobalKey<NamidaVideoControlsState>();
+    if (videoWidget == null || _lastKey != finalKey) {
+      _lastKey = finalKey;
       videoWidget = GestureDetector(
-        key: key,
+        key: Key(finalKey),
         behavior: HitTestBehavior.opaque,
         onScaleUpdate: (details) {
           videoZoomAdditionalScale.value = details.scale;
         },
         onScaleEnd: (details) {
           if (videoZoomAdditionalScale.value > 1.1) {
-            vcontroller.enterFullScreen(getVideoWidget(key, true, onMinimizeTap));
-          } else {
-            vcontroller.exitFullScreen();
+            NamidaNavigator.inst.enterFullScreen(
+              getVideoWidget(
+                finalKey,
+                true,
+                onMinimizeTap,
+                fullscreen: true,
+              ),
+            );
           }
         },
-        child: AspectRatio(
-          aspectRatio: aspectRatio,
-          child: NamidaVideoControls(
-            onMinimizeTap: onMinimizeTap,
-            showControls: enableControls,
-            controller: playerController?.videoPlayerController,
-            child: BetterPlayer(
-              // key: _videoController._betterPlayerKey,
-              controller: playerController!,
+        child: Obx(
+          () => AspectRatio(
+            aspectRatio: aspectRatio,
+            child: NamidaVideoControls(
+              key: _videoControlsKeys[finalKey],
+              onMinimizeTap: onMinimizeTap,
+              showControls: enableControls,
+              controller: playerController,
+              fallbackChild: fallbackChild,
+              isFullScreen: fullscreen,
+              child: vcontroller.videoWidget?.value,
             ),
           ),
         ),
@@ -108,13 +117,6 @@ class VideoController {
   List<NamidaVideo> get videosInCache => _videoCacheIDMap.values.reduce((value, element) => [...value, ...element]);
   bool doesVideoExistsInCache(String youtubeId) => _videoCacheIDMap[youtubeId]?.isNotEmpty ?? false;
 
-  File? videoInCacheRealCheck(String youtubeId, VideoStream? stream) {
-    if (stream == null) return null;
-    final cacheFile = File("${AppDirs.VIDEOS_CACHE}${youtubeId}_${stream.resolution}.${stream.formatSuffix}");
-    final doesExist = cacheFile.existsSync();
-    return doesExist ? cacheFile : null;
-  }
-
   List<NamidaVideo> getNVFromID(String youtubeId) => _videoCacheIDMap[youtubeId] ?? [];
   List<NamidaVideo> getCurrentVideosInCache() {
     final videos = <NamidaVideo>[];
@@ -128,7 +130,7 @@ class VideoController {
     return videos;
   }
 
-  BetterPlayerController? get playerController => _videoController.videoController;
+  CachedVideoPlayerController? get playerController => _videoController.videoController;
   static _NamidaVideoPlayer get vcontroller => inst._videoController;
   _NamidaVideoPlayer _videoController = _NamidaVideoPlayer.inst;
 
@@ -199,6 +201,7 @@ class VideoController {
     required NamidaVideo? video,
     (String, String)? cacheIdAndPath,
     required Track track,
+    bool mute = true,
   }) async {
     assert(video != null || cacheIdAndPath != null);
 
@@ -210,9 +213,11 @@ class VideoController {
             (videoDuration) => videoDuration.inSeconds > allowance && videoDuration.inSeconds < track.duration - allowance); // loop only if video duration is less than audio.
       }
       currentVideo.value = v;
+      final volume = mute ? 0.0 : settings.playerVolume.value;
       await Future.wait([
-        _videoController.setVolume(0),
+        _videoController.setVolume(volume),
         Player.inst.updateVideoPlayingState(),
+        Player.inst.refreshVideoSeekPosition(),
       ]);
     });
   }
@@ -626,7 +631,7 @@ class VideoController {
   }
 
   Future<Uint8List?> getYoutubeThumbnailAsBytes({String? youtubeId, String? url}) async {
-    assert((youtubeId == null && url != null) || (youtubeId != null && url == null));
+    if (youtubeId == null && url == null) return null;
 
     final links = url != null ? [url] : YTThumbnail(youtubeId!).allQualitiesByHighest;
 
@@ -646,7 +651,7 @@ class VideoController {
   }
 
   Future<File?> getYoutubeThumbnailAndCache({String? id, String? channelUrl}) async {
-    assert((id == null && channelUrl != null) || (id != null && channelUrl == null));
+    if (id == null && channelUrl == null) return null;
 
     final file = id != null ? File("${AppDirs.YT_THUMBNAILS}$id.png") : File("${AppDirs.YT_THUMBNAILS_CHANNELS}${channelUrl?.split('/').last}.png");
     if (await file.exists()) {
@@ -671,6 +676,16 @@ class VideoController {
             file: file,
             bytes: bytes,
           );
+  }
+
+  File? getYoutubeThumbnailFromCacheSync({String? id, String? channelUrl}) {
+    if (id == null && channelUrl == null) return null;
+
+    final file = id != null ? File("${AppDirs.YT_THUMBNAILS}$id.png") : File("${AppDirs.YT_THUMBNAILS_CHANNELS}${channelUrl?.split('/').last}.png");
+    if (file.existsSync()) {
+      return file;
+    }
+    return null;
   }
 
   Future<File?> _saveChannelThumbnailToStorage({
@@ -764,58 +779,61 @@ class _NamidaVideoPlayer {
   static final _NamidaVideoPlayer _instance = _NamidaVideoPlayer._internal();
   _NamidaVideoPlayer._internal();
 
-  BetterPlayerController? get videoController => _videoController;
-  bool get isInitialized => _initializedVideo;
-  double get aspectRatio => _videoController.videoPlayerController?.value.aspectRatio ?? 1.0;
-  bool _initializedVideo = false;
+  Rxn<Widget>? get videoWidget => _videoWidget;
+  CachedVideoPlayerController? get videoController => _videoController;
+  bool get isInitialized => _initializedVideo.value;
+  bool get isBuffering => _isBuffering.value;
+  double get aspectRatio => _videoController?.value.aspectRatio ?? 1.0;
+  Future<bool>? get waitTillBufferingComplete => _bufferingCompleter?.future;
 
-  final BetterPlayerController _videoController = BetterPlayerController(
-    const BetterPlayerConfiguration(
-        autoDispose: false,
-        handleLifecycle: false,
-        autoDetectFullscreenAspectRatio: false,
-        autoDetectFullscreenDeviceOrientation: false,
-        useRootNavigator: true,
-        fit: BoxFit.contain,
-        controlsConfiguration: BetterPlayerControlsConfiguration(
-          // showControls: false,
-          playerTheme: BetterPlayerTheme.custom,
-        )),
-  );
+  final _initializedVideo = false.obs;
+  final _isBuffering = true.obs;
+  Completer<bool>? _bufferingCompleter;
 
-  Future<void> playFile(String path, bool Function(Duration videoDuration) looping) async {
-    await setFile(path, looping);
-    await play();
+  CachedVideoPlayerController? _videoController;
+  final _videoWidget = Rxn<Widget>();
+
+  void _updateWidget(CachedVideoPlayerController controller) {
+    _videoWidget.value = null;
+    _videoWidget.value = CachedVideoPlayer(controller);
   }
 
-  Future<void> setNetworkSource(String url, bool Function(Duration videoDuration) looping) async {
-    _initializedVideo = false;
+  Future<void> setNetworkSource(String url, bool Function(Duration videoDuration) looping, {bool disposePrevious = true}) async {
+    _initializedVideo.value = false;
     await _execute(() async {
-      await dispose();
-      await _videoController.setupDataSource(
-        BetterPlayerDataSource.network(
+      if (disposePrevious) await dispose();
+
+      await _initializeController(
+        CachedVideoPlayerController.network(
           url,
-          cacheConfiguration: const BetterPlayerCacheConfiguration(
-            useCache: true,
-            maxCacheFileSize: 60 * 1024 * 1024,
-            maxCacheSize: 1 * 1024 * 1024 * 1024,
+          videoPlayerOptions: VideoPlayerOptions(
+            mixWithOthers: true,
+            allowBackgroundPlayback: true,
           ),
         ),
       );
-      _initializedVideo = true;
-      _videoController.setLooping(looping(_videoController.videoPlayerController?.value.duration ?? Duration.zero));
-      _videoController.setControlsEnabled(_videoController.isFullScreen);
+      _updateWidget(_videoController!);
+      _initializedVideo.value = true;
+      _videoController?.setLooping(looping(_videoController?.value.duration ?? Duration.zero));
     });
   }
 
   Future<void> setFile(String path, bool Function(Duration videoDuration) looping) async {
-    _initializedVideo = false;
+    _initializedVideo.value = false;
     await _execute(() async {
       await dispose();
-      await _videoController.setupDataSource(BetterPlayerDataSource.file(path));
-      _initializedVideo = true;
-      _videoController.setLooping(looping(_videoController.videoPlayerController?.value.duration ?? Duration.zero));
-      _videoController.setControlsEnabled(_videoController.isFullScreen);
+      await _initializeController(
+        CachedVideoPlayerController.file(
+          File(path),
+          videoPlayerOptions: VideoPlayerOptions(
+            mixWithOthers: true,
+            allowBackgroundPlayback: true,
+          ),
+        ),
+      );
+      _updateWidget(_videoController!);
+      _initializedVideo.value = true;
+      _videoController?.setLooping(looping(_videoController?.value.duration ?? Duration.zero));
     });
 
     try {
@@ -833,38 +851,65 @@ class _NamidaVideoPlayer {
     }
   }
 
-  Future<void> play() async => _execute(() async => await _videoController.play());
+  Future<void> play() async => await _execute(() async => await _videoController?.play());
 
-  Future<void> pause() async => _execute(() async => await _videoController.pause());
+  Future<void> pause() async => await _execute(() async => await _videoController?.pause());
 
-  Future<void> seek(Duration duration) async => _execute(() async => await _videoController.seekTo(duration));
+  Future<void> seek(Duration duration) async => await _execute(() async {
+        final wasPlaying = _videoController?.value.isPlaying ?? false;
+        await _videoController?.seekTo(duration);
+        if (!wasPlaying) {
+          await _videoController?.pause();
+        }
+      });
 
-  Future<void> setVolume(double volume) async => _execute(() async => await _videoController.setVolume(volume));
+  Future<void> setVolume(double volume) async => await _execute(() async => await _videoController?.setVolume(volume));
+
+  Future<void> setSpeed(double volume) async => await _execute(() async => await _videoController?.setPlaybackSpeed(volume));
 
   Future<bool> enablePictureInPicture() async {
     final res = await PictureInPicture.enterPip(
-      width: _videoController.videoPlayerController?.value.size?.width.toInt(),
-      height: _videoController.videoPlayerController?.value.size?.height.toInt(),
+      width: _videoController?.value.size.width.toInt(),
+      height: _videoController?.value.size.height.toInt(),
     );
     return res;
   }
 
-  void enterFullScreen(Widget widget) {
-    NamidaNavigator.inst.enterFullScreen(widget);
-    _videoController.setControlsEnabled(true);
-    _videoController.setControlsVisibility(false);
+  Future<void> _initializeController(CachedVideoPlayerController c) async {
+    _videoController?.removeListener(_updateBufferingStatus);
+    _videoController = c;
+    await _videoController!.initialize();
+    _videoController?.addListener(_updateBufferingStatus);
   }
 
-  void exitFullScreen() {
-    NamidaNavigator.inst.exitFullScreen();
-    _videoController.setControlsEnabled(false);
+  bool _didPauseInternally = false;
+  Future<void> _updateBufferingStatus() async {
+    _isBuffering.value = _videoController?.value.isBuffering ?? true;
+
+    if (_isBuffering.value) {
+      _bufferingCompleter = null;
+      _bufferingCompleter = Completer<bool>();
+      if (!VideoController.inst.isCurrentlyInBackground && Player.inst.isPlaying && Player.inst.shouldCareAboutAVSync) {
+        _didPauseInternally = true;
+        await Player.inst.pauseRaw();
+      }
+    } else {
+      if (_didPauseInternally && Player.inst.shouldCareAboutAVSync) {
+        _didPauseInternally = false;
+        await Player.inst.playRaw();
+      }
+      if (_bufferingCompleter?.isCompleted == false) _bufferingCompleter?.complete(false);
+    }
   }
 
   Future<void> dispose() async {
-    if (_initializedVideo && (videoController?.isVideoInitialized() ?? false)) {
-      await _execute(() {
-        // _videoController.dispose(forceDispose: true);
-        _initializedVideo = false;
+    if (_initializedVideo.value && (videoController?.value.isInitialized ?? false)) {
+      await _execute(() async {
+        _videoWidget.value = null;
+        await _videoController?.dispose();
+
+        _videoController = null;
+        _initializedVideo.value = false;
       });
     }
   }

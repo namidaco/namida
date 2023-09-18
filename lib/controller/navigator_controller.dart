@@ -55,6 +55,14 @@ class NamidaNavigator {
     Dimensions.inst.updateAllTileDimensions();
   }
 
+  Future<void> toggleFullScreen(Widget widget, {bool setOrientations = true}) async {
+    if (_isInFullScreen) {
+      await exitFullScreen(setOrientations: setOrientations);
+    } else {
+      await enterFullScreen(widget, setOrientations: setOrientations);
+    }
+  }
+
   Future<void> _setOrientations(List<DeviceOrientation> orientations) async {
     await SystemChrome.setPreferredOrientations(orientations);
   }

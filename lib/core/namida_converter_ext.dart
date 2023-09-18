@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/queue.dart';
@@ -42,6 +45,7 @@ import 'package:namida/ui/pages/subpages/genre_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 import 'package:namida/ui/pages/tracks_page.dart';
+import 'package:namida/ui/pages/youtube_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/stats.dart';
@@ -179,6 +183,30 @@ extension YTVideoQuality on String {
           '4320': '8k',
         }[val] ??
         '144';
+  }
+}
+
+extension CacheGetterAudio on AudioOnlyStream {
+  String cachePath(String id, {String? directory}) {
+    final audio = this;
+    return "${directory ?? AppDirs.AUDIOS_CACHE}/${id}_${audio.bitrate}.${audio.formatSuffix}";
+  }
+
+  File? getCachedFile(String id, {String? directory}) {
+    final path = cachePath(id, directory: directory);
+    return File(path).existsSync() ? File(path) : null;
+  }
+}
+
+extension CacheGetterVideo on VideoOnlyStream {
+  String cachePath(String id, {String? directory}) {
+    final video = this;
+    return "${directory ?? AppDirs.VIDEOS_CACHE}/${id}_${video.resolution}.${video.formatSuffix}";
+  }
+
+  File? getCachedFile(String id, {String? directory}) {
+    final path = cachePath(id, directory: directory);
+    return File(path).existsSync() ? File(path) : null;
   }
 }
 
@@ -396,6 +424,9 @@ extension WidgetsPagess on Widget {
         route = RouteType.SETTINGS_subpage;
         name = (this as SettingsSubPage).title;
         break;
+      case YoutubePage:
+        route = RouteType.YOUTUBE_HOME;
+        break;
     }
 
     return NamidaRoute(route, name);
@@ -496,6 +527,9 @@ extension RouteUtils on NamidaRoute {
         break;
       case RouteType.PAGE_queue:
         finalWidget = Obx(() => getTextWidget("${lang.QUEUES} • ${QueueController.inst.queuesMap.value.length}"));
+        break;
+      case RouteType.YOUTUBE_HOME:
+        finalWidget = const YoutubeSearchBar();
         break;
       default:
         null;
