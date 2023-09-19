@@ -541,10 +541,10 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                       ),
                                       () {
                                         const containerHeight = 20.0;
-                                        return AnimatedSwitcher(
-                                          duration: const Duration(milliseconds: 300),
-                                          child: Obx(
-                                            () => YoutubeController.inst.shouldShowGlowUnderVideo
+                                        return Obx(
+                                          () => AnimatedSwitcher(
+                                            duration: const Duration(milliseconds: 300),
+                                            child: YoutubeController.inst.shouldShowGlowUnderVideo
                                                 ? Stack(
                                                     key: const Key('actual_glow'),
                                                     children: [

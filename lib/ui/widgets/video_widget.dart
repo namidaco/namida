@@ -748,10 +748,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                 Player.inst.togglePlayPause();
                                                 _startTimer();
                                               },
-                                              child: AnimatedSwitcher(
-                                                duration: const Duration(milliseconds: 200),
-                                                child: Obx(
-                                                  () => Player.inst.isPlaying
+                                              child: Obx(
+                                                () => AnimatedSwitcher(
+                                                  duration: const Duration(milliseconds: 200),
+                                                  child: Player.inst.isPlaying
                                                       ? Icon(
                                                           Broken.pause,
                                                           size: 40.0,
