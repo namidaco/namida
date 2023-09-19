@@ -154,6 +154,7 @@ class VideoController {
     currentYTQualities.clear();
     await vcontroller.dispose();
     if (_isInitializing) return;
+    if (track == kDummyTrack) return;
     if (!settings.enableVideoPlayback.value) return;
 
     final possibleVideos = _getPossibleVideosFromTrack(track);
@@ -236,6 +237,11 @@ class VideoController {
   Future<void> toggleVideoPlayback() async {
     final currentValue = settings.enableVideoPlayback.value;
     settings.save(enableVideoPlayback: !currentValue);
+
+    // only modify if not playing yt video, since [enableVideoPlayback] is
+    // limited to local music.
+    if (Player.inst.currentQueueYoutube.isNotEmpty) return;
+
     if (currentValue) {
       // should close/hide
       currentVideo.value = null;

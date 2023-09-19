@@ -455,8 +455,8 @@ class YoutubeController {
       // -----------------------------------
 
       // ----- merging if both video & audio were downloaded
+      final output = "${saveDirectory.path}/$filename";
       if (merge && videoFile != null && audioFile != null) {
-        final output = "${saveDirectory.path}/$filename";
         final didMerge = await NamidaFFMPEG.inst.mergeAudioAndVideo(
           videoPath: videoFile.path,
           audioPath: audioFile.path,
@@ -483,17 +483,17 @@ class YoutubeController {
           if (videoFile != null && videoStream != null)
             renameOrCopy(
               file: videoFile,
-              path: "${saveDirectory.path}/$filename",
+              path: output,
               forceCopy: isVideoFileCached,
             ),
           if (audioFile != null && audioStream != null)
             renameOrCopy(
               file: audioFile,
-              path: "${saveDirectory.path}/$filename",
+              path: output,
               forceCopy: isAudioFileCached,
             ),
         ]);
-        df = videoFile ?? audioFile;
+        df = File(output);
       }
     } catch (e) {
       printy('Error Downloading YT Video: $e', isError: true);

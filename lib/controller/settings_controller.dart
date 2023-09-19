@@ -161,6 +161,7 @@ class SettingsController {
   final RxString trackTileSeparator = '•'.obs;
   final RxBool displayFavouriteIconInListTile = true.obs;
   final RxBool editTagsKeepFileDates = true.obs;
+  final RxBool downloadFilesWriteUploadDate = true.obs;
   final RxBool ytCommentsAlwaysLoadNew = false.obs;
   final RxBool enablePip = true.obs;
   final RxBool playerInfiniyQueueOnNextPrevious = true.obs;
@@ -345,6 +346,7 @@ class SettingsController {
       trackTileSeparator.value = json['trackTileSeparator'] ?? trackTileSeparator.value;
       displayFavouriteIconInListTile.value = json['displayFavouriteIconInListTile'] ?? displayFavouriteIconInListTile.value;
       editTagsKeepFileDates.value = json['editTagsKeepFileDates'] ?? editTagsKeepFileDates.value;
+      downloadFilesWriteUploadDate.value = json['downloadFilesWriteUploadDate'] ?? downloadFilesWriteUploadDate.value;
       ytCommentsAlwaysLoadNew.value = json['ytCommentsAlwaysLoadNew'] ?? ytCommentsAlwaysLoadNew.value;
       enablePip.value = json['enablePip'] ?? enablePip.value;
       playerInfiniyQueueOnNextPrevious.value = json['playerInfiniyQueueOnNextPrevious'] ?? playerInfiniyQueueOnNextPrevious.value;
@@ -511,6 +513,7 @@ class SettingsController {
       'trackTileSeparator': trackTileSeparator.value,
       'displayFavouriteIconInListTile': displayFavouriteIconInListTile.value,
       'editTagsKeepFileDates': editTagsKeepFileDates.value,
+      'downloadFilesWriteUploadDate': downloadFilesWriteUploadDate.value,
       'ytCommentsAlwaysLoadNew': ytCommentsAlwaysLoadNew.value,
       'enablePip': enablePip.value,
       'playerInfiniyQueueOnNextPrevious': playerInfiniyQueueOnNextPrevious.value,
@@ -608,6 +611,7 @@ class SettingsController {
     int? isTrackPlayedPercentageCount,
     bool? displayFavouriteIconInListTile,
     bool? editTagsKeepFileDates,
+    bool? downloadFilesWriteUploadDate,
     bool? ytCommentsAlwaysLoadNew,
     bool? enablePip,
     bool? playerInfiniyQueueOnNextPrevious,
@@ -909,6 +913,9 @@ class SettingsController {
     }
     if (editTagsKeepFileDates != null) {
       this.editTagsKeepFileDates.value = editTagsKeepFileDates;
+    }
+    if (downloadFilesWriteUploadDate != null) {
+      this.downloadFilesWriteUploadDate.value = downloadFilesWriteUploadDate;
     }
     if (ytCommentsAlwaysLoadNew != null) {
       this.ytCommentsAlwaysLoadNew.value = ytCommentsAlwaysLoadNew;

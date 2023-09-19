@@ -433,7 +433,8 @@ Future<void> showDownloadVideoBottomSheet({
                                       onTap: () async {
                                         Navigator.pop(context);
                                         final id = videoId;
-                                        await YoutubeController.inst.downloadYoutubeVideoRaw(
+                                        final videoDateTime = DateTime.tryParse(videoInfo.value?.uploadDate ?? '');
+                                        final downloadedFile = await YoutubeController.inst.downloadYoutubeVideoRaw(
                                           id: id,
                                           useCachedVersionsIfAvailable: true,
                                           saveDirectory: Directory(AppDirs.INTERNAL_STORAGE),
@@ -446,7 +447,6 @@ Future<void> showDownloadVideoBottomSheet({
                                           videoDownloadingStream: (downloadedBytes) {},
                                           audioDownloadingStream: (downloadedBytes) {},
                                           onAudioFileReady: (audioFile) async {
-                                            final dateTime = DateTime.tryParse(videoInfo.value?.uploadDate ?? '');
                                             if (videoThumbnail.value != null) {
                                               await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: audioFile.path, thumbnailPath: videoThumbnail.value!.path);
                                             }
@@ -456,13 +456,19 @@ Future<void> showDownloadVideoBottomSheet({
                                                 FFMPEGTagField.title: videoInfo.value?.name,
                                                 FFMPEGTagField.artist: videoInfo.value?.uploaderName,
                                                 FFMPEGTagField.comment: YoutubeController.inst.getYoutubeLink(id),
-                                                FFMPEGTagField.year: dateTime == null ? null : DateFormat('yyyyMMdd').format(dateTime),
+                                                FFMPEGTagField.year: videoDateTime == null ? null : DateFormat('yyyyMMdd').format(videoDateTime),
                                                 FFMPEGTagField.synopsis: videoInfo.value?.description == null ? null : HtmlParser.parseHTML(videoInfo.value!.description!).text,
                                               },
                                             );
                                           },
                                           onVideoFileReady: (videoFile) async {},
                                         );
+                                        if (settings.downloadFilesWriteUploadDate.value) {
+                                          if (videoDateTime != null) {
+                                            await downloadedFile?.setLastAccessed(videoDateTime);
+                                            await downloadedFile?.setLastModified(videoDateTime);
+                                          }
+                                        }
                                       },
                                     ),
                                   ),
