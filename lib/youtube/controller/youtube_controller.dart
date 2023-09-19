@@ -397,11 +397,14 @@ class YoutubeController {
             },
           );
           downloadsVideoProgressMap.remove(id);
-          final qualified = await fileSizeQualified(file: downloadedFile, targetSize: videoStream.sizeInBytes ?? 0);
-          if (qualified) {
-            videoFile = downloadedFile;
-            await onVideoFileReady(videoFile);
-          }
+          videoFile = downloadedFile;
+        }
+
+        final qualified = await fileSizeQualified(file: videoFile, targetSize: videoStream.sizeInBytes ?? 0);
+        if (qualified) {
+          await onVideoFileReady(videoFile);
+        } else {
+          videoFile = null;
         }
       }
       // -----------------------------------
@@ -439,12 +442,14 @@ class YoutubeController {
             },
           );
           downloadsAudioProgressMap.remove(id);
-          final qualified = await fileSizeQualified(file: downloadedFile, targetSize: audioStream.sizeInBytes ?? 0);
+          audioFile = downloadedFile;
+        }
+        final qualified = await fileSizeQualified(file: audioFile, targetSize: audioStream.sizeInBytes ?? 0);
 
-          if (qualified) {
-            audioFile = downloadedFile;
-            await onAudioFileReady(audioFile);
-          }
+        if (qualified) {
+          await onAudioFileReady(audioFile);
+        } else {
+          audioFile = null;
         }
       }
       // -----------------------------------
@@ -465,10 +470,28 @@ class YoutubeController {
         }
         df = File(output);
       } else {
-        // -- renaming files
+        // -- renaming files, or copying if cached
+        Future<void> renameOrCopy({required File file, required String path, required bool forceCopy}) async {
+          if (forceCopy) {
+            await file.copy(path);
+          } else {
+            await file.rename(path);
+          }
+        }
+
         await Future.wait([
-          if (isVideoFileCached == false && videoFile != null && videoStream != null) videoFile.rename("${saveDirectory.path}/$filename"),
-          if (isAudioFileCached == false && audioFile != null && audioStream != null) audioFile.rename("${saveDirectory.path}/$filename"),
+          if (videoFile != null && videoStream != null)
+            renameOrCopy(
+              file: videoFile,
+              path: "${saveDirectory.path}/$filename",
+              forceCopy: isVideoFileCached,
+            ),
+          if (audioFile != null && audioStream != null)
+            renameOrCopy(
+              file: audioFile,
+              path: "${saveDirectory.path}/$filename",
+              forceCopy: isAudioFileCached,
+            ),
         ]);
         df = videoFile ?? audioFile;
       }
