@@ -1332,6 +1332,7 @@ class _NamidaIconButtonState extends State<NamidaIconButton> {
     return Tooltip(
       message: widget.tooltip ?? '',
       child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
         onTapDown: (value) => setState(() => isPressed = true),
         onTapUp: (value) => setState(() => isPressed = false),
         onTapCancel: () => setState(() => isPressed = false),

@@ -59,7 +59,7 @@ class VideoController {
     bool fullscreen = false,
     List<NamidaPopupItem> qualityItems = const [],
   }) {
-    final finalKey = 'video_widget$key$enableControls';
+    final finalKey = 'video_widget$key$enableControls$fullscreen';
     _videoControlsKeys[finalKey] ??= GlobalKey<NamidaVideoControlsState>();
     if (videoWidget == null || _lastKey != finalKey) {
       _lastKey = finalKey;
@@ -69,7 +69,8 @@ class VideoController {
         onScaleUpdate: (details) {
           videoZoomAdditionalScale.value = details.scale;
         },
-        onScaleEnd: (details) {
+        onScaleEnd: (details) async {
+          if (NamidaNavigator.inst.isInFullScreen) return;
           if (videoZoomAdditionalScale.value > 1.1) {
             NamidaNavigator.inst.enterFullScreen(
               getVideoWidget(
@@ -82,6 +83,10 @@ class VideoController {
               ),
             );
           }
+          // else if (videoZoomAdditionalScale.value < 0.7) {
+          // NamidaNavigator.inst.exitFullScreen();
+          // }
+          videoZoomAdditionalScale.value = 0.0;
         },
         child: Stack(
           alignment: Alignment.center,
@@ -805,11 +810,12 @@ class _NamidaVideoPlayer {
   CachedVideoPlayerController? get videoController => _videoController;
   bool get isInitialized => _initializedVideo.value;
   bool get isBuffering => _isBuffering.value;
-  double? get aspectRatio => _videoController?.value.aspectRatio;
+  double? get aspectRatio => _aspectRatio.value;
   Future<bool>? get waitTillBufferingComplete => _bufferingCompleter?.future;
 
   final _initializedVideo = false.obs;
   final _isBuffering = true.obs;
+  final _aspectRatio = Rxn<double>();
   Completer<bool>? _bufferingCompleter;
 
   CachedVideoPlayerController? _videoController;
@@ -901,6 +907,7 @@ class _NamidaVideoPlayer {
     _videoController?.removeListener(_updateBufferingStatus);
     _videoController = c;
     await _videoController!.initialize();
+    _aspectRatio.value = _videoController?.value.aspectRatio;
     _videoController?.addListener(_updateBufferingStatus);
   }
 
@@ -928,6 +935,7 @@ class _NamidaVideoPlayer {
     if (_initializedVideo.value && (videoController?.value.isInitialized ?? false)) {
       await _execute(() async {
         _videoWidget.value = null;
+        _aspectRatio.value = null;
         await _videoController?.dispose();
 
         _videoController = null;

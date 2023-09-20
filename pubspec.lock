@@ -461,7 +461,7 @@ packages:
     source: sdk
     version: "0.0.0"
   flutter_volume_controller:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_volume_controller
       sha256: "7f88cb046b00fd80e98bcb7926b9e3879f004f30905109fdf6c5d09b8d28eb2e"

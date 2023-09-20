@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/core/extensions.dart';
+
 /// Used to retain state for cases like navigating after pip mode.
 bool _wasExpanded = false;
 
@@ -86,7 +88,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
           animation: controller,
           builder: (context, child) {
             return Padding(
-              padding: EdgeInsets.only(bottom: widget.bottomMargin * (1.0 - percentage)),
+              padding: EdgeInsets.only(bottom: (widget.bottomMargin * (1.0 - percentage)).withMinimum(0)),
               child: Stack(
                 alignment: Alignment.bottomCenter,
                 children: [

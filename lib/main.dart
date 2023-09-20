@@ -96,7 +96,10 @@ void main() async {
 
   await _initializeIntenties();
 
-  await SystemChrome.setPreferredOrientations(kDefaultOrientations);
+  await Future.wait([
+    SystemChrome.setPreferredOrientations(kDefaultOrientations),
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values),
+  ]);
 
   ScrollSearchController.inst.initialize();
   FlutterLocalNotificationsPlugin().cancelAll();
