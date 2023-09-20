@@ -228,8 +228,10 @@ class BackupAndRestore extends StatelessWidget {
                               items: [
                                 AppDirs.HISTORY_PLAYLIST,
                               ],
-                              youtubeAvailable: false,
-                              youtubeItems: [],
+                              youtubeAvailable: true,
+                              youtubeItems: [
+                                AppDirs.YT_HISTORY_PLAYLIST,
+                              ],
                             ),
                             const SizedBox(height: 12.0),
                             getItemWidget(

@@ -460,7 +460,10 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                               itemBuilder: (context, index) {
                                                 final item = YoutubeController.inst.currentRelatedVideos[index];
                                                 if (item is StreamInfoItem || item == null) {
-                                                  return YoutubeVideoCard(video: item as StreamInfoItem?);
+                                                  return YoutubeVideoCard(
+                                                    video: item as StreamInfoItem?,
+                                                    playlistID: null,
+                                                  );
                                                 } else if (item is YoutubePlaylist) {
                                                   return YoutubePlaylistCard(playlist: item);
                                                 }

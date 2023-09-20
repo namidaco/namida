@@ -10,7 +10,6 @@ import 'package:just_audio/just_audio.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/class/track.dart';
-import 'package:namida/class/youtube_id.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -21,12 +20,14 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
 class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Selectable get currentTrack => (currentItem is Selectable ? currentItem as Selectable : null) ?? kDummyTrack;
@@ -187,18 +188,21 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   FutureOr<void> beforeQueueAddOrInsert(Iterable<Q> items) async {
-    if (items.firstOrNull is Selectable) {
-      if (currentQueue.firstOrNull is YoutubeID) {
-        await clearQueue();
-        await stop();
-      }
-    } else if (items.firstOrNull is YoutubeID) {
-      if (currentQueue.firstOrNull is Selectable) {
-        await clearQueue();
-        await stop();
-        CurrentColor.inst.resetCurrentPlayingTrack();
-      }
-    }
+    await items._execute(
+      selectable: (finalItems) async {
+        if (currentQueue.firstOrNull is! Selectable) {
+          await clearQueue();
+          await stop();
+        }
+      },
+      youtubeID: (finalItem) async {
+        if (currentQueue.firstOrNull is! YoutubeID) {
+          await clearQueue();
+          await stop();
+          CurrentColor.inst.resetCurrentPlayingTrack();
+        }
+      },
+    );
   }
 
   @override
@@ -285,7 +289,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         );
         HistoryController.inst.addTracksToHistory([newTrackWithDate]);
       },
-      youtubeID: (finalItem) {},
+      youtubeID: (finalItem) async {
+        await YoutubeHistoryController.inst.addTracksToHistory([finalItem]);
+      },
     );
   }
 

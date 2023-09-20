@@ -16,6 +16,9 @@ class Dimensions {
 
   static const gridHorizontalPadding = 4.0;
 
+  // -- YT --
+  double youtubeCardItemExtent = 64.0; // not yet used
+
   // -- Track Tile --
   double trackTileItemExtent = 0.0;
 

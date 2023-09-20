@@ -5,10 +5,11 @@ import 'dart:io';
 
 import 'package:playlist_manager/playlist_manager.dart';
 
-import 'package:namida/class/youtube_id.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
 typedef YoutubePlaylist = GeneralPlaylist<YoutubeID>;
 
@@ -24,17 +25,20 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
     String comment = '',
     List<String> moods = const [],
   }) async {
-    final newTracks = videoIds
-        .map(
-          (id) => YoutubeID(
-            id: id,
-            addedDate: DateTime.now(),
-          ),
-        )
-        .toList();
     super.addNewPlaylistRaw(
       name,
-      tracks: newTracks,
+      tracks: (playlistID) {
+        final newTracks = videoIds
+            .map(
+              (id) => YoutubeID(
+                id: id,
+                addedDate: DateTime.now(),
+                playlistID: playlistID,
+              ),
+            )
+            .toList();
+        return newTracks;
+      },
       creationDate: creationDate,
       comment: comment,
       moods: moods,
@@ -60,6 +64,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
           (id) => YoutubeID(
             id: id,
             addedDate: DateTime.now(),
+            playlistID: playlist.playlistID,
           ),
         )
         .toList();
@@ -69,12 +74,18 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
 
   Future<void> favouriteButtonOnPressed(String id) async {
     await super.toggleTrackFavourite(
-      newTrack: YoutubeID(id: id, addedDate: DateTime.now()),
+      newTrack: YoutubeID(id: id, addedDate: DateTime.now(), playlistID: favouritesPlaylist.value.playlistID),
       identifyBy: (ytid) => ytid.id == id,
     );
   }
 
   Future<void> prepareAllPlaylists() async => await super.prepareAllPlaylistsFile();
+
+  @override
+  Future<void> prepareDefaultPlaylistsFile() async {
+    YoutubeHistoryController.inst.prepareHistoryFile();
+    await super.prepareDefaultPlaylistsFile();
+  }
 
   @override
   String get EMPTY_NAME => lang.PLEASE_ENTER_A_NAME;

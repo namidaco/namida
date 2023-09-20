@@ -108,7 +108,7 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
 
   @override
   Future<Map<int, List<TrackWithDate>>> prepareAllHistoryFilesFunction(String directoryPath) async {
-    final map = await _readHistoryFilesCompute.thready(AppDirs.HISTORY_PLAYLIST);
+    final map = await _readHistoryFilesCompute.thready(directoryPath);
     return map;
   }
 

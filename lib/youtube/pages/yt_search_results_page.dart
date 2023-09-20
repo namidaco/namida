@@ -62,7 +62,10 @@ class _YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                     final item = _searchResult[index];
                     switch (item.runtimeType) {
                       case StreamInfoItem:
-                        return YoutubeVideoCard(video: item);
+                        return YoutubeVideoCard(
+                          video: item,
+                          playlistID: null,
+                        );
                       case YoutubePlaylist:
                         return YoutubePlaylistCard(playlist: item);
                       case YoutubeChannel:

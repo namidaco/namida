@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
 
-import 'package:namida/class/youtube_id.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/enums.dart';
@@ -11,13 +11,19 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/widgets/yt_card.dart';
 
 class YoutubeVideoCard extends StatelessWidget {
   final StreamInfoItem? video;
-  const YoutubeVideoCard({super.key, required this.video});
+  final PlaylistID? playlistID;
+  const YoutubeVideoCard({
+    super.key,
+    required this.video,
+    required this.playlistID,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +46,7 @@ class YoutubeVideoCard extends StatelessWidget {
 
           Player.inst.playOrPause(
             0,
-            [YoutubeID(id: videoId)],
+            [YoutubeID(id: videoId, playlistID: playlistID)],
             QueueSource.others,
           );
 
@@ -88,14 +94,14 @@ class YoutubeVideoCard extends StatelessWidget {
           icon: Broken.next,
           title: lang.PLAY_NEXT,
           onTap: () {
-            Player.inst.addToQueue([YoutubeID(id: videoId)], insertNext: true);
+            Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertNext: true);
           },
         ),
         NamidaPopupItem(
           icon: Broken.play_cricle,
           title: lang.PLAY_LAST,
           onTap: () {
-            Player.inst.addToQueue([YoutubeID(id: videoId)], insertNext: false);
+            Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertNext: false);
           },
         ),
       ],

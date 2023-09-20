@@ -39,7 +39,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
         ));
     super.addNewPlaylistRaw(
       name,
-      tracks: newTracks,
+      tracks: (playlistID) => newTracks,
       creationDate: creationDate,
       comment: comment,
       moods: moods,

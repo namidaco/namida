@@ -76,6 +76,7 @@ class AppDirs {
   static final YOUTUBE_MAIN_DIRECTORY = '$USER_DATA/Youtube';
 
   static final YT_PLAYLISTS = '$YOUTUBE_MAIN_DIRECTORY/Youtube Playlists/';
+  static final YT_HISTORY_PLAYLIST = '$YOUTUBE_MAIN_DIRECTORY/Youtube History/';
   static final YT_THUMBNAILS = '$YOUTUBE_MAIN_DIRECTORY/YTThumbnails/';
   static final YT_THUMBNAILS_CHANNELS = '$YOUTUBE_MAIN_DIRECTORY/YTThumbnails Channels/';
   static final YT_METADATA = '$YOUTUBE_MAIN_DIRECTORY/Metadata Videos/';
@@ -99,6 +100,7 @@ class AppDirs {
     // -- Youtube
     YOUTUBE_MAIN_DIRECTORY,
     YT_PLAYLISTS,
+    YT_HISTORY_PLAYLIST,
     YT_THUMBNAILS,
     YT_THUMBNAILS_CHANNELS,
     YT_METADATA,

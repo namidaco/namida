@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/class/track.dart';
-import 'package:namida/class/youtube_id.dart';
 import 'package:namida/controller/audio_handler.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -15,6 +14,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 
 class Player {
   static Player get inst => _instance;
