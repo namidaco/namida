@@ -36,11 +36,11 @@ class YoutubeMiniPlayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const space1sb = 8.0;
-    const space2 = 90.0;
+    const space2ForThumbnail = 90.0;
     const space3sb = 8.0;
     const space4 = 38.0 * 2;
     const space5sb = 8.0;
-    const miniplayerHeight = 12.0 + space2 * 9 / 16;
+    const miniplayerHeight = 12.0 + space2ForThumbnail * 9 / 16;
 
     return SafeArea(
       child: Obx(
@@ -64,7 +64,9 @@ class YoutubeMiniPlayer extends StatelessWidget {
           ),
           onHeightChange: (percentage) => MiniPlayerController.inst.animateMiniplayer(percentage),
           builder: (double height, double p) {
-            final percentage = p.clamp(0.0, 1.0);
+            final percentageOriginal = p.clamp(0.0, 1.0);
+            final percentage = (p * 2).clamp(0.0, 1.0);
+            final inversePercOriginal = 1 - percentageOriginal;
             final inversePerc = 1 - percentage;
             final reverseOpacity = (inversePerc * 2 - 1).clamp(0.0, 1.0);
             final finalspace1sb = space1sb * inversePerc;
@@ -73,7 +75,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
             final finalspace5sb = space5sb * inversePerc;
             final finalpadding = 4.0 * inversePerc;
             final finalbr = (8.0 * inversePerc).multipliedRadius;
-            final finalthumbnailsize = (space2 + context.width * percentage).clamp(space2, context.width - finalspace1sb - finalspace3sb);
+            final finalthumbnailsize = (space2ForThumbnail + context.width * percentage).clamp(space2ForThumbnail, context.width - finalspace1sb - finalspace3sb);
 
             return SafeArea(
               child: Obx(
@@ -109,8 +111,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(finalbr),
                                     child: VideoController.inst.getVideoWidget(
-                                      "${currentId}_$shouldShowVideo",
-                                      true,
+                                      "percentage:${percentage > 0},${currentId}_$shouldShowVideo",
+                                      percentage > 0,
                                       () {
                                         MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
                                       },
@@ -131,8 +133,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                             if (reverseOpacity > 0) ...[
                               SizedBox(width: finalspace3sb),
                               SizedBox(
-                                width: (context.width - (context.width * percentage) - finalspace1sb - space2 - finalspace3sb - finalspace4buttons - finalspace5sb)
-                                    .clamp(0, context.width),
+                                width: (context.width - finalthumbnailsize - finalspace1sb - finalspace3sb - finalspace4buttons - finalspace5sb).clamp(0, context.width),
                                 child: Opacity(
                                   opacity: reverseOpacity,
                                   child: Column(
@@ -211,7 +212,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                         if (percentage > 0)
                           Expanded(
                             child: Opacity(
-                              opacity: percentage,
+                              opacity: percentageOriginal,
                               child: LazyLoadListView(
                                 onReachingEnd: () async => await YoutubeController.inst.updateCurrentComments(currentId, fetchNextOnly: true),
                                 extend: 400,
@@ -223,7 +224,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                         // key: PageStorageKey(currentId), // duplicate errors
                                         controller: controller,
                                         slivers: [
-                                          SliverPadding(padding: EdgeInsets.only(top: 100.0 * inversePerc)),
+                                          SliverPadding(padding: EdgeInsets.only(top: inversePercOriginal * 48.0)),
 
                                           // --START-- title & subtitle
                                           SliverToBoxAdapter(

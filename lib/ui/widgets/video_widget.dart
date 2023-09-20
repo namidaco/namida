@@ -307,6 +307,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       alignment: Alignment.center,
       children: [
         TapDetector(
+          enableTaps: widget.showControls,
           onTap: (d) => _onTap(),
           onDoubleTap: _onDoubleTap,
           doubleTapTime: const Duration(milliseconds: 200),

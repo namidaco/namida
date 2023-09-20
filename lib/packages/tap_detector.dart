@@ -32,6 +32,7 @@ class TapDetector extends StatelessWidget {
     this.onFocusChange,
     this.autofocus = false,
     this.useGestureDetector = true,
+    this.enableTaps = true,
   })  : assert(enableFeedback != null),
         assert(excludeFromSemantics != null),
         assert(autofocus != null),
@@ -61,6 +62,7 @@ class TapDetector extends StatelessWidget {
   final ValueChanged<bool>? onFocusChange;
   final bool? autofocus;
   final bool useGestureDetector;
+  final bool enableTaps;
 
   Timer? doubleTapTimer;
   bool isPressed = false;
@@ -114,23 +116,44 @@ class TapDetector extends StatelessWidget {
     return useGestureDetector
         ? GestureDetector(
             key: key,
-            onTap: () {
-              (onDoubleTap != null) ? _onTap() : onTap?.call(lastTapDetails);
-            }, // if onDoubleTap is not used from user, then route further to onTap
+            onTap: !enableTaps
+                ? null
+                : () {
+                    // if onDoubleTap is not used from user, then route further to onTap
+                    (onDoubleTap != null) ? _onTap() : onTap?.call(lastTapDetails);
+                  },
             onLongPress: onLongPress,
-            onTapDown: (onDoubleTap != null) ? _onTapDown : onTapDown,
-            onTapCancel: (onDoubleTap != null) ? _onTapCancel : onTapCancel,
+            onTapDown: !enableTaps
+                ? null
+                : (onDoubleTap != null)
+                    ? _onTapDown
+                    : onTapDown,
+            onTapCancel: !enableTaps
+                ? null
+                : (onDoubleTap != null)
+                    ? _onTapCancel
+                    : onTapCancel,
             excludeFromSemantics: excludeFromSemantics ?? false,
             child: child,
           )
         : InkWell(
             key: key,
-            onTap: () {
-              (onDoubleTap != null) ? _onTap() : onTap?.call(lastTapDetails);
-            }, // if onDoubleTap is not used from user, then route further to onTap
+            onTap: !enableTaps
+                ? null
+                : () {
+                    (onDoubleTap != null) ? _onTap() : onTap?.call(lastTapDetails);
+                  }, // if onDoubleTap is not used from user, then route further to onTap
             onLongPress: onLongPress,
-            onTapDown: (onDoubleTap != null) ? _onTapDown : onTapDown,
-            onTapCancel: (onDoubleTap != null) ? _onTapCancel : onTapCancel,
+            onTapDown: !enableTaps
+                ? null
+                : (onDoubleTap != null)
+                    ? _onTapDown
+                    : onTapDown,
+            onTapCancel: !enableTaps
+                ? null
+                : (onDoubleTap != null)
+                    ? _onTapCancel
+                    : onTapCancel,
             onHighlightChanged: onHighlightChanged,
             onHover: onHover,
             focusColor: focusColor,

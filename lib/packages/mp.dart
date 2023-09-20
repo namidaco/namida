@@ -87,43 +87,54 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
           builder: (context, child) {
             return Padding(
               padding: EdgeInsets.only(bottom: widget.bottomMargin * (1.0 - percentage)),
-              child: GestureDetector(
-                onTap: _dragheight == widget.minHeight
-                    ? () {
-                        animateToState(true);
-                      }
-                    : null,
-                onVerticalDragUpdate: (details) {
-                  final dd = details.delta.dy;
-                  _dragheight -= dd;
-                  controller.animateTo(_dragheight);
-                },
-                onVerticalDragEnd: (details) {
-                  final v = details.velocity.pixelsPerSecond.dy;
+              child: Stack(
+                alignment: Alignment.bottomCenter,
+                children: [
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      color: Colors.brown,
+                      child: GestureDetector(
+                        onTap: _dragheight == widget.minHeight
+                            ? () {
+                                animateToState(true);
+                              }
+                            : null,
+                        onVerticalDragUpdate: (details) {
+                          final dd = details.delta.dy;
+                          _dragheight -= dd;
+                          controller.animateTo(_dragheight);
+                        },
+                        onVerticalDragEnd: (details) {
+                          final v = details.velocity.pixelsPerSecond.dy;
 
-                  bool shouldSnapToMax = false;
-                  if (v > 200) {
-                    shouldSnapToMax = false;
-                  } else if (v < -200) {
-                    shouldSnapToMax = true;
-                  } else {
-                    final percentage = _dragheight / widget.maxHeight;
-                    if (percentage > 0.4) {
-                      shouldSnapToMax = true;
-                    } else {
-                      shouldSnapToMax = false;
-                    }
-                  }
-                  animateToState(shouldSnapToMax);
-                },
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: Container(
-                    height: controller.value,
-                    decoration: widget.decoration,
-                    child: widget.builder(controller.value, percentage),
+                          bool shouldSnapToMax = false;
+                          if (v > 200) {
+                            shouldSnapToMax = false;
+                          } else if (v < -200) {
+                            shouldSnapToMax = true;
+                          } else {
+                            final percentage = _dragheight / widget.maxHeight;
+                            if (percentage > 0.4) {
+                              shouldSnapToMax = true;
+                            } else {
+                              shouldSnapToMax = false;
+                            }
+                          }
+                          animateToState(shouldSnapToMax);
+                        },
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: Container(
+                            height: controller.value,
+                            decoration: widget.decoration,
+                            child: widget.builder(controller.value, percentage),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             );
           }),
