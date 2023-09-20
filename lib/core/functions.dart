@@ -135,7 +135,7 @@ class NamidaOnTaps {
       snackyy(
         whatDoYouWant: () async {
           await HistoryController.inst.addTracksToHistory(tempList);
-          HistoryController.inst.sortHistoryTracks(tempList.mapped((e) => e.dateAdded.toDaysSinceEpoch()));
+          HistoryController.inst.sortHistoryTracks(tempList.mapped((e) => e.dateAdded.toDaysSince1970()));
         },
       );
     } else {

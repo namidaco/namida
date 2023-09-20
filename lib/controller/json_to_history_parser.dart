@@ -446,8 +446,8 @@ class JsonToHistoryParser {
     required bool matchByTitleAndArtistIfNotFoundInMap,
     required void Function(List<_MissingListenEntry> missingEntry) onMissingEntry,
   }) {
-    final oldestDay = oldestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
-    final newestDay = newestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
+    final oldestDay = oldestDate?.toDaysSince1970();
+    final newestDay = newestDate?.toDaysSince1970();
 
     Iterable<Track> tracks = <Track>[];
 
@@ -486,7 +486,7 @@ class JsonToHistoryParser {
 
         // -- if the watch day is outside range specified
         if (oldestDay != null && newestDay != null) {
-          final watchAsDSE = d.date.toDaysSinceEpoch();
+          final watchAsDSE = d.date.toDaysSince1970();
           if (watchAsDSE < oldestDay || watchAsDSE > newestDay) continue;
         }
 
@@ -530,8 +530,8 @@ class JsonToHistoryParser {
     required DateTime? newestDate,
     required void Function(_MissingListenEntry missingEntry) onMissingEntry,
   }) async {
-    final oldestDay = oldestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
-    final newestDay = newestDate?.millisecondsSinceEpoch.toDaysSinceEpoch();
+    final oldestDay = oldestDate?.toDaysSince1970();
+    final newestDay = newestDate?.toDaysSince1970();
 
     totalJsonToParse.value = file.readAsLinesSync().length;
     isLoadingFile.value = false;
@@ -575,7 +575,7 @@ class JsonToHistoryParser {
 
         // -- skips if the date is not inside date range specified.
         if (oldestDay != null && newestDay != null) {
-          final watchAsDSE = date.toDaysSinceEpoch();
+          final watchAsDSE = date.toDaysSince1970();
           if (watchAsDSE < oldestDay || watchAsDSE > newestDay) continue;
         }
 

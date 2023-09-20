@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:faudiotagger/models/tag.dart';
+import 'package:history_manager/history_manager.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/split_config.dart';
@@ -9,7 +10,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
-class TrackWithDate extends Selectable {
+class TrackWithDate extends Selectable implements ItemWithDate {
   final int dateAdded;
   final Track track;
   final TrackSource source;
@@ -35,6 +36,9 @@ class TrackWithDate extends Selectable {
       'source': source.convertToString,
     };
   }
+
+  @override
+  DateTime get dateTimeAdded => DateTime.fromMillisecondsSinceEpoch(dateAdded);
 
   @override
   bool operator ==(other) {

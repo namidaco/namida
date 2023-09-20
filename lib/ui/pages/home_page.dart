@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
+import 'package:history_manager/history_manager.dart';
 import 'package:jiffy/jiffy.dart';
 
-import 'package:namida/class/date_range.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/generators_controller.dart';

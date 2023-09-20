@@ -130,7 +130,7 @@ class TrackTile extends StatelessWidget {
                         } else {
                           await Player.inst.playOrPause(
                             index,
-                            queueSource.toTracks(null, trackWithDate?.dateAdded.toDaysSinceEpoch()),
+                            queueSource.toTracks(null, trackWithDate?.dateAdded.toDaysSince1970()),
                             queueSource,
                           );
                         }

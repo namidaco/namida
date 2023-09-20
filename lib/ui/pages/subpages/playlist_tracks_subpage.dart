@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:history_manager/history_manager.dart';
 import 'package:known_extents_list_view_builder/sliver_known_extents_list.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
-import 'package:namida/class/date_range.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -63,7 +63,7 @@ class HistoryTracksPage extends StatelessWidget {
               final days = HistoryController.inst.historyDays.toList();
               return SliverKnownExtentsList(
                 key: UniqueKey(),
-                itemExtents: Dimensions.inst.allItemsExtentsHistory,
+                itemExtents: HistoryController.inst.allItemsExtentsHistory,
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final day = days[index];
@@ -132,7 +132,7 @@ class HistoryTracksPage extends StatelessWidget {
                       },
                       content: Obx(
                         () => SizedBox(
-                          height: Dimensions.inst.allItemsExtentsHistory[index],
+                          height: HistoryController.inst.allItemsExtentsHistory[index],
                           width: context.width,
                           child: ListView.builder(
                             padding: const EdgeInsets.only(bottom: kHistoryDayListBottomPadding, top: kHistoryDayListTopPadding),

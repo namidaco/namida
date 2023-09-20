@@ -90,8 +90,8 @@ class AdvancedSettings extends StatelessWidget {
                 final sussyDays = HistoryController.inst.historyDays.toList();
                 final isBetweenDays = oldest != null && newest != null;
                 if (isBetweenDays) {
-                  final oldestDay = oldest.millisecondsSinceEpoch.toDaysSinceEpoch();
-                  final newestDay = newest.millisecondsSinceEpoch.toDaysSinceEpoch();
+                  final oldestDay = oldest.toDaysSince1970();
+                  final newestDay = newest.toDaysSince1970();
 
                   sussyDays.retainWhere((element) => element >= oldestDay && element <= newestDay);
                   printy(sussyDays);

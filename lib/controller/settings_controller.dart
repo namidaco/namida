@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
+import 'package:history_manager/history_manager.dart';
 
-import 'package:namida/class/date_range.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/core/constants.dart';

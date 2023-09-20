@@ -193,8 +193,8 @@ packages:
     dependency: "direct overridden"
     description:
       path: "."
-      ref: "291440bb57a4173e0c7af2678b94eb34668972e1"
-      resolved-ref: "291440bb57a4173e0c7af2678b94eb34668972e1"
+      ref: b636419fb4f62e9d2475876dbee16b25960898da
+      resolved-ref: b636419fb4f62e9d2475876dbee16b25960898da
       url: "https://github.com/MSOB7YY/dart_extensions"
     source: git
     version: "0.0.1"
@@ -498,6 +498,15 @@ packages:
       url: "https://github.com/MSOB7YY/getx"
     source: git
     version: "4.6.5"
+  history_manager:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "23fdbf32ca6b5b9a169c5ab970398dcb985f7355"
+      url: "https://github.com/namidaco/history_manager"
+    source: git
+    version: "0.0.1"
   html:
     dependency: transitive
     description:
@@ -857,8 +866,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "289719270fe535625725c29ffeff2fe81703dc0c"
-      resolved-ref: "289719270fe535625725c29ffeff2fe81703dc0c"
+      ref: "4e8977ededdf535bcf8502133fa9f98742c4326e"
+      resolved-ref: "4e8977ededdf535bcf8502133fa9f98742c4326e"
       url: "https://github.com/namidaco/playlist_manager"
     source: git
     version: "0.0.1"

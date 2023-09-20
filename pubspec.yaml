@@ -27,7 +27,7 @@ dependency_overrides:
   dart_extensions:
     git:
       url: https://github.com/MSOB7YY/dart_extensions
-      ref: 291440bb57a4173e0c7af2678b94eb34668972e1
+      ref: b636419fb4f62e9d2475876dbee16b25960898da
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -67,7 +67,10 @@ dependencies:
   playlist_manager:
     git:
       url: https://github.com/namidaco/playlist_manager
-      ref: 289719270fe535625725c29ffeff2fe81703dc0c
+      ref: 4e8977ededdf535bcf8502133fa9f98742c4326e
+  history_manager:
+    git:
+      url: https://github.com/namidaco/history_manager
   flutter_html:
     git:
       url: https://github.com/zhourengui/flutter_html

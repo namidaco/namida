@@ -83,27 +83,8 @@ class NamidaGenerator {
     return sortedByValueMap.map((e) => e.key);
   }
 
-  /// if [maxCount == null], it will return all available tracks
   List<TrackWithDate> generateTracksFromHistoryDates(DateTime? oldestDate, DateTime? newestDate, {bool removeDuplicates = true}) {
-    if (oldestDate == null || newestDate == null) return [];
-
-    final tracksAvailable = <TrackWithDate>[];
-    final entries = HistoryController.inst.historyMap.value.entries.toList();
-
-    final oldestDay = oldestDate.millisecondsSinceEpoch.toDaysSinceEpoch();
-    final newestDay = newestDate.millisecondsSinceEpoch.toDaysSinceEpoch();
-
-    entries.loop((entry, index) {
-      final day = entry.key;
-      if (day >= oldestDay && day <= newestDay) {
-        tracksAvailable.addAll(entry.value);
-      }
-    });
-    if (removeDuplicates) {
-      tracksAvailable.removeDuplicates((element) => element.track);
-    }
-
-    return tracksAvailable;
+    return HistoryController.inst.generateTracksFromHistoryDates(oldestDate, newestDate, removeDuplicates: removeDuplicates);
   }
 
   /// [daysRange] means taking n days before [yearTimeStamp] & n days after [yearTimeStamp].

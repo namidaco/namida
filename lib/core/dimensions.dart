@@ -8,8 +8,6 @@ class Dimensions {
   static final Dimensions _instance = Dimensions._internal();
   Dimensions._internal();
 
-  RxList<double> allItemsExtentsHistory = <double>[].obs;
-
   static const tileBottomMargin = 4.0;
   static const tileBottomMargin6 = 6.0;
   static const _tileAdditionalMargin = 4.0;
@@ -65,7 +63,7 @@ class Dimensions {
 
   void updateTrackTileDimensions() {
     trackTileItemExtent = settings.trackListTileHeight.value + totalVerticalDistance;
-    calculateAllItemsExtentsInHistory();
+    HistoryController.inst.calculateAllItemsExtentsInHistory();
   }
 
   void updateAlbumTileDimensions() {
@@ -77,15 +75,6 @@ class Dimensions {
     final fontSize = biggerFont ? (18.0 - (gridCount * 1.7)) : (16.0 - (gridCount * 1.8));
     final thumbnailSize = (Get.width / gridCount) - gridHorizontalPadding * 2;
     return (thumbnailSize, fontSize, 2.0 * inverseGrid);
-  }
-
-  void calculateAllItemsExtentsInHistory() {
-    final tie = Dimensions.inst.trackTileItemExtent;
-    allItemsExtentsHistory
-      ..clear()
-      ..addAll(HistoryController.inst.historyMap.value.entries.map(
-        (e) => kHistoryDayHeaderHeightWithPadding + (e.value.length * tie),
-      ));
   }
 
   /// {@template card_dimensions}

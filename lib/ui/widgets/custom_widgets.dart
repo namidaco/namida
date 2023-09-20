@@ -2297,10 +2297,10 @@ class HistoryJumpToDayIcon extends StatelessWidget {
           useHistoryDates: true,
           onGenerate: (dates) {
             NamidaNavigator.inst.closeDialog();
-            final dayToScrollTo = dates.firstOrNull?.millisecondsSinceEpoch.toDaysSinceEpoch() ?? 0;
+            final dayToScrollTo = dates.firstOrNull?.toDaysSince1970() ?? 0;
             final days = HistoryController.inst.historyDays.toList();
             days.removeWhere((element) => element <= dayToScrollTo);
-            final itemExtents = Dimensions.inst.allItemsExtentsHistory;
+            final itemExtents = HistoryController.inst.allItemsExtentsHistory;
             double totalScrollOffset = 0;
             days.loop((e, index) => totalScrollOffset += itemExtents[index]);
             HistoryController.inst.scrollController.jumpTo(totalScrollOffset + 100.0);

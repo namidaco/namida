@@ -52,19 +52,19 @@ void showTrackListensDialog(Track track, {List<int>? datesOfListen, Color? color
                   child: Text((datesOfListen.length - i).toString())),
               onTap: () async {
                 final daysKeys = HistoryController.inst.historyDays.toList();
-                daysKeys.removeWhere((element) => element <= t.toDaysSinceEpoch());
+                daysKeys.removeWhere((element) => element <= t.toDaysSince1970());
                 final daysToScroll = daysKeys.length + 1;
                 int tracksToScroll = 0;
                 daysKeys.loop((e, index) {
                   tracksToScroll += HistoryController.inst.historyMap.value[e]?.length ?? 0;
                 });
-                final trackSmallList = HistoryController.inst.historyMap.value[t.toDaysSinceEpoch()]!;
+                final trackSmallList = HistoryController.inst.historyMap.value[t.toDaysSince1970()]!;
                 final indexOfSmallList = trackSmallList.indexWhere((element) => element.dateAdded == t);
                 tracksToScroll += indexOfSmallList;
                 tracksToScroll -= 2;
                 NamidaOnTaps.inst.onHistoryPlaylistTap(
                   indexToHighlight: indexOfSmallList,
-                  dayOfHighLight: t.toDaysSinceEpoch(),
+                  dayOfHighLight: t.toDaysSince1970(),
                   initialScrollOffset: (tracksToScroll * Dimensions.inst.trackTileItemExtent) + (daysToScroll * kHistoryDayHeaderHeightWithPadding),
                 );
               },
