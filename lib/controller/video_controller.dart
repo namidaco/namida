@@ -83,20 +83,25 @@ class VideoController {
             );
           }
         },
-        child: Obx(
-          () => AspectRatio(
-            aspectRatio: aspectRatio,
-            child: NamidaVideoControls(
-              key: _videoControlsKeys[finalKey],
-              onMinimizeTap: onMinimizeTap,
-              showControls: enableControls,
-              controller: playerController,
-              fallbackChild: fallbackChild,
-              isFullScreen: fullscreen,
-              qualityItems: qualityItems,
-              child: vcontroller.videoWidget?.value,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Obx(
+              () => NamidaAspectRatio(
+                aspectRatio: aspectRatio,
+                child: NamidaVideoControls(
+                  key: _videoControlsKeys[finalKey],
+                  onMinimizeTap: onMinimizeTap,
+                  showControls: enableControls,
+                  controller: playerController,
+                  fallbackChild: fallbackChild,
+                  isFullScreen: fullscreen,
+                  qualityItems: qualityItems,
+                  child: vcontroller.videoWidget?.value,
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       );
     }
@@ -106,7 +111,7 @@ class VideoController {
 
   bool get shouldShowVideo => currentVideo.value != null && _videoController.isInitialized;
 
-  double get aspectRatio => _videoController.aspectRatio;
+  double? get aspectRatio => _videoController.aspectRatio;
 
   final localVideoExtractCurrent = Rxn<int>();
   final localVideoExtractTotal = 0.obs;
@@ -800,7 +805,7 @@ class _NamidaVideoPlayer {
   CachedVideoPlayerController? get videoController => _videoController;
   bool get isInitialized => _initializedVideo.value;
   bool get isBuffering => _isBuffering.value;
-  double get aspectRatio => _videoController?.value.aspectRatio ?? 1.0;
+  double? get aspectRatio => _videoController?.value.aspectRatio;
   Future<bool>? get waitTillBufferingComplete => _bufferingCompleter?.future;
 
   final _initializedVideo = false.obs;

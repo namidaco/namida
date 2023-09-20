@@ -300,561 +300,562 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   @override
   Widget build(BuildContext context) {
-    final dummyWidget = widget.fallbackChild ?? Container(color: Colors.transparent);
+    final dummyWidget = widget.fallbackChild ??
+        Container(
+          key: const Key('dummy_container'),
+          color: Colors.transparent,
+        );
     final vc = widget.controller;
     final itemsColor = Colors.white.withAlpha(200);
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        TapDetector(
-          enableTaps: widget.showControls,
-          onTap: (d) => _onTap(),
-          onDoubleTap: _onDoubleTap,
-          doubleTapTime: const Duration(milliseconds: 200),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Positioned.fill(
-                key: const Key('always_visible_child'),
-                child: Obx(
-                  () => VideoController.vcontroller.isInitialized ? widget.child ?? dummyWidget : dummyWidget,
-                ),
+    return TapDetector(
+      enableTaps: widget.showControls,
+      onTap: (d) => _onTap(),
+      onDoubleTap: _onDoubleTap,
+      doubleTapTime: const Duration(milliseconds: 200),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned.fill(
+            key: const Key('always_visible_child'),
+            child: Obx(
+              () => AnimatedSwitcher(
+                duration: const Duration(milliseconds: 500),
+                child: VideoController.vcontroller.isInitialized ? widget.child ?? dummyWidget : dummyWidget,
               ),
-              if (widget.showControls) ...[
-                // ---- Top Row ----
-                GestureDetector(
-                  onTap: () {},
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: _getBuilder(
-                      child: (visiblePercentage, _) {
-                        return Row(
-                          children: [
-                            if (widget.isFullScreen || widget.onMinimizeTap != null)
-                              NamidaIconButton(
-                                horizontalPadding: 12.0,
-                                verticalPadding: 6.0,
-                                onPressed: widget.isFullScreen ? NamidaNavigator.inst.exitFullScreen : widget.onMinimizeTap,
-                                icon: Broken.arrow_down_2,
-                                iconColor: itemsColor,
-                                iconSize: 20.0,
-                              ),
-                            const Spacer(),
-                            // ===== Speed Chip =====
-                            NamidaPopupWrapper(
-                              onPop: _startTimer,
-                              onTap: () {
-                                _resetTimer();
-                                setControlsVisibily(true);
-                              },
-                              children: [
-                                ...[0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0].map((speed) {
-                                  return Obx(
-                                    () {
-                                      final isSelected = Player.inst.currentSpeed == speed;
-                                      return NamidaInkWell(
-                                        onTap: () {
-                                          _startTimer();
-                                          Navigator.of(context).pop();
-                                          if (!isSelected) {
-                                            Player.inst.setPlayerSpeed(speed);
-                                          }
-                                        },
-                                        decoration: const BoxDecoration(),
-                                        borderRadius: 6.0,
-                                        bgColor: isSelected ? CurrentColor.inst.color.withAlpha(100) : null,
-                                        margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                                        padding: const EdgeInsets.all(6.0),
-                                        child: Row(
-                                          children: [
-                                            const Icon(Broken.play_cricle, size: 20.0),
-                                            const SizedBox(width: 12.0),
-                                            Text(
-                                              "$speed",
-                                              style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0.multipliedFontScale),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  );
-                                }).toList(),
-                              ],
-                              child: Padding(
-                                padding: const EdgeInsets.all(4.0),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                                  child: NamidaBgBlur(
-                                    blur: visiblePercentage * 3.0,
-                                    child: NamidaInkWell(
-                                      onTap: null,
-                                      borderRadius: 6.0,
-                                      bgColor: Colors.black.withOpacity(0.2 * visiblePercentage),
-                                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                                      child: Obx(
-                                        () => Row(
-                                          children: [
-                                            Icon(
-                                              Broken.play_cricle,
-                                              size: 20.0,
-                                              color: itemsColor,
-                                            ),
-                                            const SizedBox(width: 4.0).animateEntrance(showWhen: Player.inst.currentSpeed != 1.0, allCurves: Curves.easeInOutQuart),
-                                            Text(
-                                              "${Player.inst.currentSpeed}",
-                                              style: context.textTheme.displaySmall?.copyWith(
-                                                color: itemsColor,
-                                                fontSize: 12.0,
-                                              ),
-                                            ).animateEntrance(showWhen: Player.inst.currentSpeed != 1.0, allCurves: Curves.easeInOutQuart),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // ===== Quality Chip =====
-                            Obx(
-                              () => NamidaPopupWrapper(
-                                canOpenMenu: Player.inst.currentVideoStream?.resolution != null,
-                                onPop: _startTimer,
-                                onTap: () {
-                                  _resetTimer();
-                                  setControlsVisibily(true);
-                                },
-                                childrenDefault: widget.qualityItems,
-                                children: [
-                                  ...YoutubeController.inst.currentYTQualities.where((s) => s.formatSuffix != 'webm').map((element) {
-                                    return Obx(
-                                      () {
-                                        final isSelected = element.resolution == Player.inst.currentVideoStream?.resolution;
-                                        final id = Player.inst.nowPlayingVideoID?.id;
-                                        final cachedFile = id == null ? null : element.getCachedFile(id);
-                                        return NamidaInkWell(
-                                          onTap: () {
-                                            _startTimer();
-                                            Navigator.of(context).pop();
-                                            if (!isSelected) {
-                                              Player.inst.onItemPlayYoutubeIDSetQuality(element, cachedFile, useCache: true);
-                                            }
-                                          },
-                                          decoration: const BoxDecoration(),
-                                          borderRadius: 6.0,
-                                          bgColor: isSelected ? CurrentColor.inst.color.withAlpha(100) : null,
-                                          margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                                          padding: const EdgeInsets.all(6.0),
-                                          child: Row(
-                                            children: [
-                                              Icon(cachedFile != null ? Broken.tick_circle : Broken.story, size: 20.0),
-                                              const SizedBox(width: 4.0),
-                                              Text(
-                                                element.resolution ?? '',
-                                                style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0.multipliedFontScale),
-                                              ),
-                                              Text(
-                                                " • ${element.sizeInBytes?.fileSizeFormatted ?? ''}",
-                                                style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0.multipliedFontScale),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  }).toList(),
-                                ],
-                                child: Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                                    child: NamidaBgBlur(
-                                      blur: visiblePercentage * 3.0,
-                                      child: NamidaInkWell(
-                                        onTap: null,
-                                        borderRadius: 6.0,
-                                        bgColor: Colors.black.withOpacity(0.2 * visiblePercentage),
-                                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                                        child: Row(
-                                          children: [
-                                            Obx(
-                                              () => Text(
-                                                Player.inst.currentVideoStream?.resolution ?? '',
-                                                style: context.textTheme.displaySmall?.copyWith(color: itemsColor),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4.0),
-                                            Icon(
-                                              Broken.setting,
-                                              color: itemsColor,
-                                              size: 20.0,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                // ---- Bottom Row ----
-                GestureDetector(
-                  onTap: () {},
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: _getBuilder(
-                      playerController: vc,
-                      child: (visiblePercentage, pcn) {
-                        final playerPosition = pcn?.position ?? Duration.zero;
-                        final playerDuration = pcn?.duration ?? Duration.zero;
-                        final playerBuffered = pcn?.buffered ?? [];
-                        final currentPosition = VideoController.vcontroller.isInitialized ? playerPosition : Duration.zero;
-                        final borr = BorderRadius.circular(10.0.multipliedRadius);
-                        return Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: ClipRRect(
-                            borderRadius: borr,
-                            child: NamidaBgBlur(
-                              blur: visiblePercentage * 3.0,
-                              child: Container(
-                                padding: const EdgeInsets.all(8.0),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.2 * visiblePercentage),
-                                  borderRadius: borr,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      currentPosition.inSeconds.secondsLabel,
-                                      style: context.textTheme.displayMedium?.copyWith(
-                                        color: itemsColor,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8.0),
-                                    Expanded(
-                                      child: LayoutBuilder(
-                                        builder: (context, constraints) {
-                                          void onSeekDragUpdate(double deltax) {
-                                            final percentageSwiped = (deltax / constraints.maxWidth).withMinimum(0.0);
-                                            final newSeek = percentageSwiped * (playerDuration.inMilliseconds);
-                                            userSeek.value = newSeek;
-                                          }
-
-                                          void onSeekEnd() async {
-                                            await Player.inst.seek(Duration(milliseconds: userSeek.value.toInt()));
-                                            userSeek.value = 0;
-                                          }
-
-                                          return GestureDetector(
-                                              behavior: HitTestBehavior.translucent,
-                                              onTapDown: (details) {
-                                                onSeekDragUpdate(details.localPosition.dx);
-                                                _resetTimer();
-                                              },
-                                              onTapUp: (details) {
-                                                onSeekEnd();
-                                                _startTimer();
-                                              },
-                                              onTapCancel: () {
-                                                userSeek.value = 0;
-                                                _startTimer();
-                                              },
-                                              onHorizontalDragStart: (details) => _resetTimer(),
-                                              onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx),
-                                              onHorizontalDragEnd: (details) => onSeekEnd(),
-                                              child: ValueListenableBuilder(
-                                                valueListenable: userSeek,
-                                                builder: (_, double seekvaluee, child) {
-                                                  final durMS = playerDuration.inMilliseconds;
-                                                  final currentSeekValue = seekvaluee == 0 ? currentPosition.inMilliseconds : seekvaluee;
-                                                  final currentPercentage = durMS == 0.0 ? 0.0 : currentSeekValue / durMS;
-
-                                                  const circleSize = 20.0;
-                                                  final colorScheme = context.theme.colorScheme.secondary;
-                                                  final nextBufferedRange = playerBuffered.lastOrNull;
-                                                  return Stack(
-                                                    alignment: Alignment.centerLeft,
-                                                    children: [
-                                                      _getSliderContainer(
-                                                        colorScheme,
-                                                        constraints,
-                                                        currentPercentage,
-                                                        160,
-                                                      ),
-                                                      if (nextBufferedRange != null)
-                                                        _getSliderContainer(
-                                                          colorScheme,
-                                                          constraints,
-                                                          (nextBufferedRange.end).inMilliseconds / durMS,
-                                                          100,
-                                                        ),
-                                                      _getSliderContainer(
-                                                        colorScheme,
-                                                        constraints,
-                                                        1.0,
-                                                        60,
-                                                      ),
-                                                      Container(
-                                                        alignment: Alignment.center,
-                                                        margin:
-                                                            EdgeInsets.only(left: ((constraints.maxWidth * currentPercentage) - circleSize * 0.5).clamp(0, constraints.maxWidth)),
-                                                        decoration: BoxDecoration(
-                                                          color: colorScheme,
-                                                          shape: BoxShape.circle,
-                                                        ),
-                                                        width: circleSize,
-                                                        height: circleSize,
-                                                        child: Container(
-                                                          alignment: Alignment.center,
-                                                          decoration: const BoxDecoration(
-                                                            color: Color.fromARGB(220, 40, 40, 40),
-                                                            shape: BoxShape.circle,
-                                                          ),
-                                                          width: circleSize / 2,
-                                                          height: circleSize / 2,
-                                                        ),
-                                                      )
-                                                    ],
-                                                  );
-                                                },
-                                              ));
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8.0),
-                                    Text(
-                                      playerDuration.inSeconds.secondsLabel,
-                                      style: context.textTheme.displayMedium?.copyWith(
-                                        color: itemsColor,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8.0),
-                                    NamidaIconButton(
-                                      horizontalPadding: 0.0,
-                                      padding: EdgeInsets.zero,
-                                      iconSize: 20.0,
-                                      icon: Broken.maximize_2,
-                                      iconColor: itemsColor,
-                                      onPressed: () {
-                                        _startTimer();
-                                        NamidaNavigator.inst.toggleFullScreen(
-                                          VideoController.inst.getVideoWidget(
-                                            'video_controls_full_screen',
-                                            true,
-                                            widget.onMinimizeTap,
-                                            fullscreen: true,
-                                            fallbackChild: widget.fallbackChild,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-
-                // ---- Middle Actions ----
-                _getBuilder(
-                  playerController: vc,
-                  child: (visiblePercentage, pcn) {
-                    final shouldShowNext = Player.inst.currentIndex != Player.inst.currentQueueYoutube.length - 1;
-                    final shouldShowPrev = Player.inst.currentIndex != 0;
+            ),
+          ),
+          if (widget.showControls) ...[
+            // ---- Top Row ----
+            GestureDetector(
+              onTap: () {},
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: _getBuilder(
+                  child: (visiblePercentage, _) {
                     return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        const SizedBox(),
-                        IgnorePointer(
-                          ignoring: !shouldShowPrev,
-                          child: Opacity(
-                            opacity: shouldShowPrev ? 1.0 : 0.0,
-                            child: ClipOval(
-                              child: NamidaBgBlur(
-                                blur: visiblePercentage * 2,
-                                child: Container(
-                                  color: Colors.black.withOpacity(0.2 * visiblePercentage),
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: NamidaIconButton(
-                                      icon: null,
-                                      horizontalPadding: 0.0,
-                                      padding: EdgeInsets.zero,
-                                      onPressed: () {
-                                        Player.inst.previous();
-                                        _resetTimer(hideControls: true);
-                                      },
-                                      child: Icon(
-                                        Broken.previous,
-                                        size: 30.0,
-                                        color: itemsColor,
-                                      )),
-                                ),
-                              ),
-                            ),
+                        if (widget.isFullScreen || widget.onMinimizeTap != null)
+                          NamidaIconButton(
+                            horizontalPadding: 12.0,
+                            verticalPadding: 6.0,
+                            onPressed: widget.isFullScreen ? NamidaNavigator.inst.exitFullScreen : widget.onMinimizeTap,
+                            icon: Broken.arrow_down_2,
+                            iconColor: itemsColor,
+                            iconSize: 20.0,
                           ),
-                        ),
-                        ClipOval(
-                          child: NamidaBgBlur(
-                            blur: visiblePercentage * 2.5,
-                            child: Container(
-                              color: Colors.black.withOpacity(0.3 * visiblePercentage),
-                              padding: const EdgeInsets.all(14.0),
-                              child: Obx(
+                        const Spacer(),
+                        // ===== Speed Chip =====
+                        NamidaPopupWrapper(
+                          onPop: _startTimer,
+                          onTap: () {
+                            _resetTimer();
+                            setControlsVisibily(true);
+                          },
+                          children: [
+                            ...[0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0].map((speed) {
+                              return Obx(
                                 () {
-                                  final currentPosition = Player.inst.nowPlayingPosition;
-                                  final currentTotalDur = Player.inst.currentItemDuration?.inMilliseconds ?? 0;
-                                  final reachedLastPosition = currentPosition != 0 && (currentPosition - currentTotalDur).abs() < 200; // 200ms allowance
-                                  if (reachedLastPosition) {
-                                    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                                      setControlsVisibily(true);
-                                    });
-                                  }
-                                  return Player.inst.isBuffering || VideoController.vcontroller.isBuffering || !VideoController.vcontroller.isInitialized
-                                      ? ThreeArchedCircle(
-                                          color: itemsColor,
-                                          size: 40.0,
-                                        )
-                                      : reachedLastPosition
-                                          ? NamidaIconButton(
-                                              icon: null,
-                                              horizontalPadding: 0.0,
-                                              padding: EdgeInsets.zero,
-                                              onPressed: () async {
-                                                await Player.inst.seek(Duration.zero);
-                                                await Player.inst.play();
-                                                _startTimer();
-                                              },
-                                              child: Icon(
-                                                Broken.refresh,
-                                                size: 40.0,
-                                                color: itemsColor,
-                                                key: const Key('replay'),
-                                              ),
-                                            )
-                                          : NamidaIconButton(
-                                              icon: null,
-                                              horizontalPadding: 0.0,
-                                              padding: EdgeInsets.zero,
-                                              onPressed: () {
-                                                Player.inst.togglePlayPause();
-                                                _startTimer();
-                                              },
-                                              child: Obx(
-                                                () => AnimatedSwitcher(
-                                                  duration: const Duration(milliseconds: 200),
-                                                  child: Player.inst.isPlaying
-                                                      ? Icon(
-                                                          Broken.pause,
-                                                          size: 40.0,
-                                                          color: itemsColor,
-                                                          key: const Key('paused'),
-                                                        )
-                                                      : Icon(
-                                                          Broken.play,
-                                                          size: 40.0,
-                                                          color: itemsColor,
-                                                          key: const Key('playing'),
-                                                        ),
-                                                ),
-                                              ),
-                                            );
+                                  final isSelected = Player.inst.currentSpeed == speed;
+                                  return NamidaInkWell(
+                                    onTap: () {
+                                      _startTimer();
+                                      Navigator.of(context).pop();
+                                      if (!isSelected) {
+                                        Player.inst.setPlayerSpeed(speed);
+                                      }
+                                    },
+                                    decoration: const BoxDecoration(),
+                                    borderRadius: 6.0,
+                                    bgColor: isSelected ? CurrentColor.inst.color.withAlpha(100) : null,
+                                    margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                                    padding: const EdgeInsets.all(6.0),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Broken.play_cricle, size: 20.0),
+                                        const SizedBox(width: 12.0),
+                                        Text(
+                                          "$speed",
+                                          style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0.multipliedFontScale),
+                                        ),
+                                      ],
+                                    ),
+                                  );
                                 },
-                              ),
-                            ),
-                          ),
-                        ),
-                        IgnorePointer(
-                          ignoring: !shouldShowNext,
-                          child: Opacity(
-                            opacity: shouldShowNext ? 1.0 : 0.0,
-                            child: ClipOval(
+                              );
+                            }).toList(),
+                          ],
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                               child: NamidaBgBlur(
-                                blur: visiblePercentage * 2,
-                                child: Container(
-                                  color: Colors.black.withOpacity(0.2 * visiblePercentage),
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: NamidaIconButton(
-                                      icon: null,
-                                      horizontalPadding: 0.0,
-                                      padding: EdgeInsets.zero,
-                                      onPressed: () {
-                                        Player.inst.previous();
-                                        _resetTimer(hideControls: true);
-                                      },
-                                      child: Icon(
-                                        Broken.next,
-                                        size: 30.0,
-                                        color: itemsColor,
-                                      )),
+                                blur: visiblePercentage * 3.0,
+                                child: NamidaInkWell(
+                                  onTap: null,
+                                  borderRadius: 6.0,
+                                  bgColor: Colors.black.withOpacity(0.2 * visiblePercentage),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                  child: Obx(
+                                    () => Row(
+                                      children: [
+                                        Icon(
+                                          Broken.play_cricle,
+                                          size: 20.0,
+                                          color: itemsColor,
+                                        ),
+                                        const SizedBox(width: 4.0).animateEntrance(showWhen: Player.inst.currentSpeed != 1.0, allCurves: Curves.easeInOutQuart),
+                                        Text(
+                                          "${Player.inst.currentSpeed}",
+                                          style: context.textTheme.displaySmall?.copyWith(
+                                            color: itemsColor,
+                                            fontSize: 12.0,
+                                          ),
+                                        ).animateEntrance(showWhen: Player.inst.currentSpeed != 1.0, allCurves: Curves.easeInOutQuart),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(),
+                        // ===== Quality Chip =====
+                        Obx(
+                          () => NamidaPopupWrapper(
+                            canOpenMenu: Player.inst.currentVideoStream?.resolution != null,
+                            onPop: _startTimer,
+                            onTap: () {
+                              _resetTimer();
+                              setControlsVisibily(true);
+                            },
+                            childrenDefault: widget.qualityItems,
+                            children: [
+                              ...YoutubeController.inst.currentYTQualities.where((s) => s.formatSuffix != 'webm').map((element) {
+                                return Obx(
+                                  () {
+                                    final isSelected = element.resolution == Player.inst.currentVideoStream?.resolution;
+                                    final id = Player.inst.nowPlayingVideoID?.id;
+                                    final cachedFile = id == null ? null : element.getCachedFile(id);
+                                    return NamidaInkWell(
+                                      onTap: () {
+                                        _startTimer();
+                                        Navigator.of(context).pop();
+                                        if (!isSelected) {
+                                          Player.inst.onItemPlayYoutubeIDSetQuality(element, cachedFile, useCache: true);
+                                        }
+                                      },
+                                      decoration: const BoxDecoration(),
+                                      borderRadius: 6.0,
+                                      bgColor: isSelected ? CurrentColor.inst.color.withAlpha(100) : null,
+                                      margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                                      padding: const EdgeInsets.all(6.0),
+                                      child: Row(
+                                        children: [
+                                          Icon(cachedFile != null ? Broken.tick_circle : Broken.story, size: 20.0),
+                                          const SizedBox(width: 4.0),
+                                          Text(
+                                            element.resolution ?? '',
+                                            style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0.multipliedFontScale),
+                                          ),
+                                          Text(
+                                            " • ${element.sizeInBytes?.fileSizeFormatted ?? ''}",
+                                            style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0.multipliedFontScale),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                              }).toList(),
+                            ],
+                            child: Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                child: NamidaBgBlur(
+                                  blur: visiblePercentage * 3.0,
+                                  child: NamidaInkWell(
+                                    onTap: null,
+                                    borderRadius: 6.0,
+                                    bgColor: Colors.black.withOpacity(0.2 * visiblePercentage),
+                                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                    child: Row(
+                                      children: [
+                                        Obx(
+                                          () => Text(
+                                            Player.inst.currentVideoStream?.resolution ?? '',
+                                            style: context.textTheme.displaySmall?.copyWith(color: itemsColor),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4.0),
+                                        Icon(
+                                          Broken.setting,
+                                          color: itemsColor,
+                                          size: 20.0,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     );
                   },
                 ),
-                Obx(
-                  () => Player.inst.isBuffering || VideoController.vcontroller.isBuffering || !VideoController.vcontroller.isInitialized
-                      ? ThreeArchedCircle(
-                          color: itemsColor,
-                          size: 40.0,
-                        )
-                      : const SizedBox(),
-                ),
+              ),
+            ),
+            // ---- Bottom Row ----
+            GestureDetector(
+              onTap: () {},
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: _getBuilder(
+                  playerController: vc,
+                  child: (visiblePercentage, pcn) {
+                    final playerPosition = pcn?.position ?? Duration.zero;
+                    final playerDuration = pcn?.duration ?? Duration.zero;
+                    final playerBuffered = pcn?.buffered ?? [];
+                    final currentPosition = VideoController.vcontroller.isInitialized ? playerPosition : Duration.zero;
+                    final borr = BorderRadius.circular(10.0.multipliedRadius);
+                    return Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: ClipRRect(
+                        borderRadius: borr,
+                        child: NamidaBgBlur(
+                          blur: visiblePercentage * 3.0,
+                          child: Container(
+                            padding: const EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.2 * visiblePercentage),
+                              borderRadius: borr,
+                            ),
+                            child: Row(
+                              children: [
+                                Text(
+                                  currentPosition.inSeconds.secondsLabel,
+                                  style: context.textTheme.displayMedium?.copyWith(
+                                    color: itemsColor,
+                                  ),
+                                ),
+                                const SizedBox(width: 8.0),
+                                Expanded(
+                                  child: LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      void onSeekDragUpdate(double deltax) {
+                                        final percentageSwiped = (deltax / constraints.maxWidth).withMinimum(0.0);
+                                        final newSeek = percentageSwiped * (playerDuration.inMilliseconds);
+                                        userSeek.value = newSeek;
+                                      }
 
-                // ===== Seek Animators ====
+                                      void onSeekEnd() async {
+                                        await Player.inst.seek(Duration(milliseconds: userSeek.value.toInt()));
+                                        userSeek.value = 0;
+                                      }
 
-                // -- left --
-                _getSeekAnimatedContainer(
-                  controller: seekAnimationBackward1,
-                  isForward: false,
-                  isSecondary: false,
-                ),
-                _getSeekAnimatedContainer(
-                  controller: seekAnimationBackward2,
-                  isForward: false,
-                  isSecondary: true,
-                ),
+                                      return GestureDetector(
+                                          behavior: HitTestBehavior.translucent,
+                                          onTapDown: (details) {
+                                            onSeekDragUpdate(details.localPosition.dx);
+                                            _resetTimer();
+                                          },
+                                          onTapUp: (details) {
+                                            onSeekEnd();
+                                            _startTimer();
+                                          },
+                                          onTapCancel: () {
+                                            userSeek.value = 0;
+                                            _startTimer();
+                                          },
+                                          onHorizontalDragStart: (details) => _resetTimer(),
+                                          onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx),
+                                          onHorizontalDragEnd: (details) => onSeekEnd(),
+                                          child: ValueListenableBuilder(
+                                            valueListenable: userSeek,
+                                            builder: (_, double seekvaluee, child) {
+                                              final durMS = playerDuration.inMilliseconds;
+                                              final currentSeekValue = seekvaluee == 0 ? currentPosition.inMilliseconds : seekvaluee;
+                                              final currentPercentage = durMS == 0.0 ? 0.0 : currentSeekValue / durMS;
 
-                // -- right --
-                _getSeekAnimatedContainer(
-                  controller: seekAnimationForward1,
-                  isForward: true,
-                  isSecondary: false,
+                                              const circleSize = 20.0;
+                                              final colorScheme = context.theme.colorScheme.secondary;
+                                              final nextBufferedRange = playerBuffered.lastOrNull;
+                                              return Stack(
+                                                alignment: Alignment.centerLeft,
+                                                children: [
+                                                  _getSliderContainer(
+                                                    colorScheme,
+                                                    constraints,
+                                                    currentPercentage,
+                                                    160,
+                                                  ),
+                                                  if (nextBufferedRange != null)
+                                                    _getSliderContainer(
+                                                      colorScheme,
+                                                      constraints,
+                                                      (nextBufferedRange.end).inMilliseconds / durMS,
+                                                      100,
+                                                    ),
+                                                  _getSliderContainer(
+                                                    colorScheme,
+                                                    constraints,
+                                                    1.0,
+                                                    60,
+                                                  ),
+                                                  Container(
+                                                    alignment: Alignment.center,
+                                                    margin: EdgeInsets.only(left: ((constraints.maxWidth * currentPercentage) - circleSize * 0.5).clamp(0, constraints.maxWidth)),
+                                                    decoration: BoxDecoration(
+                                                      color: colorScheme,
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    width: circleSize,
+                                                    height: circleSize,
+                                                    child: Container(
+                                                      alignment: Alignment.center,
+                                                      decoration: const BoxDecoration(
+                                                        color: Color.fromARGB(220, 40, 40, 40),
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                      width: circleSize / 2,
+                                                      height: circleSize / 2,
+                                                    ),
+                                                  )
+                                                ],
+                                              );
+                                            },
+                                          ));
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 8.0),
+                                Text(
+                                  playerDuration.inSeconds.secondsLabel,
+                                  style: context.textTheme.displayMedium?.copyWith(
+                                    color: itemsColor,
+                                  ),
+                                ),
+                                const SizedBox(width: 8.0),
+                                NamidaIconButton(
+                                  horizontalPadding: 0.0,
+                                  padding: EdgeInsets.zero,
+                                  iconSize: 20.0,
+                                  icon: Broken.maximize_2,
+                                  iconColor: itemsColor,
+                                  onPressed: () {
+                                    _startTimer();
+                                    NamidaNavigator.inst.toggleFullScreen(
+                                      VideoController.inst.getVideoWidget(
+                                        'video_controls_full_screen',
+                                        true,
+                                        widget.onMinimizeTap,
+                                        fullscreen: true,
+                                        fallbackChild: widget.fallbackChild,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                _getSeekAnimatedContainer(
-                  controller: seekAnimationForward2,
-                  isForward: true,
-                  isSecondary: true,
-                ),
+              ),
+            ),
 
-                // ===========
-                getSeekTextWidget(
-                  controller: seekAnimationBackward2,
-                  isForward: false,
-                ),
-                getSeekTextWidget(
-                  controller: seekAnimationForward2,
-                  isForward: true,
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
+            // ---- Middle Actions ----
+            _getBuilder(
+              playerController: vc,
+              child: (visiblePercentage, pcn) {
+                final shouldShowNext = Player.inst.currentIndex != Player.inst.currentQueueYoutube.length - 1;
+                final shouldShowPrev = Player.inst.currentIndex != 0;
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    const SizedBox(),
+                    IgnorePointer(
+                      ignoring: !shouldShowPrev,
+                      child: Opacity(
+                        opacity: shouldShowPrev ? 1.0 : 0.0,
+                        child: ClipOval(
+                          child: NamidaBgBlur(
+                            blur: visiblePercentage * 2,
+                            child: Container(
+                              color: Colors.black.withOpacity(0.2 * visiblePercentage),
+                              padding: const EdgeInsets.all(10.0),
+                              child: NamidaIconButton(
+                                  icon: null,
+                                  horizontalPadding: 0.0,
+                                  padding: EdgeInsets.zero,
+                                  onPressed: () {
+                                    Player.inst.previous();
+                                    _resetTimer(hideControls: true);
+                                  },
+                                  child: Icon(
+                                    Broken.previous,
+                                    size: 30.0,
+                                    color: itemsColor,
+                                  )),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    ClipOval(
+                      child: NamidaBgBlur(
+                        blur: visiblePercentage * 2.5,
+                        child: Container(
+                          color: Colors.black.withOpacity(0.3 * visiblePercentage),
+                          padding: const EdgeInsets.all(14.0),
+                          child: Obx(
+                            () {
+                              final currentPosition = Player.inst.nowPlayingPosition;
+                              final currentTotalDur = Player.inst.currentItemDuration?.inMilliseconds ?? 0;
+                              final reachedLastPosition = currentPosition != 0 && (currentPosition - currentTotalDur).abs() < 200; // 200ms allowance
+                              if (reachedLastPosition) {
+                                WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                                  setControlsVisibily(true);
+                                });
+                              }
+                              return Player.inst.isBuffering || VideoController.vcontroller.isBuffering || !VideoController.vcontroller.isInitialized
+                                  ? ThreeArchedCircle(
+                                      color: itemsColor,
+                                      size: 40.0,
+                                    )
+                                  : reachedLastPosition
+                                      ? NamidaIconButton(
+                                          icon: null,
+                                          horizontalPadding: 0.0,
+                                          padding: EdgeInsets.zero,
+                                          onPressed: () async {
+                                            await Player.inst.seek(Duration.zero);
+                                            await Player.inst.play();
+                                            _startTimer();
+                                          },
+                                          child: Icon(
+                                            Broken.refresh,
+                                            size: 40.0,
+                                            color: itemsColor,
+                                            key: const Key('replay'),
+                                          ),
+                                        )
+                                      : NamidaIconButton(
+                                          icon: null,
+                                          horizontalPadding: 0.0,
+                                          padding: EdgeInsets.zero,
+                                          onPressed: () {
+                                            Player.inst.togglePlayPause();
+                                            _startTimer();
+                                          },
+                                          child: Obx(
+                                            () => AnimatedSwitcher(
+                                              duration: const Duration(milliseconds: 200),
+                                              child: Player.inst.isPlaying
+                                                  ? Icon(
+                                                      Broken.pause,
+                                                      size: 40.0,
+                                                      color: itemsColor,
+                                                      key: const Key('paused'),
+                                                    )
+                                                  : Icon(
+                                                      Broken.play,
+                                                      size: 40.0,
+                                                      color: itemsColor,
+                                                      key: const Key('playing'),
+                                                    ),
+                                            ),
+                                          ),
+                                        );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                    IgnorePointer(
+                      ignoring: !shouldShowNext,
+                      child: Opacity(
+                        opacity: shouldShowNext ? 1.0 : 0.0,
+                        child: ClipOval(
+                          child: NamidaBgBlur(
+                            blur: visiblePercentage * 2,
+                            child: Container(
+                              color: Colors.black.withOpacity(0.2 * visiblePercentage),
+                              padding: const EdgeInsets.all(10.0),
+                              child: NamidaIconButton(
+                                  icon: null,
+                                  horizontalPadding: 0.0,
+                                  padding: EdgeInsets.zero,
+                                  onPressed: () {
+                                    Player.inst.previous();
+                                    _resetTimer(hideControls: true);
+                                  },
+                                  child: Icon(
+                                    Broken.next,
+                                    size: 30.0,
+                                    color: itemsColor,
+                                  )),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(),
+                  ],
+                );
+              },
+            ),
+            Obx(
+              () => Player.inst.isBuffering || VideoController.vcontroller.isBuffering || !VideoController.vcontroller.isInitialized
+                  ? ThreeArchedCircle(
+                      color: itemsColor,
+                      size: 40.0,
+                    )
+                  : const SizedBox(),
+            ),
+
+            // ===== Seek Animators ====
+
+            // -- left --
+            _getSeekAnimatedContainer(
+              controller: seekAnimationBackward1,
+              isForward: false,
+              isSecondary: false,
+            ),
+            _getSeekAnimatedContainer(
+              controller: seekAnimationBackward2,
+              isForward: false,
+              isSecondary: true,
+            ),
+
+            // -- right --
+            _getSeekAnimatedContainer(
+              controller: seekAnimationForward1,
+              isForward: true,
+              isSecondary: false,
+            ),
+            _getSeekAnimatedContainer(
+              controller: seekAnimationForward2,
+              isForward: true,
+              isSecondary: true,
+            ),
+
+            // ===========
+            getSeekTextWidget(
+              controller: seekAnimationBackward2,
+              isForward: false,
+            ),
+            getSeekTextWidget(
+              controller: seekAnimationForward2,
+              isForward: true,
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
