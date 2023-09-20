@@ -120,7 +120,7 @@ class MiniPlayerSwitchers extends StatelessWidget {
                 VideoController.inst.isCurrentlyInBackground = false; // since the pip needs the video
               } else {
                 VideoController.inst.isCurrentlyInBackground = true;
-                if (VideoController.vcontroller.isBuffering) {
+                if (VideoController.vcontroller.isInitialized && VideoController.vcontroller.isBuffering) {
                   Player.inst.play();
                 }
               }

@@ -901,7 +901,7 @@ class _NamidaVideoPlayer {
 
   bool _didPauseInternally = false;
   Future<void> _updateBufferingStatus() async {
-    _isBuffering.value = _videoController?.value.isBuffering ?? true;
+    _isBuffering.value = _videoController?.value.isBuffering ?? false;
 
     if (_isBuffering.value) {
       _bufferingCompleter = null;

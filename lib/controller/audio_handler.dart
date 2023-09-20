@@ -644,7 +644,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   Future<void> onRealPlay() async {
-    await Future.delayed(Duration(milliseconds: _videoPositionSeekDelayMS.abs()));
+    final del = _videoPositionSeekDelayMS.abs();
+    final vcp = VideoController.vcontroller.videoController?.value.position.inMilliseconds ?? 0;
+    final diff = (vcp - currentPositionMS).abs();
+    if (diff <= del) {
+      await Future.delayed(Duration(milliseconds: del));
+    }
     await VideoController.vcontroller.play();
   }
 }
