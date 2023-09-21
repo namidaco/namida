@@ -72,8 +72,6 @@ class NamidaFFMPEG {
 
     final tagsString = tagsMapToEditConverted.entries.map((e) => e.value == null ? '' : '-metadata ${e.key}="${e.value}"').join(' '); // check if need to remove empty value tag
     final didExecute = await _ffmpegExecute('-i "${tempFile.path}" $tagsString -c copy -y "$path"');
-    printy('tags:1::: $tagsMapToEditConverted');
-    printy('tags:::: $tagsString');
     // -- restoring original stats.
     if (originalStats != null) {
       await setFileStats(originalFile, originalStats);

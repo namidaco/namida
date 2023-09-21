@@ -33,6 +33,7 @@ class LanguageKeys {
   late String ARTWORKS;
   late String AUDIO;
   late String AUDIO_CACHE;
+  late String AUDIO_ONLY;
   late String AUTO_COLORING_SUBTITLE;
   late String AUTO_COLORING;
   late String AUTO_EXTRACT_TAGS_FROM_FILENAME;
@@ -108,6 +109,7 @@ class LanguageKeys {
   late String DEFAULT;
   late String DELETE_PLAYLIST;
   late String DELETE;
+  late String DESCRIPTION;
   late String DIRECTORY_DOESNT_EXIST;
   late String DISABLE_REORDERING;
   late String DISABLE_SEARCH_CLEANUP;
@@ -127,6 +129,7 @@ class LanguageKeys {
   late String DONE;
   late String DONT_RESTORE_POSITION;
   late String DOWNLOAD;
+  late String DOWNLOADING_WILL_OVERRIDE_IT;
   late String DO_NOTHING;
   late String DUCK_AUDIO;
   late String DUPLICATED_TRACKS;
@@ -173,6 +176,7 @@ class LanguageKeys {
   late String FILE_NAME;
   late String FILE;
   late String FILES;
+  late String FILE_ALREADY_EXISTS;
   late String FILTER_ALBUMS;
   late String FILTER_ARTISTS;
   late String FILTER_GENRES;
@@ -454,6 +458,7 @@ class LanguageKeys {
   late String SUPPORT;
   late String SUPREMACY;
   late String SUSSY_BAKA;
+  late String SYNOPSIS;
   late String TAG_FIELDS;
   late String TAGS;
   late String THEME_MODE_DARK;
@@ -511,6 +516,7 @@ class LanguageKeys {
   late String VIDEO_CACHE_FILE;
   late String VIDEO_CACHE_FILES;
   late String VIDEO_CACHE;
+  late String VIDEO_ONLY;
   late String VIDEO_PLAYBACK_SOURCE_AUTO_SUBTITLE;
   late String VIDEO_PLAYBACK_SOURCE_LOCAL_EXAMPLE_SUBTITLE;
   late String VIDEO_PLAYBACK_SOURCE_LOCAL_EXAMPLE;
@@ -528,6 +534,7 @@ class LanguageKeys {
   late String WARNING;
   late String WAVEFORM_BARS_COUNT;
   late String WAVEFORMS;
+  late String WEBM_NO_EDIT_TAGS_SUPPORT;
   late String WEEK;
   late String YEAR;
   late String YES;

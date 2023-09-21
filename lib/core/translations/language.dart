@@ -100,6 +100,7 @@ class Language extends LanguageKeys {
 			ARTWORKS = getKey("ARTWORKS");
 			AUDIO = getKey("AUDIO");
 			AUDIO_CACHE = getKey("AUDIO_CACHE");
+			AUDIO_ONLY = getKey("AUDIO_ONLY");
 			AUTO_COLORING_SUBTITLE = getKey("AUTO_COLORING_SUBTITLE");
 			AUTO_COLORING = getKey("AUTO_COLORING");
 			AUTO_EXTRACT_TAGS_FROM_FILENAME = getKey("AUTO_EXTRACT_TAGS_FROM_FILENAME");
@@ -175,6 +176,7 @@ class Language extends LanguageKeys {
 			DEFAULT = getKey("DEFAULT");
 			DELETE_PLAYLIST = getKey("DELETE_PLAYLIST");
 			DELETE = getKey("DELETE");
+			DESCRIPTION = getKey("DESCRIPTION");
 			DIRECTORY_DOESNT_EXIST = getKey("DIRECTORY_DOESNT_EXIST");
 			DISABLE_REORDERING = getKey("DISABLE_REORDERING");
 			DISABLE_SEARCH_CLEANUP = getKey("DISABLE_SEARCH_CLEANUP");
@@ -194,6 +196,7 @@ class Language extends LanguageKeys {
 			DONE = getKey("DONE");
 			DONT_RESTORE_POSITION = getKey("DONT_RESTORE_POSITION");
 			DOWNLOAD = getKey("DOWNLOAD");
+			DOWNLOADING_WILL_OVERRIDE_IT = getKey("DOWNLOADING_WILL_OVERRIDE_IT");
 			DO_NOTHING = getKey("DO_NOTHING");
 			DUCK_AUDIO = getKey("DUCK_AUDIO");
 			DUPLICATED_TRACKS = getKey("DUPLICATED_TRACKS");
@@ -240,6 +243,7 @@ class Language extends LanguageKeys {
 			FILE_NAME = getKey("FILE_NAME");
 			FILE = getKey("FILE");
 			FILES = getKey("FILES");
+			FILE_ALREADY_EXISTS = getKey("FILE_ALREADY_EXISTS");
 			FILTER_ALBUMS = getKey("FILTER_ALBUMS");
 			FILTER_ARTISTS = getKey("FILTER_ARTISTS");
 			FILTER_GENRES = getKey("FILTER_GENRES");
@@ -521,6 +525,7 @@ class Language extends LanguageKeys {
 			SUPPORT = getKey("SUPPORT");
 			SUPREMACY = getKey("SUPREMACY");
 			SUSSY_BAKA = getKey("SUSSY_BAKA");
+			SYNOPSIS = getKey("SYNOPSIS");
 			TAG_FIELDS = getKey("TAG_FIELDS");
 			TAGS = getKey("TAGS");
 			THEME_MODE_DARK = getKey("THEME_MODE_DARK");
@@ -578,6 +583,7 @@ class Language extends LanguageKeys {
 			VIDEO_CACHE_FILE = getKey("VIDEO_CACHE_FILE");
 			VIDEO_CACHE_FILES = getKey("VIDEO_CACHE_FILES");
 			VIDEO_CACHE = getKey("VIDEO_CACHE");
+			VIDEO_ONLY = getKey("VIDEO_ONLY");
 			VIDEO_PLAYBACK_SOURCE_AUTO_SUBTITLE = getKey("VIDEO_PLAYBACK_SOURCE_AUTO_SUBTITLE");
 			VIDEO_PLAYBACK_SOURCE_LOCAL_EXAMPLE_SUBTITLE = getKey("VIDEO_PLAYBACK_SOURCE_LOCAL_EXAMPLE_SUBTITLE");
 			VIDEO_PLAYBACK_SOURCE_LOCAL_EXAMPLE = getKey("VIDEO_PLAYBACK_SOURCE_LOCAL_EXAMPLE");
@@ -595,6 +601,7 @@ class Language extends LanguageKeys {
 			WARNING = getKey("WARNING");
 			WAVEFORM_BARS_COUNT = getKey("WAVEFORM_BARS_COUNT");
 			WAVEFORMS = getKey("WAVEFORMS");
+			WEBM_NO_EDIT_TAGS_SUPPORT = getKey("WEBM_NO_EDIT_TAGS_SUPPORT");
 			WEEK = getKey("WEEK");
 			YEAR = getKey("YEAR");
 			YES = getKey("YES");
@@ -613,6 +620,14 @@ class Language extends LanguageKeys {
     }
   }
 }
+
+
+
+
+
+
+
+
 
 
 
