@@ -10,7 +10,6 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -144,15 +143,7 @@ class IndexerSettings extends StatelessWidget {
               icon: Broken.cd,
               title: lang.RESPECT_NO_MEDIA,
               subtitle: "${lang.RESPECT_NO_MEDIA_SUBTITLE}. ${lang.INDEX_REFRESH_REQUIRED}",
-              onChanged: (isTrue) async {
-                if (!settings.respectNoMedia.value) {
-                  if (await requestManageStoragePermission()) {
-                    settings.save(respectNoMedia: true);
-                  }
-                } else {
-                  settings.save(respectNoMedia: false);
-                }
-              },
+              onChanged: (isTrue) => settings.save(respectNoMedia: !isTrue),
               value: settings.respectNoMedia.value,
             ),
           ),

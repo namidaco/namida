@@ -82,9 +82,11 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 
 ## - Permission Note:
 ### the following actions require <font size="1">`all_files_access`</font> permission (requested when needed)
->- respect .nomedia
 >- editing audio tags
 >- creating or restoring backups
+>- saving artworks
+>- compressing images
+>- downloading youtube content
 
 ### Special Thanks:
  >- @LucJosin for their jaudiotagger integration, which actually powers namida.
