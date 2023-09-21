@@ -71,7 +71,7 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 
 <details>
 <summary>how youtube?</summary>
- • looks up in the track comment tag (as they are mostly done by @yt-dlp) or filename for any matching youtube link, if found then it starts downloading (and caches permanently) and plays once it's ready, streaming here isn't a good idea as the priority goes for the music file itself.
+ • looks up in the track comment tag (as they are mostly done by @yt-dlp) or filename for any matching youtube link, if found then it starts downloading (and caches) and plays once it's ready, streaming here isn't a good idea as the priority goes for the music file itself.
 </details>
 <br>
 
@@ -89,7 +89,7 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 >- downloading youtube content
 
 ### Special Thanks:
- >- @LucJosin for their jaudiotagger integration, which actually powers namida.
+ >- @Artx-II for their initial dart port of Newpipe Extractor, which powers youtube section.
  >- @55nknown for their awesome miniplayer physics.
  >- @alexmercerind for helping me out a lot.
  >- @lusaxweb for their awesome Iconsax icon pack.

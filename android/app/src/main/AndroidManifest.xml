@@ -13,12 +13,13 @@
         android:icon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true"
         android:supportsPictureInPicture="true"
-        android:usesCleartextTraffic="true" 
-    > 
+        android:usesCleartextTraffic="true"
+        android:allowBackup="true"
+    >
         <activity
-            android:name="com.ryanheise.audioservice.AudioServiceActivity"
+            android:name=".NamidaMainActivity"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
@@ -35,14 +36,39 @@
             />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.MUSIC_PLAYER" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.APP_MUSIC" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="content"/>
-                <data android:scheme="file"/>
-                <data android:mimeType="audio/*"/>
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="*youtube.com"
+                    android:scheme="https"
+                    android:pathPrefix="/" />
+                <data
+                    android:host="*youtube.com"
+                    android:scheme="http"
+                    android:pathPrefix="/" />
+                <data
+                    android:host="*youtu.be"
+                    android:scheme="https"
+                    android:pathPrefix="/" />
+                <data
+                    android:host="*youtu.be"
+                    android:scheme="http"
+                    android:pathPrefix="/" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="audio/*" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND_MULTIPLE" />

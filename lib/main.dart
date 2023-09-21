@@ -151,7 +151,8 @@ Future<void> _initializeIntenties() async {
             await _waitForFirstBuildContext.future;
             showDownloadVideoBottomSheet(videoId: youtubeId);
           } else {
-            (await playExternalFiles(paths)).executeIfFalse(showErrorPlayingFileSnackbar);
+            final existing = paths.where((element) => File(element).existsSync()); // this for sussy links
+            (await playExternalFiles(existing)).executeIfFalse(showErrorPlayingFileSnackbar);
           }
         }
       }
