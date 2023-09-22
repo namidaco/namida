@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/class/color_m.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -20,6 +21,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final bool isCircle;
   final EdgeInsetsGeometry? margin;
   final void Function(File? imageFile)? onImageReady;
+  final void Function(NamidaColor? color)? onColorReady;
   final List<Widget> onTopWidgets;
   final String? smallBoxText;
   final IconData? smallBoxIcon;
@@ -38,6 +40,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.isCircle = false,
     this.margin,
     this.onImageReady,
+    this.onColorReady,
     this.onTopWidgets = const <Widget>[],
     this.smallBoxText,
     this.smallBoxIcon = Broken.play_cricle,
@@ -69,6 +72,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
     if (widget.extractColor && imagePath != null) {
       final c = await CurrentColor.inst.extractPaletteFromImage(imagePath!, useIsolate: true);
       smallBoxDynamicColor = c?.color;
+      widget.onColorReady?.call(c);
       if (mounted) setState(() {});
     }
   }

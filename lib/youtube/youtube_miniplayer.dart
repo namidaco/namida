@@ -24,6 +24,7 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/widgets/yt_action_button.dart';
+import 'package:namida/youtube/widgets/yt_channel_card.dart';
 import 'package:namida/youtube/widgets/yt_comment_card.dart';
 import 'package:namida/youtube/widgets/yt_playlist_card.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
@@ -467,6 +468,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                   );
                                                 } else if (item is YoutubePlaylist) {
                                                   return YoutubePlaylistCard(playlist: item);
+                                                } else if (item is YoutubeChannel) {
+                                                  return YoutubeChannelCard(channel: item);
                                                 }
                                                 return const SizedBox();
                                               },

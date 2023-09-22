@@ -27,6 +27,7 @@ class YoutubeCard extends StatelessWidget {
   final bool extractColor;
   final List<Widget> menuChildren;
   final List<NamidaPopupItem> menuChildrenDefault;
+  final bool isCircle;
 
   const YoutubeCard({
     super.key,
@@ -49,13 +50,14 @@ class YoutubeCard extends StatelessWidget {
     this.extractColor = false,
     this.menuChildren = const [],
     this.menuChildrenDefault = const [],
+    this.isCircle = false,
   });
 
   @override
   Widget build(BuildContext context) {
     const verticalPadding = 8.0;
     final thumbnailWidth = thumbnailWidthPercentage * context.width * 0.36;
-    final thumbnailHeight = thumbnailWidth * 9 / 16;
+    final thumbnailHeight = isCircle ? thumbnailWidth : thumbnailWidth * 9 / 16;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: verticalPadding * 0.5, horizontal: 8.0),
       child: Stack(
@@ -63,7 +65,7 @@ class YoutubeCard extends StatelessWidget {
         children: [
           NamidaInkWell(
             bgColor: context.theme.cardColor,
-            borderRadius: 12.0,
+            borderRadius: borderRadius,
             onTap: onTap,
             height: thumbnailHeight + verticalPadding,
             child: Row(
@@ -83,6 +85,7 @@ class YoutubeCard extends StatelessWidget {
                     smallBoxText: smallBoxText,
                     smallBoxIcon: smallBoxIcon,
                     extractColor: extractColor,
+                    isCircle: isCircle,
                   ),
                 ),
                 const SizedBox(width: 8.0),

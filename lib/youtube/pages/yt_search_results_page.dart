@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/widgets/yt_channel_card.dart';
 import 'package:namida/youtube/widgets/yt_playlist_card.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 
@@ -69,7 +69,7 @@ class _YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                       case YoutubePlaylist:
                         return YoutubePlaylistCard(playlist: item);
                       case YoutubeChannel:
-                        return Text((item as YoutubeChannel).name ?? ''); // TODO: channel card
+                        return YoutubeChannelCard(channel: item);
                     }
                     return const SizedBox();
                   },
