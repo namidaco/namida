@@ -96,7 +96,7 @@ class NamidaDialogs {
   /// Supports all playlists, (History, Most Played, Favourites & others).
   Future<void> showPlaylistDialog(String playlistName) async {
     if (playlistName == k_PLAYLIST_NAME_HISTORY) {
-      final twds = HistoryController.inst.historyTracks;
+      final twds = HistoryController.inst.historyTracks.toList();
       final trs = twds.toTracks();
       await showGeneralPopupDialog(
         trs,

@@ -452,7 +452,7 @@ extension WidgetsPagess on Widget {
 
 extension RouteUtils on NamidaRoute {
   /// Mainly used for sending to [generalPopupDialog] and use these tracks to remove from playlist.
-  List<TrackWithDate>? get tracksWithDateInside {
+  Iterable<TrackWithDate>? get tracksWithDateInside {
     switch (route) {
       case RouteType.SUBPAGE_playlistTracks:
         return PlaylistController.inst.getPlaylist(name)?.tracks;

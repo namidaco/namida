@@ -51,7 +51,7 @@ class NamidaGenerator {
   }
 
   Iterable<Track> generateRecommendedTrack(Track track) {
-    final historytracks = HistoryController.inst.historyTracks;
+    final historytracks = HistoryController.inst.historyTracks.toList();
     if (historytracks.isEmpty) {
       return [];
     }
