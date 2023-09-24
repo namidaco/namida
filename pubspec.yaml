@@ -27,7 +27,7 @@ dependency_overrides:
   dart_extensions:
     git:
       url: https://github.com/MSOB7YY/dart_extensions
-      ref: b636419fb4f62e9d2475876dbee16b25960898da
+      ref: 4628356a449cdeb12bef5a3a9b4ed37668530192
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -100,17 +100,18 @@ dependencies:
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
+      ref: d3c53175f14980efd9c9f9586df77c6c7ebf49b7
 
   # ---- Video Indexing & Playback ----
-  cached_video_player:
+  video_player:
     git:
-      url: https://github.com/MSOB7YY/flutter_cached_video_player
-      ref: c699b628117e152c4a8a5494b805716cac7f9357
+      url: https://github.com/MSOB7YY/video_player_cache
+      path: video_player/
   ffmpeg_kit_flutter_min: "5.1.0-LTS"
   newpipeextractor_dart:
     git:
       url: https://github.com/MSOB7YY/NewPipeExtractor_Dart
-      ref: a547bd20bb48b5ed4d0835827025a906f85b09a1
+      ref: 30f252aaa3a34441fd6eec6df06739885ccdd09a
 
   # ---- Image Utilities ----
   extended_image: ^8.0.2

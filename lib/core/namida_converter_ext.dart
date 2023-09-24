@@ -189,10 +189,14 @@ extension YTVideoQuality on String {
 }
 
 extension CacheGetterAudio on AudioOnlyStream {
-  String cachePath(String id, {String? directory}) {
+  String cacheKey(String id) {
     final audio = this;
+    return "${id}_${audio.bitrate}.${audio.formatSuffix}";
+  }
+
+  String cachePath(String id, {String? directory}) {
     final dir = Directory(directory ?? AppDirs.AUDIOS_CACHE);
-    return "${dir.path}/${id}_${audio.bitrate}.${audio.formatSuffix}";
+    return "${dir.path}/${cacheKey(id)}";
   }
 
   File? getCachedFile(String id, {String? directory}) {
@@ -202,10 +206,14 @@ extension CacheGetterAudio on AudioOnlyStream {
 }
 
 extension CacheGetterVideo on VideoOnlyStream {
-  String cachePath(String id, {String? directory}) {
+  String cacheKey(String id, {String? directory}) {
     final video = this;
+    return "${id}_${video.resolution}.${video.formatSuffix}";
+  }
+
+  String cachePath(String id, {String? directory}) {
     final dir = Directory(directory ?? AppDirs.VIDEOS_CACHE);
-    return "${dir.path}/${id}_${video.resolution}.${video.formatSuffix}";
+    return "${dir.path}/${cacheKey(id)}";
   }
 
   File? getCachedFile(String id, {String? directory}) {

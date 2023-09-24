@@ -36,11 +36,26 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   List<YoutubeID> get currentQueueYoutubeID => currentQueue.firstOrNull is YoutubeID ? currentQueue.cast<YoutubeID>() : [];
 
   final currentVideoInfo = Rxn<VideoInfo>();
+  final currentChannelInfo = Rxn<YoutubeChannel>();
   final currentVideoStream = Rxn<VideoOnlyStream>();
   final currentVideoThumbnail = Rxn<File>();
 
+  bool get isAudioOnlyPlayback => _isAudioOnlyPlayback;
+  bool _isAudioOnlyPlayback = false;
+
+  bool get isCurrentAudioFromCache => _isCurrentAudioFromCache;
+  bool _isCurrentAudioFromCache = false;
+
   /// Milliseconds should be awaited before playing video.
   int get _videoPositionSeekDelayMS => 500;
+
+  Future<void> setAudioOnlyPlayback(bool audioOnly) async {
+    _isAudioOnlyPlayback = audioOnly;
+    if (_isAudioOnlyPlayback) {
+      currentVideoStream.value = null;
+      await VideoController.vcontroller.dispose();
+    }
+  }
 
   Future<void> _waitForAllBuffers() async {
     await Future.wait([
@@ -343,9 +358,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     Lyrics.inst.updateLyrics(tr);
   }
 
-  Future<void> onItemPlayYoutubeIDSetQuality(VideoOnlyStream stream, File? cachedFile, {required bool useCache}) async {
+  Future<void> onItemPlayYoutubeIDSetQuality({
+    required VideoOnlyStream stream,
+    required File? cachedFile,
+    required bool useCache,
+    required String? videoId,
+  }) async {
     final position = currentPositionMS;
     final wasPlaying = isPlaying;
+    setAudioOnlyPlayback(false);
 
     if (wasPlaying) await onPauseRaw();
 
@@ -354,7 +375,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       if (cachedFile != null && useCache) {
         await VideoController.vcontroller.setFile(cachedFile.path, (videoDuration) => false);
       } else {
-        await VideoController.vcontroller.setNetworkSource(stream.url!, (videoDuration) => false, disposePrevious: false);
+        await VideoController.vcontroller.setNetworkSource(
+          url: stream.url!,
+          looping: (videoDuration) => false,
+          cacheKey: videoId == null ? null : stream.cacheKey(videoId),
+        );
       }
     }
 
@@ -369,14 +394,21 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     YoutubeController.inst.currentYTQualities.clear();
     YoutubeController.inst.updateVideoDetails(item.id);
 
-    currentVideoInfo.value = null;
+    currentVideoInfo.value = item.toVideoInfoSync() ?? YoutubeController.inst.getTemporarelyVideoInfo(item.id);
+    currentChannelInfo.value = YoutubeController.inst.fetchChannelDetailsFromCacheSync(currentVideoInfo.value?.uploaderUrl);
     currentVideoStream.value = null;
     currentVideoThumbnail.value = null;
 
-    pause();
+    final playerStoppingSeikoo = Completer<bool>(); // to prevent accidental stopping if setAudioSource was faster than fade effect
+    pause().then((_) async {
+      await player.stop();
+      playerStoppingSeikoo.complete(true);
+    });
+
     await VideoController.vcontroller.dispose();
     try {
       final streams = await YoutubeController.inst.getAvailableStreams(item.id);
+      if (item != currentVideo) return; // race avoidance when playing multiple videos
 
       YoutubeController.inst.currentYTQualities
         ..clear()
@@ -395,20 +427,32 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         // you could use toVideoInfoSync() but u will have to ensure that the info
         // is saved before calling [onItemPlayYoutubeID], otherwise the audio wouldnt be cached properly
         // and may cause re-download because the next time will be providing the real cache name.
-
+        if (item != currentVideo) return; // race avoidance when playing multiple videos
         currentVideoInfo.value = videoInfo;
         refreshNotification(pi, currentVideoInfo.value);
         currentVideoThumbnail.value = item.getThumbnailSync();
         final cachedVideo = prefferedVideoStream?.getCachedFile(item.id);
+        final cachedAudio = prefferedAudioStream?.getCachedFile(item.id);
+        final mediaItem = item.toMediaItem(currentVideoInfo.value, currentVideoThumbnail.value, index, currentQueue.length);
+        final audioSource = cachedAudio == null
+            ? LockCachingAudioSource(
+                Uri.parse(prefferedAudioStream!.url!),
+                cacheFile: File(prefferedAudioStream.cachePath(item.id)),
+                tag: mediaItem,
+              )
+            : AudioSource.file(cachedAudio.path, tag: mediaItem);
+        _isCurrentAudioFromCache = cachedAudio != null;
+        await playerStoppingSeikoo.future;
         await Future.wait([
-          cachedVideo == null
-              ? VideoController.vcontroller.setNetworkSource(prefferedVideoStream!.url!, (videoDuration) => false)
-              : VideoController.vcontroller.setFile(cachedVideo.path, (videoDuration) => false),
-          player.setAudioSource(LockCachingAudioSource(
-            Uri.parse(prefferedAudioStream!.url!),
-            cacheFile: File(prefferedAudioStream.cachePath(item.id)),
-            tag: item.toMediaItem(currentVideoInfo.value, currentVideoThumbnail.value, index, currentQueue.length),
-          )),
+          if (!isAudioOnlyPlayback)
+            cachedVideo == null
+                ? VideoController.vcontroller.setNetworkSource(
+                    url: prefferedVideoStream!.url!,
+                    looping: (videoDuration) => false,
+                    cacheKey: prefferedVideoStream.cacheKey(item.id),
+                  )
+                : VideoController.vcontroller.setFile(cachedVideo.path, (videoDuration) => false),
+          player.setAudioSource(audioSource),
         ]);
       }
     } catch (e) {

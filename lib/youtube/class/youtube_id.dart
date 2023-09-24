@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:history_manager/history_manager.dart';
-import 'package:newpipeextractor_dart/models/videoInfo.dart';
+import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 
 import 'package:namida/class/track.dart';

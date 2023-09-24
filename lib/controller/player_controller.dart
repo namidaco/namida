@@ -36,8 +36,12 @@ class Player {
   bool get shouldCareAboutAVSync => currentQueueYoutube.isNotEmpty;
 
   VideoInfo? get currentVideoInfo => _audioHandler.currentVideoInfo.value;
+  YoutubeChannel? get currentChannelInfo => _audioHandler.currentChannelInfo.value;
   VideoOnlyStream? get currentVideoStream => _audioHandler.currentVideoStream.value;
   File? get currentVideoThumbnail => _audioHandler.currentVideoThumbnail.value;
+
+  bool get isAudioOnlyPlayback => _audioHandler.isAudioOnlyPlayback;
+  bool get isCurrentAudioFromCache => _audioHandler.isCurrentAudioFromCache;
 
   int get currentIndex => _audioHandler.currentIndex;
   int get nowPlayingPosition => _audioHandler.currentPositionMS;
@@ -45,6 +49,7 @@ class Player {
   Duration? get currentItemDuration => _audioHandler.currentItemDuration;
   bool get isPlaying => _audioHandler.isPlaying;
   bool get isBuffering => _audioHandler.isBuffering;
+  Duration get buffered => _audioHandler.buffered;
   int get numberOfRepeats => _audioHandler.numberOfRepeats;
   int get latestInsertedIndex => _audioHandler.latestInsertedIndex;
 
@@ -102,6 +107,10 @@ class Player {
 
   void refreshNotification() {
     _audioHandler.refreshNotification();
+  }
+
+  Future<void> setAudioOnlyPlayback(bool audioOnly) async {
+    await _audioHandler.setAudioOnlyPlayback(audioOnly);
   }
 
   Future<void> setSkipSilenceEnabled(bool enabled) async {
@@ -275,8 +284,18 @@ class Player {
     _audioHandler.removeRangeFromQueue(start, end);
   }
 
-  Future<void> onItemPlayYoutubeIDSetQuality(VideoStream stream, File? cachedFile, {bool useCache = true}) async {
-    await _audioHandler.onItemPlayYoutubeIDSetQuality(stream, cachedFile, useCache: useCache);
+  Future<void> onItemPlayYoutubeIDSetQuality({
+    required VideoStream stream,
+    required File? cachedFile,
+    required bool useCache,
+    required String? videoId,
+  }) async {
+    await _audioHandler.onItemPlayYoutubeIDSetQuality(
+      stream: stream,
+      cachedFile: cachedFile,
+      useCache: useCache,
+      videoId: videoId,
+    );
   }
 
   Future<void> play() async {

@@ -38,7 +38,7 @@ class YoutubePlaylistCard extends StatelessWidget {
       },
       displayChannelThumbnail: false,
       displaythirdLineText: false,
-      smallBoxText: count?.formatDecimalShort() ?? "+25",
+      smallBoxText: count == null || count < 1 ? "+25" : count.formatDecimalShort(),
     );
   }
 }

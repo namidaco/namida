@@ -3,7 +3,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:cached_video_player/cached_video_player.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide Response;
@@ -11,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:newpipeextractor_dart/models/streams.dart';
 import 'package:picture_in_picture/picture_in_picture.dart';
+import 'package:video_player/video_player.dart';
 
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/track.dart';
@@ -92,18 +92,15 @@ class VideoController {
           alignment: Alignment.center,
           children: [
             Obx(
-              () => NamidaAspectRatio(
-                aspectRatio: aspectRatio,
-                child: NamidaVideoControls(
-                  key: _videoControlsKeys[finalKey],
-                  onMinimizeTap: onMinimizeTap,
-                  showControls: enableControls,
-                  controller: playerController,
-                  fallbackChild: fallbackChild,
-                  isFullScreen: fullscreen,
-                  qualityItems: qualityItems,
-                  child: vcontroller.videoWidget?.value,
-                ),
+              () => NamidaVideoControls(
+                key: _videoControlsKeys[finalKey],
+                onMinimizeTap: onMinimizeTap,
+                showControls: enableControls,
+                controller: playerController,
+                fallbackChild: fallbackChild,
+                isFullScreen: fullscreen,
+                qualityItems: qualityItems,
+                child: vcontroller.videoWidget?.value,
               ),
             ),
           ],
@@ -115,8 +112,6 @@ class VideoController {
   }
 
   bool get shouldShowVideo => currentVideo.value != null && _videoController.isInitialized;
-
-  double? get aspectRatio => _videoController.aspectRatio;
 
   final localVideoExtractCurrent = Rxn<int>();
   final localVideoExtractTotal = 0.obs;
@@ -151,7 +146,7 @@ class VideoController {
     return videos;
   }
 
-  CachedVideoPlayerController? get playerController => _videoController.videoController;
+  VideoPlayerController? get playerController => _videoController.videoController;
   static _NamidaVideoPlayer get vcontroller => inst._videoController;
   _NamidaVideoPlayer _videoController = _NamidaVideoPlayer.inst;
 
@@ -807,39 +802,52 @@ class _NamidaVideoPlayer {
   _NamidaVideoPlayer._internal();
 
   Rxn<Widget>? get videoWidget => _videoWidget;
-  CachedVideoPlayerController? get videoController => _videoController;
+  VideoPlayerController? get videoController => _videoController;
   bool get isInitialized => _initializedVideo.value;
   bool get isBuffering => _isBuffering.value;
+  Duration? get buffered => _buffered.value;
+  bool get isCurrentVideoFromCache => _isCurrentVideoFromCache.value;
   double? get aspectRatio => _aspectRatio.value;
   Future<bool>? get waitTillBufferingComplete => _bufferingCompleter?.future;
 
   final _initializedVideo = false.obs;
   final _isBuffering = true.obs;
+  final _buffered = Rxn<Duration>();
   final _aspectRatio = Rxn<double>();
+  final _isCurrentVideoFromCache = false.obs;
   Completer<bool>? _bufferingCompleter;
 
-  CachedVideoPlayerController? _videoController;
+  VideoPlayerController? _videoController;
   final _videoWidget = Rxn<Widget>();
 
-  void _updateWidget(CachedVideoPlayerController controller) {
+  void _updateWidget(VideoPlayerController controller) {
     _videoWidget.value = null;
-    _videoWidget.value = CachedVideoPlayer(controller);
+    _videoWidget.value = VideoPlayer(controller);
   }
 
-  Future<void> setNetworkSource(String url, bool Function(Duration videoDuration) looping, {bool disposePrevious = true}) async {
+  Future<void> setNetworkSource({
+    required String url,
+    required bool Function(Duration videoDuration) looping,
+    required String? cacheKey,
+  }) async {
     _initializedVideo.value = false;
     await _execute(() async {
-      if (disposePrevious) await dispose();
+      await dispose();
 
       await _initializeController(
-        CachedVideoPlayerController.network(
-          url,
+        VideoPlayerController.networkUrl(
+          Uri.parse(url),
+          cacheKey: cacheKey,
+          enableCaching: true,
+          maxTotalCacheSize: 2 * 1024 * 1024 * 1024,
+          cacheDirectory: Directory(AppDirs.VIDEOS_CACHE),
           videoPlayerOptions: VideoPlayerOptions(
             mixWithOthers: true,
             allowBackgroundPlayback: true,
           ),
         ),
       );
+      _isCurrentVideoFromCache.value = false;
       _updateWidget(_videoController!);
       _initializedVideo.value = true;
       _videoController?.setLooping(looping(_videoController?.value.duration ?? Duration.zero));
@@ -851,7 +859,7 @@ class _NamidaVideoPlayer {
     await _execute(() async {
       await dispose();
       await _initializeController(
-        CachedVideoPlayerController.file(
+        VideoPlayerController.file(
           File(path),
           videoPlayerOptions: VideoPlayerOptions(
             mixWithOthers: true,
@@ -859,6 +867,7 @@ class _NamidaVideoPlayer {
           ),
         ),
       );
+      _isCurrentVideoFromCache.value = true;
       _updateWidget(_videoController!);
       _initializedVideo.value = true;
       _videoController?.setLooping(looping(_videoController?.value.duration ?? Duration.zero));
@@ -903,7 +912,8 @@ class _NamidaVideoPlayer {
     return res;
   }
 
-  Future<void> _initializeController(CachedVideoPlayerController c) async {
+  Future<void> _initializeController(VideoPlayerController c) async {
+    _isBuffering.value = true;
     _videoController?.removeListener(_updateBufferingStatus);
     _videoController = c;
     await _videoController!.initialize();
@@ -913,6 +923,7 @@ class _NamidaVideoPlayer {
 
   bool _didPauseInternally = false;
   Future<void> _updateBufferingStatus() async {
+    _buffered.value = _videoController?.value.buffered.lastOrNull?.end;
     _isBuffering.value = _videoController?.value.isBuffering ?? false;
 
     if (_isBuffering.value) {
@@ -932,15 +943,16 @@ class _NamidaVideoPlayer {
   }
 
   Future<void> dispose() async {
-    if (_initializedVideo.value && (videoController?.value.isInitialized ?? false)) {
-      await _execute(() async {
-        _videoWidget.value = null;
-        _aspectRatio.value = null;
-        await _videoController?.dispose();
+    await _execute(() async {
+      _videoWidget.value = null;
+      _aspectRatio.value = null;
+      _isBuffering.value = false;
+      _buffered.value = null;
+      _isCurrentVideoFromCache.value = false;
+      await _videoController?.dispose();
 
-        _videoController = null;
-        _initializedVideo.value = false;
-      });
-    }
+      _videoController = null;
+      _initializedVideo.value = false;
+    });
   }
 }

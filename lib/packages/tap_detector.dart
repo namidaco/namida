@@ -116,6 +116,7 @@ class TapDetector extends StatelessWidget {
     return useGestureDetector
         ? GestureDetector(
             key: key,
+            behavior: HitTestBehavior.translucent,
             onTap: !enableTaps
                 ? null
                 : () {

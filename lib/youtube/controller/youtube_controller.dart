@@ -72,11 +72,28 @@ class YoutubeController {
 
   final isDownloading = <String, bool>{}.obs;
 
+  /// Temporarely saves StreamInfoItem info for flawless experience while waiting for real info.
+  final _tempVideoInfosFromStreams = <String, StreamInfoItem>{}; // {id: StreamInfoItem()}
+
   String getYoutubeLink(String id) => id.toYTUrl();
+
+  VideoInfo? getTemporarelyVideoInfo(String id) {
+    final si = _tempVideoInfosFromStreams[id];
+    return si == null ? null : VideoInfo.fromStreamInfoItem(si);
+  }
+
+  /// Keeps the map at max 300 items. maintained by least recently used.
+  void _fillTempVideoInfoMap(Iterable<StreamInfoItem>? items) {
+    if (items != null) {
+      final entries = items.map((e) => MapEntry(e.id ?? '', e));
+      _tempVideoInfosFromStreams.optimizedAdd(entries, 300);
+    }
+  }
 
   Future<void> prepareHomeFeed() async {
     homepageFeed.clear();
     final videos = await NewPipeExtractorDart.trending.getTrendingVideos();
+    _fillTempVideoInfoMap(videos);
     homepageFeed.addAll([
       ...videos,
     ]);
@@ -84,6 +101,7 @@ class YoutubeController {
 
   Future<List> searchForItems(String text) async {
     final videos = await NewPipeExtractorDart.search.searchYoutube(text, []);
+    _fillTempVideoInfoMap(videos.searchVideos);
     return videos.dynamicSearchResultsList;
   }
 
@@ -95,6 +113,7 @@ class YoutubeController {
       searchPlaylists: parsedList[1],
       searchChannels: parsedList[2],
     );
+    _fillTempVideoInfoMap(v.searchVideos);
     return v.dynamicSearchResultsList;
   }
 
@@ -103,11 +122,20 @@ class YoutubeController {
       ..clear()
       ..addAll(List.filled(20, null));
     final items = await NewPipeExtractorDart.videos.getRelatedStreams(id.toYTUrl());
+    _fillTempVideoInfoMap(items.whereType<StreamInfoItem>());
     currentRelatedVideos
       ..clear()
       ..addAll([
         ...items,
       ]);
+  }
+
+  /// For full list of items, use [streams] getter in [playlist].
+  Future<List<StreamInfoItem>> getPlaylistStreams(YoutubePlaylist? playlist) async {
+    if (playlist == null) return [];
+    final streams = await playlist.getStreamsNextPage();
+    _fillTempVideoInfoMap(streams);
+    return streams;
   }
 
   Future<void> _fetchComments(String id, {bool forceRequest = false}) async {
@@ -174,38 +202,6 @@ class YoutubeController {
     isLoadingComments.value = false;
   }
 
-  // Future<void> playVideo(String id, {VideoOnlyStream? stream}) async {
-  //   updateVideoDetails(id);
-  //   await VideoController.vcontroller.dispose();
-  //   VideoController.inst.currentVideo.value = null;
-
-  //   late VideoOnlyStream selectedStream;
-
-  //   if (stream != null) {
-  //     selectedStream = stream;
-  //   } else {
-  //     currentYTQualities.clear();
-  //     final streams = await getAvailableVideoStreamsOnly(id);
-  //     currentYTQualities
-  //       ..clear()
-  //       ..addAll(streams);
-  //     selectedStream = getPreferredStreamQuality(streams);
-  //   }
-  //   VideoController.inst.currentVideo.value = NamidaVideo(
-  //     path: '',
-  //     ytID: id,
-  //     height: selectedStream.height ?? 0,
-  //     width: selectedStream.width ?? 0,
-  //     sizeInBytes: selectedStream.sizeInBytes ?? 0,
-  //     frameratePrecise: selectedStream.fps?.toDouble() ?? 0.0,
-  //     creationTimeMS: 0,
-  //     durationMS: selectedStream.durationMS ?? 0,
-  //     bitrate: selectedStream.bitrate ?? 0,
-  //   );
-
-  //   await VideoController.vcontroller.setNetworkSource(selectedStream.url ?? '', (videoDuration) => false);
-  // }
-
   VideoStream getPreferredStreamQuality(List<VideoStream> streams, {bool preferIncludeWebm = true}) {
     final preferredQualities = settings.youtubeVideoQualities.map((element) => element.settingLabeltoVideoLabel());
     VideoStream? plsLoop(bool webm) {
@@ -266,6 +262,16 @@ class YoutubeController {
     return null;
   }
 
+  YoutubeChannel? fetchChannelDetailsFromCacheSync(String? channelUrl) {
+    final channelId = channelUrl?.split('/').last;
+    final cachedFile = File("${AppDirs.YT_METADATA_CHANNELS}$channelId.txt");
+    if (cachedFile.existsSync()) {
+      final res = cachedFile.readAsJsonSync();
+      return YoutubeChannel.fromMap(res);
+    }
+    return null;
+  }
+
   Future<YoutubeChannel> _fetchChannelDetails(String? channelUrl) async {
     final channelId = channelUrl?.split('/').last;
     final cachedFile = File("${AppDirs.YT_METADATA_CHANNELS}$channelId.txt");
@@ -285,10 +291,7 @@ class YoutubeController {
 
   Future<List<VideoOnlyStream>> getAvailableVideoStreamsOnly(String id) async {
     final videos = await NewPipeExtractorDart.videos.getVideoOnlyStreams(id.toYTUrl());
-    videos.sortByReverseAlt(
-      (e) => e.width ?? (int.tryParse(e.resolution?.split('p').firstOrNull ?? '') ?? 0),
-      (e) => e.fps ?? 0,
-    );
+    _sortVideoStreams(videos);
     return videos;
   }
 
@@ -304,20 +307,26 @@ class YoutubeController {
   Future<YoutubeVideo> getAvailableStreams(String id) async {
     final url = id.toYTUrl();
     final video = await NewPipeExtractorDart.videos.getStream(url);
-    video.videoOnlyStreams?.sortByReverseAlt(
-      (e) => e.width ?? (int.tryParse(e.resolution?.split('p').firstOrNull ?? '') ?? 0),
-      (e) => e.fps ?? 0,
-    );
-    video.videoStreams?.sortByReverseAlt(
-      (e) => e.width ?? (int.tryParse(e.resolution?.split('p').firstOrNull ?? '') ?? 0),
-      (e) => e.fps ?? 0,
-    );
 
-    video.audioOnlyStreams?.sortByReverseAlt(
+    _sortVideoStreams(video.videoOnlyStreams);
+    _sortVideoStreams(video.videoStreams);
+    _sortAudioStreams(video.audioOnlyStreams);
+
+    return video;
+  }
+
+  void _sortVideoStreams(List<VideoStream>? streams) {
+    streams?.sortByReverseAlt(
+      (e) => e.width ?? (int.tryParse(e.resolution?.split('p').firstOrNull ?? '') ?? 0),
+      (e) => e.fps ?? 0,
+    );
+  }
+
+  void _sortAudioStreams(List<AudioOnlyStream>? streams) {
+    streams?.sortByReverseAlt(
       (e) => e.bitrate ?? 0,
       (e) => e.sizeInBytes ?? 0,
     );
-    return video;
   }
 
   Future<VideoInfo?> getVideoInfo(String id) async {
@@ -360,6 +369,7 @@ class YoutubeController {
     bool isVideoFileCached = false;
     bool isAudioFileCached = false;
 
+    final filenameClean = filename.replaceAll(RegExp(r'[#\$|/\\!^]', caseSensitive: false), '_');
     try {
       // --------- Downloading Choosen Video.
       if (videoStream != null) {
@@ -370,7 +380,7 @@ class YoutubeController {
         } else {
           String getVPath(bool isTemp) {
             final prefix = isTemp ? '.tempv_' : '';
-            return "${saveDirectory.path}/$prefix$filename";
+            return "${saveDirectory.path}/$prefix$filenameClean";
           }
 
           if (videoStream.sizeInBytes == 0) {
@@ -381,7 +391,7 @@ class YoutubeController {
           final downloadedFile = await _checkFileAndDownload(
             url: videoStream.url ?? '',
             targetSize: videoStream.sizeInBytes ?? 0,
-            filename: filename,
+            filename: filenameClean,
             destinationFilePath: getVPath(true),
             onInitialFileSize: (initialFileSize) {
               onInitialVideoFileSize(initialFileSize);
@@ -418,7 +428,7 @@ class YoutubeController {
         } else {
           String getAPath(bool isTemp) {
             final prefix = isTemp ? '.tempa_' : '';
-            return "${saveDirectory.path}/$prefix$filename";
+            return "${saveDirectory.path}/$prefix$filenameClean";
           }
 
           int bytesLength = 0;
@@ -426,7 +436,7 @@ class YoutubeController {
           final downloadedFile = await _checkFileAndDownload(
             url: audioStream.url ?? '',
             targetSize: audioStream.sizeInBytes ?? 0,
-            filename: filename,
+            filename: filenameClean,
             destinationFilePath: getAPath(true),
             onInitialFileSize: (initialFileSize) {
               onInitialAudioFileSize(initialFileSize);
@@ -455,7 +465,7 @@ class YoutubeController {
       // -----------------------------------
 
       // ----- merging if both video & audio were downloaded
-      final output = "${saveDirectory.path}/$filename";
+      final output = "${saveDirectory.path}/$filenameClean";
       if (merge && videoFile != null && audioFile != null) {
         final didMerge = await NamidaFFMPEG.inst.mergeAudioAndVideo(
           videoPath: videoFile.path,
@@ -563,10 +573,8 @@ class YoutubeController {
       } else {
         final availableVideos = await getAvailableVideoStreamsOnly(id);
 
-        availableVideos.sortByReverseAlt(
-          (e) => e.width ?? (int.tryParse(e.resolution?.split('p').firstOrNull ?? '') ?? 0),
-          (e) => e.fps ?? 0,
-        );
+        _sortVideoStreams(availableVideos);
+
         onAvailableQualities(availableVideos);
 
         erabaretaStream = availableVideos.last; // worst quality
