@@ -64,6 +64,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   final hideDuration = const Duration(seconds: 3);
   final volumeHideDuration = const Duration(seconds: 2);
   final transitionDuration = const Duration(milliseconds: 300);
+  final doubleTapSeekReset = const Duration(milliseconds: 600);
 
   Timer? _hideTimer;
   void _resetTimer({bool hideControls = false}) {
@@ -106,6 +107,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   }
 
   void _onTap() {
+    if (_shouldSeekOnTap) return;
     if (_isVisible) {
       setControlsVisibily(false);
     } else {
@@ -116,7 +118,21 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     _startTimer();
   }
 
+  bool _shouldSeekOnTap = false;
+  Timer? _doubleSeekTimer;
+  void _startSeekTimer(bool forward) {
+    _shouldSeekOnTap = true;
+    _doubleSeekTimer?.cancel();
+    _doubleSeekTimer = Timer(doubleTapSeekReset, () {
+      _shouldSeekOnTap = false;
+      _seekSeconds = 0;
+    });
+  }
+
   int _seekSeconds = 0;
+
+  /// This prevents mixing up forward seek seconds with backward ones.
+  bool _lastSeekWasForward = true;
 
   void _onDoubleTap(TapDownDetails details) async {
     final totalWidth = context.width;
@@ -125,11 +141,33 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     final pos = details.localPosition.dx - halfScreen;
     if (pos.abs() > middleAmmountToIgnore) {
       if (pos.isNegative) {
+        // -- Seeking Backwards
         animateSeekControllers(false);
-        _seekSeconds = await Player.inst.seekSecondsBackward();
+        _startSeekTimer(false);
+        Player.inst.seekSecondsBackward(
+          onSecondsReady: (finalSeconds) {
+            if (_shouldSeekOnTap && !_lastSeekWasForward) {
+              _seekSeconds += finalSeconds;
+            } else {
+              _seekSeconds = finalSeconds;
+            }
+          },
+        );
+        _lastSeekWasForward = false;
       } else {
+        // -- Seeking Forwards
         animateSeekControllers(true);
-        _seekSeconds = await Player.inst.seekSecondsForward();
+        _startSeekTimer(true);
+        Player.inst.seekSecondsForward(
+          onSecondsReady: (finalSeconds) {
+            if (_shouldSeekOnTap && _lastSeekWasForward) {
+              _seekSeconds += finalSeconds;
+            } else {
+              _seekSeconds = finalSeconds;
+            }
+          },
+        );
+        _lastSeekWasForward = true;
       }
     }
   }
@@ -195,10 +233,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
     FlutterVolumeController.addListener(
       (value) async {
-        final ast = await FlutterVolumeController.getAndroidAudioStream();
-        if (ast == AudioStream.music) {
-          _currentDeviceVolume.value = value;
-          _startVolumeSwipeTimer();
+        if (widget.showControls) {
+          final ast = await FlutterVolumeController.getAndroidAudioStream();
+          if (ast == AudioStream.music) {
+            _currentDeviceVolume.value = value;
+            _startVolumeSwipeTimer();
+          }
         }
       },
       emitOnStart: false,
@@ -276,28 +316,28 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         child: AnimatedBuilder(
           animation: controller,
           builder: (context, child) {
+            final ss = _seekSeconds;
             return Opacity(
               opacity: controller.value,
-              child: Obx(
-                () {
-                  final seekSecondsInSett = settings.isSeekDurationPercentage.value ? null : settings.seekDurationInSeconds.value;
-                  final ss = seekSecondsInSett ?? _seekSeconds;
-                  return Column(
-                    children: [
-                      Icon(
-                        isForward ? forwardIcons[ss] ?? Broken.forward : backwardIcons[ss] ?? Broken.backward,
-                        color: color,
-                      ),
-                      const SizedBox(height: 8.0),
-                      Text(
-                        '$ss ${lang.SECONDS}',
-                        style: context.textTheme.displayMedium?.copyWith(color: color),
-                      ),
-                    ],
-                  );
-                },
+              child: Column(
+                children: [
+                  Icon(
+                    isForward ? forwardIcons[ss] ?? Broken.forward : backwardIcons[ss] ?? Broken.backward,
+                    color: color,
+                  ),
+                  const SizedBox(height: 8.0),
+                  Text(
+                    '$ss ${lang.SECONDS}',
+                    style: context.textTheme.displayMedium?.copyWith(color: color),
+                  ),
+                ],
               ),
             );
+          },
+        ),
+      ),
+    );
+  }
           },
         ),
       ),
@@ -351,6 +391,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
             },
       child: TapDetector(
         enableTaps: widget.showControls,
+        onTapDownImp: (d) {
+          if (_shouldSeekOnTap) {
+            _onDoubleTap(d);
+            _startTimer();
+          }
+        },
         onTap: (d) => _onTap(),
         onDoubleTap: _onDoubleTap,
         doubleTapTime: const Duration(milliseconds: 200),
