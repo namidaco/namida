@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -106,7 +107,9 @@ void showSettingDialogWithTextField({
                   settings.save(trackTileSeparator: '•');
                   showSnackBarWithTitle("${settings.trackTileSeparator}", title: title, iconWidget: iconWidget);
                 }
+
                 NamidaNavigator.inst.closeDialog();
+                Player.inst.refreshRxVariables();
               },
               icon: const Icon(Broken.refresh),
             ),
@@ -150,6 +153,7 @@ void showSettingDialogWithTextField({
                 }
 
                 NamidaNavigator.inst.closeDialog();
+                Player.inst.refreshRxVariables();
               }
             },
           ),

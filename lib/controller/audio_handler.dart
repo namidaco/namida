@@ -117,7 +117,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   // =================================================================================
 
   Future<void> refreshVideoPosition() async {
-    await VideoController.vcontroller.seek(Duration(milliseconds: currentPositionMS));
+    await VideoController.vcontroller.seek(Duration(milliseconds: currentPositionMS - _videoPositionSeekDelayMS));
   }
 
   Future<void> _playAudioThenVideo() async {

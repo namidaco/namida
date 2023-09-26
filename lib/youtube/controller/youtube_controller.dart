@@ -85,11 +85,11 @@ class YoutubeController {
     return si == null ? null : VideoInfo.fromStreamInfoItem(si);
   }
 
-  /// Keeps the map at max 300 items. maintained by least recently used.
+  /// Keeps the map at max 2000 items. maintained by least recently used.
   void _fillTempVideoInfoMap(Iterable<StreamInfoItem>? items) {
     if (items != null) {
       final entries = items.map((e) => MapEntry(e.id ?? '', e));
-      _tempVideoInfosFromStreams.optimizedAdd(entries, 300);
+      _tempVideoInfosFromStreams.optimizedAdd(entries, 2000);
     }
   }
 

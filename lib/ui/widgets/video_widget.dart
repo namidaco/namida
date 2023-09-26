@@ -525,11 +525,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                   child: NamidaBgBlur(
                                     blur: visiblePercentage * 3.0,
-                                    child: NamidaInkWell(
-                                      onTap: null,
-                                      borderRadius: 6.0,
-                                      bgColor: Colors.black.withOpacity(0.2 * visiblePercentage),
+                                    child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.2 * visiblePercentage),
+                                        borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                      ),
                                       child: Obx(
                                         () => Row(
                                           children: [
@@ -627,11 +628,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                     child: NamidaBgBlur(
                                       blur: visiblePercentage * 3.0,
-                                      child: NamidaInkWell(
-                                        onTap: null,
-                                        borderRadius: 6.0,
-                                        bgColor: Colors.black.withOpacity(0.2 * visiblePercentage),
+                                      child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.2 * visiblePercentage),
+                                          borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                        ),
                                         child: Obx(
                                           () {
                                             final qt = Player.inst.currentVideoStream?.resolution;

@@ -279,7 +279,7 @@ class VideoController {
       final volume = mute ? 0.0 : settings.playerVolume.value;
       await Future.wait([
         _videoController.setVolume(volume),
-        Player.inst.updateVideoPlayingState(),
+        vcontroller.togglePlayPause(Player.inst.isPlaying),
         Player.inst.refreshVideoSeekPosition(),
       ]);
     });
@@ -941,6 +941,8 @@ class _NamidaVideoPlayer {
     }
   }
 
+  Future<void> togglePlayPause(bool play) async => play ? await this.play() : await pause();
+
   Future<void> play() async => await _execute(() async => await _videoController?.play());
 
   Future<void> pause() async => await _execute(() async => await _videoController?.pause());
@@ -966,7 +968,6 @@ class _NamidaVideoPlayer {
   }
 
   Future<void> _initializeController(VideoPlayerController c) async {
-    _isBuffering.value = true;
     _videoController?.removeListener(_updateBufferingStatus);
     _videoController = c;
     await _videoController!.initialize();

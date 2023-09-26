@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -565,7 +566,10 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                   tooltip: YoutubeController.inst.isCurrentCommentsFromCache ? lang.CACHE : null,
                                                   icon: Broken.refresh,
                                                   iconSize: 22.0,
-                                                  onPressed: () async => await YoutubeController.inst.updateCurrentComments(currentId, forceRequest: true),
+                                                  onPressed: () async => await YoutubeController.inst.updateCurrentComments(
+                                                    currentId,
+                                                    forceRequest: ConnectivityController.inst.hasConnection,
+                                                  ),
                                                   child: YoutubeController.inst.isCurrentCommentsFromCache
                                                       ? const StackedIcon(
                                                           baseIcon: Broken.refresh,

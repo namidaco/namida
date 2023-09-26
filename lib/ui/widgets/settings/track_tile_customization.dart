@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -32,6 +33,7 @@ class TrackTileCustomization extends StatelessWidget {
           () => CustomSwitchListTile(
             icon: Broken.crop,
             title: lang.FORCE_SQUARED_TRACK_THUMBNAIL,
+            value: settings.forceSquaredTrackThumbnail.value,
             onChanged: (value) {
               settings.save(forceSquaredTrackThumbnail: !value);
               if (!value && settings.trackThumbnailSizeinList.toInt() != settings.trackListTileHeight.toInt()) {
@@ -53,8 +55,8 @@ class TrackTileCustomization extends StatelessWidget {
                   ),
                 );
               }
+              Player.inst.refreshRxVariables();
             },
-            value: settings.forceSquaredTrackThumbnail.value,
           ),
         ),
         Obx(
