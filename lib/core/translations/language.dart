@@ -69,6 +69,7 @@ class Language extends LanguageKeys {
       String getKey(String key) => map[key] ?? _defaultMap[key] ?? '';
 
       // -- Keys Start ---------------------------------------------------------
+			ABOUT = getKey("ABOUT");
 			ACTIVE = getKey("ACTIVE");
 			ADD_FOLDER = getKey("ADD_FOLDER");
 			ADD_MORE_FROM_THIS_ALBUM = getKey("ADD_MORE_FROM_THIS_ALBUM");
@@ -118,6 +119,7 @@ class Language extends LanguageKeys {
 			CACHE = getKey("CACHE");
 			CANCEL = getKey("CANCEL");
 			CHANGED = getKey("CHANGED");
+			CHANGELOG = getKey("CHANGELOG");
 			CHANNELS = getKey("CHANNELS");
 			CHECK_FOR_MORE = getKey("CHECK_FOR_MORE");
 			CHECK_LIST = getKey("CHECK_LIST");
@@ -620,6 +622,8 @@ class Language extends LanguageKeys {
     }
   }
 }
+
+
 
 
 

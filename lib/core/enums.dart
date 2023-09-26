@@ -201,6 +201,7 @@ enum RouteType {
   PAGE_folders,
   PAGE_queue,
   PAGE_stats,
+  PAGE_about,
 
   // ----- Subpages -----
   SUBPAGE_recentlyAddedTracks,

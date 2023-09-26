@@ -452,9 +452,12 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomListTile(
-      leading: const StackedIcon(
+      leading: StackedIcon(
         baseIcon: Broken.folder,
         secondaryIcon: Broken.music,
+        baseIconColor: colorScheme,
+        secondaryIconColor: colorScheme,
+        delightenColors: true,
       ),
       title: lang.UPDATE_DIRECTORY_PATH,
       subtitle: oldPath,

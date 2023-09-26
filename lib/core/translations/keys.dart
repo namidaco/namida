@@ -2,6 +2,7 @@
 // AUTO GENERATED FILE
   
 class LanguageKeys {
+  late String ABOUT;
   late String ACTIVE;
   late String ADD_FOLDER;
   late String ADD_MORE_FROM_THIS_ALBUM;
@@ -51,6 +52,7 @@ class LanguageKeys {
   late String CACHE;
   late String CANCEL;
   late String CHANGED;
+  late String CHANGELOG;
   late String CHANNELS;
   late String CHECK_FOR_MORE;
   late String CHECK_LIST;

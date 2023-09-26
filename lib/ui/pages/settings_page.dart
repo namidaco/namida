@@ -49,6 +49,10 @@ class SettingsPage extends StatelessWidget {
                     ExtrasSettings(),
                     BackupAndRestore(),
                     AdvancedSettings(),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12.0),
+                      child: AboutPageTileWidget(),
+                    ),
                     kBottomPaddingWidget,
                   ],
                 ),
@@ -101,6 +105,7 @@ class CollapsedSettingTiles extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
       children: [
         CustomCollapsedListTile(
           title: lang.THEME_SETTINGS,
@@ -146,6 +151,7 @@ class CollapsedSettingTiles extends StatelessWidget {
           icon: Broken.hierarchy_3,
           page: const AdvancedSettings(),
         ),
+        const AboutPageTileWidget(),
         const CollapsedSettingTileWidget(),
         kBottomPaddingWidget,
       ],
@@ -155,12 +161,21 @@ class CollapsedSettingTiles extends StatelessWidget {
 
 class CustomCollapsedListTile extends StatelessWidget {
   final String title;
-  final String subtitle;
+  final String? subtitle;
   final Widget page;
   final IconData? icon;
   final Widget? trailing;
+  final bool rawPage;
 
-  const CustomCollapsedListTile({super.key, required this.title, required this.subtitle, required this.page, this.icon, this.trailing});
+  const CustomCollapsedListTile({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.page,
+    this.icon,
+    this.trailing,
+    this.rawPage = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -178,10 +193,12 @@ class CustomCollapsedListTile extends StatelessWidget {
         ],
       ),
       onTap: () => NamidaNavigator.inst.navigateTo(
-        SettingsSubPage(
-          title: title,
-          child: page,
-        ),
+        rawPage
+            ? page
+            : SettingsSubPage(
+                title: title,
+                child: page,
+              ),
       ),
     );
   }

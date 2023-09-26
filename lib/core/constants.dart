@@ -20,7 +20,6 @@ final RegExp kYoutubeRegex = RegExp(
   r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)(?:\S+)?',
   caseSensitive: false,
 );
-const String k_NAMIDA_SUPPORT_LINK = '';
 
 /// Main Color
 const Color kMainColor = Color.fromARGB(160, 117, 128, 224);
@@ -109,6 +108,15 @@ class AppDirs {
     YT_STATS,
     // Internal Storage Directories are created on demand
   ];
+}
+
+class AppSocial {
+  static const APP_VERSION = 'v1.0.0-release';
+  static const DONATE_KOFI = 'https://ko-fi.com/namidaco';
+  static const DONATE_BUY_ME_A_COFFEE = 'https://www.buymeacoffee.com/namidaco';
+  static const GITHUB = 'https://github.com/namidaco/namida';
+  static const GITHUB_ISSUES = '$GITHUB/issues';
+  static const GITHUB_RELEASES = '$GITHUB/releases/';
 }
 
 /// Default Playlists IDs

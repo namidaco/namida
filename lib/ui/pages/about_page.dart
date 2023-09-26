@@ -1,0 +1,357 @@
+// ignore_for_file: use_build_context_synchronously, depend_on_referenced_packages, implementation_imports
+
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:get/get.dart';
+import 'package:markdown/src/ast.dart' as md;
+import 'package:url_launcher/url_launcher_string.dart';
+import 'package:http/http.dart' as http;
+
+import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/translations/language.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/ui/widgets/settings_card.dart';
+
+class AboutPage extends StatelessWidget {
+  const AboutPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final imageSize = context.width * 0.25;
+    final topPadding = imageSize / 2;
+    const textTopPadding = 28.0 * 2;
+    return BackgroundWrapper(
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: kBottomPadding),
+        children: [
+          SizedBox(height: topPadding),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24.0),
+            decoration: BoxDecoration(
+              color: context.theme.cardColor.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(20.0.multipliedRadius),
+            ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.topCenter,
+              children: [
+                Column(
+                  children: [
+                    SizedBox(height: topPadding + textTopPadding),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: NamidaAboutListTile(
+                        visualDensity: VisualDensity.compact,
+                        trailing: const Icon(Broken.code_circle),
+                        leading: () {
+                          final ic = SizedBox(
+                            width: 48.0,
+                            height: 48.0,
+                            child: Icon(
+                              Broken.user,
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                          );
+                          return Container(
+                            clipBehavior: Clip.antiAlias,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color.fromRGBO(25, 25, 25, 0.8),
+                            ),
+                            child: Image.network(
+                              'https://avatars.githubusercontent.com/u/85245079',
+                              width: 48.0,
+                              height: 48.0,
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress?.cumulativeBytesLoaded == loadingProgress?.expectedTotalBytes) {
+                                  return child;
+                                }
+                                return ic;
+                              },
+                              errorBuilder: (context, error, stackTrace) => ic,
+                            ),
+                          );
+                        }(),
+                        title: 'Developer',
+                        subtitle: 'MSOB7YY',
+                        link: 'https://github.com/MSOB7YY',
+                      ),
+                    ),
+                  ],
+                ),
+                Positioned(
+                  top: -topPadding,
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(4.0),
+                        clipBehavior: Clip.antiAlias,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.transparent,
+                        ),
+                        child: Container(
+                          width: imageSize,
+                          height: imageSize,
+                          clipBehavior: Clip.antiAlias,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color.fromRGBO(25, 25, 25, 0.1),
+                          ),
+                          child: Image.asset(
+                            'assets/namida_icon.png',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4.0),
+                      Text(
+                        "Namida",
+                        style: context.textTheme.displayLarge,
+                      ),
+                      Text(
+                        AppSocial.APP_VERSION,
+                        style: context.textTheme.displaySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SettingsCard(
+            icon: Broken.link_circle,
+            title: 'Social',
+            subtitle: 'join us on our platforms for updates, tips, discussion & ideas',
+            child: Column(
+              children: [
+                const NamidaAboutListTile(
+                  icon: Broken.send_2,
+                  title: 'Telegram',
+                  link: 'https://t.me/namida_official',
+                ),
+                NamidaAboutListTile(
+                  leading: Image.asset(
+                    'assets/icons/discord.png',
+                    color: context.defaultIconColor(),
+                    height: 24.0,
+                  ),
+                  title: 'Discord',
+                  link: 'https://discord.gg/WeY7DTVChT',
+                ),
+              ],
+            ),
+          ),
+          SettingsCard(
+            icon: Broken.hierarchy,
+            title: 'Developement',
+            subtitle: null,
+            child: Column(
+              children: [
+                const NamidaAboutListTile(
+                  icon: Broken.message_programming,
+                  title: 'GitHub',
+                  subtitle: 'See Project Code on Github',
+                  link: AppSocial.GITHUB,
+                ),
+                const NamidaAboutListTile(
+                  // icon: Broken.bezier,
+                  icon: Broken.command_square,
+                  title: 'Issues/Features',
+                  subtitle: 'Have an issue or suggestion? open an issue on GitHub',
+                  link: AppSocial.GITHUB,
+                ),
+                ObxValue<RxBool>(
+                  (isLoading) => NamidaAboutListTile(
+                    icon: Broken.activity,
+                    title: lang.CHANGELOG,
+                    subtitle: 'See what\'s newly added/fixed inside Namida',
+                    trailing: isLoading.value ? const LoadingIndicator() : null,
+                    onTap: () async {
+                      isLoading.value = true;
+                      final striny = await http.get(Uri.parse('https://raw.githubusercontent.com/namidaco/namida/main/CHANGELOG.md'));
+                      isLoading.value = false;
+
+                      await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
+                      showModalBottomSheet(
+                        showDragHandle: true,
+                        useRootNavigator: true,
+                        isScrollControlled: true,
+                        context: context,
+                        builder: (context) {
+                          return SizedBox(
+                            height: context.height * 0.6,
+                            width: context.width,
+                            child: Markdown(
+                              data: striny.body,
+                              selectable: true,
+                              styleSheetTheme: MarkdownStyleSheetBaseTheme.cupertino,
+                              builders: <String, MarkdownElementBuilder>{
+                                'li': _NamidaMarkdownElementBuilderCommitLink(),
+                              },
+                              styleSheet: MarkdownStyleSheet(
+                                a: context.textTheme.displayLarge,
+                                h1: context.textTheme.displayLarge,
+                                h2: context.textTheme.displayMedium,
+                                h3: context.textTheme.displayMedium,
+                                p: context.textTheme.displaySmall,
+                                listBullet: context.textTheme.displayMedium,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                  false.obs,
+                ),
+              ],
+            ),
+          ),
+          SettingsCard(
+            icon: Broken.heart_circle,
+            title: 'Donate',
+            subtitle: 'If you think it deserves',
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  InkWell(
+                    onTap: () => launchUrlString(AppSocial.DONATE_KOFI, mode: LaunchMode.externalApplication),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+                      child: context.isDarkMode
+                          ? Image.asset(
+                              'assets/logos/donate_kofi_dark.png',
+                              height: 48.0,
+                              key: const Key('donate_kofi_dark'),
+                            )
+                          : Image.asset(
+                              'assets/logos/donate_kofi_light.png',
+                              height: 48.0,
+                              key: const Key('donate_kofi_light'),
+                            ),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => launchUrlString(AppSocial.DONATE_BUY_ME_A_COFFEE, mode: LaunchMode.externalApplication),
+                    child: Image.asset(
+                      'assets/logos/donate_bmc.webp',
+                      height: 48.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SettingsCard(
+            title: 'Others',
+            icon: Broken.record_circle,
+            subtitle: null,
+            child: Column(
+              children: [
+                NamidaAboutListTile(
+                  icon: Broken.archive_book,
+                  title: 'License',
+                  subtitle: 'Licenses & Agreements Used by Namida',
+                  onTap: () {
+                    showLicensePage(
+                      context: context,
+                      useRootNavigator: true,
+                      applicationVersion: AppSocial.APP_VERSION,
+                    );
+                  },
+                ),
+                const NamidaAboutListTile(
+                  icon: Broken.cpu,
+                  title: 'App Version',
+                  subtitle: AppSocial.APP_VERSION,
+                  link: AppSocial.GITHUB_RELEASES,
+                )
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NamidaMarkdownElementBuilderCommitLink extends MarkdownElementBuilder {
+  @override
+  Widget? visitText(md.Text text, TextStyle? preferredStyle) {
+    final regex = RegExp(r'#([a-zA-Z0-9]{7}):', caseSensitive: false);
+    final res = regex.firstMatch(text.text);
+    final commit = res?.group(1);
+    final url = "${AppSocial.GITHUB}/commit/$commit";
+    final textWithoutCommit = commit == null ? text.text : text.text.replaceFirst(regex, '');
+
+    return RichText(
+      text: TextSpan(
+        text: commit == null ? '' : "#$commit:",
+        style: Get.textTheme.displayMedium?.copyWith(
+          fontSize: 13.5.multipliedFontScale,
+          color: Get.theme.colorScheme.secondary,
+        ),
+        recognizer: TapGestureRecognizer()..onTap = () => launchUrlString(url),
+        children: [
+          TextSpan(
+            text: textWithoutCommit,
+            style: Get.textTheme.displaySmall?.copyWith(
+              fontWeight: FontWeight.w400,
+              fontSize: 13.0.multipliedFontScale,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class NamidaAboutListTile extends StatelessWidget {
+  final Widget? leading;
+  final IconData? icon;
+  final String title;
+  final String? subtitle;
+  final String? link;
+  final void Function()? onTap;
+  final Widget? trailing;
+  final VisualDensity? visualDensity;
+
+  const NamidaAboutListTile({
+    super.key,
+    this.leading,
+    this.icon,
+    required this.title,
+    this.subtitle,
+    this.link,
+    this.onTap,
+    this.trailing,
+    this.visualDensity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomListTile(
+      visualDensity: visualDensity,
+      leading: leading,
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      trailing: trailing,
+      onTap: onTap ??
+          () {
+            if (link != null) {
+              launchUrlString(link!, mode: LaunchMode.externalApplication);
+            }
+          },
+    );
+  }
+}

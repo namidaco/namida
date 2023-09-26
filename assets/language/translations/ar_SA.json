@@ -1,9 +1,11 @@
 {
+  "ABOUT": "About",
   "ALL_TIME": "All time",
   "AUDIO_CACHE": "Audio Cache",
   "AUDIO_ONLY": "Audio Only",
   "BETA": "Beta",
   "CACHE": "Cache",
+  "CHANGELOG": "Changelog",
   "CHECK_FOR_MORE": "Check for more",
   "COLOR_PALETTE": "Color Palette",
   "COLOR_PALETTE_NOTE_1": "Long press a color to remove it",

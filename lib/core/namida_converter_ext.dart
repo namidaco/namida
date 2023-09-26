@@ -31,6 +31,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/pages/folders_page.dart';
@@ -390,6 +391,9 @@ extension WidgetsPagess on Widget {
         break;
       case QueuesPage:
         route = RouteType.PAGE_queue;
+        break;
+      case AboutPage:
+        route = RouteType.PAGE_about;
         break;
 
       // ----- Subpages -----

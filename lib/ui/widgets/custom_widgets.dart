@@ -1,10 +1,10 @@
 import 'dart:ui';
 
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart' hide ReorderableDragStartListener;
-
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:checkmark/checkmark.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart' hide ReorderableDragStartListener;
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -36,6 +36,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
+import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -232,6 +233,8 @@ class CustomListTile extends StatelessWidget {
   final bool largeTitle;
   final int maxSubtitleLines;
   final Widget? trailingRaw;
+  final VisualDensity? visualDensity;
+
   const CustomListTile({
     Key? key,
     required this.title,
@@ -247,6 +250,7 @@ class CustomListTile extends StatelessWidget {
     this.largeTitle = false,
     this.maxSubtitleLines = 4,
     this.trailingRaw,
+    this.visualDensity,
   }) : super(key: key);
 
   @override
@@ -260,6 +264,7 @@ class CustomListTile extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.0.multipliedRadius),
         ),
+        visualDensity: visualDensity,
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
         minVerticalPadding: 8.0,
@@ -964,6 +969,7 @@ class StackedIcon extends StatelessWidget {
   final double blurRadius;
   final Widget? smallChild;
   final bool disableColor;
+  final bool delightenColors;
 
   const StackedIcon({
     super.key,
@@ -976,7 +982,15 @@ class StackedIcon extends StatelessWidget {
     this.blurRadius = 3.0,
     this.smallChild,
     this.disableColor = false,
+    this.delightenColors = false,
   });
+  Color? _getColory(BuildContext context, Color? c) {
+    return disableColor
+        ? null
+        : delightenColors && c != null
+            ? context.defaultIconColor(c)
+            : c ?? context.defaultIconColor();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -984,7 +998,7 @@ class StackedIcon extends StatelessWidget {
       children: [
         Icon(
           baseIcon,
-          color: disableColor ? null : (baseIconColor ?? context.defaultIconColor()),
+          color: _getColory(context, baseIconColor),
           size: iconSize,
         ),
         Positioned(
@@ -1003,7 +1017,7 @@ class StackedIcon extends StatelessWidget {
                     : Icon(
                         secondaryIcon,
                         size: 14,
-                        color: disableColor ? null : (secondaryIconColor ?? context.defaultIconColor()),
+                        color: _getColory(context, secondaryIconColor),
                       )),
           ),
         )
@@ -1080,6 +1094,21 @@ class CollapsedSettingTileWidget extends StatelessWidget {
           NamidaNavigator.inst.navigateTo(const SettingsPage());
         },
       ),
+    );
+  }
+}
+
+class AboutPageTileWidget extends StatelessWidget {
+  const AboutPageTileWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomCollapsedListTile(
+      title: lang.ABOUT,
+      subtitle: null,
+      icon: Broken.info_circle,
+      rawPage: true,
+      page: const AboutPage(),
     );
   }
 }
@@ -1807,7 +1836,12 @@ class NamidaLogoContainer extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0).add(const EdgeInsets.only(top: 16.0, bottom: 8.0)),
       child: NamidaInkWell(
-        onTap: () {},
+        onTap: () {
+          NamidaNavigator.inst.toggleDrawer();
+          if (NamidaNavigator.inst.currentRoute?.route != RouteType.PAGE_about) {
+            NamidaNavigator.inst.navigateTo(const AboutPage());
+          }
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           alignment: Alignment.center,
@@ -2198,7 +2232,7 @@ class NamidaSupportButton extends StatelessWidget {
       text: title ?? lang.SUPPORT,
       onPressed: () {
         closeDialog.closeDialog();
-        launchUrlString(k_NAMIDA_SUPPORT_LINK);
+        launchUrlString(AppSocial.DONATE_BUY_ME_A_COFFEE);
       },
     );
   }

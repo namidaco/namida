@@ -85,7 +85,7 @@ class MiniplayerCustomization extends StatelessWidget {
                                                 text: lang.SUPPORT.toUpperCase(),
                                                 onPressed: () {
                                                   NamidaNavigator.inst.closeDialog();
-                                                  launchUrlString(k_NAMIDA_SUPPORT_LINK);
+                                                  launchUrlString(AppSocial.DONATE_BUY_ME_A_COFFEE);
                                                 },
                                               ),
                                             ],

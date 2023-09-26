@@ -1,4 +1,5 @@
 {
+  "ABOUT": "About",
   "ACTIVE": "Active",
   "ADD": "Add",
   "ADDED": "added",
@@ -48,6 +49,7 @@
   "CACHE": "Cache",
   "CANCEL": "Cancel",
   "CHANGED": "Changed",
+  "CHANGELOG": "Changelog",
   "CHANNELS": "Channels",
   "CHECK_FOR_MORE": "Check for more",
   "CHECK_LIST": "Check List",
