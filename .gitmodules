@@ -1,0 +1,3 @@
+[submodule "language"]
+	path = assets/language
+	url = https://github.com/namidaco/namida-translations
