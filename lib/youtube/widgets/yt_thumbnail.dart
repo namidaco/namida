@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -29,6 +30,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final String? localImagePath;
   final bool extractColor;
   final double blur;
+  final bool compressed;
 
   const YoutubeThumbnail({
     super.key,
@@ -48,6 +50,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.localImagePath,
     this.extractColor = true,
     this.blur = 1.5,
+    this.compressed = true,
   });
 
   @override
@@ -58,9 +61,17 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
   String? imagePath;
   Color? smallBoxDynamicColor;
 
-  bool get canFetchImage => widget.localImagePath != null || widget.videoId != null || widget.channelUrl != null;
+  bool get canFetchYTImage => widget.videoId != null || widget.channelUrl != null;
+  bool get canFetchImage => widget.localImagePath != null || canFetchYTImage;
+
+  Key get kekekekey => Key("$smallBoxDynamicColor${widget.videoId}${widget.channelUrl}$imagePath${widget.smallBoxText}");
+
+  Timer? _dontTouchMeImFetchingThumbnail;
 
   Future<void> _getThumbnail() async {
+    if (_dontTouchMeImFetchingThumbnail?.isActive == true) return;
+    _dontTouchMeImFetchingThumbnail = null;
+    _dontTouchMeImFetchingThumbnail = Timer(const Duration(seconds: 8), () {});
     imagePath = widget.localImagePath;
     if (imagePath == null) {
       final res = await VideoController.inst.getYoutubeThumbnailAndCache(id: widget.videoId, channelUrl: widget.channelUrl);
@@ -97,6 +108,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
               ),
       ),
       child: ArtworkWidget(
+        compressed: widget.compressed,
         key: Key("$smallBoxDynamicColor${widget.videoId}${widget.channelUrl}$imagePath${widget.smallBoxText}"),
         blur: widget.isCircle ? 0.0 : widget.blur,
         borderRadius: widget.borderRadius,
@@ -137,7 +149,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
                                   size: 16.0,
                                   color: Colors.white.withOpacity(0.8),
                                 ),
-                                const SizedBox(width: 4.0),
+                                const SizedBox(width: 2.0),
                                 Text(
                                   widget.smallBoxText!,
                                   style: context.textTheme.displaySmall?.copyWith(

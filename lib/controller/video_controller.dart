@@ -48,25 +48,25 @@ class NamidaVideoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onScaleUpdate: (details) {
+      behavior: HitTestBehavior.opaque,
+      onScaleUpdate: (details) {
         VideoController.inst.videoZoomAdditionalScale.value = details.scale;
-        },
-        onScaleEnd: (details) async {
-          if (NamidaNavigator.inst.isInFullScreen) return;
+      },
+      onScaleEnd: (details) async {
+        if (NamidaNavigator.inst.isInFullScreen) return;
         if (VideoController.inst.videoZoomAdditionalScale.value > 1.1) {
           await VideoController.inst.toggleFullScreenVideoView(
-                fallbackChild: fallbackChild,
-                qualityItems: qualityItems,
-            );
-          }
-          // else if (videoZoomAdditionalScale.value < 0.7) {
-          // NamidaNavigator.inst.exitFullScreen();
-          // }
+            fallbackChild: fallbackChild,
+            qualityItems: qualityItems,
+          );
+        }
+        // else if (videoZoomAdditionalScale.value < 0.7) {
+        // NamidaNavigator.inst.exitFullScreen();
+        // }
         VideoController.inst.videoZoomAdditionalScale.value = 0.0;
-        },
+      },
       child: Obx(
-              () => NamidaVideoControls(
+        () => NamidaVideoControls(
           widgetKey: fullscreen ? VideoController.inst.fullScreenControlskey : VideoController.inst.normalControlskey,
           onMinimizeTap: () {
             if (fullscreen) {
@@ -81,12 +81,12 @@ class NamidaVideoWidget extends StatelessWidget {
               : fullscreen
                   ? true
                   : enableControls,
-                fallbackChild: fallbackChild,
-                isFullScreen: fullscreen,
-                qualityItems: qualityItems,
+          fallbackChild: fallbackChild,
+          isFullScreen: fullscreen,
+          qualityItems: qualityItems,
           child: VideoController.vcontroller.videoWidget?.value,
-              ),
-            ),
+        ),
+      ),
     );
   }
 }
@@ -157,7 +157,27 @@ class VideoController {
   /// `id`: `<NamidaVideo>[]`
   final _videoCacheIDMap = <String, List<NamidaVideo>>{};
 
-  List<NamidaVideo> get videosInCache => _videoCacheIDMap.values.reduce((value, element) => [...value, ...element]);
+  Iterable<NamidaVideo> get videosInCache sync* {
+    for (final vids in _videoCacheIDMap.values) {
+      yield* vids;
+    }
+  }
+
+  Future<void> addYTVideoToCacheMap(String id, NamidaVideo nv) async {
+    _videoCacheIDMap.addNoDuplicatesForce(id, nv);
+  }
+
+  Future<void> addVideoFileToCacheMap(String id, File file) async {
+    final mi = await NamidaFFMPEG.inst.extractMetadata(file.path);
+    final nv = _getNVFromFFMPEGMap(
+      mediaInfo: mi,
+      ytID: id,
+      path: file.path,
+      stats: await file.stat(),
+    );
+    _videoCacheIDMap.addForce(id, nv);
+  }
+
   bool doesVideoExistsInCache(String youtubeId) => _videoCacheIDMap[youtubeId]?.isNotEmpty ?? false;
 
   List<NamidaVideo> getNVFromID(String youtubeId) => _videoCacheIDMap[youtubeId] ?? [];
@@ -173,7 +193,6 @@ class VideoController {
     return videos;
   }
 
-  VideoPlayerController? get playerController => _videoController.videoController;
   static _NamidaVideoPlayer get vcontroller => inst._videoController;
   _NamidaVideoPlayer _videoController = _NamidaVideoPlayer.inst;
 
@@ -752,7 +771,7 @@ class VideoController {
     required String idOrFileNameWOExt,
     required bool isExtracted, // set to false if its a youtube thumbnail.
   }) async {
-    assert(bytes != null || videoPath != null);
+    if (bytes == null && videoPath == null) return null;
 
     final prefix = !isLocal && isExtracted ? 'EXT_' : '';
     final dir = isLocal ? AppDirs.THUMBNAILS : AppDirs.YT_THUMBNAILS;
@@ -852,6 +871,11 @@ class _NamidaVideoPlayer {
     _videoWidget.value = VideoPlayer(controller);
   }
 
+  BufferOptions get _defaultBufferOptions => const BufferOptions(
+        minBuffer: Duration(minutes: 1),
+        maxBuffer: Duration(minutes: 3),
+      );
+
   Future<void> setNetworkSource({
     required String url,
     required bool Function(Duration videoDuration) looping,
@@ -866,12 +890,13 @@ class _NamidaVideoPlayer {
           Uri.parse(url),
           cacheKey: cacheKey,
           enableCaching: true,
-          maxTotalCacheSize: 2 * 1024 * 1024 * 1024,
+          maxTotalCacheSize: const ByteSize(gb: 4),
           cacheDirectory: Directory(AppDirs.VIDEOS_CACHE),
           videoPlayerOptions: VideoPlayerOptions(
             mixWithOthers: true,
             allowBackgroundPlayback: true,
           ),
+          bufferOptions: _defaultBufferOptions,
         ),
       );
       _isCurrentVideoFromCache.value = false;
@@ -892,6 +917,7 @@ class _NamidaVideoPlayer {
             mixWithOthers: true,
             allowBackgroundPlayback: true,
           ),
+          bufferOptions: _defaultBufferOptions,
         ),
       );
       _isCurrentVideoFromCache.value = true;

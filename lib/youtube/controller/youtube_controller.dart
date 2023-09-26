@@ -62,6 +62,9 @@ class YoutubeController {
   final isLoadingComments = false.obs;
   final currentYTQualities = <VideoOnlyStream>[].obs;
 
+  /// Used as a backup in case of no connection.
+  final currentCachedQualities = <NamidaVideo>[].obs;
+
   /// {id: DownloadProgress()}
   final downloadsVideoProgressMap = <String, DownloadProgress>{}.obs;
 

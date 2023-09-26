@@ -2665,8 +2665,6 @@ class NamidaLifeCycleWrapper extends StatefulWidget {
 }
 
 class _NamidaLifeCycleWrapperState extends State<NamidaLifeCycleWrapper> with WidgetsBindingObserver {
-  bool isInPip = false;
-
   late WidgetsBindingObserver observer;
 
   @override
@@ -2674,7 +2672,11 @@ class _NamidaLifeCycleWrapperState extends State<NamidaLifeCycleWrapper> with Wi
     super.initState();
     observer = LifecycleEventHandler(
       resumeCallBack: () async {
-        await widget.onResume?.call();
+        await Future.wait([
+          SystemChrome.setPreferredOrientations(kDefaultOrientations),
+          SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values),
+          if (widget.onResume != null) widget.onResume!(),
+        ]);
       },
       suspendingCallBack: () async {
         await widget.onSuspending?.call();

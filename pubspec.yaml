@@ -101,13 +101,14 @@ dependencies:
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
-      ref: d3c53175f14980efd9c9f9586df77c6c7ebf49b7
+      ref: b7c52ac9c6433b67eb52bb101dced89963c89b61
 
   # ---- Video Indexing & Playback ----
   video_player:
     git:
       url: https://github.com/MSOB7YY/video_player_cache
       path: video_player/
+      ref: ebd92a98f08f92ffa9daa080dcd6796785e12ad7
   ffmpeg_kit_flutter_min: "5.1.0-LTS"
   newpipeextractor_dart:
     git:

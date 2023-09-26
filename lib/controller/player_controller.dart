@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/audio_handler.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -39,6 +40,7 @@ class Player {
   YoutubeChannel? get currentChannelInfo => _audioHandler.currentChannelInfo.value;
   VideoOnlyStream? get currentVideoStream => _audioHandler.currentVideoStream.value;
   File? get currentVideoThumbnail => _audioHandler.currentVideoThumbnail.value;
+  NamidaVideo? get currentCachedVideo => _audioHandler.currentCachedVideo.value;
 
   bool get isAudioOnlyPlayback => _audioHandler.isAudioOnlyPlayback;
   bool get isCurrentAudioFromCache => _audioHandler.isCurrentAudioFromCache;
@@ -49,6 +51,9 @@ class Player {
   Duration? get currentItemDuration => _audioHandler.currentItemDuration;
   bool get isPlaying => _audioHandler.isPlaying;
   bool get isBuffering => _audioHandler.isBuffering;
+  bool get isLoading => _audioHandler.isLoading;
+  bool get isFetchingInfo => _audioHandler.isFetchingInfo;
+  bool get shouldShowLoadingIndicator => isBuffering || isLoading;
   Duration get buffered => _audioHandler.buffered;
   int get numberOfRepeats => _audioHandler.numberOfRepeats;
   int get latestInsertedIndex => _audioHandler.latestInsertedIndex;
@@ -285,16 +290,18 @@ class Player {
   }
 
   Future<void> onItemPlayYoutubeIDSetQuality({
-    required VideoStream stream,
+    required VideoStream? stream,
     required File? cachedFile,
     required bool useCache,
-    required String? videoId,
+    required String videoId,
+    NamidaVideo? videoItem,
   }) async {
     await _audioHandler.onItemPlayYoutubeIDSetQuality(
       stream: stream,
       cachedFile: cachedFile,
       useCache: useCache,
       videoId: videoId,
+      videoItem: videoItem,
     );
   }
 
@@ -335,17 +342,17 @@ class Player {
   }
 
   /// Default value is set to user preference [seekDurationInSeconds]
-  Future<int> seekSecondsForward([int? seconds]) async {
+  Future<void> seekSecondsForward({int? seconds, void Function(int finalSeconds)? onSecondsReady}) async {
     final newSeconds = _secondsToSeek(seconds);
+    onSecondsReady?.call(newSeconds);
     await _audioHandler.seek(Duration(milliseconds: nowPlayingPosition + newSeconds * 1000));
-    return newSeconds;
   }
 
   /// Default value is set to user preference [seekDurationInSeconds]
-  Future<int> seekSecondsBackward([int? seconds]) async {
+  Future<void> seekSecondsBackward({int? seconds, void Function(int finalSeconds)? onSecondsReady}) async {
     final newSeconds = _secondsToSeek(seconds);
+    onSecondsReady?.call(newSeconds);
     await _audioHandler.seek(Duration(milliseconds: nowPlayingPosition - newSeconds * 1000));
-    return newSeconds;
   }
 
   int _secondsToSeek([int? seconds]) {

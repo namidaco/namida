@@ -19,6 +19,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/dots_triangle.dart';
 import 'package:namida/packages/mp.dart';
+import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
@@ -196,11 +197,47 @@ class YoutubeMiniPlayer extends StatelessWidget {
                               width: finalspace4buttons / 2,
                               height: miniplayerHeight,
                               child: Obx(
-                                () => NamidaIconButton(
-                                  horizontalPadding: 0.0,
-                                  onPressed: () => Player.inst.togglePlayPause(),
-                                  icon: Player.inst.isPlaying ? Broken.pause : Broken.play,
-                                ),
+                                () {
+                                  final isFetching = Player.inst.isFetchingInfo;
+                                  final isLoading = isFetching || Player.inst.shouldShowLoadingIndicator || VideoController.vcontroller.isBuffering;
+
+                                  return Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      if (isLoading)
+                                        IgnorePointer(
+                                          child: Opacity(
+                                            opacity: 0.3,
+                                            child: ThreeArchedCircle(
+                                              color: context.defaultIconColor(),
+                                              size: 36.0,
+                                            ),
+                                          ),
+                                        ),
+                                      NamidaIconButton(
+                                        horizontalPadding: 0.0,
+                                        onPressed: () {
+                                          Player.inst.togglePlayPause();
+                                        },
+                                        icon: null,
+                                        child: AnimatedSwitcher(
+                                          duration: const Duration(milliseconds: 200),
+                                          child: Player.inst.isPlaying
+                                              ? Icon(
+                                                  Broken.pause,
+                                                  color: context.defaultIconColor(),
+                                                  key: const Key('pause'),
+                                                )
+                                              : Icon(
+                                                  Broken.play,
+                                                  color: context.defaultIconColor(),
+                                                  key: const Key('play'),
+                                                ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
                               ),
                             ),
                           ),
@@ -227,7 +264,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                     if (percentage > 0)
                       Expanded(
                         child: Opacity(
-                          opacity: percentageOriginal,
+                          opacity: (percentage * 4 - 3).withMinimum(0),
                           child: LazyLoadListView(
                             onReachingEnd: () async => await YoutubeController.inst.updateCurrentComments(currentId, fetchNextOnly: true),
                             extend: 400,
