@@ -125,20 +125,20 @@ class YoutubeMiniPlayer extends StatelessWidget {
                               height: finalthumbnailsize * 9 / 16,
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(finalbr),
-                                child: VideoController.inst.getVideoWidget(
-                                  "percentage:${percentage > 0},${currentId}_$shouldShowVideo",
-                                  percentage > 0,
-                                  () {
+                                child: NamidaVideoWidget(
+                                  key: Key("${currentId}_$shouldShowVideo"),
+                                  enableControls: percentage > 0.5,
+                                  onMinimizeTap: () {
                                     MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
                                   },
                                   fallbackChild: YoutubeThumbnail(
-                                    key: Key("$percentage$currentId"),
                                     width: finalthumbnailsize,
                                     height: finalthumbnailsize * 9 / 16,
                                     borderRadius: 0,
                                     blur: 0,
                                     videoId: currentId,
                                     displayFallbackIcon: false,
+                                    compressed: false,
                                   ),
                                 ),
                               ),

@@ -34,6 +34,7 @@ import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/focused_menu.dart';
 import 'package:namida/packages/miniplayer_raw.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/youtube_miniplayer.dart';
 
 import 'package:namida/ui/dialogs/common_dialogs.dart';
@@ -107,13 +108,28 @@ class MiniPlayerSwitchers extends StatelessWidget {
           child: NamidaLifeCycleWrapper(
             onSuspending: () async {
               if (settings.enablePip.value && Player.inst.isPlaying && VideoController.inst.currentVideo.value != null) {
-                NamidaNavigator.inst.closeAllDialogs();
                 await VideoController.vcontroller.enablePictureInPicture();
                 await NamidaNavigator.inst.enterFullScreen(
                   Container(
                     color: Colors.black,
                     alignment: Alignment.topLeft,
-                    child: VideoController.inst.getVideoWidget('pip_widget_child', false, null, fullscreen: true),
+                    child: NamidaVideoWidget(
+                      key: const Key('pip_widget_child'),
+                      enableControls: false,
+                      fullscreen: true,
+                      isPip: true,
+                      fallbackChild: Player.inst.nowPlayingVideoID?.id == null
+                          ? null
+                          : YoutubeThumbnail(
+                              width: 64.0,
+                              height: 64.0 * 9 / 16,
+                              borderRadius: 0,
+                              blur: 0,
+                              videoId: Player.inst.nowPlayingVideoID!.id,
+                              displayFallbackIcon: false,
+                              compressed: false,
+                            ),
+                    ),
                   ),
                   setOrientations: false,
                 );
@@ -125,7 +141,10 @@ class MiniPlayerSwitchers extends StatelessWidget {
                 }
               }
             },
-            onResume: () async => await NamidaNavigator.inst.exitFullScreen(setOrientations: false),
+            onResume: () async {
+              VideoController.inst.isCurrentlyInBackground = false;
+              await NamidaNavigator.inst.exitFullScreen(setOrientations: false);
+            },
             child: Obx(
               () => AnimatedSwitcher(
                 duration: const Duration(milliseconds: 500),
@@ -1948,7 +1967,10 @@ class _AnimatingTrackImage extends StatelessWidget {
                       borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
                       child: LyricsWrapper(
                         cp: cp,
-                        child: VideoController.inst.getVideoWidget('video_widget', false, null),
+                        child: const NamidaVideoWidget(
+                          key: Key('video_widget'),
+                          enableControls: false,
+                        ),
                       ),
                     )
                   : LyricsWrapper(

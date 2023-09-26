@@ -55,11 +55,11 @@ class NamidaNavigator {
     Dimensions.inst.updateAllTileDimensions();
   }
 
-  Future<void> toggleFullScreen(Widget widget, {bool setOrientations = true}) async {
+  Future<void> toggleFullScreen(Widget widget, {bool setOrientations = true, Future<void> Function()? onWillPop}) async {
     if (_isInFullScreen) {
       await exitFullScreen(setOrientations: setOrientations);
     } else {
-      await enterFullScreen(widget, setOrientations: setOrientations);
+      await enterFullScreen(widget, setOrientations: setOrientations, onWillPop: onWillPop);
     }
   }
 
@@ -69,7 +69,7 @@ class NamidaNavigator {
 
   bool get isInFullScreen => _isInFullScreen;
   bool _isInFullScreen = false;
-  Future<void> enterFullScreen(Widget widget, {bool setOrientations = true}) async {
+  Future<void> enterFullScreen(Widget widget, {bool setOrientations = true, Future<void> Function()? onWillPop}) async {
     if (_isInFullScreen) return;
 
     _isInFullScreen = true;
@@ -77,6 +77,7 @@ class NamidaNavigator {
     Get.to(
       () => WillPopScope(
         onWillPop: () async {
+          if (onWillPop != null) await onWillPop();
           exitFullScreen();
           return false;
         },

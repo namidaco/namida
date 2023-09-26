@@ -27,10 +27,11 @@ class NamidaVideoControls extends StatefulWidget {
   final Widget? fallbackChild;
   final bool isFullScreen;
   final List<NamidaPopupItem> qualityItems;
+  final GlobalKey<NamidaVideoControlsState> widgetKey;
 
   const NamidaVideoControls({
     super.key,
-    required this.controller,
+    required this.widgetKey,
     required this.child,
     required this.showControls,
     required this.onMinimizeTap,
@@ -401,16 +402,29 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         onDoubleTap: _onDoubleTap,
         doubleTapTime: const Duration(milliseconds: 200),
         child: Stack(
+          fit: StackFit.passthrough,
           alignment: Alignment.center,
           children: [
-            Positioned.fill(
-              key: const Key('always_visible_child'),
-              child: Obx(
-                () => NamidaAspectRatio(
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Obx(
+                  () => VideoController.vcontroller.isInitialized
+                      ? NamidaAspectRatio(
                   aspectRatio: VideoController.vcontroller.aspectRatio,
-                  child: VideoController.vcontroller.isInitialized ? widget.child ?? dummyWidget : dummyWidget,
+                          child: AnimatedScale(
+                            duration: const Duration(milliseconds: 200),
+                            scale: 1.0 + VideoController.inst.videoZoomAdditionalScale.value * 0.02,
+                            child: widget.child ?? dummyWidget,
                 ),
+                        )
+                      : SizedBox(
+                          height: context.height,
+                          width: context.height * 16 / 9,
+                          child: dummyWidget,
               ),
+            ),
+              ],
             ),
             if (widget.showControls) ...[
               // ---- Top Row ----
@@ -772,15 +786,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           iconColor: itemsColor,
                                           onPressed: () {
                                             _startTimer();
-                                            NamidaNavigator.inst.toggleFullScreen(
-                                              VideoController.inst.getVideoWidget(
-                                                'video_controls_full_screen',
-                                                true,
-                                                widget.onMinimizeTap,
-                                                fullscreen: true,
-                                                fallbackChild: widget.fallbackChild,
-                                              ),
-                                            );
+                                            VideoController.inst.toggleFullScreenVideoView(fallbackChild: widget.fallbackChild);
                                           },
                                         ),
                                       ],

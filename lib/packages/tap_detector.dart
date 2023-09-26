@@ -14,6 +14,7 @@ class TapDetector extends StatelessWidget {
     this.doubleTapTime = const Duration(milliseconds: 300),
     this.onLongPress,
     this.onTapDown,
+    this.onTapDownImp,
     this.onTapCancel,
     this.onHighlightChanged,
     this.onHover,
@@ -44,6 +45,7 @@ class TapDetector extends StatelessWidget {
   final Duration doubleTapTime;
   final GestureLongPressCallback? onLongPress;
   final GestureTapDownCallback? onTapDown;
+  final GestureTapDownCallback? onTapDownImp;
   final GestureTapCancelCallback? onTapCancel;
   final ValueChanged<bool>? onHighlightChanged;
   final ValueChanged<bool>? onHover;
@@ -92,6 +94,7 @@ class TapDetector extends StatelessWidget {
   }
 
   void _onTapDown(TapDownDetails details) {
+    onTapDownImp?.call(details);
     lastTapDetails = details;
     isPressed = true;
     if (doubleTapTimer?.isActive ?? false) {

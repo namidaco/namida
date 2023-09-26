@@ -27,6 +27,70 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
 
+class NamidaVideoWidget extends StatelessWidget {
+  final bool enableControls;
+  final VoidCallback? onMinimizeTap;
+  final Widget? fallbackChild;
+  final bool fullscreen;
+  final bool isPip;
+  final List<NamidaPopupItem> qualityItems;
+
+  const NamidaVideoWidget({
+    super.key,
+    required this.enableControls,
+    this.onMinimizeTap,
+    this.fallbackChild,
+    this.fullscreen = false,
+    this.qualityItems = const [],
+    this.isPip = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onScaleUpdate: (details) {
+        VideoController.inst.videoZoomAdditionalScale.value = details.scale;
+        },
+        onScaleEnd: (details) async {
+          if (NamidaNavigator.inst.isInFullScreen) return;
+        if (VideoController.inst.videoZoomAdditionalScale.value > 1.1) {
+          await VideoController.inst.toggleFullScreenVideoView(
+                fallbackChild: fallbackChild,
+                qualityItems: qualityItems,
+            );
+          }
+          // else if (videoZoomAdditionalScale.value < 0.7) {
+          // NamidaNavigator.inst.exitFullScreen();
+          // }
+        VideoController.inst.videoZoomAdditionalScale.value = 0.0;
+        },
+      child: Obx(
+              () => NamidaVideoControls(
+          widgetKey: fullscreen ? VideoController.inst.fullScreenControlskey : VideoController.inst.normalControlskey,
+          onMinimizeTap: () {
+            if (fullscreen) {
+              NamidaNavigator.inst.exitFullScreen();
+              VideoController.inst.fullScreenVideoWidget = null;
+            } else {
+              onMinimizeTap?.call();
+            }
+          },
+          showControls: isPip
+              ? false
+              : fullscreen
+                  ? true
+                  : enableControls,
+                fallbackChild: fallbackChild,
+                isFullScreen: fullscreen,
+                qualityItems: qualityItems,
+          child: VideoController.vcontroller.videoWidget?.value,
+              ),
+            ),
+    );
+  }
+}
+
 class VideoController {
   static VideoController get inst => _instance;
   static final VideoController _instance = VideoController._internal();
@@ -37,79 +101,42 @@ class VideoController {
 
   final videoZoomAdditionalScale = 0.0.obs;
 
-  void updateShouldShowControls(double value) {
-    final shouldShowControls = value == 1.0;
+  void updateShouldShowControls(double animationValue) {
+    final shouldShowControls = animationValue == 1.0;
     if (!shouldShowControls) {
-      for (final c in _videoControlsKeys.values) {
-        c.currentState?.setControlsVisibily(false);
-      }
+      normalControlskey.currentState?.setControlsVisibily(false);
     }
   }
 
-  final _videoControlsKeys = <String, GlobalKey<NamidaVideoControlsState>>{};
-
-  Widget? videoWidget;
-  String? _lastKey;
-
-  Widget getVideoWidget(
-    String? key,
-    bool enableControls,
-    VoidCallback? onMinimizeTap, {
+  Future<void> toggleFullScreenVideoView({
     Widget? fallbackChild,
-    bool fullscreen = false,
     List<NamidaPopupItem> qualityItems = const [],
-  }) {
-    final finalKey = 'video_widget$key$enableControls$fullscreen';
-    _videoControlsKeys[finalKey] ??= GlobalKey<NamidaVideoControlsState>();
-    if (videoWidget == null || _lastKey != finalKey) {
-      _lastKey = finalKey;
-      videoWidget = GestureDetector(
-        key: Key(finalKey),
-        behavior: HitTestBehavior.opaque,
-        onScaleUpdate: (details) {
-          videoZoomAdditionalScale.value = details.scale;
+  }) async {
+    VideoController.inst.fullScreenVideoWidget ??= Obx(
+      () => NamidaVideoControls(
+        widgetKey: VideoController.inst.fullScreenControlskey,
+        onMinimizeTap: () {
+          VideoController.inst.fullScreenVideoWidget = null;
+          NamidaNavigator.inst.exitFullScreen();
         },
-        onScaleEnd: (details) async {
-          if (NamidaNavigator.inst.isInFullScreen) return;
-          if (videoZoomAdditionalScale.value > 1.1) {
-            NamidaNavigator.inst.enterFullScreen(
-              getVideoWidget(
-                finalKey,
-                true,
-                onMinimizeTap,
-                fullscreen: true,
-                fallbackChild: fallbackChild,
-                qualityItems: qualityItems,
-              ),
-            );
-          }
-          // else if (videoZoomAdditionalScale.value < 0.7) {
-          // NamidaNavigator.inst.exitFullScreen();
-          // }
-          videoZoomAdditionalScale.value = 0.0;
-        },
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Obx(
-              () => NamidaVideoControls(
-                key: _videoControlsKeys[finalKey],
-                onMinimizeTap: onMinimizeTap,
-                showControls: enableControls,
-                controller: playerController,
-                fallbackChild: fallbackChild,
-                isFullScreen: fullscreen,
-                qualityItems: qualityItems,
-                child: vcontroller.videoWidget?.value,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return videoWidget!;
+        showControls: true,
+        fallbackChild: fallbackChild,
+        isFullScreen: true,
+        qualityItems: qualityItems,
+        child: VideoController.vcontroller.videoWidget?.value,
+      ),
+    );
+    await NamidaNavigator.inst.toggleFullScreen(
+      VideoController.inst.fullScreenVideoWidget!,
+      onWillPop: () async => VideoController.inst.fullScreenVideoWidget = null,
+    );
   }
+
+  // final videoControlsKeys = <String, GlobalKey<NamidaVideoControlsState>>{};
+
+  final normalControlskey = GlobalKey<NamidaVideoControlsState>();
+  final fullScreenControlskey = GlobalKey<NamidaVideoControlsState>();
+  Widget? fullScreenVideoWidget;
 
   bool get shouldShowVideo => currentVideo.value != null && _videoController.isInitialized;
 
@@ -243,9 +270,9 @@ class VideoController {
     final currentValue = settings.enableVideoPlayback.value;
     settings.save(enableVideoPlayback: !currentValue);
 
-    // only modify if not playing yt video, since [enableVideoPlayback] is
+    // only modify if not playing yt/local video, since [enableVideoPlayback] is
     // limited to local music.
-    if (Player.inst.currentQueueYoutube.isNotEmpty) return;
+    if (Player.inst.currentQueue.isEmpty) return;
 
     if (currentValue) {
       // should close/hide
