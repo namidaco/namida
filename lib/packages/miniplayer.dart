@@ -1434,7 +1434,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                 title: lang.NUMBER_OF_TRACKS,
                 subtitle: "${lang.UNLIMITED}-$maxCount",
                 trailing: Obx(
-                  () => NamidaWheelSlider(
+                  () => NamidaWheelSlider<int>(
                     totalCount: maxCount,
                     initValue: tracksNo.value,
                     itemSize: 1,
@@ -1736,7 +1736,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                   children: [
                                     Text(lang.MINIMUM),
                                     const SizedBox(height: 24.0),
-                                    NamidaWheelSlider(
+                                    NamidaWheelSlider<int>(
                                       totalCount: 100,
                                       initValue: minRating.value,
                                       itemSize: 1,
@@ -1758,7 +1758,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                   children: [
                                     Text(lang.MAXIMUM),
                                     const SizedBox(height: 24.0),
-                                    NamidaWheelSlider(
+                                    NamidaWheelSlider<int>(
                                       totalCount: 100,
                                       initValue: maxRating.value,
                                       itemSize: 1,

@@ -259,6 +259,7 @@ class LanguageKeys {
   late String MATCH_ALL_TRACKS;
   late String MATCH_ALL_TRACKS_NOTE;
   late String MAXIMUM;
+  late String MAX_VIDEO_CACHE_SIZE;
   late String METADATA_CACHE;
   late String METADATA_EDIT_FAILED_SUBTITLE;
   late String METADATA_EDIT_FAILED;

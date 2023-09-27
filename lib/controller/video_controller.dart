@@ -876,6 +876,9 @@ class _NamidaVideoPlayer {
         maxBuffer: Duration(minutes: 3),
       );
 
+  ByteSize get _defaultMaxCache => ByteSize(mb: settings.videosMaxCacheInMB.value);
+  Directory get _defaultCacheDirectory => Directory(AppDirs.VIDEOS_CACHE);
+
   Future<void> setNetworkSource({
     required String url,
     required bool Function(Duration videoDuration) looping,
@@ -890,8 +893,8 @@ class _NamidaVideoPlayer {
           Uri.parse(url),
           cacheKey: cacheKey,
           enableCaching: true,
-          maxTotalCacheSize: const ByteSize(gb: 4),
-          cacheDirectory: Directory(AppDirs.VIDEOS_CACHE),
+          maxTotalCacheSize: _defaultMaxCache,
+          cacheDirectory: _defaultCacheDirectory,
           videoPlayerOptions: VideoPlayerOptions(
             mixWithOthers: true,
             allowBackgroundPlayback: true,

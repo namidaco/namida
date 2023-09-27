@@ -162,12 +162,12 @@ class MiniplayerCustomization extends StatelessWidget {
               width: 80,
               child: Column(
                 children: [
-                  NamidaWheelSlider(
+                  NamidaWheelSlider<int>(
                     totalCount: 360,
                     initValue: settings.waveformTotalBars.value - 40,
                     itemSize: 6,
                     onValueChanged: (val) {
-                      final v = (val + 40) as int;
+                      final v = (val + 40);
                       settings.save(waveformTotalBars: v);
                     },
                     text: settings.waveformTotalBars.value.toString(),

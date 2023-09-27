@@ -176,7 +176,7 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
                           children: [
                             // minutes
                             Obx(
-                              () => NamidaWheelSlider(
+                              () => NamidaWheelSlider<int>(
                                 totalCount: 180,
                                 initValue: minutes.value,
                                 itemSize: 6,
@@ -192,7 +192,7 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
                             ),
                             // tracks
                             Obx(
-                              () => NamidaWheelSlider(
+                              () => NamidaWheelSlider<int>(
                                 totalCount: kMaximumSleepTimerTracks,
                                 initValue: tracks.value,
                                 itemSize: 6,

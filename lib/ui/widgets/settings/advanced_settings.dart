@@ -13,6 +13,7 @@ import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -201,6 +202,33 @@ class AdvancedSettings extends StatelessWidget {
           // -- this will loop all choosen files, get yt thumbnail (download or cache), edit tags, without affecting file modified time.
           const _FixYTDLPThumbnailSizeListTile(),
           const _CompressImagesListTile(),
+
+          () {
+            const stepper = 8 * 32;
+            const minimumValue = stepper;
+            int getValue(int mb) => (mb - minimumValue) ~/ stepper;
+            return Obx(
+              () {
+                return CustomListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.video,
+                    secondaryIcon: Broken.cpu,
+                  ),
+                  title: lang.MAX_VIDEO_CACHE_SIZE,
+                  trailing: NamidaWheelSlider<int>(
+                    totalCount: getValue(10 * 1024), // 10 GB
+                    initValue: getValue(settings.videosMaxCacheInMB.value),
+                    itemSize: 5,
+                    text: (settings.videosMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
+                    onValueChanged: (val) {
+                      settings.save(videosMaxCacheInMB: minimumValue + (val * stepper));
+                    },
+                  ),
+                );
+              },
+            );
+          }(),
+
           Obx(
             () => CustomListTile(
               leading: const StackedIcon(

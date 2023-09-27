@@ -106,6 +106,7 @@ class SettingsController {
   final RxInt isTrackPlayedSecondsCount = 40.obs;
   final RxInt isTrackPlayedPercentageCount = 40.obs;
   final RxInt waveformTotalBars = 140.obs;
+  final RxInt videosMaxCacheInMB = (2 * 1024).obs;
   final RxDouble playerVolume = 1.0.obs;
   final RxDouble playerSpeed = 1.0.obs;
   final RxDouble playerPitch = 1.0.obs;
@@ -301,6 +302,7 @@ class SettingsController {
       isTrackPlayedSecondsCount.value = json['isTrackPlayedSecondsCount'] ?? isTrackPlayedSecondsCount.value;
       isTrackPlayedPercentageCount.value = json['isTrackPlayedPercentageCount'] ?? isTrackPlayedPercentageCount.value;
       waveformTotalBars.value = json['waveformTotalBars'] ?? waveformTotalBars.value;
+      videosMaxCacheInMB.value = json['videosMaxCacheInMB'] ?? videosMaxCacheInMB.value;
       playerVolume.value = json['playerVolume'] ?? playerVolume.value;
       playerSpeed.value = json['playerSpeed'] ?? playerSpeed.value;
       playerPitch.value = json['playerPitch'] ?? playerPitch.value;
@@ -473,6 +475,7 @@ class SettingsController {
       'isTrackPlayedSecondsCount': isTrackPlayedSecondsCount.value,
       'isTrackPlayedPercentageCount': isTrackPlayedPercentageCount.value,
       'waveformTotalBars': waveformTotalBars.value,
+      'videosMaxCacheInMB': videosMaxCacheInMB.value,
       'playerVolume': playerVolume.value,
       'playerSpeed': playerSpeed.value,
       'playerPitch': playerPitch.value,
@@ -617,6 +620,7 @@ class SettingsController {
     bool? enablePip,
     bool? playerInfiniyQueueOnNextPrevious,
     int? waveformTotalBars,
+    int? videosMaxCacheInMB,
     double? playerVolume,
     double? playerSpeed,
     double? playerPitch,
@@ -929,6 +933,9 @@ class SettingsController {
     }
     if (waveformTotalBars != null) {
       this.waveformTotalBars.value = waveformTotalBars;
+    }
+    if (videosMaxCacheInMB != null) {
+      this.videosMaxCacheInMB.value = videosMaxCacheInMB;
     }
     if (playerVolume != null) {
       this.playerVolume.value = playerVolume;
