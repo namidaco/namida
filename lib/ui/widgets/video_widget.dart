@@ -388,6 +388,16 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     });
   }
 
+  bool _canSlideVolume(BuildContext context, double globalHeight) {
+    final minimumVerticalDistanceToIgnoreSwipes = context.height * 0.1;
+
+    final isSafeFromDown = globalHeight > minimumVerticalDistanceToIgnoreSwipes;
+    final isSafeFromUp = globalHeight < context.height - minimumVerticalDistanceToIgnoreSwipes;
+    return isSafeFromDown && isSafeFromUp;
+  }
+
+  bool _disableSliderVolume = false;
+
   @override
   Widget build(BuildContext context) {
     final dummyWidget = widget.fallbackChild ??
@@ -398,18 +408,28 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     final horizontalControlsPadding =
         widget.isFullScreen ? const EdgeInsets.symmetric(horizontal: 32.0, vertical: 12.0) : const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0);
     final itemsColor = Colors.white.withAlpha(200);
-    final minimumVerticalDistanceToIgnoreSwipes = context.height * 0.1;
     final shouldShowVolumeSlider = widget.showControls && widget.isFullScreen;
     return Listener(
-      onPointerCancel: !shouldShowVolumeSlider ? null : (event) => _startVolumeSwipeTimer(),
-      onPointerUp: !shouldShowVolumeSlider ? null : (event) => _startVolumeSwipeTimer(),
-      onPointerMove: !shouldShowVolumeSlider
+      onPointerCancel: (event) {
+        _disableSliderVolume = false;
+        if (shouldShowVolumeSlider) {
+          _startVolumeSwipeTimer();
+        }
+      },
+      onPointerUp: (event) {
+        _disableSliderVolume = false;
+        if (shouldShowVolumeSlider) {
+          _startVolumeSwipeTimer();
+        }
+      },
+      onPointerDown: (event) => setState(() {
+        _disableSliderVolume = !_canSlideVolume(context, event.position.dy);
+      }),
+      onPointerMove: !shouldShowVolumeSlider || _disableSliderVolume
           ? null
           : (event) async {
               final globalHeight = event.position.dy;
-              final isSafeFromDown = globalHeight > minimumVerticalDistanceToIgnoreSwipes;
-              final isSafeFromUp = globalHeight < context.height - minimumVerticalDistanceToIgnoreSwipes;
-              if (isSafeFromDown && isSafeFromUp) {
+              if (_canSlideVolume(context, globalHeight)) {
                 final d = event.delta.dy;
                 _volumeThreshold += d;
                 if (_volumeThreshold >= _volumeMinDistance) {
