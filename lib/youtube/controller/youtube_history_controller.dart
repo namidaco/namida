@@ -71,5 +71,5 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
   bool get mostPlayedCustomIsStartOfDay => settings.mostPlayedCustomisStartOfDay.value;
 
   @override
-  double get trackTileItemExtent => Dimensions.inst.youtubeCardItemExtent;
+  double get trackTileItemExtent => Dimensions.youtubeCardItemExtent;
 }

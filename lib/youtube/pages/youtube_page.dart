@@ -8,11 +8,26 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 
-class YoutubePage extends StatelessWidget {
+class YoutubePage extends StatefulWidget {
   const YoutubePage({super.key});
 
   @override
+  State<YoutubePage> createState() => _YoutubePageState();
+}
+
+class _YoutubePageState extends State<YoutubePage> with AutomaticKeepAliveClientMixin<YoutubePage> {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    YoutubeController.inst.prepareHomeFeed();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return BackgroundWrapper(
       child: Obx(
         () {

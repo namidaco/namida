@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:path/path.dart' as p;
 
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/queue.dart';
@@ -50,8 +51,7 @@ import 'package:namida/ui/pages/tracks_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/stats.dart';
-import 'package:namida/youtube/pages/youtube_page.dart';
-import 'package:namida/youtube/widgets/yt_search_bar.dart';
+import 'package:namida/youtube/pages/youtube_home_view.dart';
 
 extension LibraryTabToEnum on int {
   LibraryTab toEnum() => settings.libraryTabs.elementAt(this);
@@ -443,7 +443,7 @@ extension WidgetsPagess on Widget {
         route = RouteType.SETTINGS_subpage;
         name = (this as SettingsSubPage).title;
         break;
-      case YoutubePage:
+      case YouTubeHomeView:
         route = RouteType.YOUTUBE_HOME;
         break;
     }
@@ -546,9 +546,6 @@ extension RouteUtils on NamidaRoute {
         break;
       case RouteType.PAGE_queue:
         finalWidget = Obx(() => getTextWidget("${lang.QUEUES} • ${QueueController.inst.queuesMap.value.length}"));
-        break;
-      case RouteType.YOUTUBE_HOME:
-        finalWidget = const YoutubeSearchBar();
         break;
       default:
         null;

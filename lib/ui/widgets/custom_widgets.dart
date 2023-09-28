@@ -2613,7 +2613,8 @@ class NamidaPopupWrapper extends StatelessWidget {
   final List<NamidaPopupItem> childrenDefault;
   final VoidCallback? onTap;
   final VoidCallback? onPop;
-  final bool canOpenMenu;
+  final bool openOnTap;
+  final bool openOnLongPress;
 
   const NamidaPopupWrapper({
     super.key,
@@ -2622,7 +2623,8 @@ class NamidaPopupWrapper extends StatelessWidget {
     this.childrenDefault = const [],
     this.onTap,
     this.onPop,
-    this.canOpenMenu = true,
+    this.openOnTap = true,
+    this.openOnLongPress = true,
   });
 
   _showPopupMenu(BuildContext context) async {
@@ -2672,13 +2674,14 @@ class NamidaPopupWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      child: child,
       onTap: () {
         if (onTap != null) onTap!();
-        if (canOpenMenu) {
+        if (openOnTap) {
           _showPopupMenu(context);
         }
       },
+      onLongPress: openOnLongPress ? () => _showPopupMenu(context) : null,
+      child: child,
     );
   }
 }
@@ -2749,6 +2752,9 @@ class NamidaAspectRatio extends StatelessWidget {
         : AspectRatio(
             aspectRatio: aspectRatio!,
             child: child,
+          );
+  }
+}
           );
   }
 }

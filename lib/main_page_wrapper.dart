@@ -6,7 +6,6 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -18,11 +17,11 @@ import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/ui/pages/main_page.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
-import 'package:namida/youtube/pages/youtube_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/selected_tracks_preview.dart';
 import 'package:namida/ui/widgets/settings/customization_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
+import 'package:namida/youtube/pages/youtube_home_view.dart';
 
 class MainPageWrapper extends StatefulWidget {
   final void Function(BuildContext context) onContextAvailable;
@@ -105,8 +104,7 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
                       title: lang.YOUTUBE,
                       icon: Broken.video_square,
                       onTap: () {
-                        YoutubeController.inst.prepareHomeFeed();
-                        NamidaNavigator.inst.navigateTo(const YoutubePage());
+                        NamidaNavigator.inst.navigateTo(const YouTubeHomeView());
                         toggleDrawer();
                       },
                     ),

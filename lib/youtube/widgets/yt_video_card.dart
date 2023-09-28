@@ -36,7 +36,7 @@ class YoutubeVideoCard extends StatelessWidget {
       title: video?.name ?? '',
       subtitle: [
         video?.viewCount?.formatDecimalShort() ?? 0,
-        if (video?.uploadDate != null) video?.uploadDate,
+        if (video?.textualUploadDate != null) video?.textualUploadDate,
       ].join(' - '),
       thirdLineText: video?.uploaderName ?? '',
       onTap: () {
@@ -65,46 +65,59 @@ class YoutubeVideoCard extends StatelessWidget {
       displayChannelThumbnail: true,
       smallBoxText: video?.duration?.inSeconds.secondsLabel,
       smallBoxIcon: null,
-      menuChildrenDefault: [
-        NamidaPopupItem(
-          icon: Broken.music_library_2,
-          title: lang.ADD_TO_PLAYLIST,
-          onTap: () {
-            showAddToPlaylistSheet(ids: [videoId], idsNamesLookup: {videoId: video?.name});
-          },
-        ),
-        NamidaPopupItem(
-          icon: Broken.import,
-          title: lang.DOWNLOAD,
-          onTap: () {
-            showDownloadVideoBottomSheet(
-              videoId: videoId,
-            );
-          },
-        ),
-        NamidaPopupItem(
-          icon: Broken.share,
-          title: lang.SHARE,
-          onTap: () {
-            final url = video?.url;
-            if (url != null) Share.share(url);
-          },
-        ),
-        NamidaPopupItem(
-          icon: Broken.next,
-          title: lang.PLAY_NEXT,
-          onTap: () {
-            Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertNext: true);
-          },
-        ),
-        NamidaPopupItem(
-          icon: Broken.play_cricle,
-          title: lang.PLAY_LAST,
-          onTap: () {
-            Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertNext: false);
-          },
-        ),
-      ],
+      menuChildrenDefault: getVideoCardMenuItems(
+        videoId: videoId,
+        url: video?.url,
+        playlistID: playlistID,
+        idsNamesLookup: {videoId: video?.name},
+      ),
     );
   }
+}
+
+List<NamidaPopupItem> getVideoCardMenuItems({
+  required String videoId,
+  required String? url,
+  required PlaylistID? playlistID,
+  required Map<String, String?> idsNamesLookup,
+}) {
+  return [
+    NamidaPopupItem(
+      icon: Broken.music_library_2,
+      title: lang.ADD_TO_PLAYLIST,
+      onTap: () {
+        showAddToPlaylistSheet(ids: [videoId], idsNamesLookup: idsNamesLookup);
+      },
+    ),
+    NamidaPopupItem(
+      icon: Broken.import,
+      title: lang.DOWNLOAD,
+      onTap: () {
+        showDownloadVideoBottomSheet(
+          videoId: videoId,
+        );
+      },
+    ),
+    NamidaPopupItem(
+      icon: Broken.share,
+      title: lang.SHARE,
+      onTap: () {
+        if (url != null) Share.share(url);
+      },
+    ),
+    NamidaPopupItem(
+      icon: Broken.next,
+      title: lang.PLAY_NEXT,
+      onTap: () {
+        Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertNext: true);
+      },
+    ),
+    NamidaPopupItem(
+      icon: Broken.play_cricle,
+      title: lang.PLAY_LAST,
+      onTap: () {
+        Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertNext: false);
+      },
+    ),
+  ];
 }
