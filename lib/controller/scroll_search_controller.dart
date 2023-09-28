@@ -12,6 +12,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/packages/searchbar_animation.dart';
 import 'package:namida/ui/pages/main_page.dart';
+import 'package:namida/youtube/pages/yt_search_results_page.dart';
 
 class ScrollSearchController {
   static ScrollSearchController get inst => _instance;
@@ -19,6 +20,9 @@ class ScrollSearchController {
   ScrollSearchController._internal() {
     searchBarWidget = NamidaSearchBar(searchBarKey: searchBarKey);
   }
+
+  final ytSearchKey = GlobalKey<YoutubeSearchResultsPageState>();
+  SearchType currentSearchType = SearchType.localTracks;
 
   final RxBool isGlobalSearchMenuShown = false.obs;
   final TextEditingController searchTextEditingController = TextEditingController();
@@ -37,7 +41,14 @@ class ScrollSearchController {
 
   late final NamidaSearchBar searchBarWidget;
 
-  void animatePageController(LibraryTab tab) {
+  void animatePageController(LibraryTab tab) async {
+    if (tab == LibraryTab.search) {
+      ScrollSearchController.inst.toggleSearchMenu();
+      await Future.delayed(const Duration(milliseconds: 100));
+      ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
+      return;
+    }
+
     final w = tab.toWidget();
     hideSearchMenu();
 
@@ -113,6 +124,14 @@ class ScrollSearchController {
 
   void showSearchMenu([bool show = true]) {
     isGlobalSearchMenuShown.value = show;
+  }
+
+  void toggleSearchMenu() {
+    if (isGlobalSearchMenuShown.value) {
+      hideSearchMenu();
+    } else {
+      showSearchMenu();
+    }
   }
 
   void resetSearch() {

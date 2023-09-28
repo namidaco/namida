@@ -695,8 +695,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: c9d66d5ac24e385a384038fcc79c15a439283c37
-      resolved-ref: c9d66d5ac24e385a384038fcc79c15a439283c37
+      ref: "26f88e6c34828246306499d23e6b198eacdcf12f"
+      resolved-ref: "26f88e6c34828246306499d23e6b198eacdcf12f"
       url: "https://github.com/MSOB7YY/NewPipeExtractor_Dart"
     source: git
     version: "0.0.1"
@@ -1012,6 +1012,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.11.0"
+  sticky_and_expandable_list:
+    dependency: "direct main"
+    description:
+      name: sticky_and_expandable_list
+      sha256: "42886b52d659f1fb0f6c355192d8e4e919bdee4eb9510049b2e3d05ea988b7ed"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.3"
   sticky_headers:
     dependency: "direct main"
     description:

@@ -8,6 +8,7 @@ import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_utils/src/extensions/num_extensions.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:playlist_manager/module/playlist_id.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -263,7 +264,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
                 width: prevStream.width ?? 0,
                 sizeInBytes: prevStream.sizeInBytes ?? 0,
                 frameratePrecise: prevStream.fps?.toDouble() ?? 0.0,
-                creationTimeMS: parsy(prevVideo.uploadDate) ?? parsy(prevVideo.textualUploadDate) ?? 0,
+                creationTimeMS: prevVideo.date?.millisecondsSinceEpoch ?? parsy(prevVideo.textualUploadDate) ?? 0,
                 durationMS: prevStream.durationMS ?? 0,
                 bitrate: prevStream.bitrate ?? 0,
               ),
@@ -364,7 +365,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         HistoryController.inst.addTracksToHistory([newTrackWithDate]);
       },
       youtubeID: (finalItem) async {
-        await YoutubeHistoryController.inst.addTracksToHistory([finalItem]);
+        final newListen = YoutubeID(id: finalItem.id, playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY));
+        await YoutubeHistoryController.inst.addTracksToHistory([newListen]);
       },
     );
   }
@@ -464,12 +466,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           );
         }
       }
-    await _waitForAllBuffers();
-    await seek(position.milliseconds);
-    if (wasPlaying) {
-      await _playAudioThenVideo();
+      await _waitForAllBuffers();
+      await seek(position.milliseconds);
+      if (wasPlaying) {
+        await _playAudioThenVideo();
+      }
     }
-  }
   }
 
   Future<void> onItemPlayYoutubeID(
@@ -555,11 +557,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               cachedAudio != null
                   ? setAudioSource(AudioSource.file(cachedAudio.path, tag: mediaItem))
                   : setAudioSource(
-                    LockCachingAudioSource(
-                      Uri.parse(prefferedAudioStream!.url!),
-                      cacheFile: File(prefferedAudioStream.cachePath(item.id)),
-                      tag: mediaItem,
-                    ),
+                      LockCachingAudioSource(
+                        Uri.parse(prefferedAudioStream!.url!),
+                        cacheFile: File(prefferedAudioStream.cachePath(item.id)),
+                        tag: mediaItem,
+                      ),
                     ),
           ]);
         }

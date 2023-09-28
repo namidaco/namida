@@ -131,13 +131,7 @@ class MainPage extends StatelessWidget {
                         height: 64.0,
                         onDestinationSelected: (value) async {
                           final tab = value.toEnum();
-                          if (tab == LibraryTab.search) {
-                            ScrollSearchController.inst.showSearchMenu(true);
-                            await Future.delayed(const Duration(milliseconds: 100));
-                            ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
-                          } else {
-                            ScrollSearchController.inst.animatePageController(tab);
-                          }
+                          ScrollSearchController.inst.animatePageController(tab);
                         },
                         selectedIndex: settings.selectedLibraryTab.value.toInt(),
                         destinations: [
@@ -205,6 +199,14 @@ class NamidaSearchBar extends StatelessWidget {
       onPressButton: (isOpen) {
         ScrollSearchController.inst.showSearchMenu(isOpen);
         ScrollSearchController.inst.resetSearch();
+      },
+      onFieldSubmitted: (val) {
+        if (ScrollSearchController.inst.currentSearchType == SearchType.youtube) {
+          final latestSearch = ScrollSearchController.inst.ytSearchKey.currentState?.currentSearchText;
+          if (latestSearch != val) {
+            ScrollSearchController.inst.ytSearchKey.currentState?.fetchSearch(customText: val);
+          }
+        }
       },
       onChanged: (value) => SearchSortController.inst.searchAll(value),
     );

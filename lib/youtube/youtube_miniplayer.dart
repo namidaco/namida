@@ -57,13 +57,11 @@ class YoutubeMiniPlayer extends StatelessWidget {
             String? uploadDate;
             String? uploadDateAgo;
 
-            final parseableDate = ytvideo?.video.uploadDate ?? Player.inst.currentVideoInfo?.uploadDate;
-            if (parseableDate != null) {
-              final parsedDate = DateTime.tryParse(parseableDate); // Jiffy can throw errors
-              if (parsedDate != null) {
-                uploadDate = parsedDate.millisecondsSinceEpoch.dateFormattedOriginal;
-                uploadDateAgo = Jiffy.parseFromDateTime(parsedDate).fromNow();
-              }
+            final parsedDate = ytvideo?.video.date ?? Player.inst.currentVideoInfo?.date;
+
+            if (parsedDate != null) {
+              uploadDate = parsedDate.millisecondsSinceEpoch.dateFormattedOriginal;
+              uploadDateAgo = Jiffy.parseFromDateTime(parsedDate).fromNow();
             }
 
             final miniTitle = videoInfo?.name;

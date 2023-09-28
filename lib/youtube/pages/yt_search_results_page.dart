@@ -16,21 +16,32 @@ class YoutubeSearchResultsPage extends StatefulWidget {
   const YoutubeSearchResultsPage({super.key, required this.searchText});
 
   @override
-  State<YoutubeSearchResultsPage> createState() => _YoutubeSearchResultsPageState();
+  State<YoutubeSearchResultsPage> createState() => YoutubeSearchResultsPageState();
 }
 
-class _YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
+class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with AutomaticKeepAliveClientMixin<YoutubeSearchResultsPage> {
+  @override
+  bool get wantKeepAlive => true;
+
+  String get currentSearchText => _latestSearched ?? widget.searchText;
+  String? _latestSearched;
+
   final _searchResult = <dynamic>[];
-  bool _loading = true;
+  bool? _loading;
   @override
   void initState() {
     super.initState();
-    _fetchSearch();
+    fetchSearch();
   }
 
-  Future<void> _fetchSearch() async {
+  Future<void> fetchSearch({String customText = ''}) async {
     _searchResult.clear();
-    final result = await YoutubeController.inst.searchForItems(widget.searchText);
+    if (customText == '' && widget.searchText == '') return;
+    _loading = true;
+    if (mounted) setState(() {});
+    final newSearch = customText == '' ? widget.searchText : customText;
+    _latestSearched = newSearch;
+    final result = await YoutubeController.inst.searchForItems(newSearch);
     _searchResult.addAll(result);
     _loading = false;
     if (mounted) setState(() {});
@@ -45,37 +56,40 @@ class _YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return BackgroundWrapper(
-      child: _loading
-          ? ThreeArchedCircle(
-              color: CurrentColor.inst.color,
-              size: context.width * 0.4,
-            )
-          : LazyLoadListView(
-              onReachingEnd: () async => await _fetchSearchNextPage(),
-              listview: (controller) {
-                return ListView.builder(
-                  padding: const EdgeInsets.only(bottom: kBottomPadding),
-                  itemCount: _searchResult.length,
-                  controller: controller,
-                  itemBuilder: (context, index) {
-                    final item = _searchResult[index];
-                    switch (item.runtimeType) {
-                      case StreamInfoItem:
-                        return YoutubeVideoCard(
-                          video: item,
-                          playlistID: null,
-                        );
-                      case YoutubePlaylist:
-                        return YoutubePlaylistCard(playlist: item);
-                      case YoutubeChannel:
-                        return YoutubeChannelCard(channel: item);
-                    }
-                    return const SizedBox();
+      child: _loading == null
+          ? const SizedBox()
+          : _loading == true
+              ? ThreeArchedCircle(
+                  color: CurrentColor.inst.color,
+                  size: context.width * 0.4,
+                )
+              : LazyLoadListView(
+                  onReachingEnd: () async => await _fetchSearchNextPage(),
+                  listview: (controller) {
+                    return ListView.builder(
+                      padding: const EdgeInsets.only(bottom: kBottomPadding),
+                      itemCount: _searchResult.length,
+                      controller: controller,
+                      itemBuilder: (context, index) {
+                        final item = _searchResult[index];
+                        switch (item.runtimeType) {
+                          case StreamInfoItem:
+                            return YoutubeVideoCard(
+                              video: item,
+                              playlistID: null,
+                            );
+                          case YoutubePlaylist:
+                            return YoutubePlaylistCard(playlist: item);
+                          case YoutubeChannel:
+                            return YoutubeChannelCard(channel: item);
+                        }
+                        return const SizedBox();
+                      },
+                    );
                   },
-                );
-              },
-            ),
+                ),
     );
   }
 }

@@ -294,3 +294,9 @@ enum NotificationTapAction {
   openMiniplayer,
   openQueue,
 }
+
+enum SearchType {
+  localTracks,
+  youtube,
+  localVideos,
+}

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:jiffy/jiffy.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/controller/current_color.dart';
@@ -86,7 +85,7 @@ Future<void> showDownloadVideoBottomSheet({
         video.value?.videoOnlyStreams?.firstWhereEff((e) => e.formatSuffix != 'webm');
 
     updatefilenameOutput();
-    videoDateTime = DateTime.tryParse(videoInfo.value?.uploadDate ?? '');
+    videoDateTime = videoInfo.value?.date;
     final d = videoDateTime;
     updateTagsMap(
       {
@@ -282,8 +281,7 @@ Future<void> showDownloadVideoBottomSheet({
                                         height: 12.0,
                                         shimmerEnabled: videoInfo.value == null,
                                         child: () {
-                                          final dateFormatted =
-                                              videoInfo.value?.uploadDate != null ? Jiffy.parse(videoInfo.value!.uploadDate!).millisecondsSinceEpoch.dateFormattedOriginal : null;
+                                          final dateFormatted = videoInfo.value?.date?.millisecondsSinceEpoch.dateFormattedOriginal;
                                           return Text(
                                             [
                                               videoInfo.value?.duration?.inSeconds.secondsLabel ?? "00:00",

@@ -15,6 +15,8 @@ class SearchSortController {
   static final SearchSortController _instance = SearchSortController._internal();
   SearchSortController._internal();
 
+  String lastSearchText = '';
+
   bool get isSearching => (trackSearchTemp.isNotEmpty || albumSearchTemp.isNotEmpty || artistSearchTemp.isNotEmpty);
 
   final RxList<Track> trackSearchList = <Track>[].obs;
@@ -48,6 +50,7 @@ class SearchSortController {
   RxMap<String, Playlist> get playlistsMap => PlaylistController.inst.playlistsMap;
 
   void searchAll(String text) {
+    lastSearchText = text;
     _searchTracks(text, temp: true);
     _searchMediaType(type: MediaType.album, text: text, temp: true);
     _searchMediaType(type: MediaType.artist, text: text, temp: true);

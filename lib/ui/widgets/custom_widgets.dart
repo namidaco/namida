@@ -2755,6 +2755,75 @@ class NamidaAspectRatio extends StatelessWidget {
           );
   }
 }
-          );
+
+class NamidaTabView extends StatefulWidget {
+  final int initialIndex;
+  final List<String> tabs;
+  final List<Widget> children;
+  final void Function(int index) onIndexChanged;
+
+  const NamidaTabView({
+    super.key,
+    required this.children,
+    required this.initialIndex,
+    required this.tabs,
+    required this.onIndexChanged,
+  });
+
+  @override
+  State<NamidaTabView> createState() => _NamidaTabViewState();
+}
+
+class _NamidaTabViewState extends State<NamidaTabView> with SingleTickerProviderStateMixin {
+  late TabController controller;
+
+  void fn() => widget.onIndexChanged(controller.index);
+
+  @override
+  void initState() {
+    controller = TabController(
+      length: widget.children.length,
+      vsync: this,
+      animationDuration: const Duration(milliseconds: 500),
+      initialIndex: widget.initialIndex,
+    );
+    controller.addListener(fn);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    controller.removeListener(fn);
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        TabBar(
+          indicatorWeight: 3.0,
+          controller: controller,
+          tabs: widget.tabs
+              .map(
+                (e) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+                  child: Text(e),
+                ),
+              )
+              .toList(),
+          splashBorderRadius: BorderRadius.circular(12.0.multipliedRadius),
+          indicatorPadding: const EdgeInsets.symmetric(horizontal: 32.0),
+          indicatorSize: TabBarIndicatorSize.tab,
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: controller,
+            children: widget.children,
+          ),
+        ),
+      ],
+    );
   }
 }
