@@ -180,7 +180,10 @@ class VideoController {
 
   bool doesVideoExistsInCache(String youtubeId) => _videoCacheIDMap[youtubeId]?.isNotEmpty ?? false;
 
-  List<NamidaVideo> getNVFromID(String youtubeId) => _videoCacheIDMap[youtubeId] ?? [];
+  List<NamidaVideo> getNVFromID(String youtubeId, {bool checkForFileIRT = true}) {
+    return _videoCacheIDMap[youtubeId]?.where((element) => File(element.path).existsSync()).toList() ?? [];
+  }
+
   List<NamidaVideo> getCurrentVideosInCache() {
     final videos = <NamidaVideo>[];
     for (final vl in _videoCacheIDMap.values) {

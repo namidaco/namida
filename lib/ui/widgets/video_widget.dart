@@ -134,11 +134,11 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   /// This prevents mixing up forward seek seconds with backward ones.
   bool _lastSeekWasForward = true;
 
-  void _onDoubleTap(TapDownDetails details) async {
+  void _onDoubleTap(Offset position) async {
     final totalWidth = context.width;
     final halfScreen = totalWidth / 2;
     final middleAmmountToIgnore = totalWidth / 6;
-    final pos = details.localPosition.dx - halfScreen;
+    final pos = position.dx - halfScreen;
     if (pos.abs() > middleAmmountToIgnore) {
       if (pos.isNegative) {
         // -- Seeking Backwards
@@ -410,6 +410,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     final itemsColor = Colors.white.withAlpha(200);
     final shouldShowVolumeSlider = widget.showControls && widget.isFullScreen;
     return Listener(
+      behavior: HitTestBehavior.translucent,
       onPointerCancel: (event) {
         _disableSliderVolume = false;
         if (shouldShowVolumeSlider) {
@@ -422,35 +423,31 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           _startVolumeSwipeTimer();
         }
       },
-      onPointerDown: (event) => setState(() {
+      onPointerDown: (event) {
+        if (_shouldSeekOnTap) {
+          _onDoubleTap(event.position);
+          _startTimer();
+        }
         _disableSliderVolume = !_canSlideVolume(context, event.position.dy);
-      }),
-      onPointerMove: !shouldShowVolumeSlider || _disableSliderVolume
+      },
+      onPointerMove: !shouldShowVolumeSlider
           ? null
           : (event) async {
-              final globalHeight = event.position.dy;
-              if (_canSlideVolume(context, globalHeight)) {
-                final d = event.delta.dy;
-                _volumeThreshold += d;
-                if (_volumeThreshold >= _volumeMinDistance) {
-                  _volumeThreshold = 0.0;
-                  await FlutterVolumeController.lowerVolume(null);
-                } else if (_volumeThreshold <= -_volumeMinDistance) {
-                  _volumeThreshold = 0.0;
-                  await FlutterVolumeController.raiseVolume(null);
-                }
+              if (_disableSliderVolume) return;
+              final d = event.delta.dy;
+              _volumeThreshold += d;
+              if (_volumeThreshold >= _volumeMinDistance) {
+                _volumeThreshold = 0.0;
+                await FlutterVolumeController.lowerVolume(null);
+              } else if (_volumeThreshold <= -_volumeMinDistance) {
+                _volumeThreshold = 0.0;
+                await FlutterVolumeController.raiseVolume(null);
               }
             },
       child: TapDetector(
         enableTaps: widget.showControls,
-        onTapDownImp: (d) {
-          if (_shouldSeekOnTap) {
-            _onDoubleTap(d);
-            _startTimer();
-          }
-        },
         onTap: (d) => _onTap(),
-        onDoubleTap: _onDoubleTap,
+        onDoubleTap: (details) => _onDoubleTap(details.localPosition),
         doubleTapTime: const Duration(milliseconds: 200),
         child: Stack(
           fit: StackFit.passthrough,
@@ -578,7 +575,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                             // ===== Quality Chip =====
                             Obx(
                               () => NamidaPopupWrapper(
-                                canOpenMenu: true,
+                                openOnTap: true,
                                 onPop: _startTimer,
                                 onTap: () {
                                   _resetTimer();
