@@ -450,6 +450,7 @@ class Indexer {
 
     final newtracks = tracksReal.map((e) => e.path.toTrackOrNull());
     _addTheseTracksToAlbumGenreArtistEtc(newtracks.whereType<Track>().toList());
+    Player.inst.refreshNotification();
     await _sortAndSaveTracks();
     onFinish(newtracks.length);
   }
@@ -733,9 +734,7 @@ class Indexer {
     );
   }
 
-  /// $1 = title
-  ///
-  /// $2 = artist
+  /// (title, artist)
   (String, String) getTitleAndArtistFromFilename(String filename) {
     final filenameWOEx = filename.replaceAll('_', ' ');
     final titleAndArtist = <String>[];

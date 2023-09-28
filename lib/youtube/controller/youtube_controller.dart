@@ -93,6 +93,10 @@ class YoutubeController {
     }
   }
 
+  /// Checks if the requested id is still playing, since most functions are async and will often
+  /// take time to fetch from internet, and user may have played other vids, this covers such cases.
+  bool _canSafelyModifyMetadata(String id) => Player.inst.nowPlayingVideoID?.id == id;
+
   Future<void> prepareHomeFeed() async {
     homepageFeed.clear();
     final videos = await NewPipeExtractorDart.trending.getTrendingVideos();
@@ -126,11 +130,13 @@ class YoutubeController {
       ..addAll(List.filled(20, null));
     final items = await NewPipeExtractorDart.videos.getRelatedStreams(id.toYTUrl());
     _fillTempVideoInfoMap(items.whereType<StreamInfoItem>());
-    currentRelatedVideos
-      ..clear()
-      ..addAll([
-        ...items,
-      ]);
+    if (_canSafelyModifyMetadata(id)) {
+      currentRelatedVideos
+        ..clear()
+        ..addAll([
+          ...items,
+        ]);
+    }
   }
 
   /// For full list of items, use [streams] getter in [playlist].
@@ -144,7 +150,6 @@ class YoutubeController {
   Future<void> _fetchComments(String id, {bool forceRequest = false}) async {
     currentTotalCommentsCount.value = null;
     currentComments.clear();
-
     currentComments.addAll(List.filled(20, null));
 
     // -- Fetching Comments.
@@ -170,20 +175,23 @@ class YoutubeController {
       if (comments.isNotEmpty) _saveCommentsToStorage(cachedFile, comments);
     }
     // -- Fetching Comments End.
-
-    currentComments.clear();
-    currentComments.addAll(fetchedComments);
-    currentTotalCommentsCount.value = fetchedComments.firstOrNull?.totalCommentsCount;
+    if (_canSafelyModifyMetadata(id)) {
+      currentComments.clear();
+      currentComments.addAll(fetchedComments);
+      currentTotalCommentsCount.value = fetchedComments.firstOrNull?.totalCommentsCount;
+    }
   }
 
   Future<void> _fetchNextComments(String id) async {
     if (_isCurrentCommentsFromCache) return;
     final comments = await NewPipeExtractorDart.comments.getNextComments();
-    currentComments.addAll(comments);
+    if (_canSafelyModifyMetadata(id)) {
+      currentComments.addAll(comments);
 
-    // -- saving to cache
-    final cachedFile = File("${AppDirs.YT_METADATA_COMMENTS}$id.txt");
-    _saveCommentsToStorage(cachedFile, currentComments);
+      // -- saving to cache
+      final cachedFile = File("${AppDirs.YT_METADATA_COMMENTS}$id.txt");
+      _saveCommentsToStorage(cachedFile, currentComments);
+    }
   }
 
   Future<void> _saveCommentsToStorage(File file, Iterable<YoutubeComment?> commListy) async {
@@ -238,7 +246,9 @@ class YoutubeController {
     inspect(info);
     final channel = await _fetchChannelDetails(info?.uploaderUrl);
     inspect(channel);
-    currentYoutubeMetadata.value = info == null ? null : YTLVideo(video: info, channel: channel);
+    if (_canSafelyModifyMetadata(id)) {
+      currentYoutubeMetadata.value = info == null ? null : YTLVideo(video: info, channel: channel);
+    }
   }
 
   Future<VideoInfo?> fetchVideoDetails(String id, {bool forceRequest = false}) async {

@@ -166,7 +166,7 @@ class YoutubeCard extends StatelessWidget {
               ],
             ),
           ),
-          if (menuChildren.isNotEmpty || menuChildrenDefault.isNotEmpty)
+          if (!shimmerEnabled && (menuChildren.isNotEmpty || menuChildrenDefault.isNotEmpty))
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: NamidaPopupWrapper(

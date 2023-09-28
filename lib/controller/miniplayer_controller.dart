@@ -118,7 +118,7 @@ class MiniPlayerController {
         queueScrollController.animateTo(
           trackTileItemScrollOffsetInQueue,
           duration: const Duration(milliseconds: 600),
-          curve: Curves.easeInOutQuart,
+          curve: Curves.fastEaseInToSlowEaseOut,
         );
       }
     }

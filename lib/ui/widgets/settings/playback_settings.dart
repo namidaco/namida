@@ -483,12 +483,12 @@ class PlaybackSettings extends StatelessWidget {
                     () => Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        NamidaWheelSlider(
+                        NamidaWheelSlider<int>(
                           totalCount: 160,
                           initValue: settings.isTrackPlayedSecondsCount.value - 20,
                           itemSize: 6,
                           onValueChanged: (val) {
-                            final v = (val + 20) as int;
+                            final v = (val + 20);
                             settings.save(isTrackPlayedSecondsCount: v);
                           },
                           text: "${settings.isTrackPlayedSecondsCount.value}s",
@@ -499,12 +499,12 @@ class PlaybackSettings extends StatelessWidget {
                           lang.OR,
                           style: context.textTheme.displayMedium,
                         ),
-                        NamidaWheelSlider(
+                        NamidaWheelSlider<int>(
                           totalCount: 80,
                           initValue: settings.isTrackPlayedPercentageCount.value - 20,
                           itemSize: 6,
                           onValueChanged: (val) {
-                            final v = (val + 20) as int;
+                            final v = (val + 20);
                             settings.save(isTrackPlayedPercentageCount: v);
                           },
                           text: "${settings.isTrackPlayedPercentageCount.value}%",

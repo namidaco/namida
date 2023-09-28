@@ -117,7 +117,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   // =================================================================================
 
   Future<void> refreshVideoPosition() async {
-    await VideoController.vcontroller.seek(Duration(milliseconds: currentPositionMS - _videoPositionSeekDelayMS));
+    await VideoController.vcontroller.seek(Duration(milliseconds: currentPositionMS));
   }
 
   Future<void> _playAudioThenVideo() async {
@@ -152,7 +152,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         playbackState.add(transformEvent(PlaybackEvent(), isItemFavourite, itemIndex));
       },
       youtubeID: (finalItem) async {
-        mediaItem.add(finalItem.toMediaItem(videoInfo ?? finalItem.toVideoInfoSync(), finalItem.getThumbnailSync(), currentIndex, currentQueue.length));
+        final info = videoInfo ?? finalItem.toVideoInfoSync() ?? YoutubeController.inst.getTemporarelyVideoInfo(finalItem.id);
+        final thumbnail = finalItem.getThumbnailSync();
+        mediaItem.add(finalItem.toMediaItem(info, thumbnail, currentIndex, currentQueue.length));
         playbackState.add(transformEvent(PlaybackEvent(), isItemFavourite, itemIndex));
       },
     );
@@ -448,6 +450,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         final sameStream = newStreams.firstWhereEff((e) => e.resolution == stream.resolution && e.formatSuffix == stream.formatSuffix);
         final sameStreamUrl = sameStream?.url;
 
+        if (currentItem is YoutubeID && videoId != (currentItem as YoutubeID).id) return;
+
         YoutubeController.inst.currentYTQualities
           ..clear()
           ..addAll(newStreams);
@@ -478,6 +482,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     currentChannelInfo.value = YoutubeController.inst.fetchChannelDetailsFromCacheSync(currentVideoInfo.value?.uploaderUrl);
     currentVideoStream.value = null;
     currentVideoThumbnail.value = null;
+    _isFetchingInfo.value = false;
 
     refreshNotification(pi, currentVideoInfo.value);
 
@@ -867,13 +872,14 @@ extension TrackToAudioSourceMediaItem on Selectable {
 
   MediaItem toMediaItem(int currentIndex, int queueLength) {
     final tr = track.toTrackExt();
+    final artist = tr.originalArtist == '' ? UnknownTags.ARTIST : tr.originalArtist;
     return MediaItem(
       id: tr.path,
       title: tr.title,
       displayTitle: tr.title,
-      displaySubtitle: tr.hasUnknownAlbum ? tr.originalArtist : "${tr.originalArtist} - ${tr.album}",
+      displaySubtitle: tr.hasUnknownAlbum ? artist : "$artist - ${tr.album}",
       displayDescription: "${currentIndex + 1}/$queueLength",
-      artist: tr.originalArtist,
+      artist: artist,
       album: tr.hasUnknownAlbum ? '' : tr.album,
       genre: tr.originalGenre,
       duration: Duration(seconds: tr.duration),

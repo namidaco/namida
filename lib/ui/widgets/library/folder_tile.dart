@@ -31,10 +31,10 @@ class FolderTile extends StatelessWidget {
     final dirInside = folder.getDirectoriesInside();
     final tracks = dummyTracks ?? folder.tracks;
     return Padding(
-      padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin),
+      padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin, right: Dimensions.tileBottomMargin, left: Dimensions.tileBottomMargin),
       child: NamidaInkWell(
         bgColor: context.theme.cardColor,
-        borderRadius: 0.0,
+        borderRadius: 10.0,
         onTap: () => NamidaOnTaps.inst.onFolderTap(folder),
         child: SizedBox(
           height: Dimensions.inst.trackTileItemExtent,

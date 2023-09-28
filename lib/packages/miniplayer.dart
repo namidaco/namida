@@ -1184,6 +1184,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                 onTapCancel: () => MiniPlayerController.inst.seekValue.value = 0,
                                 onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx),
                                 onHorizontalDragEnd: (details) => onSeekEnd(),
+                                onHorizontalDragCancel: () => MiniPlayerController.inst.seekValue.value = 0,
                                 child: WaveformComponent(
                                   key: const Key('waveform_widget'),
                                   color: context.theme.colorScheme.onBackground.withAlpha(40),
@@ -1861,6 +1862,10 @@ class _TrackInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     final double opacity = (inverseAboveOne(p) * 10 - 9).clamp(0, 1);
     final track = trackPre.toTrackExt();
+    final artist = track.originalArtist;
+    final canShowArtist = artist != '';
+    final bigFontSize = velpy(a: 15.0, b: 20.0, c: p);
+    final smallFontSize = velpy(a: 13.0, b: 15.0, c: p);
     return Transform.translate(
       offset: Offset(0, bottomOffset + (-maxOffset / 4.0 * p.clamp(0, 2))),
       child: Padding(
@@ -1890,24 +1895,24 @@ class _TrackInfo extends StatelessWidget {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    track.originalArtist.overflow,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: context.textTheme.displayMedium?.copyWith(
-                                      fontSize: velpy(a: 15.0, b: 20.0, c: p).multipliedFontScale,
-                                      height: 1,
+                                  if (canShowArtist) ...[
+                                    Text(
+                                      artist.overflow,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: context.textTheme.displayMedium?.copyWith(
+                                        fontSize: bigFontSize.multipliedFontScale,
+                                        height: 1,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(
-                                    height: 4.0,
-                                  ),
+                                    const SizedBox(height: 4.0),
+                                  ],
                                   Text(
                                     track.title.overflow,
-                                    maxLines: 1,
+                                    maxLines: canShowArtist ? 1 : 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: context.textTheme.displayMedium?.copyWith(
-                                      fontSize: velpy(a: 13.0, b: 15.0, c: p).multipliedFontScale,
+                                      fontSize: (canShowArtist ? smallFontSize : bigFontSize).multipliedFontScale,
                                     ),
                                   ),
                                 ],

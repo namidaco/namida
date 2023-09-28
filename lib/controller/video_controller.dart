@@ -594,14 +594,18 @@ class VideoController {
   /// - Loops the currently existing files
   /// - Detects: `new files`.
   /// - DOES NOT handle: `deleted` & `needs-to-be-updated` files.
-  /// - Returns a map with new videos only.
+  /// - Returns a map with **new videos only**.
+  /// - **New**: excludes files ending with `.download`
   Future<Map<String, List<NamidaVideo>>> _checkForNewVideosInCache(Map<String, List<NamidaVideo>> idsMap) async {
     final dir = Directory(AppDirs.VIDEOS_CACHE);
     final newIdsMap = <String, List<NamidaVideo>>{};
 
     await for (final df in dir.list()) {
       if (df is File) {
-        final id = df.path.getFilename.substring(0, 11);
+        final filename = df.path.getFilename;
+        if (filename.endsWith('.download')) continue; // first thing first
+
+        final id = filename.substring(0, 11);
         final videosInMap = idsMap[id];
         final stats = await df.stat();
         final sizeInBytes = stats.size;
@@ -963,9 +967,10 @@ class _NamidaVideoPlayer {
   Future<void> setSpeed(double volume) async => await _execute(() async => await _videoController?.setPlaybackSpeed(volume));
 
   Future<bool> enablePictureInPicture() async {
+    final size = _videoController?.value.size;
     final res = await PictureInPicture.enterPip(
-      width: _videoController?.value.size.width.toInt(),
-      height: _videoController?.value.size.height.toInt(),
+      width: size?.width.toInt(),
+      height: size?.height.toInt(),
     );
     return res;
   }
