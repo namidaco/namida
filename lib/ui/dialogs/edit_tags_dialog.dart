@@ -1015,6 +1015,7 @@ class CustomTagTextField extends StatelessWidget {
   final bool isNumeric;
   final TextInputType? keyboardType;
   final RxBool? didEditField;
+  final AutovalidateMode? validatorMode;
   CustomTagTextField({
     super.key,
     required this.controller,
@@ -1029,6 +1030,7 @@ class CustomTagTextField extends StatelessWidget {
     this.isNumeric = false,
     this.keyboardType,
     this.didEditField,
+    this.validatorMode,
   });
   final RxBool didChange = false.obs;
   @override
@@ -1041,8 +1043,12 @@ class CustomTagTextField extends StatelessWidget {
         controller: controller,
         textAlign: TextAlign.left,
         maxLines: maxLines,
+        autovalidateMode: validatorMode,
         keyboardType: keyboardType ?? (isNumeric ? TextInputType.number : null),
         style: context.textTheme.displaySmall?.copyWith(fontSize: 14.5.multipliedFontScale, fontWeight: FontWeight.w600),
+        onTapOutside: (event) {
+          FocusScope.of(context).unfocus();
+        },
         onChanged: (value) {
           if (onChanged != null) onChanged!(value);
           if (!didChange.value) {

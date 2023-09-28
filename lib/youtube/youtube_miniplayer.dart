@@ -404,11 +404,11 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                               const SizedBox(width: 18.0),
                                               Obx(
                                                 () {
-                                                  final audioProgress = YoutubeController.inst.downloadsAudioProgressMap[currentId];
+                                                  final audioProgress = YoutubeController.inst.downloadsAudioProgressMap[currentId]?.values.firstOrNull;
                                                   final audioPerc = audioProgress == null
                                                       ? null
                                                       : "${lang.AUDIO} ${(audioProgress.progress / audioProgress.totalProgress * 100).toStringAsFixed(0)}%";
-                                                  final videoProgress = YoutubeController.inst.downloadsVideoProgressMap[currentId];
+                                                  final videoProgress = YoutubeController.inst.downloadsVideoProgressMap[currentId]?.values.firstOrNull;
                                                   final videoPerc = videoProgress == null
                                                       ? null
                                                       : "${lang.VIDEO} ${(videoProgress.progress / videoProgress.totalProgress * 100).toStringAsFixed(0)}%";

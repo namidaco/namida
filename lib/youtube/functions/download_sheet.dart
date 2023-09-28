@@ -39,17 +39,13 @@ Future<void> showDownloadVideoBottomSheet({
   final video = Rxn<YoutubeVideo>();
   final selectedAudioOnlyStream = Rxn<AudioOnlyStream>();
   final selectedVideoOnlyStream = Rxn<VideoOnlyStream>();
-  final videoInfo = Rxn<VideoInfo>();
+  final videoInfo = ValueNotifier<VideoInfo?>(null);
   final videoOutputFilenameController = TextEditingController();
   final videoThumbnail = Rxn<File>();
   DateTime? videoDateTime;
 
   final formKey = GlobalKey<FormState>();
   final filenameExists = false.obs;
-  void validateFilename() {
-    final fileDoesNotExist = formKey.currentState?.validate();
-    filenameExists.value = fileDoesNotExist == false;
-  }
 
   final tagsMap = <FFMPEGTagField, String?>{};
   void updateTagsMap(Map<FFMPEGTagField, String?> values) {
@@ -72,7 +68,6 @@ Future<void> showDownloadVideoBottomSheet({
         videoOutputFilenameController.text = filenameRealVideo;
       }
     }
-    validateFilename();
   }
 
   YoutubeController.inst.getAvailableStreams(videoId).then((v) {
@@ -237,17 +232,17 @@ Future<void> showDownloadVideoBottomSheet({
         width: context.width,
         child: Padding(
           padding: const EdgeInsets.all(18.0).add(EdgeInsets.only(bottom: bottomPadding)),
-          child: Obx(
-            () => videoInfo.value == null
-                ? Center(
-                    child: ThreeArchedCircle(
-                      color: colorScheme!,
-                      size: context.width * 0.4,
-                    ),
-                  )
-                : Form(
-                    key: formKey,
-                    child: Column(
+          child: ValueListenableBuilder(
+            valueListenable: videoInfo,
+            builder: (context, value, child) {
+              return videoInfo.value == null
+                  ? Center(
+                      child: ThreeArchedCircle(
+                        color: colorScheme!,
+                        size: context.width * 0.4,
+                      ),
+                    )
+                  : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -473,24 +468,24 @@ Future<void> showDownloadVideoBottomSheet({
                           );
                         }),
                         const SizedBox(height: 18.0),
-                        TapRegion(
-                          onTapOutside: (event) {
-                            validateFilename();
-                            FocusScope.of(context).unfocus();
-                          },
+                        Form(
+                          key: formKey,
                           child: CustomTagTextField(
                             controller: videoOutputFilenameController,
                             hintText: videoOutputFilenameController.text,
                             labelText: lang.FILE_NAME,
-                            onChanged: (value) {
-                              validateFilename();
-                            },
+                            validatorMode: AutovalidateMode.always,
                             validator: (value) {
                               if (value == null) return lang.PLEASE_ENTER_A_NAME;
                               final file = File("${AppDirs.INTERNAL_STORAGE}/$value");
+                              void updateVal(bool exist) => WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                                    filenameExists.value = exist;
+                                  });
                               if (file.existsSync()) {
-                                filenameExists.value = true;
+                                updateVal(true);
                                 return "${lang.FILE_ALREADY_EXISTS}, ${lang.DOWNLOADING_WILL_OVERRIDE_IT} (${file.sizeInBytesSync().fileSizeFormatted})";
+                              } else {
+                                updateVal(false);
                               }
 
                               return null;
@@ -516,7 +511,6 @@ Future<void> showDownloadVideoBottomSheet({
                                   final sizeSum = (selectedVideoOnlyStream.value?.sizeInBytes ?? 0) + (selectedAudioOnlyStream.value?.sizeInBytes ?? 0);
                                   final enabled = sizeSum > 0;
                                   final sizeText = enabled ? "(${sizeSum.fileSizeFormatted})" : '';
-                                  final fileAlreadyExists = filenameExists.value;
                                   return IgnorePointer(
                                     ignoring: !enabled,
                                     child: AnimatedOpacity(
@@ -527,7 +521,7 @@ Future<void> showDownloadVideoBottomSheet({
                                         padding: const EdgeInsets.all(12.0),
                                         height: 48.0,
                                         bgColor: colorScheme,
-                                        decoration: fileAlreadyExists
+                                        decoration: filenameExists.value
                                             ? BoxDecoration(
                                                 border: Border.all(
                                                   width: 3.0,
@@ -590,8 +584,8 @@ Future<void> showDownloadVideoBottomSheet({
                           ],
                         )
                       ],
-                    ),
-                  ),
+                    );
+            },
           ),
         ),
       );

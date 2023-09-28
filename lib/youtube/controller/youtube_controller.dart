@@ -1,18 +1,21 @@
 // ignore_for_file: depend_on_referenced_packages
 
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:flutter/widgets.dart';
-
 import 'package:dio/dio.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
+import 'package:namida/controller/notification_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -65,11 +68,11 @@ class YoutubeController {
   /// Used as a backup in case of no connection.
   final currentCachedQualities = <NamidaVideo>[].obs;
 
-  /// {id: DownloadProgress()}
-  final downloadsVideoProgressMap = <String, DownloadProgress>{}.obs;
+  /// {id: <filename, DownloadProgress>{}}
+  final downloadsVideoProgressMap = <String, RxMap<String, DownloadProgress>>{}.obs;
 
-  /// {id: DownloadProgress()}
-  final downloadsAudioProgressMap = <String, DownloadProgress>{}.obs;
+  /// {id: <filename, DownloadProgress>{}}
+  final downloadsAudioProgressMap = <String, RxMap<String, DownloadProgress>>{}.obs;
 
   final _downloadClientsMap = <String, Dio>{}; // {nameIdentifier: Dio()}
 
@@ -346,6 +349,107 @@ class YoutubeController {
     return await NewPipeExtractorDart.videos.getInfo(id.toYTUrl());
   }
 
+  void _loopMapAndPostNotification({
+    required Map<String, Map<String, DownloadProgress>> bigMap,
+    required int Function(String key, int progress) speedInBytes,
+    required DateTime startTime,
+    required bool isAudio,
+  }) {
+    final downloadingText = isAudio ? "Audio" : "Video";
+    for (final bigEntry in bigMap.entries.toList()) {
+      final map = bigEntry.value;
+      final videoId = bigEntry.key;
+      for (final entry in map.entries.toList()) {
+        final p = entry.value.progress;
+        final tp = entry.value.totalProgress;
+        final title = getTemporarelyVideoInfo(videoId)?.name ?? fetchVideoDetailsFromCacheSync(videoId)?.name ?? videoId;
+        final speedB = speedInBytes(videoId, entry.value.progress);
+        if (p / tp >= 1) {
+          map.remove(entry.key);
+        } else {
+          NotificationService.inst.downloadYoutubeNotification(
+            notificationID: entry.key,
+            title: "Downloading $downloadingText: $title",
+            progress: p,
+            total: tp,
+            subtitle: (progressText) => "$progressText (${speedB.fileSizeFormatted}/s)",
+            imagePath: VideoController.inst.getYoutubeThumbnailFromCacheSync(id: videoId)?.path,
+            displayTime: startTime,
+          );
+        }
+      }
+    }
+  }
+
+  void _doneDownloadingNotification({
+    required String videoId,
+    required String videoTitle,
+    required String nameIdentifier,
+    required File? downloadedFile,
+  }) {
+    if (downloadedFile == null) {
+      NotificationService.inst.doneDownloadingYoutubeNotification(
+        notificationID: nameIdentifier,
+        videoTitle: videoTitle,
+        subtitle: 'Download Failed',
+        imagePath: VideoController.inst.getYoutubeThumbnailFromCacheSync(id: videoId)?.path,
+        failed: true,
+      );
+    } else {
+      NotificationService.inst.doneDownloadingYoutubeNotification(
+        notificationID: nameIdentifier,
+        videoTitle: downloadedFile.path.getFilenameWOExt,
+        subtitle: 'Downloaded ${downloadedFile.sizeInBytesSync().fileSizeFormatted}',
+        imagePath: VideoController.inst.getYoutubeThumbnailFromCacheSync(id: videoId)?.path,
+        failed: false,
+      );
+    }
+    _tryCancelDownloadNotificationTimer();
+    downloadsVideoProgressMap.remove(videoId);
+    downloadsAudioProgressMap.remove(videoId);
+  }
+
+  final _speedMapVideo = <String, int>{};
+  final _speedMapAudio = <String, int>{};
+
+  Timer? _downloadNotificationTimer;
+  void _tryCancelDownloadNotificationTimer() {
+    if (downloadsVideoProgressMap.isEmpty && downloadsAudioProgressMap.isEmpty) {
+      _downloadNotificationTimer?.cancel();
+      _downloadNotificationTimer = null;
+    }
+  }
+
+  void _startNotificationTimer() {
+    if (_downloadNotificationTimer == null) {
+      final startTime = DateTime.now();
+      _downloadNotificationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        _loopMapAndPostNotification(
+          startTime: startTime,
+          isAudio: false,
+          bigMap: downloadsVideoProgressMap,
+          speedInBytes: (key, newProgress) {
+            final previousProgress = _speedMapVideo[key] ?? 0;
+            final speed = newProgress - previousProgress;
+            _speedMapVideo[key] = newProgress;
+            return speed;
+          },
+        );
+        _loopMapAndPostNotification(
+          startTime: startTime,
+          isAudio: true,
+          bigMap: downloadsAudioProgressMap,
+          speedInBytes: (key, newProgress) {
+            final previousProgress = _speedMapAudio[key] ?? 0;
+            final speed = newProgress - previousProgress;
+            _speedMapAudio[key] = newProgress;
+            return speed;
+          },
+        );
+      });
+    }
+  }
+
   Future<File?> downloadYoutubeVideoRaw({
     required String id,
     required bool useCachedVersionsIfAvailable,
@@ -364,6 +468,8 @@ class YoutubeController {
     if (id == '') return null;
 
     isDownloading[id] = true;
+
+    _startNotificationTimer();
 
     File? df;
     Future<bool> fileSizeQualified({
@@ -413,13 +519,13 @@ class YoutubeController {
             downloadingStream: (downloadedBytes) {
               videoDownloadingStream(downloadedBytes);
               bytesLength += downloadedBytes.length;
-              downloadsVideoProgressMap[id] = DownloadProgress(
+              downloadsVideoProgressMap[id] ??= <String, DownloadProgress>{}.obs;
+              downloadsVideoProgressMap[id]![filename] = DownloadProgress(
                 progress: bytesLength,
                 totalProgress: videoStream.sizeInBytes ?? 0,
               );
             },
           );
-          downloadsVideoProgressMap.remove(id);
           videoFile = downloadedFile;
         }
 
@@ -458,13 +564,13 @@ class YoutubeController {
             downloadingStream: (downloadedBytes) {
               audioDownloadingStream(downloadedBytes);
               bytesLength += downloadedBytes.length;
-              downloadsAudioProgressMap[id] = DownloadProgress(
+              downloadsAudioProgressMap[id] ??= <String, DownloadProgress>{}.obs;
+              downloadsAudioProgressMap[id]![filename] = DownloadProgress(
                 progress: bytesLength,
                 totalProgress: audioStream.sizeInBytes ?? 0,
               );
             },
           );
-          downloadsAudioProgressMap.remove(id);
           audioFile = downloadedFile;
         }
         final qualified = await fileSizeQualified(file: audioFile, targetSize: audioStream.sizeInBytes ?? 0);
@@ -523,6 +629,12 @@ class YoutubeController {
     }
 
     isDownloading[id] = false;
+    _doneDownloadingNotification(
+      videoId: id,
+      videoTitle: filename,
+      nameIdentifier: filename,
+      downloadedFile: df,
+    );
     return df;
   }
 

@@ -289,9 +289,11 @@ class JsonToHistoryParser {
     }
 
     await Future.delayed(Duration.zero);
+
+    final startTime = DateTime.now();
     _notificationTimer?.cancel();
     _notificationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      NotificationService.inst.importHistoryNotification(parsedHistoryJson.value, totalJsonToParse.value);
+      NotificationService.inst.importHistoryNotification(parsedHistoryJson.value, totalJsonToParse.value, startTime);
     });
 
     final datesAdded = <int>[];

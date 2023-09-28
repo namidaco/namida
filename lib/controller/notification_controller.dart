@@ -21,6 +21,11 @@ class NotificationService {
   final _historyImportChannelName = 'History Import';
   final _historyImportChannelDescription = 'Imports Tracks to History from a source';
 
+  final _youtubeDownloadID = 1;
+  final _youtubeDownloadPayload = 'youtube_download';
+  final _youtubeDownloadChannelName = 'Downloads';
+  final _youtubeDownloadChannelDescription = 'Downlaod content from youtube';
+
   Future<void> init() async {
     await _flutterLocalNotificationsPlugin.initialize(
       const InitializationSettings(
@@ -31,15 +36,65 @@ class NotificationService {
     );
   }
 
-  void importHistoryNotification(int parsed, int total) {
+  void downloadYoutubeNotification({
+    required String notificationID,
+    required String title,
+    required String Function(String progressText) subtitle,
+    String? imagePath,
+    required int progress,
+    required int total,
+    required DateTime displayTime,
+  }) {
+    _createProgressNotification(
+      id: _youtubeDownloadID,
+      progress: progress,
+      maxProgress: total,
+      title: title,
+      subtitle: subtitle,
+      channelName: _youtubeDownloadChannelName,
+      channelDescription: _youtubeDownloadChannelDescription,
+      payload: _youtubeDownloadPayload,
+      imagePath: imagePath,
+      isInBytes: true,
+      tag: notificationID,
+      displayTime: displayTime,
+    );
+  }
+
+  void doneDownloadingYoutubeNotification({
+    required String notificationID,
+    required String videoTitle,
+    required String subtitle,
+    required bool failed,
+    String? imagePath,
+  }) {
+    _createNotification(
+      id: _youtubeDownloadID,
+      title: videoTitle,
+      body: subtitle,
+      subText: failed ? 'error' : '100% ✓',
+      channelName: _youtubeDownloadChannelName,
+      channelDescription: _youtubeDownloadChannelDescription,
+      payload: _youtubeDownloadPayload,
+      imagePath: imagePath,
+      isInBytes: true,
+      tag: notificationID,
+      displayTime: DateTime.now(),
+    );
+  }
+
+  void importHistoryNotification(int parsed, int total, DateTime displayTime) {
     _createProgressNotification(
       id: _historyImportID,
       progress: parsed,
       maxProgress: total,
       title: 'Importing History',
+      subtitle: (progressText) => progressText,
       channelName: _historyImportChannelName,
       channelDescription: _historyImportChannelDescription,
       payload: _historyImportPayload,
+      isInBytes: false,
+      displayTime: displayTime,
     );
   }
 
@@ -52,6 +107,8 @@ class NotificationService {
       channelDescription: _historyImportChannelDescription,
       subText: '100% ✓',
       payload: _historyImportPayload,
+      isInBytes: false,
+      displayTime: DateTime.now(),
     );
   }
 
@@ -69,7 +126,12 @@ class NotificationService {
     required String channelName,
     required String channelDescription,
     required String payload,
+    String? imagePath,
+    required bool isInBytes,
+    String? tag,
+    required DateTime? displayTime,
   }) {
+    final pic = imagePath == null ? null : BigPictureStyleInformation(FilePathAndroidBitmap(imagePath));
     _flutterLocalNotificationsPlugin.show(
       id,
       title,
@@ -85,8 +147,13 @@ class NotificationService {
           onlyAlertOnce: true,
           ongoing: false,
           visibility: NotificationVisibility.public,
+          styleInformation: pic,
+          largeIcon: pic?.bigPicture,
           icon: 'ic_stat_musicnote',
           subText: subText,
+          tag: tag,
+          showWhen: displayTime != null,
+          when: displayTime?.millisecondsSinceEpoch,
         ),
       ),
       payload: payload,
@@ -98,16 +165,24 @@ class NotificationService {
     required int progress,
     required int maxProgress,
     required String title,
+    required String Function(String progressText) subtitle,
     required String channelName,
     required String channelDescription,
     required String payload,
+    required bool isInBytes,
+    String? imagePath,
+    String? tag,
+    required DateTime? displayTime,
   }) {
     final p = progress / maxProgress;
+    final sub = isInBytes ? '${progress.fileSizeFormatted} / ${maxProgress.fileSizeFormatted}' : '${progress.formatDecimal()} / ${maxProgress.formatDecimal()}';
+
+    final pic = imagePath == null ? null : FilePathAndroidBitmap(imagePath);
 
     _flutterLocalNotificationsPlugin.show(
       id,
       title,
-      '${progress.formatDecimal()} / ${maxProgress.formatDecimal()}',
+      subtitle(sub),
       NotificationDetails(
         android: AndroidNotificationDetails(
           '$id',
@@ -120,10 +195,15 @@ class NotificationService {
           showProgress: true,
           ongoing: true,
           visibility: NotificationVisibility.public,
+          // styleInformation: null, // this gets displayed instead of subtitle
+          largeIcon: pic,
           maxProgress: maxProgress,
           icon: 'ic_stat_musicnote',
           progress: progress,
           subText: '${((p.isFinite ? p : 0) * 100).round()}%',
+          showWhen: displayTime != null,
+          when: displayTime?.millisecondsSinceEpoch,
+          tag: tag,
         ),
       ),
       payload: payload,
