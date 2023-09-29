@@ -458,6 +458,7 @@ class YoutubeController {
     required VideoStream? videoStream,
     required AudioOnlyStream? audioStream,
     required bool merge,
+    required bool keepCachedVersionsIfDownloaded,
     required void Function(List<int> downloadedBytes) videoDownloadingStream,
     required void Function(List<int> downloadedBytes) audioDownloadingStream,
     required void Function(int initialFileSize) onInitialVideoFileSize,
@@ -613,13 +614,13 @@ class YoutubeController {
             renameOrCopy(
               file: videoFile,
               path: output,
-              forceCopy: isVideoFileCached,
+              forceCopy: isVideoFileCached || keepCachedVersionsIfDownloaded,
             ),
           if (audioFile != null && audioStream != null)
             renameOrCopy(
               file: audioFile,
               path: output,
-              forceCopy: isAudioFileCached,
+              forceCopy: isAudioFileCached || keepCachedVersionsIfDownloaded,
             ),
         ]);
         df = File(output);

@@ -83,13 +83,21 @@ Future<void> showVideoDownloadOptionsSheet({
                   children: [
                     Obx(
                       () => CustomSwitchListTile(
-                        title: 'Set file last modified as video upload date',
+                        visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
+                        title: lang.SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE,
                         value: settings.downloadFilesWriteUploadDate.value,
-                        onChanged: (isTrue) {
-                          settings.save(downloadFilesWriteUploadDate: !isTrue);
-                        },
+                        onChanged: (isTrue) => settings.save(downloadFilesWriteUploadDate: !isTrue),
                       ),
                     ),
+                    Obx(
+                      () => CustomSwitchListTile(
+                        visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
+                        title: lang.KEEP_CACHED_VERSIONS,
+                        value: settings.downloadFilesKeepCachedVersions.value,
+                        onChanged: (isTrue) => settings.save(downloadFilesKeepCachedVersions: !isTrue),
+                      ),
+                    ),
+                    const SizedBox(height: 6.0),
                     if (!supportTagging) ...[
                       const SizedBox(height: 12.0),
                       Row(

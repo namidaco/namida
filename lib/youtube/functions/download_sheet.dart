@@ -545,6 +545,7 @@ Future<void> showDownloadVideoBottomSheet({
                                             videoStream: selectedVideoOnlyStream.value,
                                             audioStream: selectedAudioOnlyStream.value,
                                             merge: true,
+                                            keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
                                             onInitialVideoFileSize: (initialFileSize) {},
                                             onInitialAudioFileSize: (initialFileSize) {},
                                             videoDownloadingStream: (downloadedBytes) {},

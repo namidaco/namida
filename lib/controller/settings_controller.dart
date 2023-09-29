@@ -164,6 +164,7 @@ class SettingsController {
   final RxBool displayFavouriteIconInListTile = true.obs;
   final RxBool editTagsKeepFileDates = true.obs;
   final RxBool downloadFilesWriteUploadDate = true.obs;
+  final RxBool downloadFilesKeepCachedVersions = true.obs;
   final RxBool ytCommentsAlwaysLoadNew = false.obs;
   final RxBool enablePip = true.obs;
   final RxBool playerInfiniyQueueOnNextPrevious = true.obs;
@@ -350,6 +351,7 @@ class SettingsController {
       displayFavouriteIconInListTile.value = json['displayFavouriteIconInListTile'] ?? displayFavouriteIconInListTile.value;
       editTagsKeepFileDates.value = json['editTagsKeepFileDates'] ?? editTagsKeepFileDates.value;
       downloadFilesWriteUploadDate.value = json['downloadFilesWriteUploadDate'] ?? downloadFilesWriteUploadDate.value;
+      downloadFilesKeepCachedVersions.value = json['downloadFilesKeepCachedVersions'] ?? downloadFilesKeepCachedVersions.value;
       ytCommentsAlwaysLoadNew.value = json['ytCommentsAlwaysLoadNew'] ?? ytCommentsAlwaysLoadNew.value;
       enablePip.value = json['enablePip'] ?? enablePip.value;
       playerInfiniyQueueOnNextPrevious.value = json['playerInfiniyQueueOnNextPrevious'] ?? playerInfiniyQueueOnNextPrevious.value;
@@ -518,6 +520,7 @@ class SettingsController {
       'displayFavouriteIconInListTile': displayFavouriteIconInListTile.value,
       'editTagsKeepFileDates': editTagsKeepFileDates.value,
       'downloadFilesWriteUploadDate': downloadFilesWriteUploadDate.value,
+      'downloadFilesKeepCachedVersions': downloadFilesKeepCachedVersions.value,
       'ytCommentsAlwaysLoadNew': ytCommentsAlwaysLoadNew.value,
       'enablePip': enablePip.value,
       'playerInfiniyQueueOnNextPrevious': playerInfiniyQueueOnNextPrevious.value,
@@ -616,6 +619,7 @@ class SettingsController {
     bool? displayFavouriteIconInListTile,
     bool? editTagsKeepFileDates,
     bool? downloadFilesWriteUploadDate,
+    bool? downloadFilesKeepCachedVersions,
     bool? ytCommentsAlwaysLoadNew,
     bool? enablePip,
     bool? playerInfiniyQueueOnNextPrevious,
@@ -921,6 +925,9 @@ class SettingsController {
     }
     if (downloadFilesWriteUploadDate != null) {
       this.downloadFilesWriteUploadDate.value = downloadFilesWriteUploadDate;
+    }
+    if (downloadFilesKeepCachedVersions != null) {
+      this.downloadFilesKeepCachedVersions.value = downloadFilesKeepCachedVersions;
     }
     if (ytCommentsAlwaysLoadNew != null) {
       this.ytCommentsAlwaysLoadNew.value = ytCommentsAlwaysLoadNew;
