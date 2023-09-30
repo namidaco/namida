@@ -48,15 +48,28 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     Color colorScheme,
     BoxConstraints constraints,
     double percentage,
-    int alpha,
-  ) {
+    int alpha, {
+    bool displayIndicator = false,
+  }) {
     return Container(
+      alignment: Alignment.centerRight,
       height: 5.0,
       width: constraints.maxWidth * percentage,
       decoration: BoxDecoration(
         color: Color.alphaBlend(Colors.white.withOpacity(0.3), colorScheme).withAlpha(alpha),
         borderRadius: BorderRadius.circular(6.0.multipliedRadius),
       ),
+      child: displayIndicator
+          ? Container(
+              width: 4.0,
+              height: 4.0,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+            )
+          : null,
     );
   }
 
@@ -726,10 +739,11 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 child: Obx(
                                   () {
                                     final playerDuration = Player.inst.currentItemDuration ?? Duration.zero;
-                                    final videoBuffered = VideoController.vcontroller.buffered;
+                                    final videoBuffered = VideoController.vcontroller.buffered ?? Duration.zero;
                                     final audioBuffered = Player.inst.buffered;
                                     // display audio buffer only if audio < video
-                                    final playerBuffered = videoBuffered == null || videoBuffered > audioBuffered ? audioBuffered : videoBuffered;
+                                    final playerBufferedBigger = videoBuffered > audioBuffered ? videoBuffered : audioBuffered;
+                                    final playerBufferedLower = videoBuffered > audioBuffered ? audioBuffered : videoBuffered;
                                     final currentPositionMS = Player.inst.nowPlayingPosition;
                                     // this for audio only mode
                                     final fullVideoBufferProgress = VideoController.vcontroller.isInitialized ? VideoController.vcontroller.isCurrentVideoFromCache : true;
@@ -793,12 +807,23 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                             currentPercentage,
                                                             160,
                                                           ),
-                                                          if (currentVideoAudioFromCache || (playerBuffered > Duration.zero && durMS > 0))
+                                                          // -- low buffer
+                                                          if (currentVideoAudioFromCache || (playerBufferedLower > Duration.zero && durMS > 0))
                                                             _getSliderContainer(
                                                               colorScheme,
                                                               constraints,
-                                                              currentVideoAudioFromCache ? 1.0 : playerBuffered.inMilliseconds / durMS,
-                                                              100,
+                                                              currentVideoAudioFromCache ? 1.0 : playerBufferedLower.inMilliseconds / durMS,
+                                                              80,
+                                                              displayIndicator: true,
+                                                            ),
+                                                          // -- big buffer
+                                                          if (currentVideoAudioFromCache || (playerBufferedBigger > Duration.zero && durMS > 0))
+                                                            _getSliderContainer(
+                                                              colorScheme,
+                                                              constraints,
+                                                              currentVideoAudioFromCache ? 1.0 : playerBufferedBigger.inMilliseconds / durMS,
+                                                              60,
+                                                              displayIndicator: true,
                                                             ),
                                                           _getSliderContainer(
                                                             colorScheme,
