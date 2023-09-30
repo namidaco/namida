@@ -15,7 +15,7 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
-import 'package:namida/youtube/widgets/yt_video_card.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 class _Section implements ExpandableListSection<YoutubeID> {
   final int day;
@@ -45,123 +45,155 @@ class YoutubeHistoryPage extends StatelessWidget {
         () {
           final days = YoutubeHistoryController.inst.historyDays.toList();
           final sections = days.map((e) => _Section(e)).toList();
-
-          return ExpandableListView(
-            builder: SliverExpandableChildDelegate<YoutubeID, _Section>(
-                sectionList: sections,
-                headerBuilder: (context, sectionIndex, index) {
-                  final day = days[sectionIndex];
-                  final dayInMs = Duration(days: day).inMilliseconds;
-                  return Container(
-                    color: context.theme.scaffoldBackgroundColor,
-                    padding: const EdgeInsets.only(top: 12.0, bottom: 8.0),
-                    child: Container(
-                      clipBehavior: Clip.antiAlias,
-                      width: context.width,
-                      height: kHistoryDayHeaderHeight * 1.2,
-                      decoration: BoxDecoration(
-                        color: Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
-                        border: Border(
-                          left: BorderSide(
-                            color: CurrentColor.inst.color,
-                            width: (4.0).withMinimum(3.0),
-                          ),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            offset: const Offset(0, 2.0),
-                            blurRadius: 4.0,
-                            color: Color.alphaBlend(context.theme.shadowColor.withAlpha(140), context.theme.scaffoldBackgroundColor),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 12.0),
-                          Expanded(
-                            child: Text(
-                              [
-                                dayInMs.dateFormattedOriginal,
-                                sections[sectionIndex].getItems().length.displayVideoKeyword,
-                              ].join('  •  '),
-                              style: context.textTheme.displayMedium,
+          return CustomScrollView(
+            slivers: [
+              SliverExpandableList(
+                builder: SliverExpandableChildDelegate<YoutubeID, _Section>(
+                    sectionList: sections,
+                    headerBuilder: (context, sectionIndex, index) {
+                      final day = days[sectionIndex];
+                      final dayInMs = Duration(days: day).inMilliseconds;
+                      return Container(
+                        color: context.theme.scaffoldBackgroundColor,
+                        padding: const EdgeInsets.only(top: 12.0, bottom: 0.0),
+                        child: Container(
+                          clipBehavior: Clip.antiAlias,
+                          width: context.width,
+                          height: kHistoryDayHeaderHeight * 1.2,
+                          decoration: BoxDecoration(
+                            color: Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
+                            border: Border(
+                              left: BorderSide(
+                                color: CurrentColor.inst.color,
+                                width: (4.0).withMinimum(3.0),
+                              ),
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                offset: const Offset(0, 8.0),
+                                blurRadius: 12.0,
+                                spreadRadius: 2.0,
+                                color: Color.alphaBlend(context.theme.shadowColor.withAlpha(180), context.theme.scaffoldBackgroundColor).withOpacity(0.4),
+                              ),
+                            ],
                           ),
-                          NamidaIconButton(
-                            icon: Broken.more,
-                            iconSize: 22.0,
-                            onPressed: () {},
-                          ),
-                          const SizedBox(width: 2.0),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-                itemBuilder: (context, sectionIndex, itemIndex, index) {
-                  final videos = sections[sectionIndex].getItems();
-                  final video = videos[itemIndex];
-                  final info = YoutubeController.inst.fetchVideoDetailsFromCacheSync(video.id);
-                  final date = video.addedDate?.millisecondsSinceEpoch.dateAndClockFormattedOriginal;
-                  final isCurrentlyPlaying = Player.inst.currentIndex == itemIndex && Player.inst.nowPlayingVideoID == video;
-                  final menuItems = getVideoCardMenuItems(
-                    videoId: video.id,
-                    url: info?.url,
-                    playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
-                    idsNamesLookup: {video.id: info?.name},
-                  );
-                  return NamidaPopupWrapper(
-                    openOnTap: false,
-                    childrenDefault: menuItems,
-                    child: NamidaInkWell(
-                      onTap: () {
-                        Player.inst.playOrPause(itemIndex, videos, QueueSource.others);
-                      },
-                      height: Dimensions.youtubeCardItemExtent,
-                      margin: const EdgeInsets.all(4.0),
-                      padding: const EdgeInsets.symmetric(vertical: Dimensions.youtubeCardItemVerticalPadding),
-                      bgColor: isCurrentlyPlaying ? CurrentColor.inst.color.withAlpha(140) : context.theme.cardColor,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                      ),
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 12.0),
-                          YoutubeThumbnail(
-                            key: Key(video.id),
-                            width: Dimensions.youtubeCardItemHeight * 16 / 9,
-                            height: Dimensions.youtubeCardItemHeight,
-                            videoId: video.id,
-                          ),
-                          const SizedBox(width: 12.0),
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  info?.name ?? video.id,
-                                  maxLines: 2,
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 12.0),
+                              Expanded(
+                                child: Text(
+                                  [
+                                    dayInMs.dateFormattedOriginal,
+                                    sections[sectionIndex].getItems().length.displayVideoKeyword,
+                                  ].join('  •  '),
                                   style: context.textTheme.displayMedium,
                                 ),
-                                if (info?.uploaderName != null)
-                                  Text(
-                                    info!.uploaderName!,
-                                    maxLines: 1,
-                                    style: context.textTheme.displaySmall,
-                                  ),
-                                if (date != null)
-                                  Text(
-                                    date,
-                                    maxLines: 1,
-                                    style: context.textTheme.displaySmall,
-                                  ),
-                              ],
-                            ),
+                              ),
+                              NamidaIconButton(
+                                icon: Broken.more,
+                                iconSize: 22.0,
+                                onPressed: () {},
+                              ),
+                              const SizedBox(width: 2.0),
+                            ],
                           ),
-                          const SizedBox(width: 12.0),
-                        ],
-                      ),
+                        ),
+                      );
+                    },
+                    itemBuilder: (context, sectionIndex, itemIndex, index) {
+                      final videos = sections[sectionIndex].getItems();
+                      final video = videos[itemIndex];
+                      final info = YoutubeController.inst.fetchVideoDetailsFromCacheSync(video.id);
+                      final date = video.addedDate?.millisecondsSinceEpoch.dateAndClockFormattedOriginal;
+                      final duration = info?.duration?.inSeconds.secondsLabel;
+                      final isCurrentlyPlaying = Player.inst.currentIndex == itemIndex && Player.inst.nowPlayingVideoID == video;
+                      final menuItems = YTUtils.getVideoCardMenuItems(
+                        videoId: video.id,
+                        url: info?.url,
+                        playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
+                        idsNamesLookup: {video.id: info?.name},
+                      );
+                      return NamidaPopupWrapper(
+                        openOnTap: false,
+                        childrenDefault: menuItems,
+                        child: NamidaInkWell(
+                          onTap: () {
+                            Player.inst.playOrPause(itemIndex, videos, QueueSource.others);
+                          },
+                          height: Dimensions.youtubeCardItemExtent,
+                          margin: const EdgeInsets.all(4.0),
+                          padding: const EdgeInsets.symmetric(vertical: Dimensions.youtubeCardItemVerticalPadding),
+                          bgColor: isCurrentlyPlaying ? CurrentColor.inst.color.withAlpha(140) : context.theme.cardColor,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                          ),
+                          child: Stack(
+                            children: [
+                              Row(
+                                children: [
+                                  const SizedBox(width: 12.0),
+                                  YoutubeThumbnail(
+                                    key: Key(video.id),
+                                    width: Dimensions.youtubeCardItemHeight * 16 / 9,
+                                    height: Dimensions.youtubeCardItemHeight,
+                                    videoId: video.id,
+                                    onTopWidgets: [
+                                      if (duration != null)
+                                        Positioned(
+                                          bottom: 0.0,
+                                          right: 0.0,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(3.0),
+                                            child: ClipRRect(
+                                              borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                              child: NamidaBgBlur(
+                                                blur: 2.0,
+                                                child: Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
+                                                  color: Colors.black.withOpacity(0.2),
+                                                  child: Text(
+                                                    duration,
+                                                    style: context.textTheme.displaySmall?.copyWith(
+                                                      color: Colors.white.withOpacity(0.8),
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(width: 12.0),
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          info?.name ?? video.id,
+                                          maxLines: 2,
+                                          style: context.textTheme.displayMedium,
+                                        ),
+                                        if (info?.uploaderName != null)
+                                          Text(
+                                            info!.uploaderName!,
+                                            maxLines: 1,
+                                            style: context.textTheme.displaySmall,
+                                          ),
+                                        if (date != null)
+                                          Text(
+                                            date,
+                                            maxLines: 1,
+                                            style: context.textTheme.displaySmall,
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12.0),
+                                ],
+                              ),
                               Positioned(
                                 bottom: 0.0,
                                 right: 12.0,
@@ -172,9 +204,12 @@ class YoutubeHistoryPage extends StatelessWidget {
                               ),
                             ],
                           ),
-                    ),
-                  );
-                }),
+                        ),
+                      );
+                    }),
+              ),
+              const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding))
+            ],
           );
         },
       ),

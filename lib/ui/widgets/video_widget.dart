@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -50,7 +51,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     int alpha,
   ) {
     return Container(
-      height: 6.0,
+      height: 5.0,
       width: constraints.maxWidth * percentage,
       decoration: BoxDecoration(
         color: Color.alphaBlend(Colors.white.withOpacity(0.3), colorScheme).withAlpha(alpha),
@@ -589,108 +590,109 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   },
                                 );
                                 return NamidaPopupWrapper(
-                                openOnTap: true,
-                                onPop: _startTimer,
-                                onTap: () {
-                                  _resetTimer();
-                                  setControlsVisibily(true);
-                                },
-                                childrenDefault: widget.qualityItems,
-                                children: [
-                                  _getQualityChip(
-                                    title: lang.AUDIO_ONLY,
-                                    onPlay: (isSelected) {
-                                      Player.inst.setAudioOnlyPlayback(true);
-                                    },
-                                    selected: Player.inst.isAudioOnlyPlayback,
-                                    isCached: false,
-                                    icon: Broken.musicnote,
-                                  ),
-                                    ...cachedQualities.map(
-                                    (element) => Obx(
-                                      () => _getQualityChip(
-                                        title: '${element.height}p',
-                                        subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
-                                        onPlay: (isSelected) {
-                                          if (!isSelected) {
-                                            Player.inst.onItemPlayYoutubeIDSetQuality(
-                                              stream: null,
-                                              cachedFile: File(element.path),
-                                              videoItem: element,
-                                              useCache: true,
-                                              videoId: Player.inst.nowPlayingVideoID?.id ?? '',
-                                            );
-                                          }
-                                        },
-                                        selected: Player.inst.currentCachedVideo?.path == element.path,
-                                        isCached: true,
-                                      ),
+                                  openOnTap: true,
+                                  onPop: _startTimer,
+                                  onTap: () {
+                                    _resetTimer();
+                                    setControlsVisibily(true);
+                                  },
+                                  childrenDefault: widget.qualityItems,
+                                  children: [
+                                    _getQualityChip(
+                                      title: lang.AUDIO_ONLY,
+                                      onPlay: (isSelected) {
+                                        Player.inst.setAudioOnlyPlayback(true);
+                                      },
+                                      selected: Player.inst.isAudioOnlyPlayback,
+                                      isCached: false,
+                                      icon: Broken.musicnote,
                                     ),
-                                  ),
-                                    ...ytQualities.map((element) {
-                                    return Obx(
-                                      () {
-                                        final isSelected = element.resolution == Player.inst.currentVideoStream?.resolution;
-                                        final id = Player.inst.nowPlayingVideoID?.id;
-                                        final cachedFile = id == null ? null : element.getCachedFile(id);
-                                        return _getQualityChip(
-                                          title: element.resolution ?? '',
-                                          subtitle: " • ${element.sizeInBytes?.fileSizeFormatted ?? ''}",
+                                    ...cachedQualities.map(
+                                      (element) => Obx(
+                                        () => _getQualityChip(
+                                          title: '${element.height}p${element.framerateText()}',
+                                          subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
                                           onPlay: (isSelected) {
                                             if (!isSelected) {
                                               Player.inst.onItemPlayYoutubeIDSetQuality(
-                                                stream: element,
-                                                cachedFile: cachedFile,
+                                                stream: null,
+                                                cachedFile: File(element.path),
+                                                videoItem: element,
                                                 useCache: true,
-                                                videoId: id ?? '',
+                                                videoId: Player.inst.nowPlayingVideoID?.id ?? '',
                                               );
                                             }
                                           },
-                                          selected: isSelected,
-                                          isCached: cachedFile != null,
-                                        );
-                                      },
-                                    );
-                                  }).toList(),
-                                ],
-                                child: Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                                    child: NamidaBgBlur(
-                                      blur: visiblePercentage * 3.0,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black.withOpacity(0.2 * visiblePercentage),
-                                          borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                          selected: Player.inst.currentCachedVideo?.path == element.path,
+                                          isCached: true,
                                         ),
-                                        child: Obx(
-                                          () {
-                                            final qt = Player.inst.currentVideoStream?.resolution;
-                                            return Row(
-                                              children: [
-                                                if (qt != null) ...[
-                                                  Text(
-                                                    qt,
-                                                    style: context.textTheme.displaySmall?.copyWith(color: itemsColor),
+                                      ),
+                                    ),
+                                    ...ytQualities.map((element) {
+                                      return Obx(
+                                        () {
+                                          final isSelected = element.resolution == Player.inst.currentVideoStream?.resolution;
+                                          final id = Player.inst.nowPlayingVideoID?.id;
+                                          final cachedFile = id == null ? null : element.getCachedFile(id);
+                                          return _getQualityChip(
+                                            title: element.resolution ?? '',
+                                            subtitle: " • ${element.sizeInBytes?.fileSizeFormatted ?? ''}",
+                                            onPlay: (isSelected) {
+                                              if (!isSelected) {
+                                                Player.inst.onItemPlayYoutubeIDSetQuality(
+                                                  stream: element,
+                                                  cachedFile: cachedFile,
+                                                  useCache: true,
+                                                  videoId: id ?? '',
+                                                );
+                                              }
+                                            },
+                                            selected: isSelected,
+                                            isCached: cachedFile != null,
+                                          );
+                                        },
+                                      );
+                                    }).toList(),
+                                  ],
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                      child: NamidaBgBlur(
+                                        blur: visiblePercentage * 3.0,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black.withOpacity(0.2 * visiblePercentage),
+                                            borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                          ),
+                                          child: Obx(
+                                            () {
+                                              final qt = Player.inst.currentVideoStream?.resolution;
+                                              return Row(
+                                                children: [
+                                                  if (qt != null) ...[
+                                                    Text(
+                                                      qt,
+                                                      style: context.textTheme.displaySmall?.copyWith(color: itemsColor),
+                                                    ),
+                                                    const SizedBox(width: 4.0),
+                                                  ],
+                                                  Icon(
+                                                    Player.inst.isAudioOnlyPlayback ? Broken.musicnote : Broken.setting,
+                                                    color: itemsColor,
+                                                    size: 20.0,
                                                   ),
-                                                  const SizedBox(width: 4.0),
                                                 ],
-                                                Icon(
-                                                  Player.inst.isAudioOnlyPlayback ? Broken.musicnote : Broken.setting,
-                                                  color: itemsColor,
-                                                  size: 20.0,
-                                                ),
-                                              ],
-                                            );
-                                          },
+                                              );
+                                            },
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ),
+                                );
+                              },
                             ),
                           ],
                         );
@@ -716,7 +718,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                             child: NamidaBgBlur(
                               blur: visiblePercentage * 3.0,
                               child: Container(
-                                padding: const EdgeInsets.all(8.0),
+                                padding: const EdgeInsets.all(7.0),
                                 decoration: BoxDecoration(
                                   color: Colors.black.withOpacity(0.2 * visiblePercentage),
                                   borderRadius: borr,
@@ -737,6 +739,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         Text(
                                           currentPositionMS.milliSecondsLabel,
                                           style: context.textTheme.displayMedium?.copyWith(
+                                            fontSize: 14.0.multipliedFontScale,
                                             color: itemsColor,
                                           ),
                                         ),
@@ -779,8 +782,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                       final currentSeekValue = seekvaluee == 0 ? currentPositionMS : seekvaluee;
                                                       final currentPercentage = durMS == 0.0 ? 0.0 : currentSeekValue / durMS;
 
-                                                      const circleSize = 20.0;
-                                                      final colorScheme = context.theme.colorScheme.secondary;
+                                                      const circleSize = 18.0;
+                                                      final colorScheme = Color.alphaBlend(Colors.white.withAlpha(80), CurrentColor.inst.color.withOpacity(1));
                                                       return Stack(
                                                         alignment: Alignment.centerLeft,
                                                         children: [
@@ -801,7 +804,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                             colorScheme,
                                                             constraints,
                                                             1.0,
-                                                            60,
+                                                            40,
                                                           ),
                                                           Container(
                                                             alignment: Alignment.center,
@@ -834,6 +837,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         Text(
                                           playerDuration.inSeconds.secondsLabel,
                                           style: context.textTheme.displayMedium?.copyWith(
+                                            fontSize: 14.0.multipliedFontScale,
                                             color: itemsColor,
                                           ),
                                         ),
@@ -841,7 +845,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         NamidaIconButton(
                                           horizontalPadding: 0.0,
                                           padding: EdgeInsets.zero,
-                                          iconSize: 20.0,
+                                          iconSize: 18.0,
                                           icon: Broken.maximize_2,
                                           iconColor: itemsColor,
                                           onPressed: () {

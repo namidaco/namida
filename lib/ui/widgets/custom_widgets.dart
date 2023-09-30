@@ -174,6 +174,7 @@ class CustomSwitchListTile extends StatelessWidget {
   final bool enabled;
   final bool largeTitle;
   final int maxSubtitleLines;
+  final VisualDensity? visualDensity;
 
   const CustomSwitchListTile({
     Key? key,
@@ -188,6 +189,7 @@ class CustomSwitchListTile extends StatelessWidget {
     this.enabled = true,
     this.largeTitle = false,
     this.maxSubtitleLines = 4,
+    this.visualDensity,
   }) : super(key: key);
 
   @override
@@ -203,6 +205,7 @@ class CustomSwitchListTile extends StatelessWidget {
       passedColor: passedColor,
       rotateIcon: rotateIcon,
       onTap: () => onChanged(value),
+      visualDensity: visualDensity,
       trailing: IgnorePointer(
         child: FittedBox(
           child: Row(
@@ -2645,34 +2648,34 @@ class NamidaPopupWrapper extends StatelessWidget {
     );
     await NamidaNavigator.inst.showMenu(
       showMenu(
-      context: context,
-      position: position,
-      items: [
-        ...childrenDefault.map(
-          (e) => PopupMenuItem(
-            height: 42.0,
-            onTap: e.onTap,
-            child: Row(
-              children: [
-                Icon(e.icon, size: 20.0),
-                const SizedBox(width: 6.0),
-                Text(
-                  e.title,
-                  style: context.textTheme.displayMedium,
-                ),
-              ],
+        context: context,
+        position: position,
+        items: [
+          ...childrenDefault.map(
+            (e) => PopupMenuItem(
+              height: 42.0,
+              onTap: e.onTap,
+              child: Row(
+                children: [
+                  Icon(e.icon, size: 20.0),
+                  const SizedBox(width: 6.0),
+                  Text(
+                    e.title,
+                    style: context.textTheme.displayMedium,
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        ...children.map(
-          (e) => PopupMenuItem(
-            onTap: null,
-            height: 32.0,
-            padding: EdgeInsets.zero,
-            child: e,
+          ...children.map(
+            (e) => PopupMenuItem(
+              onTap: null,
+              height: 32.0,
+              padding: EdgeInsets.zero,
+              child: e,
+            ),
           ),
-        ),
-      ],
+        ],
       ),
     );
     if (context.mounted) {

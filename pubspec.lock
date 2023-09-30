@@ -70,8 +70,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: b7c52ac9c6433b67eb52bb101dced89963c89b61
-      resolved-ref: b7c52ac9c6433b67eb52bb101dced89963c89b61
+      ref: "6a76a3f0568ff3493e448e537e6664ebd699ca15"
+      resolved-ref: "6a76a3f0568ff3493e448e537e6664ebd699ca15"
       url: "https://github.com/namidaco/basic_audio_handler"
     source: git
     version: "0.0.1"
@@ -683,14 +683,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.4"
-  miniplayer:
-    dependency: "direct main"
-    description:
-      name: miniplayer
-      sha256: "6e12c27aef7432fc16508460a6dc824f3edfeb01761bd0dbfbccc84d516121bf"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.1"
   newpipeextractor_dart:
     dependency: "direct main"
     description:
@@ -1015,10 +1007,11 @@ packages:
   sticky_and_expandable_list:
     dependency: "direct main"
     description:
-      name: sticky_and_expandable_list
-      sha256: "42886b52d659f1fb0f6c355192d8e4e919bdee4eb9510049b2e3d05ea988b7ed"
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: HEAD
+      resolved-ref: "13e6a946cdcdfd7a20b422dbc5e8fd07dc3d6757"
+      url: "https://github.com/MSOB7YY/flutter_sticky_and_expandable_list"
+    source: git
     version: "1.1.3"
   sticky_headers:
     dependency: "direct main"
