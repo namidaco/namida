@@ -710,21 +710,35 @@ class VideoController {
     );
   }
 
+  /// This prevents re-requesting the same url.
+  final _runningRequestsMap = <String, Completer<Uint8List?>>{};
   Future<Uint8List?> getYoutubeThumbnailAsBytes({String? youtubeId, String? url}) async {
     if (youtubeId == null && url == null) return null;
 
     final links = url != null ? [url] : YTThumbnail(youtubeId!).allQualitiesByHighest;
 
     for (final link in links) {
-      try {
-        final res = await http.get(Uri.parse(link));
-        final data = res.bodyBytes;
-        if (data.isNotEmpty && res.statusCode != 404) {
-          return data;
-        }
-      } catch (e) {
-        printy('Error getting thumbnail at $link, trying again with lower quality.\n$e', isError: true);
+      if (_runningRequestsMap[link] != null) {
+        printy('getYoutubeThumbnailAsBytes: Same link is being requested right now, ignoring');
+        return null; // return and not continue, cuz if requesting hq image, continue will make it request lower one
       }
+      _runningRequestsMap[link] = Completer<Uint8List?>();
+      try {
+        http.get(Uri.parse(link)).then((res) {
+          final data = res.bodyBytes;
+          if (data.isNotEmpty && res.statusCode != 404) {
+            _runningRequestsMap[link]?.complete(data);
+            _runningRequestsMap.remove(link);
+          }
+        });
+      } catch (e) {
+        _runningRequestsMap[link]?.complete(null);
+        _runningRequestsMap.remove(link);
+        printy('getYoutubeThumbnailAsBytes: Error getting thumbnail at $link, trying again with lower quality.\n$e', isError: true);
+      }
+
+      final futurethumb = await _runningRequestsMap[link]?.future;
+      return futurethumb;
     }
 
     return null;
