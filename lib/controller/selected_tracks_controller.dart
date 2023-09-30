@@ -25,10 +25,10 @@ class SelectedTracksController {
   final _allTracksHashCodes = <Track, bool>{}.obs;
 
   List<Selectable> get currentAllTracks {
-    if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
-      return SearchSortController.inst.trackSearchTemp;
-    } else if (MiniPlayerController.inst.isInQueue) {
+    if (MiniPlayerController.inst.isInQueue) {
       return Player.inst.currentQueue;
+    } else if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
+      return SearchSortController.inst.trackSearchTemp;
     }
 
     return NamidaNavigator.inst.currentRoute?.tracksInside ?? [];

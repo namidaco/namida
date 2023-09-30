@@ -32,9 +32,34 @@ class NamidaNavigator {
   final RxList<NamidaRoute> currentWidgetStack = <NamidaRoute>[].obs;
   NamidaRoute? get currentRoute => currentWidgetStack.lastOrNull;
   int _currentDialogNumber = 0;
+  int _currentMenusNumber = 0;
 
   final GlobalKey<InnerDrawerState> innerDrawerKey = GlobalKey<InnerDrawerState>();
   final heroController = HeroController();
+
+  Future<T?> showMenu<T>(Future? menuFunction) async {
+    _currentMenusNumber++;
+    _printMenus();
+    return await menuFunction;
+  }
+
+  void popMenu({bool handleClosing = true}) {
+    if (_currentMenusNumber > 0) {
+      _currentMenusNumber--;
+      if (handleClosing) {
+        Get.close(1);
+      }
+    }
+    _printMenus();
+  }
+
+  void popAllMenus() {
+    if (_currentMenusNumber > 0) {
+      Get.close(_currentMenusNumber);
+      _currentMenusNumber = 0;
+    }
+    _printMenus();
+  }
 
   void toggleDrawer() {
     innerDrawerKey.currentState?.toggle();
@@ -211,6 +236,7 @@ class NamidaNavigator {
   }
 
   void _printDialogs() => printy("Current Dialogs: $_currentDialogNumber");
+  void _printMenus() => printy("Current Menus: $_currentMenusNumber");
 
   Future<void> navigateOff(
     Widget page, {

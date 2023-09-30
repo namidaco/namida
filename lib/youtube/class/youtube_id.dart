@@ -71,4 +71,16 @@ extension YoutubeIDUtils on YoutubeID {
   File? getThumbnailSync() {
     return VideoController.inst.getYoutubeThumbnailFromCacheSync(id: id);
   }
+
+  Future<Duration?> getDuration() async {
+    Duration? dur;
+    final a = YoutubeController.inst.getTemporarelyVideoInfo(id);
+    dur = a?.duration;
+
+    if (dur == null) {
+      final b = await YoutubeController.inst.fetchVideoDetails(id);
+      dur = b?.duration;
+    }
+    return dur;
+  }
 }

@@ -199,7 +199,8 @@ extension CacheGetterAudio on AudioOnlyStream {
     return p.join(directory ?? AppDirs.AUDIOS_CACHE, cacheKey(id));
   }
 
-  File? getCachedFile(String id, {String? directory}) {
+  File? getCachedFile(String? id, {String? directory}) {
+    if (id == null) return null;
     final path = cachePath(id, directory: directory);
     return File(path).existsSync() ? File(path) : null;
   }
@@ -215,7 +216,8 @@ extension CacheGetterVideo on VideoOnlyStream {
     return p.join(directory ?? AppDirs.VIDEOS_CACHE, cacheKey(id));
   }
 
-  File? getCachedFile(String id, {String? directory}) {
+  File? getCachedFile(String? id, {String? directory}) {
+    if (id == null) return null;
     final path = cachePath(id, directory: directory);
     return File(path).existsSync() ? File(path) : null;
   }

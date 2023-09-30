@@ -24,6 +24,8 @@ class Player {
 
   late NamidaAudioVideoHandler<Playable> _audioHandler;
 
+  Map<String, List<MapEntry<File, int?>>> get audioCacheMap => _audioHandler.audioCacheMap;
+
   Track get nowPlayingTrack => _audioHandler.currentTrack.track;
   Selectable get nowPlayingTWD => _audioHandler.currentTrack;
   List<Selectable> get currentQueue => _audioHandler.currentQueueSelectable;
@@ -53,7 +55,7 @@ class Player {
   bool get isBuffering => _audioHandler.isBuffering;
   bool get isLoading => _audioHandler.isLoading;
   bool get isFetchingInfo => _audioHandler.isFetchingInfo;
-  bool get shouldShowLoadingIndicator => isBuffering || isLoading;
+  bool get shouldShowLoadingIndicator => (isFetchingInfo && _audioHandler.currentCachedVideo.value == null) || isBuffering || isLoading;
   Duration get buffered => _audioHandler.buffered;
   int get numberOfRepeats => _audioHandler.numberOfRepeats;
   int get latestInsertedIndex => _audioHandler.latestInsertedIndex;

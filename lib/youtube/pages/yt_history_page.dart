@@ -162,6 +162,16 @@ class YoutubeHistoryPage extends StatelessWidget {
                           const SizedBox(width: 12.0),
                         ],
                       ),
+                              Positioned(
+                                bottom: 0.0,
+                                right: 12.0,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: YTUtils.getVideoCacheStatusIcons(videoId: video.id),
+                                ),
+                              ),
+                            ],
+                          ),
                     ),
                   );
                 }),

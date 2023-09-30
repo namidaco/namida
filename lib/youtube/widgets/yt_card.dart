@@ -28,6 +28,7 @@ class YoutubeCard extends StatelessWidget {
   final List<Widget> menuChildren;
   final List<NamidaPopupItem> menuChildrenDefault;
   final bool isCircle;
+  final List<Widget> bottomRightWidgets;
 
   const YoutubeCard({
     super.key,
@@ -51,6 +52,7 @@ class YoutubeCard extends StatelessWidget {
     this.menuChildren = const [],
     this.menuChildrenDefault = const [],
     this.isCircle = false,
+    this.bottomRightWidgets = const [],
   });
 
   @override
@@ -61,7 +63,7 @@ class YoutubeCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: verticalPadding * 0.5, horizontal: 8.0),
       child: Stack(
-        alignment: Alignment.topRight,
+        alignment: Alignment.bottomRight,
         children: [
           NamidaInkWell(
             bgColor: context.theme.cardColor,
@@ -166,13 +168,26 @@ class YoutubeCard extends StatelessWidget {
               ],
             ),
           ),
+          if (bottomRightWidgets.isNotEmpty)
+            Positioned(
+              bottom: 6.0,
+              right: 6.0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: bottomRightWidgets,
+              ),
+            ),
           if (!shimmerEnabled && (menuChildren.isNotEmpty || menuChildrenDefault.isNotEmpty))
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: NamidaPopupWrapper(
-                children: menuChildren,
-                childrenDefault: menuChildrenDefault,
-                child: const MoreIcon(iconSize: 16.0),
+            Positioned(
+              top: 0.0,
+              right: 0.0,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: NamidaPopupWrapper(
+                  children: menuChildren,
+                  childrenDefault: menuChildrenDefault,
+                  child: const MoreIcon(iconSize: 16.0),
+                ),
               ),
             ),
         ],

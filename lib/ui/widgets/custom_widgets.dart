@@ -2627,6 +2627,11 @@ class NamidaPopupWrapper extends StatelessWidget {
     this.openOnLongPress = true,
   });
 
+  void popMenu({bool handleClosing = true}) {
+    onPop?.call();
+    NamidaNavigator.inst.popMenu(handleClosing: handleClosing);
+  }
+
   _showPopupMenu(BuildContext context) async {
     final RenderBox button = context.findRenderObject()! as RenderBox;
     final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
@@ -2638,7 +2643,8 @@ class NamidaPopupWrapper extends StatelessWidget {
       ),
       Offset.zero & overlay.size,
     );
-    await showMenu(
+    await NamidaNavigator.inst.showMenu(
+      showMenu(
       context: context,
       position: position,
       items: [
@@ -2667,8 +2673,11 @@ class NamidaPopupWrapper extends StatelessWidget {
           ),
         ),
       ],
+      ),
     );
-    onPop?.call();
+    if (context.mounted) {
+      popMenu(handleClosing: false);
+    }
   }
 
   @override

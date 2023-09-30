@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 /// used for stats.
 class YoutubeVideoHistory {
@@ -61,32 +60,6 @@ class YTWatch {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['date'] = date;
     data['isYTMusic'] = isYTMusic;
-    return data;
-  }
-}
-
-/// Video retrieved from Youtube Client.
-class YTLVideo {
-  final VideoInfo video;
-  final YoutubeChannel channel;
-
-  const YTLVideo({
-    required this.video,
-    required this.channel,
-  });
-
-  factory YTLVideo.fromJson(Map<String, dynamic> json) {
-    return YTLVideo(
-      video: VideoInfo.fromMap(json['video'] as Map<String, dynamic>),
-      channel: YoutubeChannel.fromMap(json['channel'] as Map<String, dynamic>),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['video'] = video.toMap();
-    data['channel'] = channel.toMap();
-
     return data;
   }
 }
@@ -163,7 +136,7 @@ class NamidaVideo {
   }
 
   @override
-  int get hashCode => "$path$ytID$height$width$sizeInBytes".hashCode;
+  int get hashCode => "$path$ytID$height$width$sizeInBytes$frameratePrecise$creationTimeMS".hashCode;
 
   @override
   String toString() {

@@ -7,6 +7,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_utils/src/extensions/num_extensions.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 
@@ -43,6 +44,19 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     );
   }
 
+  NamidaAudioVideoHandler() {
+    updateAudioCacheMap();
+  }
+
+  Future<void> updateAudioCacheMap() async {
+    final map = await _getAllAudiosInCache.thready(AppDirs.AUDIOS_CACHE);
+    audioCacheMap
+      ..clear()
+      ..addAll(map);
+  }
+
+  final audioCacheMap = <String, List<MapEntry<File, int?>>>{};
+
   Selectable get currentTrack => (currentItem is Selectable ? currentItem as Selectable : null) ?? kDummyTrack;
   YoutubeID? get currentVideo => currentItem is YoutubeID ? currentItem as YoutubeID : null;
   List<Selectable> get currentQueueSelectable => currentQueue.firstOrNull is Selectable ? currentQueue.cast<Selectable>() : [];
@@ -51,6 +65,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   final currentVideoInfo = Rxn<VideoInfo>();
   final currentChannelInfo = Rxn<YoutubeChannel>();
   final currentVideoStream = Rxn<VideoOnlyStream>();
+  final currentAudioStream = Rxn<AudioOnlyStream>();
+  int? _currentAudioBitrate;
   final currentVideoThumbnail = Rxn<File>();
   final currentCachedVideo = Rxn<NamidaVideo>();
 
@@ -70,7 +86,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _isAudioOnlyPlayback = audioOnly;
     if (_isAudioOnlyPlayback) {
       currentVideoStream.value = null;
+      currentAudioStream.value = null;
       currentCachedVideo.value = null;
+      _currentAudioBitrate = null;
       await VideoController.vcontroller.dispose();
     }
   }
@@ -243,23 +261,29 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   FutureOr<void> beforePlaying() async {
     super.beforePlaying(); // saving last position.
+    NamidaNavigator.inst.popAllMenus();
 
     /// -- Adding videos that may have been cached to VideoController cache map,
     /// for the sake of playing videos without connection, usually videos are added automatically
     /// on restart but this keeps things up-to-date.
-    void fn() {
+    ///
+    /// also adds newly cached audios.
+    void fn() async {
       final prevVideo = currentVideoInfo.value;
       final prevStream = currentVideoStream.value;
-      if (prevVideo != null && prevStream != null) {
-        final vId = prevVideo.id;
-        if (vId != null) {
+      final vId = prevVideo?.id;
+      if (vId != null) {
+        // -- Video handling
+        if (prevVideo != null && prevStream != null) {
           final maybeCached = prevStream.getCachedFile(vId);
           if (maybeCached != null) {
             int? parsy(String? s) => s == null ? null : DateTime.tryParse(s)?.millisecondsSinceEpoch;
+
             VideoController.inst.addYTVideoToCacheMap(
               vId,
               NamidaVideo(
                 path: maybeCached.path,
+                ytID: vId,
                 height: prevStream.height ?? 0,
                 width: prevStream.width ?? 0,
                 sizeInBytes: prevStream.sizeInBytes ?? 0,
@@ -271,6 +295,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             );
           }
         }
+
+        // -- Audio handling
+        final prevAudioStream = currentAudioStream.value;
+        final prevAudioBitrate = prevAudioStream?.bitrate ?? _currentAudioBitrate;
+        final possibleAudioCache = prevAudioStream?.getCachedFile(vId);
+
+        if (possibleAudioCache != null) {
+          audioCacheMap.addNoDuplicatesForce(vId, MapEntry(possibleAudioCache, prevAudioBitrate));
+        }
+        //TODO: write metadata using prevVideo
       }
     }
 
@@ -346,8 +380,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             }
           },
           youtubeID: (finalItem) async {
-            final info = await finalItem.toVideoInfo();
-            return info?.duration?.inSeconds ?? 0;
+            final dur = await finalItem.getDuration();
+            return dur?.inSeconds ?? 0;
           },
         )) ??
         0;
@@ -365,7 +399,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         HistoryController.inst.addTracksToHistory([newTrackWithDate]);
       },
       youtubeID: (finalItem) async {
-        final newListen = YoutubeID(id: finalItem.id, playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY));
+        final newListen = YoutubeID(id: finalItem.id, addedDate: DateTime.now(), playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY));
         await YoutubeHistoryController.inst.addTracksToHistory([newListen]);
       },
     );
@@ -479,8 +513,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     YoutubeID item,
     int index,
     bool startPlaying, {
-    bool canPlayAudioOnlyFromCache = true,
+    bool? canPlayAudioOnlyFromCache,
   }) async {
+    canPlayAudioOnlyFromCache ??= isAudioOnlyPlayback;
+
     YoutubeController.inst.currentYTQualities.clear();
     YoutubeController.inst.currentCachedQualities.clear();
     YoutubeController.inst.updateVideoDetails(item.id);
@@ -488,10 +524,26 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     currentVideoInfo.value = item.toVideoInfoSync() ?? YoutubeController.inst.getTemporarelyVideoInfo(item.id);
     currentChannelInfo.value = YoutubeController.inst.fetchChannelDetailsFromCacheSync(currentVideoInfo.value?.uploaderUrl);
     currentVideoStream.value = null;
+    currentAudioStream.value = null;
     currentVideoThumbnail.value = null;
+    currentCachedVideo.value = null;
+    _currentAudioBitrate = null;
     _isFetchingInfo.value = false;
 
     refreshNotification(pi, currentVideoInfo.value);
+
+    Future<void> plsplsplsPlay(bool waitForBuffer, bool wasPlayingFromCache) async {
+      if (startPlaying) {
+        setVolume(settings.playerVolume.value);
+        if (waitForBuffer) await _waitForAllBuffers();
+        await _playAudioThenVideo();
+      }
+      if (!wasPlayingFromCache) {
+        startSleepAfterMinCount();
+        startCounterToAListen(pi);
+        increaseListenTime();
+      }
+    }
 
     final playerStoppingSeikoo = Completer<bool>(); // to prevent accidental stopping if getAvailableStreams was faster than fade effect
     pause().then((_) async {
@@ -501,12 +553,25 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     await VideoController.vcontroller.dispose();
 
-    (File?, NamidaVideo?) playedFromCacheDetails = (null, null);
-    bool okayPlayedFromCache() => playedFromCacheDetails.$1 != null && (canPlayAudioOnlyFromCache || playedFromCacheDetails.$2 != null);
+    (File?, NamidaVideo?, int?) playedFromCacheDetails = (null, null, null);
+    bool okaySetFromCache() => playedFromCacheDetails.$1 != null && (canPlayAudioOnlyFromCache! || playedFromCacheDetails.$2 != null);
+
+    await playerStoppingSeikoo.future;
 
     /// try playing cache always for faster playback initialization, if the quality should be
     /// different then it will be set later after fetching.
-    playedFromCacheDetails = await _tryPlayYTVideoWithoutConnection(item: item, index: index, canPlayAudioOnly: canPlayAudioOnlyFromCache);
+    playedFromCacheDetails = await _trySetYTVideoWithoutConnection(item: item, index: index, canPlayAudioOnly: canPlayAudioOnlyFromCache);
+
+    currentCachedVideo.value = playedFromCacheDetails.$2;
+    _currentAudioBitrate = playedFromCacheDetails.$3;
+
+    bool heyIhandledAudioPlaying = false;
+    if (okaySetFromCache()) {
+      heyIhandledAudioPlaying = true;
+      await plsplsplsPlay(false, false);
+    } else {
+      heyIhandledAudioPlaying = false;
+    }
 
     if (ConnectivityController.inst.hasConnection) {
       try {
@@ -526,6 +591,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         final prefferedAudioStream = streams.audioOnlyStreams?.firstWhereEff((e) => e.formatSuffix != 'webm') ?? streams.audioOnlyStreams?.firstOrNull;
         if (prefferedAudioStream?.url != null || prefferedVideoStream?.url != null) {
           currentVideoStream.value = prefferedVideoStream;
+          currentAudioStream.value = prefferedAudioStream;
+          _currentAudioBitrate = prefferedAudioStream?.bitrate;
           currentVideoInfo.value = streams.videoInfo;
           currentVideoThumbnail.value = item.getThumbnailSync();
 
@@ -544,8 +611,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           final isAudioCacheSameAsPrevSet =
               cachedAudio != null && playedFromCacheDetails.$1 != null && playedFromCacheDetails.$1?.path == cachedAudio.path; // only if not the same cache path
 
+          final shouldResetVideoSource = !isAudioOnlyPlayback && !isVideoCacheSameAsPrevSet;
+          final shouldResetAudioSource = !isAudioCacheSameAsPrevSet;
+
+          // -- updating wether the source has changed, so that play should be triggered again.
+          if (heyIhandledAudioPlaying) {
+            heyIhandledAudioPlaying = shouldResetVideoSource || shouldResetAudioSource;
+          }
+
           await Future.wait([
-            if (!isAudioOnlyPlayback && !isVideoCacheSameAsPrevSet)
+            if (shouldResetVideoSource)
               cachedVideo != null
                   ? VideoController.vcontroller.setFile(cachedVideo.path, (videoDuration) => false)
                   : VideoController.vcontroller.setNetworkSource(
@@ -553,7 +628,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
                       looping: (videoDuration) => false,
                       cacheKey: prefferedVideoStream.cacheKey(item.id),
                     ),
-            if (!isAudioCacheSameAsPrevSet)
+            if (shouldResetAudioSource)
               cachedAudio != null
                   ? setAudioSource(AudioSource.file(cachedAudio.path, tag: mediaItem))
                   : setAudioSource(
@@ -573,8 +648,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           }
         });
         printy(e, isError: true);
-        playedFromCacheDetails = await _tryPlayYTVideoWithoutConnection(item: item, index: index, canPlayAudioOnly: canPlayAudioOnlyFromCache);
-        if (!okayPlayedFromCache()) return;
+        playedFromCacheDetails = await _trySetYTVideoWithoutConnection(item: item, index: index, canPlayAudioOnly: canPlayAudioOnlyFromCache);
+        if (!okaySetFromCache()) return;
       }
     }
 
@@ -594,21 +669,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         }
       });
     }
-
-    if (startPlaying) {
-      setVolume(settings.playerVolume.value);
-      if (!okayPlayedFromCache()) await _waitForAllBuffers();
-      await _playAudioThenVideo();
+    print('heyIhandledAudioPlaying $heyIhandledAudioPlaying');
+    if (!heyIhandledAudioPlaying) {
+      await plsplsplsPlay(!okaySetFromCache(), okaySetFromCache());
     }
-
-    startSleepAfterMinCount();
-    startCounterToAListen(pi);
-    increaseListenTime();
   }
 
   /// Returns Audio File and Video File.
-  Future<(File?, NamidaVideo?)> _tryPlayYTVideoWithoutConnection({required YoutubeID item, required int index, required bool canPlayAudioOnly}) async {
-    currentCachedVideo.value = null;
+  Future<(File?, NamidaVideo?, int?)> _trySetYTVideoWithoutConnection({required YoutubeID item, required int index, required bool canPlayAudioOnly}) async {
     // ------ Getting Video ------
     final allCachedVideos = VideoController.inst.getNVFromID(item.id);
     allCachedVideos.sortByReverseAlt(
@@ -619,9 +687,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       },
       (e) => e.frameratePrecise,
     );
+
     YoutubeController.inst.currentCachedQualities
       ..clear()
       ..addAll(allCachedVideos);
+
     final cachedVideo = allCachedVideos.firstOrNull;
     final mediaItem = item.toMediaItem(currentVideoInfo.value, currentVideoThumbnail.value, index, currentQueue.length);
 
@@ -635,34 +705,51 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     // ------ Playing ------
     if (cachedVideo != null && cachedAudio != null) {
-      currentCachedVideo.value = cachedVideo;
       // -- play audio & video
       await Future.wait([
         setAudioSource(AudioSource.file(cachedAudio.key.path, tag: mediaItem)),
         VideoController.vcontroller.setFile(cachedVideo.path, (videoDuration) => false),
       ]);
-      return (cachedAudio.key, cachedVideo);
+      return (cachedAudio.key, cachedVideo, cachedAudio.value);
     } else if (cachedAudio != null && canPlayAudioOnly) {
       // -- play audio only
       await setAudioSource(AudioSource.file(cachedAudio.key.path, tag: mediaItem));
-      return (cachedAudio.key, null);
+      return (cachedAudio.key, null, cachedAudio.value);
     }
-    return (null, null);
+    return (null, null, null);
   }
 
   static List<MapEntry<File, int?>> _getCachedAudiosForID(Map map) {
-    final dirPath = map["dirPath"];
-    final id = map["id"];
+    final dirPath = map["dirPath"] as String;
+    final id = map["id"] as String;
 
     final newFiles = <MapEntry<File, int?>>[];
 
     for (final fe in Directory(dirPath).listSync()) {
       final filename = fe.path.getFilename;
-      final isGood = fe is File && !filename.endsWith('mime') && filename.startsWith(id);
+      final goodID = filename.startsWith(id);
+      final isGood = fe is File && goodID && !filename.endsWith('.part') && !filename.endsWith('.mime');
 
       if (isGood) {
         final bitrateText = fe.path.getFilenameWOExt.split('_').last;
         newFiles.add(MapEntry(fe, int.tryParse(bitrateText)));
+      }
+    }
+    return newFiles;
+  }
+
+  static Map<String, List<MapEntry<File, int?>>> _getAllAudiosInCache(String dirPath) {
+    final newFiles = <String, List<MapEntry<File, int?>>>{};
+
+    for (final fe in Directory(dirPath).listSync()) {
+      final filename = fe.path.getFilename;
+      final isGood = fe is File && !filename.endsWith('.part') && !filename.endsWith('.mime');
+
+      if (isGood) {
+        final parts = fe.path.getFilenameWOExt.split('_');
+        final id = parts.first;
+        final bitrateText = parts.last;
+        newFiles.addForce(id, MapEntry(fe, int.tryParse(bitrateText)));
       }
     }
     return newFiles;

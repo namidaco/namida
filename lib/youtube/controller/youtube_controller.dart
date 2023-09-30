@@ -58,7 +58,8 @@ class YoutubeController {
 
   final homepageFeed = <YoutubeFeed>[].obs;
 
-  final currentYoutubeMetadata = Rxn<YTLVideo>();
+  final currentYoutubeMetadataVideo = Rxn<VideoInfo>();
+  final currentYoutubeMetadataChannel = Rxn<YoutubeChannel>();
   final currentRelatedVideos = <YoutubeFeed?>[].obs;
   final currentComments = <YoutubeComment?>[].obs;
   final currentTotalCommentsCount = Rxn<int>();
@@ -244,13 +245,37 @@ class YoutubeController {
   }
 
   Future<void> updateCurrentVideoMetadata(String id) async {
-    currentYoutubeMetadata.value = null;
+    currentYoutubeMetadataVideo.value = null;
+    currentYoutubeMetadataChannel.value = null;
+
+    void updateForCurrentID(void Function() fn) {
+      if (_canSafelyModifyMetadata(id)) {
+        fn();
+      }
+    }
+
+    final channelUrl = _tempVideoInfosFromStreams[id]?.uploaderUrl;
+
+    if (channelUrl != null) {
+      await Future.wait([
+        fetchVideoDetails(id).then((info) {
+          updateForCurrentID(() {
+            currentYoutubeMetadataVideo.value = info;
+          });
+        }),
+        _fetchChannelDetails(channelUrl).then((channel) {
+          updateForCurrentID(() {
+            currentYoutubeMetadataChannel.value = channel;
+          });
+        }),
+      ]);
+    } else {
     final info = await fetchVideoDetails(id);
-    inspect(info);
     final channel = await _fetchChannelDetails(info?.uploaderUrl);
-    inspect(channel);
-    if (_canSafelyModifyMetadata(id)) {
-      currentYoutubeMetadata.value = info == null ? null : YTLVideo(video: info, channel: channel);
+      updateForCurrentID(() {
+      currentYoutubeMetadataVideo.value = info;
+      currentYoutubeMetadataChannel.value = channel;
+      });
     }
   }
 
@@ -263,9 +288,13 @@ class YoutubeController {
     } else {
       final info = await NewPipeExtractorDart.videos.getInfo(id.toYTUrl());
       vi = info;
-      if (info != null) cachedFile.writeAsJson(info.toMap());
+      _cacheVideoInfo(id, info);
     }
     return vi;
+  }
+
+  Future<void> _cacheVideoInfo(String id, VideoInfo? info) async {
+    if (info != null) await File("${AppDirs.YT_METADATA}$id.txt").writeAsJson(info.toMap());
   }
 
   /// fetches cache version only.
@@ -303,8 +332,6 @@ class YoutubeController {
     return vi;
   }
 
-  Future<int?> getContentSize(String url) async => await NewPipeExtractorDart.httpClient.getContentLength(url);
-
   Future<List<VideoOnlyStream>> getAvailableVideoStreamsOnly(String id) async {
     final videos = await NewPipeExtractorDart.videos.getVideoOnlyStreams(id.toYTUrl());
     _sortVideoStreams(videos);
@@ -323,6 +350,7 @@ class YoutubeController {
   Future<YoutubeVideo> getAvailableStreams(String id) async {
     final url = id.toYTUrl();
     final video = await NewPipeExtractorDart.videos.getStream(url);
+    _cacheVideoInfo(id, video.videoInfo);
 
     _sortVideoStreams(video.videoOnlyStreams);
     _sortVideoStreams(video.videoStreams);
@@ -343,10 +371,6 @@ class YoutubeController {
       (e) => e.bitrate ?? 0,
       (e) => e.sizeInBytes ?? 0,
     );
-  }
-
-  Future<VideoInfo?> getVideoInfo(String id) async {
-    return await NewPipeExtractorDart.videos.getInfo(id.toYTUrl());
   }
 
   void _loopMapAndPostNotification({
@@ -450,6 +474,8 @@ class YoutubeController {
     }
   }
 
+  Future<int?> _getContentSize(String url) async => await NewPipeExtractorDart.httpClient.getContentLength(url);
+
   Future<File?> downloadYoutubeVideoRaw({
     required String id,
     required bool useCachedVersionsIfAvailable,
@@ -479,7 +505,7 @@ class YoutubeController {
       int allowanceBytes = 1024,
     }) async {
       final fileStats = await file.stat();
-      final ok = fileStats.size >= targetSize - allowanceBytes;
+      final ok = fileStats.size >= targetSize - allowanceBytes; // it can be bigger cuz metadata and artwork may be added later
       return ok;
     }
 
@@ -504,7 +530,7 @@ class YoutubeController {
           }
 
           if (videoStream.sizeInBytes == 0) {
-            videoStream.sizeInBytes = await NewPipeExtractorDart.httpClient.getContentLength(videoStream.url ?? '');
+            videoStream.sizeInBytes = await _getContentSize(videoStream.url ?? '');
           }
           int bytesLength = 0;
 

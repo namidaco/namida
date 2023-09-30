@@ -165,6 +165,8 @@ class VideoController {
 
   Future<void> addYTVideoToCacheMap(String id, NamidaVideo nv) async {
     _videoCacheIDMap.addNoDuplicatesForce(id, nv);
+    // well, no matter what happens, sometimes the info coming has extra info
+    _videoCacheIDMap[id]?.removeDuplicates((element) => "${element.height}_${element.width}_${element.path}");
   }
 
   Future<void> addVideoFileToCacheMap(String id, File file) async {
@@ -175,7 +177,7 @@ class VideoController {
       path: file.path,
       stats: await file.stat(),
     );
-    _videoCacheIDMap.addForce(id, nv);
+    _videoCacheIDMap.addNoDuplicatesForce(id, nv);
   }
 
   bool doesVideoExistsInCache(String youtubeId) => _videoCacheIDMap[youtubeId]?.isNotEmpty ?? false;

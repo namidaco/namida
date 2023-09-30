@@ -574,7 +574,21 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                             ),
                             // ===== Quality Chip =====
                             Obx(
-                              () => NamidaPopupWrapper(
+                              () {
+                                final ytQualities = YoutubeController.inst.currentYTQualities.where((s) => s.formatSuffix != 'webm');
+                                final cachedQualitiesAll = YoutubeController.inst.currentCachedQualities;
+                                final cachedQualities = List<NamidaVideo>.from(cachedQualitiesAll);
+                                cachedQualities.removeWhere(
+                                  (cq) {
+                                    return ytQualities.any((ytq) {
+                                      final c1 = ytq.resolution?.startsWith(cq.height.toString()) ?? false;
+                                      final c2 = ytq.sizeInBytes == cq.sizeInBytes;
+                                      final isSame = c1 && c2;
+                                      return isSame;
+                                    });
+                                  },
+                                );
+                                return NamidaPopupWrapper(
                                 openOnTap: true,
                                 onPop: _startTimer,
                                 onTap: () {
@@ -592,7 +606,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     isCached: false,
                                     icon: Broken.musicnote,
                                   ),
-                                  ...YoutubeController.inst.currentCachedQualities.map(
+                                    ...cachedQualities.map(
                                     (element) => Obx(
                                       () => _getQualityChip(
                                         title: '${element.height}p',
@@ -613,7 +627,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       ),
                                     ),
                                   ),
-                                  ...YoutubeController.inst.currentYTQualities.where((s) => s.formatSuffix != 'webm').map((element) {
+                                    ...ytQualities.map((element) {
                                     return Obx(
                                       () {
                                         final isSelected = element.resolution == Player.inst.currentVideoStream?.resolution;
@@ -710,7 +724,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 child: Obx(
                                   () {
                                     final playerDuration = Player.inst.currentItemDuration ?? Duration.zero;
-                                    final playerBuffered = VideoController.vcontroller.buffered ?? Player.inst.buffered;
+                                    final videoBuffered = VideoController.vcontroller.buffered;
+                                    final audioBuffered = Player.inst.buffered;
+                                    // display audio buffer only if audio < video
+                                    final playerBuffered = videoBuffered == null || videoBuffered > audioBuffered ? audioBuffered : videoBuffered;
                                     final currentPositionMS = Player.inst.nowPlayingPosition;
                                     // this for audio only mode
                                     final fullVideoBufferProgress = VideoController.vcontroller.isInitialized ? VideoController.vcontroller.isCurrentVideoFromCache : true;
@@ -902,10 +919,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     setControlsVisibily(true);
                                   });
                                 }
-                                final isFetching = Player.inst.isFetchingInfo;
                                 final isLoading = Player.inst.shouldShowLoadingIndicator || VideoController.vcontroller.isBuffering;
 
-                                return isFetching || isLoading
+                                return isLoading
                                     ? ThreeArchedCircle(
                                         color: itemsColor,
                                         size: 40.0,
@@ -998,7 +1014,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 },
               ),
               Obx(
-                () => Player.inst.isFetchingInfo || Player.inst.shouldShowLoadingIndicator || VideoController.vcontroller.isBuffering
+                () => Player.inst.shouldShowLoadingIndicator || VideoController.vcontroller.isBuffering
                     ? ThreeArchedCircle(
                         color: itemsColor,
                         size: 40.0,

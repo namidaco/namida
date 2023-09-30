@@ -50,14 +50,13 @@ class YoutubeMiniPlayer extends StatelessWidget {
         style: context.textTheme.displayMedium!,
         child: Obx(
           () {
-            final ytvideo = YoutubeController.inst.currentYoutubeMetadata.value;
-            final videoInfo = ytvideo?.video ?? Player.inst.currentVideoInfo;
-            final videoChannel = ytvideo?.channel;
+            final videoInfo = YoutubeController.inst.currentYoutubeMetadataVideo.value ?? Player.inst.currentVideoInfo;
+            final videoChannel = YoutubeController.inst.currentYoutubeMetadataChannel.value;
 
             String? uploadDate;
             String? uploadDateAgo;
 
-            final parsedDate = ytvideo?.video.date ?? Player.inst.currentVideoInfo?.date;
+            final parsedDate = videoInfo?.date ?? Player.inst.currentVideoInfo?.date;
 
             if (parsedDate != null) {
               uploadDate = parsedDate.millisecondsSinceEpoch.dateFormattedOriginal;
@@ -197,8 +196,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                               height: miniplayerHeight,
                               child: Obx(
                                 () {
-                                  final isFetching = Player.inst.isFetchingInfo;
-                                  final isLoading = isFetching || Player.inst.shouldShowLoadingIndicator || VideoController.vcontroller.isBuffering;
+                                      final isLoading = Player.inst.shouldShowLoadingIndicator || VideoController.vcontroller.isBuffering;
 
                                   return Stack(
                                     alignment: Alignment.center,
@@ -379,8 +377,9 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                               ),
                                               const SizedBox(width: 18.0),
                                               SmallYTActionButton(
-                                                title:
-                                                    (videoInfo?.dislikeCount ?? 0) < 1 ? lang.DISLIKE : videoInfo?.dislikeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
+                                                      title: (videoInfo?.dislikeCount ?? 0) < 1
+                                                          ? lang.DISLIKE
+                                                          : videoInfo?.dislikeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
                                                 icon: Broken.dislike,
                                                 onPressed: () {},
                                               ),
@@ -493,8 +492,10 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                     borderRadius: 4.0,
                                                     shimmerEnabled: channelSubs == null,
                                                     child: Text(
-                                                      [channelSubs?.formatDecimalShort(isTitleExpanded.value) ?? '?', (channelSubs ?? 0) < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS]
-                                                          .join(' '),
+                                                            [
+                                                              channelSubs?.formatDecimalShort(isTitleExpanded.value) ?? '?',
+                                                              (channelSubs ?? 0) < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS
+                                                            ].join(' '),
                                                       style: context.textTheme.displaySmall,
                                                     ),
                                                   ),
