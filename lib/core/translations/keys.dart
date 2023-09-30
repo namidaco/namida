@@ -234,6 +234,7 @@ class LanguageKeys {
   late String JUMP_TO_DAY;
   late String JUMP_TO_FIRST_TRACK_AFTER_QUEUE_FINISH;
   late String JUMP;
+  late String KEEP_CACHED_VERSIONS;
   late String KEEP_FILE_DATES;
   late String KEEP_SCREEN_AWAKE_MINIPLAYER_EXPANDED_AND_VIDEO;
   late String KEEP_SCREEN_AWAKE_MINIPLAYER_EXPANDED;
@@ -322,6 +323,7 @@ class LanguageKeys {
   late String ON_NOTIFICATION_TAP;
   late String ON_VOLUME_ZERO;
   late String OPEN_APP;
+  late String OPEN_IN_YOUTUBE_VIEW;
   late String OPEN_MINIPLAYER;
   late String OPEN_QUEUE;
   late String OPEN_YOUTUBE_LINK;
@@ -420,6 +422,7 @@ class LanguageKeys {
   late String SEPARATORS_BLACKLIST_SUBTITLE;
   late String SEPARATORS_MESSAGE;
   late String SET_AS_DEFAULT;
+  late String SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE;
   late String SET_MOODS_SUBTITLE;
   late String SET_MOODS;
   late String SET_RATING;

@@ -1,9 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
-
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -36,6 +35,7 @@ import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 
 Future<void> showGeneralPopupDialog(
   List<Track> tracks,
@@ -76,6 +76,8 @@ Future<void> showGeneralPopupDialog(
   final List<String> availableAlbums = tracks.mappedUniqued((e) => e.toTrackExt().album);
   final List<String> availableArtists = tracks.mappedUniquedList((e) => e.toTrackExt().artistsList);
   final List<Folder> availableFolders = tracks.mappedUniqued((e) => e.folder);
+
+  final Iterable<YoutubeID> availableYoutubeIDs = tracks.map((e) => YoutubeID(id: e.youtubeID, playlistID: null)).where((element) => element.id != '');
 
   RxInt numberOfRepeats = 1.obs;
   RxBool isLoadingFilesToShare = false.obs;
@@ -975,6 +977,18 @@ Future<void> showGeneralPopupDialog(
                       ),
                       // --- Advanced dialog
                       advancedStuffListTile,
+
+                      if (availableYoutubeIDs.isNotEmpty)
+                        SmallListTile(
+                          color: colorDelightened,
+                          compact: true,
+                          title: lang.OPEN_IN_YOUTUBE_VIEW,
+                          icon: Broken.video,
+                          onTap: () {
+                            NamidaNavigator.inst.closeDialog();
+                            Player.inst.playOrPause(0, availableYoutubeIDs, QueueSource.others);
+                          },
+                        ),
 
                       if (removeQueueTile != null) removeQueueTile,
 
