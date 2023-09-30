@@ -260,6 +260,7 @@ extension YTLinkToID on String {
 }
 
 extension TitleAndArtistUtils on String {
+  /// (artist, title)
   (String?, String?) splitArtistAndTitle() {
     final input = this;
     if (input == '') return (null, null);

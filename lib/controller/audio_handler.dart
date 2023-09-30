@@ -32,6 +32,7 @@ import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
@@ -295,16 +296,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             );
           }
         }
-
-        // -- Audio handling
-        final prevAudioStream = currentAudioStream.value;
-        final prevAudioBitrate = prevAudioStream?.bitrate ?? _currentAudioBitrate;
-        final possibleAudioCache = prevAudioStream?.getCachedFile(vId);
-
-        if (possibleAudioCache != null) {
-          audioCacheMap.addNoDuplicatesForce(vId, MapEntry(possibleAudioCache, prevAudioBitrate));
-        }
-        //TODO: write metadata using prevVideo
       }
     }
 
@@ -508,6 +499,29 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
   }
 
+  /// Adds Cached File to [audioCacheMap] & writes metadata.
+  Future<void> _onAudioCacheDone(String videoId, File? audioCacheFile) async {
+    // -- Audio handling
+    final prevAudioStream = currentAudioStream.value;
+    final prevAudioBitrate = prevAudioStream?.bitrate ?? _currentAudioBitrate;
+    final videoInfo = currentVideoInfo.value;
+    if (videoInfo?.id == videoId) {
+      if (audioCacheFile != null) {
+        // -- Adding recently cached audio to cache map, for being displayed on cards.
+        audioCacheMap.addNoDuplicatesForce(videoId, MapEntry(audioCacheFile, prevAudioBitrate));
+
+        // -- Writing metadata too
+        final meta = YTUtils.getMetadataInitialMap(videoId, currentVideoInfo.value);
+        await YTUtils.writeAudioMetadata(
+          videoId: videoId,
+          audioFile: audioCacheFile,
+          thumbnailFile: null,
+          tagsMap: meta,
+        );
+      }
+    }
+  }
+
   Future<void> onItemPlayYoutubeID(
     Q pi,
     YoutubeID item,
@@ -636,6 +650,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
                         Uri.parse(prefferedAudioStream!.url!),
                         cacheFile: File(prefferedAudioStream.cachePath(item.id)),
                         tag: mediaItem,
+                        onCacheDone: (cacheFile) async {
+                          await _onAudioCacheDone(item.id, cacheFile);
+                        },
                       ),
                     ),
           ]);
@@ -669,7 +686,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         }
       });
     }
-    print('heyIhandledAudioPlaying $heyIhandledAudioPlaying');
+
     if (!heyIhandledAudioPlaying) {
       await plsplsplsPlay(!okaySetFromCache(), okaySetFromCache());
     }

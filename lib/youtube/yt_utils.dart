@@ -1,14 +1,22 @@
-import 'package:flutter/material.dart';
-import 'package:namida/controller/video_controller.dart';
+import 'dart:io';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:intl/intl.dart';
+import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/video_controller.dart';
+import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 
@@ -74,5 +82,45 @@ class YTUtils {
         },
       ),
     ];
+  }
+
+  static Map<FFMPEGTagField, String?> getMetadataInitialMap(String id, VideoInfo? info, {bool autoExtract = true}) {
+    final date = info?.date;
+    final description = info?.description;
+    String? title = info?.name;
+    String? artist = info?.uploaderName;
+    String? album;
+    if (autoExtract) {
+      final splitted = info?.name?.splitArtistAndTitle();
+      if (splitted != null && splitted.$1 != null && splitted.$2 != null) {
+        title = splitted.$2;
+        artist = splitted.$1;
+        album = info?.uploaderName;
+      }
+    }
+    return {
+      FFMPEGTagField.title: title,
+      FFMPEGTagField.artist: artist,
+      FFMPEGTagField.album: album,
+      FFMPEGTagField.comment: YoutubeController.inst.getYoutubeLink(id),
+      FFMPEGTagField.year: date == null ? null : DateFormat('yyyyMMdd').format(date),
+      FFMPEGTagField.synopsis: description == null ? null : HtmlParser.parseHTML(description).text,
+    };
+  }
+
+  static Future<bool> writeAudioMetadata({
+    required String videoId,
+    required File audioFile,
+    required File? thumbnailFile,
+    required Map<FFMPEGTagField, String?> tagsMap,
+  }) async {
+    final thumbnail = thumbnailFile ?? await VideoController.inst.getYoutubeThumbnailAndCache(id: videoId);
+    if (thumbnail != null) {
+      await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: audioFile.path, thumbnailPath: thumbnail.path);
+    }
+    return await NamidaFFMPEG.inst.editMetadata(
+      path: audioFile.path,
+      tagsMap: tagsMap,
+    );
   }
 }

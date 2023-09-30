@@ -66,7 +66,11 @@ dependencies:
   file_picker: ^5.3.3
 
   # ----Audio Indexing & Playback ----
-  just_audio: ^0.9.34
+  just_audio:
+    git:
+      url: https://github.com/MSOB7YY/just_audio
+      path: just_audio/
+      ref: a720000f69e5794b2eff212196e100a742b62a43
   audio_service:
     git:
       url: https://github.com/MSOB7YY/audio_service
@@ -80,7 +84,7 @@ dependencies:
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
-      ref: 6a76a3f0568ff3493e448e537e6664ebd699ca15
+      ref: 2e839194fc0e0d0ecdc0114982025f47c9c55676
 
   # ---- Video Indexing & Playback ----
   video_player:

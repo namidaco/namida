@@ -2,9 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/controller/current_color.dart';
@@ -24,6 +22,7 @@ import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/functions/video_download_options.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 Future<void> showDownloadVideoBottomSheet({
   BuildContext? ctx,
@@ -47,8 +46,8 @@ Future<void> showDownloadVideoBottomSheet({
   final filenameExists = false.obs;
 
   final tagsMap = <FFMPEGTagField, String?>{};
-  void updateTagsMap(Map<FFMPEGTagField, String?> values) {
-    for (final e in values.entries) {
+  void updateTagsMap(Map<FFMPEGTagField, String?> map) {
+    for (final e in map.entries) {
       tagsMap[e.key] = e.value;
     }
   }
@@ -86,16 +85,8 @@ Future<void> showDownloadVideoBottomSheet({
 
     updatefilenameOutput();
     videoDateTime = videoInfo.value?.date;
-    final d = videoDateTime;
-    updateTagsMap(
-      {
-        FFMPEGTagField.title: videoInfo.value?.name,
-        FFMPEGTagField.artist: videoInfo.value?.uploaderName,
-        FFMPEGTagField.comment: YoutubeController.inst.getYoutubeLink(videoId),
-        FFMPEGTagField.year: d == null ? null : DateFormat('yyyyMMdd').format(d),
-        FFMPEGTagField.synopsis: videoInfo.value?.description == null ? null : HtmlParser.parseHTML(videoInfo.value!.description!).text,
-      },
-    );
+    final meta = YTUtils.getMetadataInitialMap(videoId, videoInfo.value);
+    updateTagsMap(meta);
   });
 
   Widget getQualityButton({
@@ -551,11 +542,10 @@ Future<void> showDownloadVideoBottomSheet({
                                             videoDownloadingStream: (downloadedBytes) {},
                                             audioDownloadingStream: (downloadedBytes) {},
                                             onAudioFileReady: (audioFile) async {
-                                              if (videoThumbnail.value != null) {
-                                                await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: audioFile.path, thumbnailPath: videoThumbnail.value!.path);
-                                              }
-                                              await NamidaFFMPEG.inst.editMetadata(
-                                                path: audioFile.path,
+                                              await YTUtils.writeAudioMetadata(
+                                                videoId: videoId,
+                                                audioFile: audioFile,
+                                                thumbnailFile: videoThumbnail.value,
                                                 tagsMap: tagsMap,
                                               );
                                             },
