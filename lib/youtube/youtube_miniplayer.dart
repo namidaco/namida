@@ -260,8 +260,13 @@ class YoutubeMiniPlayer extends StatelessWidget {
                     /// MiniPlayer Body, contains title, description, comments, ..etc.
                     if (percentage > 0)
                       Expanded(
-                        child: Opacity(
+                        child: Stack(
+                          children: [
+                            Opacity(
                           opacity: (percentage * 4 - 3).withMinimum(0),
+                              child: Listener(
+                                onPointerDown: (event) => YoutubeController.inst.cancelDimTimer(),
+                                onPointerUp: (event) => YoutubeController.inst.startDimTimer(),
                           child: LazyLoadListView(
                             onReachingEnd: () async => await YoutubeController.inst.updateCurrentComments(currentId, fetchNextOnly: true),
                             extend: 400,
@@ -651,6 +656,26 @@ class YoutubeMiniPlayer extends StatelessWidget {
                               false.obs,
                             ),
                           ),
+                              ),
+                            ),
+
+                            // -- dimming
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                child: Obx(
+                                  () => AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 600),
+                                    reverseDuration: const Duration(milliseconds: 200),
+                                    child: YoutubeController.inst.canDimMiniplayer
+                                        ? Container(
+                                            color: Colors.black.withAlpha(160),
+                                          )
+                                        : null,
+                                  ),
+                                ),
+                              ),
+                            )
+                          ],
                         ),
                       ),
                   ],

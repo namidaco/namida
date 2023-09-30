@@ -102,8 +102,11 @@ class VideoController {
   final videoZoomAdditionalScale = 0.0.obs;
 
   void updateShouldShowControls(double animationValue) {
-    final shouldShowControls = animationValue == 1.0;
-    if (!shouldShowControls) {
+    final isExpanded = animationValue == 1.0;
+    if (isExpanded) {
+      YoutubeController.inst.startDimTimer();
+    } else {
+      YoutubeController.inst.cancelDimTimer();
       normalControlskey.currentState?.setControlsVisibily(false);
     }
   }

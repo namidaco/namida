@@ -1,7 +1,6 @@
 // ignore_for_file: depend_on_referenced_packages
 
 import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -49,6 +48,22 @@ class YoutubeController {
       final pixels = scrollController.positions.lastOrNull?.pixels;
       final hasScrolledEnough = pixels != null && pixels > 40;
       _shouldShowGlowUnderVideo.value = hasScrolledEnough;
+    });
+  }
+
+  bool get canDimMiniplayer => _canDimMiniplayer.value;
+  final _canDimMiniplayer = false.obs;
+  Timer? _dimTimer;
+  void cancelDimTimer() {
+    _dimTimer?.cancel();
+    _dimTimer = null;
+    _canDimMiniplayer.value = false;
+  }
+
+  void startDimTimer() {
+    cancelDimTimer();
+    _dimTimer = Timer(const Duration(seconds: 10), () {
+      _canDimMiniplayer.value = true;
     });
   }
 
@@ -239,6 +254,8 @@ class YoutubeController {
 
   Future<void> updateVideoDetails(String id) async {
     if (scrollController.hasClients) scrollController.jumpTo(0);
+    startDimTimer();
+
     updateCurrentVideoMetadata(id);
     updateCurrentComments(id);
     fetchRelatedVideos(id);
@@ -270,11 +287,11 @@ class YoutubeController {
         }),
       ]);
     } else {
-    final info = await fetchVideoDetails(id);
-    final channel = await _fetchChannelDetails(info?.uploaderUrl);
+      final info = await fetchVideoDetails(id);
+      final channel = await _fetchChannelDetails(info?.uploaderUrl);
       updateForCurrentID(() {
-      currentYoutubeMetadataVideo.value = info;
-      currentYoutubeMetadataChannel.value = channel;
+        currentYoutubeMetadataVideo.value = info;
+        currentYoutubeMetadataChannel.value = channel;
       });
     }
   }
