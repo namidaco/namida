@@ -161,7 +161,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         Player.inst.seekSecondsBackward(
           onSecondsReady: (finalSeconds) {
             if (_shouldSeekOnTap && !_lastSeekWasForward) {
-              _seekSeconds += finalSeconds;
+              // only increase if not at the start
+              if (Player.inst.nowPlayingPosition != 0) {
+                _seekSeconds += finalSeconds;
+              }
             } else {
               _seekSeconds = finalSeconds;
             }
@@ -175,7 +178,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         Player.inst.seekSecondsForward(
           onSecondsReady: (finalSeconds) {
             if (_shouldSeekOnTap && _lastSeekWasForward) {
-              _seekSeconds += finalSeconds;
+              // only increase if not at the end
+              if (Player.inst.nowPlayingPosition != Player.inst.currentItemDuration?.inMilliseconds) {
+                _seekSeconds += finalSeconds;
+              }
             } else {
               _seekSeconds = finalSeconds;
             }

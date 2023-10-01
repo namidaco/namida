@@ -273,9 +273,9 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                 final percentage = dur == null ? 0 : Player.inst.nowPlayingPosition / dur;
                                 return Container(
                                   alignment: Alignment.centerLeft,
-                                  height: 3.0,
+                                  height: 2.0,
                                   decoration: BoxDecoration(
-                                    color: CurrentColor.inst.color,
+                                    color: CurrentColor.inst.color.withOpacity(0.6),
                                     borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                   ),
                                   width: percentage * context.width,

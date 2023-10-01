@@ -70,43 +70,53 @@ class NamidaVideoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onVerticalDragUpdate: !swipeUpToFullscreen
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerMove: !swipeUpToFullscreen
           ? null
           : (details) {
               final drag = details.delta.dy;
-              VideoController.inst.videoZoomAdditionalScale.value -= drag * 0.02;
+              if (VideoController.inst.videoZoomAdditionalScale.value >= 0) {
+                VideoController.inst.videoZoomAdditionalScale.value -= drag * 0.02;
+              }
             },
-      onVerticalDragEnd: !swipeUpToFullscreen ? null : (details) async => await _verifyAndEnterFullScreen(),
-      onVerticalDragCancel: !swipeUpToFullscreen ? null : _cancelZoom,
-      onScaleUpdate: !zoomInToFullscreen ? null : (details) => VideoController.inst.videoZoomAdditionalScale.value = details.scale,
-      onScaleEnd: !zoomInToFullscreen
+      onPointerUp: !swipeUpToFullscreen
           ? null
           : (details) async {
               if (NamidaNavigator.inst.isInFullScreen) return;
               await _verifyAndEnterFullScreen();
             },
-      child: Obx(
-        () => NamidaVideoControls(
-          widgetKey: fullscreen ? VideoController.inst.fullScreenControlskey : VideoController.inst.normalControlskey,
-          onMinimizeTap: () {
-            if (fullscreen) {
-              NamidaNavigator.inst.exitFullScreen();
-              VideoController.inst.fullScreenVideoWidget = null;
-            } else {
-              onMinimizeTap?.call();
-            }
-          },
-          showControls: isPip
-              ? false
-              : fullscreen
-                  ? true
-                  : enableControls,
-          fallbackChild: fallbackChild,
-          isFullScreen: fullscreen,
-          qualityItems: qualityItems,
-          child: VideoController.vcontroller.videoWidget?.value,
+      onPointerCancel: !swipeUpToFullscreen ? null : (event) => _cancelZoom(),
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onScaleUpdate: !zoomInToFullscreen ? null : (details) => VideoController.inst.videoZoomAdditionalScale.value = details.scale,
+        onScaleEnd: !zoomInToFullscreen
+            ? null
+            : (details) async {
+                if (NamidaNavigator.inst.isInFullScreen) return;
+                await _verifyAndEnterFullScreen();
+              },
+        child: Obx(
+          () => NamidaVideoControls(
+            widgetKey: fullscreen ? VideoController.inst.fullScreenControlskey : VideoController.inst.normalControlskey,
+            onMinimizeTap: () {
+              if (fullscreen) {
+                NamidaNavigator.inst.exitFullScreen();
+                VideoController.inst.fullScreenVideoWidget = null;
+              } else {
+                onMinimizeTap?.call();
+              }
+            },
+            showControls: isPip
+                ? false
+                : fullscreen
+                    ? true
+                    : enableControls,
+            fallbackChild: fallbackChild,
+            isFullScreen: fullscreen,
+            qualityItems: qualityItems,
+            child: VideoController.vcontroller.videoWidget?.value,
+          ),
         ),
       ),
     );
