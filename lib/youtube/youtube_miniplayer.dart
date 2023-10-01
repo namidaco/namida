@@ -133,6 +133,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                       onMinimizeTap: () {
                                         MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
                                       },
+                                      swipeUpToFullscreen: true,
                                       fallbackChild: YoutubeThumbnail(
                                         width: finalthumbnailsize,
                                         height: finalthumbnailsize * 9 / 16,

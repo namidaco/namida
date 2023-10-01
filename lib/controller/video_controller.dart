@@ -34,6 +34,8 @@ class NamidaVideoWidget extends StatelessWidget {
   final bool fullscreen;
   final bool isPip;
   final List<NamidaPopupItem> qualityItems;
+  final bool zoomInToFullscreen;
+  final bool swipeUpToFullscreen;
 
   const NamidaVideoWidget({
     super.key,
@@ -43,28 +45,48 @@ class NamidaVideoWidget extends StatelessWidget {
     this.fullscreen = false,
     this.qualityItems = const [],
     this.isPip = false,
+    this.zoomInToFullscreen = true,
+    this.swipeUpToFullscreen = false,
   });
+
+  Future<void> _verifyAndEnterFullScreen() async {
+    if (VideoController.inst.videoZoomAdditionalScale.value > 1.1) {
+      await VideoController.inst.toggleFullScreenVideoView(
+        fallbackChild: fallbackChild,
+        qualityItems: qualityItems,
+      );
+    }
+
+    // else if (videoZoomAdditionalScale.value < 0.7) {
+    // NamidaNavigator.inst.exitFullScreen();
+    // }
+
+    _cancelZoom();
+  }
+
+  void _cancelZoom() {
+    VideoController.inst.videoZoomAdditionalScale.value = 0.0;
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onScaleUpdate: (details) {
-        VideoController.inst.videoZoomAdditionalScale.value = details.scale;
-      },
-      onScaleEnd: (details) async {
-        if (NamidaNavigator.inst.isInFullScreen) return;
-        if (VideoController.inst.videoZoomAdditionalScale.value > 1.1) {
-          await VideoController.inst.toggleFullScreenVideoView(
-            fallbackChild: fallbackChild,
-            qualityItems: qualityItems,
-          );
-        }
-        // else if (videoZoomAdditionalScale.value < 0.7) {
-        // NamidaNavigator.inst.exitFullScreen();
-        // }
-        VideoController.inst.videoZoomAdditionalScale.value = 0.0;
-      },
+      onVerticalDragUpdate: !swipeUpToFullscreen
+          ? null
+          : (details) {
+              final drag = details.delta.dy;
+              VideoController.inst.videoZoomAdditionalScale.value -= drag * 0.02;
+            },
+      onVerticalDragEnd: !swipeUpToFullscreen ? null : (details) async => await _verifyAndEnterFullScreen(),
+      onVerticalDragCancel: !swipeUpToFullscreen ? null : _cancelZoom,
+      onScaleUpdate: !zoomInToFullscreen ? null : (details) => VideoController.inst.videoZoomAdditionalScale.value = details.scale,
+      onScaleEnd: !zoomInToFullscreen
+          ? null
+          : (details) async {
+              if (NamidaNavigator.inst.isInFullScreen) return;
+              await _verifyAndEnterFullScreen();
+            },
       child: Obx(
         () => NamidaVideoControls(
           widgetKey: fullscreen ? VideoController.inst.fullScreenControlskey : VideoController.inst.normalControlskey,
