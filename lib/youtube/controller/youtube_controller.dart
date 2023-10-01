@@ -252,16 +252,16 @@ class YoutubeController {
     }
   }
 
-  Future<void> updateVideoDetails(String id) async {
+  Future<void> updateVideoDetails(String id, {bool forceRequest = false}) async {
     if (scrollController.hasClients) scrollController.jumpTo(0);
     startDimTimer();
 
-    updateCurrentVideoMetadata(id);
+    updateCurrentVideoMetadata(id, forceRequest: forceRequest);
     updateCurrentComments(id);
     fetchRelatedVideos(id);
   }
 
-  Future<void> updateCurrentVideoMetadata(String id) async {
+  Future<void> updateCurrentVideoMetadata(String id, {bool forceRequest = false}) async {
     currentYoutubeMetadataVideo.value = null;
     currentYoutubeMetadataChannel.value = null;
 
@@ -287,8 +287,8 @@ class YoutubeController {
         }),
       ]);
     } else {
-      final info = await fetchVideoDetails(id);
-      final channel = await _fetchChannelDetails(info?.uploaderUrl);
+      final info = await fetchVideoDetails(id, forceRequest: forceRequest);
+      final channel = await _fetchChannelDetails(info?.uploaderUrl, forceRequest: forceRequest);
       updateForCurrentID(() {
         currentYoutubeMetadataVideo.value = info;
         currentYoutubeMetadataChannel.value = channel;
@@ -334,11 +334,11 @@ class YoutubeController {
     return null;
   }
 
-  Future<YoutubeChannel> _fetchChannelDetails(String? channelUrl) async {
+  Future<YoutubeChannel> _fetchChannelDetails(String? channelUrl, {bool forceRequest = false}) async {
     final channelId = channelUrl?.split('/').last;
     final cachedFile = File("${AppDirs.YT_METADATA_CHANNELS}$channelId.txt");
     YoutubeChannel? vi;
-    if (await cachedFile.exists()) {
+    if (!forceRequest && await cachedFile.exists()) {
       final res = await cachedFile.readAsJson();
       vi = YoutubeChannel.fromMap(res);
     } else {
@@ -546,9 +546,10 @@ class YoutubeController {
             return "${saveDirectory.path}/$prefix$filenameClean";
           }
 
-          if (videoStream.sizeInBytes == 0) {
+          if (videoStream.sizeInBytes == null || videoStream.sizeInBytes == 0) {
             videoStream.sizeInBytes = await _getContentSize(videoStream.url ?? '');
           }
+
           int bytesLength = 0;
 
           final downloadedFile = await _checkFileAndDownload(
@@ -576,6 +577,11 @@ class YoutubeController {
         final qualified = await fileSizeQualified(file: videoFile, targetSize: videoStream.sizeInBytes ?? 0);
         if (qualified) {
           await onVideoFileReady(videoFile);
+
+          // if we should keep as a cache, we copy the downloaded file to cache dir
+          if (keepCachedVersionsIfDownloaded) {
+            await videoFile.copy(videoStream.cachePath(id));
+          }
         } else {
           videoFile = null;
         }
@@ -594,6 +600,9 @@ class YoutubeController {
             return "${saveDirectory.path}/$prefix$filenameClean";
           }
 
+          if (audioStream.sizeInBytes == null || audioStream.sizeInBytes == 0) {
+            audioStream.sizeInBytes = await _getContentSize(audioStream.url ?? '');
+          }
           int bytesLength = 0;
 
           final downloadedFile = await _checkFileAndDownload(
@@ -621,6 +630,11 @@ class YoutubeController {
 
         if (qualified) {
           await onAudioFileReady(audioFile);
+
+          // if we should keep as a cache, we copy the downloaded file to cache dir
+          if (keepCachedVersionsIfDownloaded) {
+            await audioFile.copy(audioStream.cachePath(id));
+          }
         } else {
           audioFile = null;
         }
@@ -644,8 +658,8 @@ class YoutubeController {
         df = File(output);
       } else {
         // -- renaming files, or copying if cached
-        Future<void> renameOrCopy({required File file, required String path, required bool forceCopy}) async {
-          if (forceCopy) {
+        Future<void> renameOrCopy({required File file, required String path, required bool isCachedVersion}) async {
+          if (isCachedVersion) {
             await file.copy(path);
           } else {
             await file.rename(path);
@@ -657,13 +671,13 @@ class YoutubeController {
             renameOrCopy(
               file: videoFile,
               path: output,
-              forceCopy: isVideoFileCached || keepCachedVersionsIfDownloaded,
+              isCachedVersion: isVideoFileCached,
             ),
           if (audioFile != null && audioStream != null)
             renameOrCopy(
               file: audioFile,
               path: output,
-              forceCopy: isAudioFileCached || keepCachedVersionsIfDownloaded,
+              isCachedVersion: isAudioFileCached,
             ),
         ]);
         df = File(output);

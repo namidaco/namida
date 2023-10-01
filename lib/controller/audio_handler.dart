@@ -764,8 +764,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
       if (isGood) {
         final parts = fe.path.getFilenameWOExt.split('_');
-        final id = parts.first;
         final bitrateText = parts.last;
+
+        parts.removeLast(); // 'Wd_gr91dgDa_23393.m4a' -> 'Wd_gr91dgDa'
+        final id = parts.join();
         newFiles.addForce(id, MapEntry(fe, int.tryParse(bitrateText)));
       }
     }

@@ -742,7 +742,7 @@ class VideoController {
     for (final link in links) {
       if (_runningRequestsMap[link] != null) {
         printy('getYoutubeThumbnailAsBytes: Same link is being requested right now, ignoring');
-        return null; // return and not continue, cuz if requesting hq image, continue will make it request lower one
+        return await _runningRequestsMap[link]?.future; // return and not continue, cuz if requesting hq image, continue will make it request lower one
       }
       _runningRequestsMap[link] = Completer<Uint8List?>();
       try {

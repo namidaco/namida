@@ -72,6 +72,9 @@ class YoutubeMiniPlayer extends StatelessWidget {
             final channelIsVerified = videoChannel?.isVerified ?? videoInfo?.isUploaderVerified ?? false;
             final channelSubs = videoChannel?.subscriberCount ?? Player.inst.currentChannelInfo?.subscriberCount;
 
+            final videoLikeCount = videoInfo?.likeCount ?? Player.inst.currentVideoInfo?.likeCount;
+            final videoDislikeCount = videoInfo?.dislikeCount ?? Player.inst.currentVideoInfo?.dislikeCount;
+
             return NamidaYTMiniplayer(
               key: MiniPlayerController.inst.ytMiniplayerKey,
               duration: const Duration(milliseconds: 1000),
@@ -401,17 +404,15 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                     SmallYTActionButton(
                                                       title: videoInfo == null
                                                           ? null
-                                                          : (videoInfo.likeCount ?? 0) < 1
+                                                          : (videoLikeCount ?? 0) < 1
                                                               ? lang.LIKE
-                                                              : videoInfo.likeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
+                                                              : videoLikeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
                                                       icon: Broken.like_1,
                                                       onPressed: () {},
                                                     ),
                                                     const SizedBox(width: 18.0),
                                                     SmallYTActionButton(
-                                                      title: (videoInfo?.dislikeCount ?? 0) < 1
-                                                          ? lang.DISLIKE
-                                                          : videoInfo?.dislikeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
+                                                      title: (videoDislikeCount ?? 0) < 1 ? lang.DISLIKE : videoDislikeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
                                                       icon: Broken.dislike,
                                                       onPressed: () {},
                                                     ),
@@ -428,7 +429,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                     SmallYTActionButton(
                                                       title: lang.REFRESH,
                                                       icon: Broken.refresh,
-                                                      onPressed: () async => await YoutubeController.inst.updateVideoDetails(currentId),
+                                                      onPressed: () async => await YoutubeController.inst.updateVideoDetails(currentId, forceRequest: true),
                                                     ),
                                                     const SizedBox(width: 18.0),
                                                     Obx(
