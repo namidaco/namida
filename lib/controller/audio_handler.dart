@@ -199,7 +199,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         final image = await VideoController.inst.getYoutubeThumbnailAndCache(id: finalItem.id);
         if (image != null && finalItem == currentItem) {
           // -- only extract if same item is still playing, i.e. user didn't skip.
-          final color = await CurrentColor.inst.extractPaletteFromImage(image.path);
+          final color = await CurrentColor.inst.extractPaletteFromImage(image.path, paletteSaveDirectory: Directory(AppDirs.YT_PALETTES));
           if (color != null && finalItem == currentItem) {
             // -- only update if same item is still playing, i.e. user didn't skip.
             CurrentColor.inst.updatePlayerColorFromColor(color.color);

@@ -82,6 +82,7 @@ class AppDirs {
   static final YT_METADATA_CHANNELS = '$YOUTUBE_MAIN_DIRECTORY/Metadata Channels/';
   static final YT_METADATA_COMMENTS = '$YOUTUBE_MAIN_DIRECTORY/Metadata Comments/';
   static final YT_STATS = '$YOUTUBE_MAIN_DIRECTORY/Youtube Stats/';
+  static final YT_PALETTES = '$YOUTUBE_MAIN_DIRECTORY/Palettes/';
 
   // ===========================================
   static final List<String> values = [
@@ -106,6 +107,7 @@ class AppDirs {
     YT_METADATA_CHANNELS,
     YT_METADATA_COMMENTS,
     YT_STATS,
+    YT_PALETTES,
     // Internal Storage Directories are created on demand
   ];
 }

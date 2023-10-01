@@ -192,12 +192,14 @@ class CurrentColor {
     String imagePath, {
     bool forceReExtract = false,
     bool useIsolate = _defaultUseIsolate,
+    Directory? paletteSaveDirectory,
   }) async {
     if (!forceReExtract && !await File(imagePath).exists()) {
       return null;
     }
+    paletteSaveDirectory ??= Directory(AppDirs.PALETTES);
 
-    final paletteFile = File("${AppDirs.PALETTES}${imagePath.getFilenameWOExt}.palette");
+    final paletteFile = File("${paletteSaveDirectory.path}${imagePath.getFilenameWOExt}.palette");
 
     // -- try reading the cached file
     if (!forceReExtract) {
