@@ -496,20 +496,25 @@ class IndexerSettings extends StatelessWidget {
             const SizedBox(
               height: 24.0,
             ),
-            TextField(
-              decoration: InputDecoration(
-                errorMaxLines: 3,
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14.0.multipliedRadius),
-                  borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 2.0),
+            Padding(
+              padding: const EdgeInsets.only(top: 14.0),
+              child: TextField(
+                style: Get.textTheme.displaySmall?.copyWith(fontSize: 16.0.multipliedFontScale, fontWeight: FontWeight.w500),
+                decoration: InputDecoration(
+                  errorMaxLines: 3,
+                  isDense: true,
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14.0.multipliedRadius),
+                    borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 2.0),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(18.0.multipliedRadius),
+                    borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 1.0),
+                  ),
+                  hintText: lang.VALUE,
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18.0.multipliedRadius),
-                  borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 1.0),
-                ),
-                hintText: lang.VALUE,
+                controller: separatorsController,
               ),
-              controller: separatorsController,
             )
           ],
         ),

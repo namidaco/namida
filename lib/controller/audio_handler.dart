@@ -224,6 +224,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   void onReorderItems(int currentIndex, Q itemDragged) {
     super.onReorderItems(currentIndex, itemDragged);
+    refreshNotification();
 
     itemDragged._execute(
       selectable: (finalItem) {
@@ -251,6 +252,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       },
       youtubeID: (finalItem) async {
         if (currentQueue.firstOrNull is! YoutubeID) {
+          YoutubeController.inst.currentYTQualities.clear();
           await clearQueue();
           await onDispose();
           CurrentColor.inst.resetCurrentPlayingTrack();

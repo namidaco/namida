@@ -215,9 +215,13 @@ class VideoController {
     _videoCacheIDMap.addNoDuplicatesForce(id, nv);
   }
 
-  bool doesVideoExistsInCache(String youtubeId) => _videoCacheIDMap[youtubeId]?.isNotEmpty ?? false;
+  bool doesVideoExistsInCache(String youtubeId) {
+    _videoCacheIDMap.remove('');
+    return _videoCacheIDMap[youtubeId]?.isNotEmpty ?? false;
+  }
 
   List<NamidaVideo> getNVFromID(String youtubeId, {bool checkForFileIRT = true}) {
+    _videoCacheIDMap.remove('');
     return _videoCacheIDMap[youtubeId]?.where((element) => File(element.path).existsSync()).toList() ?? [];
   }
 
@@ -454,7 +458,7 @@ class VideoController {
     final link = track.youtubeLink;
     final id = link.getYoutubeID;
 
-    final possibleCached = _videoCacheIDMap[id] ?? [];
+    final possibleCached = getNVFromID(id);
     possibleCached.sortByReverseAlt(
       (e) => e.width,
       (e) => e.frameratePrecise,

@@ -118,6 +118,13 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
+  void openDialog(Widget widget) {
+    NamidaNavigator.inst.navigateDialog(
+      colorScheme: colorDelightened,
+      dialogBuilder: (theme) => widget,
+    );
+  }
+
   Timer? playErrorSkipTimer;
   final remainingSecondsToSkip = 0.obs;
   cancelSkipTimer() {
@@ -133,8 +140,8 @@ Future<void> showGeneralPopupDialog(
 
     final title = isTags ? lang.SET_TAGS : lang.SET_MOODS;
     final subtitle = lang.SET_MOODS_SUBTITLE;
-    NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
+    openDialog(
+      CustomBlurryDialog(
         title: title,
         actions: [
           const CancelButton(),
@@ -213,8 +220,8 @@ Future<void> showGeneralPopupDialog(
 
   void setTrackRating() {
     final c = TextEditingController();
-    NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
+    openDialog(
+      CustomBlurryDialog(
         title: lang.SET_RATING,
         actions: [
           const CancelButton(),
@@ -244,8 +251,8 @@ Future<void> showGeneralPopupDialog(
 
     final controller = TextEditingController(text: playlistName);
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-    NamidaNavigator.inst.navigateDialog(
-      dialog: Form(
+    openDialog(
+      Form(
         key: formKey,
         child: CustomBlurryDialog(
           title: lang.RENAME_PLAYLIST,
@@ -308,8 +315,8 @@ Future<void> showGeneralPopupDialog(
   }
 
   void updatePathDialog(String newPath) {
-    NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
+    openDialog(
+      CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
         bodyText: lang.TRACK_PATH_OLD_NEW.replaceFirst('_OLD_NAME_', tracks.first.filenameWOExt).replaceFirst('_NEW_NAME_', newPath.getFilenameWOExt),
@@ -375,8 +382,8 @@ Future<void> showGeneralPopupDialog(
     filteredPaths.addAll(paths);
     final RxBool shouldCleanUp = true.obs;
 
-    NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
+    openDialog(
+      CustomBlurryDialog(
         title: lang.CHOOSE,
         actions: [
           const CancelButton(),
@@ -674,8 +681,8 @@ Future<void> showGeneralPopupDialog(
                             /// firstly checks if a file exists in current library
                             final firstHighMatchesFiles = NamidaGenerator.inst.getHighMatcheFilesFromFilename(Indexer.inst.allAudioFiles, tracks.first.path.getFilename);
                             if (firstHighMatchesFiles.isNotEmpty) {
-                              NamidaNavigator.inst.navigateDialog(
-                                dialog: CustomBlurryDialog(
+                              openDialog(
+                                CustomBlurryDialog(
                                   title: lang.CHOOSE,
                                   actions: [
                                     const CancelButton(),

@@ -116,40 +116,39 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
   final info = await tagger.readAllData(path: track.path);
   if (info == null) {
     Get.snackbar(lang.ERROR, lang.METADATA_READ_FAILED);
-    return;
   }
 
-  final RxBool trimWhiteSpaces = true.obs;
-  final RxBool canEditTags = false.obs;
-  final RxBool didAutoExtractFromFilename = false.obs;
-  final RxString currentImagePath = ''.obs;
+  final trimWhiteSpaces = true.obs;
+  final canEditTags = false.obs;
+  final didAutoExtractFromFilename = false.obs;
+  final currentImagePath = ''.obs;
 
   final tagsControllers = <TagField, TextEditingController>{};
   final editedTags = <TagField, String>{};
 
   // filling fields
-  tagsControllers[TagField.title] = TextEditingController(text: info.title ?? '');
-  tagsControllers[TagField.album] = TextEditingController(text: info.album ?? '');
-  tagsControllers[TagField.artist] = TextEditingController(text: info.artist ?? '');
-  tagsControllers[TagField.albumArtist] = TextEditingController(text: info.albumArtist ?? '');
-  tagsControllers[TagField.genre] = TextEditingController(text: info.genre ?? '');
-  tagsControllers[TagField.composer] = TextEditingController(text: info.composer ?? '');
-  tagsControllers[TagField.comment] = TextEditingController(text: info.comment ?? '');
-  tagsControllers[TagField.lyrics] = TextEditingController(text: info.lyrics ?? '');
-  tagsControllers[TagField.trackNumber] = TextEditingController(text: info.trackNumber.toIf('', '0'));
-  tagsControllers[TagField.discNumber] = TextEditingController(text: info.discNumber.toIf('', '0'));
-  tagsControllers[TagField.year] = TextEditingController(text: info.year.toIf('', '0'));
-  tagsControllers[TagField.remixer] = TextEditingController(text: info.remixer);
-  tagsControllers[TagField.trackTotal] = TextEditingController(text: info.trackTotal.toIf('', '0'));
-  tagsControllers[TagField.discTotal] = TextEditingController(text: info.discTotal ?? '');
-  tagsControllers[TagField.lyricist] = TextEditingController(text: info.lyricist ?? '');
-  tagsControllers[TagField.language] = TextEditingController(text: info.language ?? '');
-  tagsControllers[TagField.recordLabel] = TextEditingController(text: info.recordLabel ?? '');
-  tagsControllers[TagField.country] = TextEditingController(text: info.country ?? '');
+  tagsControllers[TagField.title] = TextEditingController(text: info?.title ?? '');
+  tagsControllers[TagField.album] = TextEditingController(text: info?.album ?? '');
+  tagsControllers[TagField.artist] = TextEditingController(text: info?.artist ?? '');
+  tagsControllers[TagField.albumArtist] = TextEditingController(text: info?.albumArtist ?? '');
+  tagsControllers[TagField.genre] = TextEditingController(text: info?.genre ?? '');
+  tagsControllers[TagField.composer] = TextEditingController(text: info?.composer ?? '');
+  tagsControllers[TagField.comment] = TextEditingController(text: info?.comment ?? '');
+  tagsControllers[TagField.lyrics] = TextEditingController(text: info?.lyrics ?? '');
+  tagsControllers[TagField.trackNumber] = TextEditingController(text: info?.trackNumber.toIf('', '0'));
+  tagsControllers[TagField.discNumber] = TextEditingController(text: info?.discNumber.toIf('', '0'));
+  tagsControllers[TagField.year] = TextEditingController(text: info?.year.toIf('', '0'));
+  tagsControllers[TagField.remixer] = TextEditingController(text: info?.remixer);
+  tagsControllers[TagField.trackTotal] = TextEditingController(text: info?.trackTotal.toIf('', '0'));
+  tagsControllers[TagField.discTotal] = TextEditingController(text: info?.discTotal ?? '');
+  tagsControllers[TagField.lyricist] = TextEditingController(text: info?.lyricist ?? '');
+  tagsControllers[TagField.language] = TextEditingController(text: info?.language ?? '');
+  tagsControllers[TagField.recordLabel] = TextEditingController(text: info?.recordLabel ?? '');
+  tagsControllers[TagField.country] = TextEditingController(text: info?.country ?? '');
 
   Widget getTagTextField(TagField tag) {
-    final changed1 = tag == TagField.title && editedTags[TagField.title] != info.title;
-    final changed2 = tag == TagField.artist && editedTags[TagField.artist] != info.artist;
+    final changed1 = tag == TagField.title && editedTags[TagField.title] != info?.title;
+    final changed2 = tag == TagField.artist && editedTags[TagField.artist] != info?.artist;
     return CustomTagTextField(
       controller: tagsControllers[tag]!,
       labelText: tag.toText(),
@@ -347,7 +346,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                               () => ArtworkWidget(
                                 key: Key(currentImagePath.value),
                                 thumbnailSize: Get.width / 3,
-                                bytes: currentImagePath.value != '' ? null : info.firstArtwork,
+                                bytes: currentImagePath.value != '' ? null : info?.firstArtwork,
                                 path: currentImagePath.value != '' ? currentImagePath.value : track.pathToImage,
                                 onTopWidgets: [
                                   Positioned(
