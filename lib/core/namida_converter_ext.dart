@@ -275,6 +275,9 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
       case QueueSource.playerQueue:
         addThese(Player.inst.currentQueue);
         break;
+      case QueueSource.recentlyAdded:
+        addThese(Indexer.inst.recentlyAddedTracks);
+        break;
       default:
         addThese(SelectedTracksController.inst.currentAllTracks);
     }
@@ -498,6 +501,9 @@ extension RouteUtils on NamidaRoute {
         break;
       case RouteType.SUBPAGE_mostPlayedTracks:
         tr.addAll(HistoryController.inst.currentMostPlayedTracks);
+        break;
+      case RouteType.SUBPAGE_recentlyAddedTracks:
+        tr.addAll(Indexer.inst.recentlyAddedTracks);
         break;
 
       default:
@@ -894,6 +900,7 @@ class _NamidaConverters {
         QueueSource.queuePage: lang.QUEUES,
         QueueSource.selectedTracks: lang.SELECTED_TRACKS,
         QueueSource.externalFile: lang.EXTERNAL_FILES,
+        QueueSource.recentlyAdded: lang.RECENTLY_ADDED,
         QueueSource.others: lang.OTHERS,
       },
       TagField: {

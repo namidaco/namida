@@ -139,6 +139,7 @@ enum QueueSource {
   selectedTracks,
   externalFile,
   homePageItem,
+  recentlyAdded,
   others,
 }
 

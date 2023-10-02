@@ -55,9 +55,15 @@ class Indexer {
   final trackStatsMap = <Track, TrackStats>{}.obs;
 
   /// Used to prevent duplicated track (by filename).
-  final Map<String, bool> currentFileNamesMap = {};
+  final Map<String, bool> _currentFileNamesMap = {};
 
-  final faudiotagger = FAudioTagger();
+  final _faudiotagger = FAudioTagger();
+
+  List<Track> get recentlyAddedTracks {
+    final alltracks = List<Track>.from(tracksInfoList);
+    alltracks.sortByReverseAlt((e) => e.dateModified, (e) => e.dateAdded);
+    return alltracks;
+  }
 
   Future<void> prepareTracksFile() async {
     /// Only awaits if the track file exists, otherwise it will get into normally and start indexing.
@@ -148,7 +154,7 @@ class Indexer {
       });
       mainMapFolders[tr.folder]?.remove(tr);
 
-      currentFileNamesMap.remove(tr.filename);
+      _currentFileNamesMap.remove(tr.filename);
     });
   }
 
@@ -232,7 +238,7 @@ class Indexer {
 
     FAudioModel? trackInfo;
     try {
-      trackInfo = await faudiotagger.readAllData(path: trackPath);
+      trackInfo = await _faudiotagger.readAllData(path: trackPath);
     } catch (e) {
       printy(e, isError: true);
     }
@@ -341,7 +347,7 @@ class Indexer {
 
     final tr = finalTrackExtended.toTrack();
     allTracksMappedByPath[tr] = finalTrackExtended;
-    currentFileNamesMap[trackPath.getFilename] = true;
+    _currentFileNamesMap[trackPath.getFilename] = true;
     if (checkForDuplicates) {
       tracksInfoList.addNoDuplicates(tr);
       SearchSortController.inst.trackSearchList.addNoDuplicates(tr);
@@ -356,8 +362,8 @@ class Indexer {
 
   /// - Extracts artwork from [bytes] or [pathOfAudio] and save to file.
   /// - Path is needed bothways for making the file name.
-  /// - Using path for extracting will call [faudiotagger.readArtwork] so it will be slower.
-  /// - `final art = bytes ?? await faudiotagger.readArtwork(path: pathOfAudio);`
+  /// - Using path for extracting will call [_faudiotagger.readArtwork] so it will be slower.
+  /// - `final art = bytes ?? await _faudiotagger.readArtwork(path: pathOfAudio);`
   /// - Sending [artworkPath] that points towards an image file will just copy it to [AppDirs.ARTWORKS]
   /// - Returns the Artwork File created.
   Future<File?> extractOneArtwork(
@@ -393,7 +399,7 @@ class Indexer {
       await fileOfFull.deleteIfExists();
     }
 
-    final art = bytes ?? await faudiotagger.readArtwork(path: pathOfAudio);
+    final art = bytes ?? await _faudiotagger.readArtwork(path: pathOfAudio);
 
     if (art != null) {
       try {
@@ -471,8 +477,8 @@ class Indexer {
       oldTracks.add(ot);
       newTracks.add(nt);
       allTracksMappedByPath[ot] = e.value;
-      currentFileNamesMap.remove(ot.filename);
-      currentFileNamesMap[nt.filename] = true;
+      _currentFileNamesMap.remove(ot.filename);
+      _currentFileNamesMap[nt.filename] = true;
 
       if (newArtworkPath != '') {
         await extractOneArtwork(
@@ -556,7 +562,7 @@ class Indexer {
 
         /// skip duplicated tracks according to filename
         if (prevDuplicated) {
-          if (currentFileNamesMap.keyExists(trackPath.getFilename)) {
+          if (_currentFileNamesMap.keyExists(trackPath.getFilename)) {
             duplicatedTracksLength.value++;
             continue;
           }

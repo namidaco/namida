@@ -12,11 +12,11 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -81,9 +81,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     final timeNow = DateTime.now();
 
     // -- Recently Added --
-    final alltracks = List<Track>.from(allTracksInLibrary);
+    final alltracks = Indexer.inst.recentlyAddedTracks;
 
-    alltracks.sortByReverseAlt((e) => e.dateModified, (e) => e.dateAdded);
     _recentlyAddedFull.addAll(alltracks);
     _recentlyAdded.addAll(alltracks.take(40));
 
@@ -177,6 +176,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     void Function()? onTap,
     Widget? leading,
     String? Function(Selectable? track)? topRightText,
+    QueueSource queueSource = QueueSource.homePageItem,
   }) {
     final finalList = _listOrShimmer(listy);
     final finalListWithListens = listWithListens == null ? null : _listOrShimmer(listWithListens);
@@ -535,6 +535,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                       case HomePageItems.recentlyAdded:
                         return _getTracksList(
+                          queueSource: QueueSource.recentlyAdded,
                           homepageItem: element,
                           title: lang.RECENTLY_ADDED,
                           icon: Broken.back_square,
@@ -758,12 +759,12 @@ class _MixesCardState extends State<_MixesCard> {
                             borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                           ),
                           child: TrackTile(
-                            queueSource: QueueSource.others,
+                            queueSource: QueueSource.homePageItem,
                             onTap: () {
                               Player.inst.playOrPause(
                                 index,
                                 widget.tracks,
-                                QueueSource.others,
+                                QueueSource.homePageItem,
                                 homePageItem: HomePageItems.mixes,
                               );
                             },
@@ -890,7 +891,7 @@ class _MixesCardState extends State<_MixesCard> {
                       Player.inst.playOrPause(
                         0,
                         widget.tracks,
-                        QueueSource.others,
+                        QueueSource.homePageItem,
                         homePageItem: HomePageItems.mixes,
                       );
                     },
@@ -994,6 +995,7 @@ class _TrackCard extends StatefulWidget {
   final int index;
   final Iterable<int>? listens;
   final String? topRightText;
+  final QueueSource queueSource;
 
   const _TrackCard({
     required this.homepageItem,
@@ -1005,6 +1007,7 @@ class _TrackCard extends StatefulWidget {
     required this.index,
     this.listens,
     this.topRightText,
+    this.queueSource = QueueSource.homePageItem,
   });
 
   @override
@@ -1040,7 +1043,7 @@ class _TrackCardState extends State<_TrackCard> {
           Player.inst.playOrPause(
             widget.index,
             widget.queue,
-            QueueSource.others,
+            widget.queueSource,
             homePageItem: widget.homepageItem,
           );
         },
@@ -1048,7 +1051,7 @@ class _TrackCardState extends State<_TrackCard> {
             ? null
             : () => NamidaDialogs.inst.showTrackDialog(
                   track,
-                  source: QueueSource.others,
+                  source: widget.queueSource,
                   index: widget.index,
                 ),
         width: widget.width,
@@ -1175,7 +1178,8 @@ class RecentlyAddedTracksPage extends StatelessWidget {
           ),
         ),
         queueLength: tracksSorted.length,
-        queueSource: QueueSource.others,
+        isTrackSelectable: true,
+        queueSource: QueueSource.recentlyAdded,
         queue: tracksSorted,
         thirdLineText: (track) {
           final dateMS = track.track.dateModified;
