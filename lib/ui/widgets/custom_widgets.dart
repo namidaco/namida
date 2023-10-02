@@ -969,6 +969,7 @@ class StackedIcon extends StatelessWidget {
   final Color? baseIconColor;
   final Color? secondaryIconColor;
   final double? iconSize;
+  final double? secondaryIconSize;
   final double blurRadius;
   final Widget? smallChild;
   final bool disableColor;
@@ -982,6 +983,7 @@ class StackedIcon extends StatelessWidget {
     this.secondaryIconColor,
     this.secondaryText,
     this.iconSize,
+    this.secondaryIconSize = 14.0,
     this.blurRadius = 3.0,
     this.smallChild,
     this.disableColor = false,
@@ -1019,7 +1021,7 @@ class StackedIcon extends StatelessWidget {
                     ? Text(secondaryText!, style: context.textTheme.displaySmall?.copyWith(color: context.defaultIconColor()))
                     : Icon(
                         secondaryIcon,
-                        size: 14,
+                        size: secondaryIconSize,
                         color: _getColory(context, secondaryIconColor),
                       )),
           ),
@@ -2181,7 +2183,7 @@ class NamidaTracksList extends StatelessWidget {
     this.scrollController,
     this.padding = const EdgeInsets.only(bottom: kBottomPadding),
     required this.queueLength,
-    this.isTrackSelectable = false,
+    this.isTrackSelectable = true,
     this.physics,
     required this.queueSource,
     this.displayTrackNumber = false,

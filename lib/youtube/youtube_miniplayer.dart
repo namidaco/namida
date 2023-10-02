@@ -696,7 +696,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                     reverseDuration: const Duration(milliseconds: 200),
                                     child: YoutubeController.inst.canDimMiniplayer
                                         ? Container(
-                                            color: Colors.black.withAlpha(160),
+                                            color: Colors.black.withOpacity(settings.ytMiniplayerDimOpacity.value),
                                           )
                                         : null,
                                   ),

@@ -108,6 +108,8 @@ class SettingsController {
   final RxInt isTrackPlayedPercentageCount = 40.obs;
   final RxInt waveformTotalBars = 140.obs;
   final RxInt videosMaxCacheInMB = (2 * 1024).obs;
+  final RxInt ytMiniplayerDimAfterSeconds = 15.obs;
+  final RxDouble ytMiniplayerDimOpacity = 0.5.obs;
   final RxDouble playerVolume = 1.0.obs;
   final RxDouble playerSpeed = 1.0.obs;
   final RxDouble playerPitch = 1.0.obs;
@@ -121,7 +123,9 @@ class SettingsController {
   final RxBool displayFavouriteButtonInNotification = false.obs;
   final RxBool enableSearchCleanup = false.obs;
   final RxBool enableBottomNavBar = true.obs;
-  final RxBool useYoutubeMiniplayer = false.obs;
+  final RxBool useYoutubeMiniplayer = false.obs; // TODO: remove
+  final RxBool ytPreferNewComments = false.obs;
+  final RxBool ytAutoExtractVideoTagsFromInfo = true.obs;
   final RxBool playerPlayOnNextPrev = true.obs;
   final RxBool playerSkipSilenceEnabled = false.obs;
   final RxBool playerShuffleAllTracks = false.obs;
@@ -166,7 +170,6 @@ class SettingsController {
   final RxBool editTagsKeepFileDates = true.obs;
   final RxBool downloadFilesWriteUploadDate = true.obs;
   final RxBool downloadFilesKeepCachedVersions = true.obs;
-  final RxBool ytCommentsAlwaysLoadNew = false.obs;
   final RxBool enablePip = true.obs;
   final RxBool playerInfiniyQueueOnNextPrevious = true.obs;
   final onNotificationTapAction = NotificationTapAction.openApp.obs;
@@ -306,6 +309,8 @@ class SettingsController {
       isTrackPlayedPercentageCount.value = json['isTrackPlayedPercentageCount'] ?? isTrackPlayedPercentageCount.value;
       waveformTotalBars.value = json['waveformTotalBars'] ?? waveformTotalBars.value;
       videosMaxCacheInMB.value = json['videosMaxCacheInMB'] ?? videosMaxCacheInMB.value;
+      ytMiniplayerDimAfterSeconds.value = json['ytMiniplayerDimAfterSeconds'] ?? ytMiniplayerDimAfterSeconds.value;
+      ytMiniplayerDimOpacity.value = json['ytMiniplayerDimOpacity'] ?? ytMiniplayerDimOpacity.value;
       playerVolume.value = json['playerVolume'] ?? playerVolume.value;
       playerSpeed.value = json['playerSpeed'] ?? playerSpeed.value;
       playerPitch.value = json['playerPitch'] ?? playerPitch.value;
@@ -320,6 +325,8 @@ class SettingsController {
       enableSearchCleanup.value = json['enableSearchCleanup'] ?? enableSearchCleanup.value;
       enableBottomNavBar.value = json['enableBottomNavBar'] ?? enableBottomNavBar.value;
       useYoutubeMiniplayer.value = json['useYoutubeMiniplayer'] ?? useYoutubeMiniplayer.value;
+      ytPreferNewComments.value = json['ytPreferNewComments'] ?? ytPreferNewComments.value;
+      ytAutoExtractVideoTagsFromInfo.value = json['ytAutoExtractVideoTagsFromInfo'] ?? ytAutoExtractVideoTagsFromInfo.value;
       playerPlayOnNextPrev.value = json['playerPlayOnNextPrev'] ?? playerPlayOnNextPrev.value;
       playerSkipSilenceEnabled.value = json['playerSkipSilenceEnabled'] ?? playerSkipSilenceEnabled.value;
       playerShuffleAllTracks.value = json['playerShuffleAllTracks'] ?? playerShuffleAllTracks.value;
@@ -354,7 +361,6 @@ class SettingsController {
       editTagsKeepFileDates.value = json['editTagsKeepFileDates'] ?? editTagsKeepFileDates.value;
       downloadFilesWriteUploadDate.value = json['downloadFilesWriteUploadDate'] ?? downloadFilesWriteUploadDate.value;
       downloadFilesKeepCachedVersions.value = json['downloadFilesKeepCachedVersions'] ?? downloadFilesKeepCachedVersions.value;
-      ytCommentsAlwaysLoadNew.value = json['ytCommentsAlwaysLoadNew'] ?? ytCommentsAlwaysLoadNew.value;
       enablePip.value = json['enablePip'] ?? enablePip.value;
       playerInfiniyQueueOnNextPrevious.value = json['playerInfiniyQueueOnNextPrevious'] ?? playerInfiniyQueueOnNextPrevious.value;
       onNotificationTapAction.value = NotificationTapAction.values.getEnum(json['onNotificationTapAction']) ?? onNotificationTapAction.value;
@@ -481,6 +487,8 @@ class SettingsController {
       'isTrackPlayedPercentageCount': isTrackPlayedPercentageCount.value,
       'waveformTotalBars': waveformTotalBars.value,
       'videosMaxCacheInMB': videosMaxCacheInMB.value,
+      'ytMiniplayerDimAfterSeconds': ytMiniplayerDimAfterSeconds.value,
+      'ytMiniplayerDimOpacity': ytMiniplayerDimOpacity.value,
       'playerVolume': playerVolume.value,
       'playerSpeed': playerSpeed.value,
       'playerPitch': playerPitch.value,
@@ -495,6 +503,8 @@ class SettingsController {
       'enableSearchCleanup': enableSearchCleanup.value,
       'enableBottomNavBar': enableBottomNavBar.value,
       'useYoutubeMiniplayer': useYoutubeMiniplayer.value,
+      'ytPreferNewComments': ytPreferNewComments.value,
+      'ytAutoExtractVideoTagsFromInfo': ytAutoExtractVideoTagsFromInfo.value,
       'playerPlayOnNextPrev': playerPlayOnNextPrev.value,
       'playerSkipSilenceEnabled': playerSkipSilenceEnabled.value,
       'playerShuffleAllTracks': playerShuffleAllTracks.value,
@@ -524,7 +534,6 @@ class SettingsController {
       'editTagsKeepFileDates': editTagsKeepFileDates.value,
       'downloadFilesWriteUploadDate': downloadFilesWriteUploadDate.value,
       'downloadFilesKeepCachedVersions': downloadFilesKeepCachedVersions.value,
-      'ytCommentsAlwaysLoadNew': ytCommentsAlwaysLoadNew.value,
       'enablePip': enablePip.value,
       'playerInfiniyQueueOnNextPrevious': playerInfiniyQueueOnNextPrevious.value,
       'trackItem': trackItem.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
@@ -624,11 +633,12 @@ class SettingsController {
     bool? editTagsKeepFileDates,
     bool? downloadFilesWriteUploadDate,
     bool? downloadFilesKeepCachedVersions,
-    bool? ytCommentsAlwaysLoadNew,
     bool? enablePip,
     bool? playerInfiniyQueueOnNextPrevious,
     int? waveformTotalBars,
     int? videosMaxCacheInMB,
+    int? ytMiniplayerDimAfterSeconds,
+    double? ytMiniplayerDimOpacity,
     double? playerVolume,
     double? playerSpeed,
     double? playerPitch,
@@ -643,6 +653,8 @@ class SettingsController {
     bool? enableSearchCleanup,
     bool? enableBottomNavBar,
     bool? useYoutubeMiniplayer,
+    bool? ytPreferNewComments,
+    bool? ytAutoExtractVideoTagsFromInfo,
     bool? playerPlayOnNextPrev,
     bool? playerSkipSilenceEnabled,
     bool? playerShuffleAllTracks,
@@ -936,9 +948,6 @@ class SettingsController {
     if (downloadFilesKeepCachedVersions != null) {
       this.downloadFilesKeepCachedVersions.value = downloadFilesKeepCachedVersions;
     }
-    if (ytCommentsAlwaysLoadNew != null) {
-      this.ytCommentsAlwaysLoadNew.value = ytCommentsAlwaysLoadNew;
-    }
     if (enablePip != null) {
       this.enablePip.value = enablePip;
     }
@@ -950,6 +959,12 @@ class SettingsController {
     }
     if (videosMaxCacheInMB != null) {
       this.videosMaxCacheInMB.value = videosMaxCacheInMB;
+    }
+    if (ytMiniplayerDimAfterSeconds != null) {
+      this.ytMiniplayerDimAfterSeconds.value = ytMiniplayerDimAfterSeconds;
+    }
+    if (ytMiniplayerDimOpacity != null) {
+      this.ytMiniplayerDimOpacity.value = ytMiniplayerDimOpacity;
     }
     if (playerVolume != null) {
       this.playerVolume.value = playerVolume;
@@ -992,6 +1007,12 @@ class SettingsController {
     }
     if (useYoutubeMiniplayer != null) {
       this.useYoutubeMiniplayer.value = useYoutubeMiniplayer;
+    }
+    if (ytPreferNewComments != null) {
+      this.ytPreferNewComments.value = ytPreferNewComments;
+    }
+    if (ytAutoExtractVideoTagsFromInfo != null) {
+      this.ytAutoExtractVideoTagsFromInfo.value = ytAutoExtractVideoTagsFromInfo;
     }
     if (playerPlayOnNextPrev != null) {
       this.playerPlayOnNextPrev.value = playerPlayOnNextPrev;

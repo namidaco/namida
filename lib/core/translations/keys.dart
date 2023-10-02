@@ -112,6 +112,8 @@ class LanguageKeys {
   late String DELETE_PLAYLIST;
   late String DELETE;
   late String DESCRIPTION;
+  late String DIM_INTENSITY;
+  late String DIM_MINIPLAYER_AFTER_SECONDS;
   late String DIRECTORY_DOESNT_EXIST;
   late String DISABLE_REORDERING;
   late String DISABLE_SEARCH_CLEANUP;
@@ -132,6 +134,8 @@ class LanguageKeys {
   late String DONT_RESTORE_POSITION;
   late String DOWNLOAD;
   late String DOWNLOADING_WILL_OVERRIDE_IT;
+  late String DOWNLOADS_METADATA_TAGS;
+  late String DOWNLOADS_METADATA_TAGS_SUBTITLE;
   late String DO_NOTHING;
   late String DUCK_AUDIO;
   late String DUPLICATED_TRACKS;
@@ -148,6 +152,7 @@ class LanguageKeys {
   late String ENABLE_FOLDERS_HIERARCHY;
   late String ENABLE_GLOW_EFFECT;
   late String ENABLE_MINIPLAYER_PARTICLES;
+  late String ENABLE_PARALLAX_EFFECT;
   late String ENABLE_PARTY_MODE_SUBTITLE;
   late String ENABLE_PARTY_MODE;
   late String ENABLE_PICTURE_IN_PICTURE;
@@ -546,4 +551,7 @@ class LanguageKeys {
   late String YES;
   late String YOUTUBE_MUSIC;
   late String YOUTUBE;
+  late String YOUTUBE_SETTINGS_SUBTITLE;
+  late String YT_PREFER_NEW_COMMENTS;
+  late String YT_PREFER_NEW_COMMENTS_SUBTITLE;
 }

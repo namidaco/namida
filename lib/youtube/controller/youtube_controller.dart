@@ -51,6 +51,8 @@ class YoutubeController {
     });
   }
 
+  int get _defaultMiniplayerDimSeconds => settings.ytMiniplayerDimAfterSeconds.value;
+  double get _defaultMiniplayerOpacity => settings.ytMiniplayerDimOpacity.value;
   bool get canDimMiniplayer => _canDimMiniplayer.value;
   final _canDimMiniplayer = false.obs;
   Timer? _dimTimer;
@@ -62,9 +64,11 @@ class YoutubeController {
 
   void startDimTimer() {
     cancelDimTimer();
-    _dimTimer = Timer(const Duration(seconds: 10), () {
-      _canDimMiniplayer.value = true;
-    });
+    if (_defaultMiniplayerDimSeconds > 0 && _defaultMiniplayerOpacity > 0) {
+      _dimTimer = Timer(Duration(seconds: _defaultMiniplayerDimSeconds), () {
+        _canDimMiniplayer.value = true;
+      });
+    }
   }
 
   final scrollController = ScrollController();
@@ -176,7 +180,7 @@ class YoutubeController {
     final cachedFile = File("${AppDirs.YT_METADATA_COMMENTS}$id.txt");
 
     // fetching cache
-    final userForceNewRequest = ConnectivityController.inst.hasConnection && settings.ytCommentsAlwaysLoadNew.value;
+    final userForceNewRequest = ConnectivityController.inst.hasConnection && settings.ytPreferNewComments.value;
     if (!forceRequest && !userForceNewRequest && await cachedFile.exists()) {
       final res = await cachedFile.readAsJson();
       final commList = (res as List?)?.map((e) => YoutubeComment.fromMap(e));

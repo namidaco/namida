@@ -17,6 +17,7 @@ import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
+import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -46,6 +47,7 @@ class SettingsPage extends StatelessWidget {
                     IndexerSettings(),
                     PlaybackSettings(),
                     CustomizationSettings(),
+                    YoutubeSettings(),
                     ExtrasSettings(),
                     BackupAndRestore(),
                     AdvancedSettings(),
@@ -131,6 +133,12 @@ class CollapsedSettingTiles extends StatelessWidget {
           subtitle: lang.CUSTOMIZATIONS_SUBTITLE,
           icon: Broken.brush_1,
           page: const CustomizationSettings(),
+        ),
+        CustomCollapsedListTile(
+          title: lang.YOUTUBE,
+          subtitle: lang.YOUTUBE_SETTINGS_SUBTITLE,
+          icon: Broken.video,
+          page: const YoutubeSettings(),
         ),
         CustomCollapsedListTile(
           title: lang.EXTRAS,

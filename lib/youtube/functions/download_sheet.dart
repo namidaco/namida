@@ -85,7 +85,7 @@ Future<void> showDownloadVideoBottomSheet({
 
     updatefilenameOutput();
     videoDateTime = videoInfo.value?.date;
-    final meta = YTUtils.getMetadataInitialMap(videoId, videoInfo.value);
+    final meta = YTUtils.getMetadataInitialMap(videoId, videoInfo.value, autoExtract: settings.ytAutoExtractVideoTagsFromInfo.value);
     updateTagsMap(meta);
   });
 
