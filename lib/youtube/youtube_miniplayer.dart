@@ -291,6 +291,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                     if (percentage > 0)
                       Expanded(
                         child: Stack(
+                          alignment: Alignment.bottomCenter,
                           children: [
                             Opacity(
                               opacity: (percentage * 4 - 3).withMinimum(0),
@@ -702,7 +703,15 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                            )
+                            ),
+
+                            // prevent accidental scroll while performing home gesture
+                            AbsorbPointer(
+                              child: SizedBox(
+                                height: 18.0,
+                                width: context.width,
+                              ),
+                            ),
                           ],
                         ),
                       ),
