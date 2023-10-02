@@ -265,6 +265,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   FutureOr<void> beforePlaying() async {
     super.beforePlaying(); // saving last position.
     NamidaNavigator.inst.popAllMenus();
+    YTUtils.expandMiniplayer();
 
     /// -- Adding videos that may have been cached to VideoController cache map,
     /// for the sake of playing videos without connection, usually videos are added automatically

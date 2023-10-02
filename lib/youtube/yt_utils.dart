@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:intl/intl.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
@@ -21,6 +22,21 @@ import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 
 class YTUtils {
+  static void expandMiniplayer() {
+    final st = MiniPlayerController.inst.ytMiniplayerKey.currentState;
+    if (st != null) st.animateToState(true);
+
+    // if the miniplayer wasnt already active, we wait till the queue get filled (i.e. miniplayer gets a state)
+    // it would be better if we had a callback instead of waiting 300ms.
+    // since awaiting [playOrPause] would take quite long.
+    if (st == null) {
+      Future.delayed(
+        const Duration(milliseconds: 300),
+        () => MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(true),
+      );
+    }
+  }
+
   static List<Widget> getVideoCacheStatusIcons({
     required String videoId,
   }) {
