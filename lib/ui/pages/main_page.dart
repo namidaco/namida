@@ -23,63 +23,79 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Widget appbar(double animationMultiplier) => Obx(
+          () {
+            return AppBar(
+              toolbarHeight: 56.0 * animationMultiplier,
+              leading: NamidaNavigator.inst.currentWidgetStack.length > 1
+                  ? NamidaAppBarIcon(
+                      icon: Broken.arrow_left_2,
+                      onPressed: NamidaNavigator.inst.popPage,
+                    )
+                  : NamidaAppBarIcon(
+                      icon: Broken.menu_1,
+                      onPressed: NamidaNavigator.inst.toggleDrawer,
+                    ),
+              titleSpacing: 0,
+              automaticallyImplyLeading: false,
+              title: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? ScrollSearchController.inst.searchBarWidget : NamidaNavigator.inst.currentRoute?.toTitle(),
+              actions: NamidaNavigator.inst.currentRoute?.toActions(),
+            );
+          },
+        );
+
+    final main = WillPopScope(
+      onWillPop: () async {
+        await NamidaNavigator.inst.popPage();
+        return false;
+      },
+      child: Navigator(
+        key: NamidaNavigator.inst.navKey,
+        restorationScopeId: 'namida',
+        requestFocus: false,
+        observers: [NamidaNavigator.inst.heroController],
+        onGenerateRoute: (settings) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            NamidaNavigator.inst.onFirstLoad();
+          });
+          return GetPageRoute(page: () => const SizedBox());
+        },
+      ),
+    );
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: PreferredSize(
         preferredSize: const Size(0, 56.0),
-        child: AnimatedBuilder(
-          animation: animation,
-          builder: (context, child) {
-            return Obx(
-              () => AppBar(
-                toolbarHeight: 56.0 * (1 - animation.value * 0.3),
-                leading: NamidaNavigator.inst.currentWidgetStack.length > 1
-                    ? NamidaAppBarIcon(
-                        icon: Broken.arrow_left_2,
-                        onPressed: NamidaNavigator.inst.popPage,
-                      )
-                    : NamidaAppBarIcon(
-                        icon: Broken.menu_1,
-                        onPressed: NamidaNavigator.inst.toggleDrawer,
-                      ),
-                titleSpacing: 0,
-                automaticallyImplyLeading: false,
-                title: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? ScrollSearchController.inst.searchBarWidget : NamidaNavigator.inst.currentRoute?.toTitle(),
-                actions: NamidaNavigator.inst.currentRoute?.toActions(),
-              ),
-            );
+        child: Obx(
+          () {
+            final isReallyHidden = animation.value > 1; // queue
+            return isReallyHidden || !settings.enableMiniplayerParallaxEffect.value
+                ? appbar(1.0)
+                : AnimatedBuilder(
+                    animation: animation,
+                    builder: (context, child) => appbar((1 - animation.value * 0.3)),
+                  );
           },
         ),
       ),
       body: Stack(
         alignment: Alignment.bottomCenter,
         children: [
-          AnimatedBuilder(
-            animation: animation,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: 1 - (animation.value * 0.05),
-                child: WillPopScope(
-                  onWillPop: () async {
-                    await NamidaNavigator.inst.popPage();
-                    return false;
-                  },
-                  child: Navigator(
-                    key: NamidaNavigator.inst.navKey,
-                    restorationScopeId: 'namida',
-                    requestFocus: false,
-                    observers: [NamidaNavigator.inst.heroController],
-                    onGenerateRoute: (settings) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        NamidaNavigator.inst.onFirstLoad();
-                      });
-                      return GetPageRoute(page: () => const SizedBox());
+          Obx(() {
+            final isReallyHidden = animation.value > 1; // queue
+            return isReallyHidden || !settings.enableMiniplayerParallaxEffect.value
+                ? main
+                : AnimatedBuilder(
+                    animation: animation,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: 1 - (animation.value * 0.05),
+                        child: main,
+                      );
                     },
-                  ),
-                ),
-              );
-            },
-          ),
+                  );
+          }),
 
           /// Search Box
           Positioned.fill(

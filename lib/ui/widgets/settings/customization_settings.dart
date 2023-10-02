@@ -44,6 +44,13 @@ class CustomizationSettings extends StatelessWidget {
               },
               value: settings.enableGlowEffect.value,
             ),
+            CustomSwitchListTile(
+              icon: Broken.sun_1,
+              title: lang.ENABLE_PARALLAX_EFFECT,
+              subtitle: lang.PERFORMANCE_NOTE,
+              onChanged: (isTrue) => settings.save(enableMiniplayerParallaxEffect: !isTrue),
+              value: settings.enableMiniplayerParallaxEffect.value,
+            ),
             CustomListTile(
               icon: Broken.rotate_left_1,
               title: lang.BORDER_RADIUS_MULTIPLIER,
