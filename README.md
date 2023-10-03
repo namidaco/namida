@@ -1,4 +1,4 @@
-# <div style="display: flex; align-items: center;"><img src="some stuff/namida.png" width="82" style="margin-right: 10px;">Namida</div>
+# <div style="display: flex; vertical-align: middle; align-items: center;"><img src="some stuff/namida.png" width="82" style="margin-right: 18px;">Namida</div>
 
 
 A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in Flutter
@@ -114,7 +114,7 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
  
 > ### © Logo by @midjourney
 # Donate
-- Donation will help me improve namida and will show appreciation.
+- Donation will help improve namida and will show appreciation.
   
 <a href="https://www.buymeacoffee.com/namidaco" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 42px;" ></a>
 
