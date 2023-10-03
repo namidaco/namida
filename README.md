@@ -94,7 +94,7 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 # Screenshots
 # Installation
 - Download latest version from [releases](https://github.com/namidaco/namida/releases) page
-- Available variants are (arm, arm64, universal)
+- Available variants are arm & arm64
 
 ## - Permission Note:
 ### the following actions require <span>`all_files_access`</span> permission (requested when needed)
