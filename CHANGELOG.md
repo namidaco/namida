@@ -1,12 +1,75 @@
 # Namida Changelog
 
+## 03/10/2023
+### 🎉 New Features:
+- feat:
+   - #d9a0aa1: display remaining duration instead of total
+   - #0d28477: youtube settings section
+   - #db504f8: expose parallax effect toggle
+   - #f501db3: swipe up tp enter fullscreen
+   - #aa11934: open in youtube view for local tracks
+   - #2a214c8: dim after inactivity for yt miniplayer (later to expose dim intenstiy and timer)
+   - #fab06ec: option to keep cached downloaded versions
+   - #b7d9726: integrate yt search in main searchbar
+   - #b4404b0: Home View with History Page
+   - #20a0159: download notification
+   - #0de852a: max video cache option
+
+### 🛠️ Bug fixes & Improvements:
+- chore:
+   - #92b0d7d: removed useYoutubeMiniplayer option [its being automatically controlled now]
+   - #3953f53: few tweaks
+   - #ae424ac: prevent accidental triggers (android back & home gestures)
+   - #f021060: add recentlyAdded as queue source
+   - #196c140: some tweaks
+   - #529dd1f: move yt palette to separate folder
+   - #331d8a4: ui improvements
+   - #aa572be: some fixes
+   - #a6a1b94: audio & video buffered separately rendered
+   - #4088621: write metadata to newly cached audio files (this allows playing them later without issues)
+   - #c07d210: ui refinements, progress bar for yt miniplayer
+   - #f59b865: smoother playback, fixes & cache status on card
+   - #36bcae5: more seamless playback experience (will now try to play from cache before waiting to fetch info)
+   - #0005585: volume sliding only from within safe area
+   - #7bc6b98: some goodies
+   - #69b020b: some improvements & fixes
+   - #d24238a: about page, cleanup & prepare for publish
+- core:
+   - #19b60b9: add yt history import to yt history too
+- perf:
+   - #4f2e581: efficient image request
+- repo:
+   - #187c033: move translations to separate submodule
+
+## 27/09/2023
+### 🎉 New Features:
+- feat:
+   - #6a11b59: offline playback (consistent video caching, can now play without connection)
+   - #0685432: continuos seek on double tap
+   - #082442f: full cache support, flawless video info, audio only mode
+   - #74bfeac: volume change on vertical swipe
+
+### 🛠️ Bug fixes & Improvements:
+- chore:
+   - #d24238a: about page, cleanup & prepare for publish
+   - #a0275fb: video stretch fixes & perf improvements
+   - #9ed5c5a: upstream history_manager
+   - #23a11a8: update CHANGELOG.md with a new script to auto generate from commits
+- chore(ui):
+   - #c778696: new yt channel card , playlist cards are playable now
+- perf:
+   - #61dc93b: backup dialog sizes computing
+- license:
+   - #c054181: use EULA License
+
+
 ## 21/09/2023
 ### 🎉 New Features:
    - #dc8a038: expose video/audio download metadata tags
    - #74bfeac: volume change on vertical swipe
    - #7618916: youtube history system
    - #b8892ef: option to write video upload date to downloaded files
-   - #e92e5ab: Full Youtube Playback Support this comes with refined controls, audio caching/downloading, new artist-title splitter,keepFeatKeywordsOnly for youtube scrobbling
+   - #e92e5ab: Full Youtube Playback Support, this comes with refined controls, audio caching/downloading, new artist-title splitter, keepFeatKeywordsOnly for youtube scrobbling
    - #e5b9f0d: search navigation button
    - #c625bb7: youtube playlists
    - #d1da50c: set player (volume, speed, pitch) from within minplayer
