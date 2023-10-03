@@ -101,9 +101,46 @@ class YoutubeController {
   /// Temporarely saves StreamInfoItem info for flawless experience while waiting for real info.
   final _tempVideoInfosFromStreams = <String, StreamInfoItem>{}; // {id: StreamInfoItem()}
 
+  /// Used for easily displaying title & channel inside history directly without needing to fetch or rely on cache.
+  /// This comes mainly after a youtube history import
+  final _tempBackupVideoInfo = <String, YoutubeVideoHistory>{}; // {id: YoutubeVideoHistory()}
+
+  YoutubeVideoHistory? getBackupVideoInfo(String id) {
+    _tempVideoInfosFromStreams.remove('');
+    return _tempBackupVideoInfo[id];
+  }
+
+  Future<void> fillBackupInfoMap() async {
+    final map = await _fillBackupInfoMapIsolate.thready(AppDirs.YT_STATS);
+    _tempBackupVideoInfo
+      ..clear()
+      ..addAll(map);
+  }
+
+  static Map<String, YoutubeVideoHistory> _fillBackupInfoMapIsolate(String dirPath) {
+    final map = <String, YoutubeVideoHistory>{};
+    for (final f in Directory(dirPath).listSync()) {
+      if (f is File) {
+        try {
+          final response = f.readAsJsonSync();
+          if (response != null) {
+            for (final r in response as List) {
+              final yvh = YoutubeVideoHistory.fromJson(r);
+              map[yvh.id] = yvh;
+            }
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+    }
+    return map;
+  }
+
   String getYoutubeLink(String id) => id.toYTUrl();
 
   VideoInfo? getTemporarelyVideoInfo(String id) {
+    _tempVideoInfosFromStreams.remove('');
     final si = _tempVideoInfosFromStreams[id];
     return si == null ? null : VideoInfo.fromStreamInfoItem(si);
   }

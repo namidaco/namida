@@ -104,15 +104,18 @@ class YoutubeHistoryPage extends StatelessWidget {
                       final videos = sections[sectionIndex].getItems();
                       final video = videos[itemIndex];
                       final info = YoutubeController.inst.fetchVideoDetailsFromCacheSync(video.id);
-                      final date = video.addedDate?.millisecondsSinceEpoch.dateAndClockFormattedOriginal;
+                      final date = video.addedDate.millisecondsSinceEpoch.dateAndClockFormattedOriginal;
                       final duration = info?.duration?.inSeconds.secondsLabel;
-                      final isCurrentlyPlaying = Player.inst.currentIndex == itemIndex && Player.inst.nowPlayingVideoID == video;
+                      final isCurrentlyPlaying = Player.inst.nowPlayingVideoID == video;
                       final menuItems = YTUtils.getVideoCardMenuItems(
                         videoId: video.id,
                         url: info?.url,
                         playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
                         idsNamesLookup: {video.id: info?.name},
                       );
+                      final backupVideoInfo = YoutubeController.inst.getBackupVideoInfo(video.id);
+                      final videoTitle = info?.name ?? backupVideoInfo?.title ?? video.id;
+                      final videoSubtitle = info?.uploaderName ?? backupVideoInfo?.channel;
                       return NamidaPopupWrapper(
                         openOnTap: false,
                         childrenDefault: menuItems,
@@ -172,22 +175,27 @@ class YoutubeHistoryPage extends StatelessWidget {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          info?.name ?? video.id,
+                                          videoTitle,
                                           maxLines: 2,
-                                          style: context.textTheme.displayMedium,
+                                          style: context.textTheme.displayMedium?.copyWith(
+                                            color: isCurrentlyPlaying ? Colors.white.withOpacity(0.7) : null,
+                                          ),
                                         ),
-                                        if (info?.uploaderName != null)
+                                        if (videoSubtitle != null)
                                           Text(
-                                            info!.uploaderName!,
+                                            videoSubtitle,
                                             maxLines: 1,
-                                            style: context.textTheme.displaySmall,
+                                            style: context.textTheme.displaySmall?.copyWith(
+                                              color: isCurrentlyPlaying ? Colors.white.withOpacity(0.6) : null,
+                                            ),
                                           ),
-                                        if (date != null)
-                                          Text(
-                                            date,
-                                            maxLines: 1,
-                                            style: context.textTheme.displaySmall,
+                                        Text(
+                                          date,
+                                          maxLines: 1,
+                                          style: context.textTheme.displaySmall?.copyWith(
+                                            color: isCurrentlyPlaying ? Colors.white.withOpacity(0.5) : null,
                                           ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -199,7 +207,10 @@ class YoutubeHistoryPage extends StatelessWidget {
                                 right: 12.0,
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
-                                  children: YTUtils.getVideoCacheStatusIcons(videoId: video.id),
+                                  children: YTUtils.getVideoCacheStatusIcons(
+                                    videoId: video.id,
+                                    iconsColor: isCurrentlyPlaying ? Colors.white.withOpacity(0.5) : null,
+                                  ),
                                 ),
                               ),
                             ],

@@ -20,7 +20,7 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
       (e) => e.id == oldVideo.id,
       (old) => YoutubeID(
         id: old.id,
-        addedDate: old.dateTimeAdded,
+        watch: old.watch,
         playlistID: old.playlistID,
       ),
     );

@@ -41,27 +41,44 @@ class YoutubeVideoHistory {
 }
 
 class YTWatch {
-  final int date;
+  final DateTime? date;
   final bool isYTMusic;
+
+  DateTime get _date => date ?? DateTime.now();
+  DateTime get addedDate => _date;
 
   const YTWatch({
     required this.date,
     required this.isYTMusic,
   });
 
-  factory YTWatch.fromJson(Map<String, dynamic> json) {
+  factory YTWatch.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      return YTWatch(date: DateTime.now(), isYTMusic: false);
+    }
     return YTWatch(
-      date: json['date'] ?? 0,
+      date: DateTime.fromMillisecondsSinceEpoch(json['date'] ?? 0),
       isYTMusic: json['isYTMusic'] ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['date'] = date;
-    data['isYTMusic'] = isYTMusic;
-    return data;
+    return {
+      'date': _date.millisecondsSinceEpoch,
+      'isYTMusic': isYTMusic,
+    };
   }
+
+  @override
+  bool operator ==(other) {
+    if (other is YTWatch) {
+      return _date == other._date && isYTMusic == other.isYTMusic;
+    }
+    return false;
+  }
+
+  @override
+  int get hashCode => "${_date}_$isYTMusic".hashCode;
 }
 
 class NamidaVideo {

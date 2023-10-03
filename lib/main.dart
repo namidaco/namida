@@ -26,14 +26,15 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
-import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/main_page_wrapper.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
+import 'package:namida/youtube/functions/download_sheet.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -93,6 +94,7 @@ void main() async {
 
   YoutubePlaylistController.inst.prepareAllPlaylists();
   await YoutubePlaylistController.inst.prepareDefaultPlaylistsFile();
+  YoutubeController.inst.fillBackupInfoMap(); // for history videos info.
 
   await _initializeIntenties();
 

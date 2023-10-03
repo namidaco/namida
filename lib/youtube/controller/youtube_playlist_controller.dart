@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:playlist_manager/playlist_manager.dart';
 
+import 'package:namida/class/video.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
@@ -32,7 +33,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
             .map(
               (id) => YoutubeID(
                 id: id,
-                addedDate: DateTime.now(),
+                watch: YTWatch(date: DateTime.now(), isYTMusic: false),
                 playlistID: playlistID,
               ),
             )
@@ -63,7 +64,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
         .map(
           (id) => YoutubeID(
             id: id,
-            addedDate: DateTime.now(),
+            watch: YTWatch(date: DateTime.now(), isYTMusic: false),
             playlistID: playlist.playlistID,
           ),
         )
@@ -74,7 +75,11 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
 
   Future<void> favouriteButtonOnPressed(String id) async {
     await super.toggleTrackFavourite(
-      newTrack: YoutubeID(id: id, addedDate: DateTime.now(), playlistID: favouritesPlaylist.value.playlistID),
+      newTrack: YoutubeID(
+        id: id,
+        watch: YTWatch(date: DateTime.now(), isYTMusic: false),
+        playlistID: favouritesPlaylist.value.playlistID,
+      ),
       identifyBy: (ytid) => ytid.id == id,
     );
   }

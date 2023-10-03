@@ -19,6 +19,9 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
 class JsonToHistoryParser {
   static JsonToHistoryParser get inst => _instance;
@@ -297,6 +300,7 @@ class JsonToHistoryParser {
     });
 
     final datesAdded = <int>[];
+    final datesAddedYoutube = <int>[];
     final allMissingEntries = <_MissingListenEntry, List<int>>{};
     if (isytsource) {
       currentParsingSource.value = TrackSource.youtube;
@@ -313,7 +317,8 @@ class JsonToHistoryParser {
           missingEntry.loop((e, index) => allMissingEntries.addForce(e, e.dateMSSE));
         },
       );
-      datesAdded.addAll(res);
+      datesAdded.addAll(res.$1);
+      datesAddedYoutube.addAll(res.$2);
       // await _addYoutubeSourceFromDirectory(isMatchingTypeLink, matchYT, matchYTMusic);
     }
     if (source == TrackSource.lastfm) {
@@ -328,9 +333,17 @@ class JsonToHistoryParser {
       datesAdded.addAll(res);
     }
     isParsing.value = false;
+
+    // -- local history --
     HistoryController.inst.sortHistoryTracks(datesAdded);
     await HistoryController.inst.saveHistoryToStorage(datesAdded);
     HistoryController.inst.updateMostPlayedPlaylist();
+
+    // -- youtube history --
+    YoutubeHistoryController.inst.sortHistoryTracks(datesAddedYoutube);
+    await YoutubeHistoryController.inst.saveHistoryToStorage(datesAddedYoutube);
+    YoutubeHistoryController.inst.updateMostPlayedPlaylist();
+
     _notificationTimer?.cancel();
     NotificationService.inst.doneImportingHistoryNotification(parsedHistoryJson.value, addedHistoryJsonToPlaylist.value);
 
@@ -351,7 +364,9 @@ class JsonToHistoryParser {
   }
 
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
-  Future<List<int>> _parseYTHistoryJsonAndAdd({
+  ///
+  /// The first one is for normal history, the second is for youtube history.
+  Future<(List<int>, List<int>)> _parseYTHistoryJsonAndAdd({
     required File file,
     required bool isMatchingTypeLink,
     required bool isMatchingTypeTitleAndArtist,
@@ -369,6 +384,7 @@ class JsonToHistoryParser {
     if (isMatchingTypeLink) tracksIdsMap = _getTrackIDsMap();
 
     final datesToSave = <int>[];
+    final datesToSaveYoutube = <int>[];
     final jsonResponse = await file.readAsJson() as List?;
 
     totalJsonToParse.value = jsonResponse?.length ?? 0;
@@ -391,7 +407,7 @@ class JsonToHistoryParser {
             channelUrl: z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
             watches: [
               YTWatch(
-                date: DateTime.parse(p['time'] ?? 0).millisecondsSinceEpoch,
+                date: DateTime.parse(p['time'] ?? 0),
                 isYTMusic: p['header'] == "YouTube Music",
               )
             ],
@@ -403,6 +419,7 @@ class JsonToHistoryParser {
             mapOfAffectedIds[id] = yth;
           }
           // ---------------------------------------------------------
+          // -- local history --
           final addedDates = _matchYTVHToNamidaHistory(
             vh: yth,
             matchYT: matchYT,
@@ -415,6 +432,16 @@ class JsonToHistoryParser {
             onMissingEntry: onMissingEntry,
           );
           datesToSave.addAll(addedDates);
+
+          // -- youtube history --
+          final addedDatesYoutube = _matchYTVHToNamidaYoutubeHistory(
+            vh: yth,
+            matchYT: matchYT,
+            matchYTMusic: matchYTMusic,
+            oldestDate: oldestDate,
+            newestDate: newestDate,
+          );
+          datesToSaveYoutube.addAll(addedDatesYoutube);
 
           parsedHistoryJson.value++;
         } catch (e) {
@@ -430,10 +457,68 @@ class JsonToHistoryParser {
           printy('updatedIds: ${updatedIds.length}');
         },
       );
+      await YoutubeController.inst.fillBackupInfoMap();
     }
 
     isParsing.value = false;
-    return datesToSave;
+    return (datesToSave, datesToSaveYoutube);
+  }
+
+  bool _canSafelyAddToYTHistory({
+    required YTWatch watch,
+    int? oldestDay,
+    int? newestDay,
+    required bool matchYT,
+    required bool matchYTMusic,
+  }) {
+    // ---- sussy checks ----
+
+    // -- if the watch day is outside range specified
+    if (oldestDay != null && newestDay != null) {
+      final watchAsDSE = watch.addedDate.toDaysSince1970();
+      if (watchAsDSE < oldestDay || watchAsDSE > newestDay) return false;
+    }
+
+    // -- if the type is youtube music, but the user dont want ytm.
+    if (watch.isYTMusic && !matchYTMusic) return false;
+
+    // -- if the type is youtube, but the user dont want yt.
+    if (!watch.isYTMusic && !matchYT) return false;
+
+    return true;
+  }
+
+  /// Returns [daysToSave].
+  List<int> _matchYTVHToNamidaYoutubeHistory({
+    required YoutubeVideoHistory vh,
+    required bool matchYT,
+    required bool matchYTMusic,
+    required DateTime? oldestDate,
+    required DateTime? newestDate,
+  }) {
+    final videoIDs = <YoutubeID>[];
+    final oldestDay = oldestDate?.toDaysSince1970();
+    final newestDay = newestDate?.toDaysSince1970();
+    for (final w in vh.watches) {
+      final canAdd = _canSafelyAddToYTHistory(
+        watch: w,
+        matchYT: matchYT,
+        matchYTMusic: matchYTMusic,
+        newestDay: newestDay,
+        oldestDay: oldestDay,
+      );
+      if (canAdd) {
+        videoIDs.add(
+          YoutubeID(
+            id: vh.id,
+            watch: w,
+            playlistID: null,
+          ),
+        );
+      }
+    }
+    final daysToSave = YoutubeHistoryController.inst.addTracksToHistoryOnly(videoIDs.toList());
+    return daysToSave;
   }
 
   /// Returns [daysToSave].
@@ -484,23 +569,19 @@ class JsonToHistoryParser {
       for (int i = 0; i < vh.watches.length; i++) {
         final d = vh.watches[i];
 
-        // ---- sussy checks ----
+        final canAdd = _canSafelyAddToYTHistory(
+          watch: d,
+          matchYT: matchYT,
+          matchYTMusic: matchYTMusic,
+          newestDay: newestDay,
+          oldestDay: oldestDay,
+        );
 
-        // -- if the watch day is outside range specified
-        if (oldestDay != null && newestDay != null) {
-          final watchAsDSE = d.date.toDaysSince1970();
-          if (watchAsDSE < oldestDay || watchAsDSE > newestDay) continue;
-        }
-
-        // -- if the type is youtube music, but the user dont want ytm.
-        if (d.isYTMusic && !matchYTMusic) continue;
-
-        // -- if the type is youtube, but the user dont want yt.
-        if (!d.isYTMusic && !matchYT) continue;
+        if (!canAdd) continue;
 
         tracksToAdd.addAll(
           tracks.map((tr) => TrackWithDate(
-                dateAdded: d.date,
+                dateAdded: d.addedDate.millisecondsSinceEpoch,
                 track: tr,
                 source: d.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
               )),
@@ -512,7 +593,8 @@ class JsonToHistoryParser {
       onMissingEntry(
         vh.watches
             .map((e) => _MissingListenEntry(
-                  dateMSSE: e.date,
+                  youtubeID: vh.id,
+                  dateMSSE: e.addedDate.millisecondsSinceEpoch,
                   source: e.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
                   artistOrChannel: vh.channel,
                   title: vh.title,
@@ -605,6 +687,7 @@ class JsonToHistoryParser {
         } else {
           onMissingEntry(
             _MissingListenEntry(
+              youtubeID: null,
               dateMSSE: date,
               source: TrackSource.lastfm,
               artistOrChannel: pieces[0],
@@ -691,6 +774,7 @@ extension _FWORWHERE<E> on List<E> {
 class _MissingListenEntry {
   final int dateMSSE;
   final TrackSource source;
+  final String? youtubeID;
   final String title;
   final String artistOrChannel;
 
@@ -698,17 +782,18 @@ class _MissingListenEntry {
     required this.dateMSSE,
     required this.source,
     required this.title,
+    required this.youtubeID,
     required this.artistOrChannel,
   });
 
   @override
   bool operator ==(other) {
     if (other is _MissingListenEntry) {
-      return source == other.source && title == other.title && artistOrChannel == other.artistOrChannel;
+      return youtubeID == other.youtubeID && source == other.source && title == other.title && artistOrChannel == other.artistOrChannel;
     }
     return false;
   }
 
   @override
-  int get hashCode => "$source$title$artistOrChannel".hashCode;
+  int get hashCode => "$youtubeID$source$title$artistOrChannel".hashCode;
 }
