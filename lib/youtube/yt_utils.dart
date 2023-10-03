@@ -39,16 +39,17 @@ class YTUtils {
 
   static List<Widget> getVideoCacheStatusIcons({
     required String videoId,
+    Color? iconsColor,
   }) {
     return [
       Opacity(
         opacity: VideoController.inst.getNVFromID(videoId).isNotEmpty ? 0.6 : 0.1,
-        child: Tooltip(message: lang.VIDEO_CACHE, child: const Icon(Broken.video, size: 15.0)),
+        child: Tooltip(message: lang.VIDEO_CACHE, child: Icon(Broken.video, size: 15.0, color: iconsColor)),
       ),
       const SizedBox(width: 4.0),
       Opacity(
         opacity: Player.inst.audioCacheMap[videoId] != null ? 0.6 : 0.1,
-        child: Tooltip(message: lang.AUDIO_CACHE, child: const Icon(Broken.audio_square, size: 15.0)),
+        child: Tooltip(message: lang.AUDIO_CACHE, child: Icon(Broken.audio_square, size: 15.0, color: iconsColor)),
       ),
     ];
   }

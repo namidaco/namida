@@ -353,3 +353,9 @@ extension ThreadOpener<M, R> on ComputeCallback<M, R> {
     return await compute(this, parameter);
   }
 }
+
+extension FunctionsExecuter<T> on Iterable<Future<T>?> {
+  Future<List<T>> execute() async {
+    return await Future.wait(whereType<Future<T>>());
+  }
+}

@@ -75,7 +75,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   bool _isVisible = false;
   final hideDuration = const Duration(seconds: 3);
-  final volumeHideDuration = const Duration(seconds: 2);
+  final volumeHideDuration = const Duration(milliseconds: 500);
   final transitionDuration = const Duration(milliseconds: 300);
   final doubleTapSeekReset = const Duration(milliseconds: 600);
 
@@ -257,7 +257,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           final ast = await FlutterVolumeController.getAndroidAudioStream();
           if (ast == AudioStream.music) {
             _currentDeviceVolume.value = value;
-            _startVolumeSwipeTimer();
           }
         }
       },
@@ -1096,7 +1095,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               // ========= Volume Slider ==========
               if (shouldShowVolumeSlider)
                 Positioned(
-                  right: context.width * 0.1,
+                  right: context.width * 0.15,
                   child: Obx(
                     () {
                       final vol = _currentDeviceVolume.value;
@@ -1110,7 +1109,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 child: Container(
                                   width: 42.0,
                                   decoration: BoxDecoration(
-                                    color: context.theme.cardColor,
+                                    color: context.theme.cardColor.withOpacity(0.5),
                                     borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                                   ),
                                   child: Column(

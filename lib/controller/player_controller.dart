@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
@@ -13,6 +14,7 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -230,7 +232,28 @@ class Player {
       );
       if (showSnackBar) {
         final addins = shouldInsertNext ? lang.INSERTED : lang.ADDED;
-        Get.snackbar(lang.NOTE, '${addins.capitalizeFirst} ${finalTracks.displayTrackKeyword}');
+
+        Get.showSnackbar(
+          GetSnackBar(
+            icon: Center(
+              child: Icon(shouldInsertNext ? Broken.redo : Broken.add_circle),
+            ),
+            messageText: Text(
+              '${addins.capitalizeFirst} ${finalTracks.displayTrackKeyword}',
+              style: Get.textTheme.displayMedium,
+            ),
+            margin: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 0.0),
+            snackPosition: SnackPosition.TOP,
+            shouldIconPulse: false,
+            backgroundColor: Get.theme.scaffoldBackgroundColor.withOpacity(0.3),
+            borderRadius: 12.0.multipliedRadius,
+            barBlur: 12.0,
+            animationDuration: const Duration(milliseconds: 600),
+            forwardAnimationCurve: Curves.fastLinearToSlowEaseIn,
+            reverseAnimationCurve: Curves.easeInOutQuart,
+            duration: const Duration(seconds: 2),
+          ),
+        );
       }
       return true;
     } else if (tracks.firstOrNull is YoutubeID) {

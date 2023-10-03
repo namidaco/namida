@@ -95,11 +95,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   Future<void> _waitForAllBuffers() async {
-    await Future.wait([
-      if (waitTillAudioLoaded != null) waitTillAudioLoaded!,
-      if (VideoController.vcontroller.waitTillBufferingComplete != null) VideoController.vcontroller.waitTillBufferingComplete!,
-      if (bufferingCompleter != null) bufferingCompleter!.future,
-    ]);
+    await [
+      waitTillAudioLoaded,
+      VideoController.vcontroller.waitTillBufferingComplete,
+      bufferingCompleter?.future,
+    ].execute();
   }
 
   Future<void> prepareTotalListenTime() async {
@@ -154,13 +154,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   // =================================================================================
 
   void refreshNotification([Q? item, VideoInfo? videoInfo]) {
-    item ?? currentItem;
-    item?._execute(
-      selectable: (finalItem) async {
-        _notificationUpdateItem(item: item, isItemFavourite: finalItem.track.isFavourite, itemIndex: currentIndex);
+    final exectuteOn = item ?? currentItem;
+    exectuteOn?._execute(
+      selectable: (finalItem) {
+        _notificationUpdateItem(item: exectuteOn, isItemFavourite: finalItem.track.isFavourite, itemIndex: currentIndex);
       },
-      youtubeID: (finalItem) async {
-        _notificationUpdateItem(item: item, isItemFavourite: false, itemIndex: currentIndex, videoInfo: videoInfo);
+      youtubeID: (finalItem) {
+        _notificationUpdateItem(item: exectuteOn, isItemFavourite: false, itemIndex: currentIndex, videoInfo: videoInfo);
       },
     );
   }
@@ -169,13 +169,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     item._execute(
       selectable: (finalItem) async {
         mediaItem.add(finalItem.toMediaItem(currentIndex, currentQueue.length));
-        playbackState.add(transformEvent(PlaybackEvent(), isItemFavourite, itemIndex));
+        playbackState.add(transformEvent(PlaybackEvent(currentIndex: currentIndex), isItemFavourite, itemIndex));
       },
       youtubeID: (finalItem) async {
         final info = videoInfo ?? finalItem.toVideoInfoSync() ?? YoutubeController.inst.getTemporarelyVideoInfo(finalItem.id);
         final thumbnail = finalItem.getThumbnailSync();
         mediaItem.add(finalItem.toMediaItem(info, thumbnail, currentIndex, currentQueue.length));
-        playbackState.add(transformEvent(PlaybackEvent(), isItemFavourite, itemIndex));
+        playbackState.add(transformEvent(PlaybackEvent(currentIndex: currentIndex), isItemFavourite, itemIndex));
       },
     );
   }
@@ -393,7 +393,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         HistoryController.inst.addTracksToHistory([newTrackWithDate]);
       },
       youtubeID: (finalItem) async {
-        final newListen = YoutubeID(id: finalItem.id, addedDate: DateTime.now(), playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY));
+        final newListen = YoutubeID(
+          id: finalItem.id,
+          watch: YTWatch(date: DateTime.now(), isYTMusic: false),
+          playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
+        );
         await YoutubeHistoryController.inst.addTracksToHistory([newListen]);
       },
     );
@@ -766,11 +770,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       final isGood = fe is File && !filename.endsWith('.part') && !filename.endsWith('.mime');
 
       if (isGood) {
-        final parts = fe.path.getFilenameWOExt.split('_');
-        final bitrateText = parts.last;
-
-        parts.removeLast(); // 'Wd_gr91dgDa_23393.m4a' -> 'Wd_gr91dgDa'
-        final id = parts.join();
+        final filenamewe = fe.path.getFilenameWOExt;
+        final id = filenamewe.substring(0, 11); // 'Wd_gr91dgDa_23393.m4a' -> 'Wd_gr91dgDa'
+        final bitrateText = filenamewe.split('_').last;
         newFiles.addForce(id, MapEntry(fe, int.tryParse(bitrateText)));
       }
     }
@@ -949,7 +951,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> skipToQueueItem(int index, [bool? andPlay]) async => await onSkipToQueueItem(index, andPlay);
 
   @override
-  Future<void> stop() async => await onStop();
+  Future<void> stop() async {
+    await [onStop(), VideoController.vcontroller.pause()].execute();
+  }
 
   @override
   Future<void> fastForward() async => await onFastForward();

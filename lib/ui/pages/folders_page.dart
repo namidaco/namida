@@ -188,7 +188,7 @@ class FoldersPage extends StatelessWidget {
                     right: 12.0,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: context.theme.colorScheme.background,
+                        color: context.theme.scaffoldBackgroundColor,
                         shape: BoxShape.circle,
                       ),
                       child: NamidaIconButton(

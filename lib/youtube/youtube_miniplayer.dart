@@ -489,6 +489,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                     borderRadius: 100.0,
                                                     shimmerEnabled: channelThumbnail == null,
                                                     child: YoutubeThumbnail(
+                                                      key: Key(channelThumbnail ?? ''),
                                                       channelUrl: channelThumbnail ?? '',
                                                       width: 48.0,
                                                       height: 48.0,
