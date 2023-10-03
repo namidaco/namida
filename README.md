@@ -1,7 +1,10 @@
 # <div style="display: flex; align-items: center;"><img src="some stuff/namida.png" width="82" style="margin-right: 10px;">Namida</div>
 
 
-A Beautiful and Feature-rich Music & Video Player, Built in Flutter
+A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in Flutter
+
+
+![Static Badge](https://img.shields.io/badge/Built%20in-Flutter-blue)
 
 # 🎉 Features
 - Everything you might expect from a music player, in addition to the following:
@@ -15,29 +18,41 @@ A Beautiful and Feature-rich Music & Video Player, Built in Flutter
 ## Look & Feel
 - Material3-like Theme.
 - Dynamic Theming, Player Colors are picked from the current album artwork.
-- Tracks, Albums, Artists, Genres, Playlists, Queues and Folders Pages.
-- Waveform seekbar.
+- Home, Tracks, Albums, Artists, Genres, Playlists, Queues and Folders Pages.
+- Waveform Seekbar.
 - Lots of customizations (check out customization section).
 
+## Streaming
+- Best Video & Audio Quality
+- Audio Only Mode
+- Support Caching & Offline Playback
+- Support Downloads
+- Video View with gestures support (swipe to control volume, double tap to seek, swipe up/pinch in to enter fullscreen, etc)
+- Edit tags for downloads 
+- Optional Auto title/artist/album extraction for downloads and scrobbling
+
 ## Others:
+- Sleep Timer (Tracks or Minutes)
+- Play/Pause Fade Effect, along with Skip Silence.
+- Control pausing scenarios (calls, notifications, volume 0, etc..)
 - Define parameters to use for filtering tracks in search lists.
 - Global Tracks Selection
    - allows u to select from multiple places into the same list.
 - Never miss your sessions!
    - persistent and reliable queue system, your sessions are saved for later usage.
 - Reliable History System
-   - lets u specifiy minimum seconds/percentage to count a listen
+   - despite being a flexible system (easily modified, manipulated, imported), it lets u specifiy minimum seconds/percentage to count a listen.
 - Most Played Playlist
-   - find out your top tracks (relies on your history)
+   - find out your top tracks based on your history record.
 
 ## Some additional cool features:
 - Smort Tracks Generation:
-    - uuh.. with dis advanced algorithm brought for you, u can generate tracks related to one you currently listening to, typically the ones that you often listened to in the same period.
-    - also u can generate tracks from specific range of time, or from available moods, or randomly.
+    - uuh.. with dis advanced algorithm brought for you, u can generate tracks related to one you currently listening to, typically the ones that you often listened to in the same period. based on your history.
+    - also u can generate tracks released around the same time, or from specific range of time, from ratings, from available moods, or randomly.
 - Animating Thumbnail:
    - A thumbnail that animates with the current audio peak, looks cool.
 - Miniplayer Party Mode:
-   - Applies an edge breathing effect, color can be static or dynamic (all the colors extracted from the artwork)
+   - Applies an edge breathing effect, colors can be static or dynamic (all the colors extracted from the artwork)
 - Particles Effect
    - they speed up with the audio peak too
 - Insert after latest inserted
@@ -51,9 +66,9 @@ A Beautiful and Feature-rich Music & Video Player, Built in Flutter
 - you gonna find decent amount of options/customizations in the settings and inside dialogs so make sure to check them out.
 
 # Video Integration
-- Namida is capable of playing videos related to the music, video can be found either locally or fetched from youtube
+- For Local Library, Namida is capable of playing videos related to the music, Video can be found either locally or fetched from youtube
 <details>
-<summary>how locally?</summary>
+<summary>How locally?</summary>
 typically looks (inside the folders you specificed) for any matching title, matching goes as following:
 <br>
 -- Alan walker - Faded.m4a
@@ -68,9 +83,9 @@ the video filename should contain at least one of the following:
 <br>
 note: some cleanup is made to improve the matching, all symbols & whitespaces are ignored.
 </details>
-
+<br>
 <details>
-<summary>how youtube?</summary>
+<summary>How youtube?</summary>
  • looks up in the track comment tag (as they are mostly done by @yt-dlp) or filename for any matching youtube link, if found then it starts downloading (and caches) and plays once it's ready, streaming here isn't a good idea as the priority goes for the music file itself.
 </details>
 <br>
@@ -78,10 +93,11 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 
 # Screenshots
 # Installation
--
+- Download latest version from [releases](https://github.com/namidaco/namida/releases) page
+- Available variants are (arm, arm64, universal)
 
 ## - Permission Note:
-### the following actions require <font size="1">`all_files_access`</font> permission (requested when needed)
+### the following actions require <span>`all_files_access`</span> permission (requested when needed)
 >- editing audio tags
 >- creating or restoring backups
 >- saving artworks
@@ -89,22 +105,27 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 >- downloading youtube content
 
 ### Special Thanks:
- >- @Artx-II for their initial dart port of Newpipe Extractor, which powers youtube section.
- >- @55nknown for their awesome miniplayer physics.
- >- @alexmercerind for helping me out a lot.
- >- @lusaxweb for their awesome Iconsax icon pack.
- >- All the packages maintainers which made namida possible.
+ >- [@Artx-II](https://github.com/Artx-II) for their initial dart port of Newpipe Extractor, which powers youtube section.
+ >- [@cameralis](https://github.com/cameralis) for their awesome miniplayer physics.
+ >- [@alexmercerind](https://github.com/alexmercerind) for helping me out a lot.
+ >- [@lusaxweb](https://github.com/lusaxweb) for their awesome Iconsax icon pack.
+ >- All packages' maintainers which made namida possible.
  <br>
  
 > ### © Logo by @midjourney
 # Donate
-- 
+- Donation will help me improve namida and will show appreciation.
+  
+<a href="https://www.buymeacoffee.com/namidaco" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 42px;" ></a>
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/U7U0PF2L5)
+
 
 # LICENSE
-uhhmm i dont understand much about general licenses so here is yours
+Project is licensed under [EULA](https://github.com/namidaco/namida/blob/main/LICENSE) License.
 
 ```
 © Copyright (C) 2023-present Namidaco <namida.coo@gmail.com>
-ANY  CODE  STEALING  IS ONLY ALLOWED IF YOU UNDERSTAND IT OR THE PURPOSE BEHIND IT
-and ofc redistributing the program as a whole under different name or license without permission is not allowed.
+- You may read/compile/modify the code for your personal usage, or for the purpose of contribution for the software. 
+- Redistributing the program as a whole under different name or license without permission is not allowed.
 ```

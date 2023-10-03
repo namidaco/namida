@@ -90,7 +90,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                       )
                     : Color.alphaBlend(
                         CurrentColor.inst.color.withAlpha(40),
-                        context.isDarkMode ? const Color.fromARGB(255, 25, 25, 25) : const Color.fromARGB(255, 250, 250, 250),
+                        const Color.fromARGB(255, 250, 250, 250),
                       ),
               ),
               onHeightChange: (percentage) => MiniPlayerController.inst.animateMiniplayer(percentage),
