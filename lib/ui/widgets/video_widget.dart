@@ -9,6 +9,7 @@ import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/core/extensions.dart';
@@ -864,12 +865,21 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           ),
                                         ),
                                         const SizedBox(width: 8.0),
-                                        Text(
-                                          playerDuration.inSeconds.secondsLabel,
-                                          style: context.textTheme.displayMedium?.copyWith(
-                                            fontSize: 14.0.multipliedFontScale,
-                                            color: itemsColor,
-                                          ),
+                                        Obx(
+                                          () {
+                                            final displayRemaining = settings.displayRemainingDurInsteadOfTotal.value;
+                                            final toSubtract = displayRemaining ? currentPositionMS : 0;
+                                            final msToDisplay = playerDuration.inMilliseconds - toSubtract;
+                                            final prefix = displayRemaining ? '-' : '';
+
+                                            return Text(
+                                              "$prefix ${msToDisplay.milliSecondsLabel}",
+                                              style: context.textTheme.displayMedium?.copyWith(
+                                                fontSize: 14.0.multipliedFontScale,
+                                                color: itemsColor,
+                                              ),
+                                            );
+                                          },
                                         ),
                                         const SizedBox(width: 8.0),
                                         NamidaIconButton(

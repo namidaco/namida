@@ -452,9 +452,17 @@ class NamidaMiniPlayer extends StatelessWidget {
                                         onTap: () => Player.inst.seekSecondsForward(),
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
-                                          child: Text(
-                                            currentDuration.secondsLabel,
-                                            style: context.textTheme.displaySmall,
+                                          child: Obx(
+                                            () {
+                                              final displayRemaining = settings.displayRemainingDurInsteadOfTotal.value;
+                                              final toSubtract = displayRemaining ? Player.inst.nowPlayingPosition : 0;
+                                              final msToDisplay = currentDurationInMS - toSubtract;
+                                              final prefix = displayRemaining ? '-' : '';
+                                              return Text(
+                                                "$prefix ${msToDisplay.milliSecondsLabel}",
+                                                style: context.textTheme.displaySmall,
+                                              );
+                                            },
                                           ),
                                         ),
                                       ),

@@ -172,6 +172,7 @@ class SettingsController {
   final RxBool downloadFilesKeepCachedVersions = true.obs;
   final RxBool enablePip = true.obs;
   final RxBool playerInfiniyQueueOnNextPrevious = true.obs;
+  final RxBool displayRemainingDurInsteadOfTotal = false.obs;
   final onNotificationTapAction = NotificationTapAction.openApp.obs;
 
   final RxMap<TrackTilePosition, TrackTileItem> trackItem = {
@@ -363,6 +364,7 @@ class SettingsController {
       downloadFilesKeepCachedVersions.value = json['downloadFilesKeepCachedVersions'] ?? downloadFilesKeepCachedVersions.value;
       enablePip.value = json['enablePip'] ?? enablePip.value;
       playerInfiniyQueueOnNextPrevious.value = json['playerInfiniyQueueOnNextPrevious'] ?? playerInfiniyQueueOnNextPrevious.value;
+      displayRemainingDurInsteadOfTotal.value = json['displayRemainingDurInsteadOfTotal'] ?? displayRemainingDurInsteadOfTotal.value;
       onNotificationTapAction.value = NotificationTapAction.values.getEnum(json['onNotificationTapAction']) ?? onNotificationTapAction.value;
 
       trackItem.value = _getEnumMap(
@@ -536,6 +538,7 @@ class SettingsController {
       'downloadFilesKeepCachedVersions': downloadFilesKeepCachedVersions.value,
       'enablePip': enablePip.value,
       'playerInfiniyQueueOnNextPrevious': playerInfiniyQueueOnNextPrevious.value,
+      'displayRemainingDurInsteadOfTotal': displayRemainingDurInsteadOfTotal.value,
       'trackItem': trackItem.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
       'playerOnInterrupted': playerOnInterrupted.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
       'queueInsertion': queueInsertion.map((key, value) => MapEntry(key.convertToString, value.toJson())),
@@ -635,6 +638,7 @@ class SettingsController {
     bool? downloadFilesKeepCachedVersions,
     bool? enablePip,
     bool? playerInfiniyQueueOnNextPrevious,
+    bool? displayRemainingDurInsteadOfTotal,
     int? waveformTotalBars,
     int? videosMaxCacheInMB,
     int? ytMiniplayerDimAfterSeconds,
@@ -953,6 +957,9 @@ class SettingsController {
     }
     if (playerInfiniyQueueOnNextPrevious != null) {
       this.playerInfiniyQueueOnNextPrevious.value = playerInfiniyQueueOnNextPrevious;
+    }
+    if (displayRemainingDurInsteadOfTotal != null) {
+      this.displayRemainingDurInsteadOfTotal.value = displayRemainingDurInsteadOfTotal;
     }
     if (waveformTotalBars != null) {
       this.waveformTotalBars.value = waveformTotalBars;

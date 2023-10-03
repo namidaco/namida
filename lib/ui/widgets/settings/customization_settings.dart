@@ -51,6 +51,12 @@ class CustomizationSettings extends StatelessWidget {
               onChanged: (isTrue) => settings.save(enableMiniplayerParallaxEffect: !isTrue),
               value: settings.enableMiniplayerParallaxEffect.value,
             ),
+            CustomSwitchListTile(
+              icon: Broken.timer,
+              title: lang.DISPLAY_REMAINING_DURATION_INSTEAD_OF_TOTAL,
+              onChanged: (isTrue) => settings.save(displayRemainingDurInsteadOfTotal: !isTrue),
+              value: settings.displayRemainingDurInsteadOfTotal.value,
+            ),
             CustomListTile(
               icon: Broken.rotate_left_1,
               title: lang.BORDER_RADIUS_MULTIPLIER,
