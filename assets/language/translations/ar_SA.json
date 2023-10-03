@@ -1,6 +1,19 @@
 {
+  "DIM_INTENSITY": "Dim Intensity",
+  "DIM_MINIPLAYER_AFTER_SECONDS": "Dim miniplayer after _SECONDS_ seconds of inactivity",
+  "DISPLAY_REMAINING_DURATION_INSTEAD_OF_TOTAL": "Display remaining duration instead of total",
+  "DOWNLOADS_METADATA_TAGS": "Downloads Metadata tags",
+  "DOWNLOADS_METADATA_TAGS_SUBTITLE": "Extract artist, title & album from video info by default",
+  "ENABLE_PARALLAX_EFFECT": "Enable Parallax Effect",
+  "KEEP_CACHED_VERSIONS": "Keep cached versions",
+  "MAX_VIDEO_CACHE_SIZE": "Max video cache size",
+  "OPEN_IN_YOUTUBE_VIEW": "Open in Youtube view",
+  "SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE": "Set file last modified as video upload date",
   "THEME_SETTINGS": "المظهر",
   "THEME_SETTINGS_SUBTITLE": "الشكل العام لمشغل الموسيقى خاصتك",
   "TRACK": "تراك",
-  "TRACKS": "تراكات"
+  "TRACKS": "تراكات",
+  "YOUTUBE_SETTINGS_SUBTITLE": "Customize Youtube experience",
+  "YT_PREFER_NEW_COMMENTS": "Prefer new comments when possible",
+  "YT_PREFER_NEW_COMMENTS_SUBTITLE": "Cached version will only be used when there is no connection"
 }
