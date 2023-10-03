@@ -521,7 +521,6 @@ class LanguageKeys {
   late String UPDATING;
   late String USED;
   late String USE_COLLAPSED_SETTING_TILES;
-  late String USE_YOUTUBE_MINIPLAYER;
   late String VALUE_BETWEEN_50_200;
   late String VALUE;
   late String VIDEOS;

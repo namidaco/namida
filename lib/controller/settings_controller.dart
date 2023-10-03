@@ -123,7 +123,6 @@ class SettingsController {
   final RxBool displayFavouriteButtonInNotification = false.obs;
   final RxBool enableSearchCleanup = false.obs;
   final RxBool enableBottomNavBar = true.obs;
-  final RxBool useYoutubeMiniplayer = false.obs; // TODO: remove
   final RxBool ytPreferNewComments = false.obs;
   final RxBool ytAutoExtractVideoTagsFromInfo = true.obs;
   final RxBool playerPlayOnNextPrev = true.obs;
@@ -325,7 +324,6 @@ class SettingsController {
       displayFavouriteButtonInNotification.value = json['displayFavouriteButtonInNotification'] ?? displayFavouriteButtonInNotification.value;
       enableSearchCleanup.value = json['enableSearchCleanup'] ?? enableSearchCleanup.value;
       enableBottomNavBar.value = json['enableBottomNavBar'] ?? enableBottomNavBar.value;
-      useYoutubeMiniplayer.value = json['useYoutubeMiniplayer'] ?? useYoutubeMiniplayer.value;
       ytPreferNewComments.value = json['ytPreferNewComments'] ?? ytPreferNewComments.value;
       ytAutoExtractVideoTagsFromInfo.value = json['ytAutoExtractVideoTagsFromInfo'] ?? ytAutoExtractVideoTagsFromInfo.value;
       playerPlayOnNextPrev.value = json['playerPlayOnNextPrev'] ?? playerPlayOnNextPrev.value;
@@ -504,7 +502,6 @@ class SettingsController {
       'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
       'enableSearchCleanup': enableSearchCleanup.value,
       'enableBottomNavBar': enableBottomNavBar.value,
-      'useYoutubeMiniplayer': useYoutubeMiniplayer.value,
       'ytPreferNewComments': ytPreferNewComments.value,
       'ytAutoExtractVideoTagsFromInfo': ytAutoExtractVideoTagsFromInfo.value,
       'playerPlayOnNextPrev': playerPlayOnNextPrev.value,
@@ -656,7 +653,6 @@ class SettingsController {
     bool? displayFavouriteButtonInNotification,
     bool? enableSearchCleanup,
     bool? enableBottomNavBar,
-    bool? useYoutubeMiniplayer,
     bool? ytPreferNewComments,
     bool? ytAutoExtractVideoTagsFromInfo,
     bool? playerPlayOnNextPrev,
@@ -1011,9 +1007,6 @@ class SettingsController {
     }
     if (enableBottomNavBar != null) {
       this.enableBottomNavBar.value = enableBottomNavBar;
-    }
-    if (useYoutubeMiniplayer != null) {
-      this.useYoutubeMiniplayer.value = useYoutubeMiniplayer;
     }
     if (ytPreferNewComments != null) {
       this.ytPreferNewComments.value = ytPreferNewComments;

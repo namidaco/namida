@@ -588,7 +588,6 @@ class Language extends LanguageKeys {
 			UPDATING = getKey("UPDATING");
 			USED = getKey("USED");
 			USE_COLLAPSED_SETTING_TILES = getKey("USE_COLLAPSED_SETTING_TILES");
-			USE_YOUTUBE_MINIPLAYER = getKey("USE_YOUTUBE_MINIPLAYER");
 			VALUE_BETWEEN_50_200 = getKey("VALUE_BETWEEN_50_200");
 			VALUE = getKey("VALUE");
 			VIDEOS = getKey("VIDEOS");
