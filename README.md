@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="styles.css" />
+
 # <div style="margin-right: 18px; margin-top: 18px; display:flex; vertical-align: middle; align-items: center; max-width: 100%;"><img src="some stuff/namida.png" width="82" style="margin-right: 18px;">Namida</div>
 
 A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in Flutter
@@ -6,7 +8,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 
 # Sections:
 
-- [🎉 Features](#-features)
+- [Features](#-features)
   - [Library \& Indexing](#library--indexing)
   - [Look \& Feel](#look--feel)
   - [Streaming](#streaming)
@@ -16,7 +18,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 - [Screenshots](#screenshots)
 - [Usage Preview](#usage-preview)
 - [Installation](#installation)
-- [Permission Note](#--permission-note)
+- [Permission Note](#-permission-note)
 - [Special Thanks](#special-thanks)
 - [Donate](#donate)
 - [LICENSE](#license)
@@ -129,25 +131,29 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 <img src="screens/collection_dark_1.jpg" class="imgbr"/>
 <img src="screens/collection_dark_2.jpg" class="imgbr"/>
 
-<a name="customization"></a>
 
 <details>
   <summary>
 
-#### Customization Settings
+### Customization Settings
 
   </summary>
-    <img src="screens/Customization Settings.jpg" class="imgbr">
+    <img src="screens/customization_settings.jpg" class="imgbr">
 </details>
 <br>
 
 ### Usage Preview
 
 <video width="45%" class="vidbr" controls>
+
   <source src="screens/Usage Preview - Animating Thumbnail & Breathing Edges.mp4" type="video/mp4">
+
 </video>
+
 <video width="45%" class="vidbr" controls>
+
   <source src="screens/Usage Preview - Recommended, Listens & History.mp4" type="video/mp4">
+
 </video>
 
 # Installation
@@ -155,9 +161,9 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 - Download latest version from [releases](https://github.com/namidaco/namida/releases) page
 - Available variants are arm & arm64
 
-## - Permission Note:
+### Permission Note:
 
-### the following actions require <span>`all_files_access`</span> permission (requested when needed)
+##### the following actions require <span>`all_files_access`</span> permission (requested when needed)
 
 > - editing audio tags
 > - creating or restoring backups
@@ -193,17 +199,3 @@ Project is licensed under [EULA](https://github.com/namidaco/namida/blob/main/LI
 - You may read/compile/modify the code for your personal usage, or for the purpose of contribution for the software.
 - Redistributing the program as a whole under different name or license without permission is not allowed.
 ```
-
-<style>
-   .imgbr {
-      border-radius: 12px;
-      width: 620px;
-      display: block;
-      margin: auto;
-      margin-top: 12px;
-   }
-   .vidbr {
-      border-radius: 12px;
-      margin: auto;
-   }
-</style>

@@ -1,0 +1,11 @@
+.imgbr {
+    border-radius: 12px;
+    width: 620px;
+    display: block;
+    margin: auto;
+    margin-top: 12px;
+ }
+ .vidbr {
+    border-radius: 12px;
+    margin: auto;
+ }
