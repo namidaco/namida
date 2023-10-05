@@ -21,6 +21,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 - [Permission Note](#-permission-note)
 - [Special Thanks](#special-thanks)
 - [Donate](#donate)
+- [Social](#social)
 - [LICENSE](#license)
 
 # 🎉 Features
@@ -194,6 +195,11 @@ Animating Thumbnail        |  Recommends & Listens
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/U7U0PF2L5)
 
+# Social 
+- join us on our platforms for updates, tips, discussion & ideas
+  - [Telegram (Updates)](https://t.me/namida_official)
+  - [Telegram (Chat)](https://t.me/+FmdfsgKoGmM1ZGFk)
+  - [Discord](https://discord.gg/WeY7DTVChT)
 # LICENSE
 
 Project is licensed under [EULA](https://github.com/namidaco/namida/blob/main/LICENSE) License.
