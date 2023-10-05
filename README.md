@@ -80,6 +80,8 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
   - Applies an edge breathing effect, colors can be static or dynamic (all the colors extracted from the artwork)
 - Particles Effect
   - they speed up with the audio peak too
+- Track Play Mode 
+  - when playing from search, you can selected wether to play: selected track only, search results, album, first artist or first genre.
 - Insert after latest inserted
   - Want to insert multiple tracks one after each other? this will get your back.
 - Repeat for N times
@@ -138,15 +140,15 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 ### Customization Settings
 
   </summary>
-    <img src="screens/customization_settings.jpg" class="imgbr">
+    <img src="screens/customization_settings.jpg" class="imgbr" width="50%">
 </details>
 <br>
 
 ### Usage Preview
 
-| Animating Thumbnail  | Recommends & Listens |
-| ------------- | ------------- |
-| <div align="center"><video src="https://github.com/namidaco/namida/assets/85245079/57b84367-3920-4e10-917f-c56815d21e10.mp4"></div>  | <div align="center"><video src="https://github.com/namidaco/namida/assets/85245079/87badbab-3e4c-49cb-9b38-eda891666b94.mp4"></div>|
+Animating Thumbnail        |  Recommends & Listens
+:-------------------------:|:-------------------------:
+<video src="https://github.com/namidaco/namida/assets/85245079/da47c270-9f45-4ff5-a08e-e99e4b7ebb7c.mp4"> |  <video src="https://github.com/namidaco/namida/assets/85245079/72e978b3-6e15-4b4e-948a-03b470802b30.mp4">
 
 
 # Installation
