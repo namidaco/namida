@@ -144,6 +144,9 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 
 ### Usage Preview
 
+| Animating Thumbnail  | Recommends & Listens |
+| ------------- | ------------- |
+| <div align="center"><video src="https://github.com/namidaco/namida/assets/85245079/57b84367-3920-4e10-917f-c56815d21e10.mp4"></div>  | <div align="center"><video src="https://github.com/namidaco/namida/assets/85245079/87badbab-3e4c-49cb-9b38-eda891666b94.mp4"></div>|
 
 
 # Installation
