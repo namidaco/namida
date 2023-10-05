@@ -142,6 +142,15 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
   </summary>
     <img src="screens/customization_settings.jpg" class="imgbr" width="50%">
 </details>
+
+<details>
+  <summary>
+
+### YouTube Miniplayer
+
+  </summary>
+    <img src="screens/yt_miniplayer.png" class="imgbr" width="50%">
+</details>
 <br>
 
 ### Usage Preview
