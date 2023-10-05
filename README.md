@@ -144,17 +144,7 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 
 ### Usage Preview
 
-<video width="45%" class="vidbr" controls>
 
-  <source src="screens/Usage Preview - Animating Thumbnail & Breathing Edges.mp4" type="video/mp4">
-
-</video>
-
-<video width="45%" class="vidbr" controls>
-
-  <source src="screens/Usage Preview - Recommended, Listens & History.mp4" type="video/mp4">
-
-</video>
 
 # Installation
 
