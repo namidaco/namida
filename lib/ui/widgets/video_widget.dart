@@ -101,7 +101,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     if (mounted) setState(() {});
   }
 
-  final userSeek = ValueNotifier<double>(0.0);
+  final userSeekMS = 0.obs;
 
   Widget _getBuilder({
     required Widget Function(double visiblePercentage) child,
@@ -687,7 +687,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           ),
                                           child: Obx(
                                             () {
-                                              final qt = Player.inst.currentVideoStream?.resolution;
+                                              final qts = Player.inst.currentVideoStream?.resolution;
+                                              final c = Player.inst.currentCachedVideo;
+                                              final qtc = c == null ? null : '${c.height}p${c.framerateText()}';
+                                              final qt = qts ?? qtc;
                                               return Row(
                                                 children: [
                                                   if (qt != null) ...[
@@ -745,6 +748,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 child: Obx(
                                   () {
                                     final playerDuration = Player.inst.currentItemDuration ?? Duration.zero;
+                                    final durMS = playerDuration.inMilliseconds;
                                     final videoBuffered = VideoController.vcontroller.buffered ?? Duration.zero;
                                     final audioBuffered = Player.inst.buffered;
                                     // display audio buffer only if audio < video
@@ -754,10 +758,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     // this for audio only mode
                                     final fullVideoBufferProgress = VideoController.vcontroller.isInitialized ? VideoController.vcontroller.isCurrentVideoFromCache : true;
                                     final currentVideoAudioFromCache = fullVideoBufferProgress && Player.inst.isCurrentAudioFromCache;
+                                    final positionToDisplay = userSeekMS.value == 0 ? currentPositionMS : userSeekMS.value;
+                                    final currentPercentage = durMS == 0.0 ? 0.0 : positionToDisplay / durMS;
                                     return Row(
                                       children: [
                                         Text(
-                                          currentPositionMS.milliSecondsLabel,
+                                          positionToDisplay.milliSecondsLabel,
                                           style: context.textTheme.displayMedium?.copyWith(
                                             fontSize: 14.0.multipliedFontScale,
                                             color: itemsColor,
@@ -770,97 +776,91 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               void onSeekDragUpdate(double deltax) {
                                                 final percentageSwiped = (deltax / constraints.maxWidth).withMinimum(0.0);
                                                 final newSeek = percentageSwiped * (playerDuration.inMilliseconds);
-                                                userSeek.value = newSeek;
+                                                userSeekMS.value = newSeek.round();
                                               }
 
                                               void onSeekEnd() async {
-                                                await Player.inst.seek(Duration(milliseconds: userSeek.value.toInt()));
-                                                userSeek.value = 0;
+                                                await Player.inst.seek(Duration(milliseconds: userSeekMS.value));
+                                                userSeekMS.value = 0;
                                               }
 
                                               return GestureDetector(
-                                                  behavior: HitTestBehavior.translucent,
-                                                  onTapDown: (details) {
-                                                    onSeekDragUpdate(details.localPosition.dx);
-                                                    _resetTimer();
-                                                  },
-                                                  onTapUp: (details) {
-                                                    onSeekEnd();
-                                                    _startTimer();
-                                                  },
-                                                  onTapCancel: () {
-                                                    userSeek.value = 0;
-                                                    _startTimer();
-                                                  },
-                                                  onHorizontalDragStart: (details) => _resetTimer(),
-                                                  onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx),
-                                                  onHorizontalDragEnd: (details) => onSeekEnd(),
-                                                  child: ValueListenableBuilder(
-                                                    valueListenable: userSeek,
-                                                    builder: (_, double seekvaluee, child) {
-                                                      final durMS = playerDuration.inMilliseconds;
-                                                      final currentSeekValue = seekvaluee == 0 ? currentPositionMS : seekvaluee;
-                                                      final currentPercentage = durMS == 0.0 ? 0.0 : currentSeekValue / durMS;
-
-                                                      const circleSize = 18.0;
-                                                      final colorScheme = Color.alphaBlend(Colors.white.withAlpha(80), CurrentColor.inst.color.withOpacity(1));
-                                                      return Stack(
-                                                        alignment: Alignment.centerLeft,
-                                                        children: [
-                                                          _getSliderContainer(
-                                                            colorScheme,
-                                                            constraints,
-                                                            currentPercentage,
-                                                            160,
+                                                behavior: HitTestBehavior.translucent,
+                                                onTapDown: (details) {
+                                                  onSeekDragUpdate(details.localPosition.dx);
+                                                  _resetTimer();
+                                                },
+                                                onTapUp: (details) {
+                                                  onSeekEnd();
+                                                  _startTimer();
+                                                },
+                                                onTapCancel: () {
+                                                  userSeekMS.value = 0;
+                                                  _startTimer();
+                                                },
+                                                onHorizontalDragStart: (details) => _resetTimer(),
+                                                onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx),
+                                                onHorizontalDragEnd: (details) => onSeekEnd(),
+                                                child: () {
+                                                  const circleSize = 18.0;
+                                                  final colorScheme = Color.alphaBlend(Colors.white.withAlpha(80), CurrentColor.inst.color.withOpacity(1));
+                                                  return Stack(
+                                                    alignment: Alignment.centerLeft,
+                                                    children: [
+                                                      _getSliderContainer(
+                                                        colorScheme,
+                                                        constraints,
+                                                        currentPercentage,
+                                                        160,
+                                                      ),
+                                                      // -- low buffer
+                                                      if (currentVideoAudioFromCache || (playerBufferedLower > Duration.zero && durMS > 0))
+                                                        _getSliderContainer(
+                                                          colorScheme,
+                                                          constraints,
+                                                          currentVideoAudioFromCache ? 1.0 : playerBufferedLower.inMilliseconds / durMS,
+                                                          80,
+                                                          displayIndicator: true,
+                                                        ),
+                                                      // -- big buffer
+                                                      if (currentVideoAudioFromCache || (playerBufferedBigger > Duration.zero && durMS > 0))
+                                                        _getSliderContainer(
+                                                          colorScheme,
+                                                          constraints,
+                                                          currentVideoAudioFromCache ? 1.0 : playerBufferedBigger.inMilliseconds / durMS,
+                                                          60,
+                                                          displayIndicator: true,
+                                                        ),
+                                                      _getSliderContainer(
+                                                        colorScheme,
+                                                        constraints,
+                                                        1.0,
+                                                        40,
+                                                      ),
+                                                      Container(
+                                                        alignment: Alignment.center,
+                                                        margin:
+                                                            EdgeInsets.only(left: ((constraints.maxWidth * currentPercentage) - circleSize * 0.5).clamp(0, constraints.maxWidth)),
+                                                        decoration: BoxDecoration(
+                                                          color: colorScheme,
+                                                          shape: BoxShape.circle,
+                                                        ),
+                                                        width: circleSize,
+                                                        height: circleSize,
+                                                        child: Container(
+                                                          alignment: Alignment.center,
+                                                          decoration: const BoxDecoration(
+                                                            color: Color.fromARGB(220, 40, 40, 40),
+                                                            shape: BoxShape.circle,
                                                           ),
-                                                          // -- low buffer
-                                                          if (currentVideoAudioFromCache || (playerBufferedLower > Duration.zero && durMS > 0))
-                                                            _getSliderContainer(
-                                                              colorScheme,
-                                                              constraints,
-                                                              currentVideoAudioFromCache ? 1.0 : playerBufferedLower.inMilliseconds / durMS,
-                                                              80,
-                                                              displayIndicator: true,
-                                                            ),
-                                                          // -- big buffer
-                                                          if (currentVideoAudioFromCache || (playerBufferedBigger > Duration.zero && durMS > 0))
-                                                            _getSliderContainer(
-                                                              colorScheme,
-                                                              constraints,
-                                                              currentVideoAudioFromCache ? 1.0 : playerBufferedBigger.inMilliseconds / durMS,
-                                                              60,
-                                                              displayIndicator: true,
-                                                            ),
-                                                          _getSliderContainer(
-                                                            colorScheme,
-                                                            constraints,
-                                                            1.0,
-                                                            40,
-                                                          ),
-                                                          Container(
-                                                            alignment: Alignment.center,
-                                                            margin: EdgeInsets.only(
-                                                                left: ((constraints.maxWidth * currentPercentage) - circleSize * 0.5).clamp(0, constraints.maxWidth)),
-                                                            decoration: BoxDecoration(
-                                                              color: colorScheme,
-                                                              shape: BoxShape.circle,
-                                                            ),
-                                                            width: circleSize,
-                                                            height: circleSize,
-                                                            child: Container(
-                                                              alignment: Alignment.center,
-                                                              decoration: const BoxDecoration(
-                                                                color: Color.fromARGB(220, 40, 40, 40),
-                                                                shape: BoxShape.circle,
-                                                              ),
-                                                              width: circleSize / 2,
-                                                              height: circleSize / 2,
-                                                            ),
-                                                          )
-                                                        ],
-                                                      );
-                                                    },
-                                                  ));
+                                                          width: circleSize / 2,
+                                                          height: circleSize / 2,
+                                                        ),
+                                                      )
+                                                    ],
+                                                  );
+                                                }(),
+                                              );
                                             },
                                           ),
                                         ),

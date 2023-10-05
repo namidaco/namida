@@ -107,6 +107,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
                           _dragheight -= dd;
                           controller.animateTo(_dragheight);
                         },
+                        onVerticalDragCancel: () => animateToState(_wasExpanded),
                         onVerticalDragEnd: (details) {
                           final v = details.velocity.pixelsPerSecond.dy;
 

@@ -266,6 +266,17 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
             height: context.height * 0.8,
           ),
         ),
+
+        // prevent accidental miniplayer swipe when performing back gesture
+        Positioned(
+          right: 0,
+          child: AbsorbPointer(
+            child: SizedBox(
+              width: 8.0,
+              height: context.height,
+            ),
+          ),
+        ),
       ],
     );
   }

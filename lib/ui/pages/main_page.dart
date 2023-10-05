@@ -225,6 +225,7 @@ class NamidaSearchBar extends StatelessWidget {
         }
       },
       onChanged: (value) => SearchSortController.inst.searchAll(value),
+      onTapOutside: (event) => FocusScope.of(context).unfocus(),
     );
   }
 }

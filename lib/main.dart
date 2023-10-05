@@ -106,8 +106,8 @@ void main() async {
   ScrollSearchController.inst.initialize();
   FlutterLocalNotificationsPlugin().cancelAll();
 
-  runApp(const Namida());
-  // _initializeCatcher(() => runApp(const Namida()));
+  // runApp(const Namida());
+  _initializeCatcher(() => runApp(const Namida()));
 
   CurrentColor.inst.generateAllColorPalettes();
   Folders.inst.onFirstLoad();
