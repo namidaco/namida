@@ -747,37 +747,52 @@ class VideoController {
   }
 
   /// This prevents re-requesting the same url.
-  final _runningRequestsMap = <String, Completer<Uint8List?>>{};
+  final _runningRequestsMap = <String, bool>{};
   Future<Uint8List?> getYoutubeThumbnailAsBytes({String? youtubeId, String? url}) async {
     if (youtubeId == null && url == null) return null;
 
     final links = url != null ? [url] : YTThumbnail(youtubeId!).allQualitiesByHighest;
 
+    final thumbnailCompleter = Completer<Uint8List?>();
+
     for (final link in links) {
       if (_runningRequestsMap[link] != null) {
         printy('getYoutubeThumbnailAsBytes: Same link is being requested right now, ignoring');
-        return await _runningRequestsMap[link]?.future; // return and not continue, cuz if requesting hq image, continue will make it request lower one
+        return await thumbnailCompleter.future; // return and not continue, cuz if requesting hq image, continue will make it request lower one
       }
-      _runningRequestsMap[link] = Completer<Uint8List?>();
+
+      _runningRequestsMap[link] = true;
+
+      http.Response? requestRes;
+
       try {
-        http.get(Uri.parse(link)).then((res) {
-          final data = res.bodyBytes;
-          if (data.isNotEmpty && res.statusCode != 404) {
-            _runningRequestsMap[link]?.complete(data);
-            _runningRequestsMap.remove(link);
-          }
-        });
+        requestRes = await http.get(Uri.parse(link));
       } catch (e) {
-        _runningRequestsMap[link]?.complete(null);
-        _runningRequestsMap.remove(link);
         printy('getYoutubeThumbnailAsBytes: Error getting thumbnail at $link, trying again with lower quality.\n$e', isError: true);
       }
 
-      final futurethumb = await _runningRequestsMap[link]?.future;
-      return futurethumb;
+      // -- validation --
+      final req = requestRes;
+      if (req != null) {
+        final data = req.bodyBytes;
+        if (data.isNotEmpty && req.statusCode != 404) {
+          thumbnailCompleter.complete(data);
+          _runningRequestsMap.remove(link);
+          break;
+        } else {
+          _runningRequestsMap.remove(link);
+          continue;
+        }
+      }
     }
 
-    return null;
+    // -- finished looping and no image was assigned
+    if (!thumbnailCompleter.isCompleted) {
+      thumbnailCompleter.complete(null);
+    }
+
+    return thumbnailCompleter.future;
+  }
   }
 
   Future<File?> getYoutubeThumbnailAndCache({String? id, String? channelUrl}) async {
