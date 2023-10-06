@@ -116,6 +116,7 @@ dependencies:
   sticky_and_expandable_list:
     git:
       url: https://github.com/MSOB7YY/flutter_sticky_and_expandable_list
+  dynamic_color: ^1.6.7
 
   # ---- UI Widgets ----
   wheel_slider: ^1.0.1

@@ -218,7 +218,7 @@ class Namida extends StatelessWidget {
           themeAnimationDuration: const Duration(milliseconds: kThemeAnimationDurationMS),
           debugShowCheckedModeBanner: false,
           title: 'Namida',
-          restorationScopeId: 'Namida',
+          // restorationScopeId: 'Namida',
           theme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, true),
           darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, false),
           themeMode: settings.themeMode.value,

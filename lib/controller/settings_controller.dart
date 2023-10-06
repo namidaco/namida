@@ -172,6 +172,7 @@ class SettingsController {
   final RxBool enablePip = true.obs;
   final RxBool playerInfiniyQueueOnNextPrevious = true.obs;
   final RxBool displayRemainingDurInsteadOfTotal = false.obs;
+  final RxBool pickColorsFromDeviceWallpaper = false.obs;
   final onNotificationTapAction = NotificationTapAction.openApp.obs;
 
   final RxMap<TrackTilePosition, TrackTileItem> trackItem = {
@@ -363,6 +364,7 @@ class SettingsController {
       enablePip.value = json['enablePip'] ?? enablePip.value;
       playerInfiniyQueueOnNextPrevious.value = json['playerInfiniyQueueOnNextPrevious'] ?? playerInfiniyQueueOnNextPrevious.value;
       displayRemainingDurInsteadOfTotal.value = json['displayRemainingDurInsteadOfTotal'] ?? displayRemainingDurInsteadOfTotal.value;
+      pickColorsFromDeviceWallpaper.value = json['pickColorsFromDeviceWallpaper'] ?? pickColorsFromDeviceWallpaper.value;
       onNotificationTapAction.value = NotificationTapAction.values.getEnum(json['onNotificationTapAction']) ?? onNotificationTapAction.value;
 
       trackItem.value = _getEnumMap(
@@ -536,6 +538,7 @@ class SettingsController {
       'enablePip': enablePip.value,
       'playerInfiniyQueueOnNextPrevious': playerInfiniyQueueOnNextPrevious.value,
       'displayRemainingDurInsteadOfTotal': displayRemainingDurInsteadOfTotal.value,
+      'pickColorsFromDeviceWallpaper': pickColorsFromDeviceWallpaper.value,
       'trackItem': trackItem.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
       'playerOnInterrupted': playerOnInterrupted.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
       'queueInsertion': queueInsertion.map((key, value) => MapEntry(key.convertToString, value.toJson())),
@@ -636,6 +639,7 @@ class SettingsController {
     bool? enablePip,
     bool? playerInfiniyQueueOnNextPrevious,
     bool? displayRemainingDurInsteadOfTotal,
+    bool? pickColorsFromDeviceWallpaper,
     int? waveformTotalBars,
     int? videosMaxCacheInMB,
     int? ytMiniplayerDimAfterSeconds,
@@ -956,6 +960,9 @@ class SettingsController {
     }
     if (displayRemainingDurInsteadOfTotal != null) {
       this.displayRemainingDurInsteadOfTotal.value = displayRemainingDurInsteadOfTotal;
+    }
+    if (pickColorsFromDeviceWallpaper != null) {
+      this.pickColorsFromDeviceWallpaper.value = pickColorsFromDeviceWallpaper;
     }
     if (waveformTotalBars != null) {
       this.waveformTotalBars.value = waveformTotalBars;

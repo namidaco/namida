@@ -221,6 +221,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.3.2"
+  dynamic_color:
+    dependency: "direct main"
+    description:
+      name: dynamic_color
+      sha256: "96bff3df72e3d428bda2b874c7a521e8c86f592cae626ea594922fcc8d166e0c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.6.7"
   extended_image:
     dependency: "direct main"
     description:

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:queue/queue.dart' as qs;
 import 'package:palette_generator/palette_generator.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 
 import 'package:namida/class/color_m.dart';
 import 'package:namida/class/track.dart';
@@ -30,6 +31,7 @@ class CurrentColor {
   List<Color> get palette => _namidaColor.value.palette;
   Color get currentColorScheme => _colorSchemeOfSubPages.value ?? color;
   int get colorAlpha => Get.isDarkMode ? 200 : 120;
+  bool get shouldUpdateFromDeviceWallpaper => settings.pickColorsFromDeviceWallpaper.value;
 
   final Rx<NamidaColor> _namidaColor = NamidaColor(
     used: playerStaticColor,
@@ -45,6 +47,8 @@ class CurrentColor {
   /// Same fields exists in [Player] class, they can be used but these ones ensure updating the color only after extracting.
   final currentPlayingTrack = Rxn<Selectable>();
   final currentPlayingIndex = 0.obs;
+
+  ColorScheme? deviceWallpaperColorScheme;
 
   final isGeneratingAllColorPalettes = false.obs;
 
@@ -98,11 +102,51 @@ class CurrentColor {
     );
   }
 
+  Future<void> refreshColorsAfterResumeApp() async {
+    final namidaColor = await getPlayerColorFromDeviceWallpaper(forceCheck: true);
+    if (namidaColor != null && settings.autoColor.value && shouldUpdateFromDeviceWallpaper) {
+      _namidaColor.value = namidaColor;
+      _updateCurrentPaletteHalfs(namidaColor);
+    }
+  }
+
+  Future<ColorScheme?> _getDeviceWallpaperColorScheme({bool forceCheck = false}) async {
+    if (deviceWallpaperColorScheme == null || forceCheck) {
+      final accentColors = await DynamicColorPlugin.getCorePalette();
+      final cs = accentColors?.toColorScheme();
+      deviceWallpaperColorScheme = cs;
+      return cs;
+    } else {
+      return deviceWallpaperColorScheme;
+    }
+  }
+
+  Future<NamidaColor?> getPlayerColorFromDeviceWallpaper({bool forceCheck = false, bool customAlpha = true}) async {
+    final accentColorsScheme = await _getDeviceWallpaperColorScheme(forceCheck: forceCheck);
+    final accentColor = accentColorsScheme?.secondary;
+    if (accentColor != null) {
+      final colorWithAlpha = customAlpha ? accentColor.withAlpha(colorAlpha) : accentColor;
+      return NamidaColor(
+        used: colorWithAlpha,
+        mix: colorWithAlpha,
+        palette: [colorWithAlpha],
+      );
+    }
+    return null;
+  }
+
   Future<void> updatePlayerColorFromTrack(Selectable? track, int? index, {bool updateIndexOnly = false}) async {
     if (!updateIndexOnly && track != null && settings.autoColor.value) {
-      final color = await getTrackColors(track.track);
-      _namidaColor.value = color;
-      _updateCurrentPaletteHalfs(color);
+      NamidaColor? namidaColor;
+      if (shouldUpdateFromDeviceWallpaper) {
+        namidaColor = await getPlayerColorFromDeviceWallpaper();
+      } else {
+        namidaColor = await getTrackColors(track.track);
+      }
+      if (namidaColor != null) {
+        _namidaColor.value = namidaColor;
+        _updateCurrentPaletteHalfs(namidaColor);
+      }
     }
     if (track != null) {
       currentPlayingTrack.value = null; // nullifying to re-assign safely if subtype has changed

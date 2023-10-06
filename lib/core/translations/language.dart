@@ -414,6 +414,7 @@ class Language extends LanguageKeys {
 			PERCENTAGE = getKey("PERCENTAGE");
 			PERFORMANCE_NOTE = getKey("PERFORMANCE_NOTE");
 			PERMISSION_UPDATE = getKey("PERMISSION_UPDATE");
+			PICK_COLORS_FROM_DEVICE_WALLPAPER = getKey("PICK_COLORS_FROM_DEVICE_WALLPAPER");
 			PICK_FROM_STORAGE = getKey("PICK_FROM_STORAGE");
 			PINNED = getKey("PINNED");
 			PITCH = getKey("PITCH");
@@ -634,6 +635,7 @@ class Language extends LanguageKeys {
     }
   }
 }
+
 
 
 

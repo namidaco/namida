@@ -875,13 +875,13 @@ class YoutubeController {
 
   void dispose({bool closeCurrentDownloadClient = true, bool closeAllClients = false}) {
     if (closeCurrentDownloadClient) {
-      downloadClient?.close();
+      downloadClient?.close(force: true);
       downloadClient = null;
     }
 
     if (closeAllClients) {
       for (final c in _downloadClientsMap.values) {
-        c.close();
+        c.close(force: true);
       }
     }
   }

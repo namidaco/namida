@@ -20,6 +20,10 @@ import 'package:namida/ui/widgets/settings_card.dart';
 class ThemeSetting extends StatelessWidget {
   const ThemeSetting({super.key});
 
+  Future<void> _refreshColorCurrentTrack() async {
+    await CurrentColor.inst.updatePlayerColorFromTrack(Player.inst.nowPlayingTWD, null);
+  }
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -46,11 +50,26 @@ class ThemeSetting extends StatelessWidget {
                   if (isTrue) {
                     CurrentColor.inst.updatePlayerColorFromColor(playerStaticColor);
                   } else {
-                    await CurrentColor.inst.updatePlayerColorFromTrack(Player.inst.nowPlayingTWD, null);
+                    await _refreshColorCurrentTrack();
                   }
                 },
               ),
             ),
+            // Android S/12+
+            if (kSdkVersion >= 31)
+              Obx(
+                () => CustomSwitchListTile(
+                  enabled: settings.autoColor.value,
+                  icon: Broken.gallery_import,
+                  title: lang.PICK_COLORS_FROM_DEVICE_WALLPAPER,
+                  value: settings.pickColorsFromDeviceWallpaper.value,
+                  onChanged: (isTrue) async {
+                    settings.save(pickColorsFromDeviceWallpaper: !isTrue);
+
+                    await _refreshColorCurrentTrack();
+                  },
+                ),
+              ),
             ...[false, true].map(
               (isDark) => Obx(
                 () {

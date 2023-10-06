@@ -347,6 +347,7 @@ class LanguageKeys {
   late String PERCENTAGE;
   late String PERFORMANCE_NOTE;
   late String PERMISSION_UPDATE;
+  late String PICK_COLORS_FROM_DEVICE_WALLPAPER;
   late String PICK_FROM_STORAGE;
   late String PINNED;
   late String PITCH;

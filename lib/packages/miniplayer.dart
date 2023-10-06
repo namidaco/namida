@@ -142,8 +142,11 @@ class MiniPlayerSwitchers extends StatelessWidget {
               }
             },
             onResume: () async {
+              CurrentColor.inst.refreshColorsAfterResumeApp();
+              
               VideoController.inst.isCurrentlyInBackground = false;
               await NamidaNavigator.inst.exitFullScreen(setOrientations: false);
+
             },
             child: Obx(
               () => AnimatedSwitcher(
