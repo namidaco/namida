@@ -13,7 +13,8 @@ import 'package:namida/youtube/widgets/yt_video_card.dart';
 
 class YoutubeSearchResultsPage extends StatefulWidget {
   final String searchText;
-  const YoutubeSearchResultsPage({super.key, required this.searchText});
+  final void Function(StreamInfoItem video)? onVideoTap;
+  const YoutubeSearchResultsPage({super.key, required this.searchText, this.onVideoTap});
 
   @override
   State<YoutubeSearchResultsPage> createState() => YoutubeSearchResultsPageState();
@@ -80,6 +81,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                               isImageImportantInCache: false,
                               video: item,
                               playlistID: null,
+                              onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item as StreamInfoItem),
                             );
                           case YoutubePlaylist:
                             return YoutubePlaylistCard(playlist: item);

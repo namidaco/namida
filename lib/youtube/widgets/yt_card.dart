@@ -129,6 +129,8 @@ class YoutubeCard extends StatelessWidget {
                       const Spacer(),
                       if (displayChannelThumbnail || displaythirdLineText)
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             if (displayChannelThumbnail) ...[
                               NamidaBasicShimmer(
@@ -144,18 +146,23 @@ class YoutubeCard extends StatelessWidget {
                               ),
                               const SizedBox(width: 6.0),
                             ],
-                            NamidaBasicShimmer(
-                              width: context.width * 0.2,
-                              height: 8.0,
-                              shimmerEnabled: thirdLineText == '' || !displaythirdLineText,
-                              child: Text(
-                                thirdLineText,
-                                style: context.textTheme.displaySmall?.copyWith(
-                                  fontWeight: FontWeight.w400,
-                                  fontSize: 11.0.multipliedFontScale,
+                            Expanded(
+                              child: NamidaBasicShimmer(
+                                width: null,
+                                height: 8.0,
+                                shimmerEnabled: thirdLineText == '' || !displaythirdLineText,
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: Text(
+                                    thirdLineText,
+                                    style: context.textTheme.displaySmall?.copyWith(
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 11.0.multipliedFontScale,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             if (checkmarkStatus != null) ...[

@@ -25,6 +25,7 @@ import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
 import 'package:namida/main.dart';
+import 'package:namida/youtube/pages/yt_search_results_page.dart';
 
 /// Tested And Working on:
 /// - Android 9 (API 29): Internal ✓, External X `Needs SAF`
@@ -43,16 +44,88 @@ Future<void> showEditTracksTagsDialog(List<Track> tracks, Color? colorScheme) as
 
 Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) async {
   final singleTrack = tracks.first;
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final TextEditingController controller = TextEditingController();
+  final formKey = GlobalKey<FormState>();
+  final controller = TextEditingController();
+  final ytSearchController = TextEditingController();
+  final ytSearchPageController = GlobalKey<YoutubeSearchResultsPageState>();
   final ytlink = singleTrack.youtubeLink;
   controller.text = ytlink;
   NamidaNavigator.inst.navigateDialog(
-    dialog: Form(
+    colorScheme: colorScheme,
+    dialogBuilder: (theme) => Form(
       key: formKey,
       child: CustomBlurryDialog(
         title: lang.SET_YOUTUBE_LINK,
         contentPadding: const EdgeInsets.all(12.0).add(const EdgeInsets.only(top: 12.0)),
+        leftAction: NamidaButton(
+          text: lang.SEARCH,
+          onPressed: () {
+            final trExt = singleTrack.toTrackExt();
+            final title = trExt.title == UnknownTags.TITLE ? null : trExt.title;
+            final album = trExt.album == UnknownTags.ALBUM ? null : trExt.album;
+            final artist = trExt.originalArtist == UnknownTags.ARTIST ? null : trExt.originalArtist;
+            final searchText = [
+              if (title != null) title,
+              if (album != null) album,
+              if (artist != null) artist,
+            ].join(' ');
+            ytSearchController.text = searchText;
+            NamidaNavigator.inst.navigateDialog(
+              colorScheme: colorScheme,
+              dialogBuilder: (theme) => CustomBlurryDialog(
+                contentPadding: EdgeInsets.zero,
+                insetPadding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                child: SizedBox(
+                  width: Get.width,
+                  height: Get.height * 0.7,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 8.0),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: CustomTagTextField(
+                          controller: ytSearchController,
+                          keyboardType: TextInputType.text,
+                          hintText: searchText,
+                          labelText: lang.SEARCH,
+                          onFieldSubmitted: (value) {
+                            ytSearchPageController.currentState?.fetchSearch(customText: ytSearchController.text);
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+                      Expanded(
+                        child: YoutubeSearchResultsPage(
+                          key: ytSearchPageController,
+                          searchText: searchText,
+                          onVideoTap: (video) {
+                            NamidaNavigator.inst.closeDialog();
+                            final url = video.url;
+                            if (url != null) {
+                              controller.text = url;
+                              Get.showSnackbar(GetSnackBar(
+                                snackPosition: SnackPosition.BOTTOM,
+                                snackStyle: SnackStyle.FLOATING,
+                                animationDuration: const Duration(milliseconds: 300),
+                                duration: const Duration(seconds: 2),
+                                leftBarIndicatorColor: colorScheme,
+                                messageText: Text(
+                                  'Set to "${video.name ?? ''}" by "${video.uploaderName ?? ''}"',
+                                  style: theme.textTheme.displaySmall?.copyWith(color: Colors.white60),
+                                ),
+                                borderRadius: 0,
+                              ));
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
         actions: [
           const CancelButton(),
           NamidaButton(
@@ -1015,6 +1088,7 @@ class CustomTagTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final RxBool? didEditField;
   final AutovalidateMode? validatorMode;
+  final void Function(String value)? onFieldSubmitted;
   CustomTagTextField({
     super.key,
     required this.controller,
@@ -1030,6 +1104,7 @@ class CustomTagTextField extends StatelessWidget {
     this.keyboardType,
     this.didEditField,
     this.validatorMode,
+    this.onFieldSubmitted,
   });
   final RxBool didChange = false.obs;
   @override
@@ -1054,6 +1129,7 @@ class CustomTagTextField extends StatelessWidget {
             didChange.value = true;
           }
         },
+        onFieldSubmitted: onFieldSubmitted,
         decoration: InputDecoration(
           label: labelText != ''
               ? Obx(() {

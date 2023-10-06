@@ -204,32 +204,6 @@ class AdvancedSettings extends StatelessWidget {
           const _CompressImagesListTile(),
 
           () {
-            const stepper = 8 * 32;
-            const minimumValue = stepper;
-            int getValue(int mb) => (mb - minimumValue) ~/ stepper;
-            return Obx(
-              () {
-                return CustomListTile(
-                  leading: const StackedIcon(
-                    baseIcon: Broken.video,
-                    secondaryIcon: Broken.cpu,
-                  ),
-                  title: lang.MAX_VIDEO_CACHE_SIZE,
-                  trailing: NamidaWheelSlider<int>(
-                    totalCount: getValue(10 * 1024), // 10 GB
-                    initValue: getValue(settings.videosMaxCacheInMB.value),
-                    itemSize: 5,
-                    text: (settings.videosMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
-                    onValueChanged: (val) {
-                      settings.save(videosMaxCacheInMB: minimumValue + (val * stepper));
-                    },
-                  ),
-                );
-              },
-            );
-          }(),
-
-          () {
             const stepper = 8 * 4;
             const minimumValue = stepper;
             int getValue(int mb) => (mb - minimumValue) ~/ stepper;
@@ -248,6 +222,32 @@ class AdvancedSettings extends StatelessWidget {
                     text: (settings.imagesMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
                     onValueChanged: (val) {
                       settings.save(imagesMaxCacheInMB: minimumValue + (val * stepper));
+                    },
+                  ),
+                );
+              },
+            );
+          }(),
+
+          () {
+            const stepper = 8 * 32;
+            const minimumValue = stepper;
+            int getValue(int mb) => (mb - minimumValue) ~/ stepper;
+            return Obx(
+              () {
+                return CustomListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.video,
+                    secondaryIcon: Broken.cpu,
+                  ),
+                  title: lang.MAX_VIDEO_CACHE_SIZE,
+                  trailing: NamidaWheelSlider<int>(
+                    totalCount: getValue(10 * 1024), // 10 GB
+                    initValue: getValue(settings.videosMaxCacheInMB.value),
+                    itemSize: 5,
+                    text: (settings.videosMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
+                    onValueChanged: (val) {
+                      settings.save(videosMaxCacheInMB: minimumValue + (val * stepper));
                     },
                   ),
                 );

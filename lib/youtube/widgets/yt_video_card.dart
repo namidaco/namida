@@ -15,12 +15,14 @@ class YoutubeVideoCard extends StatelessWidget {
   final StreamInfoItem? video;
   final PlaylistID? playlistID;
   final bool isImageImportantInCache;
+  final void Function()? onTap;
 
   const YoutubeVideoCard({
     super.key,
     required this.video,
     required this.playlistID,
     required this.isImageImportantInCache,
+    this.onTap,
   });
 
   @override
@@ -47,15 +49,16 @@ class YoutubeVideoCard extends StatelessWidget {
           if (video?.textualUploadDate != null) video?.textualUploadDate,
         ].join(' - '),
         thirdLineText: video?.uploaderName ?? '',
-        onTap: () {
-          if (video?.id != null) {
-            Player.inst.playOrPause(
-              0,
-              [YoutubeID(id: videoId, playlistID: playlistID)],
-              QueueSource.others,
-            );
-          }
-        },
+        onTap: onTap ??
+            () {
+              if (video?.id != null) {
+                Player.inst.playOrPause(
+                  0,
+                  [YoutubeID(id: videoId, playlistID: playlistID)],
+                  QueueSource.others,
+                );
+              }
+            },
         channelThumbnailUrl: video?.uploaderAvatarUrl,
         displayChannelThumbnail: true,
         smallBoxText: video?.duration?.inSeconds.secondsLabel,

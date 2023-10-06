@@ -839,9 +839,8 @@ class VideoController {
     if (id == null && channelUrl == null) return null;
 
     void trySavingLastAccessed(File? file) {
-      if (isImportantInCache) {
-        file?.setLastAccessed(DateTime.now());
-      }
+      final time = isImportantInCache ? DateTime.now() : DateTime(1970);
+      file?.setLastAccessed(time);
     }
 
     final file = id != null ? File("${AppDirs.YT_THUMBNAILS}$id.png") : File("${AppDirs.YT_THUMBNAILS_CHANNELS}${channelUrl?.split('/').last}.png");
