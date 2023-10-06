@@ -229,6 +229,32 @@ class AdvancedSettings extends StatelessWidget {
             );
           }(),
 
+          () {
+            const stepper = 8 * 4;
+            const minimumValue = stepper;
+            int getValue(int mb) => (mb - minimumValue) ~/ stepper;
+            return Obx(
+              () {
+                return CustomListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.gallery,
+                    secondaryIcon: Broken.cpu,
+                  ),
+                  title: lang.MAX_IMAGE_CACHE_SIZE,
+                  trailing: NamidaWheelSlider<int>(
+                    totalCount: getValue(4 * 1024), // 4 GB
+                    initValue: getValue(settings.imagesMaxCacheInMB.value),
+                    itemSize: 5,
+                    text: (settings.imagesMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
+                    onValueChanged: (val) {
+                      settings.save(imagesMaxCacheInMB: minimumValue + (val * stepper));
+                    },
+                  ),
+                );
+              },
+            );
+          }(),
+
           Obx(
             () => CustomListTile(
               leading: const StackedIcon(

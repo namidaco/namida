@@ -31,12 +31,12 @@ class _YoutubePageState extends State<YoutubePage> with AutomaticKeepAliveClient
     return BackgroundWrapper(
       child: Obx(
         () {
-          final searchList = YoutubeController.inst.homepageFeed;
+          final feed = YoutubeController.inst.homepageFeed;
           final List<YoutubeFeed?> l = [];
-          if (searchList.isEmpty) {
+          if (feed.isEmpty) {
             l.addAll(List.filled(20, null));
           } else {
-            l.addAll(searchList);
+            l.addAll(feed);
           }
           return NamidaListView(
             // padding: const EdgeInsets.only(top: 32.0, bottom: kBottomPadding),
@@ -51,6 +51,7 @@ class _YoutubePageState extends State<YoutubePage> with AutomaticKeepAliveClient
               final feedItem = l[i];
               return YoutubeVideoCard(
                 key: ValueKey(i),
+                isImageImportantInCache: false,
                 video: feedItem is StreamInfoItem ? feedItem : null,
                 playlistID: null,
               );

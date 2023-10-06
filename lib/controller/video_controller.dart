@@ -126,7 +126,9 @@ class NamidaVideoWidget extends StatelessWidget {
 class VideoController {
   static VideoController get inst => _instance;
   static final VideoController _instance = VideoController._internal();
-  VideoController._internal();
+  VideoController._internal() {
+    _trimExcessImageCache();
+  }
 
   /// Used mainly to determine wether to pause playback whenever video buffers or not.
   bool isCurrentlyInBackground = false;
@@ -793,14 +795,59 @@ class VideoController {
 
     return thumbnailCompleter.future;
   }
+
+  Future<void> _trimExcessImageCache() async {
+    final totalMaxBytes = settings.imagesMaxCacheInMB.value * 1024 * 1024;
+    final paramters = {
+      'maxBytes': totalMaxBytes,
+      'dirPath': AppDirs.YT_THUMBNAILS,
+      'dirPathChannel': AppDirs.YT_THUMBNAILS_CHANNELS,
+    };
+    await _trimExcessImageCacheIsolate.thready(paramters);
   }
 
-  Future<File?> getYoutubeThumbnailAndCache({String? id, String? channelUrl}) async {
+  /// Returns total deleted bytes.
+  static Future<int> _trimExcessImageCacheIsolate(Map map) async {
+    final maxBytes = map['maxBytes'] as int;
+    final dirPath = map['dirPath'] as String;
+    final dirPathChannel = map['dirPathChannel'] as String;
+
+    int totalDeletedBytes = 0;
+
+    final imagesVideos = Directory(dirPath).listSync();
+    final imagesChannels = Directory(dirPathChannel).listSync();
+    final images = [...imagesVideos, ...imagesChannels];
+
+    images.sortBy((e) => e.statSync().accessed);
+    int totalBytes = images.fold(0, (previousValue, element) => previousValue + element.statSync().size);
+
+    // -- deleting
+    for (final image in images) {
+      if (totalBytes <= maxBytes) break; // better than checking with each loop
+      final deletedSize = image.statSync().size;
+      try {
+        image.deleteSync();
+        totalBytes -= deletedSize;
+        totalDeletedBytes += deletedSize;
+      } catch (_) {}
+    }
+
+    return totalDeletedBytes;
+  }
+
+  Future<File?> getYoutubeThumbnailAndCache({String? id, String? channelUrl, bool isImportantInCache = true}) async {
     if (id == null && channelUrl == null) return null;
+
+    void trySavingLastAccessed(File? file) {
+      if (isImportantInCache) {
+        file?.setLastAccessed(DateTime.now());
+      }
+    }
 
     final file = id != null ? File("${AppDirs.YT_THUMBNAILS}$id.png") : File("${AppDirs.YT_THUMBNAILS_CHANNELS}${channelUrl?.split('/').last}.png");
     if (await file.exists()) {
       printy('Downloading Thumbnail Already Exists');
+      trySavingLastAccessed(file);
       return file;
     }
 
@@ -809,7 +856,7 @@ class VideoController {
     final bytes = await getYoutubeThumbnailAsBytes(youtubeId: id, url: channelUrl);
     printy('Downloading Thumbnail Finished');
 
-    return id != null
+    final savedFile = id != null
         ? await _saveThumbnailToStorage(
             videoPath: null,
             bytes: bytes,
@@ -821,6 +868,10 @@ class VideoController {
             file: file,
             bytes: bytes,
           );
+
+    trySavingLastAccessed(savedFile);
+
+    return savedFile;
   }
 
   File? getYoutubeThumbnailFromCacheSync({String? id, String? channelUrl}) {

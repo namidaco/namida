@@ -107,7 +107,8 @@ class SettingsController {
   final RxInt isTrackPlayedSecondsCount = 40.obs;
   final RxInt isTrackPlayedPercentageCount = 40.obs;
   final RxInt waveformTotalBars = 140.obs;
-  final RxInt videosMaxCacheInMB = (2 * 1024).obs;
+  final RxInt videosMaxCacheInMB = (2 * 1024).obs; // 2GB
+  final RxInt imagesMaxCacheInMB = (8 * 32).obs; // 256 MB
   final RxInt ytMiniplayerDimAfterSeconds = 15.obs;
   final RxDouble ytMiniplayerDimOpacity = 0.5.obs;
   final RxDouble playerVolume = 1.0.obs;
@@ -310,6 +311,7 @@ class SettingsController {
       isTrackPlayedPercentageCount.value = json['isTrackPlayedPercentageCount'] ?? isTrackPlayedPercentageCount.value;
       waveformTotalBars.value = json['waveformTotalBars'] ?? waveformTotalBars.value;
       videosMaxCacheInMB.value = json['videosMaxCacheInMB'] ?? videosMaxCacheInMB.value;
+      imagesMaxCacheInMB.value = json['imagesMaxCacheInMB'] ?? imagesMaxCacheInMB.value;
       ytMiniplayerDimAfterSeconds.value = json['ytMiniplayerDimAfterSeconds'] ?? ytMiniplayerDimAfterSeconds.value;
       ytMiniplayerDimOpacity.value = json['ytMiniplayerDimOpacity'] ?? ytMiniplayerDimOpacity.value;
       playerVolume.value = json['playerVolume'] ?? playerVolume.value;
@@ -489,6 +491,7 @@ class SettingsController {
       'isTrackPlayedPercentageCount': isTrackPlayedPercentageCount.value,
       'waveformTotalBars': waveformTotalBars.value,
       'videosMaxCacheInMB': videosMaxCacheInMB.value,
+      'imagesMaxCacheInMB': imagesMaxCacheInMB.value,
       'ytMiniplayerDimAfterSeconds': ytMiniplayerDimAfterSeconds.value,
       'ytMiniplayerDimOpacity': ytMiniplayerDimOpacity.value,
       'playerVolume': playerVolume.value,
@@ -642,6 +645,7 @@ class SettingsController {
     bool? pickColorsFromDeviceWallpaper,
     int? waveformTotalBars,
     int? videosMaxCacheInMB,
+    int? imagesMaxCacheInMB,
     int? ytMiniplayerDimAfterSeconds,
     double? ytMiniplayerDimOpacity,
     double? playerVolume,
@@ -969,6 +973,9 @@ class SettingsController {
     }
     if (videosMaxCacheInMB != null) {
       this.videosMaxCacheInMB.value = videosMaxCacheInMB;
+    }
+    if (imagesMaxCacheInMB != null) {
+      this.imagesMaxCacheInMB.value = imagesMaxCacheInMB;
     }
     if (ytMiniplayerDimAfterSeconds != null) {
       this.ytMiniplayerDimAfterSeconds.value = ytMiniplayerDimAfterSeconds;

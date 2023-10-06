@@ -31,6 +31,7 @@ class YoutubePlaylistsView extends StatelessWidget {
                 () {
                   final idsExist = idsToAdd.isEmpty ? null : playlist.tracks.firstWhereEff((e) => e.id == idsToAdd.firstOrNull) != null;
                   return YoutubeCard(
+                    isImageImportantInCache: true,
                     extractColor: true,
                     thumbnailWidthPercentage: 0.8,
                     videoId: playlist.tracks.firstOrNull?.id,

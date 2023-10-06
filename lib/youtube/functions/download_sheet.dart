@@ -242,6 +242,7 @@ Future<void> showDownloadVideoBottomSheet({
                             () => Row(
                               children: [
                                 YoutubeThumbnail(
+                                  isImportantInCache: true,
                                   borderRadius: 10.0,
                                   videoId: videoId,
                                   width: context.width * 0.2,

@@ -77,6 +77,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                         switch (item.runtimeType) {
                           case StreamInfoItem:
                             return YoutubeVideoCard(
+                              isImageImportantInCache: false,
                               video: item,
                               playlistID: null,
                             );

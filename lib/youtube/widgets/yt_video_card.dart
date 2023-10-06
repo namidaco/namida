@@ -14,10 +14,13 @@ import 'package:namida/youtube/widgets/yt_card.dart';
 class YoutubeVideoCard extends StatelessWidget {
   final StreamInfoItem? video;
   final PlaylistID? playlistID;
+  final bool isImageImportantInCache;
+
   const YoutubeVideoCard({
     super.key,
     required this.video,
     required this.playlistID,
+    required this.isImageImportantInCache,
   });
 
   @override
@@ -33,6 +36,7 @@ class YoutubeVideoCard extends StatelessWidget {
       openOnTap: false,
       childrenDefault: menuItems,
       child: YoutubeCard(
+        isImageImportantInCache: isImageImportantInCache,
         borderRadius: 12.0,
         videoId: video?.id,
         thumbnailUrl: null,

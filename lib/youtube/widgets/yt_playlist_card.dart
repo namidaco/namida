@@ -39,6 +39,7 @@ class YoutubePlaylistCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final count = playlist?.streamCount;
     return YoutubeCard(
+      isImageImportantInCache: false,
       extractColor: true,
       borderRadius: 12.0,
       videoId: null,

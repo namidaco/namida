@@ -333,6 +333,7 @@ class Language extends LanguageKeys {
 			MATCH_ALL_TRACKS = getKey("MATCH_ALL_TRACKS");
 			MATCH_ALL_TRACKS_NOTE = getKey("MATCH_ALL_TRACKS_NOTE");
 			MAXIMUM = getKey("MAXIMUM");
+			MAX_IMAGE_CACHE_SIZE = getKey("MAX_IMAGE_CACHE_SIZE");
 			MAX_VIDEO_CACHE_SIZE = getKey("MAX_VIDEO_CACHE_SIZE");
 			METADATA_CACHE = getKey("METADATA_CACHE");
 			METADATA_EDIT_FAILED_SUBTITLE = getKey("METADATA_EDIT_FAILED_SUBTITLE");
@@ -635,6 +636,7 @@ class Language extends LanguageKeys {
     }
   }
 }
+
 
 
 

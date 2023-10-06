@@ -137,6 +137,7 @@ class YoutubeHistoryPage extends StatelessWidget {
                                   const SizedBox(width: 12.0),
                                   YoutubeThumbnail(
                                     key: Key(video.id),
+                                    isImportantInCache: true,
                                     width: Dimensions.youtubeCardItemHeight * 16 / 9,
                                     height: Dimensions.youtubeCardItemHeight,
                                     videoId: video.id,

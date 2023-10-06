@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:ffmpeg_kit_flutter_min/ffmpeg_kit.dart';
@@ -213,26 +212,17 @@ class NamidaFFMPEG {
         final ytId = tr?.youtubeID;
         if (ytId == null || ytId == '') continue;
 
-        final trackThumbnailCached = "${AppDirs.YT_THUMBNAILS}$ytId.png";
-        String? cachedThumbnailPath;
-        Uint8List? bytes;
+        File? cachedThumbnail;
 
-        final doesCacheExist = await File(trackThumbnailCached).exists();
+        cachedThumbnail = await VideoController.inst.getYoutubeThumbnailAndCache(id: ytId);
 
-        if (doesCacheExist) {
-          cachedThumbnailPath = trackThumbnailCached;
-        } else {
-          bytes = await VideoController.inst.getYoutubeThumbnailAsBytes(youtubeId: ytId);
-        }
-
-        if (cachedThumbnailPath == null && bytes == null) {
+        if (cachedThumbnail == null) {
           currentFailed++;
         } else {
           final file = await Indexer.inst.extractOneArtwork(
             filee.path,
             forceReExtract: true,
-            bytes: bytes,
-            artworkPath: cachedThumbnailPath,
+            artworkPath: cachedThumbnail.path,
           );
           if (file != null) {
             final didUpdate = await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: filee.path, thumbnailPath: file.path);

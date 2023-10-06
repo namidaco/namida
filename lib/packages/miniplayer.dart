@@ -121,6 +121,7 @@ class MiniPlayerSwitchers extends StatelessWidget {
                       fallbackChild: Player.inst.nowPlayingVideoID?.id == null
                           ? null
                           : YoutubeThumbnail(
+                              isImportantInCache: true,
                               width: 64.0,
                               height: 64.0 * 9 / 16,
                               borderRadius: 0,
@@ -143,10 +144,9 @@ class MiniPlayerSwitchers extends StatelessWidget {
             },
             onResume: () async {
               CurrentColor.inst.refreshColorsAfterResumeApp();
-              
+
               VideoController.inst.isCurrentlyInBackground = false;
               await NamidaNavigator.inst.exitFullScreen(setOrientations: false);
-
             },
             child: Obx(
               () => AnimatedSwitcher(

@@ -31,6 +31,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final bool extractColor;
   final double blur;
   final bool compressed;
+  final bool isImportantInCache;
 
   const YoutubeThumbnail({
     super.key,
@@ -51,6 +52,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.extractColor = true,
     this.blur = 1.5,
     this.compressed = true,
+    required this.isImportantInCache,
   });
 
   @override
@@ -74,7 +76,11 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
     _dontTouchMeImFetchingThumbnail = Timer(const Duration(seconds: 8), () {});
     imagePath = widget.localImagePath;
     if (imagePath == null) {
-      final res = await VideoController.inst.getYoutubeThumbnailAndCache(id: widget.videoId, channelUrl: widget.channelUrl);
+      final res = await VideoController.inst.getYoutubeThumbnailAndCache(
+        id: widget.videoId,
+        channelUrl: widget.channelUrl,
+        isImportantInCache: widget.isImportantInCache,
+      );
       widget.onImageReady?.call(res);
       imagePath = res?.path;
     }

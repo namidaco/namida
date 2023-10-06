@@ -138,6 +138,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                       },
                                       swipeUpToFullscreen: true,
                                       fallbackChild: YoutubeThumbnail(
+                                        isImportantInCache: true,
                                         width: finalthumbnailsize,
                                         height: finalthumbnailsize * 9 / 16,
                                         borderRadius: 0,
@@ -490,6 +491,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                     shimmerEnabled: channelThumbnail == null,
                                                     child: YoutubeThumbnail(
                                                       key: Key(channelThumbnail ?? ''),
+                                                      isImportantInCache: true,
                                                       channelUrl: channelThumbnail ?? '',
                                                       width: 48.0,
                                                       height: 48.0,
@@ -562,6 +564,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                   final item = YoutubeController.inst.currentRelatedVideos[index];
                                                   if (item is StreamInfoItem || item == null) {
                                                     return YoutubeVideoCard(
+                                                      isImageImportantInCache: false,
                                                       video: item as StreamInfoItem?,
                                                       playlistID: null,
                                                     );

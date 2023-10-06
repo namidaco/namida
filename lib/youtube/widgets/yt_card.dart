@@ -29,6 +29,7 @@ class YoutubeCard extends StatelessWidget {
   final List<NamidaPopupItem> menuChildrenDefault;
   final bool isCircle;
   final List<Widget> bottomRightWidgets;
+  final bool isImageImportantInCache;
 
   const YoutubeCard({
     super.key,
@@ -53,6 +54,7 @@ class YoutubeCard extends StatelessWidget {
     this.menuChildrenDefault = const [],
     this.isCircle = false,
     this.bottomRightWidgets = const [],
+    required this.isImageImportantInCache,
   });
 
   @override
@@ -78,6 +80,7 @@ class YoutubeCard extends StatelessWidget {
                   height: thumbnailHeight,
                   shimmerEnabled: shimmerEnabled,
                   child: YoutubeThumbnail(
+                    isImportantInCache: isImageImportantInCache,
                     videoId: videoId,
                     channelUrl: thumbnailUrl,
                     width: thumbnailWidth,
@@ -133,6 +136,7 @@ class YoutubeCard extends StatelessWidget {
                                 height: 20.0,
                                 shimmerEnabled: channelThumbnailUrl == null || !displayChannelThumbnail,
                                 child: YoutubeThumbnail(
+                                  isImportantInCache: false,
                                   channelUrl: channelThumbnailUrl ?? '',
                                   width: 20.0,
                                   isCircle: true,
