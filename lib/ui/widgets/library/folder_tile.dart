@@ -6,13 +6,12 @@ import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 
 class FolderTile extends StatelessWidget {
   final Folder folder;
@@ -36,6 +35,7 @@ class FolderTile extends StatelessWidget {
         bgColor: context.theme.cardColor,
         borderRadius: 10.0,
         onTap: () => NamidaOnTaps.inst.onFolderTap(folder),
+        onLongPress: () => NamidaDialogs.inst.showFolderDialog(folder: folder, tracks: tracks),
         child: SizedBox(
           height: Dimensions.inst.trackTileItemExtent,
           child: Padding(
@@ -109,18 +109,7 @@ class FolderTile extends StatelessWidget {
                 ),
                 MoreIcon(
                   padding: 6.0,
-                  onPressed: () {
-                    showGeneralPopupDialog(
-                      tracks,
-                      folder.folderName,
-                      [
-                        tracks.displayTrackKeyword,
-                        tracks.totalDurationFormatted,
-                      ].join(' • '),
-                      QueueSource.folder,
-                      thirdLineText: tracks.totalSizeFormatted,
-                    );
-                  },
+                  onPressed: () => NamidaDialogs.inst.showFolderDialog(folder: folder, tracks: tracks),
                 ),
                 const SizedBox(
                   width: 4.0,

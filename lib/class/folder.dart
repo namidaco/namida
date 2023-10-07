@@ -22,7 +22,7 @@ class Folder {
   int get hashCode => path.hashCode;
 
   @override
-  String toString() => "path: $path, tracks: ${tracks.length}";
+  String toString() => "Folder(path: $path, tracks: ${tracks.length})";
 }
 
 extension FolderUtils on Folder {

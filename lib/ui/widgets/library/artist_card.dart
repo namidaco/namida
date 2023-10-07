@@ -44,6 +44,7 @@ class ArtistCard extends StatelessWidget {
         child: Column(
           children: [
             Stack(
+              clipBehavior: Clip.none,
               alignment: Alignment.bottomCenter,
               children: [
                 NamidaHero(
@@ -65,7 +66,7 @@ class ArtistCard extends StatelessWidget {
                 ),
                 if (bottomCenterText != null)
                   Positioned(
-                    bottom: -2.0,
+                    bottom: -5.0,
                     child: Container(
                       padding: const EdgeInsets.all(6.0),
                       decoration: BoxDecoration(

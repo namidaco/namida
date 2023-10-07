@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
@@ -17,14 +19,18 @@ class SearchSortController {
 
   String lastSearchText = '';
 
-  bool get isSearching => (trackSearchTemp.isNotEmpty || albumSearchTemp.isNotEmpty || artistSearchTemp.isNotEmpty);
+  bool get isSearching => (trackSearchTemp.isNotEmpty ||
+      albumSearchTemp.isNotEmpty ||
+      artistSearchTemp.isNotEmpty ||
+      genreSearchTemp.isNotEmpty ||
+      playlistSearchTemp.isNotEmpty ||
+      folderSearchTemp.isNotEmpty);
 
   final RxList<Track> trackSearchList = <Track>[].obs;
+  final RxList<String> playlistSearchList = <String>[].obs;
   RxList<String> get albumSearchList => _searchMap[MediaType.album]!;
   RxList<String> get artistSearchList => _searchMap[MediaType.artist]!;
   RxList<String> get genreSearchList => _searchMap[MediaType.genre]!;
-
-  final RxList<String> playlistSearchList = <String>[].obs;
 
   final _searchMap = <MediaType, RxList<String>>{
     MediaType.album: <String>[].obs,
@@ -36,16 +42,25 @@ class SearchSortController {
   final _searchMapTemp = <MediaType, RxList<String>>{
     MediaType.album: <String>[].obs,
     MediaType.artist: <String>[].obs,
+    MediaType.genre: <String>[].obs,
+    MediaType.folder: <String>[].obs,
   };
+
+  final trackSearchTemp = <Track>[].obs;
+  final playlistSearchTemp = <String>[].obs;
   RxList<String> get albumSearchTemp => _searchMapTemp[MediaType.album]!;
   RxList<String> get artistSearchTemp => _searchMapTemp[MediaType.artist]!;
-  final RxList<Track> trackSearchTemp = <Track>[].obs;
+  RxList<String> get genreSearchTemp => _searchMapTemp[MediaType.genre]!;
+  RxList<String> get folderSearchTemp => _searchMapTemp[MediaType.folder]!;
 
   RxList<Track> get tracksInfoList => Indexer.inst.tracksInfoList;
 
   Rx<Map<String, List<Track>>> get mainMapAlbums => Indexer.inst.mainMapAlbums;
   Rx<Map<String, List<Track>>> get mainMapArtists => Indexer.inst.mainMapArtists;
   Rx<Map<String, List<Track>>> get mainMapGenres => Indexer.inst.mainMapGenres;
+  Map<String, List<Track>> get mainMapFolder {
+    return Indexer.inst.mainMapFolders.map((key, value) => MapEntry(key.path.getDirectoryName, value));
+  }
 
   RxMap<String, Playlist> get playlistsMap => PlaylistController.inst.playlistsMap;
 
@@ -54,6 +69,9 @@ class SearchSortController {
     _searchTracks(text, temp: true);
     _searchMediaType(type: MediaType.album, text: text, temp: true);
     _searchMediaType(type: MediaType.artist, text: text, temp: true);
+    _searchMediaType(type: MediaType.genre, text: text, temp: true);
+    _searchPlaylists(text, temp: true);
+    _searchMediaType(type: MediaType.folder, text: text, temp: true);
   }
 
   void searchMedia(String text, MediaType? media) {
@@ -117,6 +135,8 @@ class SearchSortController {
         keys = mainMapArtists.value.keys;
       case MediaType.genre:
         keys = mainMapGenres.value.keys;
+      case MediaType.folder:
+        keys = mainMapFolder.keys;
       default:
         null;
     }
@@ -137,6 +157,7 @@ class SearchSortController {
       'keys': keys,
       'cleanup': _shouldCleanup,
       'text': text,
+      'keyIsPath': type == MediaType.folder,
     };
     final results = await _generalSearchIsolate.thready(parameter);
 
@@ -151,12 +172,16 @@ class SearchSortController {
     }
   }
 
-  void _searchPlaylists(String text) async {
-    playlistSearchList.clear();
-
+  void _searchPlaylists(String text, {bool temp = false}) async {
     if (text == '') {
-      LibraryTab.playlists.textSearchController?.clear();
-      playlistSearchList.addAll(playlistsMap.keys);
+      if (temp) {
+        playlistSearchTemp.clear();
+      } else {
+        LibraryTab.playlists.textSearchController?.clear();
+        playlistSearchList
+          ..clear()
+          ..addAll(playlistsMap.keys);
+      }
       return;
     }
 
@@ -188,7 +213,17 @@ class SearchSortController {
           (sMoods && item.moods.any((element) => textCleanedForSearch(element).contains(lctext)));
     });
 
-    playlistSearchList.addAll(results.map((e) => e.key));
+    final playlists = results.map((e) => e.key);
+
+    if (temp) {
+      playlistSearchTemp
+        ..clear()
+        ..addAll(playlists);
+    } else {
+      playlistSearchList
+        ..clear()
+        ..addAll(playlists);
+    }
   }
 
   void sortAll() {
@@ -557,13 +592,18 @@ class SearchSortController {
   static Iterable<String> _generalSearchIsolate(Map parameters) {
     final keys = parameters['keys'] as Iterable<String>;
     final cleanup = parameters['cleanup'] as bool;
+    final keyIsPath = parameters['keyIsPath'] as bool;
     final text = parameters['text'] as String;
 
     final cleanupFunction = _functionOfCleanup(cleanup);
 
-    final results = keys.where((albumName) => cleanupFunction(albumName).contains(cleanupFunction(text)));
-
-    return results;
+    if (keyIsPath) {
+      final results = keys.where((path) => cleanupFunction(path.split(Platform.pathSeparator).last).contains(cleanupFunction(text)));
+      return results;
+    } else {
+      final results = keys.where((name) => cleanupFunction(name).contains(cleanupFunction(text)));
+      return results;
+    }
   }
 
   bool get _shouldCleanup => settings.enableSearchCleanup.value;

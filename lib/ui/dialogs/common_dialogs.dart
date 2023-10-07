@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -184,6 +185,22 @@ class NamidaDialogs {
       queue: queue,
       forceSquared: true,
       heroTag: 'queue_${queue.date}',
+    );
+  }
+
+  Future<void> showFolderDialog({
+    required Folder folder,
+    required List<Track> tracks,
+  }) async {
+    await showGeneralPopupDialog(
+      tracks,
+      folder.folderName,
+      [
+        tracks.displayTrackKeyword,
+        tracks.totalDurationFormatted,
+      ].join(' • '),
+      QueueSource.folder,
+      thirdLineText: tracks.totalSizeFormatted,
     );
   }
 }

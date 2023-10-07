@@ -1,36 +1,67 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/class/folder.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/pages/main_page.dart';
+import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/album_card.dart';
 import 'package:namida/ui/widgets/library/artist_card.dart';
+import 'package:namida/ui/widgets/library/multi_artwork_card.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/youtube/pages/yt_search_results_page.dart';
 
 class SearchPage extends StatelessWidget {
   const SearchPage({super.key});
 
+  SliverToBoxAdapter _horizontalSliverList<T>({
+    required double height,
+    required double? itemExtent,
+    required List<T> list,
+    required Widget Function(T item) builder,
+  }) {
+    return SliverToBoxAdapter(
+      child: SizedBox(
+        height: height + 24.0,
+        child: ListView.builder(
+          clipBehavior: Clip.none,
+          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+          scrollDirection: Axis.horizontal,
+          itemExtent: itemExtent,
+          itemCount: list.length,
+          itemBuilder: (context, i) {
+            return builder(list[i]);
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ScrollController scrollController = ScrollController();
     final albumDimensions = Dimensions.inst.getAlbumCardDimensions(Dimensions.albumSearchGridCount);
     final artistDimensions = Dimensions.inst.getArtistCardDimensions(Dimensions.artistSearchGridCount);
+    final genreDimensions = Dimensions.inst.getArtistCardDimensions(Dimensions.genreSearchGridCount);
+    final playlistDimensions = Dimensions.inst.getArtistCardDimensions(Dimensions.playlistSearchGridCount);
     return BackgroundWrapper(
       child: NamidaTabView(
         initialIndex: () {
@@ -62,164 +93,336 @@ class SearchPage extends StatelessWidget {
           lang.YOUTUBE,
         ],
         children: [
-          Obx(
-            () => AnimatedSwitcher(
-              duration: const Duration(milliseconds: 400),
-              child: !SearchSortController.inst.isSearching
-                  ? Container(
-                      key: const Key('emptysearch'),
-                      padding: const EdgeInsets.all(64.0).add(const EdgeInsets.only(bottom: 64.0)),
-                      width: context.width,
-                      height: context.height,
-                      child: Opacity(
-                        opacity: 0.8,
-                        child: TweenAnimationBuilder(
-                          tween: Tween<double>(begin: 4.0, end: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? 4.0 : 12.0),
-                          duration: const Duration(milliseconds: 500),
-                          builder: (context, value, child) => ImageFiltered(
-                            imageFilter: ImageFilter.blur(
-                              sigmaX: value,
-                              sigmaY: value,
-                            ),
-                            child: Image.asset('assets/namida_icon.png'),
-                          ),
-                        ),
-                      ),
-                    )
-                  : AnimationLimiter(
-                      key: const Key('fullsearch'),
-                      child: CupertinoScrollbar(
-                        controller: scrollController,
-                        child: CustomScrollView(
-                          controller: scrollController,
-                          slivers: [
-                            const SliverPadding(
-                              padding: EdgeInsets.only(bottom: 8.0),
-                            ),
-
-                            /// Albums
-                            if (SearchSortController.inst.albumSearchTemp.isNotEmpty) ...[
-                              SliverToBoxAdapter(
-                                child: SearchPageTitleRow(
-                                  title: '${lang.ALBUMS} • ${SearchSortController.inst.albumSearchTemp.length}',
-                                  icon: Broken.music_dashboard,
-                                  buttonIcon: Broken.category,
-                                  buttonText: lang.VIEW_ALL,
-                                  onPressed: () => NamidaNavigator.inst.navigateTo(const AlbumSearchResultsPage()),
+          Column(
+            children: [
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    ...MediaType.values.map(
+                      (e) => Obx(
+                        () {
+                          final list = settings.activeSearchMediaTypes;
+                          final isActive = list.contains(e);
+                          final isForcelyEnabled = e == MediaType.track;
+                          return Opacity(
+                            opacity: isForcelyEnabled ? 0.6 : 1.0,
+                            child: NamidaInkWell(
+                              bgColor: isActive ? context.theme.colorScheme.secondary.withOpacity(0.15) : null,
+                              borderRadius: 8.0,
+                              onTap: () {
+                                if (isForcelyEnabled) return;
+                                if (isActive) {
+                                  settings.removeFromList(activeSearchMediaTypes1: e);
+                                } else {
+                                  settings.save(activeSearchMediaTypes: [e]);
+                                }
+                              },
+                              margin: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 12.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: context.theme.colorScheme.secondary.withOpacity(0.8),
+                                  width: 1.5,
                                 ),
                               ),
-                              SliverToBoxAdapter(
-                                child: SizedBox(
-                                  height: 170.0 + 24.0,
-                                  child: ListView.builder(
-                                    padding: const EdgeInsets.symmetric(vertical: 12.0),
-                                    scrollDirection: Axis.horizontal,
-                                    itemExtent: 132.0,
-                                    itemCount: SearchSortController.inst.albumSearchTemp.length,
-                                    itemBuilder: (context, i) {
-                                      final albumName = SearchSortController.inst.albumSearchTemp[i];
-                                      return Container(
-                                        width: 130.0,
-                                        margin: const EdgeInsets.only(left: 2.0),
-                                        child: AlbumCard(
-                                          dimensions: albumDimensions,
-                                          name: albumName,
-                                          album: albumName.getAlbumTracks(),
-                                          staggered: false,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ],
-
-                            /// Artists
-                            if (SearchSortController.inst.artistSearchTemp.isNotEmpty) ...[
-                              SliverToBoxAdapter(
-                                child: SearchPageTitleRow(
-                                  title: '${lang.ARTISTS} • ${SearchSortController.inst.artistSearchTemp.length}',
-                                  icon: Broken.profile_2user,
-                                  buttonIcon: Broken.category,
-                                  buttonText: lang.VIEW_ALL,
-                                  onPressed: () => NamidaNavigator.inst.navigateTo(const ArtistSearchResultsPage()),
-                                ),
-                              ),
-                              const SliverPadding(
-                                padding: EdgeInsets.only(bottom: 12.0),
-                              ),
-                              SliverToBoxAdapter(
-                                child: SizedBox(
-                                  height: 100,
-                                  child: ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemExtent: 82.0,
-                                    itemCount: SearchSortController.inst.artistSearchTemp.length,
-                                    itemBuilder: (context, i) {
-                                      final artistName = SearchSortController.inst.artistSearchTemp[i];
-                                      return Container(
-                                        width: 80.0,
-                                        margin: const EdgeInsets.only(left: 2.0),
-                                        child: ArtistCard(
-                                          dimensions: artistDimensions,
-                                          name: artistName,
-                                          artist: artistName.getArtistTracks(),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                              const SliverPadding(
-                                padding: EdgeInsets.only(top: 12.0),
-                              ),
-                            ],
-
-                            /// Tracks
-                            if (SearchSortController.inst.trackSearchTemp.isNotEmpty) ...[
-                              SliverToBoxAdapter(
-                                child: Tooltip(
-                                  message: lang.TRACK_PLAY_MODE,
-                                  child: SearchPageTitleRow(
-                                    title: '${lang.TRACKS} • ${SearchSortController.inst.trackSearchTemp.length}',
-                                    icon: Broken.music_circle,
-                                    buttonIcon: Broken.play,
-                                    buttonText: settings.trackPlayMode.value.toText(),
-                                    onPressed: () {
-                                      final element = settings.trackPlayMode.value.nextElement(TrackPlayMode.values);
-                                      settings.save(trackPlayMode: element);
-                                    },
-                                  ),
-                                ),
-                              ),
-                              const SliverPadding(
-                                padding: EdgeInsets.only(bottom: 12.0),
-                              ),
-                              SliverFixedExtentList.builder(
-                                itemCount: SearchSortController.inst.trackSearchTemp.length,
-                                itemExtent: Dimensions.inst.trackTileItemExtent,
-                                itemBuilder: (context, i) {
-                                  final track = SearchSortController.inst.trackSearchTemp[i];
-                                  return AnimatingTile(
-                                    position: i,
-                                    child: TrackTile(
-                                      index: i,
-                                      trackOrTwd: track,
-                                      queueSource: QueueSource.search,
+                              child: Row(
+                                children: [
+                                  Text(
+                                    e.toText(),
+                                    style: context.textTheme.displayMedium?.copyWith(
+                                      color: context.theme.colorScheme.secondary.withOpacity(0.8),
                                     ),
+                                  ),
+                                  const SizedBox(width: 8.0),
+                                  NamidaCheckMark(
+                                    size: 12.0,
+                                    active: isActive,
+                                    activeColor: context.theme.colorScheme.secondary.withOpacity(0.8),
+                                    inactiveColor: context.theme.colorScheme.secondary.withOpacity(0.8),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Obx(
+                  () => AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    child: !SearchSortController.inst.isSearching
+                        ? Container(
+                            key: const Key('emptysearch'),
+                            padding: const EdgeInsets.all(64.0).add(const EdgeInsets.only(bottom: 64.0)),
+                            width: context.width,
+                            height: context.height,
+                            child: Opacity(
+                              opacity: 0.8,
+                              child: TweenAnimationBuilder(
+                                tween: Tween<double>(begin: 4.0, end: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? 4.0 : 12.0),
+                                duration: const Duration(milliseconds: 500),
+                                builder: (context, value, child) => ImageFiltered(
+                                  imageFilter: ImageFilter.blur(
+                                    sigmaX: value,
+                                    sigmaY: value,
+                                  ),
+                                  child: Image.asset('assets/namida_icon.png'),
+                                ),
+                              ),
+                            ),
+                          )
+                        : AnimationLimiter(
+                            key: const Key('fullsearch'),
+                            child: CupertinoScrollbar(
+                              controller: scrollController,
+                              child: Obx(
+                                () {
+                                  final activeList = settings.activeSearchMediaTypes;
+
+                                  final albumSearchTemp = SearchSortController.inst.albumSearchTemp;
+                                  final artistSearchTemp = SearchSortController.inst.artistSearchTemp;
+                                  final genreSearchTemp = SearchSortController.inst.genreSearchTemp;
+                                  final playlistSearchTemp = SearchSortController.inst.playlistSearchTemp;
+                                  final folderSearchTemp = SearchSortController.inst.folderSearchTemp;
+
+                                  return CustomScrollView(
+                                    controller: scrollController,
+                                    slivers: [
+                                      // == Albums ==
+                                      if (activeList.contains(MediaType.album) && albumSearchTemp.isNotEmpty) ...[
+                                        SliverToBoxAdapter(
+                                          child: SearchPageTitleRow(
+                                            title: '${lang.ALBUMS} • ${albumSearchTemp.length}',
+                                            icon: Broken.music_dashboard,
+                                            buttonIcon: Broken.category,
+                                            buttonText: lang.VIEW_ALL,
+                                            onPressed: () => NamidaNavigator.inst.navigateTo(const AlbumSearchResultsPage()),
+                                          ),
+                                        ),
+                                        _horizontalSliverList(
+                                          height: 138.0,
+                                          itemExtent: 108.0,
+                                          list: albumSearchTemp,
+                                          builder: (item) {
+                                            final albumName = item;
+                                            return Container(
+                                              width: 130.0,
+                                              margin: const EdgeInsets.only(left: 2.0),
+                                              child: AlbumCard(
+                                                dimensions: albumDimensions,
+                                                name: albumName,
+                                                album: albumName.getAlbumTracks(),
+                                                staggered: false,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+
+                                      // == Artists ==
+                                      if (activeList.contains(MediaType.artist) && artistSearchTemp.isNotEmpty) ...[
+                                        SliverToBoxAdapter(
+                                          child: SearchPageTitleRow(
+                                            title: '${lang.ARTISTS} • ${artistSearchTemp.length}',
+                                            icon: Broken.profile_2user,
+                                            buttonIcon: Broken.category,
+                                            buttonText: lang.VIEW_ALL,
+                                            onPressed: () => NamidaNavigator.inst.navigateTo(const ArtistSearchResultsPage()),
+                                          ),
+                                        ),
+                                        _horizontalSliverList(
+                                          height: 100.0,
+                                          itemExtent: 82.0,
+                                          list: artistSearchTemp,
+                                          builder: (item) {
+                                            final artistName = item;
+                                            return Container(
+                                              width: 80.0,
+                                              margin: const EdgeInsets.only(left: 2.0),
+                                              child: ArtistCard(
+                                                dimensions: artistDimensions,
+                                                name: artistName,
+                                                artist: artistName.getArtistTracks(),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+
+                                      // == Genres ==
+                                      if (activeList.contains(MediaType.genre) && genreSearchTemp.isNotEmpty) ...[
+                                        SliverToBoxAdapter(
+                                          child: SearchPageTitleRow(
+                                            title: '${lang.GENRES} • ${genreSearchTemp.length}',
+                                            icon: Broken.smileys,
+                                          ),
+                                        ),
+                                        _horizontalSliverList(
+                                          height: 138.0,
+                                          itemExtent: 108.0,
+                                          list: genreSearchTemp,
+                                          builder: (item) {
+                                            final genreName = item;
+                                            return Container(
+                                              width: 130.0,
+                                              margin: const EdgeInsets.only(left: 2.0),
+                                              child: MultiArtworkCard(
+                                                tracks: genreName.getGenresTracks(),
+                                                name: genreName,
+                                                gridCount: Dimensions.genreSearchGridCount,
+                                                heroTag: 'genre_$genreName',
+                                                dimensions: genreDimensions,
+                                                showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(genreName),
+                                                onTap: () => NamidaOnTaps.inst.onGenreTap(genreName),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+
+                                      // == Playlists ==
+                                      if (activeList.contains(MediaType.playlist) && playlistSearchTemp.isNotEmpty) ...[
+                                        SliverToBoxAdapter(
+                                          child: SearchPageTitleRow(
+                                            title: '${lang.PLAYLISTS} • ${playlistSearchTemp.length}',
+                                            icon: Broken.music_library_2,
+                                          ),
+                                        ),
+                                        _horizontalSliverList(
+                                          height: 138.0,
+                                          itemExtent: 108.0,
+                                          list: playlistSearchTemp,
+                                          builder: (item) {
+                                            final playlistName = item;
+                                            final playlist = PlaylistController.inst.getPlaylist(playlistName);
+
+                                            return Container(
+                                              width: 130.0,
+                                              margin: const EdgeInsets.only(left: 2.0),
+                                              child: MultiArtworkCard(
+                                                tracks: playlist?.tracks.toTracks() ?? [],
+                                                name: playlist?.name.translatePlaylistName() ?? playlistName,
+                                                gridCount: Dimensions.playlistSearchGridCount,
+                                                heroTag: 'playlist_$playlistName',
+                                                dimensions: playlistDimensions,
+                                                showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(playlistName),
+                                                onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(playlistName),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+
+                                      // == Playlists ==
+                                      if (activeList.contains(MediaType.folder) && folderSearchTemp.isNotEmpty) ...[
+                                        SliverToBoxAdapter(
+                                          child: SearchPageTitleRow(
+                                            title: '${lang.FOLDERS} • ${folderSearchTemp.length}',
+                                            icon: Broken.folder,
+                                          ),
+                                        ),
+                                        _horizontalSliverList(
+                                          height: 48.0 + 4 * 2,
+                                          itemExtent: null,
+                                          list: folderSearchTemp,
+                                          builder: (item) {
+                                            final folder = Folder(item);
+                                            final tracks = folder.tracks;
+                                            if (tracks.isEmpty) return const SizedBox();
+
+                                            return NamidaInkWell(
+                                              margin: const EdgeInsets.only(left: 6.0),
+                                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                              onTap: () => NamidaOnTaps.inst.onFolderTap(folder),
+                                              onLongPress: () => NamidaDialogs.inst.showFolderDialog(folder: folder, tracks: tracks),
+                                              borderRadius: 8.0,
+                                              bgColor: context.theme.colorScheme.secondary.withOpacity(0.12),
+                                              child: Row(
+                                                children: [
+                                                  const SizedBox(width: 4.0),
+                                                  ArtworkWidget(
+                                                    thumbnailSize: 48.0,
+                                                    path: tracks.pathToImage,
+                                                    forceSquared: true,
+                                                  ),
+                                                  const SizedBox(width: 4.0),
+                                                  Column(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        folder.folderName,
+                                                        style: context.textTheme.displayMedium?.copyWith(
+                                                          fontSize: 13.0.multipliedFontScale,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        tracks.length.displayTrackKeyword,
+                                                        style: context.textTheme.displaySmall?.copyWith(
+                                                          fontSize: 12.0.multipliedFontScale,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(width: 12.0),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+
+                                      // == Tracks ==
+                                      if (activeList.contains(MediaType.track) && SearchSortController.inst.trackSearchTemp.isNotEmpty) ...[
+                                        SliverToBoxAdapter(
+                                          child: Tooltip(
+                                            message: lang.TRACK_PLAY_MODE,
+                                            child: SearchPageTitleRow(
+                                              title: '${lang.TRACKS} • ${SearchSortController.inst.trackSearchTemp.length}',
+                                              icon: Broken.music_circle,
+                                              buttonIcon: Broken.play,
+                                              buttonText: settings.trackPlayMode.value.toText(),
+                                              onPressed: () {
+                                                final element = settings.trackPlayMode.value.nextElement(TrackPlayMode.values);
+                                                settings.save(trackPlayMode: element);
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                        const SliverPadding(padding: EdgeInsets.only(bottom: 8.0)),
+                                        SliverFixedExtentList.builder(
+                                          itemCount: SearchSortController.inst.trackSearchTemp.length,
+                                          itemExtent: Dimensions.inst.trackTileItemExtent,
+                                          itemBuilder: (context, i) {
+                                            final track = SearchSortController.inst.trackSearchTemp[i];
+                                            return AnimatingTile(
+                                              position: i,
+                                              child: TrackTile(
+                                                index: i,
+                                                trackOrTwd: track,
+                                                queueSource: QueueSource.search,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+
+                                      const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding))
+                                    ],
                                   );
                                 },
                               ),
-                            ],
-
-                            const SliverPadding(
-                              padding: EdgeInsets.only(bottom: kBottomPadding),
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-            ),
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ],
           ),
           YoutubeSearchResultsPage(
             key: ScrollSearchController.inst.ytSearchKey,

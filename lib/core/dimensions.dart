@@ -42,8 +42,10 @@ class Dimensions {
   static const _queueTileHeight = 72.0;
   static const queueTileItemExtent = _queueTileHeight + tileBottomMargin6 + 2 * tileVerticalPadding + _tileAdditionalMargin;
 
-  static const albumSearchGridCount = 3;
+  static const albumSearchGridCount = 4;
   static const artistSearchGridCount = 5;
+  static const genreSearchGridCount = 4;
+  static const playlistSearchGridCount = 4;
   static const albumInsideArtistGridCount = 4;
 
   /// {@macro card_dimensions}

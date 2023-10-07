@@ -149,6 +149,10 @@ extension LibraryTabUtils on LibraryTab {
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 }
 
+extension MediaTypeToText on MediaType {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension SortToText on SortType {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
@@ -820,6 +824,14 @@ class _NamidaConverters {
         LibraryTab.folders: lang.FOLDERS,
         LibraryTab.home: lang.HOME,
         LibraryTab.search: lang.SEARCH,
+      },
+      MediaType: {
+        MediaType.album: lang.ALBUMS,
+        MediaType.track: lang.TRACKS,
+        MediaType.artist: lang.ARTISTS,
+        MediaType.genre: lang.GENRES,
+        MediaType.playlist: lang.PLAYLISTS,
+        MediaType.folder: lang.FOLDERS,
       },
       SortType: {
         SortType.title: lang.TITLE,

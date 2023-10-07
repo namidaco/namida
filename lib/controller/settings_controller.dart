@@ -218,6 +218,12 @@ class SettingsController {
     HomePageItems.recentArtists,
   ].obs;
 
+  final activeSearchMediaTypes = <MediaType>[
+    MediaType.track,
+    MediaType.album,
+    MediaType.artist,
+  ].obs;
+
   bool didSupportNamida = false;
 
   Future<void> prepareSettingsFile() async {
@@ -243,6 +249,11 @@ class SettingsController {
       final homePageItemsFromStorage = List<String>.from(json['homePageItems'] ?? []);
       homePageItems.value =
           homePageItemsFromStorage.isNotEmpty ? List<HomePageItems>.from(homePageItemsFromStorage.map((e) => HomePageItems.values.getEnum(e))) : homePageItems.toList();
+
+      final activeSearchMediaTypesFromStorage = List<String>.from(json['activeSearchMediaTypes'] ?? []);
+      activeSearchMediaTypes.value = activeSearchMediaTypesFromStorage.isNotEmpty
+          ? List<MediaType>.from(activeSearchMediaTypesFromStorage.map((e) => MediaType.values.getEnum(e)))
+          : activeSearchMediaTypes.toList();
 
       searchResultsPlayMode.value = json['searchResultsPlayMode'] ?? searchResultsPlayMode.value;
       borderRadiusMultiplier.value = json['borderRadiusMultiplier'] ?? borderRadiusMultiplier.value;
@@ -427,6 +438,7 @@ class SettingsController {
       'autoLibraryTab': autoLibraryTab.value,
       'libraryTabs': libraryTabs.mapped((element) => element.convertToString),
       'homePageItems': homePageItems.mapped((element) => element.convertToString),
+      'activeSearchMediaTypes': activeSearchMediaTypes.mapped((element) => element.convertToString),
       'searchResultsPlayMode': searchResultsPlayMode.value,
       'borderRadiusMultiplier': borderRadiusMultiplier.value,
       'fontScaleFactor': fontScaleFactor.value,
@@ -572,6 +584,7 @@ class SettingsController {
     bool? autoLibraryTab,
     List<LibraryTab>? libraryTabs,
     List<HomePageItems>? homePageItems,
+    List<MediaType>? activeSearchMediaTypes,
     double? borderRadiusMultiplier,
     double? fontScaleFactor,
     double? trackThumbnailSizeinList,
@@ -720,6 +733,13 @@ class SettingsController {
       homePageItems.loop((t, index) {
         if (!this.homePageItems.contains(t)) {
           this.homePageItems.add(t);
+        }
+      });
+    }
+    if (activeSearchMediaTypes != null) {
+      activeSearchMediaTypes.loop((t, index) {
+        if (!this.activeSearchMediaTypes.contains(t)) {
+          this.activeSearchMediaTypes.add(t);
         }
       });
     }
@@ -1137,6 +1157,7 @@ class SettingsController {
     List<LibraryTab>? libraryTabsAll,
     HomePageItems? homePageItem1,
     List<HomePageItems>? homePageItemsAll,
+    MediaType? activeSearchMediaTypes1,
     String? backupItemslist1,
     List<String>? backupItemslistAll,
     String? youtubeVideoQualities1,
@@ -1203,6 +1224,9 @@ class SettingsController {
       homePageItemsAll.loop((t, index) {
         homePageItems.remove(t);
       });
+    }
+    if (activeSearchMediaTypes1 != null) {
+      activeSearchMediaTypes.remove(activeSearchMediaTypes1);
     }
     if (backupItemslist1 != null) {
       backupItemslist.remove(backupItemslist1);
