@@ -65,7 +65,7 @@ class CustomizationSettings extends StatelessWidget {
                 showSettingDialogWithTextField(
                   title: lang.BORDER_RADIUS_MULTIPLIER,
                   borderRadiusMultiplier: true,
-                  iconWidget: const Icon(Broken.rotate_left_1),
+                  icon: Broken.rotate_left_1,
                 );
               },
             ),
@@ -77,7 +77,7 @@ class CustomizationSettings extends StatelessWidget {
                 showSettingDialogWithTextField(
                   title: lang.FONT_SCALE,
                   fontScaleFactor: true,
-                  iconWidget: const Icon(Broken.text),
+                  icon: Broken.text,
                 );
               },
             ),
@@ -98,7 +98,7 @@ class CustomizationSettings extends StatelessWidget {
 
                 showSettingDialogWithTextField(
                     title: lang.DATE_TIME_FORMAT,
-                    iconWidget: const Icon(Broken.calendar_edit),
+                    icon: Broken.calendar_edit,
                     dateTimeFormat: true,
                     topWidget: SizedBox(
                       height: Get.height * 0.4,

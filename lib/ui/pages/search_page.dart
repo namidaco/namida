@@ -65,7 +65,7 @@ class SearchPage extends StatelessWidget {
     return BackgroundWrapper(
       child: NamidaTabView(
         initialIndex: () {
-          switch (ScrollSearchController.inst.currentSearchType) {
+          switch (ScrollSearchController.inst.currentSearchType.value) {
             case SearchType.localTracks:
               return 0;
             case SearchType.youtube:
@@ -77,10 +77,10 @@ class SearchPage extends StatelessWidget {
         onIndexChanged: (index) {
           switch (index) {
             case 0:
-              ScrollSearchController.inst.currentSearchType = SearchType.localTracks;
+              ScrollSearchController.inst.currentSearchType.value = SearchType.localTracks;
               break;
             case 1:
-              ScrollSearchController.inst.currentSearchType = SearchType.youtube;
+              ScrollSearchController.inst.currentSearchType.value = SearchType.youtube;
               final searchValue = ScrollSearchController.inst.ytSearchKey.currentState?.currentSearchText;
               if (SearchSortController.inst.lastSearchText != searchValue) {
                 ScrollSearchController.inst.ytSearchKey.currentState?.fetchSearch(customText: SearchSortController.inst.lastSearchText);

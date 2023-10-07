@@ -222,7 +222,7 @@ class PlaybackSettings extends StatelessWidget {
             settings.save(displayFavouriteButtonInNotification: !val);
             Player.inst.refreshNotification();
             if (!val && kSdkVersion < 31) {
-              Get.snackbar(lang.NOTE, lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION_SUBTITLE);
+              snackyy(title: lang.NOTE, message: lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION_SUBTITLE);
             }
           },
         ),

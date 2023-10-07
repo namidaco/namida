@@ -24,7 +24,7 @@ class IndexerSettings extends StatelessWidget {
     final newPathsLength = Indexer.inst.getNewFoundPaths(currentFiles).length;
     final deletedPathLength = Indexer.inst.getDeletedPaths(currentFiles).length;
     if (newPathsLength == 0 && deletedPathLength == 0) {
-      Get.snackbar(lang.NOTE, lang.NO_CHANGES_FOUND);
+      snackyy(title: lang.NOTE, message: lang.NO_CHANGES_FOUND);
     } else {
       NamidaNavigator.inst.navigateDialog(
         dialog: CustomBlurryDialog(
@@ -64,7 +64,7 @@ class IndexerSettings extends StatelessWidget {
       onPressed: () async {
         final path = await FilePicker.platform.getDirectoryPath();
         if (path == null) {
-          Get.snackbar(lang.NOTE, lang.NO_FOLDER_CHOSEN);
+          snackyy(title: lang.NOTE, message: lang.NO_FOLDER_CHOSEN);
           return;
         }
 
@@ -279,10 +279,10 @@ class IndexerSettings extends StatelessWidget {
                     trailing: TextButton(
                       onPressed: () {
                         if (settings.directoriesToScan.length == 1) {
-                          Get.snackbar(
-                            lang.MINIMUM_ONE_ITEM,
-                            lang.MINIMUM_ONE_FOLDER_SUBTITLE,
-                            duration: const Duration(seconds: 4),
+                          snackyy(
+                            title: lang.MINIMUM_ONE_ITEM,
+                            message: lang.MINIMUM_ONE_FOLDER_SUBTITLE,
+                            displaySeconds: 4,
                           );
                         } else {
                           NamidaNavigator.inst.navigateDialog(
@@ -432,7 +432,7 @@ class IndexerSettings extends StatelessWidget {
                         }
                         separatorsController.clear();
                       } else {
-                        Get.snackbar(lang.EMPTY_VALUE, lang.ENTER_SYMBOL, forwardAnimationCurve: Curves.fastLinearToSlowEaseIn);
+                        snackyy(title: lang.EMPTY_VALUE, message: lang.ENTER_SYMBOL);
                       }
                     },
                   ),

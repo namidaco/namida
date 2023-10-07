@@ -15,6 +15,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -98,7 +99,7 @@ class Indexer {
 
     _afterIndexing();
     isIndexing.value = false;
-    Get.snackbar(lang.DONE, lang.FINISHED_UPDATING_LIBRARY);
+    snackyy(title: lang.DONE, message: lang.FINISHED_UPDATING_LIBRARY);
   }
 
   /// Adds all tracks inside [tracksInfoList] to their respective album, artist, etc..

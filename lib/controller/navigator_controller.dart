@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/route.dart';
-import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -312,43 +311,86 @@ class NamidaNavigator {
   DateTime _currentBackPressTime = DateTime(0);
   Future<bool> _doubleTapToExit() async {
     final now = DateTime.now();
-    if (now.difference(_currentBackPressTime) > const Duration(seconds: 3)) {
+    if (now.difference(_currentBackPressTime) > const Duration(seconds: 2)) {
       _currentBackPressTime = now;
 
-      final tcolor = Color.alphaBlend(CurrentColor.inst.color.withAlpha(50), Get.textTheme.displayMedium!.color!);
-      Get.showSnackbar(
-        GetSnackBar(
-          messageText: Text(
-            lang.EXIT_APP_SUBTITLE,
-            style: Get.textTheme.displayMedium?.copyWith(color: tcolor),
-          ),
-          icon: Icon(
-            Broken.logout,
-            color: tcolor,
-          ),
-          shouldIconPulse: false,
-          snackPosition: SnackPosition.BOTTOM,
-          snackStyle: SnackStyle.FLOATING,
-          borderRadius: 14.0.multipliedRadius,
-          backgroundColor: Colors.grey.withOpacity(0.2),
-          barBlur: 10.0,
-          // dismissDirection: DismissDirection.none,
-          margin: const EdgeInsets.all(8.0),
-          animationDuration: const Duration(milliseconds: 300),
-          forwardAnimationCurve: Curves.fastLinearToSlowEaseIn,
-          reverseAnimationCurve: Curves.easeInOutQuart,
-          duration: const Duration(seconds: 3),
-          snackbarStatus: (status) {
-            // -- resets time
-            if (status == SnackbarStatus.CLOSED) {
-              _currentBackPressTime = DateTime(0);
-            }
-          },
-        ),
+      snackyy(
+        icon: Broken.logout,
+        message: lang.EXIT_APP_SUBTITLE,
+        top: false,
+        margin: const EdgeInsets.all(8.0),
+        animationDurationMS: 500,
+        snackbarStatus: (status) {
+          // -- resets time
+          if (status == SnackbarStatus.CLOSED) {
+            _currentBackPressTime = DateTime(0);
+          }
+        },
       );
+
       return false;
     }
     SystemNavigator.pop();
     return true;
   }
+}
+
+void snackyy({
+  IconData? icon,
+  Widget? iconWidget,
+  String title = '',
+  required String message,
+  bool top = true,
+  void Function(SnackbarStatus?)? snackbarStatus,
+  EdgeInsets margin = const EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0),
+  int animationDurationMS = 600,
+  int displaySeconds = 2,
+  double borderRadius = 12.0,
+  Color? leftBarIndicatorColor,
+  Widget? button,
+}) {
+  final isError = title == lang.ERROR;
+  Get.showSnackbar(
+    GetSnackBar(
+      icon: iconWidget ??
+          (icon == null
+              ? null
+              : Center(
+                  child: Icon(icon),
+                )),
+      titleText: title == ''
+          ? null
+          : Text(
+              title,
+              style: Get.textTheme.displayLarge,
+            ),
+      messageText: Text(
+        message,
+        style: title != '' ? Get.textTheme.displaySmall : Get.textTheme.displayMedium,
+      ),
+      mainButton: button,
+      margin: margin,
+      snackPosition: top ? SnackPosition.TOP : SnackPosition.BOTTOM,
+      leftBarIndicatorColor: leftBarIndicatorColor,
+      borderWidth: 1.5,
+      borderColor: isError ? Colors.red.withOpacity(0.2) : null,
+      boxShadows: isError
+          ? [
+              BoxShadow(
+                color: Colors.red.withAlpha(15),
+                blurRadius: 16.0,
+              )
+            ]
+          : null,
+      shouldIconPulse: false,
+      backgroundColor: Get.theme.scaffoldBackgroundColor.withOpacity(0.3),
+      borderRadius: borderRadius.multipliedRadius,
+      barBlur: 12.0,
+      animationDuration: Duration(milliseconds: animationDurationMS),
+      forwardAnimationCurve: Curves.fastLinearToSlowEaseIn,
+      reverseAnimationCurve: Curves.easeInOutQuart,
+      duration: Duration(seconds: displaySeconds),
+      snackbarStatus: snackbarStatus,
+    ),
+  );
 }

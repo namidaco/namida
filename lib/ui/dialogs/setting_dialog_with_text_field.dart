@@ -15,7 +15,8 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 void showSettingDialogWithTextField({
   Widget? topWidget,
   String title = '',
-  Widget? iconWidget,
+  Widget? iconWidgets,
+  IconData? icon,
   bool trackThumbnailSizeinList = false,
   bool trackListTileHeight = false,
   bool albumThumbnailSizeinList = false,
@@ -27,35 +28,24 @@ void showSettingDialogWithTextField({
   bool trackTileSeparator = false,
   bool addNewPlaylist = false,
 }) async {
-  final TextEditingController controller = TextEditingController();
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final controller = TextEditingController();
+  final formKey = GlobalKey<FormState>();
 
   if (dateTimeFormat) {
     controller.text = settings.dateTimeFormat.value;
   }
-  void showSnackBarWithTitle(
+  void showResetToDefaultSnackBar(
     String message, {
     String? title,
     Duration? duration,
     Widget? iconWidget,
   }) {
-    Get.snackbar(
-      '',
-      '',
-      titleText: Text(
-        title ?? '',
-        style: Get.textTheme.displayLarge,
-      ),
-      messageText: Text(
-        "${lang.RESET_TO_DEFAULT}: $message",
-        style: Get.textTheme.displayMedium,
-      ),
-      duration: duration ?? const Duration(seconds: 2),
-      animationDuration: const Duration(milliseconds: 400),
-      borderRadius: 16.0.multipliedRadius,
-      padding: const EdgeInsets.fromLTRB(18.0, 18.0, 24.0, 18.0),
-      icon: iconWidget,
-      shouldIconPulse: false,
+    snackyy(
+      title: title ?? '',
+      message: "${lang.RESET_TO_DEFAULT}: $message",
+      animationDurationMS: 400,
+      icon: icon,
+      iconWidget: iconWidget,
     );
   }
 
@@ -71,41 +61,41 @@ void showSettingDialogWithTextField({
               onPressed: () {
                 if (trackThumbnailSizeinList) {
                   settings.save(trackThumbnailSizeinList: 70.0);
-                  showSnackBarWithTitle("${settings.trackThumbnailSizeinList.value}", title: title, iconWidget: iconWidget);
+                  showResetToDefaultSnackBar("${settings.trackThumbnailSizeinList.value}", title: title);
                 }
                 if (trackListTileHeight) {
                   settings.save(trackListTileHeight: 70.0);
-                  showSnackBarWithTitle("${settings.trackListTileHeight.value}", title: title, iconWidget: iconWidget);
+                  showResetToDefaultSnackBar("${settings.trackListTileHeight.value}", title: title);
                   Dimensions.inst.updateTrackTileDimensions();
                 }
                 if (albumThumbnailSizeinList) {
                   settings.save(albumThumbnailSizeinList: 90.0);
-                  showSnackBarWithTitle("${settings.albumThumbnailSizeinList.value}", title: title, iconWidget: iconWidget);
+                  showResetToDefaultSnackBar("${settings.albumThumbnailSizeinList.value}", title: title);
                 }
                 if (albumListTileHeight) {
                   settings.save(albumListTileHeight: 90.0);
-                  showSnackBarWithTitle("${settings.albumListTileHeight.value}", title: title, iconWidget: iconWidget);
+                  showResetToDefaultSnackBar("${settings.albumListTileHeight.value}", title: title);
                   Dimensions.inst.updateAlbumTileDimensions();
                 }
                 if (nowPlayingImageContainerHeight) {
                   settings.save(nowPlayingImageContainerHeight: 400.0);
-                  showSnackBarWithTitle("${settings.nowPlayingImageContainerHeight.value}", title: title, iconWidget: iconWidget);
+                  showResetToDefaultSnackBar("${settings.nowPlayingImageContainerHeight.value}", title: title);
                 }
                 if (borderRadiusMultiplier) {
                   settings.save(borderRadiusMultiplier: 1.0);
-                  showSnackBarWithTitle("${settings.borderRadiusMultiplier.value}", title: title, iconWidget: iconWidget);
+                  showResetToDefaultSnackBar("${settings.borderRadiusMultiplier.value}", title: title);
                 }
                 if (fontScaleFactor) {
                   settings.save(fontScaleFactor: 0.9);
-                  showSnackBarWithTitle("${settings.fontScaleFactor.value.toInt() * 100}%", title: title, iconWidget: iconWidget);
+                  showResetToDefaultSnackBar("${settings.fontScaleFactor.value.toInt() * 100}%", title: title);
                 }
                 if (dateTimeFormat) {
                   settings.save(dateTimeFormat: 'MMM yyyy');
-                  showSnackBarWithTitle("${settings.dateTimeFormat}", title: title, iconWidget: iconWidget);
+                  showResetToDefaultSnackBar("${settings.dateTimeFormat}", title: title);
                 }
                 if (trackTileSeparator) {
                   settings.save(trackTileSeparator: '•');
-                  showSnackBarWithTitle("${settings.trackTileSeparator}", title: title, iconWidget: iconWidget);
+                  showResetToDefaultSnackBar("${settings.trackTileSeparator}", title: title);
                 }
 
                 NamidaNavigator.inst.closeDialog();

@@ -73,6 +73,7 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
             NamidaNavigator.inst.navigateDialog(
               colorScheme: colorScheme,
               dialogBuilder: (theme) => CustomBlurryDialog(
+                title: lang.SEARCH_YOUTUBE,
                 contentPadding: EdgeInsets.zero,
                 insetPadding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
                 child: SizedBox(
@@ -103,18 +104,14 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
                             final url = video.url;
                             if (url != null) {
                               controller.text = url;
-                              Get.showSnackbar(GetSnackBar(
-                                snackPosition: SnackPosition.BOTTOM,
-                                snackStyle: SnackStyle.FLOATING,
-                                animationDuration: const Duration(milliseconds: 300),
-                                duration: const Duration(seconds: 2),
-                                leftBarIndicatorColor: colorScheme,
-                                messageText: Text(
-                                  'Set to "${video.name ?? ''}" by "${video.uploaderName ?? ''}"',
-                                  style: theme.textTheme.displaySmall?.copyWith(color: Colors.white60),
-                                ),
+                              snackyy(
+                                message: 'Set to "${video.name ?? ''}" by "${video.uploaderName ?? ''}"',
+                                top: false,
                                 borderRadius: 0,
-                              ));
+                                margin: EdgeInsets.zero,
+                                leftBarIndicatorColor: colorScheme,
+                                animationDurationMS: 500,
+                              );
                             }
                           },
                         ),
@@ -188,7 +185,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
 
   final info = await tagger.readAllData(path: track.path);
   if (info == null) {
-    Get.snackbar(lang.ERROR, lang.METADATA_READ_FAILED);
+    snackyy(title: lang.ERROR, message: lang.METADATA_READ_FAILED);
   }
 
   final trimWhiteSpaces = true.obs;
@@ -388,7 +385,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                 trimWhiteSpaces: trimWhiteSpaces.value,
                 onEdit: (didUpdate, track) {
                   if (!didUpdate) {
-                    Get.snackbar(lang.METADATA_EDIT_FAILED, lang.METADATA_EDIT_FAILED_SUBTITLE);
+                    snackyy(title: lang.METADATA_EDIT_FAILED, message: lang.METADATA_EDIT_FAILED_SUBTITLE);
                   }
                 },
               );
@@ -853,7 +850,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                       );
 
                       if (failedEditsTracks.isNotEmpty) {
-                        Get.snackbar('${lang.METADATA_EDIT_FAILED} (${failedEditsTracks.length})', lang.METADATA_EDIT_FAILED_SUBTITLE);
+                        snackyy(title: '${lang.METADATA_EDIT_FAILED} (${failedEditsTracks.length})', message: lang.METADATA_EDIT_FAILED_SUBTITLE);
                       }
                       updatingLibrary.value = '✓';
                       finishedEditing.value = true;

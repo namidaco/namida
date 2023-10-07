@@ -181,23 +181,12 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                       subtitle = lang.COULDNT_SAVE_IMAGE;
                                       snackColor = Colors.red;
                                     }
-                                    Get.snackbar(
-                                      title,
-                                      subtitle,
-                                      snackPosition: SnackPosition.BOTTOM,
-                                      snackStyle: SnackStyle.FLOATING,
-                                      animationDuration: const Duration(milliseconds: 300),
-                                      duration: const Duration(seconds: 2),
+                                    snackyy(
+                                      title: title,
+                                      message: subtitle,
                                       leftBarIndicatorColor: snackColor,
-                                      margin: const EdgeInsets.all(0.0),
-                                      titleText: Text(
-                                        title,
-                                        style: theme.textTheme.displayMedium?.copyWith(color: Colors.white70),
-                                      ),
-                                      messageText: Text(
-                                        subtitle,
-                                        style: theme.textTheme.displaySmall?.copyWith(color: Colors.white60),
-                                      ),
+                                      margin: EdgeInsets.zero,
+                                      top: false,
                                       borderRadius: 0,
                                     );
                                   },
@@ -419,24 +408,13 @@ class TrackInfoListTile extends StatelessWidget {
     if (value == '') return;
 
     Clipboard.setData(ClipboardData(text: value));
-    Get.snackbar(
-      'Copied $title',
-      value,
-      snackPosition: SnackPosition.BOTTOM,
-      snackStyle: SnackStyle.FLOATING,
-      animationDuration: const Duration(milliseconds: 300),
-      duration: const Duration(seconds: 2),
+    snackyy(
+      title: 'Copied $title',
+      message: value,
       leftBarIndicatorColor: context.theme.colorScheme.primary,
-      margin: const EdgeInsets.all(0.0),
-      titleText: Text(
-        'Copied $title',
-        style: Get.textTheme.displayMedium,
-      ),
-      messageText: Text(
-        value,
-        style: Get.textTheme.displaySmall,
-      ),
+      margin: EdgeInsets.zero,
       borderRadius: 0,
+      top: false,
     );
   }
 

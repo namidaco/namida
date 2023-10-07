@@ -7,6 +7,7 @@ import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -298,16 +299,13 @@ Future<void> showDownloadVideoBottomSheet({
                                           onPressed: () {
                                             // webm doesnt support tag editing
                                             if (isWEBM) {
-                                              Get.snackbar(
-                                                lang.ERROR,
-                                                lang.WEBM_NO_EDIT_TAGS_SUPPORT,
-                                                snackPosition: SnackPosition.BOTTOM,
-                                                snackStyle: SnackStyle.FLOATING,
-                                                animationDuration: const Duration(milliseconds: 300),
-                                                duration: const Duration(seconds: 2),
+                                              snackyy(
+                                                title: lang.ERROR,
+                                                message: lang.WEBM_NO_EDIT_TAGS_SUPPORT,
                                                 leftBarIndicatorColor: Colors.red,
-                                                margin: const EdgeInsets.all(0.0),
+                                                margin: EdgeInsets.zero,
                                                 borderRadius: 0,
+                                                top: false,
                                               );
                                             }
 

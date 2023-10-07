@@ -784,7 +784,7 @@ extension LanguageUtils on Language {
 }
 
 void showMinimumItemsSnack([int minimum = 1]) {
-  Get.snackbar(lang.MINIMUM_ONE_ITEM, lang.getMinimumItemSubtitle(minimum));
+  snackyy(title: lang.MINIMUM_ONE_ITEM, message: lang.getMinimumItemSubtitle(minimum));
 }
 
 class _NamidaConverters {

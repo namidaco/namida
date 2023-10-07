@@ -22,7 +22,7 @@ class ScrollSearchController {
   }
 
   final ytSearchKey = GlobalKey<YoutubeSearchResultsPageState>();
-  SearchType currentSearchType = SearchType.localTracks;
+  final currentSearchType = SearchType.localTracks.obs;
 
   final RxBool isGlobalSearchMenuShown = false.obs;
   final TextEditingController searchTextEditingController = TextEditingController();

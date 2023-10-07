@@ -25,7 +25,7 @@ class BackupAndRestore extends StatelessWidget {
 
   bool _canDoImport() {
     if (JsonToHistoryParser.inst.isParsing.value || HistoryController.inst.isLoadingHistory) {
-      Get.snackbar(lang.NOTE, lang.ANOTHER_PROCESS_IS_RUNNING);
+      snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
       return false;
     }
     return true;

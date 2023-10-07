@@ -1332,7 +1332,10 @@ class NamidaMiniPlayer extends StatelessWidget {
           icon: Broken.trash,
           onPressed: () {
             final removed = Player.inst.removeDuplicatesFromQueue();
-            Get.snackbar(lang.NOTE, "${lang.REMOVED} ${removed.displayTrackKeyword}");
+            snackyy(
+              icon: Broken.filter_remove,
+              message: "${lang.REMOVED} ${removed.displayTrackKeyword}",
+            );
           },
         ),
         const SizedBox(width: 6.0),
@@ -1573,7 +1576,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                     NamidaNavigator.inst.closeDialog();
                     final historyTracks = HistoryController.inst.historyTracks;
                     if (historyTracks.isEmpty) {
-                      Get.snackbar(lang.NOTE, lang.NO_TRACKS_IN_HISTORY);
+                      snackyy(title: lang.NOTE, message: lang.NO_TRACKS_IN_HISTORY);
                       return;
                     }
                     showCalendarDialog(
@@ -1617,7 +1620,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                     }
 
                     if (allAvailableMoodsPlaylists.isEmpty && allAvailableMoodsTracks.isEmpty) {
-                      Get.snackbar(lang.ERROR, lang.NO_MOODS_AVAILABLE);
+                      snackyy(title: lang.ERROR, message: lang.NO_MOODS_AVAILABLE);
                       return;
                     }
 
@@ -1727,7 +1730,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                             text: lang.GENERATE,
                             onPressed: () {
                               if (minRating.value > maxRating.value) {
-                                Get.snackbar(lang.ERROR, lang.MIN_VALUE_CANT_BE_MORE_THAN_MAX);
+                                snackyy(title: lang.ERROR, message: lang.MIN_VALUE_CANT_BE_MORE_THAN_MAX);
                                 return;
                               }
                               final tracks = NamidaGenerator.inst.generateTracksFromRatings(
@@ -1808,7 +1811,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                   onTap: (insertionType) {
                     final year = currentTrack.year;
                     if (year == 0) {
-                      Get.snackbar(lang.ERROR, lang.NEW_TRACKS_UNKNOWN_YEAR);
+                      snackyy(title: lang.ERROR, message: lang.NEW_TRACKS_UNKNOWN_YEAR);
                       return;
                     }
                     final tracks = NamidaGenerator.inst.generateTracksFromSameEra(year, currentTrack: currentTrack);

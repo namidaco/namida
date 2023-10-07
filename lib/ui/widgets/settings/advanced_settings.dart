@@ -63,7 +63,7 @@ class AdvancedSettings extends StatelessWidget {
             title: lang.RESCAN_VIDEOS,
             onTap: () async {
               await VideoController.inst.scanLocalVideos(forceReScan: true);
-              Get.snackbar(lang.DONE, lang.FINISHED_UPDATING_LIBRARY);
+              snackyy(title: lang.DONE, message: lang.FINISHED_UPDATING_LIBRARY);
             },
           ),
           CustomListTile(
@@ -135,7 +135,7 @@ class AdvancedSettings extends StatelessWidget {
                           newestDate: newestDate,
                         );
                         NamidaNavigator.inst.closeDialog();
-                        Get.snackbar(lang.NOTE, "${lang.REMOVED} ${removedNum.displayTrackKeyword}");
+                        snackyy(title: lang.NOTE, message: "${lang.REMOVED} ${removedNum.displayTrackKeyword}");
                       },
                     )
                   ],

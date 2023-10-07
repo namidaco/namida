@@ -266,7 +266,7 @@ Future<void> showGeneralPopupDialog(
                   if (didRename) {
                     NamidaNavigator.inst.closeDialog();
                   } else {
-                    Get.snackbar(lang.ERROR, lang.COULDNT_RENAME_PLAYLIST);
+                    snackyy(title: lang.ERROR, message: lang.COULDNT_RENAME_PLAYLIST);
                   }
                 }
               },
@@ -301,10 +301,11 @@ Future<void> showGeneralPopupDialog(
     if (pl == null) return;
 
     await PlaylistController.inst.removePlaylist(pl);
-    Get.snackbar(
-      lang.UNDO_CHANGES,
-      lang.UNDO_CHANGES_DELETED_PLAYLIST,
-      mainButton: TextButton(
+    snackyy(
+      title: lang.UNDO_CHANGES,
+      message: lang.UNDO_CHANGES_DELETED_PLAYLIST,
+      displaySeconds: 3,
+      button: TextButton(
         onPressed: () async {
           await PlaylistController.inst.reAddPlaylist(pl, pl.modifiedDate);
           Get.closeAllSnackbars();
@@ -367,7 +368,7 @@ Future<void> showGeneralPopupDialog(
     final files = Directory(dirPath).listSync();
     files.removeWhere((element) => element is! File);
     if (files.isEmpty) {
-      Get.snackbar(lang.ERROR, lang.NO_TRACKS_FOUND_IN_DIRECTORY);
+      snackyy(title: lang.ERROR, message: lang.NO_TRACKS_FOUND_IN_DIRECTORY);
       return;
     }
 
@@ -456,7 +457,7 @@ Future<void> showGeneralPopupDialog(
   void openYoutubeLink() {
     final link = tracks.first.youtubeLink;
     if (link == '') {
-      Get.snackbar(lang.COULDNT_OPEN, lang.COULDNT_OPEN_YT_LINK);
+      snackyy(title: lang.COULDNT_OPEN, message: lang.COULDNT_OPEN_YT_LINK);
       return;
     }
     launchUrlString(
@@ -521,10 +522,11 @@ Future<void> showGeneralPopupDialog(
             cancelSkipTimer();
             final oldQueue = queue;
             QueueController.inst.removeQueue(oldQueue);
-            Get.snackbar(
-              lang.UNDO_CHANGES,
-              lang.UNDO_CHANGES_DELETED_QUEUE,
-              mainButton: TextButton(
+            snackyy(
+              title: lang.UNDO_CHANGES,
+              message: lang.UNDO_CHANGES_DELETED_QUEUE,
+              displaySeconds: 3,
+              button: TextButton(
                 onPressed: () {
                   QueueController.inst.reAddQueue(oldQueue);
                   Get.closeAllSnackbars();

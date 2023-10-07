@@ -68,7 +68,7 @@ class TrackTileCustomization extends StatelessWidget {
               showSettingDialogWithTextField(
                 title: lang.TRACK_THUMBNAIL_SIZE_IN_LIST,
                 trackThumbnailSizeinList: true,
-                iconWidget: const Icon(Broken.maximize_3),
+                icon: Broken.maximize_3,
               );
             },
           ),
@@ -82,7 +82,7 @@ class TrackTileCustomization extends StatelessWidget {
               showSettingDialogWithTextField(
                 title: lang.HEIGHT_OF_TRACK_TILE,
                 trackListTileHeight: true,
-                iconWidget: const Icon(Broken.pharagraphspacing),
+                icon: Broken.pharagraphspacing,
               );
             },
           ),
@@ -127,7 +127,7 @@ class TrackTileCustomization extends StatelessWidget {
             onTap: () => showSettingDialogWithTextField(
               title: lang.TRACK_TILE_ITEMS_SEPARATOR,
               trackTileSeparator: true,
-              iconWidget: const Icon(Broken.minus_square),
+              icon: Broken.minus_square,
             ),
           ),
         ),

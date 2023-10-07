@@ -29,15 +29,12 @@ class TapDetector extends StatelessWidget {
     this.enableFeedback = true,
     this.excludeFromSemantics = false,
     this.focusNode,
-    this.canRequestFocus = true,
+    this.canRequestFocus = false,
     this.onFocusChange,
     this.autofocus = false,
     this.useGestureDetector = true,
     this.enableTaps = true,
-  })  : assert(enableFeedback != null),
-        assert(excludeFromSemantics != null),
-        assert(autofocus != null),
-        assert(canRequestFocus != null);
+  });
 
   final Widget? child;
   final GestureTapDownCallback? onTap;
@@ -57,12 +54,12 @@ class TapDetector extends StatelessWidget {
   final double? radius;
   final BorderRadius? borderRadius;
   final ShapeBorder? customBorder;
-  final bool? enableFeedback;
-  final bool? excludeFromSemantics;
+  final bool enableFeedback;
+  final bool excludeFromSemantics;
   final FocusNode? focusNode;
-  final bool? canRequestFocus;
+  final bool canRequestFocus;
   final ValueChanged<bool>? onFocusChange;
-  final bool? autofocus;
+  final bool autofocus;
   final bool useGestureDetector;
   final bool enableTaps;
 
@@ -137,7 +134,7 @@ class TapDetector extends StatelessWidget {
                 : (onDoubleTap != null)
                     ? _onTapCancel
                     : onTapCancel,
-            excludeFromSemantics: excludeFromSemantics ?? false,
+            excludeFromSemantics: excludeFromSemantics,
             child: child,
           )
         : InkWell(
@@ -169,11 +166,11 @@ class TapDetector extends StatelessWidget {
             borderRadius: borderRadius,
             customBorder: customBorder,
             enableFeedback: enableFeedback,
-            excludeFromSemantics: excludeFromSemantics ?? false,
+            excludeFromSemantics: excludeFromSemantics,
             focusNode: focusNode,
-            canRequestFocus: canRequestFocus ?? true,
+            canRequestFocus: canRequestFocus,
             onFocusChange: onFocusChange,
-            autofocus: autofocus ?? false,
+            autofocus: autofocus,
             child: child,
           );
   }

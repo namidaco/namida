@@ -173,59 +173,64 @@ class NamidaSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SearchBarAnimation(
-      key: searchBarKey,
-      isSearchBoxOnRightSide: true,
-      textAlignToRight: false,
-      durationInMilliSeconds: 300,
-      enableKeyboardFocus: true,
-      isOriginalAnimation: false,
-      textEditingController: ScrollSearchController.inst.searchTextEditingController,
-      hintText: lang.SEARCH,
-      searchBoxWidth: context.width / 1.2,
-      buttonColour: Colors.transparent,
-      enableBoxShadow: false,
-      buttonShadowColour: Colors.transparent,
-      hintTextColour: context.theme.colorScheme.onSurface,
-      searchBoxColour: context.theme.cardColor.withAlpha(200),
-      enteredTextStyle: context.theme.textTheme.displayMedium,
-      cursorColour: context.theme.colorScheme.onBackground,
-      buttonBorderColour: Colors.black45,
-      cursorRadius: const Radius.circular(12.0),
-      buttonWidget: const IgnorePointer(
-        child: NamidaIconButton(
-          icon: Broken.search_normal,
+    return Obx(
+      () => SearchBarAnimation(
+        key: searchBarKey,
+        isSearchBoxOnRightSide: true,
+        textAlignToRight: false,
+        durationInMilliSeconds: 300,
+        enableKeyboardFocus: true,
+        isOriginalAnimation: false,
+        textEditingController: ScrollSearchController.inst.searchTextEditingController,
+        hintText: ScrollSearchController.inst.currentSearchType.value == SearchType.youtube ? lang.SEARCH_YOUTUBE : lang.SEARCH,
+        searchBoxWidth: context.width / 1.2,
+        buttonColour: Colors.transparent,
+        enableBoxShadow: false,
+        buttonShadowColour: Colors.transparent,
+        hintTextColour: context.theme.colorScheme.onSurface,
+        searchBoxColour: context.theme.cardColor.withAlpha(200),
+        enteredTextStyle: context.theme.textTheme.displayMedium,
+        cursorColour: context.theme.colorScheme.onBackground,
+        buttonBorderColour: Colors.black45,
+        cursorRadius: const Radius.circular(12.0),
+        buttonWidget: const IgnorePointer(
+          child: NamidaIconButton(
+            icon: Broken.search_normal,
+          ),
         ),
-      ),
-      secondaryButtonWidget: const IgnorePointer(
-        child: NamidaIconButton(
-          icon: Broken.search_status_1,
+        secondaryButtonWidget: const IgnorePointer(
+          child: NamidaIconButton(
+            icon: Broken.search_status_1,
+          ),
         ),
-      ),
-      trailingWidget: NamidaIconButton(
-        icon: Broken.close_circle,
-        padding: EdgeInsets.zero,
-        iconSize: 22,
-        onPressed: ScrollSearchController.inst.resetSearch,
-      ),
-      onTap: () {
-        ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
-        ScrollSearchController.inst.showSearchMenu();
-      },
-      onPressButton: (isOpen) {
-        ScrollSearchController.inst.showSearchMenu(isOpen);
-        ScrollSearchController.inst.resetSearch();
-      },
-      onFieldSubmitted: (val) {
-        if (ScrollSearchController.inst.currentSearchType == SearchType.youtube) {
-          final latestSearch = ScrollSearchController.inst.ytSearchKey.currentState?.currentSearchText;
-          if (latestSearch != val) {
-            ScrollSearchController.inst.ytSearchKey.currentState?.fetchSearch(customText: val);
+        trailingWidget: NamidaIconButton(
+          icon: Broken.close_circle,
+          padding: EdgeInsets.zero,
+          iconSize: 22,
+          onPressed: ScrollSearchController.inst.resetSearch,
+        ),
+        onTap: () {
+          ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
+          ScrollSearchController.inst.showSearchMenu();
+        },
+        onPressButton: (isOpen) {
+          ScrollSearchController.inst.showSearchMenu(isOpen);
+          ScrollSearchController.inst.resetSearch();
+        },
+        onFieldSubmitted: (val) {
+          if (ScrollSearchController.inst.currentSearchType.value == SearchType.youtube) {
+            final latestSearch = ScrollSearchController.inst.ytSearchKey.currentState?.currentSearchText;
+            if (latestSearch != val) {
+              ScrollSearchController.inst.ytSearchKey.currentState?.fetchSearch(customText: val);
+            }
           }
-        }
-      },
-      onChanged: (value) => SearchSortController.inst.searchAll(value),
-      onTapOutside: (event) => FocusScope.of(context).unfocus(),
+        },
+        onChanged: (value) => SearchSortController.inst.searchAll(value),
+        // -- unfocusing produces weird bug while swiping for drawer
+        // -- leaving it will leave the pointer while entering miniplayer
+        // -- bruh
+        // onTapOutside: (event) => FocusScope.of(context).unfocus(),
+      ),
     );
   }
 }

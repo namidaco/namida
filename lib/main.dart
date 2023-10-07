@@ -20,6 +20,7 @@ import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -139,7 +140,7 @@ Future<void> _initializeIntenties() async {
   void showErrorPlayingFileSnackbar({String? error}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final errorMessage = error != null ? '($error)' : '';
-      Get.snackbar(lang.ERROR, '${lang.COULDNT_PLAY_FILE} $errorMessage');
+      snackyy(title: lang.ERROR, message: '${lang.COULDNT_PLAY_FILE} $errorMessage');
     });
   }
 
@@ -194,7 +195,7 @@ Future<bool> requestManageStoragePermission() async {
   }
 
   if (!await Permission.manageExternalStorage.isGranted || await Permission.manageExternalStorage.isDenied) {
-    Get.snackbar(lang.STORAGE_PERMISSION_DENIED, lang.STORAGE_PERMISSION_DENIED_SUBTITLE);
+    snackyy(title: lang.STORAGE_PERMISSION_DENIED, message: lang.STORAGE_PERMISSION_DENIED_SUBTITLE);
     return false;
   }
   await createDir();

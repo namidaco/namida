@@ -927,7 +927,7 @@ class GeneratePlaylistButton extends StatelessWidget {
       onPressed: () {
         final numbers = PlaylistController.inst.generateRandomPlaylist();
         if (numbers == 0) {
-          Get.snackbar(lang.ERROR, lang.NO_ENOUGH_TRACKS);
+          snackyy(title: lang.ERROR, message: lang.NO_ENOUGH_TRACKS);
         }
       },
     );

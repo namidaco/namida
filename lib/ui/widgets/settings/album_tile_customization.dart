@@ -96,7 +96,7 @@ class AlbumTileCustomization extends StatelessWidget {
               showSettingDialogWithTextField(
                 title: lang.ALBUM_THUMBNAIL_SIZE_IN_LIST,
                 albumThumbnailSizeinList: true,
-                iconWidget: const Icon(Broken.maximize_3),
+                icon: Broken.maximize_3,
               );
             },
           ),
@@ -112,7 +112,7 @@ class AlbumTileCustomization extends StatelessWidget {
               showSettingDialogWithTextField(
                 title: lang.HEIGHT_OF_ALBUM_TILE,
                 albumListTileHeight: true,
-                iconWidget: const Icon(Broken.pharagraphspacing),
+                icon: Broken.pharagraphspacing,
               );
             },
           ),

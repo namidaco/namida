@@ -115,13 +115,14 @@ class NamidaOnTaps {
   }
 
   Future<void> onRemoveTracksFromPlaylist(String name, List<TrackWithDate> tracksWithDates) async {
-    void snackyy({required void Function() whatDoYouWant}) {
-      Get.snackbar(
-        lang.UNDO_CHANGES,
-        lang.UNDO_CHANGES_DELETED_TRACK,
-        mainButton: TextButton(
+    void showSnacky({required void Function() whatDoYouWant}) {
+      snackyy(
+        title: lang.UNDO_CHANGES,
+        message: lang.UNDO_CHANGES_DELETED_TRACK,
+        displaySeconds: 3,
+        button: TextButton(
           onPressed: () {
-            Get.closeAllSnackbars();
+            Get.closeCurrentSnackbar();
             whatDoYouWant();
           },
           child: Text(lang.UNDO),
@@ -134,7 +135,7 @@ class NamidaOnTaps {
     if (isHistory) {
       final tempList = List<TrackWithDate>.from(tracksWithDates);
       await HistoryController.inst.removeTracksFromHistory(tracksWithDates);
-      snackyy(
+      showSnacky(
         whatDoYouWant: () async {
           await HistoryController.inst.addTracksToHistory(tempList);
           HistoryController.inst.sortHistoryTracks(tempList.mapped((e) => e.dateAdded.toDaysSince1970()));
@@ -150,7 +151,7 @@ class NamidaOnTaps {
       });
 
       await PlaylistController.inst.removeTracksFromPlaylist(playlist, twdAndIndexes.values.toList());
-      snackyy(
+      showSnacky(
         whatDoYouWant: () async {
           PlaylistController.inst.insertTracksInPlaylistWithEachIndex(
             playlist,

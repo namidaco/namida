@@ -455,7 +455,7 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
         hintText: widget.hintText,
         hintStyle: TextStyle(
           color: widget.hintTextColour,
-          fontSize: _SBDimensions.d16,
+          fontSize: _SBDimensions.d15,
           fontWeight: FontWeight.w400,
           height: kIsWeb ? _SBDimensions.d1_5 : _SBDimensions.d1_2,
         ),
@@ -503,7 +503,7 @@ class _SBDimensions {
   static const double d8 = 8.0;
   static const double d10 = 10.0;
   static const double d11 = 11.0;
-  static const double d16 = 16.0;
+  static const double d15 = 15.0;
   static const double d20 = 20.0;
   static const double d30 = 30.0;
   static const double d45 = 45.0;

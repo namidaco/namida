@@ -83,10 +83,10 @@ class BackupController {
       ];
       await ZipFile.createFromFiles(sourceDir: sourceDir, files: allFiles, zipFile: zipFile);
 
-      Get.snackbar(lang.CREATED_BACKUP_SUCCESSFULLY, lang.CREATED_BACKUP_SUCCESSFULLY_SUB);
+      snackyy(title: lang.CREATED_BACKUP_SUCCESSFULLY, message: lang.CREATED_BACKUP_SUCCESSFULLY_SUB);
     } catch (e) {
       printy(e, isError: true);
-      Get.snackbar(lang.ERROR, e.toString());
+      snackyy(title: lang.ERROR, message: e.toString());
     }
 
     // Cleaning up
@@ -171,7 +171,7 @@ class BackupController {
     Indexer.inst.refreshLibraryAndCheckForDiff();
     Indexer.inst.updateImageSizeInStorage();
     Indexer.inst.updateVideosSizeInStorage();
-    Get.snackbar(lang.RESTORED_BACKUP_SUCCESSFULLY, lang.RESTORED_BACKUP_SUCCESSFULLY_SUB);
+    snackyy(title: lang.RESTORED_BACKUP_SUCCESSFULLY, message: lang.RESTORED_BACKUP_SUCCESSFULLY_SUB);
     isRestoringBackup.value = false;
   }
 }
