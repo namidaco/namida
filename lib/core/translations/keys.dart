@@ -214,6 +214,7 @@ class LanguageKeys {
   late String GO_TO_CHANNEL;
   late String GO_TO_FOLDER;
   late String GRANT_ACCESS;
+  late String GROUP_ARTWORKS_BY_ALBUM;
   late String GUIDE;
   late String HEIGHT_OF_ALBUM_TILE;
   late String HEIGHT_OF_TRACK_TILE;
@@ -406,6 +407,7 @@ class LanguageKeys {
   late String REPEAT_MODE_NONE;
   late String REPEAT_MODE_ONE;
   late String REPLIES;
+  late String REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING;
   late String RESCAN_VIDEOS;
   late String RESET_TO_DEFAULT;
   late String RESPECT_NO_MEDIA_SUBTITLE;

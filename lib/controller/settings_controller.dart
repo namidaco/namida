@@ -136,6 +136,7 @@ class SettingsController {
   final RxBool displayAudioInfoMiniplayer = false.obs;
   final RxBool showUnknownFieldsInTrackInfoDialog = true.obs;
   final RxBool extractFeatArtistFromTitle = true.obs;
+  final RxBool groupArtworksByAlbum = false.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
     TagField.trackNumber,
     TagField.year,
@@ -359,6 +360,7 @@ class SettingsController {
       displayAudioInfoMiniplayer.value = json['displayAudioInfoMiniplayer'] ?? displayAudioInfoMiniplayer.value;
       showUnknownFieldsInTrackInfoDialog.value = json['showUnknownFieldsInTrackInfoDialog'] ?? showUnknownFieldsInTrackInfoDialog.value;
       extractFeatArtistFromTitle.value = json['extractFeatArtistFromTitle'] ?? extractFeatArtistFromTitle.value;
+      groupArtworksByAlbum.value = json['groupArtworksByAlbum'] ?? groupArtworksByAlbum.value;
 
       final listFromStorage = List<String>.from(json['tagFieldsToEdit'] ?? []);
       tagFieldsToEdit.value = listFromStorage.isNotEmpty ? List<TagField>.from(listFromStorage.map((e) => TagField.values.getEnum(e))) : tagFieldsToEdit;
@@ -541,6 +543,7 @@ class SettingsController {
       'displayAudioInfoMiniplayer': displayAudioInfoMiniplayer.value,
       'showUnknownFieldsInTrackInfoDialog': showUnknownFieldsInTrackInfoDialog.value,
       'extractFeatArtistFromTitle': extractFeatArtistFromTitle.value,
+      'groupArtworksByAlbum': groupArtworksByAlbum.value,
       'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
       'wakelockMode': wakelockMode.value.convertToString,
       'localVideoMatchingType': localVideoMatchingType.value.convertToString,
@@ -697,6 +700,7 @@ class SettingsController {
     bool? displayAudioInfoMiniplayer,
     bool? showUnknownFieldsInTrackInfoDialog,
     bool? extractFeatArtistFromTitle,
+    bool? groupArtworksByAlbum,
     List<TagField>? tagFieldsToEdit,
     WakelockMode? wakelockMode,
     LocalVideoMatchingType? localVideoMatchingType,
@@ -1095,6 +1099,9 @@ class SettingsController {
     }
     if (extractFeatArtistFromTitle != null) {
       this.extractFeatArtistFromTitle.value = extractFeatArtistFromTitle;
+    }
+    if (groupArtworksByAlbum != null) {
+      this.groupArtworksByAlbum.value = groupArtworksByAlbum;
     }
     if (tagFieldsToEdit != null) {
       tagFieldsToEdit.loop((d, index) {

@@ -29,6 +29,8 @@ class Indexer {
   static final Indexer _instance = Indexer._internal();
   Indexer._internal();
 
+  bool get _defaultGroupArtworksByAlbum => settings.groupArtworksByAlbum.value;
+
   final RxBool isIndexing = false.obs;
 
   final RxSet<String> allAudioFiles = <String>{}.obs;
@@ -79,13 +81,22 @@ class Indexer {
     }
   }
 
+  final _cancelableIndexingCompleter = <DateTime, Completer<void>>{};
+
   Future<void> refreshLibraryAndCheckForDiff({Set<String>? currentFiles, bool forceReIndex = false}) async {
+    _cancelableIndexingCompleter.entries.lastOrNull?.value.complete(); // canceling previous indexing sessions
+
     isIndexing.value = true;
+
+    final indexingTokenTime = DateTime.now();
+    _cancelableIndexingCompleter[indexingTokenTime] = Completer<void>();
+
     if (forceReIndex || tracksInfoList.isEmpty) {
       await _fetchAllSongsAndWriteToFile(
         audioFiles: {},
         deletedPaths: {},
         forceReIndex: true,
+        cancelTokenTime: indexingTokenTime,
       );
     } else {
       currentFiles ??= await getAudioFiles();
@@ -93,6 +104,7 @@ class Indexer {
         audioFiles: getNewFoundPaths(currentFiles),
         deletedPaths: getDeletedPaths(currentFiles),
         forceReIndex: false,
+        cancelTokenTime: indexingTokenTime,
       );
     }
 
@@ -331,7 +343,13 @@ class Indexer {
       }
       // ------------------------------------------------------------
 
-      extractOneArtwork(trackPath, bytes: trackInfo.firstArtwork, forceReExtract: deleteOldArtwork, extractColor: extractColor);
+      extractOneArtwork(
+        trackPath,
+        bytes: trackInfo.firstArtwork,
+        forceReExtract: deleteOldArtwork,
+        extractColor: extractColor,
+        albumIdendifier: finalTrackExtended.albumIdentifier,
+      );
     } else {
       // --- Adding dummy track with info extracted from filename.
       final titleAndArtist = getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
@@ -342,7 +360,12 @@ class Indexer {
         originalArtist: artist,
         artistsList: [artist],
       );
-      extractOneArtwork(trackPath, forceReExtract: deleteOldArtwork, extractColor: extractColor);
+      extractOneArtwork(
+        trackPath,
+        forceReExtract: deleteOldArtwork,
+        extractColor: extractColor,
+        albumIdendifier: finalTrackExtended.albumIdentifier,
+      );
     }
 
     final tr = finalTrackExtended.toTrack();
@@ -372,6 +395,7 @@ class Indexer {
     bool forceReExtract = false,
     bool extractColor = false,
     String? artworkPath,
+    required String albumIdendifier,
   }) async {
     Future<void> extractColorPlsss(File imageFile) async {
       if (extractColor) {
@@ -380,7 +404,8 @@ class Indexer {
       }
     }
 
-    final fileOfFull = File("${AppDirs.ARTWORKS}${pathOfAudio.getFilename}.png");
+    final nameInCache = _defaultGroupArtworksByAlbum ? albumIdendifier : pathOfAudio.getFilename;
+    final fileOfFull = File("${AppDirs.ARTWORKS}$nameInCache.png");
 
     if (artworkPath != null) {
       await updateImageSizeInStorage(oldDeletedFile: fileOfFull); // removing old file stats
@@ -399,11 +424,11 @@ class Indexer {
 
     if (art != null) {
       try {
+        await updateImageSizeInStorage(oldDeletedFile: fileOfFull); // removing old file stats
         if (forceReExtract) {
           await fileOfFull.deleteIfExists();
         }
         final imgFile = await fileOfFull.create(recursive: true);
-        await updateImageSizeInStorage(oldDeletedFile: fileOfFull); // removing old file stats
         await imgFile.writeAsBytes(art);
         updateImageSizeInStorage(newImagePath: imgFile.path); // adding new file stats
         extractColorPlsss(imgFile);
@@ -484,6 +509,7 @@ class Indexer {
           ot.path,
           forceReExtract: true,
           artworkPath: newArtworkPath,
+          albumIdendifier: e.value.albumIdentifier,
         );
         CurrentColor.inst.reExtractTrackColorPalette(track: ot, newNC: null, imagePath: ot.pathToImage);
       }
@@ -537,6 +563,7 @@ class Indexer {
     required Set<String> audioFiles,
     required Set<String> deletedPaths,
     required bool forceReIndex,
+    required DateTime cancelTokenTime,
   }) async {
     if (forceReIndex) {
       _clearListsAndResetCounters();
@@ -557,6 +584,9 @@ class Indexer {
     if (audioFiles.isNotEmpty) {
       // -- Extracting All Metadata
       for (final trackPath in audioFiles) {
+        // breaks the loop if another indexing session has been started
+        if (_cancelableIndexingCompleter[cancelTokenTime]?.isCompleted == true) break;
+
         printy(trackPath);
 
         /// skip duplicated tracks according to filename
@@ -902,8 +932,10 @@ class Indexer {
   Future<void> updateImageSizeInStorage({String? newImagePath, File? oldDeletedFile}) async {
     if (newImagePath != null || oldDeletedFile != null) {
       if (oldDeletedFile != null) {
-        if (await oldDeletedFile.exists()) artworksInStorage.value--;
-        artworksSizeInStorage.value -= await oldDeletedFile.sizeInBytes();
+        if (await oldDeletedFile.exists()) {
+          artworksInStorage.value--;
+          artworksSizeInStorage.value -= await oldDeletedFile.sizeInBytes();
+        }
       }
       if (newImagePath != null) {
         artworksInStorage.value++;
@@ -927,8 +959,10 @@ class Indexer {
   Future<void> updateVideosSizeInStorage({String? newVideoPath, File? oldDeletedFile}) async {
     if (newVideoPath != null || oldDeletedFile != null) {
       if (oldDeletedFile != null) {
-        if (await oldDeletedFile.exists()) videosInStorage.value--;
-        videosInStorage.value -= await oldDeletedFile.sizeInBytes();
+        if (await oldDeletedFile.exists()) {
+          videosInStorage.value--;
+          videosInStorage.value -= await oldDeletedFile.sizeInBytes();
+        }
       }
       if (newVideoPath != null) {
         videosInStorage.value++;

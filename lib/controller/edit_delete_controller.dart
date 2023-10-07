@@ -58,7 +58,7 @@ class EditDeleteController {
     final saveDir = await Directory(AppDirs.SAVED_ARTWORKS).create();
     final saveDirPath = saveDir.path;
     final newPath = "$saveDirPath${Platform.pathSeparator}${track.filenameWOExt}.png";
-    final imgFile = await Indexer.inst.extractOneArtwork(track.path);
+    final imgFile = await Indexer.inst.extractOneArtwork(track.path, albumIdendifier: track.albumIdentifier);
     if (imgFile != null) {
       try {
         // try copying
@@ -106,7 +106,9 @@ class EditDeleteController {
 }
 
 extension HasCachedFiles on List<Selectable> {
-  bool get hasArtworkCached => _doesAnyPathExist(AppDirs.ARTWORKS, 'png');
+  // we use [pathToImage] to ensure when [settings.groupArtworksByAlbum] is enabled
+  bool get hasArtworkCached => _doesAnyPathExist(AppDirs.ARTWORKS, 'png', fullPath: (tr) => tr.track.pathToImage);
+
   bool get hasLyricsCached => _doesAnyPathExist(AppDirs.LYRICS, 'txt');
   bool get hasColorCached => _doesAnyPathExist(AppDirs.PALETTES, 'palette');
   bool get hasVideoCached {
@@ -121,10 +123,10 @@ extension HasCachedFiles on List<Selectable> {
 
   bool get hasAnythingCached => hasArtworkCached || hasLyricsCached /* || hasColorCached */;
 
-  bool _doesAnyPathExist(String directory, String extension) {
+  bool _doesAnyPathExist(String directory, String extension, {String Function(Selectable tr)? fullPath}) {
     for (int i = 0; i < length; i++) {
       final track = this[i];
-      if (File("$directory${track.track.filename}.$extension").existsSync()) {
+      if (File(fullPath != null ? fullPath(track) : "$directory${track.track.filename}.$extension").existsSync()) {
         return true;
       }
     }

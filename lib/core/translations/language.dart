@@ -281,6 +281,7 @@ class Language extends LanguageKeys {
 			GO_TO_CHANNEL = getKey("GO_TO_CHANNEL");
 			GO_TO_FOLDER = getKey("GO_TO_FOLDER");
 			GRANT_ACCESS = getKey("GRANT_ACCESS");
+			GROUP_ARTWORKS_BY_ALBUM = getKey("GROUP_ARTWORKS_BY_ALBUM");
 			GUIDE = getKey("GUIDE");
 			HEIGHT_OF_ALBUM_TILE = getKey("HEIGHT_OF_ALBUM_TILE");
 			HEIGHT_OF_TRACK_TILE = getKey("HEIGHT_OF_TRACK_TILE");
@@ -473,6 +474,7 @@ class Language extends LanguageKeys {
 			REPEAT_MODE_NONE = getKey("REPEAT_MODE_NONE");
 			REPEAT_MODE_ONE = getKey("REPEAT_MODE_ONE");
 			REPLIES = getKey("REPLIES");
+			REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING = getKey("REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING");
 			RESCAN_VIDEOS = getKey("RESCAN_VIDEOS");
 			RESET_TO_DEFAULT = getKey("RESET_TO_DEFAULT");
 			RESPECT_NO_MEDIA_SUBTITLE = getKey("RESPECT_NO_MEDIA_SUBTITLE");
@@ -637,6 +639,9 @@ class Language extends LanguageKeys {
     }
   }
 }
+
+
+
 
 
 

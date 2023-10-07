@@ -210,7 +210,7 @@ class NamidaFFMPEG {
       if (filee is File) {
         final tr = await filee.path.toTrackExtOrExtract();
         final ytId = tr?.youtubeID;
-        if (ytId == null || ytId == '') continue;
+        if (tr == null || ytId == null || ytId == '') continue;
 
         File? cachedThumbnail;
 
@@ -223,6 +223,7 @@ class NamidaFFMPEG {
             filee.path,
             forceReExtract: true,
             artworkPath: cachedThumbnail.path,
+            albumIdendifier: tr.albumIdentifier,
           );
           if (file != null) {
             final didUpdate = await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: filee.path, thumbnailPath: file.path);

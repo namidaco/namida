@@ -305,7 +305,10 @@ extension TrackExtUtils on TrackExtended {
   String get folderPath => path.getDirectoryName;
   Folder get folder => Folder(folderPath);
   String get folderName => folderPath.split(Platform.pathSeparator).last;
-  String get pathToImage => "${AppDirs.ARTWORKS}$filename.png";
+  String get pathToImage {
+    final identifier = settings.groupArtworksByAlbum.value ? albumIdentifier : filename;
+    return "${AppDirs.ARTWORKS}$identifier.png";
+  }
 
   String get albumIdentifier => getAlbumIdentifier(settings.albumIdentifiers);
 
@@ -456,7 +459,10 @@ extension TrackUtils on Track {
   String get folderPath => path.getDirectoryName;
   Folder get folder => Folder(folderPath);
   String get folderName => folderPath.split(Platform.pathSeparator).last;
-  String get pathToImage => "${AppDirs.ARTWORKS}$filename.png";
+  String get pathToImage {
+    final identifier = settings.groupArtworksByAlbum.value ? albumIdentifier : filename;
+    return "${AppDirs.ARTWORKS}$identifier.png";
+  }
 
   String get youtubeLink => toTrackExt().youtubeLink;
   String get youtubeID => youtubeLink.getYoutubeID;
