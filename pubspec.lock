@@ -397,7 +397,7 @@ packages:
     source: hosted
     version: "7.0.0+1"
   flutter_mailer:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_mailer
       sha256: a935e9caa842877e8ed56109afb75b86e6488edbcd4696a5ac02b327a48fcd8a

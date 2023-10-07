@@ -2,10 +2,12 @@
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mailer/flutter_mailer.dart';
 
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:get/get.dart';
 import 'package:markdown/src/ast.dart' as md;
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:http/http.dart' as http;
 
@@ -274,6 +276,25 @@ class AboutPage extends StatelessWidget {
                   title: 'App Version',
                   subtitle: AppSocial.APP_VERSION,
                   link: AppSocial.GITHUB_RELEASES,
+                ),
+                NamidaAboutListTile(
+                  icon: Broken.clipboard_text,
+                  title: 'Share Logs',
+                  trailing: NamidaIconButton(
+                    iconColor: context.defaultIconColor(),
+                    icon: Broken.direct_send,
+                    tooltip: AppSocial.EMAIL,
+                    onPressed: () async {
+                      final mailOptions = MailOptions(
+                        body: 'pls look at this report im beggin u pls solve my issue pls i wa-',
+                        subject: 'Namida Logs Report',
+                        recipients: [AppSocial.EMAIL],
+                        attachments: [AppPaths.LOGS],
+                      );
+                      await FlutterMailer.send(mailOptions);
+                    },
+                  ),
+                  onTap: () => Share.shareXFiles([XFile(AppPaths.LOGS)]),
                 )
               ],
             ),
