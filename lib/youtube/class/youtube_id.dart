@@ -12,27 +12,26 @@ import 'package:namida/youtube/controller/youtube_controller.dart';
 
 class YoutubeID implements Playable, ItemWithDate {
   final String id;
-  final YTWatch? watch;
+  final YTWatch? watchNull;
   final PlaylistID? playlistID;
-
-  DateTime get addedDate => watch?.date ?? DateTime.now();
-
-  DateTime get _date => addedDate;
-  YTWatch get _watch => watch ?? YTWatch(date: addedDate, isYTMusic: false);
-
-  const YoutubeID({
-    required this.id,
-    this.watch,
-    required this.playlistID,
-  });
 
   @override
   DateTime get dateTimeAdded => _date;
 
+  DateTime get _date => watch.date;
+
+  YTWatch get watch => watchNull ?? const YTWatch(dateNull: null, isYTMusic: false);
+
+  const YoutubeID({
+    required this.id,
+    this.watchNull,
+    required this.playlistID,
+  });
+
   factory YoutubeID.fromJson(Map<String, dynamic> json) {
     return YoutubeID(
       id: json['id'] ?? '',
-      watch: YTWatch.fromJson(json['watch']),
+      watchNull: YTWatch.fromJson(json['watch']),
       playlistID: json['playlistID'] == null ? null : PlaylistID.fromJson(json['playlistID']),
     );
   }
@@ -40,7 +39,7 @@ class YoutubeID implements Playable, ItemWithDate {
   Map<String, dynamic> toJson() {
     return {
       "id": id,
-      "watch": _watch.toJson(),
+      "watch": watch.toJson(),
       "playlistID": playlistID?.toJson(),
     };
   }

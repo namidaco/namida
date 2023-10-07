@@ -76,6 +76,30 @@ class IndexerSettings extends StatelessWidget {
     );
   }
 
+  void _showReindexingPrompt({
+    required String title,
+    required String body,
+  }) {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: title,
+        actions: [
+          const CancelButton(),
+          const SizedBox(width: 8.0),
+          NamidaButton(
+            text: [lang.CLEAR, lang.RE_INDEX].join(' & '),
+            onPressed: () async {
+              NamidaNavigator.inst.closeDialog();
+              await Indexer.inst.clearImageCache();
+              await Indexer.inst.refreshLibraryAndCheckForDiff(forceReIndex: true);
+            },
+          ),
+        ],
+        bodyText: body,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -169,24 +193,7 @@ class IndexerSettings extends StatelessWidget {
               value: settings.groupArtworksByAlbum.value,
               onChanged: (isTrue) {
                 settings.save(groupArtworksByAlbum: !isTrue);
-                NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    title: lang.GROUP_ARTWORKS_BY_ALBUM,
-                    actions: [
-                      const CancelButton(),
-                      const SizedBox(width: 8.0),
-                      NamidaButton(
-                        text: [lang.CLEAR, lang.RE_INDEX].join(' & '),
-                        onPressed: () async {
-                          NamidaNavigator.inst.closeDialog();
-                          await Indexer.inst.clearImageCache();
-                          await Indexer.inst.refreshLibraryAndCheckForDiff(forceReIndex: true);
-                        },
-                      ),
-                    ],
-                    bodyText: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING,
-                  ),
-                );
+                _showReindexingPrompt(title: lang.GROUP_ARTWORKS_BY_ALBUM, body: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING);
               },
             ),
           ),
@@ -203,15 +210,20 @@ class IndexerSettings extends StatelessWidget {
                     actions: [
                       const CancelButton(),
                       const SizedBox(width: 8.0),
-                      NamidaButton(
-                        text: lang.SAVE,
-                        onPressed: () async {
-                          NamidaNavigator.inst.closeDialog();
-                          settings.removeFromList(albumIdentifiersAll: AlbumIdentifier.values);
-                          settings.save(albumIdentifiers: tempList);
+                      Obx(
+                        () => NamidaButton(
+                          enabled: !settings.albumIdentifiers.every((element) => tempList.contains(element)), // isEqualTo wont work cuz order shouldnt matter
+                          text: lang.SAVE,
+                          onPressed: () async {
+                            NamidaNavigator.inst.closeDialog();
+                            settings.removeFromList(albumIdentifiersAll: AlbumIdentifier.values);
+                            settings.save(albumIdentifiers: tempList);
 
-                          await Indexer.inst.prepareTracksFile();
-                        },
+                            Indexer.inst.prepareTracksFile();
+
+                            _showReindexingPrompt(title: lang.ALBUM_IDENTIFIERS, body: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING);
+                          },
+                        ),
                       ),
                     ],
                     child: Column(

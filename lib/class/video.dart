@@ -41,23 +41,23 @@ class YoutubeVideoHistory {
 }
 
 class YTWatch {
-  final DateTime? date;
+  final DateTime? dateNull;
   final bool isYTMusic;
 
-  DateTime get _date => date ?? DateTime.now();
-  DateTime get addedDate => _date;
+  DateTime get date => _date;
+  DateTime get _date => dateNull ?? DateTime.now();
 
   const YTWatch({
-    required this.date,
+    required this.dateNull,
     required this.isYTMusic,
   });
 
   factory YTWatch.fromJson(Map<String, dynamic>? json) {
     if (json == null) {
-      return YTWatch(date: DateTime.now(), isYTMusic: false);
+      return YTWatch(dateNull: DateTime(1970), isYTMusic: false);
     }
     return YTWatch(
-      date: DateTime.fromMillisecondsSinceEpoch(json['date'] ?? 0),
+      dateNull: DateTime.fromMillisecondsSinceEpoch(json['date'] ?? 0),
       isYTMusic: json['isYTMusic'] ?? false,
     );
   }

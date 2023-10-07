@@ -33,7 +33,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
             .map(
               (id) => YoutubeID(
                 id: id,
-                watch: YTWatch(date: DateTime.now(), isYTMusic: false),
+                watchNull: YTWatch(dateNull: DateTime.now(), isYTMusic: false),
                 playlistID: playlistID,
               ),
             )
@@ -64,7 +64,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
         .map(
           (id) => YoutubeID(
             id: id,
-            watch: YTWatch(date: DateTime.now(), isYTMusic: false),
+            watchNull: YTWatch(dateNull: DateTime.now(), isYTMusic: false),
             playlistID: playlist.playlistID,
           ),
         )
@@ -77,7 +77,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
     await super.toggleTrackFavourite(
       newTrack: YoutubeID(
         id: id,
-        watch: YTWatch(date: DateTime.now(), isYTMusic: false),
+        watchNull: YTWatch(dateNull: DateTime.now(), isYTMusic: false),
         playlistID: favouritesPlaylist.value.playlistID,
       ),
       identifyBy: (ytid) => ytid.id == id,

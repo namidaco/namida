@@ -506,12 +506,21 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                       children: [
                                                         Row(
                                                           children: [
-                                                            NamidaBasicShimmer(
-                                                              width: 114.0,
-                                                              height: 12.0,
-                                                              borderRadius: 4.0,
-                                                              shimmerEnabled: channelName == null,
-                                                              child: Text(channelName ?? ''),
+                                                            Expanded(
+                                                              child: NamidaBasicShimmer(
+                                                                width: 114.0,
+                                                                height: 12.0,
+                                                                borderRadius: 4.0,
+                                                                shimmerEnabled: channelName == null,
+                                                                child: Text(
+                                                                  channelName ?? '',
+                                                                  style: context.textTheme.displayMedium?.copyWith(
+                                                                    fontSize: 12.5.multipliedFontScale,
+                                                                  ),
+                                                                  maxLines: 1,
+                                                                  overflow: TextOverflow.ellipsis,
+                                                                ),
+                                                              ),
                                                             ),
                                                             if (channelIsVerified) ...[
                                                               const SizedBox(width: 4.0),
@@ -534,6 +543,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                               (channelSubs ?? 0) < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS
                                                             ].join(' '),
                                                             style: context.textTheme.displaySmall,
+                                                            maxLines: 1,
+                                                            overflow: TextOverflow.ellipsis,
                                                           ),
                                                         ),
                                                       ],

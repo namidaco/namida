@@ -104,7 +104,6 @@ class YoutubeHistoryPage extends StatelessWidget {
                       final videos = sections[sectionIndex].getItems();
                       final video = videos[itemIndex];
                       final info = YoutubeController.inst.fetchVideoDetailsFromCacheSync(video.id);
-                      final date = video.addedDate.millisecondsSinceEpoch.dateAndClockFormattedOriginal;
                       final duration = info?.duration?.inSeconds.secondsLabel;
                       final isCurrentlyPlaying = Player.inst.nowPlayingVideoID == video;
                       final menuItems = YTUtils.getVideoCardMenuItems(
@@ -116,6 +115,8 @@ class YoutubeHistoryPage extends StatelessWidget {
                       final backupVideoInfo = YoutubeController.inst.getBackupVideoInfo(video.id);
                       final videoTitle = info?.name ?? backupVideoInfo?.title ?? video.id;
                       final videoSubtitle = info?.uploaderName ?? backupVideoInfo?.channel;
+                      final dateText = video.dateTimeAdded.millisecondsSinceEpoch.dateAndClockFormattedOriginal;
+
                       return NamidaPopupWrapper(
                         openOnTap: false,
                         childrenDefault: menuItems,
@@ -191,7 +192,7 @@ class YoutubeHistoryPage extends StatelessWidget {
                                             ),
                                           ),
                                         Text(
-                                          date,
+                                          dateText,
                                           maxLines: 1,
                                           style: context.textTheme.displaySmall?.copyWith(
                                             color: isCurrentlyPlaying ? Colors.white.withOpacity(0.5) : null,
