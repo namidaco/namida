@@ -153,6 +153,10 @@ extension MediaTypeToText on MediaType {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension AlbumIdentifierToText on AlbumIdentifier {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension SortToText on SortType {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
@@ -411,7 +415,7 @@ extension WidgetsPagess on Widget {
         break;
       case AlbumTracksPage:
         route = RouteType.SUBPAGE_albumTracks;
-        name = (this as AlbumTracksPage).name;
+        name = (this as AlbumTracksPage).albumIdentifier;
         break;
       case ArtistTracksPage:
         route = RouteType.SUBPAGE_artistTracks;
@@ -737,7 +741,7 @@ extension TracksFromMaps on String {
     final tracks = getArtistTracks();
     final albums = <String>{};
     tracks.loop((t, i) {
-      albums.add(t.album);
+      albums.add(t.albumIdentifier);
     });
     return albums;
   }
@@ -832,6 +836,11 @@ class _NamidaConverters {
         MediaType.genre: lang.GENRES,
         MediaType.playlist: lang.PLAYLISTS,
         MediaType.folder: lang.FOLDERS,
+      },
+      AlbumIdentifier: {
+        AlbumIdentifier.albumName: lang.NAME,
+        AlbumIdentifier.albumArtist: lang.ALBUM_ARTIST,
+        AlbumIdentifier.year: lang.YEAR,
       },
       SortType: {
         SortType.title: lang.TITLE,

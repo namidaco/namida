@@ -16,13 +16,13 @@ import 'package:namida/ui/widgets/library/album_card.dart';
 class ArtistTracksPage extends StatelessWidget {
   final String name;
   final List<Track> tracks;
-  final Set<String> albums;
+  final Set<String> albumIdentifiers;
 
   const ArtistTracksPage({
     super.key,
     required this.name,
     required this.tracks,
-    required this.albums,
+    required this.albumIdentifiers,
   });
 
   @override
@@ -65,7 +65,7 @@ class ArtistTracksPage extends StatelessWidget {
             ),
             NamidaExpansionTile(
               icon: Broken.music_dashboard,
-              titleText: "${lang.ALBUMS} ${albums.length}",
+              titleText: "${lang.ALBUMS} ${albumIdentifiers.length}",
               initiallyExpanded: true,
               children: [
                 SizedBox(
@@ -74,16 +74,16 @@ class ArtistTracksPage extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 14.0),
                     scrollDirection: Axis.horizontal,
                     itemExtent: 100.0,
-                    itemCount: albums.length,
+                    itemCount: albumIdentifiers.length,
                     itemBuilder: (context, i) {
-                      final albumName = albums.elementAt(i);
+                      final albumId = albumIdentifiers.elementAt(i);
                       return Container(
                         width: 100.0,
                         margin: const EdgeInsets.only(left: 2.0),
                         child: AlbumCard(
                           dimensions: albumDimensions,
-                          name: albumName,
-                          album: albumName.getAlbumTracks(),
+                          identifier: albumId,
+                          album: albumId.getAlbumTracks(),
                           staggered: false,
                           compact: true,
                         ),

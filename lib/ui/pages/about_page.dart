@@ -165,7 +165,7 @@ class AboutPage extends StatelessWidget {
                   icon: Broken.command_square,
                   title: 'Issues/Features',
                   subtitle: 'Have an issue or suggestion? open an issue on GitHub',
-                  link: AppSocial.GITHUB,
+                  link: AppSocial.GITHUB_ISSUES,
                 ),
                 ObxValue<RxBool>(
                   (isLoading) => NamidaAboutListTile(

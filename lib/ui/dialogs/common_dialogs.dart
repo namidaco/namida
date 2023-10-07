@@ -48,8 +48,8 @@ class NamidaDialogs {
     );
   }
 
-  Future<void> showAlbumDialog(String albumName) async {
-    final tracks = albumName.getAlbumTracks();
+  Future<void> showAlbumDialog(String albumIdentifier) async {
+    final tracks = albumIdentifier.getAlbumTracks();
     final artists = tracks.mappedUniquedList((e) => e.artistsList);
     await showGeneralPopupDialog(
       tracks,
@@ -59,8 +59,8 @@ class NamidaDialogs {
       thirdLineText: artists.join(', ').overflow,
       forceSquared: shouldAlbumBeSquared,
       forceSingleArtwork: true,
-      heroTag: 'album_$albumName',
-      albumToAddFrom: tracks.album,
+      heroTag: 'album_$albumIdentifier',
+      albumToAddFrom: (tracks.album, albumIdentifier),
     );
   }
 

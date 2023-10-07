@@ -32,23 +32,23 @@ class NamidaOnTaps {
   Future<void> onArtistTap(String name, [List<Track>? tracksPre]) async {
     final tracks = tracksPre ?? name.getArtistTracks();
 
-    final albums = name.getArtistAlbums();
+    final albumIds = name.getArtistAlbums();
 
     NamidaNavigator.inst.navigateTo(
       ArtistTracksPage(
         name: name,
         tracks: tracks,
-        albums: albums,
+        albumIdentifiers: albumIds,
       ),
     );
   }
 
-  Future<void> onAlbumTap(String album) async {
-    final tracks = album.getAlbumTracks();
+  Future<void> onAlbumTap(String albumIdentifier) async {
+    final tracks = albumIdentifier.getAlbumTracks();
 
     NamidaNavigator.inst.navigateTo(
       AlbumTracksPage(
-        name: album,
+        albumIdentifier: albumIdentifier,
         tracks: tracks,
       ),
     );

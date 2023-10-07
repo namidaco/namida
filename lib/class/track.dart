@@ -6,6 +6,7 @@ import 'package:history_manager/history_manager.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -306,6 +307,15 @@ extension TrackExtUtils on TrackExtended {
   String get folderName => folderPath.split(Platform.pathSeparator).last;
   String get pathToImage => "${AppDirs.ARTWORKS}$filename.png";
 
+  String get albumIdentifier => getAlbumIdentifier(settings.albumIdentifiers);
+
+  String getAlbumIdentifier(List<AlbumIdentifier> identifiers) {
+    final n = identifiers.contains(AlbumIdentifier.albumName) ? album : '';
+    final aa = identifiers.contains(AlbumIdentifier.albumArtist) ? albumArtist : '';
+    final y = identifiers.contains(AlbumIdentifier.year) ? year : '';
+    return "$n$aa$y";
+  }
+
   String get youtubeLink {
     final match = comment.isEmpty ? null : kYoutubeRegex.firstMatch(comment)?[0];
     final match2 = filename.isEmpty ? null : kYoutubeRegex.firstMatch(filename)?[0];
@@ -470,4 +480,7 @@ extension TrackUtils on Track {
       "${trExt.sampleRate / 1000} khz",
     ].join(' • ');
   }
+
+  String get albumIdentifier => toTrackExt().albumIdentifier;
+  String getAlbumIdentifier(List<AlbumIdentifier> identifiers) => toTrackExt().getAlbumIdentifier(identifiers);
 }

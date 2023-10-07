@@ -20,14 +20,14 @@ import 'package:namida/ui/widgets/library/album_tile.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class AlbumsPage extends StatelessWidget {
-  final List<String>? albums;
+  final List<String>? albumIdentifiers;
   final int countPerRow;
   final bool animateTiles;
   final bool enableHero;
 
   const AlbumsPage({
     super.key,
-    this.albums,
+    this.albumIdentifiers,
     required this.countPerRow,
     this.animateTiles = true,
     this.enableHero = true,
@@ -37,7 +37,7 @@ class AlbumsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final finalAlbums = albums ?? SearchSortController.inst.albumSearchList;
+    final finalAlbums = albumIdentifiers ?? SearchSortController.inst.albumSearchList;
     final scrollController = LibraryTab.albums.scrollController;
     final albumDimensions = Dimensions.inst.getAlbumCardDimensions(countPerRow);
 
@@ -87,13 +87,13 @@ class AlbumsPage extends StatelessWidget {
                             itemExtent: settings.albumListTileHeight.value + 4.0 * 5,
                             padding: const EdgeInsets.only(bottom: kBottomPadding),
                             itemBuilder: (BuildContext context, int i) {
-                              final albumName = finalAlbums[i];
+                              final albumId = finalAlbums[i];
                               return AnimatingTile(
                                 position: i,
                                 shouldAnimate: _shouldAnimate,
                                 child: AlbumTile(
-                                  name: albumName,
-                                  album: albumName.getAlbumTracks(),
+                                  identifier: albumId,
+                                  album: albumId.getAlbumTracks(),
                                 ),
                               );
                             },
@@ -108,15 +108,15 @@ class AlbumsPage extends StatelessWidget {
                                 mainAxisSpacing: 8.0,
                                 gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow),
                                 itemBuilder: (context, i) {
-                                  final albumName = finalAlbums[i];
+                                  final albumId = finalAlbums[i];
                                   return AnimatingGrid(
                                     columnCount: finalAlbums.length,
                                     position: i,
                                     shouldAnimate: _shouldAnimate,
                                     child: AlbumCard(
                                       dimensions: albumDimensions,
-                                      name: albumName,
-                                      album: albumName.getAlbumTracks(),
+                                      identifier: albumId,
+                                      album: albumId.getAlbumTracks(),
                                       staggered: true,
                                     ),
                                   );
@@ -130,15 +130,15 @@ class AlbumsPage extends StatelessWidget {
                                 itemCount: finalAlbums.length,
                                 padding: const EdgeInsets.only(bottom: kBottomPadding),
                                 itemBuilder: (BuildContext context, int i) {
-                                  final albumName = finalAlbums[i];
+                                  final albumId = finalAlbums[i];
                                   return AnimatingGrid(
                                     columnCount: finalAlbums.length,
                                     position: i,
                                     shouldAnimate: _shouldAnimate,
                                     child: AlbumCard(
                                       dimensions: albumDimensions,
-                                      name: albumName,
-                                      album: albumName.getAlbumTracks(),
+                                      identifier: albumId,
+                                      album: albumId.getAlbumTracks(),
                                       staggered: false,
                                     ),
                                   );

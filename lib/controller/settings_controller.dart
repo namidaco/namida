@@ -224,6 +224,10 @@ class SettingsController {
     MediaType.artist,
   ].obs;
 
+  final albumIdentifiers = <AlbumIdentifier>[
+    AlbumIdentifier.albumName,
+  ].obs;
+
   bool didSupportNamida = false;
 
   Future<void> prepareSettingsFile() async {
@@ -254,6 +258,11 @@ class SettingsController {
       activeSearchMediaTypes.value = activeSearchMediaTypesFromStorage.isNotEmpty
           ? List<MediaType>.from(activeSearchMediaTypesFromStorage.map((e) => MediaType.values.getEnum(e)))
           : activeSearchMediaTypes.toList();
+
+      final albumIdentifiersFromStorage = List<String>.from(json['albumIdentifiers'] ?? []);
+      albumIdentifiers.value = albumIdentifiersFromStorage.isNotEmpty
+          ? List<AlbumIdentifier>.from(albumIdentifiersFromStorage.map((e) => AlbumIdentifier.values.getEnum(e)))
+          : albumIdentifiers.toList();
 
       searchResultsPlayMode.value = json['searchResultsPlayMode'] ?? searchResultsPlayMode.value;
       borderRadiusMultiplier.value = json['borderRadiusMultiplier'] ?? borderRadiusMultiplier.value;
@@ -439,6 +448,7 @@ class SettingsController {
       'libraryTabs': libraryTabs.mapped((element) => element.convertToString),
       'homePageItems': homePageItems.mapped((element) => element.convertToString),
       'activeSearchMediaTypes': activeSearchMediaTypes.mapped((element) => element.convertToString),
+      'albumIdentifiers': albumIdentifiers.mapped((element) => element.convertToString),
       'searchResultsPlayMode': searchResultsPlayMode.value,
       'borderRadiusMultiplier': borderRadiusMultiplier.value,
       'fontScaleFactor': fontScaleFactor.value,
@@ -585,6 +595,7 @@ class SettingsController {
     List<LibraryTab>? libraryTabs,
     List<HomePageItems>? homePageItems,
     List<MediaType>? activeSearchMediaTypes,
+    List<AlbumIdentifier>? albumIdentifiers,
     double? borderRadiusMultiplier,
     double? fontScaleFactor,
     double? trackThumbnailSizeinList,
@@ -740,6 +751,13 @@ class SettingsController {
       activeSearchMediaTypes.loop((t, index) {
         if (!this.activeSearchMediaTypes.contains(t)) {
           this.activeSearchMediaTypes.add(t);
+        }
+      });
+    }
+    if (albumIdentifiers != null) {
+      albumIdentifiers.loop((t, index) {
+        if (!this.albumIdentifiers.contains(t)) {
+          this.albumIdentifiers.add(t);
         }
       });
     }
@@ -1158,6 +1176,8 @@ class SettingsController {
     HomePageItems? homePageItem1,
     List<HomePageItems>? homePageItemsAll,
     MediaType? activeSearchMediaTypes1,
+    AlbumIdentifier? albumIdentifiers1,
+    List<AlbumIdentifier>? albumIdentifiersAll,
     String? backupItemslist1,
     List<String>? backupItemslistAll,
     String? youtubeVideoQualities1,
@@ -1227,6 +1247,14 @@ class SettingsController {
     }
     if (activeSearchMediaTypes1 != null) {
       activeSearchMediaTypes.remove(activeSearchMediaTypes1);
+    }
+    if (albumIdentifiers1 != null) {
+      albumIdentifiers.remove(albumIdentifiers1);
+    }
+    if (albumIdentifiersAll != null) {
+      albumIdentifiersAll.loop((t, index) {
+        albumIdentifiers.remove(t);
+      });
     }
     if (backupItemslist1 != null) {
       backupItemslist.remove(backupItemslist1);

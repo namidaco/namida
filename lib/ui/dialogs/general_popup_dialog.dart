@@ -57,7 +57,7 @@ Future<void> showGeneralPopupDialog(
   bool isFromPlayerQueue = false,
   bool errorPlayingTrack = false,
   String? artistToAddFrom,
-  String? albumToAddFrom,
+  (String, String)? albumToAddFrom,
   String? heroTag,
 }) async {
   final tracksExisting = <Track>[];
@@ -73,7 +73,11 @@ Future<void> showGeneralPopupDialog(
   final trackToExtractColorFrom = forceSingleArtwork ? tracks[tracks.indexOfImage] : tracks.first;
   final colorDelightened = extractColor ? await CurrentColor.inst.getTrackDelightnedColor(trackToExtractColorFrom) : CurrentColor.inst.color;
 
-  final List<String> availableAlbums = tracks.mappedUniqued((e) => e.toTrackExt().album);
+  /// name, identifier
+  final List<(String, String)> availableAlbums = tracks.mappedUniqued((e) {
+    final ext = e.toTrackExt();
+    return (ext.album, ext.albumIdentifier);
+  });
   final List<String> availableArtists = tracks.mappedUniquedList((e) => e.toTrackExt().artistsList);
   final List<Folder> availableFolders = tracks.mappedUniqued((e) => e.folder);
 
@@ -761,14 +765,14 @@ Future<void> showGeneralPopupDialog(
                           color: colorDelightened,
                           compact: true,
                           title: lang.GO_TO_ALBUM,
-                          subtitle: availableAlbums.first,
+                          subtitle: availableAlbums.first.$1,
                           icon: Broken.music_dashboard,
-                          onTap: () => NamidaOnTaps.inst.onAlbumTap(availableAlbums.first),
+                          onTap: () => NamidaOnTaps.inst.onAlbumTap(availableAlbums.first.$2),
                           trailing: IconButton(
                             tooltip: lang.ADD_MORE_FROM_THIS_ALBUM,
                             onPressed: () {
                               NamidaNavigator.inst.closeDialog();
-                              final tracks = availableAlbums.first.getAlbumTracks();
+                              final tracks = availableAlbums.first.$2.getAlbumTracks();
                               Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreAlbum);
                             },
                             icon: const Icon(Broken.add),
@@ -778,10 +782,10 @@ Future<void> showGeneralPopupDialog(
                         SmallListTile(
                           color: colorDelightened,
                           compact: true,
-                          title: lang.ADD_MORE_FROM_TO_QUEUE.replaceFirst('_MEDIA_', '"$albumToAddFrom"'),
+                          title: lang.ADD_MORE_FROM_TO_QUEUE.replaceFirst('_MEDIA_', '"${albumToAddFrom.$1}"'),
                           icon: Broken.music_dashboard,
                           onTap: () {
-                            final tracks = availableAlbums.first.getAlbumTracks();
+                            final tracks = albumToAddFrom.$2.getAlbumTracks();
                             Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreAlbum);
                           },
                           trailing: IgnorePointer(
@@ -808,9 +812,9 @@ Future<void> showGeneralPopupDialog(
                                     padding: const EdgeInsets.all(2.0).add(const EdgeInsets.only(right: 2.0)),
                                     child: NamidaInkWell(
                                         borderRadius: 0.0,
-                                        onTap: () => NamidaOnTaps.inst.onAlbumTap(e),
+                                        onTap: () => NamidaOnTaps.inst.onAlbumTap(e.$2),
                                         child: Text(
-                                          e,
+                                          e.$1,
                                           style: Get.textTheme.displaySmall?.copyWith(decoration: TextDecoration.underline),
                                         )),
                                   ),

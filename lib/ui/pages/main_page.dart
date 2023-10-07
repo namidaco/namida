@@ -241,7 +241,7 @@ class AlbumSearchResultsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlbumsPage(
-      albums: SearchSortController.inst.albumSearchTemp,
+      albumIdentifiers: SearchSortController.inst.albumSearchTemp,
       countPerRow: settings.albumGridCount.value,
     );
   }

@@ -15,7 +15,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 
 class AlbumCard extends StatelessWidget {
-  final String name;
+  final String identifier;
   final List<Track> album;
   final bool staggered;
   final bool compact;
@@ -27,7 +27,7 @@ class AlbumCard extends StatelessWidget {
 
   const AlbumCard({
     super.key,
-    required this.name,
+    required this.identifier,
     required this.album,
     required this.staggered,
     this.compact = false,
@@ -51,7 +51,7 @@ class AlbumCard extends StatelessWidget {
     final shouldDisplayNormalDate = topRightText == null && !settings.albumCardTopRightDate.value && finalYear != '';
     final shouldDisplayAlbumArtist = album.albumArtist != '';
 
-    final hero = 'album_$name$additionalHeroTag';
+    final hero = 'album_$identifier$additionalHeroTag';
 
     return GridTile(
       child: Container(
@@ -69,8 +69,8 @@ class AlbumCard extends StatelessWidget {
           ],
         ),
         child: NamidaInkWell(
-          onTap: () => NamidaOnTaps.inst.onAlbumTap(album.album),
-          onLongPress: () => NamidaDialogs.inst.showAlbumDialog(name),
+          onTap: () => NamidaOnTaps.inst.onAlbumTap(identifier),
+          onLongPress: () => NamidaDialogs.inst.showAlbumDialog(identifier),
           child: Column(
             children: [
               NamidaHero(

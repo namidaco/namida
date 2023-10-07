@@ -12,17 +12,18 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 
 class AlbumTracksPage extends StatelessWidget {
-  final String name;
+  final String albumIdentifier;
   final List<Track> tracks;
 
   const AlbumTracksPage({
     super.key,
-    required this.name,
+    required this.albumIdentifier,
     required this.tracks,
   });
 
   @override
   Widget build(BuildContext context) {
+    final name = tracks.album;
     return BackgroundWrapper(
       child: Obx(
         () => NamidaTracksList(
@@ -35,18 +36,18 @@ class AlbumTracksPage extends StatelessWidget {
             source: QueueSource.album,
             subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
             thirdLineText: tracks.albumArtist,
-            heroTag: 'album_$name',
+            heroTag: 'album_$albumIdentifier',
             imageWidget: shouldAlbumBeSquared
                 ? MultiArtworkContainer(
                     size: Get.width * 0.35,
-                    heroTag: 'album_$name',
+                    heroTag: 'album_$albumIdentifier',
                     paths: [tracks.pathToImage],
                   )
                 : Container(
                     margin: const EdgeInsets.symmetric(horizontal: 12.0),
                     padding: const EdgeInsets.all(3.0),
                     child: NamidaHero(
-                      tag: 'album_$name',
+                      tag: 'album_$albumIdentifier',
                       child: ArtworkWidget(
                         thumbnailSize: Get.width * 0.35,
                         forceSquared: false,

@@ -7,8 +7,10 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
@@ -222,6 +224,68 @@ class IndexerSettings extends StatelessWidget {
               ),
             ),
           ),
+          Obx(
+            () => CustomListTile(
+              icon: Broken.arrow_square,
+              title: lang.ALBUM_IDENTIFIERS,
+              trailingText: settings.albumIdentifiers.length.toString(),
+              onTap: () {
+                final tempList = List<AlbumIdentifier>.from(settings.albumIdentifiers).obs;
+                NamidaNavigator.inst.navigateDialog(
+                  dialog: CustomBlurryDialog(
+                    title: lang.ALBUM_IDENTIFIERS,
+                    actions: [
+                      const CancelButton(),
+                      const SizedBox(width: 8.0),
+                      NamidaButton(
+                        text: lang.SAVE,
+                        onPressed: () async {
+                          NamidaNavigator.inst.closeDialog();
+                          settings.removeFromList(albumIdentifiersAll: AlbumIdentifier.values);
+                          settings.save(albumIdentifiers: tempList);
+
+                          await Indexer.inst.prepareTracksFile();
+                        },
+                      ),
+                    ],
+                    child: Column(
+                      children: [
+                        ...AlbumIdentifier.values.map(
+                          (e) {
+                            final isForcelyEnabled = e == AlbumIdentifier.albumName;
+                            return Opacity(
+                              opacity: isForcelyEnabled ? 0.7 : 1.0,
+                              child: Padding(
+                                padding: const EdgeInsets.all(6.0),
+                                child: Obx(
+                                  () => ListTileWithCheckMark(
+                                    title: e.toText(),
+                                    active: tempList.contains(e),
+                                    onTap: () {
+                                      if (isForcelyEnabled) return;
+                                      tempList.addOrRemove(e);
+                                    },
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          // Obx(
+          //   () => CustomSwitchListTile(
+          //     icon: Broken.backward_item,
+          //     title: 'Group Artworks by Album',
+          //     value: settings.groupArtworksByAlbum.value,
+          //     onChanged: (isTrue) => settings.save(groupArtworksByAlbum: !isTrue),
+          //   ),
+          // ),
           CustomListTile(
             icon: Broken.refresh,
             title: lang.RE_INDEX,

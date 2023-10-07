@@ -209,14 +209,14 @@ class SearchPage extends StatelessWidget {
                                           itemExtent: 108.0,
                                           list: albumSearchTemp,
                                           builder: (item) {
-                                            final albumName = item;
+                                            final albumId = item;
                                             return Container(
                                               width: 130.0,
                                               margin: const EdgeInsets.only(left: 2.0),
                                               child: AlbumCard(
                                                 dimensions: albumDimensions,
-                                                name: albumName,
-                                                album: albumName.getAlbumTracks(),
+                                                identifier: albumId,
+                                                album: albumId.getAlbumTracks(),
                                                 staggered: false,
                                               ),
                                             );

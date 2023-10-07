@@ -85,6 +85,7 @@ class Language extends LanguageKeys {
 			AGO = getKey("AGO");
 			ALBUM_ARTIST = getKey("ALBUM_ARTIST");
 			ALBUM_ARTISTS = getKey("ALBUM_ARTISTS");
+			ALBUM_IDENTIFIERS = getKey("ALBUM_IDENTIFIERS");
 			ALBUM_THUMBNAIL_SIZE_IN_LIST = getKey("ALBUM_THUMBNAIL_SIZE_IN_LIST");
 			ALBUM_TILE_CUSTOMIZATION = getKey("ALBUM_TILE_CUSTOMIZATION");
 			ALBUM = getKey("ALBUM");
@@ -636,6 +637,7 @@ class Language extends LanguageKeys {
     }
   }
 }
+
 
 
 

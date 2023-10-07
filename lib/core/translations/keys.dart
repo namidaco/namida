@@ -18,6 +18,7 @@ class LanguageKeys {
   late String AGO;
   late String ALBUM_ARTIST;
   late String ALBUM_ARTISTS;
+  late String ALBUM_IDENTIFIERS;
   late String ALBUM_THUMBNAIL_SIZE_IN_LIST;
   late String ALBUM_TILE_CUSTOMIZATION;
   late String ALBUM;

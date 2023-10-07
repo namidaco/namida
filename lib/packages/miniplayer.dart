@@ -342,7 +342,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                 Expanded(
                                   child: NamidaInkWell(
                                     borderRadius: 16.0,
-                                    onTap: () => NamidaOnTaps.inst.onAlbumTap(currentTrack.album),
+                                    onTap: () => NamidaOnTaps.inst.onAlbumTap(currentTrack.albumIdentifier),
                                     child: Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [

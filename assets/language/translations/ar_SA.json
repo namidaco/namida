@@ -1,4 +1,5 @@
 {
+  "ALBUM_IDENTIFIERS": "Album Identifiers",
   "DIM_INTENSITY": "Dim Intensity",
   "DIM_MINIPLAYER_AFTER_SECONDS": "Dim miniplayer after _SECONDS_ seconds of inactivity",
   "DISPLAY_REMAINING_DURATION_INSTEAD_OF_TOTAL": "Display remaining duration instead of total",

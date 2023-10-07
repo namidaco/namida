@@ -301,3 +301,9 @@ enum SearchType {
   youtube,
   localVideos,
 }
+
+enum AlbumIdentifier {
+  albumName,
+  year,
+  albumArtist,
+}

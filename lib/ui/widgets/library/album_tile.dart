@@ -12,12 +12,12 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 
 class AlbumTile extends StatelessWidget {
-  final String name;
+  final String identifier;
   final List<Track> album;
 
   const AlbumTile({
     super.key,
-    required this.name,
+    required this.identifier,
     required this.album,
   });
 
@@ -26,7 +26,7 @@ class AlbumTile extends StatelessWidget {
     final albumThumbnailSize = settings.albumThumbnailSizeinList.value;
     final albumTileHeight = settings.albumListTileHeight.value;
     final finalYear = album.year.yearFormatted;
-    final hero = 'album_$name';
+    final hero = 'album_$identifier';
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8.0).add(const EdgeInsets.only(bottom: Dimensions.tileBottomMargin)),
@@ -42,8 +42,8 @@ class AlbumTile extends StatelessWidget {
       child: NamidaInkWell(
         borderRadius: 0.2 * albumTileHeight,
         bgColor: context.theme.cardColor,
-        onTap: () => NamidaOnTaps.inst.onAlbumTap(album.album),
-        onLongPress: () => NamidaDialogs.inst.showAlbumDialog(name),
+        onTap: () => NamidaOnTaps.inst.onAlbumTap(identifier),
+        onLongPress: () => NamidaDialogs.inst.showAlbumDialog(identifier),
         child: SizedBox(
           height: Dimensions.inst.albumTileItemExtent,
           child: Padding(
@@ -114,7 +114,7 @@ class AlbumTile extends StatelessWidget {
                 const SizedBox(width: 4.0),
                 MoreIcon(
                   padding: 6.0,
-                  onPressed: () => NamidaDialogs.inst.showAlbumDialog(name),
+                  onPressed: () => NamidaDialogs.inst.showAlbumDialog(identifier),
                 ),
                 const SizedBox(width: 10.0),
               ],

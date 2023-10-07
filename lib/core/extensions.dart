@@ -222,7 +222,7 @@ extension TRACKPLAYMODE on TrackPlayMode {
       queue = searchQueue ?? (SearchSortController.inst.trackSearchTemp.isNotEmpty ? SearchSortController.inst.trackSearchTemp : SearchSortController.inst.trackSearchList);
     }
     if (this == TrackPlayMode.trackAlbum) {
-      queue = track.album.getAlbumTracks();
+      queue = track.albumIdentifier.getAlbumTracks();
     }
     if (this == TrackPlayMode.trackArtist) {
       queue = track.artistsList.first.getArtistTracks();

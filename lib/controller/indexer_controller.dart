@@ -14,7 +14,6 @@ import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -115,7 +114,7 @@ class Indexer {
       final trExt = tr.toTrackExt();
 
       // -- Assigning Albums
-      mainMapAlbums.value.addForce(trExt.album, tr);
+      mainMapAlbums.value.addForce(trExt.albumIdentifier, tr);
 
       // -- Assigning Artists
       trExt.artistsList.loop((artist, i) {
@@ -145,7 +144,7 @@ class Indexer {
   void _removeTheseTracksToAlbumGenreArtistEtc(List<Track> tracks) {
     tracks.loop((tr, _) {
       final trExt = tr.toTrackExt();
-      mainMapAlbums.value[trExt.album]?.remove(tr);
+      mainMapAlbums.value[trExt.albumIdentifier]?.remove(tr);
 
       trExt.artistsList.loop((artist, i) {
         mainMapArtists.value[artist]?.remove(tr);
@@ -169,7 +168,7 @@ class Indexer {
       final trExt = tr.toTrackExt();
 
       // -- Assigning Albums
-      mainMapAlbums.value.addNoDuplicatesForce(trExt.album, tr);
+      mainMapAlbums.value.addNoDuplicatesForce(trExt.albumIdentifier, tr);
 
       // -- Assigning Artists
       trExt.artistsList.loop((artist, i) {
@@ -185,7 +184,7 @@ class Indexer {
       mainMapFolders.addNoDuplicatesForce(tr.folder, tr);
 
       // --- Adding media that was affected
-      addedAlbums.add(trExt.album);
+      addedAlbums.add(trExt.albumIdentifier);
       addedArtists.addAll(trExt.artistsList);
       addedGenres.addAll(trExt.artistsList);
       addedFolders.add(tr.folder);
@@ -396,14 +395,13 @@ class Indexer {
       return fileOfFull;
     }
 
-    if (forceReExtract) {
-      await fileOfFull.deleteIfExists();
-    }
-
     final art = bytes ?? await _faudiotagger.readArtwork(path: pathOfAudio);
 
     if (art != null) {
       try {
+        if (forceReExtract) {
+          await fileOfFull.deleteIfExists();
+        }
         final imgFile = await fileOfFull.create(recursive: true);
         await updateImageSizeInStorage(oldDeletedFile: fileOfFull); // removing old file stats
         await imgFile.writeAsBytes(art);
@@ -439,7 +437,6 @@ class Indexer {
     if (updateArtwork) {
       imageCache.clear();
       imageCache.clearLiveImages();
-      await EditDeleteController.inst.deleteArtwork(tracks);
     }
 
     await tracksReal.loopFuture((track, index) async {
@@ -450,6 +447,7 @@ class Indexer {
           trackPath: track.path,
           tryExtractingFromFilename: tryExtractingFromFilename,
           extractColor: true,
+          deleteOldArtwork: true,
         );
         onProgress(tr != null);
       }

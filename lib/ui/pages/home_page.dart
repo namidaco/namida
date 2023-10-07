@@ -105,14 +105,14 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     _updateSameTimeNYearsAgo(timeNow, minusYearClamped);
 
     // -- Recent Albums --
-    _recentAlbums.addAllIfEmpty(_recentListened.mappedUniqued((e) => e.track.album).take(25));
+    _recentAlbums.addAllIfEmpty(_recentListened.mappedUniqued((e) => e.track.albumIdentifier).take(25));
 
     // -- Recent Artists --
     _recentArtists.addAllIfEmpty(_recentListened.mappedUniquedList((e) => e.track.artistsList).take(25));
 
     _topRecentListened.loop((e, _) {
       // -- Top Recent Albums --
-      _topRecentAlbums.update(e.key.album, (value) => value + 1, ifAbsent: () => 1);
+      _topRecentAlbums.update(e.key.albumIdentifier, (value) => value + 1, ifAbsent: () => 1);
 
       // -- Top Recent Artists --
       e.key.artistsList.loop((e, _) => _topRecentArtists.update(e, (value) => value + 1, ifAbsent: () => 1));
@@ -242,18 +242,18 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         itemCount: itemCount,
         itemExtent: 98.0,
         itemBuilder: (context, index) {
-          final a = album(index);
+          final albumId = album(index);
           return ShimmerWrapper(
             shimmerEnabled: _isLoading,
             child: AlbumCard(
               homepageItem: homepageItem,
               displayIcon: !_isLoading,
               compact: true,
-              name: a ?? '',
-              album: a?.getAlbumTracks() ?? [],
+              identifier: albumId ?? '',
+              album: albumId?.getAlbumTracks() ?? [],
               staggered: false,
               dimensions: albumDimensions,
-              topRightText: listens == null ? null : "${listens(a)}",
+              topRightText: listens == null ? null : "${listens(albumId)}",
               additionalHeroTag: "$title$index",
             ),
           );
