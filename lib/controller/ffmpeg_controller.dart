@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -28,9 +29,9 @@ class NamidaFFMPEG {
   };
 
   Future<MediaInfo?> extractMetadata(String path) async {
-    final session = await FFprobeKit.getMediaInformation(path);
-    final info = session.getMediaInformation()?.getAllProperties();
-    return info == null ? null : MediaInfo.fromMap(info);
+    final session = await FFprobeKit.execute('-loglevel error -v quiet -show_entries stream_tags:format_tags -of json "$path"');
+    final output = await session.getOutput();
+    return output == null ? null : MediaInfo.fromMap(jsonDecode(output));
   }
 
   Future<bool> editMetadata({
@@ -91,6 +92,7 @@ class NamidaFFMPEG {
 
     final codec = compress ? '-filter:v scale=-2:250 -an' : '-c copy';
     final output = await FFmpegKit.execute('-i "$audioPath" -map 0:v -map -0:V $codec -y "$thumbnailSavePath"');
+    print('fffffffffff ${(await output.getAllLogs()).lastOrNull?.getMessage()}');
     final didSuccess = await output.getReturnCode().then((value) => value?.isValueSuccess()) ?? false;
     return didSuccess ? File(thumbnailSavePath) : null;
   }

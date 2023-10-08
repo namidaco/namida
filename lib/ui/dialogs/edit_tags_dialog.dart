@@ -549,7 +549,7 @@ Future<void> _updateTracksMetadata({
 
   String oldComment = '';
   if (commentToInsert != '') {
-    oldComment = await tagger.readTags(path: tracks.first.path).then((value) => value?.comment ?? '');
+    oldComment = await tagger.extractMetadata(trackPath: tracks.first.path).then((value) => value.$1?.comment ?? '');
   }
   final newTag = commentToInsert != ''
       ? Tag(comment: oldComment == '' ? commentToInsert : '$commentToInsert\n$oldComment')

@@ -22,6 +22,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 
 class Indexer {
@@ -249,14 +250,17 @@ class Indexer {
     late TrackExtended finalTrackExtended;
 
     FAudioModel? trackInfo;
-    try {
-      trackInfo = await _faudiotagger.readAllData(path: trackPath);
-    } catch (e) {
-      printy(e, isError: true);
-    }
+    Uint8List? artwork;
+
+    final infoAndArtwork = await _faudiotagger.extractMetadata(trackPath: trackPath);
+
+    trackInfo = infoAndArtwork.$1;
+    artwork = infoAndArtwork.$2;
+
     if (trackInfo == null && !tryExtractingFromFilename) {
       return null;
     }
+
     final initialTrack = TrackExtended(
       title: UnknownTags.TITLE,
       originalArtist: UnknownTags.ARTIST,
@@ -345,7 +349,7 @@ class Indexer {
 
       extractOneArtwork(
         trackPath,
-        bytes: trackInfo.firstArtwork,
+        bytes: artwork,
         forceReExtract: deleteOldArtwork,
         extractColor: extractColor,
         albumIdendifier: finalTrackExtended.albumIdentifier,
