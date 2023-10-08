@@ -5,9 +5,9 @@
 A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in Flutter
 
 ![](https://img.shields.io/badge/Built%20in-Flutter-%23369FE7)
-![](https://img.shields.io/badge/Telegram-Channel-blue?link=https://t.me/namida_official)
-![](https://img.shields.io/badge/Telegram-Chat-blue?link=https://t.me/+FmdfsgKoGmM1ZGFk)
-![](https://img.shields.io/badge/Discord-Server-7B55C1?link=https://discord.gg/WeY7DTVChT)
+![](https://img.shields.io/badge/Telegram-Channel-blue?link=https%3A%2F%2Ft.me%2Fnamida_official)
+![](https://img.shields.io/badge/Telegram-Chat-blue?link=https%3A%2F%2Ft.me%2F%2BFmdfsgKoGmM1ZGFk)
+![](https://img.shields.io/badge/Discord-Server-7B55C1?link=https%3A%2F%2Fdiscord.gg%2FWeY7DTVChT)
 
 # Sections:
 
