@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
@@ -34,6 +35,9 @@ class MiniPlayerController {
 
   /// Prevents Listener while reorderding or dismissing items inside queue.
   bool isReorderingQueue = false;
+
+  Completer<void>? reorderingQueueCompleter;
+  Completer<void>? reorderingQueueCompleterPlayer;
 
   /// Icon that represents the direction of the current track
   final Rx<IconData> arrowIcon = Broken.cd.obs;
@@ -78,6 +82,17 @@ class MiniPlayerController {
     }
     animation.reset();
     verticalSnapping();
+  }
+
+  void invokeStartReordering() {
+    isReorderingQueue = true;
+    reorderingQueueCompleter ??= Completer<void>();
+  }
+
+  void invokeDoneReordering() {
+    isReorderingQueue = false;
+    reorderingQueueCompleter?.complete();
+    reorderingQueueCompleter = null;
   }
 
   late AnimationController animation;

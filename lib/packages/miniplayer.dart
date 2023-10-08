@@ -1257,8 +1257,8 @@ class NamidaMiniPlayer extends StatelessWidget {
                                     itemExtents: Player.inst.currentQueue.toTrackItemExtents(),
                                     scrollController: MiniPlayerController.inst.queueScrollController,
                                     padding: EdgeInsets.only(bottom: 56.0 + SelectedTracksController.inst.bottomPadding.value),
-                                    onReorderStart: (index) => MiniPlayerController.inst.isReorderingQueue = true,
-                                    onReorderEnd: (index) => MiniPlayerController.inst.isReorderingQueue = false,
+                                    onReorderStart: (index) => MiniPlayerController.inst.invokeStartReordering(),
+                                    onReorderEnd: (index) => MiniPlayerController.inst.invokeDoneReordering(),
                                     onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
                                     itemCount: Player.inst.currentQueue.length,
                                     itemBuilder: (context, i) {
@@ -1272,9 +1272,16 @@ class NamidaMiniPlayer extends StatelessWidget {
                                           key: Key("Diss_$key"),
                                           onDismissed: (direction) {
                                             Player.inst.removeFromQueue(i);
-                                            MiniPlayerController.inst.isReorderingQueue = false;
+                                            MiniPlayerController.inst.invokeDoneReordering();
                                           },
-                                          onUpdate: (detailts) => MiniPlayerController.inst.isReorderingQueue = detailts.progress != 0.0,
+                                          onUpdate: (detailts) {
+                                            final isReordering = detailts.progress != 0.0;
+                                            if (isReordering) {
+                                              MiniPlayerController.inst.invokeStartReordering();
+                                            } else {
+                                              MiniPlayerController.inst.invokeDoneReordering();
+                                            }
+                                          },
                                           child: TrackTile(
                                             index: i,
                                             key: Key('tile_$key'),

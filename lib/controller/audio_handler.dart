@@ -222,23 +222,29 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  void onReorderItems(int currentIndex, Q itemDragged) {
-    super.onReorderItems(currentIndex, itemDragged);
+  void onReorderItems(int currentIndex, Q itemDragged) async {
+    // usually not needed, since [beforePlaying] already assign if miniplayer is reordering.
+    MiniPlayerController.inst.reorderingQueueCompleterPlayer ??= Completer<void>();
+
+    await super.onReorderItems(currentIndex, itemDragged);
     refreshNotification();
 
-    itemDragged._execute(
+    await itemDragged._execute(
       selectable: (finalItem) {
         CurrentColor.inst.updatePlayerColorFromTrack(null, currentIndex, updateIndexOnly: true);
       },
       youtubeID: (finalItem) {},
     );
 
-    currentQueue._execute(
+    await currentQueue._execute(
       selectable: (finalItems) {
         QueueController.inst.updateLatestQueue(finalItems.tracks.toList());
       },
       youtubeID: (finalItems) {},
     );
+
+    MiniPlayerController.inst.reorderingQueueCompleterPlayer?.complete();
+    MiniPlayerController.inst.reorderingQueueCompleterPlayer = null;
   }
 
   @override
@@ -266,6 +272,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     super.beforePlaying(); // saving last position.
     NamidaNavigator.inst.popAllMenus();
     YTUtils.expandMiniplayer();
+
+    if (MiniPlayerController.inst.isReorderingQueue) {
+      MiniPlayerController.inst.reorderingQueueCompleterPlayer ??= Completer<void>();
+    }
 
     /// -- Adding videos that may have been cached to VideoController cache map,
     /// for the sake of playing videos without connection, usually videos are added automatically
@@ -306,6 +316,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       selectable: (finalItems) async => fn(),
       youtubeID: (finalItem) async => fn(),
     );
+
+    await MiniPlayerController.inst.reorderingQueueCompleter?.future; // wait if reordering
+    await MiniPlayerController.inst.reorderingQueueCompleterPlayer?.future; // wait if updating lists after reordering
   }
 
   @override

@@ -85,11 +85,11 @@ class NamidaReordererableListener extends StatelessWidget {
     return CustomReorderableDelayedDragStartListener(
       onDragStart: (event) {
         if (isInQueue) {
-          MiniPlayerController.inst.isReorderingQueue = true;
+          MiniPlayerController.inst.invokeStartReordering();
         }
       },
       onDragEnd: (event) {
-        MiniPlayerController.inst.isReorderingQueue = false;
+        MiniPlayerController.inst.invokeDoneReordering();
       },
       index: index,
       delay: const Duration(milliseconds: 80),
