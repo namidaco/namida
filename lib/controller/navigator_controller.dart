@@ -65,7 +65,10 @@ class NamidaNavigator {
   }
 
   void _hideSearchMenuAndUnfocus() => ScrollSearchController.inst.hideSearchMenu();
-  void _minimizeMiniplayer() => MiniPlayerController.inst.snapToMini();
+  void _minimizeMiniplayer() {
+    MiniPlayerController.inst.snapToMini();
+    MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
+  }
 
   void _hideEverything() {
     _hideSearchMenuAndUnfocus();

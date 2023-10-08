@@ -269,7 +269,6 @@
   "MAX_VIDEO_CACHE_SIZE": "Max video cache size",
   "METADATA_CACHE": "Metadata Cache",
   "METADATA_EDIT_FAILED": "Failed to edit metadata",
-  "METADATA_EDIT_FAILED_SUBTITLE": "Consider resetting SAF permission in the settings",
   "METADATA_READ_FAILED": "Failed to read metadata",
   "MINIMUM": "Minimum",
   "MINIMUM_ONE_FOLDER_SUBTITLE": "There should be at least 1 folder, add more folders if you want to remove this one",

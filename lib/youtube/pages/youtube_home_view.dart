@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/pages/youtube_page.dart';
@@ -10,9 +11,10 @@ class YouTubeHomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tabs = [lang.HOME, lang.HISTORY];
+    final historyIndex = tabs.length - 1;
     return BackgroundWrapper(
       child: NamidaTabView(
-        initialIndex: tabs.length - 1,
+        initialIndex: historyIndex,
         tabs: tabs,
         onIndexChanged: (index) {},
         children: const [

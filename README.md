@@ -25,7 +25,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 - [Screenshots](#screenshots)
 - [Usage Preview](#usage-preview)
 - [Installation](#installation)
-- [Permission Note](#-permission-note)
+- [Permission Note](#permission-note)
 - [Special Thanks](#special-thanks)
 - [Donate](#donate)
 - [Social](#social)

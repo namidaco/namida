@@ -2,25 +2,22 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
-import 'package:namida/class/track.dart';
-import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
-void showTrackListensDialog(Track track, {List<int>? datesOfListen, Color? colorScheme}) async {
-  datesOfListen ??= HistoryController.inst.topTracksMapListens[track] ?? [];
-  final color = colorScheme ?? await CurrentColor.inst.getTrackDelightnedColor(track);
+void showVideoListensDialog(String videoId, {List<int>? datesOfListen, Color? colorScheme}) async {
+  datesOfListen ??= YoutubeHistoryController.inst.topTracksMapListens[videoId] ?? [];
 
   if (datesOfListen.isEmpty) return;
   datesOfListen.sortByReverse((e) => e);
 
   NamidaNavigator.inst.navigateDialog(
-    colorScheme: color,
+    colorScheme: colorScheme,
     lighterDialogColor: false,
     dialogBuilder: (theme) => CustomBlurryDialog(
       theme: theme,
@@ -51,14 +48,18 @@ void showTrackListensDialog(Track track, {List<int>? datesOfListen, Color? color
                   ),
                   child: Text((datesOfListen.length - i).toString())),
               onTap: () async {
-                final scrollInfo = HistoryController.inst.getListenScrollPosition(
+                final scrollInfo = YoutubeHistoryController.inst.getListenScrollPosition(
                   listenMS: t,
                   extraItemsOffset: 2,
                 );
-                NamidaOnTaps.inst.onHistoryPlaylistTap(
+
+                final totalItemsExtent = scrollInfo.itemsToScroll * Dimensions.youtubeCardItemExtent;
+                final totalDaysExtent = scrollInfo.daysToScroll * kYoutubeHistoryDayHeaderHeightWithPadding;
+
+                YTUtils.onYoutubeHistoryPlaylistTap(
                   indexToHighlight: scrollInfo.indexOfSmallList,
                   dayOfHighLight: scrollInfo.dayToHighLight,
-                  initialScrollOffset: (scrollInfo.itemsToScroll * Dimensions.inst.trackTileItemExtent) + (scrollInfo.daysToScroll * kHistoryDayHeaderHeightWithPadding),
+                  initialScrollOffset: totalItemsExtent + totalDaysExtent,
                 );
               },
             );

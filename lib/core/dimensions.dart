@@ -18,8 +18,8 @@ class Dimensions {
 
   // -- YT --
   static const youtubeCardItemHeight = 24.0 * 3;
-  static const youtubeCardItemVerticalPadding = 8.0;
-  static double get youtubeCardItemExtent => youtubeCardItemHeight + 2 * youtubeCardItemVerticalPadding;
+  static const youtubeCardItemVerticalPadding = 4.0;
+  static double get youtubeCardItemExtent => youtubeCardItemHeight + tileBottomMargin + 2 * youtubeCardItemVerticalPadding;
 
   // -- Track Tile --
   double trackTileItemExtent = 0.0;
@@ -104,3 +104,10 @@ const kQueueBottomRowHeight = 48.0;
 const kExpandableBoxHeight = 48.0;
 
 const kHistoryDayHeaderHeightWithPadding = kHistoryDayHeaderHeight + kHistoryDayListTopPadding + kHistoryDayListBottomPadding;
+
+// -- yt
+const kYoutubeHistoryDayHeaderHeight = 40.0;
+const kYoutubeHistoryDayListTopPadding = 6.0;
+const kYoutubeHistoryDayListBottomPadding = 12.0;
+
+const kYoutubeHistoryDayHeaderHeightWithPadding = kYoutubeHistoryDayHeaderHeight + kYoutubeHistoryDayListTopPadding + kYoutubeHistoryDayListBottomPadding;

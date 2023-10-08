@@ -32,11 +32,9 @@ class HistoryTracksPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sc = HistoryController.inst.scrollController;
-
     return BackgroundWrapper(
       child: CustomScrollView(
-        controller: sc,
+        controller: HistoryController.inst.scrollController,
         slivers: [
           Obx(
             () {

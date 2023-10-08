@@ -265,8 +265,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "51e6a2a1c289a74336681dd965de1e7c39a028bc"
-      resolved-ref: "51e6a2a1c289a74336681dd965de1e7c39a028bc"
+      ref: e6bd5b3d3303e68b513924cf31789b2246f0e5e4
+      resolved-ref: e6bd5b3d3303e68b513924cf31789b2246f0e5e4
       url: "https://github.com/MSOB7YY/faudiotagger"
     source: git
     version: "0.0.1"
@@ -416,10 +416,10 @@ packages:
     dependency: "direct dev"
     description:
       name: flutter_native_splash
-      sha256: ba45d8cfbd778478a74696b012f33ffb6b1760c9bc531b21e2964444a4870dae
+      sha256: "91004565166dbbc7a85e7e99b84124a287839830ca957cfe45004793fe6fe69f"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.1"
+    version: "2.3.3"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -509,8 +509,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: fb4f13b536b5cbf61dfd9ef9e29669544247cca1
-      resolved-ref: fb4f13b536b5cbf61dfd9ef9e29669544247cca1
+      ref: "011e76e2357cbecead75911eb2694c91507e9dd4"
+      resolved-ref: "011e76e2357cbecead75911eb2694c91507e9dd4"
       url: "https://github.com/namidaco/history_manager"
     source: git
     version: "0.0.1"
@@ -550,10 +550,10 @@ packages:
     dependency: transitive
     description:
       name: image
-      sha256: a72242c9a0ffb65d03de1b7113bc4e189686fc07c7147b8b41811d0dd0e0d9bf
+      sha256: "028f61960d56f26414eb616b48b04eb37d700cbe477b7fb09bf1d7ce57fd9271"
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.17"
+    version: "4.1.3"
   intl:
     dependency: "direct main"
     description:
@@ -1015,15 +1015,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.11.0"
-  sticky_and_expandable_list:
-    dependency: "direct main"
-    description:
-      path: "."
-      ref: HEAD
-      resolved-ref: "13e6a946cdcdfd7a20b422dbc5e8fd07dc3d6757"
-      url: "https://github.com/MSOB7YY/flutter_sticky_and_expandable_list"
-    source: git
-    version: "1.1.3"
   sticky_headers:
     dependency: "direct main"
     description:

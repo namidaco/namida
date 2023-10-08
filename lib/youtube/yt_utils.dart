@@ -2,13 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:namida/controller/ffmpeg_controller.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/enums.dart';
@@ -18,8 +20,11 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
+import 'package:namida/youtube/functions/video_listens_dialog.dart';
+import 'package:namida/youtube/pages/yt_history_page.dart';
 
 class YTUtils {
   static void expandMiniplayer() {
@@ -39,9 +44,25 @@ class YTUtils {
 
   static List<Widget> getVideoCacheStatusIcons({
     required String videoId,
+    required BuildContext context,
     Color? iconsColor,
   }) {
+    final listens = YoutubeHistoryController.inst.topTracksMapListens[videoId] ?? [];
     return [
+      if (listens.isNotEmpty)
+        NamidaInkWell(
+          borderRadius: 6.0,
+          bgColor: context.theme.scaffoldBackgroundColor.withOpacity(0.5),
+          onTap: () {
+            showVideoListensDialog(videoId);
+          },
+          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
+          child: Text(
+            listens.length.formatDecimal(),
+            style: context.textTheme.displaySmall,
+          ),
+        ),
+      const SizedBox(width: 4.0),
       Opacity(
         opacity: VideoController.inst.getNVFromID(videoId).isNotEmpty ? 0.6 : 0.1,
         child: Tooltip(message: lang.VIDEO_CACHE, child: Icon(Broken.video, size: 15.0, color: iconsColor)),
@@ -139,5 +160,30 @@ class YTUtils {
       path: audioFile.path,
       tagsMap: tagsMap,
     );
+  }
+
+  static Future<void> onYoutubeHistoryPlaylistTap({
+    double initialScrollOffset = 0,
+    int? indexToHighlight,
+    int? dayOfHighLight,
+  }) async {
+    YoutubeHistoryController.inst.indexToHighlight.value = indexToHighlight;
+    YoutubeHistoryController.inst.dayOfHighLight.value = dayOfHighLight;
+
+    void jump() => YoutubeHistoryController.inst.scrollController.jumpTo(initialScrollOffset);
+
+    if (YoutubeHistoryController.inst.scrollController.hasClients) {
+      NamidaNavigator.inst.closeAllDialogs();
+      MiniPlayerController.inst.snapToMini();
+      MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
+      jump();
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        jump();
+      });
+      await NamidaNavigator.inst.navigateTo(
+        const YoutubeHistoryPage(),
+      );
+    }
   }
 }

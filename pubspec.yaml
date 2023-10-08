@@ -50,7 +50,7 @@ dependencies:
   history_manager:
     git:
       url: https://github.com/namidaco/history_manager
-      ref: fb4f13b536b5cbf61dfd9ef9e29669544247cca1
+      ref: 011e76e2357cbecead75911eb2694c91507e9dd4
   flutter_html:
     git:
       url: https://github.com/zhourengui/flutter_html
@@ -81,7 +81,7 @@ dependencies:
   faudiotagger:
     git:
       url: https://github.com/MSOB7YY/faudiotagger
-      ref: 51e6a2a1c289a74336681dd965de1e7c39a028bc
+      ref: e6bd5b3d3303e68b513924cf31789b2246f0e5e4
   waveform_extractor: ^1.0.1
   basic_audio_handler:
     git:
@@ -115,9 +115,6 @@ dependencies:
       url: https://github.com/MSOB7YY/known_extents_listview_fancy
       ref: 95d9e56403b03f2f176bdceb269119d11cf7a4ef
   flutter_animate: ^4.2.0+1
-  sticky_and_expandable_list:
-    git:
-      url: https://github.com/MSOB7YY/flutter_sticky_and_expandable_list
   dynamic_color: ^1.6.7
 
   # ---- UI Widgets ----

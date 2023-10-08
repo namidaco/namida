@@ -78,7 +78,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        if (_dragheight >= widget.maxHeight) {
+        if (_dragheight >= widget.maxHeight - widget.minHeight) {
           animateToState(false);
           return false;
         }

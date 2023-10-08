@@ -13,7 +13,6 @@ import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -23,8 +22,11 @@ import 'package:namida/packages/mp.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
+import 'package:namida/youtube/functions/video_listens_dialog.dart';
 import 'package:namida/youtube/widgets/yt_action_button.dart';
 import 'package:namida/youtube/widgets/yt_channel_card.dart';
 import 'package:namida/youtube/widgets/yt_comment_card.dart';
@@ -74,6 +76,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
 
             final videoLikeCount = videoInfo?.likeCount ?? Player.inst.currentVideoInfo?.likeCount;
             final videoDislikeCount = videoInfo?.dislikeCount ?? Player.inst.currentVideoInfo?.dislikeCount;
+
+            final videoListens = YoutubeHistoryController.inst.topTracksMapListens[currentId] ?? [];
 
             return NamidaYTMiniplayer(
               key: MiniPlayerController.inst.ytMiniplayerKey,
@@ -326,6 +330,31 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                 collapsedIconColor: context.theme.colorScheme.onBackground,
                                                 childrenPadding: const EdgeInsets.all(18.0),
                                                 onExpansionChanged: (value) => isTitleExpanded.value = value,
+                                                trailing: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    if (videoListens.isNotEmpty)
+                                                      NamidaInkWell(
+                                                        borderRadius: 6.0,
+                                                        bgColor: CurrentColor.inst.color.withOpacity(0.7),
+                                                        onTap: () {
+                                                          showVideoListensDialog(currentId);
+                                                        },
+                                                        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                                                        child: Text(
+                                                          videoListens.length.formatDecimal(),
+                                                          style: context.textTheme.displaySmall?.copyWith(
+                                                            color: Colors.white.withOpacity(0.6),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    const SizedBox(width: 8.0),
+                                                    const Icon(
+                                                      Broken.arrow_down_2,
+                                                      size: 20.0,
+                                                    ),
+                                                  ],
+                                                ),
                                                 title: Column(
                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
@@ -504,10 +533,10 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                       mainAxisAlignment: MainAxisAlignment.center,
                                                       crossAxisAlignment: CrossAxisAlignment.start,
                                                       children: [
-                                                        Row(
-                                                          children: [
-                                                            Expanded(
-                                                              child: NamidaBasicShimmer(
+                                                        FittedBox(
+                                                          child: Row(
+                                                            children: [
+                                                              NamidaBasicShimmer(
                                                                 width: 114.0,
                                                                 height: 12.0,
                                                                 borderRadius: 4.0,
@@ -519,32 +548,35 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                                   ),
                                                                   maxLines: 1,
                                                                   overflow: TextOverflow.ellipsis,
+                                                                  textAlign: TextAlign.start,
                                                                 ),
                                                               ),
-                                                            ),
-                                                            if (channelIsVerified) ...[
-                                                              const SizedBox(width: 4.0),
-                                                              const Icon(
-                                                                Broken.shield_tick,
-                                                                size: 14.0,
-                                                              ),
-                                                            ]
-                                                          ],
+                                                              if (channelIsVerified) ...[
+                                                                const SizedBox(width: 4.0),
+                                                                const Icon(
+                                                                  Broken.shield_tick,
+                                                                  size: 14.0,
+                                                                ),
+                                                              ]
+                                                            ],
+                                                          ),
                                                         ),
                                                         const SizedBox(height: 4.0),
-                                                        NamidaBasicShimmer(
-                                                          width: 92.0,
-                                                          height: 10.0,
-                                                          borderRadius: 4.0,
-                                                          shimmerEnabled: channelSubs == null,
-                                                          child: Text(
-                                                            [
-                                                              channelSubs?.formatDecimalShort(isTitleExpanded.value) ?? '?',
-                                                              (channelSubs ?? 0) < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS
-                                                            ].join(' '),
-                                                            style: context.textTheme.displaySmall,
-                                                            maxLines: 1,
-                                                            overflow: TextOverflow.ellipsis,
+                                                        FittedBox(
+                                                          child: NamidaBasicShimmer(
+                                                            width: 92.0,
+                                                            height: 10.0,
+                                                            borderRadius: 4.0,
+                                                            shimmerEnabled: channelSubs == null,
+                                                            child: Text(
+                                                              [
+                                                                channelSubs?.formatDecimalShort(isTitleExpanded.value) ?? '?',
+                                                                (channelSubs ?? 0) < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS
+                                                              ].join(' '),
+                                                              style: context.textTheme.displaySmall,
+                                                              maxLines: 1,
+                                                              overflow: TextOverflow.ellipsis,
+                                                            ),
                                                           ),
                                                         ),
                                                       ],
