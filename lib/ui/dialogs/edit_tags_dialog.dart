@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -383,9 +384,9 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                 editedTags: editedTags,
                 imagePath: currentImagePath.value,
                 trimWhiteSpaces: trimWhiteSpaces.value,
-                onEdit: (didUpdate, track) {
+                onEdit: (didUpdate, error, track) {
                   if (!didUpdate) {
-                    snackyy(title: lang.METADATA_EDIT_FAILED, message: lang.METADATA_EDIT_FAILED_SUBTITLE);
+                    snackyy(title: lang.METADATA_EDIT_FAILED, message: error);
                   }
                 },
               );
@@ -534,7 +535,7 @@ Future<void> _updateTracksMetadata({
   required bool trimWhiteSpaces,
   String imagePath = '',
   String commentToInsert = '',
-  void Function(bool didUpdate, Track track)? onEdit,
+  void Function(bool didUpdate, dynamic error, Track track)? onEdit,
   void Function()? onUpdatingTracksStart,
   bool? keepFileDates,
 }) async {
@@ -579,16 +580,51 @@ Future<void> _updateTracksMetadata({
     final file = File(track.path);
     await file.executeAndKeepStats(
       () async {
-        final didUpdate = await tagger!.writeTags(
+        bool didUpdate = false;
+
+        // -- 1. try tagger
+        final error = await tagger!.writeTags(
           path: track.path,
           tag: newTag,
         );
+
+        didUpdate = error == null || error == '';
+
+        if (!didUpdate) {
+          // -- 2. try with ffmpeg
+          final ffmpegTagsMap = commentToInsert != ''
+              ? <FFMPEGTagField, String?>{
+                  FFMPEGTagField.comment: oldComment == '' ? commentToInsert : '$commentToInsert\n$oldComment',
+                }
+              : <FFMPEGTagField, String?>{
+                  FFMPEGTagField.title: editedTags[TagField.title],
+                  FFMPEGTagField.artist: editedTags[TagField.artist],
+                  FFMPEGTagField.album: editedTags[TagField.album],
+                  FFMPEGTagField.albumArtist: editedTags[TagField.albumArtist],
+                  FFMPEGTagField.composer: editedTags[TagField.composer],
+                  FFMPEGTagField.genre: editedTags[TagField.genre],
+                  FFMPEGTagField.year: editedTags[TagField.year],
+                  FFMPEGTagField.trackNumber: "${editedTags[TagField.trackNumber] ?? 0}/${editedTags[TagField.trackTotal] ?? 0}",
+                  FFMPEGTagField.discNumber: "${editedTags[TagField.discNumber] ?? 0}/${editedTags[TagField.discTotal] ?? 0}",
+                  FFMPEGTagField.comment: editedTags[TagField.comment],
+                  FFMPEGTagField.lyrics: editedTags[TagField.lyrics],
+                  FFMPEGTagField.remixer: editedTags[TagField.remixer],
+                  FFMPEGTagField.lyricist: editedTags[TagField.lyricist],
+                  FFMPEGTagField.language: editedTags[TagField.language],
+                  FFMPEGTagField.recordLabel: editedTags[TagField.recordLabel],
+                  FFMPEGTagField.country: editedTags[TagField.country],
+                };
+          didUpdate = await NamidaFFMPEG.inst.editMetadata(
+            path: track.path,
+            tagsMap: ffmpegTagsMap,
+          );
+        }
         if (didUpdate) {
           final trExt = track.toTrackExt();
           tracksMap[track] = trExt.copyWithTag(tag: newTag);
         }
         printo('Did Update Metadata: $didUpdate', isError: !didUpdate);
-        if (onEdit != null) onEdit(didUpdate, track);
+        if (onEdit != null) onEdit(didUpdate, error, track);
       },
       keepStats: keepFileDates ?? settings.editTagsKeepFileDates.value,
     );
@@ -831,17 +867,19 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                           ),
                         ),
                       );
+                      String? errorMsg;
                       await _updateTracksMetadata(
                         tagger: null,
                         tracks: tracks,
                         editedTags: editedTags,
                         trimWhiteSpaces: trimWhiteSpaces.value,
                         imagePath: currentImagePath.value,
-                        onEdit: (didUpdate, track) {
+                        onEdit: (didUpdate, error, track) {
                           if (didUpdate) {
                             successfullEdits.value++;
                           } else {
                             failedEditsTracks.add(track);
+                            errorMsg = error;
                           }
                         },
                         onUpdatingTracksStart: () {
@@ -850,7 +888,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                       );
 
                       if (failedEditsTracks.isNotEmpty) {
-                        snackyy(title: '${lang.METADATA_EDIT_FAILED} (${failedEditsTracks.length})', message: lang.METADATA_EDIT_FAILED_SUBTITLE);
+                        snackyy(title: '${lang.METADATA_EDIT_FAILED} (${failedEditsTracks.length})', message: errorMsg ?? '');
                       }
                       updatingLibrary.value = '✓';
                       finishedEditing.value = true;

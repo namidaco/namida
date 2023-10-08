@@ -12,6 +12,7 @@ dependency_overrides:
     git:
       url: https://github.com/MSOB7YY/dart_extensions
       ref: 4628356a449cdeb12bef5a3a9b4ed37668530192
+  archive: ^3.3.8
 
 dependencies:
   flutter:
@@ -80,7 +81,7 @@ dependencies:
   faudiotagger:
     git:
       url: https://github.com/MSOB7YY/faudiotagger
-      ref: 454f4357840eebae5c3ec1f91345257c858caf93
+      ref: 51e6a2a1c289a74336681dd965de1e7c39a028bc
   waveform_extractor: ^1.0.1
   basic_audio_handler:
     git:
