@@ -172,8 +172,8 @@ class Player {
     }
   }
 
-  Future<void> refreshVideoSeekPosition() async {
-    await _audioHandler.refreshVideoPosition();
+  Future<void> refreshVideoSeekPosition({bool delayed = false}) async {
+    await _audioHandler.refreshVideoPosition(delayed);
   }
 
   Future<void> setVolume(double volume) async {

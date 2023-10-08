@@ -7,7 +7,6 @@ import 'package:flutter/scheduler.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_utils/src/extensions/num_extensions.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:namida/controller/navigator_controller.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 
@@ -18,6 +17,8 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -81,7 +82,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool _isCurrentAudioFromCache = false;
 
   /// Milliseconds should be awaited before playing video.
-  int get _videoPositionSeekDelayMS => 400;
+  int get _videoPositionSeekDelayMS => 500;
+
+  Completer<void>? _audioShouldBeLoading;
 
   Future<void> setAudioOnlyPlayback(bool audioOnly) async {
     _isAudioOnlyPlayback = audioOnly;
@@ -95,11 +98,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   Future<void> _waitForAllBuffers() async {
-    await [
-      waitTillAudioLoaded,
-      VideoController.vcontroller.waitTillBufferingComplete,
-      bufferingCompleter?.future,
-    ].execute();
+    await waitTillAudioLoaded;
+    await _audioShouldBeLoading?.future;
+    await VideoController.vcontroller.waitTillBufferingComplete;
+    await bufferingCompleter?.future;
   }
 
   Future<void> prepareTotalListenTime() async {
@@ -136,12 +138,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   // ================================ Video Methods ==================================
   // =================================================================================
 
-  Future<void> refreshVideoPosition() async {
+  Future<void> refreshVideoPosition(bool delayed) async {
+    if (delayed) await Future.delayed(Duration(milliseconds: _videoPositionSeekDelayMS.abs()));
     await VideoController.vcontroller.seek(Duration(milliseconds: currentPositionMS));
   }
 
   Future<void> _playAudioThenVideo() async {
     onPlayRaw();
+    await _audioShouldBeLoading?.future;
     await Future.delayed(Duration(milliseconds: _videoPositionSeekDelayMS.abs()));
     await VideoController.vcontroller.play();
   }
@@ -270,6 +274,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   FutureOr<void> beforePlaying() async {
     super.beforePlaying(); // saving last position.
+    _audioShouldBeLoading ??= Completer<void>();
     NamidaNavigator.inst.popAllMenus();
     YTUtils.expandMiniplayer();
 
@@ -480,7 +485,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     if (cachedFile != null && useCache) {
       currentCachedVideo.value = videoItem;
       await VideoController.vcontroller.setFile(cachedFile.path, (videoDuration) => false);
-      await refreshVideoPosition();
+      await refreshVideoPosition(true);
     } else if (stream != null && stream.url != null) {
       if (wasPlaying) await onPauseRaw();
       try {
@@ -976,13 +981,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   void onBufferOrLoadStart() {
+    _audioShouldBeLoading ??= Completer<void>();
     if (isPlaying) {
       VideoController.vcontroller.pause();
     }
   }
 
   @override
-  void onBufferOrLoadEnd() {
+  void onBufferOrLoadEnd() async {
+    await waitTillAudioLoaded;
+    if (_audioShouldBeLoading?.isCompleted == false) _audioShouldBeLoading?.complete();
     if (isPlaying) {
       VideoController.vcontroller.play();
     }

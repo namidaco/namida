@@ -326,8 +326,9 @@ class VideoController {
       await Future.wait([
         _videoController.setVolume(volume),
         vcontroller.togglePlayPause(Player.inst.isPlaying),
-        Player.inst.refreshVideoSeekPosition(),
       ]);
+      await Future.delayed(const Duration(milliseconds: 100));
+      await Player.inst.refreshVideoSeekPosition(delayed: true);
     });
   }
 
