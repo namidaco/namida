@@ -92,7 +92,6 @@ class NamidaFFMPEG {
 
     final codec = compress ? '-filter:v scale=-2:250 -an' : '-c copy';
     final output = await FFmpegKit.execute('-i "$audioPath" -map 0:v -map -0:V $codec -y "$thumbnailSavePath"');
-    print('fffffffffff ${(await output.getAllLogs()).lastOrNull?.getMessage()}');
     final didSuccess = await output.getReturnCode().then((value) => value?.isValueSuccess()) ?? false;
     return didSuccess ? File(thumbnailSavePath) : null;
   }

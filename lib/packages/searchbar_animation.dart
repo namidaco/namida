@@ -12,8 +12,12 @@ class SearchBarAnimation extends StatefulWidget {
   /// Need to pass the textEditingController for the textFormField of the searchbar.
   final TextEditingController textEditingController;
 
-  /// Provide trailing icon in search box which is at the end of search box by default it is search icon.
   final Widget trailingWidget;
+
+  /// Provide trailing icon in search box which is beside [trailingWidget]
+  final Widget? buttonWidgetSmall;
+
+  final double buttonWidgetSmallPadding;
 
   /// Provide the button icon that is when the search box is closed by default it is search icon.
   final Widget buttonWidget;
@@ -22,7 +26,7 @@ class SearchBarAnimation extends StatefulWidget {
   final Widget secondaryButtonWidget;
 
   /// This allows to set the hintText color of textFormField of the search box.
-  final Color? hintTextColour;
+  final TextStyle? Function(double height)? hintTextStyle;
 
   /// This allows to set the background colour of the whole search box field by default it is set to white.
   final Color? searchBoxColour;
@@ -112,6 +116,8 @@ class SearchBarAnimation extends StatefulWidget {
     required this.textEditingController,
     required this.isOriginalAnimation,
     required this.trailingWidget,
+    this.buttonWidgetSmall,
+    this.buttonWidgetSmallPadding = 0.0,
     required this.secondaryButtonWidget,
     required this.buttonWidget,
     this.searchBoxWidth,
@@ -119,7 +125,7 @@ class SearchBarAnimation extends StatefulWidget {
     this.searchBoxColour = _SBColor.white,
     this.buttonColour = _SBColor.white,
     this.cursorColour = _SBColor.black,
-    this.hintTextColour = _SBColor.grey,
+    this.hintTextStyle,
     this.searchBoxBorderColour = _SBColor.black12,
     this.buttonShadowColour = _SBColor.black45,
     this.buttonBorderColour = _SBColor.black26,
@@ -200,6 +206,7 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
 
   /// main body of the searchbar animation
   Widget _buildAnimatedSearchbarBody() {
+    final smallButtonTotalPadding = _SBDimensions.d5 * 2 + widget.buttonWidgetSmallPadding;
     return Container(
       height: _SBDimensions.d60,
       alignment: widget.isSearchBoxOnRightSide ? Alignment.centerRight : Alignment.centerLeft,
@@ -238,9 +245,9 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
             children: [
               AnimatedPositioned(
                 duration: Duration(milliseconds: widget.durationInMilliSeconds),
-                top: _SBDimensions.d6,
-                left: widget.isSearchBoxOnRightSide ? _SBDimensions.d7 : null,
-                right: !widget.isSearchBoxOnRightSide ? _SBDimensions.d7 : null,
+                top: _SBDimensions.d5,
+                left: widget.isSearchBoxOnRightSide ? _SBDimensions.d6 : null,
+                right: !widget.isSearchBoxOnRightSide ? _SBDimensions.d6 : null,
                 curve: Curves.easeOut,
                 child: AnimatedOpacity(
                   opacity: (!switcher) ? _SBDimensions.d0 : _SBDimensions.d1,
@@ -259,7 +266,7 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                 left: (!switcher)
                     ? _SBDimensions.d20
                     : (!widget.textAlignToRight)
-                        ? _SBDimensions.d45
+                        ? _SBDimensions.d35
                         : _SBDimensions.d80,
                 curve: Curves.easeOut,
                 top: _SBDimensions.d11,
@@ -270,7 +277,23 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                     padding: const EdgeInsets.only(left: _SBDimensions.d10),
                     alignment: Alignment.topCenter,
                     width: (widget.searchBoxWidth ?? MediaQuery.of(context).size.width) / _SBDimensions.d1_7,
-                    child: _textFormField(),
+                    child: _textFormField(smallButtonTotalPadding * 0.6),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 0,
+                bottom: 0,
+                right: smallButtonTotalPadding,
+                child: Align(
+                  alignment: widget.isSearchBoxOnRightSide ? Alignment.centerRight : Alignment.centerLeft,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: _SBDimensions.t200),
+                    child: AnimatedOpacity(
+                      opacity: (!switcher) ? _SBDimensions.d0 : _SBDimensions.d1,
+                      duration: const Duration(milliseconds: _SBDimensions.t200),
+                      child: widget.buttonWidgetSmall != null ? widget.buttonWidgetSmall! : const SizedBox(),
+                    ),
                   ),
                 ),
               ),
@@ -414,55 +437,59 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
   }
 
   /// This function is for the textFormField of searchbar.
-  TextFormField _textFormField() {
-    return TextFormField(
-      controller: widget.textEditingController,
-      inputFormatters: widget.inputFormatters,
-      focusNode: focusNode,
-      cursorWidth: _SBDimensions.d2,
-      textInputAction: TextInputAction.search,
-      onTap: widget.onTap,
-      onTapOutside: widget.onTapOutside,
-      cursorHeight: widget.cursorHeight,
-      cursorRadius: widget.cursorRadius,
-      onFieldSubmitted: (String value) {
-        setState(() {
-          switcher = true;
-        });
-        (widget.onFieldSubmitted != null) ? widget.onFieldSubmitted!(value) : debugPrint('onFieldSubmitted Not Used');
-      },
-      onEditingComplete: () {
-        unFocusKeyboard();
-        setState(() {
-          switcher = false;
-        });
-        (widget.onEditingComplete != null) ? widget.onEditingComplete?.call() : debugPrint('onEditingComplete Not Used');
-      },
-      keyboardType: widget.textInputType,
-      onChanged: (var value) {
-        (widget.onChanged != null) ? widget.onChanged?.call(value) : debugPrint('onChanged Not Used');
-      },
-      onSaved: (var value) {
-        (widget.onSaved != null) ? widget.onSaved?.call(value) : debugPrint('onSaved Not Used');
-      },
-      style: widget.enteredTextStyle ?? const TextStyle(color: _SBColor.black),
-      cursorColor: widget.cursorColour,
-      textAlign: widget.textAlignToRight ? TextAlign.right : TextAlign.left,
-      decoration: InputDecoration(
-        contentPadding: const EdgeInsets.only(bottom: _SBDimensions.d8),
-        isDense: true,
-        floatingLabelBehavior: FloatingLabelBehavior.never,
-        hintText: widget.hintText,
-        hintStyle: TextStyle(
-          color: widget.hintTextColour,
-          fontSize: _SBDimensions.d15,
-          fontWeight: FontWeight.w400,
-          height: kIsWeb ? _SBDimensions.d1_5 : _SBDimensions.d1_2,
-        ),
-        alignLabelWithHint: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(_SBDimensions.d20),
-          borderSide: BorderSide.none,
+  Widget _textFormField(double rightPadding) {
+    return Padding(
+      padding: EdgeInsets.only(right: rightPadding),
+      child: TextFormField(
+        controller: widget.textEditingController,
+        inputFormatters: widget.inputFormatters,
+        focusNode: focusNode,
+        cursorWidth: _SBDimensions.d2,
+        textInputAction: TextInputAction.search,
+        onTap: widget.onTap,
+        onTapOutside: widget.onTapOutside,
+        cursorHeight: widget.cursorHeight,
+        cursorRadius: widget.cursorRadius,
+        onFieldSubmitted: (String value) {
+          setState(() {
+            switcher = true;
+          });
+          (widget.onFieldSubmitted != null) ? widget.onFieldSubmitted!(value) : debugPrint('onFieldSubmitted Not Used');
+        },
+        onEditingComplete: () {
+          unFocusKeyboard();
+          setState(() {
+            switcher = false;
+          });
+          (widget.onEditingComplete != null) ? widget.onEditingComplete?.call() : debugPrint('onEditingComplete Not Used');
+        },
+        keyboardType: widget.textInputType,
+        onChanged: (var value) {
+          (widget.onChanged != null) ? widget.onChanged?.call(value) : debugPrint('onChanged Not Used');
+        },
+        onSaved: (var value) {
+          (widget.onSaved != null) ? widget.onSaved?.call(value) : debugPrint('onSaved Not Used');
+        },
+        style: widget.enteredTextStyle ?? const TextStyle(color: _SBColor.black),
+        cursorColor: widget.cursorColour,
+        textAlign: widget.textAlignToRight ? TextAlign.right : TextAlign.left,
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.only(bottom: _SBDimensions.d8),
+          isDense: true,
+          floatingLabelBehavior: FloatingLabelBehavior.never,
+          hintText: widget.hintText,
+          hintStyle: widget.hintTextStyle?.call(kIsWeb ? _SBDimensions.d1_5 : _SBDimensions.d1_2) ??
+              const TextStyle(
+                color: _SBColor.grey,
+                fontSize: _SBDimensions.d15,
+                fontWeight: FontWeight.w400,
+                height: kIsWeb ? _SBDimensions.d1_5 : _SBDimensions.d1_2,
+              ),
+          alignLabelWithHint: true,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(_SBDimensions.d20),
+            borderSide: BorderSide.none,
+          ),
         ),
       ),
     );
@@ -506,7 +533,7 @@ class _SBDimensions {
   static const double d15 = 15.0;
   static const double d20 = 20.0;
   static const double d30 = 30.0;
-  static const double d45 = 45.0;
+  static const double d35 = 35.0;
   static const double d48 = 48.0;
   static const double d60 = 60.0;
   static const double d80 = 80.0;

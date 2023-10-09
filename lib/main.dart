@@ -16,6 +16,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:picture_in_picture/picture_in_picture.dart';
 
+import 'package:namida/controller/clipboard_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
@@ -77,6 +78,7 @@ void main() async {
     Language.initialize(),
   ]);
   ConnectivityController.inst.initialize();
+  ClipboardController.inst.initialize();
 
   /// updates values on startup
   Indexer.inst.updateImageSizeInStorage();

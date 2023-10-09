@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/controller/clipboard_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -8,6 +9,7 @@ import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
@@ -16,6 +18,7 @@ import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/pages/search_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 
 class MainPage extends StatelessWidget {
   final AnimationController animation;
@@ -171,6 +174,23 @@ class NamidaSearchBar extends StatelessWidget {
   final GlobalKey<SearchBarAnimationState> searchBarKey;
   const NamidaSearchBar({super.key, required this.searchBarKey});
 
+  void _onSubmitted(String val) {
+    final ytlink = kYoutubeRegex.firstMatch(val)?[0];
+    final ytID = ytlink?.getYoutubeID;
+
+    if (ytlink != null && ytID != null && ytID != '') {
+      ScrollSearchController.inst.searchTextEditingController.clear();
+      Player.inst.playOrPause(0, [YoutubeID(id: ytlink.getYoutubeID, playlistID: null)], QueueSource.others);
+    }
+
+    if (ScrollSearchController.inst.currentSearchType.value == SearchType.youtube) {
+      final latestSearch = ScrollSearchController.inst.ytSearchKey.currentState?.currentSearchText;
+      if (latestSearch != val) {
+        ScrollSearchController.inst.ytSearchKey.currentState?.fetchSearch(customText: val);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Obx(
@@ -187,7 +207,10 @@ class NamidaSearchBar extends StatelessWidget {
         buttonColour: Colors.transparent,
         enableBoxShadow: false,
         buttonShadowColour: Colors.transparent,
-        hintTextColour: context.theme.colorScheme.onSurface,
+        hintTextStyle: (height) => context.textTheme.displaySmall?.copyWith(
+          fontSize: 17.0.multipliedFontScale,
+          height: height * 1.1,
+        ),
         searchBoxColour: context.theme.cardColor.withAlpha(200),
         enteredTextStyle: context.theme.textTheme.displayMedium,
         cursorColour: context.theme.colorScheme.onBackground,
@@ -203,6 +226,33 @@ class NamidaSearchBar extends StatelessWidget {
             icon: Broken.search_status_1,
           ),
         ),
+        buttonWidgetSmallPadding: 24.0 + 8.0,
+        buttonWidgetSmall: Obx(
+          () {
+            final clipboard = ClipboardController.inst.clipboardText;
+            final alreadyPasted = clipboard == ClipboardController.inst.lastCopyUsed;
+            final empty = ClipboardController.inst.textInControllerEmpty;
+
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: empty || (clipboard != '' && !alreadyPasted)
+                  ? NamidaIconButton(
+                      horizontalPadding: 0,
+                      icon: Broken.clipboard_tick,
+                      iconSize: 20.0,
+                      onPressed: () {
+                        ClipboardController.inst.setLastPasted(clipboard);
+                        final c = ScrollSearchController.inst.searchTextEditingController;
+                        c.text = "${c.text} $clipboard";
+                        c.selection = TextSelection.fromPosition(TextPosition(offset: c.text.length));
+                        _onSubmitted(clipboard);
+                        ClipboardController.inst.updateTextInControllerEmpty(false);
+                      },
+                    )
+                  : const SizedBox(),
+            );
+          },
+        ),
         trailingWidget: NamidaIconButton(
           icon: Broken.close_circle,
           padding: EdgeInsets.zero,
@@ -216,16 +266,13 @@ class NamidaSearchBar extends StatelessWidget {
         onPressButton: (isOpen) {
           ScrollSearchController.inst.showSearchMenu(isOpen);
           ScrollSearchController.inst.resetSearch();
+          ClipboardController.inst.updateTextInControllerEmpty(true);
         },
-        onFieldSubmitted: (val) {
-          if (ScrollSearchController.inst.currentSearchType.value == SearchType.youtube) {
-            final latestSearch = ScrollSearchController.inst.ytSearchKey.currentState?.currentSearchText;
-            if (latestSearch != val) {
-              ScrollSearchController.inst.ytSearchKey.currentState?.fetchSearch(customText: val);
-            }
-          }
+        onFieldSubmitted: _onSubmitted,
+        onChanged: (value) {
+          ClipboardController.inst.updateTextInControllerEmpty(value == '');
+          SearchSortController.inst.searchAll(value);
         },
-        onChanged: (value) => SearchSortController.inst.searchAll(value),
         // -- unfocusing produces weird bug while swiping for drawer
         // -- leaving it will leave the pointer while entering miniplayer
         // -- bruh
