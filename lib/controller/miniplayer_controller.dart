@@ -7,13 +7,12 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/dimensions.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/packages/mp.dart';
@@ -294,16 +293,11 @@ class MiniPlayerController {
   }
 
   void _toggleWakelockOn() {
-    if (settings.wakelockMode.value == WakelockMode.expanded) {
-      WakelockPlus.enable();
-    }
-    if (settings.wakelockMode.value == WakelockMode.expandedAndVideo && VideoController.inst.shouldShowVideo) {
-      WakelockPlus.enable();
-    }
+    settings.wakelockMode.value.toggleOn(VideoController.inst.shouldShowVideo);
   }
 
   void _toggleWakelockOff() {
-    WakelockPlus.disable();
+    settings.wakelockMode.value.toggleOff();
   }
 
   void snapToExpanded({bool haptic = true}) {

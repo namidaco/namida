@@ -172,10 +172,9 @@ class YTUtils {
 
     void jump() => YoutubeHistoryController.inst.scrollController.jumpTo(initialScrollOffset);
 
+    NamidaNavigator.inst.hideStuff();
+
     if (YoutubeHistoryController.inst.scrollController.hasClients) {
-      NamidaNavigator.inst.closeAllDialogs();
-      MiniPlayerController.inst.snapToMini();
-      MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
       jump();
     } else {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 
 /// Used to retain state for cases like navigating after pip mode.
 bool _wasExpanded = false;
@@ -56,6 +59,8 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     super.dispose();
   }
 
+  bool get isExpanded => _dragheight >= widget.maxHeight - widget.minHeight;
+
   double _dragheight = 0;
 
   double get percentage => (controller.value - widget.minHeight) / (widget.maxHeight - widget.minHeight);
@@ -72,13 +77,26 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   void animateToState(bool toExpanded, {Duration? dur}) {
     _updateHeight(toExpanded ? widget.maxHeight : widget.minHeight, duration: dur ?? widget.duration);
     _wasExpanded = toExpanded;
+    if (toExpanded) {
+      _toggleWakelockOn();
+    } else {
+      _toggleWakelockOff();
+    }
+  }
+
+  void _toggleWakelockOn() {
+    settings.wakelockMode.value.toggleOn(VideoController.vcontroller.isInitialized);
+  }
+
+  void _toggleWakelockOff() {
+    settings.wakelockMode.value.toggleOff();
   }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        if (_dragheight >= widget.maxHeight - widget.minHeight) {
+        if (isExpanded) {
           animateToState(false);
           return false;
         }

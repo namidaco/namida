@@ -7,7 +7,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:http/http.dart' as http;
-import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:newpipeextractor_dart/models/streams.dart';
 import 'package:picture_in_picture/picture_in_picture.dart';
 import 'package:video_player/video_player.dart';
@@ -21,11 +20,13 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 
 class NamidaVideoWidget extends StatelessWidget {
   final bool enableControls;
@@ -329,6 +330,8 @@ class VideoController {
       ]);
       await Future.delayed(const Duration(milliseconds: 100));
       await Player.inst.refreshVideoSeekPosition(delayed: true);
+
+      settings.wakelockMode.value.toggleOn(shouldShowVideo);
     });
   }
 

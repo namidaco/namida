@@ -70,6 +70,16 @@ class NamidaNavigator {
     MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
   }
 
+  void hideStuff({
+    bool searchMenuAndUnfocus = true,
+    bool minimizeMiniplayers = true,
+    bool closeDialogs = true,
+  }) {
+    if (searchMenuAndUnfocus) _hideSearchMenuAndUnfocus();
+    if (minimizeMiniplayers) _minimizeMiniplayer();
+    if (closeDialogs) closeAllDialogs();
+  }
+
   void _hideEverything() {
     _hideSearchMenuAndUnfocus();
     _minimizeMiniplayer();
@@ -288,6 +298,10 @@ class NamidaNavigator {
   Future<void> popPage() async {
     if (innerDrawerKey.currentState?.isOpened ?? false) {
       innerDrawerKey.currentState?.close();
+      return;
+    }
+    if (MiniPlayerController.inst.ytMiniplayerKey.currentState?.isExpanded == true) {
+      MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
       return;
     }
     if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {

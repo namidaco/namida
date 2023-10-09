@@ -576,6 +576,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         setVolume(settings.playerVolume.value);
         if (waitForBuffer) await _waitForAllBuffers();
         await _playAudioThenVideo();
+        settings.wakelockMode.value.toggleOn(currentVideoStream.value != null || currentCachedVideo.value != null);
       }
       if (!wasPlayingFromCache) {
         startSleepAfterMinCount();
