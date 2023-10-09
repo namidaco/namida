@@ -103,6 +103,31 @@ class MiniPlayerSwitchers extends StatelessWidget {
       () {
         // to refresh after toggling [enableBottomNavBar]
         settings.enableBottomNavBar.value;
+        Widget pipChild() {
+          return Container(
+            color: Colors.black,
+            alignment: Alignment.topLeft,
+            child: NamidaVideoWidget(
+              key: const Key('pip_widget_child'),
+              enableControls: false,
+              fullscreen: true,
+              isPip: true,
+              fallbackChild: Player.inst.nowPlayingVideoID?.id == null
+                  ? null
+                  : YoutubeThumbnail(
+                      isImportantInCache: true,
+                      width: 64.0,
+                      height: 64.0 * 9 / 16,
+                      borderRadius: 0,
+                      blur: 0,
+                      videoId: Player.inst.nowPlayingVideoID!.id,
+                      displayFallbackIcon: false,
+                      compressed: false,
+                    ),
+            ),
+          );
+        }
+
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 600),
           child: NamidaLifeCycleWrapper(
@@ -110,28 +135,7 @@ class MiniPlayerSwitchers extends StatelessWidget {
               if (settings.enablePip.value && Player.inst.isPlaying && VideoController.inst.currentVideo.value != null) {
                 await VideoController.vcontroller.enablePictureInPicture();
                 await NamidaNavigator.inst.enterFullScreen(
-                  Container(
-                    color: Colors.black,
-                    alignment: Alignment.topLeft,
-                    child: NamidaVideoWidget(
-                      key: const Key('pip_widget_child'),
-                      enableControls: false,
-                      fullscreen: true,
-                      isPip: true,
-                      fallbackChild: Player.inst.nowPlayingVideoID?.id == null
-                          ? null
-                          : YoutubeThumbnail(
-                              isImportantInCache: true,
-                              width: 64.0,
-                              height: 64.0 * 9 / 16,
-                              borderRadius: 0,
-                              blur: 0,
-                              videoId: Player.inst.nowPlayingVideoID!.id,
-                              displayFallbackIcon: false,
-                              compressed: false,
-                            ),
-                    ),
-                  ),
+                  pipChild(),
                   setOrientations: false,
                 );
                 VideoController.inst.isCurrentlyInBackground = false; // since the pip needs the video
@@ -149,14 +153,16 @@ class MiniPlayerSwitchers extends StatelessWidget {
               await NamidaNavigator.inst.exitFullScreen(setOrientations: false);
             },
             child: Obx(
-              () => AnimatedSwitcher(
-                duration: const Duration(milliseconds: 500),
-                child: Player.inst.nowPlayingTrack == kDummyTrack
-                    ? Player.inst.currentQueueYoutube.isNotEmpty
-                        ? const YoutubeMiniPlayer(key: Key('ytminiplayer'))
-                        : const SizedBox(key: Key('empty_miniplayer'))
-                    : const NamidaMiniPlayer(key: Key('actualminiplayer')),
-              ),
+              () => VideoController.vcontroller.isInPip
+                  ? pipChild()
+                  : AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 500),
+                      child: Player.inst.nowPlayingTrack == kDummyTrack
+                          ? Player.inst.currentQueueYoutube.isNotEmpty
+                              ? const YoutubeMiniPlayer(key: Key('ytminiplayer'))
+                              : const SizedBox(key: Key('empty_miniplayer'))
+                          : const NamidaMiniPlayer(key: Key('actualminiplayer')),
+                    ),
             ),
           ),
         );

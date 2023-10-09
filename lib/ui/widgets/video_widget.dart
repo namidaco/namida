@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get.dart';
+import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
@@ -495,6 +496,15 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               ],
             ),
             if (widget.showControls) ...[
+              // ---- Mask -----
+              Positioned.fill(
+                child: _getBuilder(
+                  child: (visiblePercentage) => Container(
+                    color: Colors.black.withOpacity(0.2),
+                  ),
+                ),
+              ),
+
               // ---- Top Row ----
               Padding(
                 padding: horizontalControlsPadding,
@@ -781,7 +791,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                   Icon(
                                                     Player.inst.isAudioOnlyPlayback ? Broken.musicnote : Broken.setting,
                                                     color: itemsColor,
-                                                    size: 20.0,
+                                                    size: 16.0,
                                                   ),
                                                 ],
                                               );

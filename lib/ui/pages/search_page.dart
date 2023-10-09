@@ -108,7 +108,7 @@ class SearchPage extends StatelessWidget {
                           return Opacity(
                             opacity: isForcelyEnabled ? 0.6 : 1.0,
                             child: NamidaInkWell(
-                              bgColor: isActive ? context.theme.colorScheme.secondary.withOpacity(0.15) : null,
+                              bgColor: isActive ? context.theme.colorScheme.secondary.withOpacity(0.12) : null,
                               borderRadius: 8.0,
                               onTap: () {
                                 if (isForcelyEnabled) return;
@@ -122,7 +122,7 @@ class SearchPage extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                               decoration: BoxDecoration(
                                 border: Border.all(
-                                  color: context.theme.colorScheme.secondary.withOpacity(0.8),
+                                  color: context.theme.colorScheme.secondary.withOpacity(0.7),
                                   width: 1.5,
                                 ),
                               ),
@@ -131,15 +131,15 @@ class SearchPage extends StatelessWidget {
                                   Text(
                                     e.toText(),
                                     style: context.textTheme.displayMedium?.copyWith(
-                                      color: context.theme.colorScheme.secondary.withOpacity(0.8),
+                                      color: context.theme.colorScheme.secondary.withOpacity(0.7),
                                     ),
                                   ),
                                   const SizedBox(width: 8.0),
                                   NamidaCheckMark(
                                     size: 12.0,
                                     active: isActive,
-                                    activeColor: context.theme.colorScheme.secondary.withOpacity(0.8),
-                                    inactiveColor: context.theme.colorScheme.secondary.withOpacity(0.8),
+                                    activeColor: context.theme.colorScheme.secondary.withOpacity(0.7),
+                                    inactiveColor: context.theme.colorScheme.secondary.withOpacity(0.7),
                                   ),
                                 ],
                               ),

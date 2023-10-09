@@ -745,6 +745,7 @@ class ListTileWithCheckMark extends StatelessWidget {
   final Widget? titleWidget;
   final Widget? leading;
   final double? iconSize;
+  final bool dense;
 
   const ListTileWithCheckMark({
     super.key,
@@ -757,6 +758,7 @@ class ListTileWithCheckMark extends StatelessWidget {
     this.titleWidget,
     this.leading,
     this.iconSize,
+    this.dense = false,
   });
 
   @override
@@ -788,8 +790,10 @@ class ListTileWithCheckMark extends StatelessWidget {
           size: 18.0,
           active: active,
         ),
-        visualDensity: VisualDensity.compact,
+        // visualDensity: VisualDensity.compact,
+        visualDensity: const VisualDensity(horizontal: -2.8, vertical: -2.8),
         onTap: onTap,
+        dense: dense,
       ),
     );
   }

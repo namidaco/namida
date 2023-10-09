@@ -307,9 +307,22 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         subList.add(e);
       }
     });
+    final mainListController = ScrollController();
+    void jumpToLast() {
+      mainListController.animateTo(
+        mainListController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+      );
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      jumpToLast();
+    });
+
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
-        title: lang.CONFIGURE,
+        title: "${lang.CONFIGURE} (${lang.REORDERABLE})",
         actions: [
           NamidaButton(
             text: lang.DONE,
@@ -323,7 +336,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             () => Column(
               children: [
                 Expanded(
+                  flex: 6,
                   child: ReorderableListView.builder(
+                    scrollController: mainListController,
                     itemCount: settings.homePageItems.length,
                     proxyDecorator: (child, index, animation) => child,
                     itemBuilder: (context, index) {
@@ -359,23 +374,33 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   ),
                 ),
                 const NamidaContainerDivider(height: 4.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
-                ...subList.map(
-                  (item) => Material(
-                    type: MaterialType.transparency,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: ListTileWithCheckMark(
-                        active: false,
-                        icon: Broken.recovery_convert,
-                        title: item.toText(),
-                        onTap: () {
-                          settings.save(homePageItems: [item]);
-                          subList.remove(item);
-                        },
-                      ),
+                if (subList.isNotEmpty)
+                  Expanded(
+                    flex: subList.length,
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      itemCount: subList.length,
+                      itemBuilder: (context, index) {
+                        final item = subList[index];
+                        return Material(
+                          type: MaterialType.transparency,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: ListTileWithCheckMark(
+                              active: false,
+                              icon: Broken.recovery_convert,
+                              title: item.toText(),
+                              onTap: () {
+                                settings.save(homePageItems: [item]);
+                                subList.remove(item);
+                                jumpToLast();
+                              },
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                ),
               ],
             ),
           ),

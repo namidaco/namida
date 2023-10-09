@@ -123,90 +123,110 @@ class ExtrasSettings extends StatelessWidget {
                 icon: Broken.color_swatch,
                 title: lang.LIBRARY_TABS,
                 trailingText: "${settings.libraryTabs.length}",
-                onTap: () => NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    title: lang.LIBRARY_TABS,
-                    actions: [
-                      NamidaButton(
-                        text: lang.DONE,
-                        onPressed: NamidaNavigator.inst.closeDialog,
-                      ),
-                    ],
-                    child: Obx(
-                      () {
-                        final subList = <LibraryTab>[].obs;
+                onTap: () {
+                  final subList = <LibraryTab>[].obs;
 
-                        LibraryTab.values.loop((e, index) {
-                          if (!settings.libraryTabs.contains(e)) {
-                            subList.add(e);
-                          }
-                        });
+                  LibraryTab.values.loop((e, index) {
+                    if (!settings.libraryTabs.contains(e)) {
+                      subList.add(e);
+                    }
+                  });
 
-                        return Column(
-                          children: [
-                            Text(
-                              lang.LIBRARY_TABS_REORDER,
-                              style: context.textTheme.displayMedium,
-                            ),
-                            const SizedBox(height: 12.0),
-                            ReorderableListView.builder(
-                              shrinkWrap: true,
-                              proxyDecorator: (child, index, animation) => child,
-                              padding: EdgeInsets.zero,
-                              itemCount: settings.libraryTabs.length,
-                              itemBuilder: (context, i) {
-                                final tab = settings.libraryTabs[i];
-                                return Container(
-                                  key: ValueKey(i),
-                                  margin: const EdgeInsets.all(4.0),
-                                  child: ListTileWithCheckMark(
-                                    title: "${i + 1}. ${tab.toText()}",
-                                    icon: tab.toIcon(),
-                                    onTap: () {
-                                      if (settings.libraryTabs.length > 3) {
-                                        settings.removeFromList(libraryTab1: tab);
-                                        settings.save(selectedLibraryTab: settings.libraryTabs[0]);
-                                      } else {
-                                        showMinimumItemsSnack(3);
-                                      }
-                                    },
-                                    active: settings.libraryTabs.contains(tab),
-                                  ),
-                                );
-                              },
-                              onReorder: (oldIndex, newIndex) {
-                                if (newIndex > oldIndex) {
-                                  newIndex -= 1;
-                                }
-                                final item = settings.libraryTabs.elementAt(oldIndex);
-                                settings.removeFromList(
-                                  libraryTab1: item,
-                                );
-                                settings.insertInList(newIndex, libraryTab1: item);
-                              },
-                            ),
-                            const NamidaContainerDivider(height: 4.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
-                            const SizedBox(height: 8.0),
-                            ...subList.asMap().entries.map(
-                                  (e) => Column(
-                                    key: UniqueKey(),
-                                    children: [
-                                      ListTileWithCheckMark(
-                                        title: "${e.key + 1}. ${e.value.toText()}",
-                                        icon: e.value.toIcon(),
-                                        onTap: () => settings.save(libraryTabs: [e.value]),
-                                        active: settings.libraryTabs.contains(e.value),
+                  NamidaNavigator.inst.navigateDialog(
+                    dialog: CustomBlurryDialog(
+                      title: lang.LIBRARY_TABS,
+                      actions: [
+                        NamidaButton(
+                          text: lang.DONE,
+                          onPressed: NamidaNavigator.inst.closeDialog,
+                        ),
+                      ],
+                      child: SizedBox(
+                        width: Get.width,
+                        height: Get.height * 0.5,
+                        child: Obx(
+                          () => Column(
+                            children: [
+                              Text(
+                                lang.LIBRARY_TABS_REORDER,
+                                style: context.textTheme.displayMedium,
+                              ),
+                              const SizedBox(height: 12.0),
+                              Expanded(
+                                flex: 6,
+                                child: ReorderableListView.builder(
+                                  shrinkWrap: true,
+                                  proxyDecorator: (child, index, animation) => child,
+                                  padding: EdgeInsets.zero,
+                                  itemCount: settings.libraryTabs.length,
+                                  itemBuilder: (context, i) {
+                                    final tab = settings.libraryTabs[i];
+                                    return Container(
+                                      key: ValueKey(i),
+                                      margin: const EdgeInsets.all(4.0),
+                                      child: ListTileWithCheckMark(
+                                        title: "${i + 1}. ${tab.toText()}",
+                                        icon: tab.toIcon(),
+                                        onTap: () {
+                                          if (settings.libraryTabs.length > 3) {
+                                            settings.removeFromList(libraryTab1: tab);
+                                            settings.save(selectedLibraryTab: settings.libraryTabs[0]);
+                                            subList.add(tab);
+                                          } else {
+                                            showMinimumItemsSnack(3);
+                                          }
+                                        },
+                                        active: settings.libraryTabs.contains(tab),
                                       ),
-                                      const SizedBox(height: 8.0),
-                                    ],
+                                    );
+                                  },
+                                  onReorder: (oldIndex, newIndex) {
+                                    if (newIndex > oldIndex) {
+                                      newIndex -= 1;
+                                    }
+                                    final item = settings.libraryTabs.elementAt(oldIndex);
+                                    settings.removeFromList(
+                                      libraryTab1: item,
+                                    );
+                                    settings.insertInList(newIndex, libraryTab1: item);
+                                  },
+                                ),
+                              ),
+                              const NamidaContainerDivider(height: 4.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
+                              const SizedBox(height: 8.0),
+                              if (subList.isNotEmpty)
+                                Expanded(
+                                  flex: subList.length,
+                                  child: ListView.builder(
+                                    padding: EdgeInsets.zero,
+                                    itemCount: subList.length,
+                                    itemBuilder: (context, index) {
+                                      final item = subList[index];
+                                      return Material(
+                                        type: MaterialType.transparency,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                          child: ListTileWithCheckMark(
+                                            title: "${index + 1}. ${item.toText()}",
+                                            icon: item.toIcon(),
+                                            onTap: () {
+                                              settings.save(libraryTabs: [item]);
+                                              subList.remove(item);
+                                            },
+                                            active: settings.libraryTabs.contains(item),
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
-                          ],
-                        );
-                      },
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               );
             },
           ),

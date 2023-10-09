@@ -160,7 +160,8 @@ Future<void> _initializeIntenties() async {
             settings.onYoutubeLinkOpen.value.execute(youtubeIds);
           } else {
             final existing = paths.where((element) => File(element).existsSync()); // this for sussy links
-            (await playExternalFiles(existing)).executeIfFalse(showErrorPlayingFileSnackbar);
+            final err = await playExternalFiles(existing);
+            if (err != null) showErrorPlayingFileSnackbar(error: err);
           }
         }
       }
@@ -178,13 +179,17 @@ Future<void> _initializeIntenties() async {
 }
 
 /// returns [true] if played successfully.
-Future<bool> playExternalFiles(Iterable<String> paths) async {
-  final trs = await Indexer.inst.convertPathToTrack(paths);
-  if (trs.isNotEmpty) {
-    await Player.inst.playOrPause(0, trs, QueueSource.externalFile);
-    return true;
-  } else {
-    return false;
+Future<String?> playExternalFiles(Iterable<String> paths) async {
+  try {
+    final trs = await Indexer.inst.convertPathToTrack(paths);
+    if (trs.isNotEmpty) {
+      await Player.inst.playOrPause(0, trs, QueueSource.externalFile);
+      return null;
+    } else {
+      return 'Empty List';
+    }
+  } catch (e) {
+    return e.toString();
   }
 }
 

@@ -976,7 +976,9 @@ class VideoController {
 class _NamidaVideoPlayer {
   static _NamidaVideoPlayer get inst => _instance;
   static final _NamidaVideoPlayer _instance = _NamidaVideoPlayer._internal();
-  _NamidaVideoPlayer._internal();
+  _NamidaVideoPlayer._internal() {
+    PictureInPicture.onPipChanged = (isInPip) => _isInPip.value = isInPip;
+  }
 
   Rxn<Widget>? get videoWidget => _videoWidget;
   VideoPlayerController? get videoController => _videoController;
@@ -986,6 +988,7 @@ class _NamidaVideoPlayer {
   bool get isCurrentVideoFromCache => _isCurrentVideoFromCache.value;
   double? get aspectRatio => _aspectRatio.value;
   Future<bool>? get waitTillBufferingComplete => _bufferingCompleter?.future;
+  bool get isInPip => _isInPip.value;
 
   final _initializedVideo = false.obs;
   final _isBuffering = true.obs;
@@ -993,6 +996,7 @@ class _NamidaVideoPlayer {
   final _aspectRatio = Rxn<double>();
   final _isCurrentVideoFromCache = false.obs;
   Completer<bool>? _bufferingCompleter;
+  final _isInPip = false.obs;
 
   VideoPlayerController? _videoController;
   final _videoWidget = Rxn<Widget>();
