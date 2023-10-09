@@ -122,7 +122,7 @@ class SettingsController {
   final RxInt minTrackDurationToRestoreLastPosInMinutes = 5.obs;
   final RxString lastPlayedTrackPath = ''.obs;
   final RxBool displayFavouriteButtonInNotification = false.obs;
-  final RxBool enableSearchCleanup = false.obs;
+  final RxBool enableSearchCleanup = true.obs;
   final RxBool enableBottomNavBar = true.obs;
   final RxBool ytPreferNewComments = false.obs;
   final RxBool ytAutoExtractVideoTagsFromInfo = true.obs;
