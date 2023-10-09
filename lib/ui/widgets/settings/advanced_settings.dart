@@ -26,6 +26,7 @@ import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 
 class AdvancedSettings extends StatelessWidget {
   const AdvancedSettings({super.key});
@@ -255,35 +256,8 @@ class AdvancedSettings extends StatelessWidget {
             );
           }(),
 
-          Obx(
-            () => CustomListTile(
-              leading: const StackedIcon(
-                baseIcon: Broken.image,
-                secondaryIcon: Broken.close_circle,
-              ),
-              title: lang.CLEAR_IMAGE_CACHE,
-              trailingText: Indexer.inst.artworksSizeInStorage.value.fileSizeFormatted,
-              onTap: () {
-                NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    isWarning: true,
-                    normalTitleStyle: true,
-                    bodyText: lang.CLEAR_IMAGE_CACHE_WARNING,
-                    actions: [
-                      const CancelButton(),
-                      NamidaButton(
-                        text: lang.CLEAR.toUpperCase(),
-                        onPressed: () async {
-                          NamidaNavigator.inst.closeDialog();
-                          await Indexer.inst.clearImageCache();
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
+          const _ClearImageCacheListTile(),
+
           Obx(
             () => CustomListTile(
               leading: const StackedIcon(
@@ -515,6 +489,114 @@ class AdvancedSettings extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ClearImageCacheListTile extends StatefulWidget {
+  const _ClearImageCacheListTile();
+
+  @override
+  State<_ClearImageCacheListTile> createState() => __ClearImageCacheListTileState();
+}
+
+class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
+  final mainDirs = {
+    AppDirs.ARTWORKS,
+    AppDirs.THUMBNAILS,
+    AppDirs.YT_THUMBNAILS,
+    AppDirs.YT_THUMBNAILS_CHANNELS,
+  };
+
+  final dirsMap = <String, int>{}.obs;
+
+  final dirsChoosen = <String>[].obs;
+
+  int get totalBytes => dirsMap.values.fold(0, (previousValue, element) => previousValue + element);
+
+  @override
+  void initState() {
+    super.initState();
+    dirsChoosen.addAll([
+      AppDirs.YT_THUMBNAILS,
+      AppDirs.YT_THUMBNAILS_CHANNELS,
+    ]);
+    _fillSizes();
+  }
+
+  void _fillSizes() async {
+    final res = await _fillSizesIsolate.thready(mainDirs);
+    dirsMap
+      ..clear()
+      ..addAll(res);
+  }
+
+  static Map<String, int> _fillSizesIsolate(Set<String> dirs) {
+    final map = <String, int>{};
+    for (final d in dirs) {
+      map[d] = Directory(d).listSync().fold(0, (previousValue, element) => previousValue + element.statSync().size);
+    }
+    return map;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () => CustomListTile(
+        leading: const StackedIcon(
+          baseIcon: Broken.image,
+          secondaryIcon: Broken.close_circle,
+        ),
+        title: lang.CLEAR_IMAGE_CACHE,
+        trailingText: totalBytes.fileSizeFormatted,
+        onTap: () {
+          NamidaNavigator.inst.navigateDialog(
+            dialog: CustomBlurryDialog(
+              title: lang.CONFIGURE,
+              normalTitleStyle: true,
+              actions: [
+                const CancelButton(),
+                Obx(
+                  () {
+                    final total = dirsChoosen.fold(0, (p, element) => p + (dirsMap[element] ?? 0));
+                    return NamidaButton(
+                      text: "${lang.CLEAR.toUpperCase()} (${total.fileSizeFormatted})",
+                      onPressed: () async {
+                        NamidaNavigator.inst.closeDialog();
+                        await Indexer.inst.clearImageCache();
+                      },
+                    );
+                  },
+                ),
+              ],
+              child: Column(
+                children: [
+                  ...mainDirs.map(
+                    (e) {
+                      final bytes = dirsMap[e] ?? 0;
+                      final warningText = e == AppDirs.ARTWORKS || e == AppDirs.THUMBNAILS ? lang.CLEAR_IMAGE_CACHE_WARNING : '';
+                      final subtitle = warningText == '' ? bytes.fileSizeFormatted : "${bytes.fileSizeFormatted}\n$warningText";
+                      return Padding(
+                        padding: const EdgeInsets.all(6.0),
+                        child: Obx(
+                          () => ListTileWithCheckMark(
+                            active: dirsChoosen.contains(e),
+                            dense: true,
+                            icon: Broken.cpu_setting,
+                            title: e.split(Platform.pathSeparator).lastWhereEff((e) => e != '') ?? e,
+                            subtitle: subtitle,
+                            onTap: () => dirsChoosen.addOrRemove(e),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

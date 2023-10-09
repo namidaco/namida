@@ -59,7 +59,7 @@
   "CHOOSE_WHAT_TO_CLEAR": "Choose what to clear",
   "CLEAR": "Clear",
   "CLEAR_IMAGE_CACHE": "Clear Image cache",
-  "CLEAR_IMAGE_CACHE_WARNING": "Clearing Image cache will result in a library without images.\n\nUse it only in case you want to rebuild image cache.",
+  "CLEAR_IMAGE_CACHE_WARNING": "Warning: will result in a library without images, Use only to rebuild image cache.",
   "CLEAR_TRACK_ITEM": "Clear Track's",
   "CLEAR_TRACK_ITEM_MULTIPLE": "Clear _NUMBER_ Tracks'",
   "CLEAR_VIDEO_CACHE": "Clear Video Cache",
