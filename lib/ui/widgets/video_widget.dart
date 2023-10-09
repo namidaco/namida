@@ -573,7 +573,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           children: [
                                             Icon(
                                               Broken.play_cricle,
-                                              size: 20.0,
+                                              size: 16.0,
                                               color: itemsColor,
                                             ),
                                             const SizedBox(width: 4.0).animateEntrance(showWhen: Player.inst.currentSpeed != 1.0, allCurves: Curves.easeInOutQuart),
@@ -592,6 +592,84 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 ),
                               ),
                             ),
+                            Obx(() {
+                              final audioStreamsAll = List<AudioOnlyStream>.from(YoutubeController.inst.currentYTAudioStreams);
+                              final streamsMap = <String, AudioOnlyStream>{}; // {language: audiostream}
+                              audioStreamsAll.sortBy((e) => e.displayLanguage ?? '');
+                              audioStreamsAll.loop((e, index) {
+                                if (e.language != null && e.formatSuffix != 'webm') {
+                                  streamsMap[e.language!] = e;
+                                }
+                              });
+                              if (streamsMap.keys.length <= 1) return const SizedBox();
+
+                              return NamidaPopupWrapper(
+                                openOnTap: true,
+                                onPop: _startTimer,
+                                onTap: () {
+                                  _resetTimer();
+                                  setControlsVisibily(true);
+                                },
+                                childrenDefault: widget.qualityItems,
+                                children: [
+                                  ...streamsMap.values.map(
+                                    (element) => Obx(
+                                      () {
+                                        final isSelected1 = element.language == Player.inst.currentCachedAudio?.langaugeCode;
+                                        final isSelected2 = element.language == Player.inst.currentAudioStream?.language;
+                                        final isSelected = isSelected1 || isSelected2;
+                                        final id = Player.inst.nowPlayingVideoID?.id;
+                                        return _getQualityChip(
+                                          title: '${element.displayLanguage}',
+                                          subtitle: " • ${element.language ?? 0}",
+                                          onPlay: (isSelected) {
+                                            if (!isSelected) {
+                                              Player.inst.onItemPlayYoutubeIDSetAudio(
+                                                stream: element,
+                                                cachedFile: null,
+                                                useCache: true,
+                                                videoId: Player.inst.nowPlayingVideoID?.id ?? '',
+                                              );
+                                            }
+                                          },
+                                          selected: isSelected,
+                                          isCached: element.getCachedFile(id) != null,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                                child: Padding(
+                                  padding: const EdgeInsets.all(4.0),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                    child: NamidaBgBlur(
+                                      blur: visiblePercentage * 3.0,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.2 * visiblePercentage),
+                                          borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                        ),
+                                        child: Obx(
+                                          () {
+                                            final currentStream = Player.inst.currentAudioStream;
+                                            final currentCached = Player.inst.currentCachedAudio;
+                                            final qt = currentStream?.displayLanguage ?? currentCached?.langaugeName;
+                                            return qt == null
+                                                ? const SizedBox()
+                                                : Text(
+                                                    qt,
+                                                    style: context.textTheme.displaySmall?.copyWith(color: itemsColor),
+                                                  );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }),
                             // ===== Quality Chip =====
                             Obx(
                               () {

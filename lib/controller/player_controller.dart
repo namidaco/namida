@@ -5,6 +5,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
+import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/audio_handler.dart';
@@ -26,7 +27,7 @@ class Player {
 
   late NamidaAudioVideoHandler<Playable> _audioHandler;
 
-  Map<String, List<MapEntry<File, int?>>> get audioCacheMap => _audioHandler.audioCacheMap;
+  Map<String, List<AudioCacheDetails>> get audioCacheMap => _audioHandler.audioCacheMap;
 
   Track get nowPlayingTrack => _audioHandler.currentTrack.track;
   Selectable get nowPlayingTWD => _audioHandler.currentTrack;
@@ -43,8 +44,10 @@ class Player {
   VideoInfo? get currentVideoInfo => _audioHandler.currentVideoInfo.value;
   YoutubeChannel? get currentChannelInfo => _audioHandler.currentChannelInfo.value;
   VideoOnlyStream? get currentVideoStream => _audioHandler.currentVideoStream.value;
+  AudioOnlyStream? get currentAudioStream => _audioHandler.currentAudioStream.value;
   File? get currentVideoThumbnail => _audioHandler.currentVideoThumbnail.value;
   NamidaVideo? get currentCachedVideo => _audioHandler.currentCachedVideo.value;
+  AudioCacheDetails? get currentCachedAudio => _audioHandler.currentCachedAudio.value;
 
   bool get isAudioOnlyPlayback => _audioHandler.isAudioOnlyPlayback;
   bool get isCurrentAudioFromCache => _audioHandler.isCurrentAudioFromCache;
@@ -309,6 +312,20 @@ class Player {
       useCache: useCache,
       videoId: videoId,
       videoItem: videoItem,
+    );
+  }
+
+  Future<void> onItemPlayYoutubeIDSetAudio({
+    required AudioOnlyStream? stream,
+    required File? cachedFile,
+    bool useCache = true,
+    required String videoId,
+  }) async {
+    await _audioHandler.onItemPlayYoutubeIDSetAudio(
+      stream: stream,
+      cachedFile: cachedFile,
+      useCache: useCache,
+      videoId: videoId,
     );
   }
 

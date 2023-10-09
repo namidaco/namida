@@ -211,7 +211,13 @@ extension YTVideoQuality on String {
 extension CacheGetterAudio on AudioOnlyStream {
   String cacheKey(String id) {
     final audio = this;
-    return "${id}_${audio.bitrate}.${audio.formatSuffix}";
+    // -- wont save english track, only saves non-english ones.
+    final langCode = audio.language?.toLowerCase();
+    final langName = audio.displayLanguage?.toLowerCase();
+    final isNull = langCode == null || langName == null;
+    final isEnglish = langCode == 'en' || langName == 'english';
+    final languageText = isNull || isEnglish ? '' : '_${audio.language}_${audio.displayLanguage}';
+    return "$id${languageText}_${audio.bitrate}.${audio.formatSuffix}";
   }
 
   String cachePath(String id, {String? directory}) {

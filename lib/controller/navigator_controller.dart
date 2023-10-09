@@ -365,8 +365,9 @@ void snackyy({
   double borderRadius = 12.0,
   Color? leftBarIndicatorColor,
   Widget? button,
+  bool? isError,
 }) {
-  final isError = title == lang.ERROR;
+  isError ??= title == lang.ERROR;
   Get.showSnackbar(
     GetSnackBar(
       icon: iconWidget ??

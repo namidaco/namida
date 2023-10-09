@@ -84,6 +84,7 @@ class YoutubeController {
   final currentTotalCommentsCount = Rxn<int>();
   final isLoadingComments = false.obs;
   final currentYTQualities = <VideoOnlyStream>[].obs;
+  final currentYTAudioStreams = <AudioOnlyStream>[].obs;
 
   /// Used as a backup in case of no connection.
   final currentCachedQualities = <NamidaVideo>[].obs;
