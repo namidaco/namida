@@ -456,32 +456,55 @@ class AdvancedSettings extends StatelessWidget {
                       itemCount: videoFiles.length,
                       itemBuilder: (context, index) {
                         final video = videoFiles[index];
-                        return Obx(
-                          () => ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 24.0),
-                            leading: ArtworkWidget(
-                              thumbnailSize: 70.0,
-                              iconSize: 24.0,
-                              width: 70,
-                              height: 70 * 9 / 16,
-                              path: video.pathToYTImage,
-                            ),
-                            title: Text(video.ytID ?? ''),
-                            subtitle: Text("${video.height}p • ${video.framerate}fps - ${video.sizeInBytes.fileSizeFormatted}"),
-                            trailing: IgnorePointer(
-                              child: SizedBox(
-                                height: 18.0,
-                                width: 18.0,
-                                child: CheckMark(
-                                  strokeWidth: 2,
-                                  activeColor: context.theme.listTileTheme.iconColor!,
-                                  inactiveColor: context.theme.listTileTheme.iconColor!,
-                                  duration: const Duration(milliseconds: 400),
-                                  active: videosToDelete.contains(video),
+                        final id = video.ytID;
+                        final title = id == null ? null : YoutubeController.inst.getBackupVideoInfo(id)?.title ?? YoutubeController.inst.fetchVideoDetailsFromCacheSync(id)?.name;
+
+                        return NamidaInkWell(
+                          margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                          onTap: () => videosToDelete.addOrRemove(video),
+                          child: Row(
+                            children: [
+                              ArtworkWidget(
+                                thumbnailSize: 92.0,
+                                iconSize: 24.0,
+                                width: 92,
+                                height: 92 * 9 / 16,
+                                path: video.pathToYTImage,
+                              ),
+                              const SizedBox(width: 8.0),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      title ?? video.ytID ?? '',
+                                      style: context.textTheme.displayMedium,
+                                    ),
+                                    Text(
+                                      "${video.height}p • ${video.framerate}fps - ${video.sizeInBytes.fileSizeFormatted}",
+                                      style: context.textTheme.displaySmall,
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                            onTap: () => videosToDelete.addOrRemove(video),
+                              const SizedBox(width: 8.0),
+                              IgnorePointer(
+                                child: SizedBox(
+                                  height: 16.0,
+                                  width: 16.0,
+                                  child: Obx(
+                                    () => CheckMark(
+                                      strokeWidth: 2,
+                                      activeColor: context.theme.listTileTheme.iconColor!,
+                                      inactiveColor: context.theme.listTileTheme.iconColor!,
+                                      duration: const Duration(milliseconds: 400),
+                                      active: videosToDelete.contains(video),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         );
                       },
