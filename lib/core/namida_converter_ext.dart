@@ -57,6 +57,10 @@ import 'package:namida/ui/pages/tracks_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/stats.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
+import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/pages/youtube_home_view.dart';
 
 extension LibraryTabToEnum on int {
@@ -422,6 +426,54 @@ extension FFMPEGTagFieldUtilsC on FFMPEGTagField {
 extension PlayerRepeatModeUtils on RepeatMode {
   String toText() => _NamidaConverters.inst.getTitle(this);
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
+}
+
+extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+  IconData toIcon() => _NamidaConverters.inst.getIcon(this);
+
+  Future<void> execute(Iterable<String> ids) async {
+    switch (this) {
+      case OnYoutubeLinkOpenAction.showDownload:
+        showDownloadVideoBottomSheet(videoId: ids.first);
+      case OnYoutubeLinkOpenAction.addToPlaylist:
+        final idnames = {for (final id in ids) id: YoutubeController.inst.fetchVideoDetailsFromCacheSync(id)?.name};
+        showAddToPlaylistSheet(ids: ids, idsNamesLookup: idnames);
+      case OnYoutubeLinkOpenAction.play:
+        Player.inst.playOrPause(0, ids.map((e) => YoutubeID(id: e, playlistID: null)), QueueSource.others);
+      case OnYoutubeLinkOpenAction.alwaysAsk:
+        {
+          final newVals = List<OnYoutubeLinkOpenAction>.from(OnYoutubeLinkOpenAction.values);
+          newVals.remove(OnYoutubeLinkOpenAction.alwaysAsk);
+          NamidaNavigator.inst.navigateDialog(
+            dialog: CustomBlurryDialog(
+              title: lang.CHOOSE,
+              normalTitleStyle: true,
+              actions: [
+                NamidaButton(
+                  text: lang.DONE,
+                  onPressed: NamidaNavigator.inst.closeDialog,
+                )
+              ],
+              child: Column(
+                children: newVals
+                    .map(
+                      (e) => CustomListTile(
+                        icon: e.toIcon(),
+                        title: e.toText(),
+                        onTap: () => e.execute(ids),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          );
+        }
+
+      default:
+        null;
+    }
+  }
 }
 
 extension ThemeUtils on ThemeMode {
@@ -1101,6 +1153,12 @@ class _NamidaConverters {
         NotificationTapAction.openApp: lang.OPEN_APP,
         NotificationTapAction.openMiniplayer: lang.OPEN_MINIPLAYER,
         NotificationTapAction.openQueue: lang.OPEN_QUEUE,
+      },
+      OnYoutubeLinkOpenAction: {
+        OnYoutubeLinkOpenAction.showDownload: lang.DOWNLOAD,
+        OnYoutubeLinkOpenAction.play: lang.PLAY,
+        OnYoutubeLinkOpenAction.addToPlaylist: lang.ADD_TO_PLAYLIST,
+        OnYoutubeLinkOpenAction.alwaysAsk: lang.ALWAYS_ASK,
       }
     };
 
@@ -1199,6 +1257,12 @@ class _NamidaConverters {
         InsertionSortingType.listenCount: Broken.award,
         InsertionSortingType.random: Broken.format_circle,
         InsertionSortingType.rating: Broken.grammerly,
+      },
+      OnYoutubeLinkOpenAction: {
+        OnYoutubeLinkOpenAction.showDownload: Broken.import,
+        OnYoutubeLinkOpenAction.play: Broken.play,
+        OnYoutubeLinkOpenAction.addToPlaylist: Broken.music_library_2,
+        OnYoutubeLinkOpenAction.alwaysAsk: Broken.message_question,
       }
     };
     _toTitle

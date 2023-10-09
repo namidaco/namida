@@ -16,7 +16,7 @@ import 'package:namida/youtube/youtube_playlists_view.dart';
 
 void showAddToPlaylistSheet({
   BuildContext? ctx,
-  required List<String> ids,
+  required Iterable<String> ids,
   required Map<String, String?> idsNamesLookup,
 }) async {
   final pcontroller = pc.YoutubePlaylistController.inst;
@@ -54,7 +54,7 @@ void showAddToPlaylistSheet({
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Text(
-                ids.map((e) => idsNamesLookup[e]).join(', '),
+                ids.map((e) => idsNamesLookup[e] ?? e).join(', '),
                 style: context.textTheme.displaySmall,
               ),
             ),

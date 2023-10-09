@@ -307,3 +307,10 @@ enum AlbumIdentifier {
   year,
   albumArtist,
 }
+
+enum OnYoutubeLinkOpenAction {
+  showDownload,
+  play,
+  addToPlaylist,
+  alwaysAsk,
+}

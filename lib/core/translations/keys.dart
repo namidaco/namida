@@ -25,6 +25,7 @@ class LanguageKeys {
   late String ALBUMS_COUNT;
   late String ALBUMS;
   late String ALL_TIME;
+  late String ALWAYS_ASK;
   late String ANIMATING_THUMBNAIL_INTENSITY;
   late String ANIMATING_THUMBNAIL_INVERSED_SUBTITLE;
   late String ANIMATING_THUMBNAIL_INVERSED;
@@ -329,6 +330,7 @@ class LanguageKeys {
   late String OLD_DIRECTORY_STILL_HAS_TRACKS;
   late String ON_INTERRUPTION;
   late String ON_NOTIFICATION_TAP;
+  late String ON_OPENING_YOUTUBE_LINK;
   late String ON_VOLUME_ZERO;
   late String OPEN_APP;
   late String OPEN_IN_YOUTUBE_VIEW;

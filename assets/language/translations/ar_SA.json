@@ -1,5 +1,6 @@
 {
   "ALBUM_IDENTIFIERS": "Album Identifiers",
+  "ALWAYS_ASK": "Always ask",
   "DIM_INTENSITY": "Dim Intensity",
   "DIM_MINIPLAYER_AFTER_SECONDS": "Dim miniplayer after _SECONDS_ seconds of inactivity",
   "DISPLAY_REMAINING_DURATION_INSTEAD_OF_TOTAL": "Display remaining duration instead of total",
@@ -10,6 +11,7 @@
   "KEEP_CACHED_VERSIONS": "Keep cached versions",
   "MAX_IMAGE_CACHE_SIZE": "Max image cache size",
   "MAX_VIDEO_CACHE_SIZE": "Max video cache size",
+  "ON_OPENING_YOUTUBE_LINK": "On opening youtube link",
   "OPEN_IN_YOUTUBE_VIEW": "Open in Youtube view",
   "PICK_COLORS_FROM_DEVICE_WALLPAPER": "Pick Colors from Device Wallpaper",
   "REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING": "Requires clearing image cache and re indexing",

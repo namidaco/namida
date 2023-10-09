@@ -176,6 +176,7 @@ class SettingsController {
   final RxBool displayRemainingDurInsteadOfTotal = false.obs;
   final RxBool pickColorsFromDeviceWallpaper = false.obs;
   final onNotificationTapAction = NotificationTapAction.openApp.obs;
+  final onYoutubeLinkOpen = OnYoutubeLinkOpenAction.alwaysAsk.obs;
 
   final RxMap<TrackTilePosition, TrackTileItem> trackItem = {
     TrackTilePosition.row1Item1: TrackTileItem.title,
@@ -390,6 +391,7 @@ class SettingsController {
       displayRemainingDurInsteadOfTotal.value = json['displayRemainingDurInsteadOfTotal'] ?? displayRemainingDurInsteadOfTotal.value;
       pickColorsFromDeviceWallpaper.value = json['pickColorsFromDeviceWallpaper'] ?? pickColorsFromDeviceWallpaper.value;
       onNotificationTapAction.value = NotificationTapAction.values.getEnum(json['onNotificationTapAction']) ?? onNotificationTapAction.value;
+      onYoutubeLinkOpen.value = OnYoutubeLinkOpenAction.values.getEnum(json['onYoutubeLinkOpen']) ?? onYoutubeLinkOpen.value;
 
       trackItem.value = _getEnumMap(
             json['trackItem'],
@@ -552,6 +554,7 @@ class SettingsController {
       'trackPlayMode': trackPlayMode.value.convertToString,
       'mostPlayedTimeRange': mostPlayedTimeRange.value.convertToString,
       'onNotificationTapAction': onNotificationTapAction.value.convertToString,
+      'onYoutubeLinkOpen': onYoutubeLinkOpen.value.convertToString,
       'mostPlayedCustomDateRange': mostPlayedCustomDateRange.value.toJson(),
       'mostPlayedCustomisStartOfDay': mostPlayedCustomisStartOfDay.value,
 
@@ -709,6 +712,7 @@ class SettingsController {
     TrackPlayMode? trackPlayMode,
     MostPlayedTimeRange? mostPlayedTimeRange,
     NotificationTapAction? onNotificationTapAction,
+    OnYoutubeLinkOpenAction? onYoutubeLinkOpen,
     DateRange? mostPlayedCustomDateRange,
     bool? mostPlayedCustomisStartOfDay,
     bool? didSupportNamida,
@@ -1130,6 +1134,9 @@ class SettingsController {
     }
     if (onNotificationTapAction != null) {
       this.onNotificationTapAction.value = onNotificationTapAction;
+    }
+    if (onYoutubeLinkOpen != null) {
+      this.onYoutubeLinkOpen.value = onYoutubeLinkOpen;
     }
     if (mostPlayedCustomDateRange != null) {
       this.mostPlayedCustomDateRange.value = mostPlayedCustomDateRange;

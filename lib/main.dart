@@ -12,6 +12,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:get/get.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:picture_in_picture/picture_in_picture.dart';
@@ -36,7 +37,6 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/main_page_wrapper.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
-import 'package:namida/youtube/functions/download_sheet.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -151,10 +151,13 @@ Future<void> _initializeIntenties() async {
       if (files.isNotEmpty) {
         final paths = files.map((e) => e.realPath?.replaceAll('\\', '') ?? e.value).whereType<String>();
         if (paths.isNotEmpty) {
-          final youtubeId = paths.firstOrNull?.getYoutubeID;
-          if (youtubeId != null && youtubeId != '') {
+          final youtubeIds = paths.map((e) {
+            final id = e.getYoutubeID;
+            return id == '' ? null : id;
+          }).whereType<String>();
+          if (youtubeIds.isNotEmpty) {
             await _waitForFirstBuildContext.future;
-            showDownloadVideoBottomSheet(videoId: youtubeId);
+            settings.onYoutubeLinkOpen.value.execute(youtubeIds);
           } else {
             final existing = paths.where((element) => File(element).existsSync()); // this for sussy links
             (await playExternalFiles(existing)).executeIfFalse(showErrorPlayingFileSnackbar);
