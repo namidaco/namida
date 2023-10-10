@@ -167,12 +167,8 @@ class Player {
     _audioHandler.resetSleepAfterTimer();
   }
 
-  Future<void> updateVideoPlayingState() async {
-    if (isPlaying) {
-      await play();
-    } else {
-      await pause();
-    }
+  Future<void> toggleVideoPlay() async {
+    await _audioHandler.toggleVideoPlay();
   }
 
   Future<void> refreshVideoSeekPosition({bool delayed = false}) async {

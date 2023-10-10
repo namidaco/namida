@@ -6,6 +6,7 @@ import 'package:sticky_headers/sticky_headers.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -120,6 +121,7 @@ class YoutubeHistoryPage extends StatelessWidget {
                                     childrenDefault: menuItems,
                                     child: NamidaInkWell(
                                       onTap: () {
+                                        YTUtils.expandMiniplayer();
                                         Player.inst.playOrPause(i, videos, QueueSource.others);
                                       },
                                       height: Dimensions.youtubeCardItemExtent,
@@ -150,6 +152,7 @@ class YoutubeHistoryPage extends StatelessWidget {
                                                           borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                                           child: NamidaBgBlur(
                                                             blur: 2.0,
+                                                            enabled: settings.enableBlurEffect.value,
                                                             child: Container(
                                                               padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
                                                               color: Colors.black.withOpacity(0.2),

@@ -57,6 +57,7 @@ class YoutubeVideoCard extends StatelessWidget {
                   [YoutubeID(id: videoId, playlistID: playlistID)],
                   QueueSource.others,
                 );
+                YTUtils.expandMiniplayer();
               }
             },
         channelThumbnailUrl: video?.uploaderAvatarUrl,

@@ -25,7 +25,6 @@ class EditDeleteController {
       videosToDelete.addAll(VideoController.inst.getNVFromID(e.track.youtubeID));
     });
     await Indexer.inst.clearVideoCache(videosToDelete);
-    await Player.inst.updateVideoPlayingState();
   }
 
   Future<void> deleteLyrics(List<Selectable> tracks) async {

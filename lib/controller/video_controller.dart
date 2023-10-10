@@ -324,12 +324,12 @@ class VideoController {
       }
       currentVideo.value = v;
       final volume = mute ? 0.0 : settings.playerVolume.value;
+      await vcontroller.waitTillBufferingComplete;
       await Future.wait([
         _videoController.setVolume(volume),
-        vcontroller.togglePlayPause(Player.inst.isPlaying),
+        Player.inst.toggleVideoPlay(),
       ]);
-      await Future.delayed(const Duration(milliseconds: 100));
-      await Player.inst.refreshVideoSeekPosition(delayed: true);
+      await Player.inst.refreshVideoSeekPosition();
 
       settings.wakelockMode.value.toggleOn(shouldShowVideo);
     });
