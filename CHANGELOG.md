@@ -45,7 +45,8 @@
    - #19b60b9: add yt history import to yt history too
 
 ## 03/10/2023
-# v1.0.0 (first release)
+# v1.0.0
+# first release
 ### 🎉 New Features:
 - feat:
    - #d9a0aa1: display remaining duration instead of total

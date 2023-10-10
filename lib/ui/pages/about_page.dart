@@ -309,12 +309,28 @@ class AboutPage extends StatelessWidget {
 class _NamidaMarkdownElementBuilderHeader extends MarkdownElementBuilder {
   @override
   Widget? visitText(md.Text text, TextStyle? preferredStyle) {
-    return NamidaInkWell(
-      borderRadius: 24.0,
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-      child: Text(
-        text.text,
-        style: Get.textTheme.displayMedium,
+    return Center(
+      child: NamidaInkWell(
+        onTap: () {
+          final version = text.text.replaceAll(' ', '');
+          if (version.startsWith('v') && version.split('.').length > 1) {
+            final url = "${AppSocial.GITHUB}/releases/tag/$version";
+            launchUrlString(url);
+          }
+        },
+        bgColor: Get.theme.cardTheme.color?.withOpacity(0.8),
+        borderRadius: 18.0,
+        decoration: BoxDecoration(
+          border: Border.all(
+            width: 1.5,
+            color: Get.theme.colorScheme.primary.withOpacity(0.5),
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+        child: Text(
+          text.text,
+          style: Get.textTheme.displayMedium,
+        ),
       ),
     );
   }
