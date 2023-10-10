@@ -69,8 +69,11 @@ void main() async {
   final paths = await ExternalPath.getExternalStorageDirectories();
   kStoragePaths.assignAll(paths);
   kDirectoriesPaths.assignAll(paths.mappedUniqued((path) => "$path/${ExternalPath.DIRECTORY_MUSIC}"));
-  kDirectoriesPaths.add('${paths[0]}/Download/');
+
   AppDirs.INTERNAL_STORAGE = "${paths[0]}/Namida";
+  final downloadsFolder = "${paths[0]}/Download/";
+
+  kDirectoriesPaths.addAll([downloadsFolder, AppDirs.INTERNAL_STORAGE]);
 
   await settings.prepareSettingsFile();
   await Future.wait([

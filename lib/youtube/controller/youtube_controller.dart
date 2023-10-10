@@ -621,7 +621,8 @@ class YoutubeController {
           await onVideoFileReady(videoFile);
 
           // if we should keep as a cache, we copy the downloaded file to cache dir
-          if (keepCachedVersionsIfDownloaded) {
+          // -- [!isVideoFileCached] is very important, otherwise it will copy to itself (0 bytes result).
+          if (isVideoFileCached == false && keepCachedVersionsIfDownloaded) {
             await videoFile.copy(videoStream.cachePath(id));
           }
         } else {
@@ -674,7 +675,8 @@ class YoutubeController {
           await onAudioFileReady(audioFile);
 
           // if we should keep as a cache, we copy the downloaded file to cache dir
-          if (keepCachedVersionsIfDownloaded) {
+          // -- [!isAudioFileCached] is very important, otherwise it will copy to itself (0 bytes result).
+          if (isAudioFileCached == false && keepCachedVersionsIfDownloaded) {
             await audioFile.copy(audioStream.cachePath(id));
           }
         } else {

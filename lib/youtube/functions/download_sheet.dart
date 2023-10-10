@@ -555,12 +555,18 @@ Future<void> showDownloadVideoBottomSheet({
                                               );
                                             },
                                           );
+
                                           if (settings.downloadFilesWriteUploadDate.value) {
                                             final d = videoDateTime;
                                             if (d != null) {
                                               await downloadedFile?.setLastAccessed(d);
                                               await downloadedFile?.setLastModified(d);
                                             }
+                                          }
+
+                                          // -- adding to library, only if audio downloaded
+                                          if (selectedAudioOnlyStream.value != null && selectedVideoOnlyStream.value == null) {
+                                            await downloadedFile?.path.toTrackExtOrExtract();
                                           }
                                         },
                                       ),
