@@ -344,6 +344,7 @@ class NamidaFFMPEG {
     FFMPEGTagField.title: "title",
     FFMPEGTagField.albumArtist: "album_artist",
     FFMPEGTagField.genre: "genre",
+    FFMPEGTagField.mood: "mood",
     FFMPEGTagField.country: "Country",
     FFMPEGTagField.recordLabel: "LABEL",
     FFMPEGTagField.comment: "comment",

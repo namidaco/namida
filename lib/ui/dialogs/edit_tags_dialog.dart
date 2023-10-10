@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:faudiotagger/models/faudiomodel.dart';
 import 'package:flutter/material.dart';
 
 import 'package:checkmark/checkmark.dart';
@@ -184,7 +186,12 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
 
   final tagger = FAudioTagger();
 
-  final info = await tagger.readAllData(path: track.path);
+  FAudioModel? info;
+  Uint8List? artwork;
+
+  final infoFull = await tagger.extractMetadata(trackPath: track.path);
+  info = infoFull.$1;
+  artwork = infoFull.$2;
   if (info == null) {
     snackyy(title: lang.ERROR, message: lang.METADATA_READ_FAILED);
   }
@@ -203,6 +210,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
   tagsControllers[TagField.artist] = TextEditingController(text: info?.artist ?? '');
   tagsControllers[TagField.albumArtist] = TextEditingController(text: info?.albumArtist ?? '');
   tagsControllers[TagField.genre] = TextEditingController(text: info?.genre ?? '');
+  tagsControllers[TagField.mood] = TextEditingController(text: info?.mood ?? '');
   tagsControllers[TagField.composer] = TextEditingController(text: info?.composer ?? '');
   tagsControllers[TagField.comment] = TextEditingController(text: info?.comment ?? '');
   tagsControllers[TagField.lyrics] = TextEditingController(text: info?.lyrics ?? '');
@@ -417,7 +425,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
                               () => ArtworkWidget(
                                 key: Key(currentImagePath.value),
                                 thumbnailSize: Get.width / 3,
-                                bytes: currentImagePath.value != '' ? null : info?.firstArtwork,
+                                bytes: currentImagePath.value != '' ? null : artwork,
                                 path: currentImagePath.value != '' ? currentImagePath.value : track.pathToImage,
                                 onTopWidgets: [
                                   Positioned(
@@ -561,6 +569,7 @@ Future<void> _updateTracksMetadata({
           albumArtist: editedTags[TagField.albumArtist],
           composer: editedTags[TagField.composer],
           genre: editedTags[TagField.genre],
+          mood: editedTags[TagField.mood],
           trackNumber: editedTags[TagField.trackNumber],
           discNumber: editedTags[TagField.discNumber],
           year: editedTags[TagField.year],
@@ -588,7 +597,7 @@ Future<void> _updateTracksMetadata({
           tag: newTag,
         );
 
-        didUpdate = error == null || error == '';
+        // didUpdate = error == null || error == '';
 
         if (!didUpdate) {
           // -- 2. try with ffmpeg
@@ -603,6 +612,7 @@ Future<void> _updateTracksMetadata({
                   FFMPEGTagField.albumArtist: editedTags[TagField.albumArtist],
                   FFMPEGTagField.composer: editedTags[TagField.composer],
                   FFMPEGTagField.genre: editedTags[TagField.genre],
+                  FFMPEGTagField.mood: editedTags[TagField.mood],
                   FFMPEGTagField.year: editedTags[TagField.year],
                   FFMPEGTagField.trackNumber: "${editedTags[TagField.trackNumber] ?? 0}/${editedTags[TagField.trackTotal] ?? 0}",
                   FFMPEGTagField.discNumber: "${editedTags[TagField.discNumber] ?? 0}/${editedTags[TagField.discTotal] ?? 0}",
@@ -697,6 +707,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
     TagField.album,
     TagField.artist,
     TagField.genre,
+    TagField.mood,
     TagField.year,
     TagField.comment,
     TagField.albumArtist,

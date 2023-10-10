@@ -291,6 +291,7 @@ class LanguageKeys {
   late String MIXES;
   late String MONTH;
   late String MONTHS;
+  late String MOOD;
   late String MOODS;
   late String MORE;
   late String MOST_PLAYED;

@@ -93,6 +93,7 @@ class MIFormatTags {
   final String? lyrics;
   final String? lyricist;
   final String? compatibleBrands;
+  final String? mood;
 
   const MIFormatTags({
     this.date,
@@ -117,6 +118,7 @@ class MIFormatTags {
     this.lyrics,
     this.lyricist,
     this.compatibleBrands,
+    this.mood,
   });
 
   factory MIFormatTags.fromMap(Map<dynamic, dynamic> json) => MIFormatTags(
@@ -142,6 +144,7 @@ class MIFormatTags {
         lyrics: json["lyrics"],
         lyricist: json["LYRICIST"],
         compatibleBrands: json["compatible_brands"],
+        mood: json["mood"],
       );
 
   Map<dynamic, dynamic> toMap() => {
@@ -167,6 +170,7 @@ class MIFormatTags {
         "lyrics": lyrics,
         "LYRICIST": lyricist,
         "compatible_brands": compatibleBrands,
+        "mood": mood,
       };
 }
 

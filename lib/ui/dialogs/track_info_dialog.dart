@@ -299,6 +299,13 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                           icon: trackExt.genresList.length == 1 ? Broken.emoji_happy : Broken.smileys,
                         ),
 
+                      if (shouldShowTheField(trackExt.hasUnknownMood))
+                        TrackInfoListTile(
+                          title: trackExt.moodList.length == 1 ? lang.MOOD : lang.MOODS,
+                          value: trackExt.hasUnknownMood ? UnknownTags.MOOD : trackExt.moodList.join(', '),
+                          icon: Broken.happyemoji,
+                        ),
+
                       if (shouldShowTheField(trackExt.hasUnknownComposer))
                         TrackInfoListTile(
                           title: lang.COMPOSER,

@@ -168,6 +168,8 @@ class TrackExtended {
   final String albumArtist;
   final String originalGenre;
   final List<String> genresList;
+  final String originalMood;
+  final List<String> moodList;
   final String composer;
   final int trackNo;
 
@@ -195,6 +197,8 @@ class TrackExtended {
     required this.albumArtist,
     required this.originalGenre,
     required this.genresList,
+    required this.originalMood,
+    required this.moodList,
     required this.composer,
     required this.trackNo,
     required this.duration,
@@ -233,6 +237,11 @@ class TrackExtended {
         json['originalGenre'],
         config: genresSplitConfig,
       ),
+      originalMood: json['originalMood'] ?? '',
+      moodList: Indexer.inst.splitGenre(
+        json['originalMood'],
+        config: genresSplitConfig,
+      ),
       composer: json['composer'] ?? '',
       trackNo: json['trackNo'] ?? 0,
       duration: json['duration'] ?? 0,
@@ -259,6 +268,7 @@ class TrackExtended {
       'album': album,
       'albumArtist': albumArtist,
       'originalGenre': originalGenre,
+      'originalMood': originalMood,
       'composer': composer,
       'trackNo': trackNo,
       'duration': duration,
@@ -298,6 +308,7 @@ extension TrackExtUtils on TrackExtended {
   bool get hasUnknownComposer => composer == '' || composer == UnknownTags.COMPOSER;
   bool get hasUnknownArtist => artistsList.isEmpty || artistsList.firstOrNull == UnknownTags.ARTIST;
   bool get hasUnknownGenre => genresList.isEmpty || genresList.firstOrNull == UnknownTags.GENRE;
+  bool get hasUnknownMood => moodList.isEmpty || moodList.firstOrNull == UnknownTags.MOOD;
 
   String get filename => path.getFilename;
   String get filenameWOExt => path.getFilenameWOExt;
@@ -342,6 +353,8 @@ extension TrackExtUtils on TrackExtended {
       albumArtist: tag.albumArtist ?? albumArtist,
       originalGenre: tag.genre ?? originalGenre,
       genresList: tag.genre != null ? [tag.genre!] : genresList,
+      originalMood: tag.mood ?? originalMood,
+      moodList: tag.mood != null ? [tag.mood!] : moodList,
       composer: tag.composer ?? composer,
       trackNo: tag.trackNumber.getIntValue() ?? trackNo,
       year: tag.year.getIntValue() ?? year,
@@ -371,6 +384,8 @@ extension TrackExtUtils on TrackExtended {
     String? albumArtist,
     String? originalGenre,
     List<String>? genresList,
+    String? originalMood,
+    List<String>? moodList,
     String? composer,
     int? trackNo,
 
@@ -398,6 +413,8 @@ extension TrackExtUtils on TrackExtended {
       albumArtist: albumArtist ?? this.albumArtist,
       originalGenre: originalGenre ?? this.originalGenre,
       genresList: genresList ?? this.genresList,
+      originalMood: originalMood ?? this.originalMood,
+      moodList: moodList ?? this.moodList,
       composer: composer ?? this.composer,
       trackNo: trackNo ?? this.trackNo,
       duration: duration ?? this.duration,
@@ -436,6 +453,8 @@ extension TrackUtils on Track {
   String get albumArtist => toTrackExt().albumArtist;
   String get originalGenre => toTrackExt().originalGenre;
   List<String> get genresList => toTrackExt().genresList;
+  String get originalMood => toTrackExt().originalMood;
+  List<String> get moodList => toTrackExt().moodList;
   String get composer => toTrackExt().composer;
   int get trackNo => toTrackExt().trackNo;
   int get duration => toTrackExt().duration;

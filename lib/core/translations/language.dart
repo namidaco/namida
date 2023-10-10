@@ -358,6 +358,7 @@ class Language extends LanguageKeys {
 			MIXES = getKey("MIXES");
 			MONTH = getKey("MONTH");
 			MONTHS = getKey("MONTHS");
+			MOOD = getKey("MOOD");
 			MOODS = getKey("MOODS");
 			MORE = getKey("MORE");
 			MOST_PLAYED = getKey("MOST_PLAYED");
@@ -640,6 +641,7 @@ class Language extends LanguageKeys {
     }
   }
 }
+
 
 
 

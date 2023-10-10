@@ -270,6 +270,8 @@ class Indexer {
       originalGenre: UnknownTags.GENRE,
       genresList: [UnknownTags.GENRE],
       composer: UnknownTags.COMPOSER,
+      originalMood: UnknownTags.MOOD,
+      moodList: [UnknownTags.MOOD],
       trackNo: 0,
       duration: 0,
       year: 0,
@@ -306,6 +308,12 @@ class Indexer {
         config: GenresSplitConfig.settings(),
       );
 
+      // -- Split Moods (using same genre splitters)
+      final moods = splitGenre(
+        trackInfo.mood,
+        config: GenresSplitConfig.settings(),
+      );
+
       String? trimOrNull(String? value) => value == null ? value : value.trimAll();
       String? nullifyEmpty(String? value) => value == '' ? null : value;
       String? doMagic(String? value) => nullifyEmpty(trimOrNull(value));
@@ -318,6 +326,8 @@ class Indexer {
         albumArtist: doMagic(trackInfo.albumArtist),
         originalGenre: doMagic(trackInfo.genre),
         genresList: genres,
+        originalMood: doMagic(trackInfo.mood),
+        moodList: moods,
         composer: doMagic(trackInfo.composer),
         trackNo: trackInfo.trackNumber.getIntValue(),
         duration: duration,
