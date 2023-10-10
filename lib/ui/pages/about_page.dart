@@ -177,9 +177,8 @@ class AboutPage extends StatelessWidget {
                     trailing: isLoading.value ? const LoadingIndicator() : null,
                     onTap: () async {
                       isLoading.value = true;
-                      final striny = await http.get(Uri.parse('https://raw.githubusercontent.com/namidaco/namida/main/CHANGELOG.md'));
+                      final stringy = await http.get(Uri.parse('https://raw.githubusercontent.com/namidaco/namida/main/CHANGELOG.md'));
                       isLoading.value = false;
-
                       await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
                       showModalBottomSheet(
                         showDragHandle: true,
@@ -191,7 +190,7 @@ class AboutPage extends StatelessWidget {
                             height: context.height * 0.6,
                             width: context.width,
                             child: Markdown(
-                              data: striny.body,
+                              data: stringy.body,
                               selectable: true,
                               styleSheetTheme: MarkdownStyleSheetBaseTheme.cupertino,
                               builders: <String, MarkdownElementBuilder>{
@@ -337,14 +336,23 @@ class _NamidaMarkdownElementBuilderHeader extends MarkdownElementBuilder {
 }
 
 class _NamidaMarkdownElementBuilderCommitLink extends MarkdownElementBuilder {
+  String? shortenLongHash(String? longHash, {int chars = 5}) {
+    if (longHash == null || longHash == '') return null;
+    if (longHash.length >= chars * 2) {
+      return '${longHash.substring(0, chars)}...${longHash.substring(longHash.length - chars)}';
+    } else {
+      return longHash;
+    }
+  }
+
   @override
   Widget? visitText(md.Text text, TextStyle? preferredStyle) {
-    final regex = RegExp(r'#([a-zA-Z0-9]{7}):', caseSensitive: false);
+    final regex = RegExp(r'#([a-fA-F0-9]{40}):', caseSensitive: false);
     final res = regex.firstMatch(text.text);
-    final commit = res?.group(1);
-    final url = "${AppSocial.GITHUB}/commit/$commit";
-    final textWithoutCommit = commit == null ? text.text : text.text.replaceFirst(regex, '');
-
+    final longHash = res?.group(1);
+    final url = "${AppSocial.GITHUB}/commit/$longHash";
+    final textWithoutCommit = longHash == null ? text.text : text.text.replaceFirst(regex, '');
+    final commit = shortenLongHash(longHash);
     return RichText(
       text: TextSpan(
         text: commit == null ? '' : "#$commit:",

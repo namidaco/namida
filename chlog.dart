@@ -53,6 +53,7 @@ void main(List<String> argumentsPre) async {
     'log',
     '--oneline',
     '--decorate',
+    '--no-abbrev-commit',
     // '--pretty=%s',
     // '--first-parent',
     if (startDatetime != null) '--after="$startDatetime"',
