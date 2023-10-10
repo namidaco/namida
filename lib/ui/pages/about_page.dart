@@ -196,6 +196,7 @@ class AboutPage extends StatelessWidget {
                               styleSheetTheme: MarkdownStyleSheetBaseTheme.cupertino,
                               builders: <String, MarkdownElementBuilder>{
                                 'li': _NamidaMarkdownElementBuilderCommitLink(),
+                                'h1': _NamidaMarkdownElementBuilderHeader(),
                               },
                               styleSheet: MarkdownStyleSheet(
                                 a: context.textTheme.displayLarge,
@@ -300,6 +301,20 @@ class AboutPage extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _NamidaMarkdownElementBuilderHeader extends MarkdownElementBuilder {
+  @override
+  Widget? visitText(md.Text text, TextStyle? preferredStyle) {
+    return NamidaInkWell(
+      borderRadius: 24.0,
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      child: Text(
+        text.text,
+        style: Get.textTheme.displayMedium,
       ),
     );
   }

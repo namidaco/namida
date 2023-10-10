@@ -1,6 +1,51 @@
 # Namida Changelog
 
+## 10/10/2023
+# v1.3.0
+### 🎉 New Features:
+- feat:
+   - #aabbff1: add mood as tag field
+   - #6e2159d: add downloaded music to library automatically
+   - #07ab4cd: add youtube as a library tab
+   - #3514ef1: image cache clear dialog rework, now can choose which directories to clear
+   - #edda4ea: yt audio language tracks support (this also includes caching)
+   - #517a484: on Youtube Link open (showDownload, play, addToPlaylist, alwaysAsk)
+   - #149902c: clipboard auto paste & direct yt link open
+   - #ce481c7: extract by ffmpeg if tagger failed
+   - #c9b9445: display video listen count & jump to listen for youtube videos
+   - #3da20ce: share logs easily from within about page
+   - #6888d8a: group artworks by album
+   - #37a1fe5: album distinguish parameters
+   - #9e82433: media type chips for searching, can now control which media to search for (tracks, albums, artists, genres, playlists, folders) 
+   - #2d84131: auto search option when setting youtube link
+
+### 🛠️ Bug fixes & Improvements:
+- chore:
+   - #36273bb: playback improvements
+   - #584f733: display video info while clearing video cache
+   - #1d070d9: few ui fixes/improvements
+   - #e1889d6: few tweaks
+   - #822072e: search cleanup is true by default
+   - #9395a1a: try editing tags with ffmpeg if tagger failed
+   - #032b313: suspend playing next while reordering queue
+   - #ca03127: some improvements
+   - #c60cd84: add yt miniplayer screenshot
+   - #ac69925: few tweaks
+   - #3953f53: few tweaks
+   - #ae424ac: prevent accidental triggers (android back & home gestures)
+   - #461d045: max image cache size
+   - #973e824: auto-coloring from device wallpaper (A12+)
+   - #d9a0aa1: display remaining duration instead of total
+- fix:
+   - #ac90081: video playback sync for local music
+   - #f7487f4: not fetching lower res yt images
+- code:
+   - #4c35777: refactor snackbars
+- core:
+   - #19b60b9: add yt history import to yt history too
+
 ## 03/10/2023
+# v1.0.0 (first release)
 ### 🎉 New Features:
 - feat:
    - #d9a0aa1: display remaining duration instead of total
