@@ -201,12 +201,8 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
 
   @override
   Widget build(BuildContext context) {
-    return _buildAnimatedSearchbarBody();
-  }
-
-  /// main body of the searchbar animation
-  Widget _buildAnimatedSearchbarBody() {
     final smallButtonTotalPadding = _SBDimensions.d5 * 2 + widget.buttonWidgetSmallPadding;
+    final smallButtonTotalPaddingPart = smallButtonTotalPadding * 0.6;
     return Container(
       height: _SBDimensions.d60,
       alignment: widget.isSearchBoxOnRightSide ? Alignment.centerRight : Alignment.centerLeft,
@@ -276,8 +272,8 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                   child: Container(
                     padding: const EdgeInsets.only(left: _SBDimensions.d10),
                     alignment: Alignment.topCenter,
-                    width: (widget.searchBoxWidth ?? MediaQuery.of(context).size.width) / _SBDimensions.d1_7,
-                    child: _textFormField(smallButtonTotalPadding * 0.6),
+                    width: smallButtonTotalPaddingPart + (widget.searchBoxWidth ?? MediaQuery.of(context).size.width) / _SBDimensions.d1_7,
+                    child: _textFormField(context, smallButtonTotalPaddingPart),
                   ),
                 ),
               ),
@@ -437,7 +433,8 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
   }
 
   /// This function is for the textFormField of searchbar.
-  Widget _textFormField(double rightPadding) {
+  Widget _textFormField(BuildContext context, double rightPadding) {
+    MediaQuery.sizeOf(context).width;
     return Padding(
       padding: EdgeInsets.only(right: rightPadding),
       child: TextFormField(

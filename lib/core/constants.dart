@@ -113,7 +113,7 @@ class AppDirs {
 }
 
 class AppSocial {
-  static const APP_VERSION = 'v1.0.0-release';
+  static const APP_VERSION = 'v1.3.0-release';
   static const DONATE_KOFI = 'https://ko-fi.com/namidaco';
   static const DONATE_BUY_ME_A_COFFEE = 'https://www.buymeacoffee.com/namidaco';
   static const GITHUB = 'https://github.com/namidaco/namida';
@@ -233,6 +233,8 @@ const kDummyExtendedTrack = TrackExtended(
   albumArtist: "",
   originalGenre: "",
   genresList: [],
+  originalMood: "",
+  moodList: [],
   composer: "",
   trackNo: 0,
   duration: 0,
@@ -258,6 +260,7 @@ class UnknownTags {
   static const ALBUMARTIST = '';
   static const ARTIST = 'Unknown Artist';
   static const GENRE = 'Unknown Genre';
+  static const MOOD = '';
   static const COMPOSER = 'Unknown Composer';
 }
 
