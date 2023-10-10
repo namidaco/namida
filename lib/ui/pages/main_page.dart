@@ -152,7 +152,7 @@ class MainPage extends StatelessWidget {
                           final tab = value.toEnum();
                           ScrollSearchController.inst.animatePageController(tab);
                         },
-                        selectedIndex: settings.selectedLibraryTab.value.toInt(),
+                        selectedIndex: settings.selectedLibraryTab.value.toInt().toIf(0, -1),
                         destinations: [
                           ...settings.libraryTabs.map(
                             (e) => NavigationDestination(

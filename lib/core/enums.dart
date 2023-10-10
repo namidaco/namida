@@ -106,6 +106,7 @@ enum LibraryTab {
   playlists,
   folders,
   search,
+  youtube,
 }
 
 enum TrackPlayMode {

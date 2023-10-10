@@ -21,7 +21,6 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/selected_tracks_preview.dart';
 import 'package:namida/ui/widgets/settings/customization_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
-import 'package:namida/youtube/pages/youtube_home_view.dart';
 
 class MainPageWrapper extends StatefulWidget {
   final void Function(BuildContext context) onContextAvailable;
@@ -99,15 +98,6 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
                           icon: Broken.driver,
                           onTap: () {
                             NamidaNavigator.inst.navigateTo(const QueuesPage());
-                            toggleDrawer();
-                          },
-                        ),
-                        NamidaDrawerListTile(
-                          enabled: false,
-                          title: lang.YOUTUBE,
-                          icon: Broken.video_square,
-                          onTap: () {
-                            NamidaNavigator.inst.navigateTo(const YouTubeHomeView());
                             toggleDrawer();
                           },
                         ),

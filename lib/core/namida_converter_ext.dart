@@ -146,6 +146,8 @@ extension LibraryTabUtils on LibraryTab {
         break;
       case LibraryTab.home:
         page = const HomePage();
+      case LibraryTab.youtube:
+        page = const YouTubeHomeView();
         break;
       default:
         null;
@@ -869,6 +871,8 @@ extension RouteUtils on NamidaRoute {
         break;
       case RouteType.PAGE_HOME:
         tab = LibraryTab.home;
+      case RouteType.YOUTUBE_HOME:
+        tab = LibraryTab.youtube;
         break;
       default:
         null;
@@ -981,6 +985,7 @@ class _NamidaConverters {
         LibraryTab.folders: lang.FOLDERS,
         LibraryTab.home: lang.HOME,
         LibraryTab.search: lang.SEARCH,
+        LibraryTab.youtube: lang.YOUTUBE,
       },
       MediaType: {
         MediaType.album: lang.ALBUMS,
@@ -1231,6 +1236,7 @@ class _NamidaConverters {
         LibraryTab.folders: Broken.folder,
         LibraryTab.home: Broken.home_2,
         LibraryTab.search: Broken.search_normal_1,
+        LibraryTab.youtube: Broken.video_square,
       },
       TagField: {
         TagField.title: Broken.music,
