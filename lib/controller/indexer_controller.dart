@@ -8,12 +8,14 @@ import 'package:flutter/services.dart';
 
 import 'package:faudiotagger/faudiotagger.dart';
 import 'package:get/get.dart';
+import 'package:just_audio/just_audio.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -289,8 +291,19 @@ class Indexer {
       lyrics: '',
     );
     if (trackInfo != null) {
-      final duration = trackInfo.length ?? 0;
-      if (minDur != 0 && duration < minDur) {
+      int durationInSeconds = trackInfo.length ?? 0;
+      if (durationInSeconds == 0) {
+        final d = await NamidaFFMPEG.inst.getMediaDuration(trackPath);
+        durationInSeconds = d?.inSeconds ?? 0;
+
+        if (durationInSeconds == 0) {
+          final ap = AudioPlayer();
+          final dur = await ap.setFilePath(trackPath);
+          durationInSeconds = dur?.inSeconds ?? 0;
+          ap.dispose();
+        }
+      }
+      if (minDur != 0 && durationInSeconds < minDur) {
         if (onMinDurTrigger != null) onMinDurTrigger();
         return null;
       }
@@ -330,7 +343,7 @@ class Indexer {
         moodList: moods,
         composer: doMagic(trackInfo.composer),
         trackNo: trackInfo.trackNumber.getIntValue(),
-        duration: duration,
+        duration: durationInSeconds,
         year: trackInfo.year.getIntValue(),
         comment: trackInfo.comment,
         bitrate: trackInfo.bitRate,
