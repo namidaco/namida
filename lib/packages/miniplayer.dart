@@ -1201,7 +1201,6 @@ class NamidaMiniPlayer extends StatelessWidget {
                                 onTapCancel: () => MiniPlayerController.inst.seekValue.value = 0,
                                 onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx),
                                 onHorizontalDragEnd: (details) => onSeekEnd(),
-                                onHorizontalDragCancel: () => MiniPlayerController.inst.seekValue.value = 0,
                                 child: WaveformComponent(
                                   key: const Key('waveform_widget'),
                                   color: context.theme.colorScheme.onBackground.withAlpha(40),

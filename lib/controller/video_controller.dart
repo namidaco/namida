@@ -922,7 +922,7 @@ class VideoController {
   }
 
   NamidaVideo _getNVFromFFMPEGMap({required String path, MediaInfo? mediaInfo, required FileStat stats, String? ytID}) {
-    final videoStream = mediaInfo?.streams?.firstWhere((element) => element.streamType == StreamType.video);
+    final videoStream = mediaInfo?.streams?.firstWhereEff((element) => element.streamType == StreamType.video);
 
     double? frameratePrecise;
     final framerateField = videoStream?.rFrameRate?.split('/');

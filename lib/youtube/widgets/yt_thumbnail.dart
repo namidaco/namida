@@ -8,6 +8,7 @@ import 'package:namida/class/color_m.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -87,7 +88,11 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
     if (mounted) setState(() {});
 
     if (widget.extractColor && imagePath != null) {
-      final c = await CurrentColor.inst.extractPaletteFromImage(imagePath!, useIsolate: true);
+      final c = await CurrentColor.inst.extractPaletteFromImage(
+        imagePath!,
+        useIsolate: true,
+        paletteSaveDirectory: Directory(AppDirs.YT_PALETTES),
+      );
       smallBoxDynamicColor = c?.color;
       widget.onColorReady?.call(c);
       if (mounted) setState(() {});

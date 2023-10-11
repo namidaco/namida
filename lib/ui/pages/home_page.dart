@@ -142,7 +142,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
     _isLoading = false;
 
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   void _updateSameTimeNYearsAgo(DateTime timeNow, int year) {
@@ -530,7 +530,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                           child: GestureDetector(
                                             onTap: () {
                                               _updateSameTimeNYearsAgo(DateTime.now(), e);
-                                              setState(() {});
+                                              if (mounted) setState(() {});
                                             },
                                             child: AnimatedContainer(
                                               duration: const Duration(milliseconds: 250),
@@ -817,9 +817,8 @@ class _MixesCardState extends State<_MixesCard> {
   void _extractColor() {
     if (track != null && _cardColor == null) {
       CurrentColor.inst.getTrackColors(track!, useIsolate: true).then((value) {
-        setState(() {
-          _cardColor = value.color;
-        });
+        _cardColor = value.color;
+        if (mounted) setState(() {});
       });
     }
   }
@@ -1045,9 +1044,8 @@ class _TrackCardState extends State<_TrackCard> {
   void _extractColor() {
     if (widget.track != null && _cardColor == null) {
       CurrentColor.inst.getTrackColors(widget.track!, useIsolate: true).then((value) {
-        setState(() {
-          _cardColor = value.color;
-        });
+        _cardColor = value.color;
+        if (mounted) setState(() {});
       });
     }
   }
@@ -1062,9 +1060,9 @@ class _TrackCardState extends State<_TrackCard> {
       shimmerEnabled: displayShimmer,
       child: NamidaInkWell(
         onTap: () {
-          setState(() {
-            _enabledTrack = (widget.title, widget.index);
-          });
+          _enabledTrack = (widget.title, widget.index);
+          if (mounted) setState(() {});
+
           Player.inst.playOrPause(
             widget.index,
             widget.queue,

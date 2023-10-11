@@ -90,7 +90,7 @@ class MiniPlayerController {
 
   void invokeDoneReordering() {
     isReorderingQueue = false;
-    reorderingQueueCompleter?.complete();
+    reorderingQueueCompleter?.completeIfWasnt();
     reorderingQueueCompleter = null;
   }
 

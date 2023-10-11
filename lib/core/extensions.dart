@@ -359,3 +359,10 @@ extension FunctionsExecuter<T> on Iterable<Future<T>?> {
     return await Future.wait(whereType<Future<T>>());
   }
 }
+
+extension CompleterCompleter<T> on Completer<T>? {
+  void completeIfWasnt([FutureOr<T>? value]) async {
+    final c = this;
+    if (c?.isCompleted == false) c?.complete(value);
+  }
+}

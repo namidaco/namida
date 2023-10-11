@@ -354,9 +354,10 @@ class CurrentColor {
     await Directory(AppDirs.PALETTES).create();
 
     isGeneratingAllColorPalettes.value = true;
-    for (int i = 0; i < allTracksInLibrary.length; i++) {
+    final alltracks = allTracksInLibrary;
+    for (int i = 0; i < alltracks.length; i++) {
       if (!isGeneratingAllColorPalettes.value) break; // stops extracting
-      await getTrackColors(allTracksInLibrary[i], useIsolate: true, forceReCheck: true);
+      await getTrackColors(alltracks[i], useIsolate: true, forceReCheck: true);
     }
 
     isGeneratingAllColorPalettes.value = false;

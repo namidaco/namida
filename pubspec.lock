@@ -70,8 +70,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: b4b7fbd92eb9f2a662b32f0796aef9ccac34440d
-      resolved-ref: b4b7fbd92eb9f2a662b32f0796aef9ccac34440d
+      ref: d4e8578848e401135ed7331c08586c579696fafe
+      resolved-ref: d4e8578848e401135ed7331c08586c579696fafe
       url: "https://github.com/namidaco/basic_audio_handler"
     source: git
     version: "0.0.1"
@@ -441,8 +441,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: d1881c5e527db26d2d139edb858b5384f6331405
-      resolved-ref: d1881c5e527db26d2d139edb858b5384f6331405
+      ref: a6a9f135a64cbf3599e1333fd37e6b7eb249bbb9
+      resolved-ref: a6a9f135a64cbf3599e1333fd37e6b7eb249bbb9
       url: "https://github.com/MSOB7YY/flutter_sharing_intent"
     source: git
     version: "1.0.6"
@@ -917,8 +917,8 @@ packages:
     dependency: transitive
     description:
       path: "."
-      ref: HEAD
-      resolved-ref: "7047a352f5a84647547c2ed886d90c3cc23fae0c"
+      ref: "3001f23ef75b3c48124097dab106c5d335454413"
+      resolved-ref: "3001f23ef75b3c48124097dab106c5d335454413"
       url: "https://github.com/namidaco/queue_manager"
     source: git
     version: "0.0.1"

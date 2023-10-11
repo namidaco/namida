@@ -246,6 +246,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     await super.onReorderItems(currentIndex, itemDragged);
     refreshNotification();
+    MiniPlayerController.inst.reorderingQueueCompleterPlayer?.completeIfWasnt();
+    MiniPlayerController.inst.reorderingQueueCompleterPlayer = null;
 
     await itemDragged._execute(
       selectable: (finalItem) {
@@ -260,9 +262,19 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       },
       youtubeID: (finalItems) {},
     );
+  }
 
-    MiniPlayerController.inst.reorderingQueueCompleterPlayer?.complete();
-    MiniPlayerController.inst.reorderingQueueCompleterPlayer = null;
+  @override
+  FutureOr<void> beforeRemovingPlayingItemFromQueue(bool wasLatest) async {
+    MiniPlayerController.inst.reorderingQueueCompleter?.completeIfWasnt();
+    MiniPlayerController.inst.reorderingQueueCompleterPlayer?.completeIfWasnt();
+  }
+
+  @override
+  FutureOr<void> removeFromQueue(int index, bool startPlayingIfRemovedCurrent) async {
+    await super.removeFromQueue(index, startPlayingIfRemovedCurrent);
+    MiniPlayerController.inst.reorderingQueueCompleter?.completeIfWasnt();
+    MiniPlayerController.inst.reorderingQueueCompleterPlayer?.completeIfWasnt();
   }
 
   @override
@@ -446,6 +458,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         await onItemPlayYoutubeID(item, finalItem, index, startPlaying);
       },
     );
+    MiniPlayerController.inst.reorderingQueueCompleterPlayer?.completeIfWasnt();
   }
 
   Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, bool startPlaying) async {
@@ -1139,7 +1152,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   void onBufferOrLoadEnd() async {
     await waitTillAudioLoaded;
-    if (_audioShouldBeLoading?.isCompleted == false) _audioShouldBeLoading?.complete();
+    _audioShouldBeLoading?.completeIfWasnt();
     if (isPlaying) {
       VideoController.vcontroller.play();
     }
@@ -1152,11 +1165,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   Future<void> onRealPlay() async {
+    await VideoController.vcontroller.pause(); // pausing for cases like: seeking to 0, which will trigger play fast
     final del = _videoPositionSeekDelayMS.abs();
     final vcp = VideoController.vcontroller.videoController?.value.position.inMilliseconds ?? 0;
     final diff = (vcp - currentPositionMS).abs();
     if (diff <= del) {
-      await Future.delayed(Duration(milliseconds: del));
+      await Future.delayed(Duration(milliseconds: diff.withMaximum(_videoPositionSeekDelayMS)));
     }
     await VideoController.vcontroller.play();
   }
