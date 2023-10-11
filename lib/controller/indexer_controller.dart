@@ -36,6 +36,7 @@ class Indexer {
 
   final RxBool isIndexing = false.obs;
 
+  final currentTrackPathBeingExtracted = ''.obs;
   final RxSet<String> allAudioFiles = <String>{}.obs;
   final RxInt filteredForSizeDurationTracks = 0.obs;
   final RxInt duplicatedTracksLength = 0.obs;
@@ -242,172 +243,183 @@ class Indexer {
     bool tryExtractingFromFilename = true,
     bool extractColor = false,
   }) async {
-    // -- returns null early depending on size [byte] or duration [seconds]
-    final fileStat = await File(trackPath).stat();
-    if (minSize != 0 && fileStat.size < minSize) {
-      if (onMinSizeTrigger != null) onMinSizeTrigger();
-      return null;
-    }
+    // -- most methods dont throw, except for timeout
+    try {
+      const timeoutDuration = Duration(seconds: 10); // 10s for each method, 2 more fallback methods so totalDuration is upto 30s
 
-    late TrackExtended finalTrackExtended;
-
-    FAudioModel? trackInfo;
-    Uint8List? artwork;
-
-    final infoAndArtwork = await _faudiotagger.extractMetadata(trackPath: trackPath);
-
-    trackInfo = infoAndArtwork.$1;
-    artwork = infoAndArtwork.$2;
-
-    if (trackInfo == null && !tryExtractingFromFilename) {
-      return null;
-    }
-
-    final initialTrack = TrackExtended(
-      title: UnknownTags.TITLE,
-      originalArtist: UnknownTags.ARTIST,
-      artistsList: [UnknownTags.ARTIST],
-      album: UnknownTags.ALBUM,
-      albumArtist: UnknownTags.ALBUMARTIST,
-      originalGenre: UnknownTags.GENRE,
-      genresList: [UnknownTags.GENRE],
-      composer: UnknownTags.COMPOSER,
-      originalMood: UnknownTags.MOOD,
-      moodList: [UnknownTags.MOOD],
-      trackNo: 0,
-      duration: 0,
-      year: 0,
-      size: fileStat.size,
-      dateAdded: fileStat.accessed.millisecondsSinceEpoch,
-      dateModified: fileStat.changed.millisecondsSinceEpoch,
-      path: trackPath,
-      comment: '',
-      bitrate: 0,
-      sampleRate: 0,
-      format: '',
-      channels: '',
-      discNo: 0,
-      language: '',
-      lyrics: '',
-    );
-    if (trackInfo != null) {
-      int durationInSeconds = trackInfo.length ?? 0;
-      if (durationInSeconds == 0) {
-        final d = await NamidaFFMPEG.inst.getMediaDuration(trackPath);
-        durationInSeconds = d?.inSeconds ?? 0;
-
-        if (durationInSeconds == 0) {
-          final ap = AudioPlayer();
-          final dur = await ap.setFilePath(trackPath);
-          durationInSeconds = dur?.inSeconds ?? 0;
-          ap.dispose();
+      // -- returns null early depending on size [byte] or duration [seconds]
+      FileStat? fileStat;
+      try {
+        fileStat = await File(trackPath).stat();
+        if (minSize != 0 && fileStat.size < minSize) {
+          if (onMinSizeTrigger != null) onMinSizeTrigger();
+          return null;
         }
-      }
-      if (minDur != 0 && durationInSeconds < minDur) {
-        if (onMinDurTrigger != null) onMinDurTrigger();
+      } catch (_) {}
+
+      late TrackExtended finalTrackExtended;
+
+      FAudioModel? trackInfo;
+      Uint8List? artwork;
+
+      final infoAndArtwork = await _faudiotagger.extractMetadata(trackPath: trackPath).timeout(timeoutDuration);
+
+      trackInfo = infoAndArtwork.$1;
+      artwork = infoAndArtwork.$2;
+
+      if (trackInfo == null && !tryExtractingFromFilename) {
         return null;
       }
 
-      // -- Split Artists
-      final artists = splitArtist(
-        title: trackInfo.title,
-        originalArtist: trackInfo.artist,
-        config: ArtistsSplitConfig.settings(),
+      final initialTrack = TrackExtended(
+        title: UnknownTags.TITLE,
+        originalArtist: UnknownTags.ARTIST,
+        artistsList: [UnknownTags.ARTIST],
+        album: UnknownTags.ALBUM,
+        albumArtist: UnknownTags.ALBUMARTIST,
+        originalGenre: UnknownTags.GENRE,
+        genresList: [UnknownTags.GENRE],
+        composer: UnknownTags.COMPOSER,
+        originalMood: UnknownTags.MOOD,
+        moodList: [UnknownTags.MOOD],
+        trackNo: 0,
+        duration: 0,
+        year: 0,
+        size: fileStat?.size ?? 0,
+        dateAdded: fileStat?.accessed.millisecondsSinceEpoch ?? 0,
+        dateModified: fileStat?.changed.millisecondsSinceEpoch ?? 0,
+        path: trackPath,
+        comment: '',
+        bitrate: 0,
+        sampleRate: 0,
+        format: '',
+        channels: '',
+        discNo: 0,
+        language: '',
+        lyrics: '',
       );
+      if (trackInfo != null) {
+        int durationInSeconds = trackInfo.length ?? 0;
+        if (durationInSeconds == 0) {
+          final d = await NamidaFFMPEG.inst.getMediaDuration(trackPath).timeout(timeoutDuration);
+          durationInSeconds = d?.inSeconds ?? 0;
 
-      // -- Split Genres
-      final genres = splitGenre(
-        trackInfo.genre,
-        config: GenresSplitConfig.settings(),
-      );
+          if (durationInSeconds == 0) {
+            final ap = AudioPlayer();
+            final dur = await ap.setFilePath(trackPath).timeout(timeoutDuration);
+            durationInSeconds = dur?.inSeconds ?? 0;
+            ap.dispose();
+          }
+        }
+        if (minDur != 0 && durationInSeconds < minDur) {
+          if (onMinDurTrigger != null) onMinDurTrigger();
+          return null;
+        }
 
-      // -- Split Moods (using same genre splitters)
-      final moods = splitGenre(
-        trackInfo.mood,
-        config: GenresSplitConfig.settings(),
-      );
+        // -- Split Artists
+        final artists = splitArtist(
+          title: trackInfo.title,
+          originalArtist: trackInfo.artist,
+          config: ArtistsSplitConfig.settings(),
+        );
 
-      String? trimOrNull(String? value) => value == null ? value : value.trimAll();
-      String? nullifyEmpty(String? value) => value == '' ? null : value;
-      String? doMagic(String? value) => nullifyEmpty(trimOrNull(value));
+        // -- Split Genres
+        final genres = splitGenre(
+          trackInfo.genre,
+          config: GenresSplitConfig.settings(),
+        );
 
-      finalTrackExtended = initialTrack.copyWith(
-        title: doMagic(trackInfo.title),
-        originalArtist: doMagic(trackInfo.artist),
-        artistsList: artists,
-        album: doMagic(trackInfo.album),
-        albumArtist: doMagic(trackInfo.albumArtist),
-        originalGenre: doMagic(trackInfo.genre),
-        genresList: genres,
-        originalMood: doMagic(trackInfo.mood),
-        moodList: moods,
-        composer: doMagic(trackInfo.composer),
-        trackNo: trackInfo.trackNumber.getIntValue(),
-        duration: durationInSeconds,
-        year: trackInfo.year.getIntValue(),
-        comment: trackInfo.comment,
-        bitrate: trackInfo.bitRate,
-        sampleRate: trackInfo.sampleRate,
-        format: trackInfo.format,
-        channels: trackInfo.channels,
-        discNo: trackInfo.discNumber.getIntValue(),
-        language: trackInfo.language,
-        lyrics: trackInfo.lyrics,
-      );
+        // -- Split Moods (using same genre splitters)
+        final moods = splitGenre(
+          trackInfo.mood,
+          config: GenresSplitConfig.settings(),
+        );
 
-      // ----- if the title || artist weren't found in the tag fields
-      final isTitleEmpty = finalTrackExtended.title == UnknownTags.TITLE;
-      final isArtistEmpty = finalTrackExtended.originalArtist == UnknownTags.ARTIST;
-      if (isTitleEmpty || isArtistEmpty) {
-        final extractedName = getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
-        final newTitle = isTitleEmpty ? extractedName.$1 : null;
-        final newArtists = isArtistEmpty ? [extractedName.$2] : null;
-        finalTrackExtended = finalTrackExtended.copyWith(
-          title: newTitle,
-          originalArtist: newArtists?.first,
-          artistsList: newArtists,
+        String? trimOrNull(String? value) => value == null ? value : value.trimAll();
+        String? nullifyEmpty(String? value) => value == '' ? null : value;
+        String? doMagic(String? value) => nullifyEmpty(trimOrNull(value));
+
+        finalTrackExtended = initialTrack.copyWith(
+          title: doMagic(trackInfo.title),
+          originalArtist: doMagic(trackInfo.artist),
+          artistsList: artists,
+          album: doMagic(trackInfo.album),
+          albumArtist: doMagic(trackInfo.albumArtist),
+          originalGenre: doMagic(trackInfo.genre),
+          genresList: genres,
+          originalMood: doMagic(trackInfo.mood),
+          moodList: moods,
+          composer: doMagic(trackInfo.composer),
+          trackNo: trackInfo.trackNumber.getIntValue(),
+          duration: durationInSeconds,
+          year: trackInfo.year.getIntValue(),
+          comment: trackInfo.comment,
+          bitrate: trackInfo.bitRate,
+          sampleRate: trackInfo.sampleRate,
+          format: trackInfo.format,
+          channels: trackInfo.channels,
+          discNo: trackInfo.discNumber.getIntValue(),
+          language: trackInfo.language,
+          lyrics: trackInfo.lyrics,
+        );
+
+        // ----- if the title || artist weren't found in the tag fields
+        final isTitleEmpty = finalTrackExtended.title == UnknownTags.TITLE;
+        final isArtistEmpty = finalTrackExtended.originalArtist == UnknownTags.ARTIST;
+        if (isTitleEmpty || isArtistEmpty) {
+          final extractedName = getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
+          final newTitle = isTitleEmpty ? extractedName.$1 : null;
+          final newArtists = isArtistEmpty ? [extractedName.$2] : null;
+          finalTrackExtended = finalTrackExtended.copyWith(
+            title: newTitle,
+            originalArtist: newArtists?.first,
+            artistsList: newArtists,
+          );
+        }
+        // ------------------------------------------------------------
+
+        extractOneArtwork(
+          trackPath,
+          bytes: artwork,
+          forceReExtract: deleteOldArtwork,
+          extractColor: extractColor,
+          albumIdendifier: finalTrackExtended.albumIdentifier,
+        );
+      } else {
+        // --- Adding dummy track with info extracted from filename.
+        final titleAndArtist = getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
+        final title = titleAndArtist.$1;
+        final artist = titleAndArtist.$2;
+        finalTrackExtended = initialTrack.copyWith(
+          title: title,
+          originalArtist: artist,
+          artistsList: [artist],
+        );
+        extractOneArtwork(
+          trackPath,
+          forceReExtract: deleteOldArtwork,
+          extractColor: extractColor,
+          albumIdendifier: finalTrackExtended.albumIdentifier,
         );
       }
-      // ------------------------------------------------------------
 
-      extractOneArtwork(
-        trackPath,
-        bytes: artwork,
-        forceReExtract: deleteOldArtwork,
-        extractColor: extractColor,
-        albumIdendifier: finalTrackExtended.albumIdentifier,
-      );
-    } else {
-      // --- Adding dummy track with info extracted from filename.
-      final titleAndArtist = getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
-      final title = titleAndArtist.$1;
-      final artist = titleAndArtist.$2;
-      finalTrackExtended = initialTrack.copyWith(
-        title: title,
-        originalArtist: artist,
-        artistsList: [artist],
-      );
-      extractOneArtwork(
-        trackPath,
-        forceReExtract: deleteOldArtwork,
-        extractColor: extractColor,
-        albumIdendifier: finalTrackExtended.albumIdentifier,
-      );
+      final tr = finalTrackExtended.toTrack();
+      allTracksMappedByPath[tr] = finalTrackExtended;
+      _currentFileNamesMap[trackPath.getFilename] = true;
+      if (checkForDuplicates) {
+        tracksInfoList.addNoDuplicates(tr);
+        SearchSortController.inst.trackSearchList.addNoDuplicates(tr);
+      } else {
+        tracksInfoList.add(tr);
+        SearchSortController.inst.trackSearchList.add(tr);
+      }
+
+      printy("tracksInfoList length: ${tracksInfoList.length}");
+      return finalTrackExtended;
+    } catch (e) {
+      printy('Error or timeout occured while extracting $trackPath');
+      return null;
     }
-
-    final tr = finalTrackExtended.toTrack();
-    allTracksMappedByPath[tr] = finalTrackExtended;
-    _currentFileNamesMap[trackPath.getFilename] = true;
-    if (checkForDuplicates) {
-      tracksInfoList.addNoDuplicates(tr);
-      SearchSortController.inst.trackSearchList.addNoDuplicates(tr);
-    } else {
-      tracksInfoList.add(tr);
-      SearchSortController.inst.trackSearchList.add(tr);
-    }
-
-    printy("tracksInfoList length: ${tracksInfoList.length}");
-    return finalTrackExtended;
   }
 
   /// - Extracts artwork from [bytes] or [pathOfAudio] and save to file.
@@ -608,6 +620,7 @@ class Indexer {
     final minSize = settings.indexMinFileSizeInB.value; // bytes
     final prevDuplicated = settings.preventDuplicatedTracks.value;
 
+    currentTrackPathBeingExtracted.value = '';
     if (audioFiles.isNotEmpty) {
       // -- Extracting All Metadata
       for (final trackPath in audioFiles) {
@@ -615,6 +628,7 @@ class Indexer {
         if (_cancelableIndexingCompleter[cancelTokenTime]?.isCompleted == true) break;
 
         printy(trackPath);
+        currentTrackPathBeingExtracted.value = trackPath;
 
         /// skip duplicated tracks according to filename
         if (prevDuplicated) {
@@ -635,6 +649,7 @@ class Indexer {
 
       printy('Extracted All Metadata');
     }
+    currentTrackPathBeingExtracted.value = '';
 
     /// doing some checks to remove unqualified tracks.
     /// removes tracks after changing `duration` or `size`.

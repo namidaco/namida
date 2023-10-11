@@ -147,13 +147,27 @@ class IndexerSettings extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
             child: Obx(
               () => Text(
                 '${lang.DUPLICATED_TRACKS}: ${Indexer.inst.duplicatedTracksLength.value}\n${lang.TRACKS_EXCLUDED_BY_NOMEDIA}: ${Indexer.inst.tracksExcludedByNoMedia.value}\n${lang.FILTERED_BY_SIZE_AND_DURATION}: ${Indexer.inst.filteredForSizeDurationTracks.value}',
                 style: context.textTheme.displaySmall,
               ),
             ),
+          ),
+          Obx(
+            () {
+              final p = Indexer.inst.currentTrackPathBeingExtracted.value;
+              return p == ''
+                  ? const SizedBox()
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0),
+                      child: Text(
+                        Indexer.inst.currentTrackPathBeingExtracted.value,
+                        style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
+                      ),
+                    );
+            },
           ),
           Obx(
             () => CustomSwitchListTile(
