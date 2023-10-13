@@ -112,9 +112,9 @@ class SearchSortController {
     final tsf = settings.trackSearchFilter;
     final cleanup = settings.enableSearchCleanup.value;
     final result = await _searchTracksIsolate.thready({
-      'tsf': tsf,
+      'tsf': tsf.toList(),
       'cleanup': cleanup,
-      'tracks': tracksInfoList,
+      'tracks': tracksInfoList.toList(),
       'text': text,
     });
     final finalList = temp ? trackSearchTemp : trackSearchList;

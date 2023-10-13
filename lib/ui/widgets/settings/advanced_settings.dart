@@ -565,6 +565,7 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
                       onPressed: () async {
                         NamidaNavigator.inst.closeDialog();
                         await Indexer.inst.clearImageCache();
+                        _fillSizes();
                       },
                     );
                   },

@@ -750,7 +750,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             streams.audioOnlyStreams?.firstWhereEff((e) => e.formatSuffix != 'webm') ??
             streams.audioOnlyStreams?.firstOrNull;
         if (prefferedAudioStream?.url != null || prefferedVideoStream?.url != null) {
-          final isStreamRequiredBetterThanCachedSet = playedFromCacheDetails.$2 != null && (prefferedVideoStream?.width ?? 0) > (playedFromCacheDetails.$2?.width ?? 0);
+          final isStreamRequiredBetterThanCachedSet =
+              playedFromCacheDetails.$2 == null ? true : playedFromCacheDetails.$2 != null && (prefferedVideoStream?.width ?? 0) > (playedFromCacheDetails.$2?.width ?? 0);
 
           currentVideoStream.value = isStreamRequiredBetterThanCachedSet ? prefferedVideoStream : vos?.firstWhereEff((e) => e.width == (playedFromCacheDetails.$2?.width));
 
@@ -1113,6 +1114,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       },
       youtubeID: (finalItem) async {
         await plsPause();
+        if (position == Duration.zero) {
+          // -- try putting cache version if it was cached
+        }
         await plsSeek();
       },
     );

@@ -253,17 +253,20 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       upperBound: 1.0,
     );
 
-    FlutterVolumeController.addListener(
-      (value) async {
-        if (widget.showControls) {
-          final ast = await FlutterVolumeController.getAndroidAudioStream();
-          if (ast == AudioStream.music) {
-            _currentDeviceVolume.value = value;
+    if (widget.isFullScreen) {
+      FlutterVolumeController.addListener(
+        (value) async {
+          if (widget.showControls) {
+            final ast = await FlutterVolumeController.getAndroidAudioStream();
+            if (ast == AudioStream.music) {
+              _currentDeviceVolume.value = value;
+              if (!_isPointerDown) _startVolumeSwipeTimer(); // only start timer if not handled by pointer down/up
+            }
           }
-        }
-      },
-      emitOnStart: false,
-    );
+        },
+        emitOnStart: false,
+      );
+    }
   }
 
   @override
@@ -417,7 +420,11 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     return isSafeFromDown && isSafeFromUp;
   }
 
+  /// used to disable slider if user swiped too close to the edge.
   bool _disableSliderVolume = false;
+
+  /// used to hide slider if wasnt handled by pointer down/up.
+  bool _isPointerDown = false;
 
   @override
   Widget build(BuildContext context) {
@@ -433,18 +440,21 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     return Listener(
       behavior: HitTestBehavior.translucent,
       onPointerCancel: (event) {
+        _isPointerDown = false;
         _disableSliderVolume = false;
         if (shouldShowVolumeSlider) {
           _startVolumeSwipeTimer();
         }
       },
       onPointerUp: (event) {
+        _isPointerDown = false;
         _disableSliderVolume = false;
         if (shouldShowVolumeSlider) {
           _startVolumeSwipeTimer();
         }
       },
       onPointerDown: (event) {
+        _isPointerDown = true;
         if (_shouldSeekOnTap) {
           _onDoubleTap(event.position);
           _startTimer();

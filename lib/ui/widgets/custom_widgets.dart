@@ -1244,7 +1244,7 @@ class NamidaWheelSlider<T> extends StatelessWidget {
             initValue: initValue,
             itemSize: itemSize,
             squeeze: squeeze,
-            isInfinite: false,
+            isInfinite: isInfinite,
             lineColor: Get.iconColor,
             pointerColor: context.theme.listTileTheme.textColor!,
             pointerHeight: 38.0,
