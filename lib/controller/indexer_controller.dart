@@ -146,7 +146,7 @@ class Indexer {
       mainMapFolders.addForce(tr.folder, tr);
     });
 
-    mainMapAlbums.value.updateAll((key, value) => value..sortByAlt((e) => e.year, (e) => e.title));
+    mainMapAlbums.value.updateAll((key, value) => value..sortByAlts((e) => e.year, [(e) => e.trackNo, (e) => e.title]));
     mainMapArtists.value.updateAll((key, value) => value..sortByAlt((e) => e.year, (e) => e.title));
     mainMapGenres.value.updateAll((key, value) => value..sortByAlt((e) => e.year, (e) => e.title));
     mainMapFolders.updateAll((key, value) => value..sortBy((e) => e.filename.toLowerCase()));

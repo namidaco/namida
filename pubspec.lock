@@ -184,8 +184,8 @@ packages:
     dependency: "direct overridden"
     description:
       path: "."
-      ref: "4628356a449cdeb12bef5a3a9b4ed37668530192"
-      resolved-ref: "4628356a449cdeb12bef5a3a9b4ed37668530192"
+      ref: a479566dba509bed428cd0135ce3c9b6145807d8
+      resolved-ref: a479566dba509bed428cd0135ce3c9b6145807d8
       url: "https://github.com/MSOB7YY/dart_extensions"
     source: git
     version: "0.0.1"
