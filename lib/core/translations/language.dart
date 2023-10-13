@@ -72,6 +72,7 @@ class Language extends LanguageKeys {
 			ABOUT = getKey("ABOUT");
 			ACTIVE = getKey("ACTIVE");
 			ADD_FOLDER = getKey("ADD_FOLDER");
+			ADD_LRC_FILE = getKey("ADD_LRC_FILE");
 			ADD_MORE_FROM_THIS_ALBUM = getKey("ADD_MORE_FROM_THIS_ALBUM");
 			ADD_MORE_FROM_THIS_ARTIST = getKey("ADD_MORE_FROM_THIS_ARTIST");
 			ADD_MORE_FROM_THIS_FOLDER = getKey("ADD_MORE_FROM_THIS_FOLDER");
@@ -393,6 +394,7 @@ class Language extends LanguageKeys {
 			NOTE = getKey("NOTE");
 			NUMBER_OF_TRACKS = getKey("NUMBER_OF_TRACKS");
 			OF = getKey("OF");
+			OFFSET = getKey("OFFSET");
 			OLDEST_WATCH = getKey("OLDEST_WATCH");
 			OLD_DIRECTORY = getKey("OLD_DIRECTORY");
 			OLD_DIRECTORY_STILL_HAS_TRACKS = getKey("OLD_DIRECTORY_STILL_HAS_TRACKS");
@@ -423,6 +425,7 @@ class Language extends LanguageKeys {
 			PICK_FROM_STORAGE = getKey("PICK_FROM_STORAGE");
 			PINNED = getKey("PINNED");
 			PITCH = getKey("PITCH");
+			PLAIN = getKey("PLAIN");
 			PLAY_AFTER_NEXT_PREV = getKey("PLAY_AFTER_NEXT_PREV");
 			PLAY_AFTER = getKey("PLAY_AFTER");
 			PLAY_ALL = getKey("PLAY_ALL");
@@ -544,6 +547,7 @@ class Language extends LanguageKeys {
 			SUPPORT = getKey("SUPPORT");
 			SUPREMACY = getKey("SUPREMACY");
 			SUSSY_BAKA = getKey("SUSSY_BAKA");
+			SYNCED = getKey("SYNCED");
 			SYNOPSIS = getKey("SYNOPSIS");
 			TAG_FIELDS = getKey("TAG_FIELDS");
 			TAGS = getKey("TAGS");
@@ -641,6 +645,10 @@ class Language extends LanguageKeys {
     }
   }
 }
+
+
+
+
 
 
 

@@ -61,6 +61,7 @@ dependencies:
   flutter_volume_controller: ^1.2.7
   flutter_markdown: ^0.6.17+3
   flutter_mailer: ^2.1.1
+  lrc: ^1.0.2
 
   # ---- Path/File Providers ----
   path_provider: ^2.0.14
@@ -86,7 +87,7 @@ dependencies:
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
-      ref: d4e8578848e401135ed7331c08586c579696fafe
+      ref: a0f9ed6eb88c9748001ced7ed4ad61f375c8b2f2
 
   # ---- Video Indexing & Playback ----
   video_player:
@@ -116,6 +117,7 @@ dependencies:
       ref: 95d9e56403b03f2f176bdceb269119d11cf7a4ef
   flutter_animate: ^4.2.0+1
   dynamic_color: ^1.6.7
+  scrollable_positioned_list: ^0.3.8
 
   # ---- UI Widgets ----
   wheel_slider: ^1.0.1

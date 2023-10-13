@@ -33,7 +33,9 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/focused_menu.dart';
+import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 import 'package:namida/packages/miniplayer_raw.dart';
+import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/youtube_miniplayer.dart';
 
@@ -447,10 +449,13 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                   );
                                                 },
                                               ),
-                                              Obx(
-                                                () => Text(
-                                                  Player.inst.nowPlayingPosition.milliSecondsLabel,
-                                                  style: context.textTheme.displaySmall,
+                                              NamidaHero(
+                                                tag: 'MINIPLAYER_POSITION',
+                                                child: Obx(
+                                                  () => Text(
+                                                    Player.inst.nowPlayingPosition.milliSecondsLabel,
+                                                    style: context.textTheme.displaySmall,
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -461,17 +466,20 @@ class NamidaMiniPlayer extends StatelessWidget {
                                         onTap: () => Player.inst.seekSecondsForward(),
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
-                                          child: Obx(
-                                            () {
-                                              final displayRemaining = settings.displayRemainingDurInsteadOfTotal.value;
-                                              final toSubtract = displayRemaining ? Player.inst.nowPlayingPosition : 0;
-                                              final msToDisplay = currentDurationInMS - toSubtract;
-                                              final prefix = displayRemaining ? '-' : '';
-                                              return Text(
-                                                "$prefix ${msToDisplay.milliSecondsLabel}",
-                                                style: context.textTheme.displaySmall,
-                                              );
-                                            },
+                                          child: NamidaHero(
+                                            tag: 'MINIPLAYER_DURATION',
+                                            child: Obx(
+                                              () {
+                                                final displayRemaining = settings.displayRemainingDurInsteadOfTotal.value;
+                                                final toSubtract = displayRemaining ? Player.inst.nowPlayingPosition : 0;
+                                                final msToDisplay = currentDurationInMS - toSubtract;
+                                                final prefix = displayRemaining ? '-' : '';
+                                                return Text(
+                                                  "$prefix ${msToDisplay.milliSecondsLabel}",
+                                                  style: context.textTheme.displaySmall,
+                                                );
+                                              },
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -1000,34 +1008,38 @@ class NamidaMiniPlayer extends StatelessWidget {
                                   SizedBox(
                                     width: 34,
                                     height: 34,
-                                    child: IconButton(
-                                      tooltip: lang.LYRICS,
-                                      visualDensity: VisualDensity.compact,
-                                      onPressed: () {
-                                        settings.save(enableLyrics: !settings.enableLyrics.value);
-                                        Lyrics.inst.updateLyrics(currentTrack);
+                                    child: GestureDetector(
+                                      onLongPress: () {
+                                        showLRCSetDialog(currentTrack, CurrentColor.inst.color);
                                       },
-                                      padding: const EdgeInsets.all(2.0),
-                                      icon: Obx(
-                                        () => settings.enableLyrics.value
-                                            ? Lyrics.inst.currentLyrics.value == ''
-                                                ? StackedIcon(
-                                                    baseIcon: Broken.document,
-                                                    secondaryText: !Lyrics.inst.lyricsAvailable.value ? 'x' : '?',
-                                                    iconSize: 20.0,
-                                                    blurRadius: 6.0,
-                                                    baseIconColor: context.theme.colorScheme.onSecondaryContainer,
-                                                  )
-                                                : Icon(
-                                                    Broken.document,
-                                                    size: 20.0,
-                                                    color: context.theme.colorScheme.onSecondaryContainer,
-                                                  )
-                                            : Icon(
-                                                Broken.card_slash,
-                                                size: 20.0,
-                                                color: context.theme.colorScheme.onSecondaryContainer,
-                                              ),
+                                      child: IconButton(
+                                        visualDensity: VisualDensity.compact,
+                                        onPressed: () {
+                                          settings.save(enableLyrics: !settings.enableLyrics.value);
+                                          Lyrics.inst.updateLyrics(currentTrack);
+                                        },
+                                        padding: const EdgeInsets.all(2.0),
+                                        icon: Obx(
+                                          () => settings.enableLyrics.value
+                                              ? Lyrics.inst.currentLyricsText.value == '' && Lyrics.inst.currentLyricsLRC.value == null
+                                                  ? StackedIcon(
+                                                      baseIcon: Broken.document,
+                                                      secondaryText: !Lyrics.inst.lyricsCanBeAvailable.value ? 'x' : '?',
+                                                      iconSize: 20.0,
+                                                      blurRadius: 6.0,
+                                                      baseIconColor: context.theme.colorScheme.onSecondaryContainer,
+                                                    )
+                                                  : Icon(
+                                                      Broken.document,
+                                                      size: 20.0,
+                                                      color: context.theme.colorScheme.onSecondaryContainer,
+                                                    )
+                                              : Icon(
+                                                  Broken.card_slash,
+                                                  size: 20.0,
+                                                  color: context.theme.colorScheme.onSecondaryContainer,
+                                                ),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -1177,67 +1189,11 @@ class NamidaMiniPlayer extends StatelessWidget {
                                           : (1 - bp)
                                       : 0.0)) *
                                   0.4)),
-                      child: Align(
+                      child: const Align(
                         alignment: Alignment.bottomLeft,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              void onSeekDragUpdate(double deltax) {
-                                final percentageSwiped = deltax / constraints.maxWidth;
-                                final newSeek = percentageSwiped * currentDurationInMS;
-                                MiniPlayerController.inst.seekValue.value = newSeek.toInt();
-                              }
-
-                              void onSeekEnd() {
-                                final ms = MiniPlayerController.inst.seekValue.value;
-                                Player.inst.seek(Duration(milliseconds: ms));
-                                MiniPlayerController.inst.seekValue.value = 0;
-                              }
-
-                              return GestureDetector(
-                                onTapDown: (details) => onSeekDragUpdate(details.localPosition.dx),
-                                onTapUp: (details) => onSeekEnd(),
-                                onTapCancel: () => MiniPlayerController.inst.seekValue.value = 0,
-                                onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx),
-                                onHorizontalDragEnd: (details) => onSeekEnd(),
-                                child: WaveformComponent(
-                                  key: const Key('waveform_widget'),
-                                  color: context.theme.colorScheme.onBackground.withAlpha(40),
-                                  barsColorOnTop: context.theme.colorScheme.onBackground.withAlpha(110),
-                                  widgetOnTop: (barsWidgetWithDiffColor) {
-                                    return Obx(
-                                      () {
-                                        final seekValue = MiniPlayerController.inst.seekValue.value;
-                                        final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPosition;
-                                        final durInMs = currentDurationInMS;
-                                        final percentage = (position / durInMs).clamp(0.0, durInMs.toDouble());
-                                        return ShaderMask(
-                                          blendMode: BlendMode.srcIn,
-                                          shaderCallback: (Rect bounds) {
-                                            return LinearGradient(
-                                              tileMode: TileMode.decal,
-                                              stops: [0.0, percentage, percentage + 0.005, 1.0],
-                                              colors: [
-                                                Color.alphaBlend(CurrentColor.inst.color.withAlpha(220), context.theme.colorScheme.onBackground),
-                                                Color.alphaBlend(CurrentColor.inst.color.withAlpha(180), context.theme.colorScheme.onBackground),
-                                                Colors.transparent,
-                                                Colors.transparent,
-                                              ],
-                                            ).createShader(bounds);
-                                          },
-                                          child: SizedBox(
-                                            width: Get.width - 16.0 / 2,
-                                            child: barsWidgetWithDiffColor,
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
-                                ),
-                              );
-                            },
-                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          child: WaveformMiniplayer(),
                         ),
                       ),
                     ),
@@ -1746,13 +1702,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                               ),
                             ],
                           ),
-                                ),
-                                ),
-                              ],
-                            )),
                         ),
-                              ],
-                            )),
                       ),
                     );
                   },
@@ -1901,6 +1851,81 @@ class NamidaMiniPlayer extends StatelessWidget {
   }
 }
 
+class WaveformMiniplayer extends StatelessWidget {
+  final bool fixPadding;
+  const WaveformMiniplayer({super.key, this.fixPadding = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaHero(
+      tag: 'MINIPLAYER_WAVEFORM',
+      child: Obx(
+        () {
+          final currentDurationInMS = Player.inst.nowPlayingTrack.duration * 1000;
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              void onSeekDragUpdate(double deltax) {
+                final percentageSwiped = deltax / constraints.maxWidth;
+                final newSeek = percentageSwiped * currentDurationInMS;
+                MiniPlayerController.inst.seekValue.value = newSeek.toInt();
+              }
+
+              void onSeekEnd() {
+                final ms = MiniPlayerController.inst.seekValue.value;
+                Player.inst.seek(Duration(milliseconds: ms));
+                MiniPlayerController.inst.seekValue.value = 0;
+              }
+
+              return GestureDetector(
+                onTapDown: (details) => onSeekDragUpdate(details.localPosition.dx),
+                onTapUp: (details) => onSeekEnd(),
+                onTapCancel: () => MiniPlayerController.inst.seekValue.value = 0,
+                onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx),
+                onHorizontalDragEnd: (details) => onSeekEnd(),
+                child: WaveformComponent(
+                  key: const Key('waveform_widget'),
+                  color: context.theme.colorScheme.onBackground.withAlpha(40),
+                  barsColorOnTop: context.theme.colorScheme.onBackground.withAlpha(110),
+                  padding: fixPadding ? const EdgeInsets.symmetric(horizontal: 16.0 / 2) : null,
+                  widgetOnTop: (barsWidgetWithDiffColor) {
+                    return Obx(
+                      () {
+                        final seekValue = MiniPlayerController.inst.seekValue.value;
+                        final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPosition;
+                        final durInMs = currentDurationInMS;
+                        final percentage = (position / durInMs).clamp(0.0, durInMs.toDouble());
+                        return ShaderMask(
+                          blendMode: BlendMode.srcIn,
+                          shaderCallback: (Rect bounds) {
+                            return LinearGradient(
+                              tileMode: TileMode.decal,
+                              stops: [0.0, percentage, percentage + 0.005, 1.0],
+                              colors: [
+                                Color.alphaBlend(CurrentColor.inst.color.withAlpha(220), context.theme.colorScheme.onBackground),
+                                Color.alphaBlend(CurrentColor.inst.color.withAlpha(180), context.theme.colorScheme.onBackground),
+                                Colors.transparent,
+                                Colors.transparent,
+                              ],
+                            ).createShader(bounds);
+                          },
+                          child: SizedBox(
+                            width: Get.width - 16.0 / 2,
+                            child: barsWidgetWithDiffColor,
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
 class _TrackInfo extends StatelessWidget {
   const _TrackInfo({
     Key? key,
@@ -2032,6 +2057,7 @@ class _AnimatingTrackImage extends StatelessWidget {
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
                       child: LyricsWrapper(
+                        track: track,
                         cp: cp,
                         child: const NamidaVideoWidget(
                           key: Key('video_widget'),
@@ -2040,6 +2066,7 @@ class _AnimatingTrackImage extends StatelessWidget {
                       ),
                     )
                   : LyricsWrapper(
+                      track: track,
                       cp: cp,
                       child: _TrackImage(
                         track: track,
@@ -2128,7 +2155,14 @@ class _RawImageContainer extends StatelessWidget {
 class LyricsWrapper extends StatelessWidget {
   final Widget child;
   final double cp;
-  const LyricsWrapper({super.key, this.child = const SizedBox(), required this.cp});
+  final Track track;
+
+  const LyricsWrapper({
+    super.key,
+    required this.child,
+    required this.cp,
+    required this.track,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -2138,40 +2172,52 @@ class LyricsWrapper extends StatelessWidget {
     return Obx(
       () => AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
-        child: !settings.enableLyrics.value || Lyrics.inst.currentLyrics.value == ''
+        child: !settings.enableLyrics.value
             ? child
-            : Stack(
-                alignment: Alignment.center,
-                children: [
-                  child,
-                  Opacity(
-                    opacity: cp,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-                      child: NamidaBgBlur(
-                        blur: 12.0,
-                        enabled: true,
-                        child: Container(
-                          color: context.theme.scaffoldBackgroundColor.withAlpha(110),
-                          width: double.infinity,
-                          height: double.infinity,
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                const SizedBox(height: 16.0),
-                                Text(Lyrics.inst.currentLyrics.value, style: context.textTheme.displayMedium),
-                                const SizedBox(height: 16.0),
-                              ],
+            : Lyrics.inst.currentLyricsLRC.value != null
+                ? LyricsLRCParsedView(
+                    key: key,
+                    cp: cp,
+                    lrc: Lyrics.inst.currentLyricsLRC.value!,
+                    videoOrImage: child,
+                    totalDuration: track.duration.seconds,
+                  )
+                : Lyrics.inst.currentLyricsText.value != ''
+                    ? Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          child,
+                          Opacity(
+                            opacity: cp,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+                              child: NamidaBgBlur(
+                                blur: 12.0,
+                                enabled: true,
+                                child: Container(
+                                  color: context.theme.scaffoldBackgroundColor.withAlpha(110),
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  alignment: Alignment.center,
+                                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                                  child: ShaderFadingWidget(
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        children: [
+                                          const SizedBox(height: 16.0),
+                                          Text(Lyrics.inst.currentLyricsText.value, style: context.textTheme.displayMedium),
+                                          const SizedBox(height: 16.0),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                        ],
+                      )
+                    : child,
       ),
     );
   }

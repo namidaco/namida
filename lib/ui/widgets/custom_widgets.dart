@@ -2846,3 +2846,35 @@ class _NamidaTabViewState extends State<NamidaTabView> with SingleTickerProvider
     );
   }
 }
+
+class ShaderFadingWidget extends StatelessWidget {
+  final bool biggerValues;
+  final Widget child;
+  final Alignment begin;
+  final Alignment end;
+  const ShaderFadingWidget({
+    super.key,
+    this.biggerValues = false,
+    required this.child,
+    this.begin = Alignment.topCenter,
+    this.end = Alignment.bottomCenter,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      blendMode: BlendMode.dstIn,
+      shaderCallback: (rect) {
+        final stops = biggerValues ? [0.07, 0.3, 0.6, 0.8, 1.0] : [0.0, 0.2, 0.8, 1.0, 1.0];
+        return LinearGradient(
+          begin: begin,
+          end: end,
+          tileMode: TileMode.clamp,
+          stops: stops,
+          colors: const [Colors.transparent, Colors.white, Colors.white, Colors.white, Colors.transparent],
+        ).createShader(Rect.fromLTRB(0, 0, rect.width, rect.height));
+      },
+      child: child,
+    );
+  }
+}

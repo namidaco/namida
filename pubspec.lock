@@ -70,8 +70,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: d4e8578848e401135ed7331c08586c579696fafe
-      resolved-ref: d4e8578848e401135ed7331c08586c579696fafe
+      ref: a0f9ed6eb88c9748001ced7ed4ad61f375c8b2f2
+      resolved-ref: a0f9ed6eb88c9748001ced7ed4ad61f375c8b2f2
       url: "https://github.com/namidaco/basic_audio_handler"
     source: git
     version: "0.0.1"
@@ -646,6 +646,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.0"
+  lrc:
+    dependency: "direct main"
+    description:
+      name: lrc
+      sha256: "5100362b5c8e97f4d3f03ff87efeb40e73a6dd780eca2cbde9312e0d44b8e5ba"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   mailer:
     dependency: transitive
     description:
@@ -938,6 +946,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.27.7"
+  scrollable_positioned_list:
+    dependency: "direct main"
+    description:
+      name: scrollable_positioned_list
+      sha256: "1b54d5f1329a1e263269abc9e2543d90806131aa14fe7c6062a8054d57249287"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.8"
   selectable_autolink_text:
     dependency: "direct main"
     description:

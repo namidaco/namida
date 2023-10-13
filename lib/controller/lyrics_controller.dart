@@ -1,13 +1,16 @@
-/// copyright: credit goes for (@netlob)[https://github.com/netlob/dart-lyrics]
-/// this file is originally from @netlob, edited to fit Namida.
+/// copyright: google search request is originally from [@netlob](https://github.com/netlob/dart-lyrics), edited to fit Namida.
 
 // ignore_for_file: depend_on_referenced_packages
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:lrc/lrc.dart';
+import 'package:path/path.dart' as p;
 
+import 'package:namida/class/lyrics.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -18,85 +21,238 @@ class Lyrics {
   static final Lyrics _instance = Lyrics._internal();
   Lyrics._internal();
 
-  final RxString currentLyrics = ''.obs;
-  final RxBool lyricsAvailable = true.obs;
+  final currentLyricsText = ''.obs;
+  final currentLyricsLRC = Rxn<Lrc>();
+  final lyricsCanBeAvailable = true.obs;
 
-  Future<void> updateLyrics(Track track) async {
-    currentLyrics.value = '';
-    if (settings.enableLyrics.value) {
-      final lyricsFile = File("${AppDirs.LYRICS}${track.filename}.txt");
+  Track? _currentTrack;
 
-      /// get from storage
-      if (await lyricsFile.existsAndValid()) {
-        currentLyrics.value = await lyricsFile.readAsString();
+  Future<void> updateLyrics(Track track, {bool preferEmbedded = false}) async {
+    _currentTrack = track;
+    currentLyricsText.value = '';
+    currentLyricsLRC.value = null;
+    lyricsCanBeAvailable.value = true;
+    if (!settings.enableLyrics.value) return;
+
+    final embedded = track.lyrics;
+
+    /// 1. device lrc
+    /// 2. cached lrc
+    /// 3. track embedded lrc
+    /// 4. database.
+    final lrcLyrics = await _fetchLRCBasedLyrics(track, embedded);
+
+    if (lrcLyrics != null) {
+      if (_currentTrack == track) {
+        currentLyricsLRC.value = lrcLyrics;
       }
-
-      /// download lyrics
-      else {
-        final String lyrics = await Lyrics.inst.getLyrics(artist: track.artistsList.first, track: track.title);
-        RegExp exp = RegExp(r'<[^>]*>');
-        if (lyrics != '') {
-          String formattedText = lyrics.replaceAll(exp, '');
-          currentLyrics.value = formattedText;
-          await lyricsFile.writeAsString(formattedText);
-        } else {
-          lyricsAvailable.value = false;
-          return;
+    } else {
+      /// 1. cached txt lyrics
+      /// 2. track embedded txt
+      /// 3. google search
+      final textLyrics = await _fetchTextBasedLyrics(track, embedded);
+      if (textLyrics != '') {
+        if (_currentTrack == track) {
+          currentLyricsText.value = textLyrics;
         }
+      } else {
+        lyricsCanBeAvailable.value = false;
       }
-      lyricsAvailable.value = true;
     }
   }
 
-  final String _url = "https://www.google.com/search?client=safari&rls=en&ie=UTF-8&oe=UTF-8&q=";
-  String _delimiter1 = '</div></div></div></div><div class="hwc"><div class="BNeawe tAd8D AP7Wnd"><div><div class="BNeawe tAd8D AP7Wnd">';
-  String _delimiter2 = '</div></div></div></div></div><div><span class="hwc"><div class="BNeawe uEec3 AP7Wnd">';
-
-  Lyrics({delimiter1, delimiter2}) {
-    setDelimiters(delimiter1: delimiter1, delimiter2: delimiter2);
+  bool hasLyrics(Track tr) {
+    return tr.lyrics != '' || lyricsFileCache(tr).existsSync() || lyricsFileDevice(tr).existsSync() || lyricsFileText(tr).existsSync();
   }
 
-  void setDelimiters({String? delimiter1, String? delimiter2}) {
-    _delimiter1 = delimiter1 ?? _delimiter1;
-    _delimiter2 = delimiter2 ?? _delimiter2;
+  File lyricsFileText(Track tr) => File(p.join(AppDirs.LYRICS, "${tr.filename}.txt"));
+  File lyricsFileCache(Track tr) => File(p.join(AppDirs.LYRICS, "${tr.filename}.lrc"));
+  File lyricsFileDevice(Track tr) => File(p.join(tr.path.getDirectoryPath, "${tr.filename}.lrc"));
+
+  Future<void> saveLyricsToCache(Track track, String lyricsText, bool isSynced) async {
+    final fc = isSynced ? lyricsFileCache(track) : lyricsFileText(track);
+    await fc.create();
+    await fc.writeAsString(lyricsText);
   }
 
-  Future<String> getLyrics({String? track, String? artist}) async {
-    if (track == null || artist == null) {
-      throw Exception("track and artist must not be null");
-    }
+  Future<Lrc?> _fetchLRCBasedLyrics(Track track, String trackLyrics) async {
+    final fc = lyricsFileCache(track);
+    final lyricsFileLocal = lyricsFileDevice(track);
 
-    String lyrics;
-
-    // try multiple queries
-    try {
-      lyrics = (await http.get(Uri.parse(Uri.encodeFull('$_url$track by $artist lyrics'))).timeout(const Duration(seconds: 10))).body;
-      lyrics = lyrics.split(_delimiter1).last;
-      lyrics = lyrics.split(_delimiter2).first;
-      if (lyrics.contains('<meta charset="UTF-8">')) throw Error();
-    } catch (_) {
+    Future<Lrc?> parseLRCFile(File file) async {
+      final content = await file.readAsString();
       try {
-        lyrics = (await http.get(Uri.parse(Uri.encodeFull('$_url$track by $artist song lyrics'))).timeout(const Duration(seconds: 10)).then((value) => value.body));
-        lyrics = lyrics.split(_delimiter1).last;
-        lyrics = lyrics.split(_delimiter2).first;
-        if (lyrics.contains('<meta charset="UTF-8">')) throw Error();
+        return content.toLrc();
       } catch (_) {
-        try {
-          lyrics = (await http.get(Uri.parse(Uri.encodeFull('$_url${track.split("-").first} by $artist lyrics'))).timeout(const Duration(seconds: 10)).then((value) => value.body));
-          lyrics = lyrics.split(_delimiter1).last;
-          lyrics = lyrics.split(_delimiter2).first;
-          if (lyrics.contains('<meta charset="UTF-8">')) throw Error();
-        } catch (_) {
-          return '';
-        }
+        return null;
       }
     }
 
-    final List<String> split = lyrics.split('\n');
-    String result = '';
-    for (int i = 0; i < split.length; i++) {
-      result = '$result${split[i]}\n';
+    Lrc? lrc;
+
+    /// 1. device lrc
+    /// 2. cached lrc
+    /// 3. track embedded
+    if (await lyricsFileLocal.existsAndValid()) {
+      lrc = await parseLRCFile(lyricsFileLocal);
+    } else if (await fc.existsAndValid()) {
+      lrc = await parseLRCFile(fc);
+    } else if (trackLyrics != '') {
+      try {
+        lrc = trackLyrics.toLrc();
+      } catch (_) {}
     }
-    return result.trim();
+
+    /// 4. if still null, fetch from database.
+    if (lrc == null) {
+      final lyrics = await fetchLRCBasedLyricsFromInternet(
+        durationInSeconds: track.duration,
+        title: track.title,
+        artist: track.originalArtist,
+        album: track.album,
+      );
+      final text = lyrics.firstOrNull?.lyrics;
+      if (text != null) await fc.writeAsString(text);
+      return text?.toLrc();
+    }
+    return lrc;
+  }
+
+  Future<List<LyricsModel>> fetchLRCBasedLyricsFromInternet({
+    String title = '',
+    String artist = '',
+    String album = '',
+    required int durationInSeconds,
+    String customQuery = '',
+  }) async {
+    String formatTime(int seconds) {
+      final duration = Duration(seconds: seconds);
+      final min = duration.inMinutes.remainder(60);
+      final sec = duration.inSeconds.remainder(60);
+      final ms = duration.inMilliseconds.remainder(1000);
+      String pad(int n) => n.toString().padLeft(2, '0');
+      final formattedTime = '${pad(min)}:${pad(sec)}.${pad(ms)}';
+      return formattedTime;
+    }
+
+    final params = [
+      if (title != '') 'track_name=$title',
+      if (artist != '') 'artist_name=${artist.split('(').first.split('[').first}',
+      // if (album != '') 'album_name=$album',
+    ].join('&');
+    if (params.isNotEmpty || customQuery != '') {
+      final tail = customQuery == '' ? params : 'q=$customQuery';
+      final urlPre = "https://lrclib.net/api/search?$tail";
+      final url = Uri.parse(Uri.encodeFull(urlPre));
+      http.Response? req;
+      try {
+        req = await http.get(url);
+      } catch (_) {
+        return [];
+      }
+      final fetched = <LyricsModel>[];
+      final jsonLists = (jsonDecode(req.body) as List<dynamic>?) ?? [];
+      for (final jsonRes in jsonLists) {
+        final syncedLyrics = jsonRes?["syncedLyrics"] as String? ?? '';
+        final plain = jsonRes?["plainLyrics"] as String? ?? '';
+        if (syncedLyrics != '') {
+          // lrc
+          final lines = <String>[];
+          if (artist != '') lines.add('[ar:$artist]');
+          if (album != '') lines.add('[al:$album]');
+          if (title != '') lines.add('[ti:$title]');
+          if (durationInSeconds > 0) lines.add('[length:${formatTime(durationInSeconds)}]');
+          for (final l in syncedLyrics.split('\n')) {
+            lines.add(l);
+          }
+          final resultedLRC = lines.join('\n');
+          fetched.add(LyricsModel(
+            lyrics: resultedLRC,
+            isInCache: false,
+            fromInternet: true,
+            synced: true,
+            file: null,
+            isEmbedded: false,
+          ));
+        } else if (plain != '') {
+          // txt
+          fetched.add(LyricsModel(
+            lyrics: plain,
+            isInCache: false,
+            fromInternet: true,
+            synced: false,
+            file: null,
+            isEmbedded: false,
+          ));
+        }
+      }
+      fetched.removeDuplicates();
+      return fetched;
+    }
+    return [];
+  }
+
+  Future<String> _fetchTextBasedLyrics(Track track, String trackLyrics) async {
+    final lyricsFile = lyricsFileText(track);
+
+    /// get from storage
+    if (await lyricsFile.existsAndValid()) {
+      return await lyricsFile.readAsString();
+    } else if (trackLyrics != '') {
+      return trackLyrics;
+    }
+
+    /// download lyrics
+    else {
+      final lyrics = await _fetchLyricsGoogle(artist: track.artistsList.first, title: track.title);
+      final regex = RegExp(r'<[^>]*>');
+      if (lyrics != '') {
+        final formattedText = lyrics.replaceAll(regex, '');
+        await lyricsFile.writeAsString(formattedText);
+        return formattedText;
+      }
+    }
+    return '';
+  }
+
+  Future<String> _fetchLyricsGoogle({String title = '', String artist = ''}) async {
+    if (title == '' && artist == '') {
+      return '';
+    }
+
+    const url = "https://www.google.com/search?client=safari&rls=en&ie=UTF-8&oe=UTF-8&q=";
+    const delimiter1 = '</div></div></div></div><div class="hwc"><div class="BNeawe tAd8D AP7Wnd"><div><div class="BNeawe tAd8D AP7Wnd">';
+    const delimiter2 = '</div></div></div></div></div><div><span class="hwc"><div class="BNeawe uEec3 AP7Wnd">';
+
+    Future<String> requestQuery(String searchText) async {
+      http.Response? res;
+      try {
+        res = await http.get(Uri.parse(Uri.encodeFull(searchText))).timeout(const Duration(seconds: 10));
+      } catch (_) {}
+      if (res == null) return '';
+      final lyricsRes = res.body.split(delimiter1).last.split(delimiter2).first;
+      if (lyricsRes.contains('<meta charset="UTF-8">')) return '';
+      return lyricsRes;
+    }
+
+    String lyrics = '';
+
+    final possibleQueries = [
+      '$url$title by $artist lyrics',
+      '$url${title.split("-").first} by $artist lyrics',
+      '$url$title by $artist song lyrics',
+    ];
+    for (final q in possibleQueries) {
+      lyrics = await requestQuery(q);
+      if (lyrics != '') break;
+    }
+
+    // final List<String> split = lyrics.split('\n');
+    // String result = '';
+    // for (int i = 0; i < split.length; i++) {
+    //   result = '$result${split[i]}\n';
+    // }
+    // return result.trim();
+    return lyrics;
   }
 }

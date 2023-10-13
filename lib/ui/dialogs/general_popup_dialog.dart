@@ -14,6 +14,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -29,6 +30,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
+import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -987,6 +989,25 @@ Future<void> showGeneralPopupDialog(
                           NamidaNavigator.inst.closeDialog();
                           showEditTracksTagsDialog(tracks, colorDelightened);
                         },
+                        trailing: isSingle
+                            ? IconButton(
+                                tooltip: lang.LYRICS,
+                                icon: Lyrics.inst.hasLyrics(tracks.first)
+                                    ? StackedIcon(
+                                        baseIcon: Broken.document,
+                                        secondaryIcon: Broken.tick_circle,
+                                        iconSize: 20.0,
+                                        secondaryIconSize: 10.0,
+                                        baseIconColor: iconColor,
+                                      )
+                                    : const Icon(
+                                        Broken.document,
+                                        size: 20.0,
+                                      ),
+                                iconSize: 20.0,
+                                onPressed: () => showLRCSetDialog(tracks.first, colorDelightened),
+                              )
+                            : null,
                       ),
                       // --- Advanced dialog
                       advancedStuffListTile,

@@ -147,6 +147,7 @@ class MiniplayerRaw extends StatelessWidget {
         onPointerUp: MiniPlayerController.inst.onPointerUp,
         child: enableHorizontalGestures
             ? GestureDetector(
+                behavior: HitTestBehavior.deferToChild,
                 onTap: MiniPlayerController.inst.gestureDetectorOnTap,
                 onVerticalDragUpdate: MiniPlayerController.inst.gestureDetectorOnVerticalDragUpdate,
                 onVerticalDragEnd: (_) => MiniPlayerController.inst.verticalSnapping(),

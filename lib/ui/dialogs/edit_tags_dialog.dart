@@ -1135,6 +1135,7 @@ class CustomTagTextField extends StatelessWidget {
   final RxBool? didEditField;
   final AutovalidateMode? validatorMode;
   final void Function(String value)? onFieldSubmitted;
+  final double borderRadius;
   CustomTagTextField({
     super.key,
     required this.controller,
@@ -1151,10 +1152,13 @@ class CustomTagTextField extends StatelessWidget {
     this.didEditField,
     this.validatorMode,
     this.onFieldSubmitted,
+    this.borderRadius = 16.0,
   });
   final RxBool didChange = false.obs;
   @override
   Widget build(BuildContext context) {
+    final borderR = borderRadius.multipliedRadius;
+    final borderRS = (borderRadius - 2.0).withMinimum(0).multipliedRadius;
     return SizedBox(
       width: null,
       child: TextFormField(
@@ -1189,19 +1193,19 @@ class CustomTagTextField extends StatelessWidget {
           errorMaxLines: 3,
           suffixIcon: Icon(icon, size: 18.0),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14.0.multipliedRadius),
+            borderRadius: BorderRadius.circular(borderRS),
             borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 2.0),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+            borderRadius: BorderRadius.circular(borderR),
             borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 1.0),
           ),
           focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+            borderRadius: BorderRadius.circular(borderR),
             borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
           ),
           errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+            borderRadius: BorderRadius.circular(borderR),
             borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
           ),
           hintText: hintText,

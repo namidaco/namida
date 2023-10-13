@@ -5,6 +5,7 @@ class LanguageKeys {
   late String ABOUT;
   late String ACTIVE;
   late String ADD_FOLDER;
+  late String ADD_LRC_FILE;
   late String ADD_MORE_FROM_THIS_ALBUM;
   late String ADD_MORE_FROM_THIS_ARTIST;
   late String ADD_MORE_FROM_THIS_FOLDER;
@@ -326,6 +327,7 @@ class LanguageKeys {
   late String NOTE;
   late String NUMBER_OF_TRACKS;
   late String OF;
+  late String OFFSET;
   late String OLDEST_WATCH;
   late String OLD_DIRECTORY;
   late String OLD_DIRECTORY_STILL_HAS_TRACKS;
@@ -356,6 +358,7 @@ class LanguageKeys {
   late String PICK_FROM_STORAGE;
   late String PINNED;
   late String PITCH;
+  late String PLAIN;
   late String PLAY_AFTER_NEXT_PREV;
   late String PLAY_AFTER;
   late String PLAY_ALL;
@@ -477,6 +480,7 @@ class LanguageKeys {
   late String SUPPORT;
   late String SUPREMACY;
   late String SUSSY_BAKA;
+  late String SYNCED;
   late String SYNOPSIS;
   late String TAG_FIELDS;
   late String TAGS;

@@ -52,6 +52,7 @@ class Player {
   bool get isAudioOnlyPlayback => _audioHandler.isAudioOnlyPlayback;
   bool get isCurrentAudioFromCache => _audioHandler.isCurrentAudioFromCache;
 
+  Stream<int> get positionStream => _audioHandler.positionStream;
   int get currentIndex => _audioHandler.currentIndex;
   int get nowPlayingPosition => _audioHandler.currentPositionMS;
   double get currentSpeed => _audioHandler.currentSpeed;
