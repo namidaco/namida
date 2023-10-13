@@ -1631,6 +1631,14 @@ class NamidaMiniPlayer extends StatelessWidget {
                       });
                     }
 
+                    // -- moods from track embedded tag
+                    final library = allTracksInLibrary;
+                    for (final tr in library) {
+                      tr.moodList.loop((mood, _) {
+                        allAvailableMoodsTracks.addNoDuplicatesForce(mood, tr);
+                      });
+                    }
+
                     if (allAvailableMoodsPlaylists.isEmpty && allAvailableMoodsTracks.isEmpty) {
                       snackyy(title: lang.ERROR, message: lang.NO_MOODS_AVAILABLE);
                       return;
@@ -1641,6 +1649,56 @@ class NamidaMiniPlayer extends StatelessWidget {
 
                     final selectedmoodsPlaylists = <String>[].obs;
                     final selectedmoodsTracks = <String>[].obs;
+
+                    List<Widget> getListy({
+                      required String title,
+                      required List<String> moodsList,
+                      required Map<String, List<Track>> allAvailableMoods,
+                      required List<String> selectedList,
+                    }) {
+                      return [
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Text("$title (${moodsList.length})", style: context.textTheme.displayMedium),
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: Wrap(
+                            children: [
+                              ...moodsList.map(
+                                (m) {
+                                  final tracksCount = allAvailableMoods[m]?.length ?? 0;
+                                  return NamidaInkWell(
+                                    borderRadius: 6.0,
+                                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+                                    margin: const EdgeInsets.all(2.0),
+                                    bgColor: context.theme.cardColor,
+                                    onTap: () => selectedList.addOrRemove(m),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          "$m ($tracksCount)",
+                                          style: context.textTheme.displayMedium,
+                                        ),
+                                        const SizedBox(width: 8.0),
+                                        Obx(
+                                          () => NamidaCheckMark(
+                                            size: 12.0,
+                                            active: selectedList.contains(m),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ];
+                    }
 
                     NamidaNavigator.inst.navigateDialog(
                       dialog: CustomBlurryDialog(
@@ -1668,54 +1726,31 @@ class NamidaMiniPlayer extends StatelessWidget {
                           ),
                         ],
                         child: SizedBox(
-                            height: context.height * 0.4,
-                            width: context.width,
-                            child: CustomScrollView(
-                              slivers: [
-                                // -- Playlist moods
-                                SliverToBoxAdapter(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(12.0),
-                                    child: Text(lang.PLAYLISTS, style: context.textTheme.displayMedium),
-                                  ),
+                          height: context.height * 0.4,
+                          width: context.width,
+                          child: CustomScrollView(
+                            slivers: [
+                              // -- Tracks moods (embedded & custom)
+                              ...getListy(
+                                title: lang.TRACKS,
+                                moodsList: tracksAllMoods,
+                                allAvailableMoods: allAvailableMoodsTracks,
+                                selectedList: selectedmoodsTracks,
+                              ),
+                              // -- Playlist moods
+                              ...getListy(
+                                title: lang.PLAYLISTS,
+                                moodsList: playlistsAllMoods,
+                                allAvailableMoods: allAvailableMoodsPlaylists,
+                                selectedList: selectedmoodsPlaylists,
+                              ),
+                            ],
+                          ),
                                 ),
-                                SliverList.separated(
-                                  separatorBuilder: (context, index) => const SizedBox(height: 12.0),
-                                  itemCount: playlistsAllMoods.length,
-                                  itemBuilder: (context, index) {
-                                    final m = playlistsAllMoods[index];
-                                    final tracksCount = allAvailableMoodsPlaylists[m]?.length ?? 0;
-                                    return Obx(
-                                      () => ListTileWithCheckMark(
-                                        title: "$m ($tracksCount)",
-                                        active: selectedmoodsPlaylists.contains(m),
-                                        onTap: () => selectedmoodsPlaylists.addOrRemove(m),
-                                      ),
-                                    );
-                                  },
                                 ),
-                                // -- Tracks moods
-                                SliverToBoxAdapter(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(12.0),
-                                    child: Text(lang.TRACKS, style: context.textTheme.displayMedium),
-                                  ),
-                                ),
-                                SliverList.separated(
-                                  separatorBuilder: (context, index) => const SizedBox(height: 12.0),
-                                  itemCount: tracksAllMoods.length,
-                                  itemBuilder: (context, index) {
-                                    final m = tracksAllMoods[index];
-                                    final tracksCount = allAvailableMoodsTracks[m]?.length ?? 0;
-                                    return Obx(
-                                      () => ListTileWithCheckMark(
-                                        title: "$m ($tracksCount)",
-                                        active: selectedmoodsTracks.contains(m),
-                                        onTap: () => selectedmoodsTracks.addOrRemove(m),
-                                      ),
-                                    );
-                                  },
-                                ),
+                              ],
+                            )),
+                        ),
                               ],
                             )),
                       ),
