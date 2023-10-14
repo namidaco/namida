@@ -462,7 +462,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
         final idnames = {for (final id in ids) id: YoutubeController.inst.fetchVideoDetailsFromCacheSync(id)?.name};
         showAddToPlaylistSheet(ids: ids, idsNamesLookup: idnames);
       case OnYoutubeLinkOpenAction.play:
-        Player.inst.playOrPause(0, ids.map((e) => YoutubeID(id: e, playlistID: null)), QueueSource.others);
+        await Player.inst.playOrPause(0, ids.map((e) => YoutubeID(id: e, playlistID: null)), QueueSource.others);
       case OnYoutubeLinkOpenAction.alwaysAsk:
         {
           final newVals = List<OnYoutubeLinkOpenAction>.from(OnYoutubeLinkOpenAction.values);
@@ -492,6 +492,40 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
           );
         }
 
+      default:
+        null;
+    }
+  }
+}
+
+extension PerformanceModeUtils on PerformanceMode {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+  IconData toIcon() => _NamidaConverters.inst.getIcon(this);
+
+  Future<void> execute() async {
+    switch (this) {
+      case PerformanceMode.highPerformance:
+        settings.save(
+          enableBlurEffect: false,
+          enableGlowEffect: false,
+          enableMiniplayerParallaxEffect: false,
+          artworkCacheHeightMultiplier: 0.5,
+        );
+      case PerformanceMode.balanced:
+        settings.save(
+          enableBlurEffect: false,
+          enableGlowEffect: false,
+          enableMiniplayerParallaxEffect: true,
+          artworkCacheHeightMultiplier: 0.8,
+        );
+      case PerformanceMode.goodLooking:
+        settings.save(
+          enableBlurEffect: true,
+          enableGlowEffect: true,
+          enableMiniplayerParallaxEffect: true,
+          artworkCacheHeightMultiplier: 1.0,
+        );
+      // case PerformanceMode.custom:
       default:
         null;
     }
@@ -1186,6 +1220,12 @@ class _NamidaConverters {
         OnYoutubeLinkOpenAction.play: lang.PLAY,
         OnYoutubeLinkOpenAction.addToPlaylist: lang.ADD_TO_PLAYLIST,
         OnYoutubeLinkOpenAction.alwaysAsk: lang.ALWAYS_ASK,
+      },
+      PerformanceMode: {
+        PerformanceMode.highPerformance: lang.HIGH_PERFORMANCE,
+        PerformanceMode.balanced: lang.BALANCED,
+        PerformanceMode.goodLooking: lang.GOOD_LOOKING,
+        PerformanceMode.custom: lang.CUSTOM,
       }
     };
 
@@ -1293,6 +1333,12 @@ class _NamidaConverters {
         OnYoutubeLinkOpenAction.play: Broken.play,
         OnYoutubeLinkOpenAction.addToPlaylist: Broken.music_library_2,
         OnYoutubeLinkOpenAction.alwaysAsk: Broken.message_question,
+      },
+      PerformanceMode: {
+        PerformanceMode.highPerformance: Broken.activity,
+        PerformanceMode.balanced: Broken.cd,
+        PerformanceMode.goodLooking: Broken.buy_crypto,
+        PerformanceMode.custom: Broken.candle,
       }
     };
     _toTitle

@@ -317,3 +317,10 @@ enum OnYoutubeLinkOpenAction {
   addToPlaylist,
   alwaysAsk,
 }
+
+enum PerformanceMode {
+  highPerformance,
+  balanced,
+  goodLooking,
+  custom,
+}

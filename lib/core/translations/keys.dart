@@ -47,6 +47,7 @@ class LanguageKeys {
   late String AUTOMATIC_BACKUP;
   late String BACKUP_AND_RESTORE_SUBTITLE;
   late String BACKUP_AND_RESTORE;
+  late String BALANCED;
   late String BETA;
   late String BETWEEN_DATES;
   late String BITRATE;
@@ -211,6 +212,7 @@ class LanguageKeys {
   late String GENERATE;
   late String GENRE;
   late String GENRES;
+  late String GOOD_LOOKING;
   late String GO_TO_ALBUM;
   late String GO_TO_ARTIST;
   late String GO_TO_CHANNEL;
@@ -221,6 +223,7 @@ class LanguageKeys {
   late String HEIGHT_OF_ALBUM_TILE;
   late String HEIGHT_OF_TRACK_TILE;
   late String HIGH_MATCHES;
+  late String HIGH_PERFORMANCE;
   late String HISTORY;
   late String HISTORY_IMPORT_MISSING_ENTRIES_NOTE;
   late String HISTORY_LISTENS_REPLACE_WARNING;
@@ -352,6 +355,7 @@ class LanguageKeys {
   late String PAUSE_FADE_DURATION;
   late String PAUSE_PLAYBACK;
   late String PERCENTAGE;
+  late String PERFORMANCE_MODE;
   late String PERFORMANCE_NOTE;
   late String PERMISSION_UPDATE;
   late String PICK_COLORS_FROM_DEVICE_WALLPAPER;

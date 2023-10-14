@@ -82,16 +82,13 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
   double? _lastBorderRadius;
 
   Widget getImagePathWidget() {
-    final pixelRatio = context.mediaQuery.devicePixelRatio.round();
+    final pixelRatio = context.mediaQuery.devicePixelRatio;
+    final cacheMultiplier = (pixelRatio * settings.artworkCacheHeightMultiplier.value).round();
     return Image.file(
       File(widget.path!),
       gaplessPlayback: true,
       fit: BoxFit.cover,
-      cacheHeight: widget.useTrackTileCacheHeight
-          ? settings.trackThumbnailSizeinList.value > 120
-              ? null
-              : 60 * pixelRatio
-          : widget.cacheHeight * pixelRatio,
+      cacheHeight: widget.useTrackTileCacheHeight ? 60 * cacheMultiplier : widget.cacheHeight * cacheMultiplier,
       filterQuality: FilterQuality.medium,
       width: _realWidthAndHeight,
       height: _realWidthAndHeight,

@@ -19,6 +19,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -40,6 +41,49 @@ class AdvancedSettings extends StatelessWidget {
       // icon: Broken.danger,
       child: Column(
         children: [
+          CustomListTile(
+            icon: Broken.cpu_setting,
+            title: lang.PERFORMANCE_MODE,
+            trailingRaw: NamidaPopupWrapper(
+              children: [
+                ...PerformanceMode.values.map(
+                  (e) => Obx(
+                    () => NamidaInkWell(
+                      margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                      borderRadius: 6.0,
+                      bgColor: settings.performanceMode.value == e ? context.theme.cardColor : null,
+                      child: Row(
+                        children: [
+                          Icon(
+                            e.toIcon(),
+                            size: 18.0,
+                          ),
+                          const SizedBox(width: 6.0),
+                          Text(
+                            e.toText(),
+                            style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
+                          ),
+                        ],
+                      ),
+                      onTap: () {
+                        e.execute();
+                        settings.save(performanceMode: e);
+                        NamidaNavigator.inst.popMenu(handleClosing: false);
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ),
+                ),
+              ],
+              child: Obx(
+                () => Text(
+                  settings.performanceMode.value.toText(),
+                  style: context.textTheme.displaySmall,
+                ),
+              ),
+            ),
+          ),
           CustomListTile(
             leading: const StackedIcon(
               baseIcon: Broken.video,

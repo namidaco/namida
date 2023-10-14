@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -31,7 +32,10 @@ class CustomizationSettings extends StatelessWidget {
               title: lang.ENABLE_BLUR_EFFECT,
               subtitle: lang.PERFORMANCE_NOTE,
               onChanged: (p0) {
-                settings.save(enableBlurEffect: !p0);
+                settings.save(
+                  enableBlurEffect: !p0,
+                  performanceMode: PerformanceMode.custom,
+                );
               },
               value: settings.enableBlurEffect.value,
             ),
@@ -40,7 +44,10 @@ class CustomizationSettings extends StatelessWidget {
               title: lang.ENABLE_GLOW_EFFECT,
               subtitle: lang.PERFORMANCE_NOTE,
               onChanged: (p0) {
-                settings.save(enableGlowEffect: !p0);
+                settings.save(
+                  enableGlowEffect: !p0,
+                  performanceMode: PerformanceMode.custom,
+                );
               },
               value: settings.enableGlowEffect.value,
             ),
@@ -48,7 +55,10 @@ class CustomizationSettings extends StatelessWidget {
               icon: Broken.maximize,
               title: lang.ENABLE_PARALLAX_EFFECT,
               subtitle: lang.PERFORMANCE_NOTE,
-              onChanged: (isTrue) => settings.save(enableMiniplayerParallaxEffect: !isTrue),
+              onChanged: (isTrue) => settings.save(
+                enableMiniplayerParallaxEffect: !isTrue,
+                performanceMode: PerformanceMode.custom,
+              ),
               value: settings.enableMiniplayerParallaxEffect.value,
             ),
             CustomSwitchListTile(

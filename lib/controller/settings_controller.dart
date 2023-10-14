@@ -30,6 +30,7 @@ class SettingsController {
   final RxInt searchResultsPlayMode = 1.obs;
   final RxDouble borderRadiusMultiplier = 1.0.obs;
   final RxDouble fontScaleFactor = 0.9.obs;
+  final RxDouble artworkCacheHeightMultiplier = 0.8.obs;
   final RxDouble trackThumbnailSizeinList = 70.0.obs;
   final RxDouble trackListTileHeight = 70.0.obs;
   final RxDouble albumThumbnailSizeinList = 90.0.obs;
@@ -47,8 +48,8 @@ class SettingsController {
   final RxInt artistGridCount = 3.obs;
   final RxInt genreGridCount = 2.obs;
   final RxInt playlistGridCount = 1.obs;
-  final RxBool enableBlurEffect = true.obs;
-  final RxBool enableGlowEffect = true.obs;
+  final RxBool enableBlurEffect = false.obs;
+  final RxBool enableGlowEffect = false.obs;
   final RxBool hourFormat12 = true.obs;
   final RxString dateTimeFormat = 'MMM yyyy'.obs;
   final RxList<String> trackArtistsSeparators = <String>['&', ',', ';', '//', ' ft. ', ' x '].obs;
@@ -177,6 +178,7 @@ class SettingsController {
   final RxBool pickColorsFromDeviceWallpaper = false.obs;
   final onNotificationTapAction = NotificationTapAction.openApp.obs;
   final onYoutubeLinkOpen = OnYoutubeLinkOpenAction.alwaysAsk.obs;
+  final performanceMode = PerformanceMode.balanced.obs;
 
   final RxMap<TrackTilePosition, TrackTileItem> trackItem = {
     TrackTilePosition.row1Item1: TrackTileItem.title,
@@ -269,6 +271,7 @@ class SettingsController {
       searchResultsPlayMode.value = json['searchResultsPlayMode'] ?? searchResultsPlayMode.value;
       borderRadiusMultiplier.value = json['borderRadiusMultiplier'] ?? borderRadiusMultiplier.value;
       fontScaleFactor.value = json['fontScaleFactor'] ?? fontScaleFactor.value;
+      artworkCacheHeightMultiplier.value = json['artworkCacheHeightMultiplier'] ?? artworkCacheHeightMultiplier.value;
       trackThumbnailSizeinList.value = json['trackThumbnailSizeinList'] ?? trackThumbnailSizeinList.value;
       trackListTileHeight.value = json['trackListTileHeight'] ?? trackListTileHeight.value;
       albumThumbnailSizeinList.value = json['albumThumbnailSizeinList'] ?? albumThumbnailSizeinList.value;
@@ -392,6 +395,7 @@ class SettingsController {
       pickColorsFromDeviceWallpaper.value = json['pickColorsFromDeviceWallpaper'] ?? pickColorsFromDeviceWallpaper.value;
       onNotificationTapAction.value = NotificationTapAction.values.getEnum(json['onNotificationTapAction']) ?? onNotificationTapAction.value;
       onYoutubeLinkOpen.value = OnYoutubeLinkOpenAction.values.getEnum(json['onYoutubeLinkOpen']) ?? onYoutubeLinkOpen.value;
+      performanceMode.value = PerformanceMode.values.getEnum(json['performanceMode']) ?? performanceMode.value;
 
       trackItem.value = _getEnumMap(
             json['trackItem'],
@@ -456,6 +460,7 @@ class SettingsController {
       'searchResultsPlayMode': searchResultsPlayMode.value,
       'borderRadiusMultiplier': borderRadiusMultiplier.value,
       'fontScaleFactor': fontScaleFactor.value,
+      'artworkCacheHeightMultiplier': artworkCacheHeightMultiplier.value,
       'trackThumbnailSizeinList': trackThumbnailSizeinList.value,
       'trackListTileHeight': trackListTileHeight.value,
       'albumThumbnailSizeinList': albumThumbnailSizeinList.value,
@@ -555,6 +560,7 @@ class SettingsController {
       'mostPlayedTimeRange': mostPlayedTimeRange.value.convertToString,
       'onNotificationTapAction': onNotificationTapAction.value.convertToString,
       'onYoutubeLinkOpen': onYoutubeLinkOpen.value.convertToString,
+      'performanceMode': performanceMode.value.convertToString,
       'mostPlayedCustomDateRange': mostPlayedCustomDateRange.value.toJson(),
       'mostPlayedCustomisStartOfDay': mostPlayedCustomisStartOfDay.value,
 
@@ -604,6 +610,7 @@ class SettingsController {
     List<AlbumIdentifier>? albumIdentifiers,
     double? borderRadiusMultiplier,
     double? fontScaleFactor,
+    double? artworkCacheHeightMultiplier,
     double? trackThumbnailSizeinList,
     double? trackListTileHeight,
     double? albumThumbnailSizeinList,
@@ -713,6 +720,7 @@ class SettingsController {
     MostPlayedTimeRange? mostPlayedTimeRange,
     NotificationTapAction? onNotificationTapAction,
     OnYoutubeLinkOpenAction? onYoutubeLinkOpen,
+    PerformanceMode? performanceMode,
     DateRange? mostPlayedCustomDateRange,
     bool? mostPlayedCustomisStartOfDay,
     bool? didSupportNamida,
@@ -778,6 +786,9 @@ class SettingsController {
     }
     if (fontScaleFactor != null) {
       this.fontScaleFactor.value = fontScaleFactor;
+    }
+    if (artworkCacheHeightMultiplier != null) {
+      this.artworkCacheHeightMultiplier.value = artworkCacheHeightMultiplier;
     }
     if (trackThumbnailSizeinList != null) {
       this.trackThumbnailSizeinList.value = trackThumbnailSizeinList;
@@ -1137,6 +1148,9 @@ class SettingsController {
     }
     if (onYoutubeLinkOpen != null) {
       this.onYoutubeLinkOpen.value = onYoutubeLinkOpen;
+    }
+    if (performanceMode != null) {
+      this.performanceMode.value = performanceMode;
     }
     if (mostPlayedCustomDateRange != null) {
       this.mostPlayedCustomDateRange.value = mostPlayedCustomDateRange;
