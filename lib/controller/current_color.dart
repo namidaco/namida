@@ -334,6 +334,9 @@ class CurrentColor {
 
   void _updateInColorMap(String filenameWoExt, NamidaColor? nc) {
     if (nc != null) colorsMap[filenameWoExt] = nc;
+    if (filenameWoExt == Player.inst.nowPlayingTrack.path.getFilename) {
+      updatePlayerColorFromTrack(Player.inst.nowPlayingTrack, null);
+    }
   }
 
   void _updateCurrentPaletteHalfs(NamidaColor nc) {

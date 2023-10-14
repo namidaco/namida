@@ -786,7 +786,7 @@ class Indexer {
     final List<Track> finalTracks = <Track>[];
     final tracksPath = tracksPathPre.toList();
 
-    tracksPath.loopFuture((tp, index) async {
+    await tracksPath.loopFuture((tp, index) async {
       final trako = await tp.toTrackExtOrExtract();
       if (trako != null) finalTracks.add(trako.toTrack());
     });
