@@ -57,18 +57,19 @@ class EditDeleteController {
     final saveDir = await Directory(AppDirs.SAVED_ARTWORKS).create();
     final saveDirPath = saveDir.path;
     final newPath = "$saveDirPath${Platform.pathSeparator}${track.filenameWOExt}.png";
-    final imgFile = await Indexer.inst.extractOneArtwork(track.path, albumIdendifier: track.albumIdentifier);
-    if (imgFile != null) {
-      try {
-        // try copying
-        await imgFile.copy(newPath);
-        return saveDirPath;
-      } catch (e) {
-        printy(e, isError: true);
-        return null;
-      }
+    final imgFiles = await Indexer.inst.extractOneArtwork(
+      [track.path],
+      albumIdendifiers: {track.path: track.albumIdentifier},
+    );
+    final imgFile = imgFiles.firstOrNull;
+    try {
+      // try copying
+      await imgFile?.copy(newPath);
+      return saveDirPath;
+    } catch (e) {
+      printy(e, isError: true);
+      return null;
     }
-    return null;
   }
 
   Future<void> updateTrackPathInEveryPartOfNamida(Track oldTrack, String newPath) async {

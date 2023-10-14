@@ -14,7 +14,7 @@ class NamidaGenerator {
       (element) {
         final trackFilename = filename;
         final fileSystemFilenameCleaned = element.getFilename.cleanUpForComparison;
-        final l = Indexer.inst.getTitleAndArtistFromFilename(trackFilename);
+        final l = Indexer.getTitleAndArtistFromFilename(trackFilename);
         final trackTitle = l.$1;
         final trackArtist = l.$2;
         final matching1 = fileSystemFilenameCleaned.contains(trackFilename.cleanUpForComparison);

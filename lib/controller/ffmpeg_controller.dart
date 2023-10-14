@@ -220,16 +220,16 @@ class NamidaFFMPEG {
         if (cachedThumbnail == null) {
           currentFailed++;
         } else {
-          final file = await Indexer.inst.extractOneArtwork(
-            filee.path,
-            forceReExtract: true,
-            artworkPath: cachedThumbnail.path,
-            albumIdendifier: tr.albumIdentifier,
-          );
-          if (file != null) {
-            final didUpdate = await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: filee.path, thumbnailPath: file.path);
-            if (!didUpdate) currentFailed++;
-          }
+          final file = await Indexer.inst
+              .extractOneArtwork(
+                [filee.path],
+                forceReExtract: true,
+                artworkPaths: {filee.path: cachedThumbnail.path},
+                albumIdendifiers: {filee.path: tr.albumIdentifier},
+              )
+              .then((value) => value.first);
+          final didUpdate = file == null ? false : await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: filee.path, thumbnailPath: file.path);
+          if (!didUpdate) currentFailed++;
         }
 
         currentOperations[OperationType.ytdlpThumbnailFix]!.value = OperationProgress(

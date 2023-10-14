@@ -264,13 +264,11 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
 
                       if (shouldShowTheField(trackExt.hasUnknownArtist))
                         TrackInfoListTile(
-                          title: Indexer.inst
-                                      .splitArtist(
-                                        title: trackExt.title,
-                                        originalArtist: trackExt.originalArtist,
-                                        config: ArtistsSplitConfig.settings(addFeatArtist: false),
-                                      )
-                                      .length ==
+                          title: Indexer.splitArtist(
+                                    title: trackExt.title,
+                                    originalArtist: trackExt.originalArtist,
+                                    config: ArtistsSplitConfig.settings(addFeatArtist: false),
+                                  ).length ==
                                   1
                               ? lang.ARTIST
                               : lang.ARTISTS,

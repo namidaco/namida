@@ -225,7 +225,7 @@ class TrackExtended {
     return TrackExtended(
       title: json['title'] ?? '',
       originalArtist: json['originalArtist'] ?? '',
-      artistsList: Indexer.inst.splitArtist(
+      artistsList: Indexer.splitArtist(
         title: json['title'],
         originalArtist: json['originalArtist'],
         config: artistsSplitConfig,
@@ -233,12 +233,12 @@ class TrackExtended {
       album: json['album'] ?? '',
       albumArtist: json['albumArtist'] ?? '',
       originalGenre: json['originalGenre'] ?? '',
-      genresList: Indexer.inst.splitGenre(
+      genresList: Indexer.splitGenre(
         json['originalGenre'],
         config: genresSplitConfig,
       ),
       originalMood: json['originalMood'] ?? '',
-      moodList: Indexer.inst.splitGenre(
+      moodList: Indexer.splitGenre(
         json['originalMood'],
         config: genresSplitConfig,
       ),

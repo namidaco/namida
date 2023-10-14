@@ -498,7 +498,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
               NamidaInkWell(
                 borderRadius: 2.0,
                 onTap: () {
-                  final titleAndArtist = Indexer.inst.getTitleAndArtistFromFilename(track.path.getFilenameWOExt);
+                  final titleAndArtist = Indexer.getTitleAndArtistFromFilename(track.path.getFilenameWOExt);
                   final title = titleAndArtist.$1;
                   final artist = titleAndArtist.$2;
 

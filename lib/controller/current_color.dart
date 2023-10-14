@@ -271,7 +271,7 @@ class CurrentColor {
 
   final _colorGenerationTasks = qs.Queue(parallel: 1);
 
-  Future<void> reExtractTrackColorPalette({required Track track, required NamidaColor? newNC, required String? imagePath}) async {
+  Future<void> reExtractTrackColorPalette({required Track track, required NamidaColor? newNC, required String? imagePath, bool useIsolate = true}) async {
     assert(newNC != null || imagePath != null, 'a color or imagePath must be provided');
 
     final paletteFile = File("${AppDirs.PALETTES}${track.filename}.palette");
@@ -279,7 +279,7 @@ class CurrentColor {
       await paletteFile.writeAsJson(newNC.toJson());
       _updateInColorMap(track.filename, newNC);
     } else if (imagePath != null) {
-      final nc = await extractPaletteFromImage(imagePath, forceReExtract: true);
+      final nc = await extractPaletteFromImage(imagePath, forceReExtract: true, useIsolate: useIsolate);
       _updateInColorMap(imagePath.getFilenameWOExt, nc);
     }
     if (Player.inst.nowPlayingTrack == track) {

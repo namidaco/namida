@@ -239,7 +239,7 @@ extension TRACKPLAYMODE on TrackPlayMode {
 }
 
 extension ConvertPathToTrack on String {
-  Future<TrackExtended?> toTrackExtOrExtract() async => toTrackExtOrNull() ?? (await Indexer.inst.extractOneTrack(trackPath: this));
+  Future<TrackExtended?> toTrackExtOrExtract() async => toTrackExtOrNull() ?? (await Indexer.inst.extractOneTrack(tracksPath: [this]))[this];
   Track toTrack() => Track(this);
   Track? toTrackOrNull() => Indexer.inst.allTracksMappedByPath[toTrack()] == null ? null : toTrack();
   TrackExtended? toTrackExtOrNull() => Indexer.inst.allTracksMappedByPath[Track(this)];
