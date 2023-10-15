@@ -254,20 +254,19 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     );
 
     if (widget.isFullScreen) {
-      FlutterVolumeController.addListener(
-        (value) async {
+      Player.inst.onVolumeChangeAddListener(
+        _volumeListenerKey,
+        (mv) async {
           if (widget.showControls) {
-            final ast = await FlutterVolumeController.getAndroidAudioStream();
-            if (ast == AudioStream.music) {
-              _currentDeviceVolume.value = value;
-              if (!_isPointerDown) _startVolumeSwipeTimer(); // only start timer if not handled by pointer down/up
-            }
+            _currentDeviceVolume.value = mv;
+            if (!_isPointerDown) _startVolumeSwipeTimer(); // only start timer if not handled by pointer down/up
           }
         },
-        emitOnStart: false,
       );
     }
   }
+
+  final _volumeListenerKey = 'video_widget';
 
   @override
   void dispose() {
@@ -275,7 +274,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     seekAnimationForward2.dispose();
     seekAnimationBackward1.dispose();
     seekAnimationBackward2.dispose();
-    FlutterVolumeController.removeListener();
+    Player.inst.onVolumeChangeRemoveListener(_volumeListenerKey);
     super.dispose();
   }
 

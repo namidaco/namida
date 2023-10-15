@@ -70,8 +70,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: a0f9ed6eb88c9748001ced7ed4ad61f375c8b2f2
-      resolved-ref: a0f9ed6eb88c9748001ced7ed4ad61f375c8b2f2
+      ref: a82ceea56b59edc3b437dc1ba316408e93409ae6
+      resolved-ref: a82ceea56b59edc3b437dc1ba316408e93409ae6
       url: "https://github.com/namidaco/basic_audio_handler"
     source: git
     version: "0.0.1"

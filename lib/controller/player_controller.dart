@@ -114,6 +114,14 @@ class Player {
     });
   }
 
+  void onVolumeChangeAddListener(String key, void Function(double musicVolume) fn) {
+    _audioHandler.onVolumeChangeAddListener(key, fn);
+  }
+
+  void onVolumeChangeRemoveListener(String key) {
+    _audioHandler.onVolumeChangeRemoveListener(key);
+  }
+
   Future<void> prepareTotalListenTime() async {
     _audioHandler.prepareTotalListenTime();
   }
