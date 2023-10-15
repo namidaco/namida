@@ -24,6 +24,88 @@ class ThemeSetting extends StatelessWidget {
     await CurrentColor.inst.updatePlayerColorFromTrack(Player.inst.nowPlayingTWD, null);
   }
 
+  Widget getThemeTile() {
+    return CustomListTile(
+      icon: Broken.brush_4,
+      title: lang.THEME_MODE,
+      trailing: const ToggleThemeModeContainer(),
+    );
+  }
+
+  Widget getLanguageTile(BuildContext context) {
+    return Obx(
+      () => CustomListTile(
+        icon: Broken.language_square,
+        title: lang.LANGUAGE,
+        subtitle: lang.currentLanguage.name,
+        onTap: () {
+          final Rx<NamidaLanguage> selectedLang = lang.currentLanguage.obs;
+          NamidaNavigator.inst.navigateDialog(
+            dialog: CustomBlurryDialog(
+              title: lang.LANGUAGE,
+              normalTitleStyle: true,
+              actions: [
+                const CancelButton(),
+                NamidaButton(
+                  onPressed: () async => (await lang.update(lang: selectedLang.value)).closeDialog(),
+                  text: lang.CONFIRM,
+                )
+              ],
+              child: SizedBox(
+                height: (Language.availableLanguages.length * context.height * 0.08).withMaximum(context.height * 0.5),
+                width: context.width,
+                child: NamidaListView(
+                  padding: EdgeInsets.zero,
+                  itemExtents: null,
+                  itemCount: Language.availableLanguages.length,
+                  itemBuilder: (context, i) {
+                    final e = Language.availableLanguages[i];
+                    return Padding(
+                      key: Key(i.toString()),
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Obx(
+                        () => ListTileWithCheckMark(
+                          leading: Container(
+                            padding: const EdgeInsets.all(4.0),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                width: 1.5,
+                                color: context.theme.colorScheme.onBackground.withAlpha(100),
+                              ),
+                            ),
+                            child: Text(
+                              e.name[0],
+                              style: const TextStyle(fontSize: 13.0),
+                            ),
+                          ),
+                          titleWidget: RichText(
+                            text: TextSpan(
+                              text: e.name,
+                              style: context.textTheme.displayMedium,
+                              children: [
+                                TextSpan(
+                                  text: " (${e.country})",
+                                  style: context.textTheme.displaySmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                          active: e == selectedLang.value,
+                          onTap: () => selectedLang.value = e,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -34,11 +116,7 @@ class ThemeSetting extends StatelessWidget {
         width: context.width,
         child: Column(
           children: [
-            CustomListTile(
-              icon: Broken.brush_4,
-              title: lang.THEME_MODE,
-              trailing: const ToggleThemeModeContainer(),
-            ),
+            getThemeTile(),
             Obx(
               () => CustomSwitchListTile(
                 icon: Broken.colorfilter,
@@ -118,77 +196,7 @@ class ThemeSetting extends StatelessWidget {
                 },
               ),
             ),
-            Obx(
-              () => CustomListTile(
-                icon: Broken.language_square,
-                title: lang.LANGUAGE,
-                subtitle: lang.currentLanguage.name,
-                onTap: () {
-                  final Rx<NamidaLanguage> selectedLang = lang.currentLanguage.obs;
-                  NamidaNavigator.inst.navigateDialog(
-                    dialog: CustomBlurryDialog(
-                      title: lang.LANGUAGE,
-                      normalTitleStyle: true,
-                      actions: [
-                        const CancelButton(),
-                        NamidaButton(
-                          onPressed: () async => (await lang.update(lang: selectedLang.value)).closeDialog(),
-                          text: lang.CONFIRM,
-                        )
-                      ],
-                      child: SizedBox(
-                        height: (Language.availableLanguages.length * context.height * 0.08).withMaximum(context.height * 0.5),
-                        width: context.width,
-                        child: NamidaListView(
-                          padding: EdgeInsets.zero,
-                          itemExtents: null,
-                          itemCount: Language.availableLanguages.length,
-                          itemBuilder: (context, i) {
-                            final e = Language.availableLanguages[i];
-                            return Padding(
-                              key: Key(i.toString()),
-                              padding: const EdgeInsets.symmetric(vertical: 4.0),
-                              child: Obx(
-                                () => ListTileWithCheckMark(
-                                  leading: Container(
-                                    padding: const EdgeInsets.all(4.0),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        width: 1.5,
-                                        color: context.theme.colorScheme.onBackground.withAlpha(100),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      e.name[0],
-                                      style: const TextStyle(fontSize: 13.0),
-                                    ),
-                                  ),
-                                  titleWidget: RichText(
-                                    text: TextSpan(
-                                      text: e.name,
-                                      style: context.textTheme.displayMedium,
-                                      children: [
-                                        TextSpan(
-                                          text: " (${e.country})",
-                                          style: context.textTheme.displaySmall,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  active: e == selectedLang.value,
-                                  onTap: () => selectedLang.value = e,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
+            getLanguageTile(context),
           ],
         ),
       ),

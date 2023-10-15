@@ -12,7 +12,6 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:get/get.dart';
-import 'package:namida/core/namida_converter_ext.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:picture_in_picture/picture_in_picture.dart';
@@ -32,6 +31,7 @@ import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/main_page_wrapper.dart';
@@ -45,14 +45,13 @@ void main() async {
   /// Getting Device info
   kSdkVersion = await PictureInPicture.getPlatformSdk();
 
-  /// Granting Storage Permission.
-  /// Requesting Granular media permissions for Android 13 (API 33) doesnt work for some reason.
-  /// Currently the target API is set to 32.
-  if (await Permission.storage.isDenied || await Permission.storage.isPermanentlyDenied) {
-    final st = await Permission.storage.request();
-    if (!st.isGranted) {
-      SystemNavigator.pop();
-    }
+  /// if `true`:
+  /// 1. onboarding screen will show
+  /// 2. `indexer` and `latest queue` will be executed after permission is granted.
+  bool shouldShowOnBoarding = false;
+
+  if (!await requestStoragePermission(request: false)) {
+    shouldShowOnBoarding = true;
   }
 
   AppDirs.USER_DATA = await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
@@ -77,7 +76,7 @@ void main() async {
 
   await settings.prepareSettingsFile();
   await Future.wait([
-    Indexer.inst.prepareTracksFile(),
+    if (!shouldShowOnBoarding) Indexer.inst.prepareTracksFile(),
     Language.initialize(),
   ]);
   ConnectivityController.inst.initialize();
@@ -96,7 +95,7 @@ void main() async {
   PlaylistController.inst.prepareAllPlaylists();
   VideoController.inst.initialize();
   await PlaylistController.inst.prepareDefaultPlaylistsFile();
-  await QueueController.inst.prepareLatestQueue();
+  if (!shouldShowOnBoarding) await QueueController.inst.prepareLatestQueue();
 
   YoutubePlaylistController.inst.prepareAllPlaylists();
   await YoutubePlaylistController.inst.prepareDefaultPlaylistsFile();
@@ -112,8 +111,8 @@ void main() async {
   ScrollSearchController.inst.initialize();
   FlutterLocalNotificationsPlugin().cancelAll();
 
-  // runApp(const Namida());
-  _initializeCatcher(() => runApp(const Namida()));
+  // runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding));
+  _initializeCatcher(() => runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding)));
 
   CurrentColor.inst.generateAllColorPalettes();
   Folders.inst.onFirstLoad();
@@ -196,6 +195,31 @@ Future<String?> playExternalFiles(Iterable<String> paths) async {
   }
 }
 
+/// Granting Storage Permission.
+/// Requesting Granular media permissions for Android 13 (API 33) doesnt work for some reason.
+/// Currently the target API is set to 32.
+/// [request] will prompt dialog if not granted.
+Future<bool> requestStoragePermission({bool request = true}) async {
+  bool granted = false;
+  if (await Permission.storage.isPermanentlyDenied) {
+    if (request) {
+      // -- user denied, should open settings.
+      await openAppSettings();
+    }
+  } else if (await Permission.storage.isDenied) {
+    if (request) {
+      final st = await Permission.storage.request();
+      if (st.isPermanentlyDenied) {
+        await openAppSettings();
+      }
+      granted = st.isGranted;
+    }
+  } else {
+    granted = true;
+  }
+  return granted;
+}
+
 Future<bool> requestManageStoragePermission() async {
   Future<void> createDir() async => await Directory(settings.defaultBackupLocation.value).create(recursive: true);
   if (kSdkVersion < 30) {
@@ -220,7 +244,8 @@ late BuildContext _initialContext;
 final _waitForFirstBuildContext = Completer<bool>();
 
 class Namida extends StatelessWidget {
-  const Namida({super.key});
+  final bool shouldShowOnBoarding;
+  const Namida({super.key, required this.shouldShowOnBoarding});
 
   @override
   Widget build(BuildContext context) {
@@ -240,6 +265,7 @@ class Namida extends StatelessWidget {
             return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
           },
           home: MainPageWrapper(
+            shouldShowOnBoarding: shouldShowOnBoarding,
             onContextAvailable: (ctx) {
               _initialContext = ctx;
               _waitForFirstBuildContext.isCompleted ? null : _waitForFirstBuildContext.complete(true);

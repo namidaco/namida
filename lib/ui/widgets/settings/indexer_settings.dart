@@ -76,6 +76,121 @@ class IndexerSettings extends StatelessWidget {
     );
   }
 
+  Widget getFoldersToScanWidget({
+    required BuildContext context,
+    bool initiallyExpanded = false,
+  }) {
+    return Obx(
+      () => NamidaExpansionTile(
+        initiallyExpanded: initiallyExpanded,
+        icon: Broken.folder,
+        titleText: lang.LIST_OF_FOLDERS,
+        textColor: context.textTheme.displayLarge!.color,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            addFolderButton((dirPath) {
+              settings.save(directoriesToScan: [dirPath]);
+            }),
+            const SizedBox(width: 8.0),
+            const Icon(Broken.arrow_down_2),
+          ],
+        ),
+        children: [
+          ...settings.directoriesToScan.map(
+            (e) => ListTile(
+              title: Text(
+                e,
+                style: context.textTheme.displayMedium,
+              ),
+              trailing: TextButton(
+                onPressed: () {
+                  if (settings.directoriesToScan.length == 1) {
+                    snackyy(
+                      title: lang.MINIMUM_ONE_ITEM,
+                      message: lang.MINIMUM_ONE_FOLDER_SUBTITLE,
+                      displaySeconds: 4,
+                    );
+                  } else {
+                    NamidaNavigator.inst.navigateDialog(
+                      dialog: CustomBlurryDialog(
+                        normalTitleStyle: true,
+                        isWarning: true,
+                        actions: [
+                          const CancelButton(),
+                          NamidaButton(
+                            text: lang.REMOVE,
+                            onPressed: () {
+                              settings.removeFromList(directoriesToScan1: e);
+                              NamidaNavigator.inst.closeDialog();
+                              _showRefreshPromptDialog(true);
+                            },
+                          ),
+                        ],
+                        bodyText: "${lang.REMOVE} \"$e\"?",
+                      ),
+                    );
+                  }
+                },
+                child: Text(lang.REMOVE.toUpperCase()),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget getFoldersToExcludeWidget({
+    required BuildContext context,
+    bool initiallyExpanded = false,
+  }) {
+    return Obx(
+      () => NamidaExpansionTile(
+        initiallyExpanded: initiallyExpanded,
+        icon: Broken.folder_minus,
+        titleText: lang.EXCLUDED_FODLERS,
+        textColor: context.textTheme.displayLarge!.color,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            addFolderButton((dirPath) {
+              settings.save(directoriesToExclude: [dirPath]);
+            }),
+            const SizedBox(width: 8.0),
+            const Icon(Broken.arrow_down_2),
+          ],
+        ),
+        children: settings.directoriesToExclude.isEmpty
+            ? [
+                ListTile(
+                  title: Text(
+                    lang.NO_EXCLUDED_FOLDERS,
+                    style: context.textTheme.displayMedium,
+                  ),
+                ),
+              ]
+            : [
+                ...settings.directoriesToExclude.map(
+                  (e) => ListTile(
+                    title: Text(
+                      e,
+                      style: context.textTheme.displayMedium,
+                    ),
+                    trailing: TextButton(
+                      onPressed: () {
+                        settings.removeFromList(directoriesToExclude1: e);
+                        _showRefreshPromptDialog(true);
+                      },
+                      child: Text(lang.REMOVE.toUpperCase()),
+                    ),
+                  ),
+                ),
+              ],
+      ),
+    );
+  }
+
   void _showReindexingPrompt({
     required String title,
     required String body,
@@ -368,107 +483,8 @@ class IndexerSettings extends StatelessWidget {
             subtitle: lang.REFRESH_LIBRARY_SUBTITLE,
             onTap: () => _showRefreshPromptDialog(false),
           ),
-          Obx(
-            () => NamidaExpansionTile(
-              icon: Broken.folder,
-              titleText: lang.LIST_OF_FOLDERS,
-              textColor: context.textTheme.displayLarge!.color,
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  addFolderButton((dirPath) {
-                    settings.save(directoriesToScan: [dirPath]);
-                  }),
-                  const SizedBox(width: 8.0),
-                  const Icon(Broken.arrow_down_2),
-                ],
-              ),
-              children: [
-                ...settings.directoriesToScan.map(
-                  (e) => ListTile(
-                    title: Text(
-                      e,
-                      style: context.textTheme.displayMedium,
-                    ),
-                    trailing: TextButton(
-                      onPressed: () {
-                        if (settings.directoriesToScan.length == 1) {
-                          snackyy(
-                            title: lang.MINIMUM_ONE_ITEM,
-                            message: lang.MINIMUM_ONE_FOLDER_SUBTITLE,
-                            displaySeconds: 4,
-                          );
-                        } else {
-                          NamidaNavigator.inst.navigateDialog(
-                            dialog: CustomBlurryDialog(
-                              normalTitleStyle: true,
-                              isWarning: true,
-                              actions: [
-                                const CancelButton(),
-                                NamidaButton(
-                                  text: lang.REMOVE,
-                                  onPressed: () {
-                                    settings.removeFromList(directoriesToScan1: e);
-                                    NamidaNavigator.inst.closeDialog();
-                                    _showRefreshPromptDialog(true);
-                                  },
-                                ),
-                              ],
-                              bodyText: "${lang.REMOVE} \"$e\"?",
-                            ),
-                          );
-                        }
-                      },
-                      child: Text(lang.REMOVE.toUpperCase()),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Obx(
-            () => NamidaExpansionTile(
-              icon: Broken.folder_minus,
-              titleText: lang.EXCLUDED_FODLERS,
-              textColor: context.textTheme.displayLarge!.color,
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  addFolderButton((dirPath) {
-                    settings.save(directoriesToExclude: [dirPath]);
-                  }),
-                  const SizedBox(width: 8.0),
-                  const Icon(Broken.arrow_down_2),
-                ],
-              ),
-              children: settings.directoriesToExclude.isEmpty
-                  ? [
-                      ListTile(
-                        title: Text(
-                          lang.NO_EXCLUDED_FOLDERS,
-                          style: context.textTheme.displayMedium,
-                        ),
-                      ),
-                    ]
-                  : [
-                      ...settings.directoriesToExclude.map(
-                        (e) => ListTile(
-                          title: Text(
-                            e,
-                            style: context.textTheme.displayMedium,
-                          ),
-                          trailing: TextButton(
-                            onPressed: () {
-                              settings.removeFromList(directoriesToExclude1: e);
-                              _showRefreshPromptDialog(true);
-                            },
-                            child: Text(lang.REMOVE.toUpperCase()),
-                          ),
-                        ),
-                      ),
-                    ],
-            ),
-          ),
+          getFoldersToScanWidget(context: context),
+          getFoldersToExcludeWidget(context: context),
         ],
       ),
     );

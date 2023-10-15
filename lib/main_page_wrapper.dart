@@ -15,6 +15,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/inner_drawer.dart';
 import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/ui/pages/main_page.dart';
+import 'package:namida/ui/pages/onboarding.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -23,8 +24,10 @@ import 'package:namida/ui/widgets/settings/customization_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 
 class MainPageWrapper extends StatefulWidget {
+  final bool shouldShowOnBoarding;
   final void Function(BuildContext context) onContextAvailable;
-  const MainPageWrapper({super.key, required this.onContextAvailable});
+
+  const MainPageWrapper({super.key, required this.shouldShowOnBoarding, required this.onContextAvailable});
 
   @override
   State<MainPageWrapper> createState() => _MainPageWrapperState();
@@ -35,6 +38,17 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
   void initState() {
     super.initState();
     widget.onContextAvailable(context);
+    if (widget.shouldShowOnBoarding) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (timeStamp) {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) {
+            return FirstRunConfigureScreen(
+              onContextAvailable: widget.onContextAvailable,
+            );
+          }));
+        },
+      );
+    }
   }
 
   @override

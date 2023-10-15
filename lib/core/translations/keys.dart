@@ -218,6 +218,7 @@ class LanguageKeys {
   late String GO_TO_CHANNEL;
   late String GO_TO_FOLDER;
   late String GRANT_ACCESS;
+  late String GRANT_STORAGE_PERMISSION;
   late String GROUP_ARTWORKS_BY_ALBUM;
   late String GUIDE;
   late String HEIGHT_OF_ALBUM_TILE;
@@ -441,6 +442,7 @@ class LanguageKeys {
   late String SELECTED_TRACKS;
   late String SEPARATORS_BLACKLIST_SUBTITLE;
   late String SEPARATORS_MESSAGE;
+  late String SETUP_FIRST_STARTUP;
   late String SET_AS_DEFAULT;
   late String SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE;
   late String SET_MOODS_SUBTITLE;
