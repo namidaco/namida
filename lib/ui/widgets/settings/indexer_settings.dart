@@ -225,19 +225,22 @@ class IndexerSettings extends StatelessWidget {
                       const CancelButton(),
                       const SizedBox(width: 8.0),
                       Obx(
-                        () => NamidaButton(
-                          enabled: !settings.albumIdentifiers.every((element) => tempList.contains(element)), // isEqualTo wont work cuz order shouldnt matter
-                          text: lang.SAVE,
-                          onPressed: () async {
-                            NamidaNavigator.inst.closeDialog();
-                            settings.removeFromList(albumIdentifiersAll: AlbumIdentifier.values);
-                            settings.save(albumIdentifiers: tempList);
+                        () {
+                          return NamidaButton(
+                            enabled: settings.albumIdentifiers.any((element) => !tempList.contains(element)) ||
+                                tempList.any((element) => !settings.albumIdentifiers.contains(element)), // isEqualTo wont work cuz order shouldnt matter
+                            text: lang.SAVE,
+                            onPressed: () async {
+                              NamidaNavigator.inst.closeDialog();
+                              settings.removeFromList(albumIdentifiersAll: AlbumIdentifier.values);
+                              settings.save(albumIdentifiers: tempList);
 
-                            Indexer.inst.prepareTracksFile();
+                              Indexer.inst.prepareTracksFile();
 
-                            _showReindexingPrompt(title: lang.ALBUM_IDENTIFIERS, body: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING);
-                          },
-                        ),
+                              _showReindexingPrompt(title: lang.ALBUM_IDENTIFIERS, body: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING);
+                            },
+                          );
+                        },
                       ),
                     ],
                     child: Column(
