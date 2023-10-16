@@ -182,6 +182,7 @@ Animating Thumbnail        |  Recommends & Listens
 > - saving artworks
 > - compressing images
 > - downloading youtube content
+> - playing tracks from a root folder
 
 ### Special Thanks:
 

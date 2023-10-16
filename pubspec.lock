@@ -70,8 +70,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: a82ceea56b59edc3b437dc1ba316408e93409ae6
-      resolved-ref: a82ceea56b59edc3b437dc1ba316408e93409ae6
+      ref: abe0dc1bf5582047da8dc62f0049765be5182f18
+      resolved-ref: abe0dc1bf5582047da8dc62f0049765be5182f18
       url: "https://github.com/namidaco/basic_audio_handler"
     source: git
     version: "0.0.1"
@@ -505,6 +505,14 @@ packages:
       url: "https://github.com/MSOB7YY/getx"
     source: git
     version: "4.6.5"
+  globbing:
+    dependency: transitive
+    description:
+      name: globbing
+      sha256: "4f89cfaf6fa74c9c1740a96259da06bd45411ede56744e28017cc534a12b6e2d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   history_manager:
     dependency: "direct main"
     description:
@@ -1063,6 +1071,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.0"
+  system_info2:
+    dependency: "direct main"
+    description:
+      name: system_info2
+      sha256: "65206bbef475217008b5827374767550a5420ce70a04d2d7e94d1d2253f3efc9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.0"
   term_glyph:
     dependency: transitive
     description:

@@ -1,5 +1,35 @@
 # Namida Changelog
 
+## 16/10/2023
+# v1.4.8
+### 🎉 New Features:
+- feat:  
+   - #5b53f979bb9131185d776760f1fcb81eb40c8795: Full LRC Support (comes with synced view, fullscreen, lrc fetching, modifying, nightcore/spedup support)
+   - #7d34cd195aad72485a16a9449487cec3cb021682: force track colors for miniplayer option
+   - #662256a98e338db911e690d46ace4d0a0c82361a: onboarding screen for first startup
+   - #a3dcedcc1134ef3aa6c7ba28b6b92d5c7696ffa2: performance mode (highPerformance, balanced, goodLooking, custom)
+
+### 🛠️ Bug fixes & Improvements:
+- chore:
+   - #1b1883a106c939f2f511ce7081709c5999cdecba: improvements & fixes
+   - #261e46a7f2ee53ad75c94dcbefa9fcf418bc60e1: few fixes
+   - #16e8375e63c89e4040c00bf48ff49a0870ed6276: add mood tag to (generate by mood) dialog
+   - #95a7301f7c2806d6081d8942fc13b1016ecf0e45: sort album tracks by year or trackNo or title
+   - #39bd4e8c9f1bf97b43109d09402b46ecd9c71c30: various improvements/fixes
+   - #d0b55d7ff6fee250f1c16092c1082b3de3159811: extraction improvements
+   - #ff1b1bb3b8772df0eab312f79afa2870ac058863: fallback duration extract
+   - #ecd451a83ca142fbd058995350dca94723298992: openable version page inside changelog sheet
+- perf:
+   - #b9bec28c7bf518192e5d26c3059694f5244dddd1: scrolling performance improvement
+   - #5ae0247a62046d03ce9cdf486f908a54ee085de7: improve indexing speed by 250%
+- fix:
+   - #850edcb1e7b26810723d128a7bd6604ce82499a2: pausing on volume 0
+   - #1bcee8b12907f5da036bd71164a8dea8849e15ea: disabled save button for album identifiers
+   - #aca3df469e1d5e4575d1b762e6d13e96c4044966: not playing external file
+   - #d2953e238f1442309c70b46537e53866f04d96fb: empty shuffle queue & item skipping optimization
+   - #6d43c26c0dc95b7160d223d9c818b8d0c741a05a: not playing tracks inside root folders (requires all_file_access permission)
+
+
 ## 10/10/2023
 # v1.3.0
 ### 🎉 New Features:
