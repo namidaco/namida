@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:namida/youtube/yt_utils.dart';
-
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 
@@ -40,6 +38,7 @@ class YoutubeVideoCard extends StatelessWidget {
       playlistID: playlistID,
       idsNamesLookup: {videoId: video?.name},
     );
+    final videoViewCount = video?.viewCount;
     return NamidaPopupWrapper(
       openOnTap: false,
       childrenDefault: menuItems,
@@ -53,7 +52,7 @@ class YoutubeVideoCard extends StatelessWidget {
         shimmerEnabled: video == null,
         title: video?.name ?? '',
         subtitle: [
-          video?.viewCount?.formatDecimalShort() ?? 0,
+          if (videoViewCount != null) "${videoViewCount.formatDecimalShort()} ${videoViewCount == 0 ? lang.VIEW : lang.VIEWS}",
           if (video?.textualUploadDate != null) video?.textualUploadDate,
         ].join(' - '),
         thirdLineText: video?.uploaderName ?? '',

@@ -557,6 +557,8 @@ class LanguageKeys {
   late String VIDEO_QUALITY_SUBTITLE;
   late String VIDEO_QUALITY;
   late String VIDEO;
+  late String VIEW;
+  late String VIEWS;
   late String VIEW_ALL;
   late String VOLUME;
   late String WARNING;

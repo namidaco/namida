@@ -507,7 +507,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required String videoId,
     required NamidaVideo? videoItem,
   }) async {
-    final position = currentPositionMS;
     final wasPlaying = isPlaying;
     setAudioOnlyPlayback(false);
 
@@ -547,12 +546,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           );
         }
       }
-      await _waitForAllBuffers();
-      await seek(position.milliseconds);
-      if (wasPlaying) {
-        await _playAudioThenVideo();
-      }
     }
+    await _waitForAllBuffers();
+    if (wasPlaying) await _playAudioThenVideo();
   }
 
   Future<void> onItemPlayYoutubeIDSetAudio({
@@ -618,8 +614,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
   }
 
+  bool _nextSeekCanSetAudioCache = false;
+
   /// Adds Cached File to [audioCacheMap] & writes metadata.
   Future<void> _onAudioCacheDone(String videoId, File? audioCacheFile) async {
+    _nextSeekCanSetAudioCache = true;
     // -- Audio handling
     final prevAudioStream = currentAudioStream.value;
     final prevAudioBitrate = prevAudioStream?.bitrate ?? currentCachedAudio.value?.bitrate;
@@ -672,7 +671,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     currentVideoThumbnail.value = null;
     currentCachedVideo.value = null;
     currentCachedAudio.value = null;
+    _isCurrentAudioFromCache = false;
     _isFetchingInfo.value = false;
+    _nextSeekCanSetAudioCache = false;
 
     refreshNotification(pi, currentVideoInfo.value);
 
@@ -777,7 +778,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
           // -- updating wether the source has changed, so that play should be triggered again.
           if (heyIhandledAudioPlaying) {
-            heyIhandledAudioPlaying = (shouldResetVideoSource) || shouldResetAudioSource;
+            heyIhandledAudioPlaying = !((shouldResetVideoSource && isStreamRequiredBetterThanCachedSet) || shouldResetAudioSource);
           }
 
           await playerStoppingSeikoo.future;
@@ -840,8 +841,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         }
       });
     }
+
     if (!heyIhandledAudioPlaying) {
-      await plsplsplsPlay(!okaySetFromCache(), okaySetFromCache(), !okaySetFromCache());
+      final didplayfromcache = okaySetFromCache();
+      await plsplsplsPlay(!didplayfromcache, didplayfromcache, !didplayfromcache);
     }
   }
 
@@ -875,7 +878,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       "dirPath": AppDirs.AUDIOS_CACHE,
       "id": item.id,
     });
-    final finalAudioFiles = audioFiles..sortByReverseAlt((e) => e.bitrate ?? 0, (e) => e.file.sizeInBytesSync());
+    final finalAudioFiles = audioFiles..sortByReverseAlt((e) => e.bitrate ?? 0, (e) => e.file.lengthSync());
     final cachedAudio = finalAudioFiles.firstOrNull;
 
     // ------ Playing ------
@@ -1114,8 +1117,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       },
       youtubeID: (finalItem) async {
         await plsPause();
-        if (position == Duration.zero) {
+        if (_nextSeekCanSetAudioCache) {
           // -- try putting cache version if it was cached
+          _nextSeekCanSetAudioCache = false;
+          final cached = currentAudioStream.value?.getCachedFile(finalItem.id);
+          if (cached != null) await setAudioSource(AudioSource.file(cached.path, tag: mediaItem));
+          _isCurrentAudioFromCache = true;
         }
         await plsSeek();
       },

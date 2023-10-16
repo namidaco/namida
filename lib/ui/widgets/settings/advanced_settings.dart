@@ -32,6 +32,52 @@ import 'package:namida/youtube/controller/youtube_controller.dart';
 class AdvancedSettings extends StatelessWidget {
   const AdvancedSettings({super.key});
 
+  Widget getPerformanceTile(BuildContext context) {
+    return CustomListTile(
+      icon: Broken.cpu_setting,
+      title: lang.PERFORMANCE_MODE,
+      trailingRaw: NamidaPopupWrapper(
+        children: [
+          ...PerformanceMode.values.map(
+            (e) => Obx(
+              () => NamidaInkWell(
+                margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                borderRadius: 6.0,
+                bgColor: settings.performanceMode.value == e ? context.theme.cardColor : null,
+                child: Row(
+                  children: [
+                    Icon(
+                      e.toIcon(),
+                      size: 18.0,
+                    ),
+                    const SizedBox(width: 6.0),
+                    Text(
+                      e.toText(),
+                      style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
+                    ),
+                  ],
+                ),
+                onTap: () {
+                  e.execute();
+                  settings.save(performanceMode: e);
+                  NamidaNavigator.inst.popMenu(handleClosing: false);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ),
+          ),
+        ],
+        child: Obx(
+          () => Text(
+            settings.performanceMode.value.toText(),
+            style: context.textTheme.displaySmall,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -41,49 +87,7 @@ class AdvancedSettings extends StatelessWidget {
       // icon: Broken.danger,
       child: Column(
         children: [
-          CustomListTile(
-            icon: Broken.cpu_setting,
-            title: lang.PERFORMANCE_MODE,
-            trailingRaw: NamidaPopupWrapper(
-              children: [
-                ...PerformanceMode.values.map(
-                  (e) => Obx(
-                    () => NamidaInkWell(
-                      margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                      borderRadius: 6.0,
-                      bgColor: settings.performanceMode.value == e ? context.theme.cardColor : null,
-                      child: Row(
-                        children: [
-                          Icon(
-                            e.toIcon(),
-                            size: 18.0,
-                          ),
-                          const SizedBox(width: 6.0),
-                          Text(
-                            e.toText(),
-                            style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
-                          ),
-                        ],
-                      ),
-                      onTap: () {
-                        e.execute();
-                        settings.save(performanceMode: e);
-                        NamidaNavigator.inst.popMenu(handleClosing: false);
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ),
-                ),
-              ],
-              child: Obx(
-                () => Text(
-                  settings.performanceMode.value.toText(),
-                  style: context.textTheme.displaySmall,
-                ),
-              ),
-            ),
-          ),
+          getPerformanceTile(context),
           CustomListTile(
             leading: const StackedIcon(
               baseIcon: Broken.video,

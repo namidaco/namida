@@ -437,6 +437,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     final itemsColor = Colors.white.withAlpha(200);
     final shouldShowVolumeSlider = widget.showControls && widget.isFullScreen;
     return Listener(
+      key: widget.widgetKey,
       behavior: HitTestBehavior.translucent,
       onPointerCancel: (event) {
         _isPointerDown = false;

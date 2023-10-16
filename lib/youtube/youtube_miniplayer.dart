@@ -80,8 +80,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
 
             final videoLikeCount = videoInfo?.likeCount ?? Player.inst.currentVideoInfo?.likeCount;
             final videoDislikeCount = videoInfo?.dislikeCount ?? Player.inst.currentVideoInfo?.dislikeCount;
-
-            final videoListens = YoutubeHistoryController.inst.topTracksMapListens[currentId] ?? [];
+            final videoViewCount = videoInfo?.viewCount ?? Player.inst.currentVideoInfo?.viewCount;
 
             return NamidaYTMiniplayer(
               key: MiniPlayerController.inst.ytMiniplayerKey,
@@ -334,30 +333,35 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                 collapsedIconColor: context.theme.colorScheme.onBackground,
                                                 childrenPadding: const EdgeInsets.all(18.0),
                                                 onExpansionChanged: (value) => isTitleExpanded.value = value,
-                                                trailing: Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    if (videoListens.isNotEmpty)
-                                                      NamidaInkWell(
-                                                        borderRadius: 6.0,
-                                                        bgColor: CurrentColor.inst.color.withOpacity(0.7),
-                                                        onTap: () {
-                                                          showVideoListensDialog(currentId);
-                                                        },
-                                                        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                                                        child: Text(
-                                                          videoListens.length.formatDecimal(),
-                                                          style: context.textTheme.displaySmall?.copyWith(
-                                                            color: Colors.white.withOpacity(0.6),
+                                                trailing: Obx(
+                                                  () {
+                                                    final videoListens = YoutubeHistoryController.inst.topTracksMapListens[currentId] ?? [];
+                                                    return Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        if (videoListens.isNotEmpty)
+                                                          NamidaInkWell(
+                                                            borderRadius: 6.0,
+                                                            bgColor: CurrentColor.inst.color.withOpacity(0.7),
+                                                            onTap: () {
+                                                              showVideoListensDialog(currentId);
+                                                            },
+                                                            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                                                            child: Text(
+                                                              videoListens.length.formatDecimal(),
+                                                              style: context.textTheme.displaySmall?.copyWith(
+                                                                color: Colors.white.withOpacity(0.6),
+                                                              ),
+                                                            ),
                                                           ),
+                                                        const SizedBox(width: 8.0),
+                                                        const Icon(
+                                                          Broken.arrow_down_2,
+                                                          size: 20.0,
                                                         ),
-                                                      ),
-                                                    const SizedBox(width: 8.0),
-                                                    const Icon(
-                                                      Broken.arrow_down_2,
-                                                      size: 20.0,
-                                                    ),
-                                                  ],
+                                                      ],
+                                                    );
+                                                  },
                                                 ),
                                                 title: Column(
                                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,7 +388,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                         final collapsedDate = isTitleExpanded.value ? null : uploadDateAgo;
                                                         return Text(
                                                           [
-                                                            videoInfo?.viewCount.formatDecimalShort(isTitleExpanded.value),
+                                                            if (videoViewCount != null)
+                                                              "${videoViewCount.formatDecimalShort(isTitleExpanded.value)} ${videoViewCount == 0 ? lang.VIEW : lang.VIEWS}",
                                                             if (expandedDate != null) expandedDate,
                                                             if (collapsedDate != null) collapsedDate,
                                                           ].join(' • '),

@@ -75,11 +75,11 @@ class BackupAndRestore extends StatelessWidget {
                 int totalSize = 0;
                 forWhat.loop((e, _) {
                   if (FileSystemEntity.typeSync(e) == FileSystemEntityType.file) {
-                    totalSize += File(e).sizeInBytesSync();
+                    totalSize += File(e).lengthSync();
                   } else if (FileSystemEntity.typeSync(e) == FileSystemEntityType.directory) {
                     int size = 0;
                     Directory(e).listSync().loop((e, index) {
-                      size += (e is File ? File(e.path).sizeInBytesSync() : 0);
+                      size += (e is File ? File(e.path).lengthSync() : 0);
                     });
                     totalSize += size;
                   }

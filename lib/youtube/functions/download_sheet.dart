@@ -471,7 +471,7 @@ Future<void> showDownloadVideoBottomSheet({
                                   });
                               if (file.existsSync()) {
                                 updateVal(true);
-                                return "${lang.FILE_ALREADY_EXISTS}, ${lang.DOWNLOADING_WILL_OVERRIDE_IT} (${file.sizeInBytesSync().fileSizeFormatted})";
+                                return "${lang.FILE_ALREADY_EXISTS}, ${lang.DOWNLOADING_WILL_OVERRIDE_IT} (${file.lengthSync().fileSizeFormatted})";
                               } else {
                                 updateVal(false);
                               }

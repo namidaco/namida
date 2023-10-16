@@ -769,10 +769,10 @@ class VideoController {
 
       _runningRequestsMap[link] = true;
 
-      http.Response? requestRes;
+      (Uint8List, int)? requestRes;
 
       try {
-        requestRes = await http.get(Uri.parse(link));
+        requestRes = await _httpGetIsolate.thready(link);
       } catch (e) {
         printy('getYoutubeThumbnailAsBytes: Error getting thumbnail at $link, trying again with lower quality.\n$e', isError: true);
       }
@@ -780,8 +780,8 @@ class VideoController {
       // -- validation --
       final req = requestRes;
       if (req != null) {
-        final data = req.bodyBytes;
-        if (data.isNotEmpty && req.statusCode != 404) {
+        final data = req.$1;
+        if (data.isNotEmpty && req.$2 != 404) {
           thumbnailCompleter.complete(data);
           _runningRequestsMap.remove(link);
           break;
@@ -798,6 +798,11 @@ class VideoController {
     }
 
     return thumbnailCompleter.future;
+  }
+
+  static Future<(Uint8List, int)> _httpGetIsolate(String link) async {
+    final requestRes = await http.get(Uri.parse(link));
+    return (requestRes.bodyBytes, requestRes.statusCode);
   }
 
   Future<void> _trimExcessImageCache() async {
@@ -1120,6 +1125,7 @@ class _NamidaVideoPlayer {
     _isBuffering.value = _videoController?.value.isBuffering ?? false;
 
     if (_isBuffering.value) {
+      _bufferingCompleter?.completeIfWasnt();
       _bufferingCompleter = null;
       _bufferingCompleter = Completer<bool>();
       if (!VideoController.inst.isCurrentlyInBackground && Player.inst.isPlaying && Player.inst.shouldCareAboutAVSync) {
@@ -1131,7 +1137,7 @@ class _NamidaVideoPlayer {
         _didPauseInternally = false;
         await Player.inst.playRaw();
       }
-      if (_bufferingCompleter?.isCompleted == false) _bufferingCompleter?.complete(false);
+      _bufferingCompleter?.completeIfWasnt(false);
     }
   }
 
@@ -1141,6 +1147,7 @@ class _NamidaVideoPlayer {
       _aspectRatio.value = null;
       _isBuffering.value = false;
       _buffered.value = null;
+      _bufferingCompleter?.completeIfWasnt();
       _isCurrentVideoFromCache.value = false;
       await _videoController?.dispose();
 

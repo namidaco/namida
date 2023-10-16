@@ -482,7 +482,7 @@ class YoutubeController {
       NotificationService.inst.doneDownloadingYoutubeNotification(
         notificationID: nameIdentifier,
         videoTitle: downloadedFile.path.getFilenameWOExt,
-        subtitle: 'Downloaded ${downloadedFile.sizeInBytesSync().fileSizeFormatted}',
+        subtitle: 'Downloaded ${downloadedFile.lengthSync().fileSizeFormatted}',
         imagePath: VideoController.inst.getYoutubeThumbnailFromCacheSync(id: videoId)?.path,
         failed: false,
       );
@@ -752,7 +752,7 @@ class YoutubeController {
     int downloadStartRange = 0;
 
     final file = await File(destinationFilePath).create(); // retrieving the temp file (or creating a new one).
-    final initialFileSizeOnDisk = await file.sizeInBytes(); // fetching current size to be used as a range bytes for download request
+    final initialFileSizeOnDisk = await file.length(); // fetching current size to be used as a range bytes for download request
     onInitialFileSize(initialFileSizeOnDisk);
     // only download if the download is incomplete, useful sometimes when file 'moving' fails.
     if (initialFileSizeOnDisk < targetSize) {
@@ -824,7 +824,7 @@ class YoutubeController {
       int downloadStartRange = 0;
 
       final file = await File(getVPath(true)).create(); // retrieving the temp file (or creating a new one).
-      final initialFileSizeOnDisk = await file.sizeInBytes(); // fetching current size to be used as a range bytes for download request
+      final initialFileSizeOnDisk = await file.length(); // fetching current size to be used as a range bytes for download request
       onInitialFileSize(initialFileSizeOnDisk);
       // only download if the download is incomplete, useful sometimes when file 'moving' fails.
       if (initialFileSizeOnDisk < erabaretaStreamSizeInBytes) {

@@ -5,7 +5,6 @@ import 'package:dio/dio.dart';
 import 'package:ffmpeg_kit_flutter_min/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_min/ffmpeg_kit_config.dart';
 import 'package:ffmpeg_kit_flutter_min/ffprobe_kit.dart';
-import 'package:ffmpeg_kit_flutter_min/session_state.dart';
 import 'package:get/get_rx/get_rx.dart';
 
 import 'package:namida/class/media_info.dart';
@@ -29,9 +28,9 @@ class NamidaFFMPEG {
   };
 
   Future<MediaInfo?> extractMetadata(String path) async {
-    final session = await FFprobeKit.execute('-loglevel error -v quiet -show_entries stream_tags:format_tags -of json "$path"');
-    final output = await session.getOutput();
-    return output == null ? null : MediaInfo.fromMap(jsonDecode(output));
+    final output = await _ffprobeExecute('-loglevel error -v quiet -show_entries stream_tags:format_tags -of json "$path"');
+    if (output == null || output == '') return null;
+    return MediaInfo.fromMap(jsonDecode(output));
   }
 
   Future<bool> editMetadata({
@@ -91,9 +90,13 @@ class NamidaFFMPEG {
     }
 
     final codec = compress ? '-filter:v scale=-2:250 -an' : '-c copy';
-    final output = await FFmpegKit.execute('-i "$audioPath" -map 0:v -map -0:V $codec -y "$thumbnailSavePath"');
-    final didSuccess = await output.getReturnCode().then((value) => value?.isValueSuccess()) ?? false;
-    return didSuccess ? File(thumbnailSavePath) : null;
+    final didSuccess = await _ffmpegExecute('-i "$audioPath" -map 0:v -map -0:V $codec -y "$thumbnailSavePath"');
+    if (didSuccess) {
+      return File(thumbnailSavePath);
+    } else {
+      final didSuccess = await _ffmpegExecute('-i "$audioPath" -an -c:v copy -y "$thumbnailSavePath"');
+      return didSuccess ? File(thumbnailSavePath) : null;
+    }
   }
 
   Future<bool> editAudioThumbnail({
@@ -105,9 +108,8 @@ class NamidaFFMPEG {
     final originalStats = keepOriginalFileStats ? await audioFile.stat() : null;
 
     final cacheFile = File("${AppDirs.APP_CACHE}/${audioPath.hashCode}.${audioPath.getExtension}");
-    final output = await FFmpegKit.execute('-i "$audioPath" -i "$thumbnailPath" -map 0:a -map 1 -codec copy -disposition:v attached_pic -y "${cacheFile.path}"');
-    final didSuccess = await output.getReturnCode().then((value) => value?.isValueSuccess()) ?? false;
-    final canSafelyMoveBack = didSuccess && await cacheFile.sizeInBytes() > 0;
+    final didSuccess = await _ffmpegExecute('-i "$audioPath" -i "$thumbnailPath" -map 0:a -map 1 -codec copy -disposition:v attached_pic -y "${cacheFile.path}"');
+    final canSafelyMoveBack = didSuccess && await cacheFile.length() > 0;
     if (canSafelyMoveBack) {
       // only move output file back in case of success.
       await cacheFile.copy(audioPath);
@@ -145,8 +147,7 @@ class NamidaFFMPEG {
     final imageFile = File(path);
     final originalStats = keepOriginalFileStats ? await imageFile.stat() : null;
     final newFilePath = "$saveDir/${path.getFilenameWOExt}.jpg";
-    final output = await FFmpegKit.execute('-i "$path" -qscale:v $toQSC -y "$newFilePath"');
-    final didSuccess = await output.getReturnCode().then((value) => value?.isValueSuccess()) ?? false;
+    final didSuccess = await _ffmpegExecute('-i "$path" -qscale:v $toQSC -y "$newFilePath"');
 
     if (originalStats != null) {
       await setFileStats(File(newFilePath), originalStats);
@@ -178,7 +179,7 @@ class NamidaFFMPEG {
     int currentProgress = 0;
     int currentFailed = 0;
     for (final f in dirFiles) {
-      final didUpdate = await NamidaFFMPEG.inst.compressImage(
+      final didUpdate = await compressImage(
         path: f.path,
         saveDir: dir.path,
         percentage: compressionPerc,
@@ -228,7 +229,7 @@ class NamidaFFMPEG {
                 albumIdendifiers: {filee.path: tr.albumIdentifier},
               )
               .then((value) => value.first);
-          final didUpdate = file == null ? false : await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: filee.path, thumbnailPath: file.path);
+          final didUpdate = file == null ? false : await editAudioThumbnail(audioPath: filee.path, thumbnailPath: file.path);
           if (!didUpdate) currentFailed++;
         }
 
@@ -276,8 +277,7 @@ class NamidaFFMPEG {
   }
 
   Future<Duration?> getMediaDuration(String path) async {
-    final session = await FFprobeKit.execute('-loglevel error -v quiet -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$path"');
-    final output = await session.getOutput();
+    final output = await _ffprobeExecute('-show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$path"');
     final duration = output == null ? null : double.tryParse(output);
     return duration == null ? null : Duration(microseconds: (duration * 1000 * 1000).floor());
   }
@@ -295,19 +295,20 @@ class NamidaFFMPEG {
     bool override = true,
   }) async {
     final ovrr = override ? '-y' : '';
-    final res = await FFmpegKit.execute(' -i "$videoPath" -i "$audioPath" -c copy $ovrr "$outputPath"');
-    return res.getState().then((value) => value == SessionState.completed);
+    return await _ffmpegExecute('-i "$videoPath" -i "$audioPath" -c copy $ovrr "$outputPath"');
   }
 
+  /// Automatically appends `-hide_banner -loglevel quiet` for fast execution
   Future<bool> _ffmpegExecute(String command) async {
-    final res = await FFmpegKit.execute(command);
-    final state = await res.getState();
-    return state == SessionState.completed;
+    final res = await FFmpegKit.execute("-hide_banner -loglevel quiet $command");
+    final rc = await res.getReturnCode();
+    return rc?.isValueSuccess() ?? false;
   }
 
-  Future<bool> _ffprobeExecute(String command) async {
-    final res = await FFprobeKit.execute(command);
-    return await res.getState().then((value) => value == SessionState.completed);
+  /// Automatically appends `-loglevel quiet -v quiet ` for fast execution
+  Future<String?> _ffprobeExecute(String command) async {
+    final res = await FFprobeKit.execute("-loglevel quiet -v quiet $command");
+    return await res.getOutput();
   }
 
   /// First field is track/disc number, can be 0 or more.

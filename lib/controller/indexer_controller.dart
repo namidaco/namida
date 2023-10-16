@@ -645,12 +645,12 @@ class Indexer {
       if (oldDeletedFile != null) {
         if (oldDeletedFile.existsSync()) {
           initialCount--;
-          initialSize -= oldDeletedFile.sizeInBytesSync();
+          initialSize -= oldDeletedFile.lengthSync();
         }
       }
       if (newImagePath != null) {
         initialCount++;
-        initialSize += File(newImagePath).sizeInBytesSync();
+        initialSize += File(newImagePath).lengthSync();
       }
     }
 
@@ -1214,12 +1214,12 @@ class Indexer {
       if (oldDeletedFile != null) {
         if (oldDeletedFile.existsSync()) {
           artworksInStorage.value--;
-          artworksSizeInStorage.value -= oldDeletedFile.sizeInBytesSync();
+          artworksSizeInStorage.value -= oldDeletedFile.lengthSync();
         }
       }
       if (newImagePath != null) {
         artworksInStorage.value++;
-        artworksSizeInStorage.value += File(newImagePath).sizeInBytesSync();
+        artworksSizeInStorage.value += File(newImagePath).lengthSync();
       }
 
       return;
@@ -1247,12 +1247,12 @@ class Indexer {
       if (oldDeletedFile != null) {
         if (oldDeletedFile.existsSync()) {
           initialCount--;
-          initialSize -= oldDeletedFile.sizeInBytesSync();
+          initialSize -= oldDeletedFile.lengthSync();
         }
       }
       if (newImagePath != null) {
         initialCount++;
-        initialSize += File(newImagePath).sizeInBytesSync();
+        initialSize += File(newImagePath).lengthSync();
       }
     } else {
       final dir = Directory(dirPath);
@@ -1260,7 +1260,7 @@ class Indexer {
       for (final f in dir.listSync()) {
         if (f is File) {
           initialCount++;
-          initialSize += f.sizeInBytesSync();
+          initialSize += f.lengthSync();
         }
       }
     }
@@ -1281,12 +1281,12 @@ class Indexer {
       if (oldDeletedFile != null) {
         if (await oldDeletedFile.exists()) {
           videosInStorage.value--;
-          videosInStorage.value -= await oldDeletedFile.sizeInBytes();
+          videosInStorage.value -= await oldDeletedFile.length();
         }
       }
       if (newVideoPath != null) {
         videosInStorage.value++;
-        videosInStorage.value += await File(newVideoPath).sizeInBytes();
+        videosInStorage.value += await File(newVideoPath).length();
       }
 
       return;

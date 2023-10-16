@@ -624,6 +624,8 @@ class Language extends LanguageKeys {
 			VIDEO_QUALITY_SUBTITLE = getKey("VIDEO_QUALITY_SUBTITLE");
 			VIDEO_QUALITY = getKey("VIDEO_QUALITY");
 			VIDEO = getKey("VIDEO");
+			VIEW = getKey("VIEW");
+			VIEWS = getKey("VIEWS");
 			VIEW_ALL = getKey("VIEW_ALL");
 			VOLUME = getKey("VOLUME");
 			WARNING = getKey("WARNING");
@@ -651,6 +653,12 @@ class Language extends LanguageKeys {
     }
   }
 }
+
+
+
+
+
+
 
 
 

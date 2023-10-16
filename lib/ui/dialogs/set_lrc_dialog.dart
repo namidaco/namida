@@ -168,6 +168,8 @@ void showLRCSetDialog(Track track, Color colorScheme) {
       );
     }
 
+    final offsetController = TextEditingController();
+
     NamidaNavigator.inst.navigateDialog(
       colorScheme: colorScheme,
       dialogBuilder: (theme) => CustomBlurryDialog(
@@ -179,6 +181,9 @@ void showLRCSetDialog(Track track, Color colorScheme) {
           NamidaButton(
             text: lang.SAVE.toUpperCase(),
             onPressed: () async {
+              final ct = offsetController.text;
+              final tfoffset = ct == '' ? null : int.tryParse(offsetController.text);
+              if (tfoffset != null) newOffset.value = tfoffset;
               if (lrc != null) {
                 final newLRC = Lrc(
                   type: lrc.type,
@@ -232,10 +237,12 @@ void showLRCSetDialog(Track track, Color colorScheme) {
                       ),
                       Obx(
                         () {
-                          final ms = newOffset.value.remainder(1000).toString();
+                          final ms = newOffset.value.remainder(1000).abs().toString();
                           final msText = ms.length > 2 ? ms.substring(0, 2) : ms;
+                          final off = newOffset.value;
+                          final prefix = off.isNegative ? '-' : '';
                           return Text(
-                            "${newOffset.value.milliSecondsLabel}.$msText",
+                            "$prefix${off.abs().milliSecondsLabel}.$msText",
                             style: Get.textTheme.displaySmall,
                           );
                         },
@@ -258,6 +265,7 @@ void showLRCSetDialog(Track track, Color colorScheme) {
                 ],
               ),
               TextField(
+                controller: offsetController,
                 keyboardType: TextInputType.number,
                 onSubmitted: (value) {
                   final parsed = int.tryParse(value);
@@ -387,7 +395,7 @@ void showLRCSetDialog(Track track, Color colorScheme) {
                                           showEditCachedSyncedTimeOffsetDialog(l);
                                         },
                                       ),
-                                    const SizedBox(width: 4.0),
+                                    const SizedBox(width: 8.0),
                                     NamidaIconButton(
                                       horizontalPadding: 0.0,
                                       icon: Broken.trash,

@@ -104,7 +104,7 @@ class YTCommentCard extends StatelessWidget {
                           const Icon(
                             Broken.heart_tick,
                             size: 16.0,
-                            color: Colors.red,
+                            color: Color.fromARGB(200, 250, 90, 80),
                           ),
                         ],
                       ],
