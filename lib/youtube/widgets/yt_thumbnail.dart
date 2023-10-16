@@ -50,7 +50,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.smallBoxIcon = Broken.play_cricle,
     this.displayFallbackIcon = true,
     this.localImagePath,
-    this.extractColor = true,
+    this.extractColor = false,
     this.blur = 1.5,
     this.compressed = true,
     required this.isImportantInCache,
@@ -104,25 +104,15 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
     if (imagePath == null && canFetchImage) {
       _getThumbnail();
     }
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      margin: widget.margin,
-      height: widget.height,
-      width: widget.width,
-      decoration: BoxDecoration(
-        color: context.theme.cardColor.withAlpha(60),
-        shape: widget.isCircle ? BoxShape.circle : BoxShape.rectangle,
-        borderRadius: widget.isCircle
-            ? null
-            : BorderRadius.circular(
-                widget.borderRadius.multipliedRadius,
-              ),
-      ),
+    return Padding(
+      padding: widget.margin ?? EdgeInsets.zero,
       child: ArtworkWidget(
+        isCircle: widget.isCircle,
+        bgcolor: context.theme.cardColor.withAlpha(60),
         compressed: widget.compressed,
         key: Key("$smallBoxDynamicColor${widget.videoId}${widget.channelUrl}$imagePath${widget.smallBoxText}"),
         blur: widget.isCircle ? 0.0 : widget.blur,
-        borderRadius: widget.borderRadius,
+        borderRadius: widget.isCircle ? 0.0 : widget.borderRadius,
         fadeMilliSeconds: 600,
         path: imagePath,
         height: widget.height,

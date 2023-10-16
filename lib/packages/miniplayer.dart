@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:animated_background/animated_background.dart';
 import 'package:get/get.dart';
+import 'package:known_extents_list_view_builder/known_extents_reorderable_list_view_builder.dart';
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -1214,8 +1215,8 @@ class NamidaMiniPlayer extends StatelessWidget {
                               alignment: Alignment.bottomRight,
                               children: [
                                 Obx(
-                                  () => NamidaListView(
-                                    itemExtents: Player.inst.currentQueue.toTrackItemExtents(),
+                                  () => KnownExtentsReorderableListView.builder(
+                                    itemExtents: List.filled(Player.inst.currentQueue.length, Dimensions.inst.trackTileItemExtent),
                                     scrollController: MiniPlayerController.inst.queueScrollController,
                                     padding: EdgeInsets.only(bottom: 56.0 + SelectedTracksController.inst.bottomPadding.value),
                                     onReorderStart: (index) => MiniPlayerController.inst.invokeStartReordering(),
@@ -1254,6 +1255,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                         ),
                                       );
                                     },
+                                    proxyDecorator: (child, index, animation) => child,
                                   ),
                                 ),
                                 Container(

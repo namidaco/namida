@@ -16,7 +16,15 @@ import 'package:namida/youtube/widgets/yt_card.dart';
 
 class YoutubePlaylistCard extends StatelessWidget {
   final YoutubePlaylist? playlist;
-  const YoutubePlaylistCard({super.key, required this.playlist});
+  final double? thumbnailWidth;
+  final double? thumbnailHeight;
+
+  const YoutubePlaylistCard({
+    super.key,
+    required this.playlist,
+    this.thumbnailWidth,
+    this.thumbnailHeight,
+  });
 
   /// Returns all available streams as youtube id, no matter how many times [_fetchVideos] was called.
   Future<Iterable<YoutubeID>> _fetchVideos([int? max = 100]) async {
@@ -39,6 +47,8 @@ class YoutubePlaylistCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final count = playlist?.streamCount;
     return YoutubeCard(
+      thumbnailHeight: thumbnailHeight,
+      thumbnailWidth: thumbnailWidth,
       isImageImportantInCache: false,
       extractColor: true,
       borderRadius: 12.0,

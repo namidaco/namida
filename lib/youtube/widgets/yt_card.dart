@@ -30,6 +30,8 @@ class YoutubeCard extends StatelessWidget {
   final bool isCircle;
   final List<Widget> bottomRightWidgets;
   final bool isImageImportantInCache;
+  final double? thumbnailWidth;
+  final double? thumbnailHeight;
 
   const YoutubeCard({
     super.key,
@@ -55,13 +57,15 @@ class YoutubeCard extends StatelessWidget {
     this.isCircle = false,
     this.bottomRightWidgets = const [],
     required this.isImageImportantInCache,
+    this.thumbnailWidth,
+    this.thumbnailHeight,
   });
 
   @override
   Widget build(BuildContext context) {
     const verticalPadding = 8.0;
-    final thumbnailWidth = thumbnailWidthPercentage * context.width * 0.36;
-    final thumbnailHeight = isCircle ? thumbnailWidth : thumbnailWidth * 9 / 16;
+    final thumbnailWidth = this.thumbnailWidth ?? thumbnailWidthPercentage * context.width * 0.36;
+    final thumbnailHeight = this.thumbnailHeight ?? (isCircle ? thumbnailWidth : thumbnailWidth * 9 / 16);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: verticalPadding * 0.5, horizontal: 8.0),
       child: Stack(

@@ -10,7 +10,8 @@ import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class YoutubeChannelCard extends StatefulWidget {
   final YoutubeChannel? channel;
-  const YoutubeChannelCard({super.key, required this.channel});
+  final double? thumbnailSize;
+  const YoutubeChannelCard({super.key, required this.channel, this.thumbnailSize});
 
   @override
   State<YoutubeChannelCard> createState() => _YoutubeChannelCardState();
@@ -22,7 +23,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
   Widget build(BuildContext context) {
     final channel = widget.channel;
     final subscribers = channel?.subscriberCount?.formatDecimalShort();
-    final thumbnailSize = context.width * 0.2;
+    final thumbnailSize = widget.thumbnailSize ?? context.width * 0.2;
     const verticalPadding = 8.0;
     final shimmerEnabled = channel == null;
     return NamidaInkWell(

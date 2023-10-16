@@ -58,6 +58,9 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final thumbnailWidth = context.width * 0.36;
+    final thumbnailHeight = thumbnailWidth * 9 / 16;
+    final thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
     return BackgroundWrapper(
       child: _loading == null
           ? const SizedBox()
@@ -70,6 +73,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                   onReachingEnd: () async => await _fetchSearchNextPage(),
                   listview: (controller) {
                     return ListView.builder(
+                      itemExtent: thumbnailItemExtent,
                       padding: const EdgeInsets.only(bottom: kBottomPadding),
                       itemCount: _searchResult.length,
                       controller: controller,
@@ -78,15 +82,24 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                         switch (item.runtimeType) {
                           case StreamInfoItem:
                             return YoutubeVideoCard(
+                              thumbnailHeight: thumbnailHeight,
+                              thumbnailWidth: thumbnailWidth,
                               isImageImportantInCache: false,
                               video: item,
                               playlistID: null,
                               onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item as StreamInfoItem),
                             );
                           case YoutubePlaylist:
-                            return YoutubePlaylistCard(playlist: item);
+                            return YoutubePlaylistCard(
+                              playlist: item,
+                              thumbnailHeight: thumbnailHeight,
+                              thumbnailWidth: thumbnailWidth,
+                            );
                           case YoutubeChannel:
-                            return YoutubeChannelCard(channel: item);
+                            return YoutubeChannelCard(
+                              channel: item,
+                              thumbnailSize: context.width * 0.18,
+                            );
                         }
                         return const SizedBox();
                       },

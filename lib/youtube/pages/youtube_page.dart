@@ -28,6 +28,9 @@ class _YoutubePageState extends State<YoutubePage> with AutomaticKeepAliveClient
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final thumbnailWidth = context.width * 0.36;
+    final thumbnailHeight = thumbnailWidth * 9 / 16;
+    final thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
     return BackgroundWrapper(
       child: Obx(
         () {
@@ -54,10 +57,12 @@ class _YoutubePageState extends State<YoutubePage> with AutomaticKeepAliveClient
                 isImageImportantInCache: false,
                 video: feedItem is StreamInfoItem ? feedItem : null,
                 playlistID: null,
+                thumbnailWidth: thumbnailWidth,
+                thumbnailHeight: thumbnailHeight,
               );
             },
             itemCount: l.length,
-            itemExtents: null,
+            itemExtents: List.filled(l.length, thumbnailItemExtent),
           );
         },
       ),

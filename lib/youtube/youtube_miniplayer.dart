@@ -47,6 +47,10 @@ class YoutubeMiniPlayer extends StatelessWidget {
     const space5sb = 8.0;
     const miniplayerHeight = 12.0 + space2ForThumbnail * 9 / 16;
 
+    final relatedThumbnailWidth = context.width * 0.36;
+    final relatedThumbnailHeight = relatedThumbnailWidth * 9 / 16;
+    final relatedThumbnailItemExtent = relatedThumbnailHeight + 8.0 * 2;
+
     return SafeArea(
       child: DefaultTextStyle(
         style: context.textTheme.displayMedium!,
@@ -601,12 +605,15 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                             // --END-- channel
 
                                             Obx(
-                                              () => SliverList.builder(
+                                              () => SliverFixedExtentList.builder(
+                                                itemExtent: relatedThumbnailItemExtent,
                                                 itemCount: YoutubeController.inst.currentRelatedVideos.length,
                                                 itemBuilder: (context, index) {
                                                   final item = YoutubeController.inst.currentRelatedVideos[index];
                                                   if (item is StreamInfoItem || item == null) {
                                                     return YoutubeVideoCard(
+                                                      thumbnailHeight: relatedThumbnailHeight,
+                                                      thumbnailWidth: relatedThumbnailWidth,
                                                       isImageImportantInCache: false,
                                                       video: item as StreamInfoItem?,
                                                       playlistID: null,
