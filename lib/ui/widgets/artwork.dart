@@ -73,19 +73,30 @@ class ArtworkWidget extends StatefulWidget {
 }
 
 class _ArtworkWidgetState extends State<ArtworkWidget> {
+  late DisposableBuildContext<_ArtworkWidgetState> _disposableContext;
+  @override
+  void initState() {
+    super.initState();
+    _disposableContext = DisposableBuildContext<_ArtworkWidgetState>(this);
+  }
+
+  @override
+  void dispose() {
+    _disposableContext.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final imagePath = widget.path;
     final realWidthAndHeight = widget.forceSquared ? context.width : null;
 
     int? finalCache;
-    if (widget.compressed) {
+    if (widget.compressed || widget.useTrackTileCacheHeight) {
       final pixelRatio = context.mediaQuery.devicePixelRatio;
       final cacheMultiplier = (pixelRatio * settings.artworkCacheHeightMultiplier.value).round();
       finalCache = widget.useTrackTileCacheHeight ? 60 * cacheMultiplier : widget.cacheHeight * cacheMultiplier;
     }
-
-    final c = DisposableBuildContext<_ArtworkWidgetState>(this);
 
     final borderR = widget.isCircle || settings.borderRadiusMultiplier.value == 0 ? null : BorderRadius.circular(widget.borderRadius.multipliedRadius);
     final shape = widget.isCircle ? BoxShape.circle : BoxShape.rectangle;
@@ -149,7 +160,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
                     children: [
                       Image(
                         image: ScrollAwareImageProvider(
-                          context: c,
+                          context: _disposableContext,
                           imageProvider: ResizeImage.resizeIfNeeded(
                             null,
                             finalCache,

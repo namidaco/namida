@@ -8,6 +8,7 @@ import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_utils/src/extensions/num_extensions.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 
 import 'package:namida/class/audio_cache_detail.dart';
@@ -31,6 +32,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
@@ -86,7 +88,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   /// Milliseconds should be awaited before playing video.
   int get _videoPositionSeekDelayMS => 500;
 
-  Completer<void>? _audioShouldBeLoading;
+  // Completer<void>? _audioShouldBeLoading;
 
   Future<void> setAudioOnlyPlayback(bool audioOnly) async {
     _isAudioOnlyPlayback = audioOnly;
@@ -100,7 +102,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   Future<void> _waitForAllBuffers() async {
     await waitTillAudioLoaded;
-    await _audioShouldBeLoading?.future;
+    // await _audioShouldBeLoading?.future;
     await VideoController.vcontroller.waitTillBufferingComplete;
     await bufferingCompleter?.future;
   }
@@ -141,7 +143,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   Future<void> toggleVideoPlay() async {
     await _waitForAllBuffers();
-    await _audioShouldBeLoading?.future;
+    // await _audioShouldBeLoading?.future;
     await VideoController.vcontroller.seek(currentPositionMS.milliseconds);
     if (isPlaying) {
       await VideoController.vcontroller.play();
@@ -157,7 +159,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   Future<void> _playAudioThenVideo() async {
     onPlayRaw();
-    await _audioShouldBeLoading?.future;
+    // await _audioShouldBeLoading?.future;
     await Future.delayed(Duration(milliseconds: _videoPositionSeekDelayMS.abs()));
     if (isPlaying) {
       await VideoController.vcontroller.play();
@@ -301,7 +303,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   FutureOr<void> beforePlaying() async {
     super.beforePlaying(); // saving last position.
-    _audioShouldBeLoading ??= Completer<void>();
+    // _audioShouldBeLoading ??= Completer<void>();
     NamidaNavigator.inst.popAllMenus();
     ScrollSearchController.inst.unfocusKeyboard();
 
@@ -1168,7 +1170,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   void onBufferOrLoadStart() {
-    _audioShouldBeLoading ??= Completer<void>();
+    // _audioShouldBeLoading ??= Completer<void>();
     if (isPlaying) {
       VideoController.vcontroller.pause();
     }
@@ -1177,7 +1179,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   void onBufferOrLoadEnd() async {
     await waitTillAudioLoaded;
-    _audioShouldBeLoading?.completeIfWasnt();
+    // _audioShouldBeLoading?.completeIfWasnt();
     if (isPlaying) {
       VideoController.vcontroller.play();
     }

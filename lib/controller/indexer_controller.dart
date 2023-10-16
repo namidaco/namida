@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart' as p;
+import 'package:system_info2/system_info2.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/split_config.dart';
@@ -845,6 +846,8 @@ class Indexer {
 
     currentTrackPathBeingExtracted.value = '';
     final chunkExtractList = <String>[];
+    final freeMemory = SysInfo.getFreePhysicalMemory();
+    final chunkSize = (freeMemory ~/ 4).clamp(8, 128);
     if (audioFiles.isNotEmpty) {
       // -- Extracting All Metadata
       for (final trackPath in audioFiles) {
@@ -852,7 +855,7 @@ class Indexer {
         if (_cancelableIndexingCompleter[cancelTokenTime]?.isCompleted == true) break;
 
         printy(trackPath);
-        currentTrackPathBeingExtracted.value = trackPath;
+        // currentTrackPathBeingExtracted.value = trackPath;
 
         /// skip duplicated tracks according to filename
         if (prevDuplicated) {
@@ -862,7 +865,7 @@ class Indexer {
           }
         }
 
-        if (chunkExtractList.isNotEmpty && chunkExtractList.length % 24 == 0) {
+        if (chunkExtractList.isNotEmpty && chunkExtractList.length % chunkSize == 0) {
           await extractOneTrack(
             tracksPath: chunkExtractList,
             minDur: minDur,
@@ -876,7 +879,7 @@ class Indexer {
 
         chunkExtractList.add(trackPath);
       }
-      // -- if there were any items left (length < 24)
+      // -- if there were any items left (length < chunkSize)
       await extractOneTrack(
         tracksPath: chunkExtractList,
         minDur: minDur,
