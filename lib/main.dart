@@ -232,7 +232,7 @@ Future<bool> requestManageStoragePermission() async {
   }
 
   if (!await Permission.manageExternalStorage.isGranted || await Permission.manageExternalStorage.isDenied) {
-    snackyy(title: lang.STORAGE_PERMISSION_DENIED, message: lang.STORAGE_PERMISSION_DENIED_SUBTITLE);
+    snackyy(title: lang.STORAGE_PERMISSION_DENIED, message: lang.STORAGE_PERMISSION_DENIED_SUBTITLE, isError: true);
     return false;
   }
   await createDir();

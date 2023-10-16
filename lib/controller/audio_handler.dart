@@ -466,22 +466,36 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     VideoController.inst.updateCurrentVideo(tr);
     WaveformController.inst.generateWaveform(tr);
 
-    /// The whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture] don't get detected.
-    try {
+    Future<void> setPls() async {
       final dur = await setAudioSource(tr.toAudioSource(currentIndex, currentQueue.length));
       if (tr.duration == 0) {
         tr.duration = dur?.inSeconds ?? 0;
         refreshNotification(currentItem);
       }
+    }
+
+    try {
+      await setPls();
     } catch (e) {
-      SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+      SchedulerBinding.instance.addPostFrameCallback((timeStamp) async {
         if (item.track == currentTrack.track) {
-          NamidaDialogs.inst.showTrackDialog(tr, isFromPlayerQueue: true, errorPlayingTrack: true, source: QueueSource.playerQueue);
+          // -- playing music from root folders still require `all_file_access`
+          // -- this is a fix for not playing some external files reported by some users.
+          final hadPermissionBefore = await Permission.manageExternalStorage.isGranted;
+          if (hadPermissionBefore) {
+            NamidaDialogs.inst.showTrackDialog(tr, isFromPlayerQueue: true, errorPlayingTrack: true, source: QueueSource.playerQueue);
+          } else {
+            final hasPermission = await requestManageStoragePermission();
+            if (hasPermission) await setPls();
+          }
         }
       });
       printy(e, isError: true);
       return;
     }
+
+    // -- The whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture]
+    // -- sometimes don't get detected.
     await Future.wait([
       onPauseRaw(),
       tryRestoringLastPosition(tr),
