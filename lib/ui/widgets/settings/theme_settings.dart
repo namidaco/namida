@@ -148,6 +148,18 @@ class ThemeSetting extends StatelessWidget {
                   },
                 ),
               ),
+            Obx(
+              () => CustomSwitchListTile(
+                icon: Broken.slider_horizontal,
+                title: lang.FORCE_MINIPLAYER_FOLLOW_TRACK_COLORS,
+                subtitle: '${lang.IGNORES}: ${lang.AUTO_COLORING}, ${lang.PICK_COLORS_FROM_DEVICE_WALLPAPER} & ${lang.DEFAULT_COLOR}',
+                value: settings.forceMiniplayerTrackColor.value,
+                onChanged: (isTrue) async {
+                  settings.save(forceMiniplayerTrackColor: !isTrue);
+                  await _refreshColorCurrentTrack();
+                },
+              ),
+            ),
             ...[false, true].map(
               (isDark) => Obx(
                 () {

@@ -202,6 +202,7 @@ class LanguageKeys {
   late String FOLDER;
   late String FOLDERS;
   late String FONT_SCALE;
+  late String FORCE_MINIPLAYER_FOLLOW_TRACK_COLORS;
   late String FORCE_SQUARED_ALBUM_THUMBNAIL;
   late String FORCE_SQUARED_THUMBNAIL_NOTE;
   late String FORCE_SQUARED_TRACK_THUMBNAIL;
@@ -230,6 +231,7 @@ class LanguageKeys {
   late String HISTORY_LISTENS_REPLACE_WARNING;
   late String HOME;
   late String HOUR_FORMAT_12;
+  late String IGNORES;
   late String IMPORT_ALL;
   late String IMPORT_LAST_FM_HISTORY_GUIDE;
   late String IMPORT_LAST_FM_HISTORY;

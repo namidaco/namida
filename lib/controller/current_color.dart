@@ -27,11 +27,14 @@ class CurrentColor {
   static final CurrentColor _instance = CurrentColor._internal();
   CurrentColor._internal();
 
+  Color get miniplayerColor => settings.forceMiniplayerTrackColor.value ? _namidaColorMiniplayer.value ?? color : color;
   Color get color => _namidaColor.value.color;
   List<Color> get palette => _namidaColor.value.palette;
   Color get currentColorScheme => _colorSchemeOfSubPages.value ?? color;
   int get colorAlpha => Get.isDarkMode ? 200 : 120;
   bool get shouldUpdateFromDeviceWallpaper => settings.pickColorsFromDeviceWallpaper.value;
+
+  final _namidaColorMiniplayer = Rxn<Color>();
 
   final Rx<NamidaColor> _namidaColor = NamidaColor(
     used: playerStaticColor,
@@ -136,16 +139,24 @@ class CurrentColor {
   }
 
   Future<void> updatePlayerColorFromTrack(Selectable? track, int? index, {bool updateIndexOnly = false}) async {
-    if (!updateIndexOnly && track != null && settings.autoColor.value) {
+    if (!updateIndexOnly && track != null && (settings.autoColor.value || settings.forceMiniplayerTrackColor.value)) {
       NamidaColor? namidaColor;
-      if (shouldUpdateFromDeviceWallpaper) {
-        namidaColor = await getPlayerColorFromDeviceWallpaper();
-      } else {
-        namidaColor = await getTrackColors(track.track);
-      }
-      if (namidaColor != null) {
-        _namidaColor.value = namidaColor;
-        _updateCurrentPaletteHalfs(namidaColor);
+
+      final trColors = await getTrackColors(track.track);
+      _namidaColorMiniplayer.value = trColors.color;
+
+      if (settings.autoColor.value) {
+        if (shouldUpdateFromDeviceWallpaper) {
+          namidaColor = await getPlayerColorFromDeviceWallpaper();
+        } else {
+          namidaColor = trColors;
+        }
+        if (namidaColor != null) {
+          _namidaColor.value = namidaColor;
+          _updateCurrentPaletteHalfs(
+            settings.forceMiniplayerTrackColor.value ? trColors : namidaColor,
+          );
+        }
       }
     }
     if (track != null) {

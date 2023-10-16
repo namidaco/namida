@@ -105,6 +105,7 @@ class SettingsController {
   final RxBool enablePartyModeColorSwap = true.obs;
   final RxBool enableMiniplayerParticles = true.obs;
   final RxBool enableMiniplayerParallaxEffect = true.obs;
+  final RxBool forceMiniplayerTrackColor = false.obs;
   final RxInt isTrackPlayedSecondsCount = 40.obs;
   final RxInt isTrackPlayedPercentageCount = 40.obs;
   final RxInt waveformTotalBars = 140.obs;
@@ -332,6 +333,7 @@ class SettingsController {
       enablePartyModeColorSwap.value = json['enablePartyModeColorSwap'] ?? enablePartyModeColorSwap.value;
       enableMiniplayerParticles.value = json['enableMiniplayerParticles'] ?? enableMiniplayerParticles.value;
       enableMiniplayerParallaxEffect.value = json['enableMiniplayerParallaxEffect'] ?? enableMiniplayerParallaxEffect.value;
+      forceMiniplayerTrackColor.value = json['forceMiniplayerTrackColor'] ?? forceMiniplayerTrackColor.value;
       isTrackPlayedSecondsCount.value = json['isTrackPlayedSecondsCount'] ?? isTrackPlayedSecondsCount.value;
       isTrackPlayedPercentageCount.value = json['isTrackPlayedPercentageCount'] ?? isTrackPlayedPercentageCount.value;
       waveformTotalBars.value = json['waveformTotalBars'] ?? waveformTotalBars.value;
@@ -518,6 +520,7 @@ class SettingsController {
       'enablePartyModeColorSwap': enablePartyModeColorSwap.value,
       'enableMiniplayerParticles': enableMiniplayerParticles.value,
       'enableMiniplayerParallaxEffect': enableMiniplayerParallaxEffect.value,
+      'forceMiniplayerTrackColor': forceMiniplayerTrackColor.value,
       'isTrackPlayedSecondsCount': isTrackPlayedSecondsCount.value,
       'isTrackPlayedPercentageCount': isTrackPlayedPercentageCount.value,
       'waveformTotalBars': waveformTotalBars.value,
@@ -670,6 +673,7 @@ class SettingsController {
     bool? enablePartyModeColorSwap,
     bool? enableMiniplayerParticles,
     bool? enableMiniplayerParallaxEffect,
+    bool? forceMiniplayerTrackColor,
     int? isTrackPlayedSecondsCount,
     int? isTrackPlayedPercentageCount,
     bool? displayFavouriteIconInListTile,
@@ -994,6 +998,9 @@ class SettingsController {
     }
     if (enableMiniplayerParallaxEffect != null) {
       this.enableMiniplayerParallaxEffect.value = enableMiniplayerParallaxEffect;
+    }
+    if (forceMiniplayerTrackColor != null) {
+      this.forceMiniplayerTrackColor.value = forceMiniplayerTrackColor;
     }
     if (isTrackPlayedSecondsCount != null) {
       this.isTrackPlayedSecondsCount.value = isTrackPlayedSecondsCount;

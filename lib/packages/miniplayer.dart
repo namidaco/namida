@@ -68,7 +68,7 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
     return Obx(
       () => AnimatedTheme(
         duration: const Duration(milliseconds: 300),
-        data: AppThemes.inst.getAppTheme(CurrentColor.inst.color, !context.isDarkMode),
+        data: AppThemes.inst.getAppTheme(CurrentColor.inst.miniplayerColor, !context.isDarkMode),
         child: Stack(
           children: [
             // -- MiniPlayer Wallpaper
@@ -262,14 +262,16 @@ class NamidaMiniPlayer extends StatelessWidget {
                                 Container(
                                   clipBehavior: Clip.antiAlias,
                                   decoration: BoxDecoration(
-                                    color: CurrentColor.inst.color,
+                                    color: CurrentColor.inst.miniplayerColor,
                                     borderRadius: borderRadius,
                                     gradient: LinearGradient(
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
                                       colors: [
-                                        Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(100), CurrentColor.inst.color).withOpacity(velpy(a: .38, b: .28, c: icp)),
-                                        Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.color).withOpacity(velpy(a: .1, b: .22, c: icp)),
+                                        Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(100), CurrentColor.inst.miniplayerColor)
+                                            .withOpacity(velpy(a: .38, b: .28, c: icp)),
+                                        Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.miniplayerColor)
+                                            .withOpacity(velpy(a: .1, b: .22, c: icp)),
                                       ],
                                     ),
                                   ),
@@ -284,9 +286,9 @@ class NamidaMiniPlayer extends StatelessWidget {
                                       width: w > 0 ? ((Get.width * w) * 0.9) : 0,
                                       margin: const EdgeInsets.symmetric(horizontal: 16.0),
                                       decoration: BoxDecoration(
-                                        color: CurrentColor.inst.color,
+                                        color: CurrentColor.inst.miniplayerColor,
                                         borderRadius: BorderRadius.circular(50),
-                                        //  color: Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.color)
+                                        //  color: Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.miniplayerColor)
                                         //   .withOpacity(velpy(a: .3, b: .22, c: icp)),
                                       ),
                                     );
@@ -524,20 +526,22 @@ class NamidaMiniPlayer extends StatelessWidget {
                                               child: AnimatedContainer(
                                                 duration: const Duration(milliseconds: 400),
                                                 decoration: BoxDecoration(
-                                                  color: isButtonHighlighed ? Color.alphaBlend(CurrentColor.inst.color.withAlpha(233), Colors.white) : CurrentColor.inst.color,
+                                                  color: isButtonHighlighed
+                                                      ? Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(233), Colors.white)
+                                                      : CurrentColor.inst.miniplayerColor,
                                                   gradient: LinearGradient(
                                                     begin: Alignment.topLeft,
                                                     end: Alignment.bottomRight,
                                                     colors: [
-                                                      CurrentColor.inst.color,
-                                                      Color.alphaBlend(CurrentColor.inst.color.withAlpha(200), Colors.grey),
+                                                      CurrentColor.inst.miniplayerColor,
+                                                      Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(200), Colors.grey),
                                                     ],
                                                     stops: const [0, 0.7],
                                                   ),
                                                   shape: BoxShape.circle,
                                                   boxShadow: [
                                                     BoxShadow(
-                                                      color: CurrentColor.inst.color.withAlpha(160),
+                                                      color: CurrentColor.inst.miniplayerColor.withAlpha(160),
                                                       blurRadius: 8.0,
                                                       spreadRadius: isButtonHighlighed ? 3.0 : 1.0,
                                                       offset: const Offset(0.0, 2.0),
@@ -714,7 +718,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                 final currentVideo = VideoController.inst.currentVideo.value;
                                                 final isCurrent = element.path == currentVideo?.path;
                                                 return getQualityButton(
-                                                  bgColor: isCurrent ? CurrentColor.inst.color.withAlpha(20) : null,
+                                                  bgColor: isCurrent ? CurrentColor.inst.miniplayerColor.withAlpha(20) : null,
                                                   icon: Broken.video,
                                                   title: [
                                                     "${element.height}p${element.framerateText()}",
@@ -750,7 +754,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                                     VideoController.inst
                                                         .playVideoCurrent(video: null, cacheIdAndPath: (currentVideo?.ytID ?? '', cacheFile?.path ?? ''), track: currentTrack);
                                                   },
-                                                  bgColor: cacheExists ? CurrentColor.inst.color.withAlpha(40) : null,
+                                                  bgColor: cacheExists ? CurrentColor.inst.miniplayerColor.withAlpha(40) : null,
                                                   icon: cacheExists ? Broken.tick_circle : Broken.import,
                                                   title: "${element.resolution} • ${element.sizeInBytes?.fileSizeFormatted}",
                                                   subtitle: "${element.formatSuffix} • ${element.bitrateText}",
@@ -1011,7 +1015,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                     height: 34,
                                     child: GestureDetector(
                                       onLongPress: () {
-                                        showLRCSetDialog(currentTrack, CurrentColor.inst.color);
+                                        showLRCSetDialog(currentTrack, CurrentColor.inst.miniplayerColor);
                                       },
                                       child: IconButton(
                                         visualDensity: VisualDensity.compact,
@@ -1903,8 +1907,8 @@ class WaveformMiniplayer extends StatelessWidget {
                               tileMode: TileMode.decal,
                               stops: [0.0, percentage, percentage + 0.005, 1.0],
                               colors: [
-                                Color.alphaBlend(CurrentColor.inst.color.withAlpha(220), context.theme.colorScheme.onBackground),
-                                Color.alphaBlend(CurrentColor.inst.color.withAlpha(180), context.theme.colorScheme.onBackground),
+                                Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(220), context.theme.colorScheme.onBackground),
+                                Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(180), context.theme.colorScheme.onBackground),
                                 Colors.transparent,
                                 Colors.transparent,
                               ],
