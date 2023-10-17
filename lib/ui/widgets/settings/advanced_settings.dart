@@ -28,6 +28,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
 class AdvancedSettings extends StatelessWidget {
   const AdvancedSettings({super.key});
@@ -357,35 +358,31 @@ class AdvancedSettings extends StatelessWidget {
         .replaceFirst('_TOTAL_SIZE_', videos.fold(0, (previousValue, element) => previousValue + element.sizeInBytes).fileSizeFormatted);
   }
 
-  _showChooseVideosToDeleteDialog(List<NamidaVideo> allVideoFiles) {
+  void _showChooseVideosToDeleteDialog(List<NamidaVideo> allVideoFiles) {
     final RxList<NamidaVideo> videosToDelete = <NamidaVideo>[].obs;
     final videoFiles = List<NamidaVideo>.from(allVideoFiles).obs;
-    final isSortTypeSize = true.obs;
 
-    sortBySize() {
-      videoFiles.sortByReverse((e) => e.sizeInBytes);
-      isSortTypeSize.value = true;
-    }
+    final currentSort = 'size'.obs;
 
-    sortByAccessTime() {
-      videoFiles.sortByAlt((e) => File(e.path).statSync().accessed, (e) => File(e.path).statSync().modified);
-      isSortTypeSize.value = false;
-    }
-
-    toggleSort() {
-      if (isSortTypeSize.value) {
-        sortByAccessTime();
-      } else {
-        sortBySize();
+    void sortBy(String type) {
+      currentSort.value = type;
+      switch (type) {
+        case 'size':
+          videoFiles.sortByReverse((e) => e.sizeInBytes);
+        case 'access_time':
+          videoFiles.sortByAlt((e) => File(e.path).statSync().accessed, (e) => File(e.path).statSync().modified);
+        case 'listen_count':
+          videoFiles.sortBy((e) => YoutubeHistoryController.inst.topTracksMapListens[e.ytID]?.length ?? 0);
+        default:
+          null;
       }
     }
 
-    sortBySize();
-
     Widget getChipButton({
+      required String sort,
       required String title,
       required IconData icon,
-      required bool enabled,
+      required bool Function(String sort) enabled,
     }) {
       return NamidaInkWell(
         animationDurationMS: 100,
@@ -393,10 +390,10 @@ class AdvancedSettings extends StatelessWidget {
         bgColor: Get.theme.cardTheme.color,
         padding: const EdgeInsets.all(8.0),
         decoration: BoxDecoration(
-          border: enabled ? Border.all(color: Get.theme.colorScheme.primary) : null,
+          border: enabled(sort) ? Border.all(color: Get.theme.colorScheme.primary) : null,
           borderRadius: BorderRadius.circular(8.0.multipliedRadius),
         ),
-        onTap: toggleSort,
+        onTap: () => sortBy(sort),
         child: Row(
           children: [
             Icon(icon, size: 18.0),
@@ -458,16 +455,36 @@ class AdvancedSettings extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 6.0),
-                Obx(
-                  () => Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      const SizedBox(width: 24.0),
-                      getChipButton(title: lang.SIZE, icon: Broken.size, enabled: isSortTypeSize.value),
-                      const SizedBox(width: 12.0),
-                      getChipButton(title: lang.OLDEST_WATCH, icon: Broken.sort, enabled: !isSortTypeSize.value),
-                      const SizedBox(width: 24.0),
-                    ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Obx(
+                    () => Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        const SizedBox(width: 24.0),
+                        getChipButton(
+                          sort: 'size',
+                          title: lang.SIZE,
+                          icon: Broken.size,
+                          enabled: (sort) => sort == currentSort.value,
+                        ),
+                        const SizedBox(width: 12.0),
+                        getChipButton(
+                          sort: 'access_time',
+                          title: lang.OLDEST_WATCH,
+                          icon: Broken.sort,
+                          enabled: (sort) => sort == currentSort.value,
+                        ),
+                        const SizedBox(width: 12.0),
+                        getChipButton(
+                          sort: 'listen_count',
+                          title: lang.TOTAL_LISTENS,
+                          icon: Broken.math,
+                          enabled: (sort) => sort == currentSort.value,
+                        ),
+                        const SizedBox(width: 24.0),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 6.0),
@@ -480,7 +497,7 @@ class AdvancedSettings extends StatelessWidget {
                         final video = videoFiles[index];
                         final id = video.ytID;
                         final title = id == null ? null : YoutubeController.inst.getBackupVideoInfo(id)?.title ?? YoutubeController.inst.fetchVideoDetailsFromCacheSync(id)?.name;
-
+                        final listens = YoutubeHistoryController.inst.topTracksMapListens[id]?.length ?? 0;
                         return NamidaInkWell(
                           margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
                           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
@@ -511,6 +528,13 @@ class AdvancedSettings extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 8.0),
+                              if (listens > 0) ...[
+                                Text(
+                                  listens.toString(),
+                                  style: context.textTheme.displaySmall,
+                                ),
+                                const SizedBox(width: 8.0),
+                              ],
                               IgnorePointer(
                                 child: SizedBox(
                                   height: 16.0,
