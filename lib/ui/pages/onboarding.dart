@@ -12,6 +12,7 @@ import 'package:namida/main.dart';
 import 'package:namida/main_page_wrapper.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/advanced_settings.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
@@ -87,6 +88,9 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
     final themeTile = theme.getThemeTile();
     final languageTile = theme.getLanguageTile(context);
 
+    const extras = ExtrasSettings();
+    final libraryTabsTile = extras.getLibraryTabsTile(context);
+
     const advanced = AdvancedSettings();
     final performanceTile = advanced.getPerformanceTile(context);
 
@@ -117,6 +121,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                 themeTile,
                                 languageTile,
                                 performanceTile,
+                                libraryTabsTile,
                                 foldersToScan,
                                 foldersToExclude,
                               ],

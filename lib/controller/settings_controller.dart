@@ -26,7 +26,13 @@ class SettingsController {
   final Rx<LibraryTab> selectedLibraryTab = LibraryTab.tracks.obs;
   final Rx<LibraryTab> staticLibraryTab = LibraryTab.tracks.obs;
   final RxBool autoLibraryTab = true.obs;
-  final RxList<LibraryTab> libraryTabs = LibraryTab.values.obs;
+  final RxList<LibraryTab> libraryTabs = [
+    LibraryTab.home,
+    LibraryTab.tracks,
+    LibraryTab.playlists,
+    LibraryTab.folders,
+    LibraryTab.youtube,
+  ].obs;
   final RxInt searchResultsPlayMode = 1.obs;
   final RxDouble borderRadiusMultiplier = 1.0.obs;
   final RxDouble fontScaleFactor = 0.9.obs;
