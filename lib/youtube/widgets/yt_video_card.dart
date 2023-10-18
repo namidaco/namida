@@ -31,7 +31,8 @@ class YoutubeVideoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final videoId = video?.id ?? '';
+    final idNull = video?.id;
+    final videoId = idNull ?? '';
     final menuItems = YTUtils.getVideoCardMenuItems(
       videoId: videoId,
       url: video?.url,
@@ -47,7 +48,7 @@ class YoutubeVideoCard extends StatelessWidget {
         thumbnailHeight: thumbnailHeight,
         isImageImportantInCache: isImageImportantInCache,
         borderRadius: 12.0,
-        videoId: video?.id,
+        videoId: idNull,
         thumbnailUrl: null,
         shimmerEnabled: video == null,
         title: video?.name ?? '',
@@ -58,7 +59,7 @@ class YoutubeVideoCard extends StatelessWidget {
         thirdLineText: video?.uploaderName ?? '',
         onTap: onTap ??
             () {
-              if (video?.id != null) {
+              if (idNull != null) {
                 Player.inst.playOrPause(
                   0,
                   [YoutubeID(id: videoId, playlistID: playlistID)],
@@ -71,7 +72,7 @@ class YoutubeVideoCard extends StatelessWidget {
         displayChannelThumbnail: true,
         smallBoxText: video?.duration?.inSeconds.secondsLabel,
         smallBoxIcon: null,
-        bottomRightWidgets: YTUtils.getVideoCacheStatusIcons(videoId: videoId, context: context),
+        bottomRightWidgets: idNull == null ? [] : YTUtils.getVideoCacheStatusIcons(videoId: idNull, context: context),
         menuChildrenDefault: menuItems,
       ),
     );

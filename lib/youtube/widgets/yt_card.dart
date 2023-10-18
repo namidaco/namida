@@ -152,10 +152,11 @@ class YoutubeCard extends StatelessWidget {
                             ],
                             Expanded(
                               child: NamidaBasicShimmer(
-                                width: null,
+                                width: context.width * 0.35,
                                 height: 8.0,
                                 shimmerEnabled: thirdLineText == '' || !displaythirdLineText,
-                                child: SizedBox(
+                                child: Container(
+                                  alignment: Alignment.centerLeft,
                                   width: double.infinity,
                                   child: Text(
                                     thirdLineText,
