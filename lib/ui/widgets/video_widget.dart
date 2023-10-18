@@ -425,6 +425,11 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   /// used to hide slider if wasnt handled by pointer down/up.
   bool _isPointerDown = false;
 
+  bool get _showLoadingIndicator {
+    final isLoading = Player.inst.isBuffering || Player.inst.isLoading || VideoController.vcontroller.isBuffering;
+    return isLoading && !Player.inst.isPlaying;
+  }
+
   @override
   Widget build(BuildContext context) {
     final dummyWidget = widget.fallbackChild ??
@@ -437,7 +442,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     final itemsColor = Colors.white.withAlpha(200);
     final shouldShowVolumeSlider = widget.showControls && widget.isFullScreen;
     return Listener(
-      key: widget.widgetKey,
+      // key: widget.widgetKey, // prevents updating widget `GlobalKey().currentState?.build(context);`
       behavior: HitTestBehavior.translucent,
       onPointerCancel: (event) {
         _isPointerDown = false;
@@ -1061,9 +1066,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     setControlsVisibily(true);
                                   });
                                 }
-                                final isLoading = Player.inst.shouldShowLoadingIndicator || VideoController.vcontroller.isBuffering;
-
-                                return isLoading
+                                return _showLoadingIndicator
                                     ? ThreeArchedCircle(
                                         color: itemsColor,
                                         size: 40.0,
@@ -1156,7 +1159,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 },
               ),
               Obx(
-                () => Player.inst.shouldShowLoadingIndicator || VideoController.vcontroller.isBuffering
+                () => _showLoadingIndicator
                     ? ThreeArchedCircle(
                         color: itemsColor,
                         size: 40.0,

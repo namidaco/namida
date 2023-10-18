@@ -533,6 +533,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       await VideoController.vcontroller.setFile(cachedFile.path, (videoDuration) => false);
       await refreshVideoPosition(true);
     } else if (stream != null && stream.url != null) {
+      final position = currentPositionMS;
       if (wasPlaying) await onPauseRaw();
       try {
         await VideoController.vcontroller.setNetworkSource(
@@ -562,6 +563,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           );
         }
       }
+      await VideoController.vcontroller.seek(position.milliseconds);
     }
     await _waitForAllBuffers();
     if (wasPlaying) await _playAudioThenVideo();
@@ -727,6 +729,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       item: item,
       index: index,
       canPlayAudioOnly: canPlayAudioOnlyFromCache,
+      disableVideo: isAudioOnlyPlayback,
       whatToAwait: () async => await playerStoppingSeikoo.future,
     );
 
@@ -770,7 +773,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           final isStreamRequiredBetterThanCachedSet =
               playedFromCacheDetails.$2 == null ? true : playedFromCacheDetails.$2 != null && (prefferedVideoStream?.width ?? 0) > (playedFromCacheDetails.$2?.width ?? 0);
 
-          currentVideoStream.value = isStreamRequiredBetterThanCachedSet ? prefferedVideoStream : vos?.firstWhereEff((e) => e.width == (playedFromCacheDetails.$2?.width));
+          currentVideoStream.value = isAudioOnlyPlayback
+              ? null
+              : isStreamRequiredBetterThanCachedSet
+                  ? prefferedVideoStream
+                  : vos?.firstWhereEff((e) => e.width == (playedFromCacheDetails.$2?.width));
 
           currentAudioStream.value = prefferedAudioStream;
           currentVideoInfo.value = streams.videoInfo;
@@ -789,7 +796,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               playedFromCacheDetails.$2?.path == cachedVideo.path; // only if not the same cache path (i.e. diff resolution)
           final isAudioCacheSameAsPrevSet =
               cachedAudio != null && playedFromCacheDetails.$1 != null && playedFromCacheDetails.$1?.file.path == cachedAudio.path; // only if not the same cache path
-          final shouldResetVideoSource = !isAudioOnlyPlayback && !isVideoCacheSameAsPrevSet;
+          final shouldResetVideoSource = isAudioOnlyPlayback ? false : !isAudioOnlyPlayback && !isVideoCacheSameAsPrevSet;
           final shouldResetAudioSource = !isAudioCacheSameAsPrevSet;
 
           // -- updating wether the source has changed, so that play should be triggered again.
@@ -798,7 +805,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           }
 
           await playerStoppingSeikoo.future;
-
           await Future.wait([
             if (shouldResetVideoSource && isStreamRequiredBetterThanCachedSet)
               cachedVideo != null
@@ -835,6 +841,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           item: item,
           index: index,
           canPlayAudioOnly: canPlayAudioOnlyFromCache,
+          disableVideo: isAudioOnlyPlayback,
           whatToAwait: () async => await playerStoppingSeikoo.future,
         );
         if (!okaySetFromCache()) return;
@@ -869,6 +876,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required YoutubeID item,
     required int index,
     required bool canPlayAudioOnly,
+    required bool disableVideo,
     required Future<void> Function() whatToAwait,
   }) async {
     // ------ Getting Video ------
@@ -898,7 +906,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final cachedAudio = finalAudioFiles.firstOrNull;
 
     // ------ Playing ------
-    if (cachedVideo != null && cachedAudio != null) {
+    if (cachedVideo != null && cachedAudio != null && !disableVideo) {
       // -- play audio & video
       await whatToAwait();
       await Future.wait([
