@@ -7,10 +7,12 @@ class MediaInfo {
     this.format,
   });
 
-  factory MediaInfo.fromMap(Map<dynamic, dynamic> json) => MediaInfo(
-        streams: (json["streams"] as List?)?.map((e) => MIStream.fromMap(e)).toList(),
-        format: json["format"] == null ? null : MIFormat.fromMap(json["format"]),
-      );
+  factory MediaInfo.fromMap(Map<dynamic, dynamic> json) {
+    return MediaInfo(
+      streams: (json["streams"] as List?)?.map((e) => MIStream.fromMap(e)).toList(),
+      format: json["format"] == null ? null : MIFormat.fromMap(json["format"]),
+    );
+  }
 
   Map<dynamic, dynamic> toMap() => {
         "streams": streams?.map((e) => e.toMap()),
@@ -342,7 +344,8 @@ class MIStreamTags {
       };
 }
 
-extension _StringToDuration on String? {
+extension StringToDuration on String? {
+  /// parses '232.432000' text
   Duration? getDuration() {
     Duration? dur;
     if (this != null) {

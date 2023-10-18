@@ -294,6 +294,8 @@ extension MediaInfoToFAudioModel on MediaInfo? {
     final discNumberTotal = info.disc?.split('/');
     final audioStream = infoFull?.streams?.firstWhereEff((e) => e.streamType == StreamType.audio);
     int? parsy(String? v) => v == null ? null : int.tryParse(v);
+    final bitrate = parsy(infoFull?.format?.bitRate); // 234292
+    final bitrateThousands = bitrate == null ? null : bitrate / 1000; // 234
     return FAudioModel(
       title: info.title,
       album: info.album,
@@ -314,7 +316,7 @@ extension MediaInfoToFAudioModel on MediaInfo? {
       mood: info.mood,
       country: info.country,
       length: infoFull?.format?.duration?.inSeconds,
-      bitRate: parsy(infoFull?.format?.bitRate),
+      bitRate: bitrateThousands?.round(),
       channels: audioStream?.channels == null
           ? null
           : {

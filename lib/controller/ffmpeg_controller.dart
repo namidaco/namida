@@ -28,9 +28,43 @@ class NamidaFFMPEG {
   };
 
   Future<MediaInfo?> extractMetadata(String path) async {
-    final output = await _ffprobeExecute('-loglevel error -v quiet -show_entries stream_tags:format_tags -of json "$path"');
-    if (output == null || output == '') return null;
-    return MediaInfo.fromMap(jsonDecode(output));
+    final output = await _ffprobeExecute('-loglevel error -v quiet -show_streams -show_format -show_entries stream_tags:format_tags -of json "$path"');
+
+    if (output != null && output != '') {
+      final decoded = jsonDecode(output);
+      final mi = MediaInfo.fromMap(decoded);
+      final formatGood = (decoded['format'] as Map?)?.isNotEmpty ?? false;
+      final tagsGood = (decoded['format']['tags'] as Map?)?.isNotEmpty ?? false;
+      if (formatGood && tagsGood) return mi;
+    }
+
+    final mediaInfo = await FFprobeKit.getMediaInformation(path);
+    final information = mediaInfo.getMediaInformation();
+
+    final map = information?.getAllProperties();
+    if (map != null) {
+      final miBackup = MediaInfo.fromMap(map);
+      final format = miBackup.format;
+      final tags = information?.getTags() ?? (map['streams'] as List?)?.firstWhereEff((e) => e['tags'].isNotEmpty)?['tags'];
+      final mi = MediaInfo(
+        streams: miBackup.streams,
+        format: MIFormat(
+          bitRate: format?.bitRate ?? information?.getBitrate(),
+          duration: format?.duration ?? information?.getDuration().getDuration(),
+          filename: format?.filename ?? information?.getFilename(),
+          formatName: format?.formatName ?? information?.getFormat(),
+          nbPrograms: format?.nbPrograms,
+          nbStreams: format?.nbStreams,
+          probeScore: format?.probeScore,
+          size: format?.size ?? information?.getSize().getIntValue(),
+          startTime: format?.startTime ?? information?.getStartTime(),
+          tags: tags == null ? null : MIFormatTags.fromMap(tags),
+        ),
+      );
+      return mi;
+    }
+
+    return null;
   }
 
   Future<bool> editMetadata({
