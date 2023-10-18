@@ -574,7 +574,7 @@ class YoutubeController {
     bool isVideoFileCached = false;
     bool isAudioFileCached = false;
 
-    final filenameClean = filename.replaceAll(RegExp(r'[#\$|/\\!^]', caseSensitive: false), '_');
+    final filenameClean = filename.replaceAll(RegExp(r'[#\$|/\\!^:]', caseSensitive: false), '_');
     try {
       // --------- Downloading Choosen Video.
       if (videoStream != null) {
