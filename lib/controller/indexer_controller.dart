@@ -211,7 +211,7 @@ class Indexer {
     addedAlbums
       ..removeDuplicates()
       ..loop((e, index) {
-        mainMapAlbums.value[e]?.sortByAlt((e) => e.year, (e) => e.title);
+        mainMapAlbums.value[e]?.sortByAlts((e) => e.year, [(e) => e.trackNo, (e) => e.title]);
       });
     addedArtists
       ..removeDuplicates()
