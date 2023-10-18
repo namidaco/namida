@@ -19,6 +19,20 @@ import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 
+LinearGradient _bgLinearGradient(BuildContext context) {
+  final firstC = context.theme.appBarTheme.backgroundColor ?? CurrentColor.inst.color.withAlpha(context.isDarkMode ? 0 : 25);
+  final secondC = CurrentColor.inst.color.withAlpha(context.isDarkMode ? 40 : 60);
+  return LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    stops: const [0.2, 1.0],
+    colors: [
+      firstC,
+      secondC,
+    ],
+  );
+}
+
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
   @override
@@ -29,14 +43,7 @@ class SettingsPage extends StatelessWidget {
           Container(
             height: context.height,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  context.theme.appBarTheme.backgroundColor ?? CurrentColor.inst.color.withAlpha(context.isDarkMode ? 0 : 25),
-                  CurrentColor.inst.color.withAlpha(context.isDarkMode ? 40 : 60),
-                ],
-              ),
+              gradient: _bgLinearGradient(context),
             ),
           ),
           settings.useSettingCollapsedTiles.value
@@ -76,14 +83,7 @@ class SettingsSubPage extends StatelessWidget {
           Container(
             height: context.height,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  context.theme.appBarTheme.backgroundColor ?? CurrentColor.inst.color.withAlpha(context.isDarkMode ? 0 : 25),
-                  CurrentColor.inst.color.withAlpha(context.isDarkMode ? 40 : 60),
-                ],
-              ),
+              gradient: _bgLinearGradient(context),
             ),
           ),
           SingleChildScrollView(

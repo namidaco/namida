@@ -160,6 +160,18 @@ class ThemeSetting extends StatelessWidget {
                 },
               ),
             ),
+            Obx(
+              () => CustomSwitchListTile(
+                icon: Broken.mirror,
+                title: lang.USE_PITCH_BLACK,
+                subtitle: lang.USE_PITCH_BLACK_SUBTITLE,
+                value: settings.pitchBlack.value,
+                onChanged: (isTrue) async {
+                  settings.save(pitchBlack: !isTrue);
+                  await _refreshColorCurrentTrack();
+                },
+              ),
+            ),
             ...[false, true].map(
               (isDark) => Obx(
                 () {

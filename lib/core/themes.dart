@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 
 class AppThemes {
@@ -14,20 +15,28 @@ class AppThemes {
     color ??= CurrentColor.inst.color;
     light ??= Get.theme.brightness == Brightness.light;
 
+    final shouldUseAMOLED = !light && settings.pitchBlack.value;
+    final pitchBlack = shouldUseAMOLED ? const Color.fromARGB(255, 0, 0, 0) : null;
+    final mainColorMultiplier = pitchBlack == null ? 0.8 : 0.1; // makes colors that rely on mainColor, a bit darker.
+    final pitchGrey = pitchBlack == null ? const Color.fromARGB(255, 35, 35, 35) : const Color.fromARGB(255, 20, 20, 20);
+
+    int getColorAlpha(int a) => (a * mainColorMultiplier).round();
+    Color getMainColorWithAlpha(int a) => color!.withAlpha(getColorAlpha(a));
+
     final cardTheme = CardTheme(
       elevation: 12.0,
       color: Color.alphaBlend(
-        color.withAlpha(45),
-        light ? const Color.fromARGB(255, 255, 255, 255) : const Color.fromARGB(255, 35, 35, 35),
+        getMainColorWithAlpha(45),
+        light ? const Color.fromARGB(255, 255, 255, 255) : pitchGrey,
       ),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14.0),
+        borderRadius: BorderRadius.circular(14.0.multipliedRadius),
       ),
     );
 
     final cardColor = Color.alphaBlend(
-      color.withAlpha(35),
-      light ? const Color.fromARGB(255, 255, 255, 255) : const Color.fromARGB(255, 35, 35, 35),
+      getMainColorWithAlpha(35),
+      light ? const Color.fromARGB(255, 255, 255, 255) : pitchGrey,
     );
 
     return ThemeData(
@@ -35,7 +44,7 @@ class AppThemes {
       useMaterial3: true,
       colorSchemeSeed: color,
       fontFamily: "LexendDeca",
-      scaffoldBackgroundColor: light ? Color.alphaBlend(color.withAlpha(60), Colors.white) : null,
+      scaffoldBackgroundColor: pitchBlack ?? (light ? Color.alphaBlend(color.withAlpha(60), Colors.white) : null),
       splashColor: Colors.transparent,
       splashFactory: InkRipple.splashFactory,
       highlightColor: light ? Colors.black.withAlpha(20) : Colors.white.withAlpha(10),
@@ -45,11 +54,18 @@ class AppThemes {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        backgroundColor: light ? Color.alphaBlend(color.withAlpha(25), Colors.white) : null,
+        backgroundColor: pitchBlack ?? (light ? Color.alphaBlend(color.withAlpha(25), Colors.white) : null),
         actionsIconTheme: IconThemeData(
           color: light ? const Color.fromARGB(200, 40, 40, 40) : const Color.fromARGB(200, 233, 233, 233),
         ),
       ),
+      navigationBarTheme: pitchBlack == null
+          ? null
+          : NavigationBarThemeData(
+              backgroundColor: pitchBlack,
+              surfaceTintColor: pitchBlack,
+              indicatorColor: Color.alphaBlend(color.withAlpha(120), pitchBlack),
+            ),
       iconTheme: IconThemeData(
         color: light ? const Color.fromARGB(200, 40, 40, 40) : const Color.fromARGB(200, 233, 233, 233),
       ),
@@ -61,28 +77,29 @@ class AppThemes {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: light ? Color.alphaBlend(color.withAlpha(30), Colors.white) : null,
+          backgroundColor: light ? Color.alphaBlend(getMainColorWithAlpha(30), Colors.white) : pitchBlack?.withOpacity(0.5),
         ),
       ),
       dialogBackgroundColor: lighterDialog
           ? light
-              ? Color.alphaBlend(color.withAlpha(60), Colors.white)
-              : Color.alphaBlend(color.withAlpha(20), const Color.fromARGB(255, 12, 12, 12))
+              ? Color.alphaBlend(getMainColorWithAlpha(60), Colors.white)
+              : Color.alphaBlend(getMainColorWithAlpha(20), pitchBlack ?? const Color.fromARGB(255, 12, 12, 12))
           : light
-              ? Color.alphaBlend(color.withAlpha(35), Colors.white)
-              : Color.alphaBlend(color.withAlpha(12), const Color.fromARGB(255, 16, 16, 16)),
+              ? Color.alphaBlend(getMainColorWithAlpha(35), Colors.white)
+              : Color.alphaBlend(getMainColorWithAlpha(12), pitchBlack ?? const Color.fromARGB(255, 16, 16, 16)),
       focusColor: light ? const Color.fromARGB(200, 190, 190, 190) : const Color.fromARGB(150, 80, 80, 80),
       dialogTheme: DialogTheme(surfaceTintColor: Colors.transparent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0.multipliedRadius))),
       listTileTheme: ListTileThemeData(
         horizontalTitleGap: 16.0,
-        selectedColor:
-            light ? Color.alphaBlend(color.withAlpha(40), const Color.fromARGB(255, 182, 182, 182)) : Color.alphaBlend(color.withAlpha(40), const Color.fromARGB(255, 55, 55, 55)),
+        selectedColor: light
+            ? Color.alphaBlend(getMainColorWithAlpha(40), const Color.fromARGB(255, 182, 182, 182))
+            : Color.alphaBlend(getMainColorWithAlpha(40), pitchBlack ?? const Color.fromARGB(255, 55, 55, 55)),
         iconColor: Color.alphaBlend(
-          color.withAlpha(80),
+          getMainColorWithAlpha(80),
           light ? const Color.fromARGB(200, 55, 55, 55) : const Color.fromARGB(255, 228, 228, 228),
         ),
         textColor: Color.alphaBlend(
-          color.withAlpha(80),
+          getMainColorWithAlpha(80),
           light ? const Color.fromARGB(200, 55, 55, 55) : const Color.fromARGB(255, 228, 228, 228),
         ),
       ),
@@ -90,8 +107,8 @@ class AppThemes {
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
           color: light
-              ? Color.alphaBlend(color.withAlpha(30), const Color.fromARGB(255, 242, 242, 242))
-              : Color.alphaBlend(color.withAlpha(80), const Color.fromARGB(255, 12, 12, 12)),
+              ? Color.alphaBlend(getMainColorWithAlpha(30), const Color.fromARGB(255, 242, 242, 242))
+              : Color.alphaBlend(getMainColorWithAlpha(80), const Color.fromARGB(255, 12, 12, 12)),
           borderRadius: BorderRadius.circular(10.0.multipliedRadius),
           boxShadow: const [
             BoxShadow(

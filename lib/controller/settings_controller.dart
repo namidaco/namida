@@ -20,6 +20,7 @@ class SettingsController {
 
   final Rx<NamidaLanguage> selectedLanguage = kDefaultLang.obs;
   final Rx<ThemeMode> themeMode = ThemeMode.system.obs;
+  final RxBool pitchBlack = false.obs;
   final RxBool autoColor = true.obs;
   final RxInt staticColor = kMainColorLight.value.obs;
   final RxInt staticColorDark = kMainColorDark.value.obs;
@@ -250,6 +251,7 @@ class SettingsController {
       /// Assigning Values
       selectedLanguage.value = NamidaLanguage.fromJson(json['selectedLanguage']);
       themeMode.value = ThemeMode.values.getEnum(json['themeMode']) ?? themeMode.value;
+      pitchBlack.value = json['pitchBlack'] ?? pitchBlack.value;
       autoColor.value = json['autoColor'] ?? autoColor.value;
       staticColor.value = json['staticColor'] ?? staticColor.value;
       staticColorDark.value = json['staticColorDark'] ?? staticColorDark.value;
@@ -455,6 +457,7 @@ class SettingsController {
     final res = {
       'selectedLanguage': selectedLanguage.toJson(),
       'themeMode': themeMode.value.convertToString,
+      'pitchBlack': pitchBlack.value,
       'autoColor': autoColor.value,
       'staticColor': staticColor.value,
       'staticColorDark': staticColorDark.value,
@@ -606,6 +609,7 @@ class SettingsController {
   void save({
     NamidaLanguage? selectedLanguage,
     ThemeMode? themeMode,
+    bool? pitchBlack,
     bool? autoColor,
     int? staticColor,
     int? staticColorDark,
@@ -740,6 +744,9 @@ class SettingsController {
     }
     if (themeMode != null) {
       this.themeMode.value = themeMode;
+    }
+    if (pitchBlack != null) {
+      this.pitchBlack.value = pitchBlack;
     }
     if (autoColor != null) {
       this.autoColor.value = autoColor;
