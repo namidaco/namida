@@ -105,12 +105,27 @@ class Lyrics {
 
     /// 4. if still null, fetch from database.
     if (lrc == null) {
-      final lyrics = await fetchLRCBasedLyricsFromInternet(
-        durationInSeconds: track.duration,
-        title: track.title,
-        artist: track.originalArtist,
-        album: track.album,
-      );
+      final tries = <(String, String, String)>[]; // title, artist, album
+      tries.addAll([
+        (track.title, track.originalArtist, ''),
+        (track.title, track.originalArtist, track.album),
+        (track.title, track.artistsList.first, ''),
+        (track.title, track.artistsList.first, track.album),
+      ]);
+
+      final lyrics = <LyricsModel>[];
+      for (final t in tries) {
+        lyrics.addAll(
+          await fetchLRCBasedLyricsFromInternet(
+            durationInSeconds: track.duration,
+            title: t.$1,
+            artist: t.$2,
+            album: t.$3,
+          ),
+        );
+        if (lyrics.isNotEmpty) break;
+      }
+
       final text = lyrics.firstOrNull?.lyrics;
       if (text != null) await fc.writeAsString(text);
       return text?.toLrc();
@@ -138,7 +153,7 @@ class Lyrics {
     final params = [
       if (title != '') 'track_name=$title',
       if (artist != '') 'artist_name=${artist.split('(').first.split('[').first}',
-      // if (album != '') 'album_name=$album',
+      if (album != '') 'album_name=$album',
     ].join('&');
     if (params.isNotEmpty || customQuery != '') {
       final tail = customQuery == '' ? params : 'q=$customQuery';
