@@ -210,9 +210,8 @@ class _LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                               ],
                                             ),
                                           );
-                                        } else {
-                                          return const SizedBox();
                                         }
+                                        return const SizedBox();
                                       }
 
                                       final color = CurrentColor.inst.color;
