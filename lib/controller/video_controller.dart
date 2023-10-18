@@ -150,6 +150,7 @@ class VideoController {
     Widget? fallbackChild,
     List<NamidaPopupItem> qualityItems = const [],
   }) async {
+    final aspect = VideoController.vcontroller.aspectRatio;
     VideoController.inst.fullScreenVideoWidget ??= Obx(
       () => NamidaVideoControls(
         widgetKey: VideoController.inst.fullScreenControlskey,
@@ -166,6 +167,7 @@ class VideoController {
     );
     await NamidaNavigator.inst.toggleFullScreen(
       VideoController.inst.fullScreenVideoWidget!,
+      setOrientations: aspect == null ? true : aspect > 1,
       onWillPop: () async => VideoController.inst.fullScreenVideoWidget = null,
     );
   }
