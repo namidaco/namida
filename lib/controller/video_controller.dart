@@ -3,8 +3,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:http/http.dart' as http;
 import 'package:newpipeextractor_dart/models/streams.dart';
@@ -179,6 +179,7 @@ class VideoController {
   Widget? fullScreenVideoWidget;
 
   bool get shouldShowVideo => currentVideo.value != null && _videoController.isInitialized;
+  int get localVideosTotalCount => _allVideoPaths.length;
 
   final localVideoExtractCurrent = Rxn<int>();
   final localVideoExtractTotal = 0.obs;
@@ -193,6 +194,8 @@ class VideoController {
 
   /// `path`: `NamidaVideo`
   final _videoPathsMap = <String, NamidaVideo>{};
+
+  final _allVideoPaths = <String>[];
 
   /// `id`: `<NamidaVideo>[]`
   final _videoCacheIDMap = <String, List<NamidaVideo>>{};
@@ -257,7 +260,7 @@ class VideoController {
     if (track == kDummyTrack) return;
     if (!settings.enableVideoPlayback.value) return;
 
-    final possibleVideos = _getPossibleVideosFromTrack(track);
+    final possibleVideos = await _getPossibleVideosFromTrack(track);
     currentPossibleVideos
       ..clear()
       ..addAll(possibleVideos);
@@ -462,7 +465,64 @@ class VideoController {
     return downloadedVideo;
   }
 
-  List<NamidaVideo> _getPossibleVideosFromTrack(Track track) {
+  List<String> _getPossibleVideosPathsFromAudioFile(String path) {
+    final possibleLocal = <String>[];
+    final trExt = path.toTrackExt();
+
+    final valInSett = settings.localVideoMatchingType.value;
+    final shouldCheckSameDir = settings.localVideoMatchingCheckSameDir.value;
+
+    void matchFileName(String videoName, String vpath, bool ensureSameDir) {
+      if (ensureSameDir) {
+        if (vpath.getDirectoryPath != path.getDirectoryPath) return;
+      }
+
+      final videoNameContainsMusicFileName = _checkFileNameAudioVideo(videoName, path.getFilenameWOExt);
+      if (videoNameContainsMusicFileName) possibleLocal.add(vpath);
+    }
+
+    void matchTitleAndArtist(String videoName, String vpath, bool ensureSameDir) {
+      if (ensureSameDir) {
+        if (vpath.getDirectoryPath != path.getDirectoryPath) return;
+      }
+      final videoContainsTitle = videoName.contains(trExt.title.cleanUpForComparison);
+      final videoNameContainsTitleAndArtist = videoContainsTitle && trExt.artistsList.isNotEmpty && videoName.contains(trExt.artistsList.first.cleanUpForComparison);
+      // useful for [Nightcore - title]
+      // track must contain Nightcore as the first Genre
+      final videoNameContainsTitleAndGenre = videoContainsTitle && trExt.genresList.isNotEmpty && videoName.contains(trExt.genresList.first.cleanUpForComparison);
+      if (videoNameContainsTitleAndArtist || videoNameContainsTitleAndGenre) possibleLocal.add(vpath);
+    }
+
+    switch (valInSett) {
+      case LocalVideoMatchingType.auto:
+        for (final vp in _allVideoPaths) {
+          final videoName = vp.getFilenameWOExt;
+          matchFileName(videoName, vp, shouldCheckSameDir);
+          matchTitleAndArtist(videoName, vp, shouldCheckSameDir);
+        }
+        break;
+
+      case LocalVideoMatchingType.filename:
+        for (final vp in _allVideoPaths) {
+          final videoName = vp.getFilenameWOExt;
+          matchFileName(videoName, vp, shouldCheckSameDir);
+        }
+
+        break;
+      case LocalVideoMatchingType.titleAndArtist:
+        for (final vp in _allVideoPaths) {
+          final videoName = vp.getFilenameWOExt;
+          matchTitleAndArtist(videoName, vp, shouldCheckSameDir);
+        }
+        break;
+
+      default:
+        null;
+    }
+    return possibleLocal;
+  }
+
+  Future<List<NamidaVideo>> _getPossibleVideosFromTrack(Track track) async {
     final link = track.youtubeLink;
     final id = link.getYoutubeID;
 
@@ -472,60 +532,41 @@ class VideoController {
       (e) => e.frameratePrecise,
     );
 
+    final videosFile = File(AppPaths.VIDEOS_LOCAL);
+    final local = _getPossibleVideosPathsFromAudioFile(track.path);
     final possibleLocal = <NamidaVideo>[];
-    final trExt = track.toTrackExt();
-
-    final valInSett = settings.localVideoMatchingType.value;
-    final shouldCheckSameDir = settings.localVideoMatchingCheckSameDir.value;
-
-    void matchFileName(String videoName, MapEntry<String, NamidaVideo> vf, bool ensureSameDir) {
-      if (ensureSameDir) {
-        if (vf.key.getDirectoryPath != track.path.getDirectoryPath) return;
+    for (final l in local) {
+      NamidaVideo? nv = _videoPathsMap[l];
+      if (nv == null) {
+        try {
+          final v = await NamidaFFMPEG.inst.extractMetadata(l);
+          if (v != null) {
+            _saveThumbnailToStorage(
+              videoPath: l,
+              bytes: null,
+              isLocal: true,
+              idOrFileNameWOExt: l.getFilenameWOExt,
+              isExtracted: true,
+            );
+            final stats = await File(l).stat();
+            final vid = _getNVFromFFMPEGMap(
+              path: l,
+              mediaInfo: v,
+              stats: stats,
+              ytID: null,
+            );
+            // -- saving extracted info before continuing.
+            _videoPathsMap[l] = vid;
+            await videosFile.writeAsJson(_videoPathsMap.values.map((e) => e.toJson()).toList());
+            nv = vid;
+          }
+        } catch (e) {
+          printy(e, isError: true);
+          continue;
+        }
       }
-
-      final videoNameContainsMusicFileName = _checkFileNameAudioVideo(videoName, track.filenameWOExt);
-      if (videoNameContainsMusicFileName) possibleLocal.add(vf.value);
+      if (nv != null) possibleLocal.add(nv);
     }
-
-    void matchTitleAndArtist(String videoName, MapEntry<String, NamidaVideo> vf, bool ensureSameDir) {
-      if (ensureSameDir) {
-        if (vf.key.getDirectoryPath != track.path.getDirectoryPath) return;
-      }
-      final videoContainsTitle = videoName.contains(trExt.title.cleanUpForComparison);
-      final videoNameContainsTitleAndArtist = videoContainsTitle && trExt.artistsList.isNotEmpty && videoName.contains(trExt.artistsList.first.cleanUpForComparison);
-      // useful for [Nightcore - title]
-      // track must contain Nightcore as the first Genre
-      final videoNameContainsTitleAndGenre = videoContainsTitle && trExt.genresList.isNotEmpty && videoName.contains(trExt.genresList.first.cleanUpForComparison);
-      if (videoNameContainsTitleAndArtist || videoNameContainsTitleAndGenre) possibleLocal.add(vf.value);
-    }
-
-    switch (valInSett) {
-      case LocalVideoMatchingType.auto:
-        for (final vf in _videoPathsMap.entries) {
-          final videoName = vf.key.getFilenameWOExt;
-          matchFileName(videoName, vf, shouldCheckSameDir);
-          matchTitleAndArtist(videoName, vf, shouldCheckSameDir);
-        }
-        break;
-
-      case LocalVideoMatchingType.filename:
-        for (final vf in _videoPathsMap.entries) {
-          final videoName = vf.key.getFilenameWOExt;
-          matchFileName(videoName, vf, shouldCheckSameDir);
-        }
-
-        break;
-      case LocalVideoMatchingType.titleAndArtist:
-        for (final vf in _videoPathsMap.entries) {
-          final videoName = vf.key.getFilenameWOExt;
-          matchTitleAndArtist(videoName, vf, shouldCheckSameDir);
-        }
-        break;
-
-      default:
-        null;
-    }
-
     return [...possibleCached, ...possibleLocal];
   }
 
@@ -564,14 +605,29 @@ class VideoController {
     }
 
     await Future.wait([
-      fetchCachedVideos(),
-      scanLocalVideos(),
+      fetchCachedVideos(), // --> should think about a way to flank around scanning lots of cache videos if info not found (ex: after backup)
+      scanLocalVideos(fillPathsOnly: true, extractIfFileNotFound: false), // this will get paths only and disables extracting whole local videos on startup
     ]);
     _isInitializing = false;
     await updateCurrentVideo(Player.inst.nowPlayingTrack);
   }
 
-  Future<void> scanLocalVideos({bool strictNoMedia = true, bool forceReScan = false}) async {
+  Future<void> scanLocalVideos({
+    bool strictNoMedia = true,
+    bool forceReScan = false,
+    bool extractIfFileNotFound = false,
+    required bool fillPathsOnly,
+  }) async {
+    if (fillPathsOnly) {
+      localVideoExtractCurrent.value = 0;
+      final videos = await _fetchVideoPathsFromStorage(strictNoMedia: strictNoMedia, forceReCheckDir: forceReScan);
+      _allVideoPaths
+        ..clear()
+        ..addAll(videos);
+      localVideoExtractCurrent.value = null;
+      return;
+    }
+
     void resetCounters() {
       localVideoExtractCurrent.value = 0;
       localVideoExtractTotal.value = 0;
@@ -581,6 +637,7 @@ class VideoController {
     final localVideos = await _getLocalVideos(
       strictNoMedia: strictNoMedia,
       forceReScan: forceReScan,
+      extractIfFileNotFound: extractIfFileNotFound,
       onProgress: (didExtract, total) {
         if (didExtract) localVideoExtractCurrent.value = (localVideoExtractCurrent.value ?? 0) + 1;
         localVideoExtractTotal.value = total;
@@ -688,6 +745,7 @@ class VideoController {
   Future<List<NamidaVideo>> _getLocalVideos({
     bool strictNoMedia = true,
     bool forceReScan = false,
+    bool extractIfFileNotFound = true,
     required void Function(bool didExtract, int total) onProgress,
   }) async {
     final videosFile = File(AppPaths.VIDEOS_LOCAL);
@@ -698,6 +756,7 @@ class VideoController {
       final vl = videosJson?.map((e) => NamidaVideo.fromJson(e)) ?? [];
       namidaVideos.addAll(vl);
     } else {
+      if (!extractIfFileNotFound) return [];
       final videos = await _fetchVideoPathsFromStorage(strictNoMedia: strictNoMedia, forceReCheckDir: forceReScan);
 
       for (final path in videos) {
@@ -1106,9 +1165,12 @@ class _NamidaVideoPlayer {
 
   Future<bool> enablePictureInPicture() async {
     final size = _videoController?.value.size;
+    // final videoCtx = VideoController.inst.normalControlskey.currentContext ?? VideoController.inst.fullScreenControlskey.currentContext;
+    // final rect = videoCtx?.globalPaintBounds;
     final res = await PictureInPicture.enterPip(
       width: size?.width.toInt(),
       height: size?.height.toInt(),
+      // rectHint: rect,
     );
     return res;
   }
@@ -1156,5 +1218,18 @@ class _NamidaVideoPlayer {
       _videoController = null;
       _initializedVideo.value = false;
     });
+  }
+}
+
+extension _GlobalPaintBounds on BuildContext {
+  Rect? get globalPaintBounds {
+    final renderObject = findRenderObject();
+    final translation = renderObject?.getTransformTo(null).getTranslation();
+    if (translation != null && renderObject?.paintBounds != null) {
+      final offset = Offset(translation.x, translation.y);
+      return renderObject!.paintBounds.shift(offset);
+    } else {
+      return null;
+    }
   }
 }

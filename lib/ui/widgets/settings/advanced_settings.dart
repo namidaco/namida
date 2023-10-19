@@ -101,6 +101,8 @@ class AdvancedSettings extends StatelessWidget {
                 final isCounterVisible = total != 0;
                 final isLoadingVisible = current != null;
 
+                if (!isCounterVisible && !isLoadingVisible) return Text("${VideoController.inst.localVideosTotalCount}");
+
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -112,7 +114,7 @@ class AdvancedSettings extends StatelessWidget {
             ),
             title: lang.RESCAN_VIDEOS,
             onTap: () async {
-              await VideoController.inst.scanLocalVideos(forceReScan: true);
+              await VideoController.inst.scanLocalVideos(forceReScan: true, fillPathsOnly: true);
               snackyy(title: lang.DONE, message: lang.FINISHED_UPDATING_LIBRARY);
             },
           ),

@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -47,6 +48,7 @@ class IndexerSettings extends StatelessWidget {
               onPressed: () async {
                 NamidaNavigator.inst.closeDialog();
                 await Future.delayed(const Duration(milliseconds: 300));
+                VideoController.inst.scanLocalVideos(forceReScan: true, fillPathsOnly: true);
                 await Indexer.inst.refreshLibraryAndCheckForDiff(currentFiles: currentFiles);
               },
             ),

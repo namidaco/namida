@@ -28,14 +28,16 @@ class NamidaFFMPEG {
   };
 
   Future<MediaInfo?> extractMetadata(String path) async {
-    final output = await _ffprobeExecute('-loglevel error -v quiet -show_streams -show_format -show_entries stream_tags:format_tags -of json "$path"');
+    final output = await _ffprobeExecute('-show_streams -show_format -show_entries stream_tags:format_tags -of json "$path"');
 
     if (output != null && output != '') {
-      final decoded = jsonDecode(output);
-      final mi = MediaInfo.fromMap(decoded);
-      final formatGood = (decoded['format'] as Map?)?.isNotEmpty ?? false;
-      final tagsGood = (decoded['format']['tags'] as Map?)?.isNotEmpty ?? false;
-      if (formatGood && tagsGood) return mi;
+      try {
+        final decoded = jsonDecode(output);
+        final mi = MediaInfo.fromMap(decoded);
+        final formatGood = (decoded['format'] as Map?)?.isNotEmpty ?? false;
+        final tagsGood = (decoded['format']?['tags'] as Map?)?.isNotEmpty ?? false;
+        if (formatGood && tagsGood) return mi;
+      } catch (_) {}
     }
 
     final mediaInfo = await FFprobeKit.getMediaInformation(path);
