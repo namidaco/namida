@@ -84,6 +84,7 @@ class SettingsController {
   final RxString defaultBackupLocation = AppDirs.BACKUPS.obs;
   final RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
   final RxBool enableFoldersHierarchy = true.obs;
+  final RxBool displayArtistBeforeTitle = true.obs;
   final RxList<String> backupItemslist = [
     AppPaths.TRACKS,
     AppPaths.TRACKS_STATS,
@@ -329,6 +330,7 @@ class SettingsController {
       defaultBackupLocation.value = json['defaultBackupLocation'] ?? defaultBackupLocation.value;
       defaultFolderStartupLocation.value = json['defaultFolderStartupLocation'] ?? defaultFolderStartupLocation.value;
       enableFoldersHierarchy.value = json['enableFoldersHierarchy'] ?? enableFoldersHierarchy.value;
+      displayArtistBeforeTitle.value = json['displayArtistBeforeTitle'] ?? displayArtistBeforeTitle.value;
       backupItemslist.value = List<String>.from(json['backupItemslist'] ?? backupItemslist);
       enableVideoPlayback.value = json['enableVideoPlayback'] ?? enableVideoPlayback.value;
       enableLyrics.value = json['enableLyrics'] ?? enableLyrics.value;
@@ -518,6 +520,7 @@ class SettingsController {
       'defaultBackupLocation': defaultBackupLocation.value,
       'defaultFolderStartupLocation': defaultFolderStartupLocation.value,
       'enableFoldersHierarchy': enableFoldersHierarchy.value,
+      'displayArtistBeforeTitle': displayArtistBeforeTitle.value,
       'backupItemslist': backupItemslist.toList(),
       'enableVideoPlayback': enableVideoPlayback.value,
       'enableLyrics': enableLyrics.value,
@@ -672,6 +675,7 @@ class SettingsController {
     String? defaultBackupLocation,
     String? defaultFolderStartupLocation,
     bool? enableFoldersHierarchy,
+    bool? displayArtistBeforeTitle,
     List<String>? backupItemslist,
     bool? enableVideoPlayback,
     bool? enableLyrics,
@@ -970,6 +974,9 @@ class SettingsController {
     }
     if (enableFoldersHierarchy != null) {
       this.enableFoldersHierarchy.value = enableFoldersHierarchy;
+    }
+    if (displayArtistBeforeTitle != null) {
+      this.displayArtistBeforeTitle.value = displayArtistBeforeTitle;
     }
     if (backupItemslist != null) {
       backupItemslist.loop((d, index) {

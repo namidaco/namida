@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -183,6 +184,17 @@ class MiniplayerCustomization extends StatelessWidget {
             title: lang.DISPLAY_AUDIO_INFO_IN_MINIPLAYER,
             onChanged: (value) => settings.save(displayAudioInfoMiniplayer: !value),
             value: settings.displayAudioInfoMiniplayer.value,
+          ),
+        ),
+        Obx(
+          () => CustomSwitchListTile(
+            icon: Broken.align_left,
+            title: lang.DISPLAY_ARTIST_BEFORE_TITLE,
+            onChanged: (value) {
+              settings.save(displayArtistBeforeTitle: !value);
+              Player.inst.refreshRxVariables();
+            },
+            value: settings.displayArtistBeforeTitle.value,
           ),
         ),
       ],

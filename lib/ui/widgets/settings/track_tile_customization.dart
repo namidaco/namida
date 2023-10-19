@@ -36,6 +36,7 @@ class TrackTileCustomization extends StatelessWidget {
             value: settings.forceSquaredTrackThumbnail.value,
             onChanged: (value) {
               settings.save(forceSquaredTrackThumbnail: !value);
+              Player.inst.refreshRxVariables();
               if (!value && settings.trackThumbnailSizeinList.toInt() != settings.trackListTileHeight.toInt()) {
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
@@ -55,7 +56,6 @@ class TrackTileCustomization extends StatelessWidget {
                   ),
                 );
               }
-              Player.inst.refreshRxVariables();
             },
           ),
         ),

@@ -1954,10 +1954,61 @@ class _TrackInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     final double opacity = (inverseAboveOne(p) * 10 - 9).clamp(0, 1);
     final track = trackPre.toTrackExt();
+    final title = track.title;
     final artist = track.originalArtist;
     final canShowArtist = artist != '';
+    final canShowTitle = track.title != '';
     final bigFontSize = velpy(a: 15.0, b: 20.0, c: p);
     final smallFontSize = velpy(a: 13.0, b: 15.0, c: p);
+    TextStyle? getStyle(bool bigger, bool makeSmallBiggerIf) {
+      return bigger
+          ? context.textTheme.displayMedium?.copyWith(
+              fontSize: bigFontSize.multipliedFontScale,
+              height: 1,
+            )
+          : context.textTheme.displayMedium?.copyWith(
+              fontSize: (makeSmallBiggerIf ? bigFontSize : smallFontSize).multipliedFontScale,
+            );
+    }
+
+    final artistAndTitle = settings.displayArtistBeforeTitle.value
+        ? [
+            if (canShowArtist) ...[
+              Text(
+                artist.overflow,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: getStyle(true, !canShowTitle),
+              ),
+              const SizedBox(height: 4.0),
+            ],
+            if (canShowTitle)
+              Text(
+                title.overflow,
+                maxLines: canShowArtist ? 1 : 2,
+                overflow: TextOverflow.ellipsis,
+                style: getStyle(false, !canShowArtist),
+              ),
+          ]
+        : [
+            if (canShowTitle) ...[
+              Text(
+                title.overflow,
+                maxLines: canShowArtist ? 1 : 2,
+                overflow: TextOverflow.ellipsis,
+                style: getStyle(true, !canShowTitle),
+              ),
+              const SizedBox(height: 4.0),
+            ],
+            if (canShowArtist)
+              Text(
+                artist.overflow,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: getStyle(false, !canShowArtist),
+              ),
+          ];
+
     return Transform.translate(
       offset: Offset(0, bottomOffset + (-maxOffset / 4.0 * p.clamp(0, 2))),
       child: Padding(
@@ -1986,28 +2037,7 @@ class _TrackInfo extends StatelessWidget {
                                 key: Key(track.title),
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (canShowArtist) ...[
-                                    Text(
-                                      artist.overflow,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: context.textTheme.displayMedium?.copyWith(
-                                        fontSize: bigFontSize.multipliedFontScale,
-                                        height: 1,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4.0),
-                                  ],
-                                  Text(
-                                    track.title.overflow,
-                                    maxLines: canShowArtist ? 1 : 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: context.textTheme.displayMedium?.copyWith(
-                                      fontSize: (canShowArtist ? smallFontSize : bigFontSize).multipliedFontScale,
-                                    ),
-                                  ),
-                                ],
+                                children: artistAndTitle,
                               ),
                             ),
                           ),
