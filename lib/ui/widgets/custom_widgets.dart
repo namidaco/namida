@@ -2865,7 +2865,7 @@ class ShaderFadingWidget extends StatelessWidget {
     return ShaderMask(
       blendMode: BlendMode.dstIn,
       shaderCallback: (rect) {
-        final stops = biggerValues ? [0.07, 0.3, 0.6, 0.8, 1.0] : [0.0, 0.2, 0.8, 1.0, 1.0];
+        final stops = biggerValues ? [0.07, 0.3, 0.6, 0.8, 1.0] : [0.0, 0.2, 0.8, 0.9, 1.0];
         return LinearGradient(
           begin: begin,
           end: end,

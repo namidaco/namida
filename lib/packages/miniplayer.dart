@@ -2240,9 +2240,9 @@ class LyricsWrapper extends StatelessWidget {
                                     child: SingleChildScrollView(
                                       child: Column(
                                         children: [
-                                          const SizedBox(height: 16.0),
+                                          const SizedBox(height: 48.0),
                                           Text(Lyrics.inst.currentLyricsText.value, style: context.textTheme.displayMedium),
-                                          const SizedBox(height: 16.0),
+                                          const SizedBox(height: 48.0),
                                         ],
                                       ),
                                     ),
