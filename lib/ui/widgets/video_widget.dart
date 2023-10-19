@@ -437,8 +437,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           key: const Key('dummy_container'),
           color: Colors.transparent,
         );
-    final horizontalControlsPadding =
-        widget.isFullScreen ? const EdgeInsets.symmetric(horizontal: 32.0, vertical: 12.0) : const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0);
+    final inLandscape = NamidaNavigator.inst.isInLanscape;
+    final horizontalControlsPadding = widget.isFullScreen
+        ? inLandscape
+            ? const EdgeInsets.symmetric(horizontal: 32.0, vertical: 12.0) // lanscape videos
+            : const EdgeInsets.symmetric(horizontal: 12.0, vertical: 32.0) // vertical videos
+        : const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0);
     final itemsColor = Colors.white.withAlpha(200);
     final shouldShowVolumeSlider = widget.showControls && widget.isFullScreen;
     return Listener(

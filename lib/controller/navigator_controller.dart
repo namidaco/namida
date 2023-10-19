@@ -36,6 +36,8 @@ class NamidaNavigator {
   final GlobalKey<InnerDrawerState> innerDrawerKey = GlobalKey<InnerDrawerState>();
   final heroController = HeroController();
 
+  bool isInLanscape = false;
+
   Future<T?> showMenu<T>(Future? menuFunction) async {
     _currentMenusNumber++;
     _printMenus();
@@ -100,7 +102,9 @@ class NamidaNavigator {
     }
   }
 
-  Future<void> _setOrientations(List<DeviceOrientation> orientations) async {
+  Future<void> _setOrientations(bool lanscape) async {
+    isInLanscape = lanscape;
+    final orientations = lanscape ? [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight] : kDefaultOrientations;
     await SystemChrome.setPreferredOrientations(orientations);
   }
 
@@ -128,23 +132,22 @@ class NamidaNavigator {
       opaque: true,
       fullscreenDialog: false,
     );
-    if (setOrientations) {
-      await Future.wait([
-        _setOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]),
-        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky),
-      ]);
-    }
+
+    await Future.wait([
+      if (setOrientations) _setOrientations(true),
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky),
+    ]);
   }
 
   Future<void> exitFullScreen({bool setOrientations = true}) async {
     if (!_isInFullScreen) return;
     Get.close(1);
-    if (setOrientations) {
-      await Future.wait([
-        _setOrientations(kDefaultOrientations),
-        SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values),
-      ]);
-    }
+
+    await Future.wait([
+      if (setOrientations) _setOrientations(false),
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values),
+    ]);
+
     _isInFullScreen = false;
   }
 
