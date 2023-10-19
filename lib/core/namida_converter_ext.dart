@@ -255,18 +255,35 @@ extension FAudioTaggerFFMPEGExtractor on FAudioTagger {
     required String trackPath,
     bool extractFFmpegThumbnailIfFailed = true,
     bool forceExtractByFFmpeg = false,
+    void Function(String err)? onError,
+    void Function(String err)? onArtworkError,
   }) async {
     FAudioModel? trackInfo;
     Uint8List? artwork;
 
+    IOSink? sink;
+
     if (!forceExtractByFFmpeg) {
-      try {
-        trackInfo = await readAllData(path: trackPath);
-        artwork = trackInfo?.firstArtwork;
-      } catch (e) {
-        printy(e, isError: true);
+      // -- preparing logs file
+      if (onError == null) {
+        final logsFile = File(AppPaths.LOGS_TAGGER);
+        await logsFile.create();
+        sink = logsFile.openWrite(mode: FileMode.append);
       }
+
+      trackInfo = await readAllData(
+        path: trackPath,
+        onError: onError ?? (err) => (err) => sink?.write("Error Extracting [$trackPath]: $err\n\n\n"),
+      );
+      artwork = trackInfo?.firstArtwork ??
+          await readArtwork(
+            path: trackPath,
+            onError: onArtworkError ?? (err) => (err) => sink?.write("Error Extracting Artwork: [$trackPath]: $err\n\n\n"),
+          );
     }
+
+    await sink?.flush();
+    await sink?.close();
 
     if (trackInfo == null) {
       final ffmpegInfo = await NamidaFFMPEG.inst.extractMetadata(trackPath);

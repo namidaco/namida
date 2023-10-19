@@ -278,7 +278,7 @@ class IndexerSettings extends StatelessWidget {
                   : Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0),
                       child: Text(
-                        Indexer.inst.currentTrackPathBeingExtracted.value,
+                        p,
                         style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
                       ),
                     );

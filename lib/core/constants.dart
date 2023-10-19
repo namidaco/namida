@@ -39,6 +39,7 @@ class AppPaths {
   static final LATEST_QUEUE = '$_USER_DATA/latest_queue.json';
 
   static final LOGS = '$_USER_DATA/logs.txt';
+  static final LOGS_TAGGER = '$_USER_DATA/tagger_logs.txt';
 
   static final TOTAL_LISTEN_TIME = '$_USER_DATA/total_listen.txt';
   static final FAVOURITES_PLAYLIST = '$_USER_DATA/favs.json';

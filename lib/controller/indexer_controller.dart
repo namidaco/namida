@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:faudiotagger/faudiotagger.dart';
 import 'package:faudiotagger/models/faudiomodel.dart';
@@ -241,11 +242,13 @@ class Indexer {
     final tryExtractingFromFilename = parameters["tryExtractingFromFilename"] as bool;
     final faudiomodelsSent = parameters["faudiomodels"] as Map;
     final artworksSent = parameters["artworks"] as Map;
+    final logsPath = parameters["logsPath"] as String;
 
+    final sendPort = parameters["sendPort"] as SendPort;
     final token = parameters["token"] as RootIsolateToken;
     BackgroundIsolateBinaryMessenger.ensureInitialized(token);
 
-    Future<Map<String, dynamic>> extracty(String trackPath) async {
+    Future<Map<String, dynamic>> extracty(String trackPath, void Function(String err) onError) async {
       // -- most methods dont throw, except for timeout
       try {
         const timeoutDuration = Duration(seconds: 10); // 10s for each method, 2 more fallback methods so totalDuration is upto 30s
@@ -280,9 +283,13 @@ class Indexer {
 
         // if one of them wasnt sent, we extract using tagger
         if (trackInfo == null && artwork == null) {
-          final infoAndArtwork = await _faudiotagger.readAllData(path: trackPath).timeout(timeoutDuration);
-          trackInfo ??= infoAndArtwork;
-          artwork ??= infoAndArtwork?.firstArtwork;
+          try {
+            final infoAndArtwork = await _faudiotagger.readAllData(path: trackPath, onError: onError).timeout(timeoutDuration);
+            trackInfo ??= infoAndArtwork;
+            artwork ??= infoAndArtwork?.firstArtwork;
+          } catch (e) {
+            printo(e, isError: true);
+          }
         }
 
         if (trackInfo == null && !tryExtractingFromFilename) {
@@ -432,16 +439,28 @@ class Indexer {
     }
 
     if (trackPaths.isNotEmpty) {
+      final logsFile = File(logsPath);
+      await logsFile.create();
+      final sink = logsFile.openWrite(mode: FileMode.append);
+
       final all = <Map<String, dynamic>>[];
       final completer = Completer<void>();
+      int extractedNumber = 0;
       for (final trackPath in trackPaths) {
-        extracty(trackPath).then((r) {
+        extracty(
+          trackPath,
+          (err) => sink.write('Error Extracting ["$trackPath"]: $err\n\n\n'),
+        ).then((r) {
+          sendPort.send(trackPath);
           r['path'] = trackPath;
           all.add(r);
-          if (all.length == trackPaths.length) completer.completeIfWasnt();
+          extractedNumber++;
+          if (extractedNumber == trackPaths.length) completer.completeIfWasnt();
         });
       }
       await completer.future;
+      await sink.flush();
+      await sink.close();
       return all;
     }
     return [];
@@ -460,6 +479,11 @@ class Indexer {
     bool tryExtractingFromFilename = true,
     bool extractColor = false,
   }) async {
+    final ReceivePort receivePort = ReceivePort();
+    receivePort.listen((message) {
+      currentTrackPathBeingExtracted.value = message as String? ?? '';
+    });
+
     Future<List<(String, TrackExtended?, Uint8List?)>> executeOnThread({
       required List<String> paths,
       Map<String, FAudioModel?> audiomodels = const {},
@@ -473,6 +497,8 @@ class Indexer {
         "tryExtractingFromFilename": tryExtractingFromFilename,
         "faudiomodels": audiomodels.isEmpty ? {} : {for (final m in audiomodels.entries) m.key: m.value?.toMap()},
         "artworks": artworks,
+        "sendPort": receivePort.sendPort,
+        "logsPath": AppPaths.LOGS_TAGGER,
       });
       final all = <(String, TrackExtended?, Uint8List?)>[];
       for (final res in results) {
@@ -525,12 +551,24 @@ class Indexer {
       }
       artworks[r.$1] = r.$3;
     }
+
+    final logsFile = File(AppPaths.LOGS_TAGGER);
+    await logsFile.create();
+    final sink = logsFile.openWrite(mode: FileMode.append);
     final ffmpegModel = <String, FAudioModel?>{};
     for (final f in failed) {
-      final r = await _faudiotagger.extractMetadata(trackPath: f, forceExtractByFFmpeg: true);
+      final r = await _faudiotagger.extractMetadata(
+        trackPath: f,
+        forceExtractByFFmpeg: true,
+        onError: (err) => sink.write("Error Extracting [$f]: $err\n\n\n"),
+        onArtworkError: (err) => sink.write("Error Extracting Artwork [$f]: $err\n\n\n"),
+      );
       ffmpegModel[f] = r.$1;
       artworks[f] = r.$2;
     }
+
+    await sink.flush();
+    await sink.close();
     final resultsFFMPEG = await executeOnThread(
       paths: failed,
       audiomodels: ffmpegModel,
@@ -847,7 +885,7 @@ class Indexer {
     currentTrackPathBeingExtracted.value = '';
     final chunkExtractList = <String>[];
     final freeMemory = SysInfo.getFreePhysicalMemory();
-    final chunkSize = (freeMemory ~/ 4).clamp(8, 128);
+    final chunkSize = (freeMemory ~/ 6).clamp(8, 156);
     if (audioFiles.isNotEmpty) {
       // -- Extracting All Metadata
       for (final trackPath in audioFiles) {
