@@ -88,7 +88,6 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final imagePath = widget.path;
     final realWidthAndHeight = widget.forceSquared ? context.width : null;
 
     int? finalCache;
@@ -134,8 +133,10 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
       );
     }
 
+    final imagePath = widget.path;
     final bytes = widget.bytes;
-    return imagePath == null || widget.forceDummyArtwork
+    final isValidBytes = bytes != null && bytes.isNotEmpty;
+    return (imagePath == null && !isValidBytes) || widget.forceDummyArtwork
         ? getStockWidget(
             stackWithOnTopWidgets: true,
             bgc: widget.bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
@@ -158,33 +159,34 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      Image(
-                        image: ScrollAwareImageProvider(
-                          context: _disposableContext,
-                          imageProvider: ResizeImage.resizeIfNeeded(
-                            null,
-                            finalCache,
-                            (bytes != null && bytes.isNotEmpty ? MemoryImage(bytes) : FileImage(File(imagePath))) as ImageProvider,
+                      if (imagePath != null || isValidBytes)
+                        Image(
+                          image: ScrollAwareImageProvider(
+                            context: _disposableContext,
+                            imageProvider: ResizeImage.resizeIfNeeded(
+                              null,
+                              finalCache,
+                              (isValidBytes ? MemoryImage(bytes) : FileImage(File(imagePath!))) as ImageProvider,
+                            ),
                           ),
+                          gaplessPlayback: true,
+                          fit: BoxFit.cover,
+                          filterQuality: widget.compressed ? FilterQuality.low : FilterQuality.high,
+                          width: realWidthAndHeight,
+                          height: realWidthAndHeight,
+                          frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
+                            if (wasSynchronouslyLoaded) return child;
+                            return AnimatedSwitcher(
+                              duration: Duration(milliseconds: widget.fadeMilliSeconds),
+                              child: frame != null ? child : const SizedBox(),
+                            );
+                          }),
+                          errorBuilder: (context, error, stackTrace) {
+                            return getStockWidget(
+                              stackWithOnTopWidgets: false,
+                            );
+                          },
                         ),
-                        gaplessPlayback: true,
-                        fit: BoxFit.cover,
-                        filterQuality: widget.compressed ? FilterQuality.low : FilterQuality.high,
-                        width: realWidthAndHeight,
-                        height: realWidthAndHeight,
-                        frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
-                          if (wasSynchronouslyLoaded) return child;
-                          return AnimatedSwitcher(
-                            duration: Duration(milliseconds: widget.fadeMilliSeconds),
-                            child: frame != null ? child : const SizedBox(),
-                          );
-                        }),
-                        errorBuilder: (context, error, stackTrace) {
-                          return getStockWidget(
-                            stackWithOnTopWidgets: false,
-                          );
-                        },
-                      ),
                       ...widget.onTopWidgets
                     ],
                   ),

@@ -3,10 +3,10 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart' hide Response;
-import 'package:http/http.dart' as http;
 import 'package:newpipeextractor_dart/models/streams.dart';
 import 'package:picture_in_picture/picture_in_picture.dart';
 import 'package:video_player/video_player.dart';
@@ -813,27 +813,44 @@ class VideoController {
     );
   }
 
+  void closeThumbnailClients(List<String?> links) {
+    links.loop((link, _) {
+      _runningRequestsClients[link]?.close(force: true);
+      _runningRequestsClients.remove(link);
+    });
+  }
+
   /// This prevents re-requesting the same url.
-  final _runningRequestsMap = <String, bool>{};
-  Future<Uint8List?> getYoutubeThumbnailAsBytes({String? youtubeId, String? url}) async {
+  static final _runningRequestsClients = <String, Dio>{};
+  static final _runningRequestsMap = <String, Completer<Uint8List?>?>{};
+
+  Future<Uint8List?> getYoutubeThumbnailAsBytes({String? youtubeId, String? url, bool lowerResYTID = false, required bool keepInMemory}) async {
     if (youtubeId == null && url == null) return null;
 
-    final links = url != null ? [url] : YTThumbnail(youtubeId!).allQualitiesByHighest;
-
-    final thumbnailCompleter = Completer<Uint8List?>();
+    final links = url != null
+        ? [url]
+        : lowerResYTID
+            ? [YTThumbnail(youtubeId!).mqdefault]
+            : YTThumbnail(youtubeId!).allQualitiesByHighest;
 
     for (final link in links) {
       if (_runningRequestsMap[link] != null) {
         printy('getYoutubeThumbnailAsBytes: Same link is being requested right now, ignoring');
-        return await thumbnailCompleter.future; // return and not continue, cuz if requesting hq image, continue will make it request lower one
+        return await _runningRequestsMap[link]!.future; // return and not continue, cuz if requesting hq image, continue will make it request lower one
       }
 
-      _runningRequestsMap[link] = true;
+      _runningRequestsClients[link] = Dio();
+      _runningRequestsMap.optimizedAdd([MapEntry(link, Completer<Uint8List?>())], 600); // most images are <~20kb so =12MB
 
       (Uint8List, int)? requestRes;
 
       try {
-        requestRes = await _httpGetIsolate.thready(link);
+        final client = _runningRequestsClients[link]!;
+        final res = await client.get<Uint8List?>(
+          link,
+          options: Options(responseType: ResponseType.bytes),
+        );
+        requestRes = (res.data ?? Uint8List.fromList([]), res.statusCode ?? 404);
       } catch (e) {
         printy('getYoutubeThumbnailAsBytes: Error getting thumbnail at $link, trying again with lower quality.\n$e', isError: true);
       }
@@ -843,28 +860,25 @@ class VideoController {
       if (req != null) {
         final data = req.$1;
         if (data.isNotEmpty && req.$2 != 404) {
-          thumbnailCompleter.complete(data);
-          _runningRequestsMap.remove(link);
-          break;
+          _runningRequestsMap[link]?.completeIfWasnt(data);
+          if (!keepInMemory) _runningRequestsMap.remove(link);
+          closeThumbnailClients([link]);
+          return data;
         } else {
-          _runningRequestsMap.remove(link);
+          _runningRequestsMap[link]?.completeIfWasnt(null);
+          _runningRequestsMap.remove(link); // removing since it failed
+          closeThumbnailClients([link]);
           continue;
         }
       }
     }
-
-    // -- finished looping and no image was assigned
-    if (!thumbnailCompleter.isCompleted) {
-      thumbnailCompleter.complete(null);
-    }
-
-    return thumbnailCompleter.future;
+    return null;
   }
 
-  static Future<(Uint8List, int)> _httpGetIsolate(String link) async {
-    final requestRes = await http.get(Uri.parse(link));
-    return (requestRes.bodyBytes, requestRes.statusCode);
-  }
+  // static Future<(Uint8List, int)> _httpGetIsolate(String link) async {
+  //   final requestRes = await http.get(Uri.parse(link));
+  //   return (requestRes.bodyBytes, requestRes.statusCode);
+  // }
 
   Future<void> _trimExcessImageCache() async {
     final totalMaxBytes = settings.imagesMaxCacheInMB.value * 1024 * 1024;
@@ -905,7 +919,12 @@ class VideoController {
     return totalDeletedBytes;
   }
 
-  Future<File?> getYoutubeThumbnailAndCache({String? id, String? channelUrl, bool isImportantInCache = true}) async {
+  Future<File?> getYoutubeThumbnailAndCache({
+    String? id,
+    String? channelUrl,
+    bool isImportantInCache = true,
+    FutureOr<void> Function()? beforeFetchingFromInternet,
+  }) async {
     if (id == null && channelUrl == null) return null;
 
     void trySavingLastAccessed(File? file) {
@@ -921,8 +940,9 @@ class VideoController {
     }
 
     printy('Downloading Thumbnail Started');
+    await beforeFetchingFromInternet?.call();
 
-    final bytes = await getYoutubeThumbnailAsBytes(youtubeId: id, url: channelUrl);
+    final bytes = await getYoutubeThumbnailAsBytes(youtubeId: id, url: channelUrl, keepInMemory: false);
     printy('Downloading Thumbnail Finished');
 
     final savedFile = id != null

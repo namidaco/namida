@@ -153,6 +153,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                         videoId: currentId,
                                         displayFallbackIcon: false,
                                         compressed: false,
+                                        preferLowerRes: false,
                                       ),
                                     ),
                                   ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -13,6 +14,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 
 class YoutubeThumbnail extends StatefulWidget {
   final String? channelUrl;
@@ -33,6 +35,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final double blur;
   final bool compressed;
   final bool isImportantInCache;
+  final bool preferLowerRes;
 
   const YoutubeThumbnail({
     super.key,
@@ -54,6 +57,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.blur = 1.5,
     this.compressed = true,
     required this.isImportantInCache,
+    this.preferLowerRes = true,
   });
 
   @override
@@ -67,25 +71,50 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
   bool get canFetchYTImage => widget.videoId != null || widget.channelUrl != null;
   bool get canFetchImage => widget.localImagePath != null || canFetchYTImage;
 
-  Key get kekekekey => Key("$smallBoxDynamicColor${widget.videoId}${widget.channelUrl}$imagePath${widget.smallBoxText}");
-
   Timer? _dontTouchMeImFetchingThumbnail;
+
+  Uint8List? imageBytes;
+
+  @override
+  void dispose() {
+    final allLinks = [widget.channelUrl];
+    allLinks.addAll(widget.videoId == null ? [] : YTThumbnail(widget.videoId!).allQualitiesByHighest);
+    VideoController.inst.closeThumbnailClients(allLinks);
+    super.dispose();
+  }
 
   Future<void> _getThumbnail() async {
     if (_dontTouchMeImFetchingThumbnail?.isActive == true) return;
     _dontTouchMeImFetchingThumbnail = null;
     _dontTouchMeImFetchingThumbnail = Timer(const Duration(seconds: 8), () {});
     imagePath = widget.localImagePath;
+
     if (imagePath == null) {
       final res = await VideoController.inst.getYoutubeThumbnailAndCache(
         id: widget.videoId,
         channelUrl: widget.channelUrl,
         isImportantInCache: widget.isImportantInCache,
+        // -- get lower res first
+        beforeFetchingFromInternet: () async {
+          final lowerRes = await VideoController.inst.getYoutubeThumbnailAsBytes(
+            youtubeId: widget.videoId,
+            lowerResYTID: true,
+            keepInMemory: true,
+          );
+          if (lowerRes != null && lowerRes.isNotEmpty) {
+            imageBytes = lowerRes;
+            if (mounted) setState(() {});
+          }
+        },
       );
       widget.onImageReady?.call(res);
-      imagePath = res?.path;
+
+      // -- only put the image if bytes are NOT valid, or if specified by parent
+      if (!widget.preferLowerRes || (imageBytes?.isEmpty ?? true)) {
+        imagePath = res?.path;
+        if (mounted) setState(() {});
+      }
     }
-    if (mounted) setState(() {});
 
     if (widget.extractColor && imagePath != null) {
       final c = await CurrentColor.inst.extractPaletteFromImage(
@@ -99,21 +128,24 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
     }
   }
 
+  Key get thumbKey => Key("$smallBoxDynamicColor${widget.videoId}${widget.channelUrl}${imageBytes?.length}$imagePath${widget.smallBoxText}");
+
   @override
   Widget build(BuildContext context) {
     if (imagePath == null && canFetchImage) {
-      _getThumbnail();
+      _getThumbnail(); // for failed requests
     }
     return Padding(
       padding: widget.margin ?? EdgeInsets.zero,
       child: ArtworkWidget(
+        key: thumbKey,
         isCircle: widget.isCircle,
         bgcolor: context.theme.cardColor.withAlpha(60),
         compressed: widget.compressed,
-        key: Key("$smallBoxDynamicColor${widget.videoId}${widget.channelUrl}$imagePath${widget.smallBoxText}"),
         blur: widget.isCircle ? 0.0 : widget.blur,
         borderRadius: widget.isCircle ? 0.0 : widget.borderRadius,
         fadeMilliSeconds: 600,
+        bytes: imageBytes,
         path: imagePath,
         height: widget.height,
         width: widget.width,

@@ -126,6 +126,7 @@ class MiniPlayerSwitchers extends StatelessWidget {
                       videoId: Player.inst.nowPlayingVideoID!.id,
                       displayFallbackIcon: false,
                       compressed: false,
+                      preferLowerRes: false,
                     ),
             ),
           );
