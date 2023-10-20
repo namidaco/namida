@@ -231,9 +231,7 @@ class Lyrics {
   }
 
   Future<String> _fetchLyricsGoogle({String title = '', String artist = ''}) async {
-    if (title == '' && artist == '') {
-      return '';
-    }
+    if (title == '' && artist == '') return '';
 
     const url = "https://www.google.com/search?client=safari&rls=en&ie=UTF-8&oe=UTF-8&q=";
     const delimiter1 = '</div></div></div></div><div class="hwc"><div class="BNeawe tAd8D AP7Wnd"><div><div class="BNeawe tAd8D AP7Wnd">';
@@ -247,6 +245,7 @@ class Lyrics {
       if (res == null) return '';
       final lyricsRes = res.body.split(delimiter1).last.split(delimiter2).first;
       if (lyricsRes.contains('<meta charset="UTF-8">')) return '';
+      if (lyricsRes.contains('please enable javascript on your web browser')) return '';
       return lyricsRes;
     }
 
