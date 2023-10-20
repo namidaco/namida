@@ -713,10 +713,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
 
     final playerStoppingSeikoo = Completer<bool>(); // to prevent accidental stopping if getAvailableStreams was faster than fade effect
-    pause().then((_) async {
+    if (isPlaying) {
+      // wait for pausing only if playing.
+      pause().then((_) async {
+        await onDispose();
+        playerStoppingSeikoo.complete(true);
+      });
+    } else {
       await onDispose();
       playerStoppingSeikoo.complete(true);
-    });
+    }
 
     await VideoController.vcontroller.dispose();
 
