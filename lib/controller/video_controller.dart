@@ -174,6 +174,8 @@ class VideoController {
 
   // final videoControlsKeys = <String, GlobalKey<NamidaVideoControlsState>>{};
 
+  final currentBrigthnessDim = 1.0.obs;
+
   final normalControlskey = GlobalKey<NamidaVideoControlsState>();
   final fullScreenControlskey = GlobalKey<NamidaVideoControlsState>();
   Widget? fullScreenVideoWidget;

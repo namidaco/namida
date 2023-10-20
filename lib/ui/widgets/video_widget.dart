@@ -78,6 +78,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   bool _isVisible = false;
   final hideDuration = const Duration(seconds: 3);
   final volumeHideDuration = const Duration(milliseconds: 500);
+  final brightnessHideDuration = const Duration(milliseconds: 500);
   final transitionDuration = const Duration(milliseconds: 300);
   final doubleTapSeekReset = const Duration(milliseconds: 600);
 
@@ -98,6 +99,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   }
 
   void setControlsVisibily(bool visible) {
+    if (visible && VideoController.vcontroller.isInPip) return; // dont show if in pip
     _isVisible = visible;
     if (mounted) setState(() {});
   }
@@ -123,6 +125,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   void _onTap() {
     _currentDeviceVolume.value = null; // hide volume slider
+    _canShowBrightnessSlider.value = false; // hide brightness slider
     if (_shouldSeekOnTap) return;
     if (_isVisible) {
       setControlsVisibily(false);
@@ -321,7 +324,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   }) {
     final seekContainerSize = context.width;
     final finalOffset = seekContainerSize * 0.05;
-    final color = Colors.black.withOpacity(0.8);
     final forwardIcons = <int, IconData>{
       5: Broken.forward_5_seconds,
       10: Broken.forward_10_seconds,
@@ -332,6 +334,19 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       10: Broken.backward_10_seconds,
       15: Broken.backward_15_seconds,
     };
+    const color = Color.fromRGBO(222, 222, 222, 0.8);
+    const strokeWidth = 1.8;
+    const strokeColor = Color.fromRGBO(20, 20, 20, 1);
+    const outlineShadow = <Shadow>[
+      // bottomLeft
+      Shadow(offset: Offset(-strokeWidth, -strokeWidth), color: strokeColor, blurRadius: 4.0),
+      // bottomRight
+      Shadow(offset: Offset(strokeWidth, -strokeWidth), color: strokeColor, blurRadius: 4.0),
+      // topRight
+      Shadow(offset: Offset(strokeWidth, strokeWidth), color: strokeColor, blurRadius: 4.0),
+      // topLeft
+      Shadow(offset: Offset(-strokeWidth, strokeWidth), color: strokeColor, blurRadius: 4.0),
+    ];
     return Positioned(
       right: isForward ? finalOffset : null,
       left: isForward ? null : finalOffset,
@@ -347,12 +362,16 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                   Icon(
                     isForward ? forwardIcons[ss] ?? Broken.forward : backwardIcons[ss] ?? Broken.backward,
                     color: color,
+                    shadows: outlineShadow,
                   ),
                   const SizedBox(height: 8.0),
                   Text(
                     '$ss ${lang.SECONDS}',
-                    style: context.textTheme.displayMedium?.copyWith(color: color),
-                  ),
+                    style: context.textTheme.displayMedium?.copyWith(
+                      color: color,
+                      shadows: outlineShadow,
+                    ),
+                  )
                 ],
               ),
             );
@@ -411,6 +430,17 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     });
   }
 
+  double _brightnessDimThreshold = 0.0;
+  final _brightnessMinDistance = 2.0;
+  final _canShowBrightnessSlider = false.obs;
+  Timer? _brightnessDimTimer;
+  void _startBrightnessDimTimer() {
+    _brightnessDimTimer?.cancel();
+    _brightnessDimTimer = Timer(brightnessHideDuration, () {
+      _canShowBrightnessSlider.value = false;
+    });
+  }
+
   bool _canSlideVolume(BuildContext context, double globalHeight) {
     final minimumVerticalDistanceToIgnoreSwipes = context.height * 0.1;
 
@@ -420,7 +450,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   }
 
   /// used to disable slider if user swiped too close to the edge.
-  bool _disableSliderVolume = false;
+  bool _disableSliders = false;
 
   /// used to hide slider if wasnt handled by pointer down/up.
   bool _isPointerDown = false;
@@ -430,6 +460,63 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     return isLoading && !Player.inst.isPlaying;
   }
 
+  RxDouble get _currentBrigthnessDim => VideoController.inst.currentBrigthnessDim;
+
+  Widget _getVerticalSliderWidget(String key, double? perc, IconData icon) {
+    final totalHeight = context.height.withMaximum(context.width);
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      child: perc == null
+          ? SizedBox(key: Key('$key.hidden'))
+          : Material(
+              key: Key('$key.visible'),
+              type: MaterialType.transparency,
+              child: Container(
+                width: 42.0,
+                decoration: BoxDecoration(
+                  color: context.theme.cardColor.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12.0),
+                    Stack(
+                      alignment: Alignment.bottomCenter,
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                          ),
+                          width: 4.0,
+                          height: totalHeight * 0.4,
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: CurrentColor.inst.color,
+                            borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                          ),
+                          width: 4.0,
+                          height: totalHeight * 0.4 * perc,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12.0),
+                    Text(
+                      "${(perc * 100).round()}%",
+                      style: context.textTheme.displaySmall,
+                    ),
+                    const SizedBox(height: 6.0),
+                    Icon(icon, size: 20.0),
+                    const SizedBox(height: 12.0),
+                  ],
+                ),
+              ),
+            ),
+    );
+  }
+
+  bool _pointerDownedOnRight = true;
   @override
   Widget build(BuildContext context) {
     final dummyWidget = widget.fallbackChild ??
@@ -444,44 +531,61 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
             : const EdgeInsets.symmetric(horizontal: 12.0, vertical: 32.0) // vertical videos
         : const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0);
     final itemsColor = Colors.white.withAlpha(200);
-    final shouldShowVolumeSlider = widget.showControls && widget.isFullScreen;
+    final shouldShowSliders = widget.showControls && widget.isFullScreen;
     return Listener(
       // key: widget.widgetKey, // prevents updating widget `GlobalKey().currentState?.build(context);`
       behavior: HitTestBehavior.translucent,
       onPointerCancel: (event) {
         _isPointerDown = false;
-        _disableSliderVolume = false;
-        if (shouldShowVolumeSlider) {
+        _disableSliders = false;
+        if (shouldShowSliders) {
           _startVolumeSwipeTimer();
+          _startBrightnessDimTimer();
         }
       },
       onPointerUp: (event) {
         _isPointerDown = false;
-        _disableSliderVolume = false;
-        if (shouldShowVolumeSlider) {
+        _disableSliders = false;
+        if (shouldShowSliders) {
           _startVolumeSwipeTimer();
+          _startBrightnessDimTimer();
         }
       },
       onPointerDown: (event) {
+        _pointerDownedOnRight = event.position.dx > context.width / 2;
         _isPointerDown = true;
         if (_shouldSeekOnTap) {
           _onDoubleTap(event.position);
           _startTimer();
         }
-        _disableSliderVolume = !_canSlideVolume(context, event.position.dy);
+        _disableSliders = !_canSlideVolume(context, event.position.dy);
       },
-      onPointerMove: !shouldShowVolumeSlider
+      onPointerMove: !shouldShowSliders
           ? null
           : (event) async {
-              if (_disableSliderVolume) return;
+              if (_disableSliders) return;
               final d = event.delta.dy;
-              _volumeThreshold += d;
-              if (_volumeThreshold >= _volumeMinDistance) {
-                _volumeThreshold = 0.0;
-                await FlutterVolumeController.lowerVolume(null);
-              } else if (_volumeThreshold <= -_volumeMinDistance) {
-                _volumeThreshold = 0.0;
-                await FlutterVolumeController.raiseVolume(null);
+              if (_pointerDownedOnRight) {
+                // -- volume
+                _volumeThreshold += d;
+                if (_volumeThreshold >= _volumeMinDistance) {
+                  _volumeThreshold = 0.0;
+                  await FlutterVolumeController.lowerVolume(null);
+                } else if (_volumeThreshold <= -_volumeMinDistance) {
+                  _volumeThreshold = 0.0;
+                  await FlutterVolumeController.raiseVolume(null);
+                }
+              } else {
+                _brightnessDimThreshold += d;
+                if (_brightnessDimThreshold >= _brightnessMinDistance) {
+                  _brightnessDimThreshold = 0.0;
+                  _canShowBrightnessSlider.value = true;
+                  _currentBrigthnessDim.value = (_currentBrigthnessDim.value - 0.01).withMinimum(0.1);
+                } else if (_brightnessDimThreshold <= -_brightnessMinDistance) {
+                  _brightnessDimThreshold = 0.0;
+                  _canShowBrightnessSlider.value = true;
+                  _currentBrigthnessDim.value = (_currentBrigthnessDim.value + 0.01).withMaximum(1.0);
+                }
               }
             },
       child: TapDetector(
@@ -514,6 +618,15 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 ),
               ],
             ),
+            // ---- Brightness Mask -----
+            Positioned.fill(
+              child: Obx(
+                () => Container(
+                  color: Colors.black.withOpacity(1 - _currentBrigthnessDim.value),
+                ),
+              ),
+            ),
+
             if (widget.showControls) ...[
               // ---- Mask -----
               Positioned.fill(
@@ -545,6 +658,25 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 iconSize: 20.0,
                               ),
                             const Spacer(),
+                            // ==== Reset Brightness ====
+                            Obx(
+                              () => AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 200),
+                                child: _currentBrigthnessDim.value < 1.0
+                                    ? NamidaIconButton(
+                                        key: const Key('brightnesseto_ok'),
+                                        tooltip: lang.RESET_BRIGHTNESS,
+                                        icon: Broken.sun_1,
+                                        iconColor: itemsColor.withOpacity(0.8),
+                                        horizontalPadding: 4.0,
+                                        iconSize: 18.0,
+                                        onPressed: () => _currentBrigthnessDim.value = 1.0,
+                                      )
+                                    : const SizedBox(
+                                        key: Key('brightnesseto_no'),
+                                      ),
+                              ),
+                            ),
                             // ===== Speed Chip =====
                             NamidaPopupWrapper(
                               onPop: _startTimer,
@@ -739,7 +871,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           title: '${element.height}p${element.framerateText()}',
                                           subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
                                           onPlay: (isSelected) {
-                                            if (!isSelected) {
+                                            // sometimes video is not initialized so we need the second check
+                                            if (!isSelected || !VideoController.vcontroller.isInitialized) {
                                               Player.inst.onItemPlayYoutubeIDSetQuality(
                                                 stream: null,
                                                 cachedFile: File(element.path),
@@ -1207,64 +1340,37 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 isForward: true,
               ),
 
-              // ========= Volume Slider ==========
-              if (shouldShowVolumeSlider)
+              // ========= Sliders ==========
+              if (shouldShowSliders) ...[
+                // ======= Brightness Slider ========
+                Positioned(
+                  left: context.width * 0.15,
+                  child: Obx(
+                    () {
+                      final bri = _canShowBrightnessSlider.value ? _currentBrigthnessDim.value : null;
+                      return _getVerticalSliderWidget(
+                        'brightness',
+                        bri,
+                        Broken.sun_1,
+                      );
+                    },
+                  ),
+                ),
+                // ======= Volume Slider ========
                 Positioned(
                   right: context.width * 0.15,
                   child: Obx(
                     () {
                       final vol = _currentDeviceVolume.value;
-                      return AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
-                        child: vol == null
-                            ? const SizedBox(key: Key('volume_hidden'))
-                            : Material(
-                                key: const Key('volume_visible'),
-                                type: MaterialType.transparency,
-                                child: Container(
-                                  width: 42.0,
-                                  decoration: BoxDecoration(
-                                    color: context.theme.cardColor.withOpacity(0.5),
-                                    borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      const SizedBox(height: 12.0),
-                                      Stack(
-                                        alignment: Alignment.bottomCenter,
-                                        children: [
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              color: Colors.black.withOpacity(0.2),
-                                              borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                                            ),
-                                            width: 4.0,
-                                            height: context.height * 0.4,
-                                          ),
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              color: CurrentColor.inst.color,
-                                              borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                                            ),
-                                            width: 4.0,
-                                            height: context.height * 0.4 * vol,
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 12.0),
-                                      Text(
-                                        "${(vol * 100).round()}%",
-                                        style: context.textTheme.displaySmall,
-                                      ),
-                                      const SizedBox(height: 12.0),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                      return _getVerticalSliderWidget(
+                        'volume',
+                        vol,
+                        Broken.volume_high,
                       );
                     },
                   ),
-                )
+                ),
+              ],
             ],
           ],
         ),

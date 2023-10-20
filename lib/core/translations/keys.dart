@@ -422,6 +422,7 @@ class LanguageKeys {
   late String REPLIES;
   late String REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING;
   late String RESCAN_VIDEOS;
+  late String RESET_BRIGHTNESS;
   late String RESET_TO_DEFAULT;
   late String RESPECT_NO_MEDIA_SUBTITLE;
   late String RESPECT_NO_MEDIA;
