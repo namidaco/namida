@@ -14,6 +14,7 @@ enum SortType {
   dateModified,
   bitrate,
   composer,
+  trackNo,
   discNo,
   filename,
   duration,

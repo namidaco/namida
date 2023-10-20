@@ -11,7 +11,7 @@ dependency_overrides:
   dart_extensions:
     git:
       url: https://github.com/MSOB7YY/dart_extensions
-      ref: ca4344e147827a38c813902fc995b788f3e7f8d9
+      ref: 0a4d65044b5767d266730cc67894ef648e7f1afd
   archive: ^3.3.8
 
 dependencies:
@@ -83,7 +83,7 @@ dependencies:
   faudiotagger:
     git:
       url: https://github.com/MSOB7YY/faudiotagger
-      ref: e6bd5b3d3303e68b513924cf31789b2246f0e5e4
+      ref: cb8399eec6bc9d238e53125d294c9a3cb5b91434
   waveform_extractor: ^1.0.1
   basic_audio_handler:
     git:

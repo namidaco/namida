@@ -184,8 +184,8 @@ packages:
     dependency: "direct overridden"
     description:
       path: "."
-      ref: ca4344e147827a38c813902fc995b788f3e7f8d9
-      resolved-ref: ca4344e147827a38c813902fc995b788f3e7f8d9
+      ref: "0a4d65044b5767d266730cc67894ef648e7f1afd"
+      resolved-ref: "0a4d65044b5767d266730cc67894ef648e7f1afd"
       url: "https://github.com/MSOB7YY/dart_extensions"
     source: git
     version: "0.0.1"
@@ -265,8 +265,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: e6bd5b3d3303e68b513924cf31789b2246f0e5e4
-      resolved-ref: e6bd5b3d3303e68b513924cf31789b2246f0e5e4
+      ref: cb8399eec6bc9d238e53125d294c9a3cb5b91434
+      resolved-ref: cb8399eec6bc9d238e53125d294c9a3cb5b91434
       url: "https://github.com/MSOB7YY/faudiotagger"
     source: git
     version: "0.0.1"

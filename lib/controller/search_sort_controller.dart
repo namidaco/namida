@@ -97,6 +97,35 @@ class SearchSortController {
     }
   }
 
+  List<Comparable Function(Track tr)> getMediaTracksSortingComparables(MediaType media) {
+    final sorts = settings.mediaItemsTrackSorting[media] ?? <SortType>[SortType.title];
+
+    final map = <SortType, Comparable Function(Track e)>{
+      SortType.title: (e) => e.title.toLowerCase(),
+      SortType.album: (e) => e.album.toLowerCase(),
+      SortType.albumArtist: (e) => e.albumArtist.toLowerCase(),
+      SortType.year: (e) => e.year,
+      SortType.artistsList: (e) => e.artistsList.join().toLowerCase(),
+      SortType.genresList: (e) => e.genresList.join().toLowerCase(),
+      SortType.dateAdded: (e) => e.dateAdded,
+      SortType.dateModified: (e) => e.dateModified,
+      SortType.bitrate: (e) => e.bitrate,
+      SortType.composer: (e) => e.composer.toLowerCase(),
+      SortType.trackNo: (e) => e.trackNo,
+      SortType.discNo: (e) => e.discNo,
+      SortType.filename: (e) => e.filename.toLowerCase(),
+      SortType.duration: (e) => e.duration,
+      SortType.sampleRate: (e) => e.sampleRate,
+      SortType.size: (e) => e.size,
+      SortType.rating: (e) => e.stats.rating,
+    };
+    final l = <Comparable Function(Track e)>[];
+    sorts.loop((e, index) {
+      if (map[e] != null) l.add(map[e]!);
+    });
+    return l;
+  }
+
   void _searchTracks(String text, {bool temp = false}) async {
     if (text == '') {
       if (temp) {
@@ -262,25 +291,50 @@ class SearchSortController {
     sortBy ??= settings.tracksSort.value;
     reverse ??= settings.tracksSortReversed.value;
 
-    void sortThis(Comparable Function(Track tr) comparable) => reverse! ? tracksInfoList.sortByReverse(comparable) : tracksInfoList.sortBy(comparable);
+    void sortThis(Comparable Function(Track e) comparable) => reverse! ? tracksInfoList.sortByReverse(comparable) : tracksInfoList.sortBy(comparable);
+    void sortThisAlts(List<Comparable<dynamic> Function(Track tr)> alternatives) =>
+        reverse! ? tracksInfoList.sortByReverseAlts(alternatives) : tracksInfoList.sortByAlts(alternatives);
 
+    final sameAlbumSorters = getMediaTracksSortingComparables(MediaType.album);
+    final sameArtistSorters = getMediaTracksSortingComparables(MediaType.artist);
+    final sameGenreSorters = getMediaTracksSortingComparables(MediaType.genre);
     switch (sortBy) {
       case SortType.title:
         sortThis((e) => e.title.toLowerCase());
       case SortType.album:
-        sortThis((e) => e.album.toLowerCase());
+        sortThisAlts(
+          [
+            (tr) => tr.album.toLowerCase(),
+            ...sameAlbumSorters,
+          ],
+        );
         break;
       case SortType.albumArtist:
-        sortThis((e) => e.albumArtist.toLowerCase());
+        sortThisAlts(
+          [
+            (tr) => tr.albumArtist.toLowerCase(),
+            ...sameAlbumSorters,
+          ],
+        );
         break;
       case SortType.year:
         sortThis((e) => e.year);
         break;
       case SortType.artistsList:
-        sortThis((e) => e.artistsList.join().toLowerCase());
+        sortThisAlts(
+          [
+            (tr) => tr.artistsList.join().toLowerCase(),
+            ...sameArtistSorters,
+          ],
+        );
         break;
       case SortType.genresList:
-        sortThis((e) => e.genresList.join().toLowerCase());
+        sortThisAlts(
+          [
+            (tr) => tr.genresList.join().toLowerCase(),
+            ...sameGenreSorters,
+          ],
+        );
         break;
       case SortType.dateAdded:
         sortThis((e) => e.dateAdded);
@@ -292,7 +346,10 @@ class SearchSortController {
         sortThis((e) => e.bitrate);
         break;
       case SortType.composer:
-        sortThis((e) => e.composer);
+        sortThis((e) => e.composer.toLowerCase());
+        break;
+      case SortType.trackNo:
+        sortThis((e) => e.trackNo);
         break;
       case SortType.discNo:
         sortThis((e) => e.discNo);

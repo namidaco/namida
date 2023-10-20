@@ -147,7 +147,7 @@ class ExtrasSettings extends StatelessWidget {
                           },
                         ),
                         NamidaButton(
-                          text: lang.SAVE,
+                          text: lang.DONE,
                           onPressed: NamidaNavigator.inst.closeDialog,
                         ),
                       ],

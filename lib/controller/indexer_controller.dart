@@ -149,12 +149,40 @@ class Indexer {
       mainMapFolders.addForce(tr.folder, tr);
     });
 
-    mainMapAlbums.value.updateAll((key, value) => value..sortByAlts((e) => e.year, [(e) => e.trackNo, (e) => e.title]));
-    mainMapArtists.value.updateAll((key, value) => value..sortByAlt((e) => e.year, (e) => e.title));
-    mainMapGenres.value.updateAll((key, value) => value..sortByAlt((e) => e.year, (e) => e.title));
-    mainMapFolders.updateAll((key, value) => value..sortBy((e) => e.filename.toLowerCase()));
-
+    sortMediaTracksSubLists(MediaType.values);
     _sortAll();
+  }
+
+  void sortMediaTracksSubLists(List<MediaType> medias) {
+    medias.loop((e, index) {
+      final sorters = SearchSortController.inst.getMediaTracksSortingComparables(e);
+      void sortPls(Iterable<List<Track>> trs) {
+        for (final e in trs) {
+          e.sortByAlts(sorters);
+        }
+      }
+
+      switch (e) {
+        case MediaType.album:
+          sortPls(mainMapAlbums.value.values);
+          mainMapAlbums.refresh();
+          break;
+        case MediaType.artist:
+          sortPls(mainMapArtists.value.values);
+          mainMapArtists.refresh();
+          break;
+        case MediaType.genre:
+          sortPls(mainMapGenres.value.values);
+          mainMapGenres.refresh();
+          break;
+        case MediaType.folder:
+          sortPls(mainMapFolders.values);
+          mainMapFolders.refresh();
+          break;
+        default:
+          null;
+      }
+    });
   }
 
   void _sortAll() => SearchSortController.inst.sortAll();
@@ -209,25 +237,29 @@ class Indexer {
       addedFolders.add(tr.folder);
     });
 
+    final albumSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.album);
+    final artistSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.artist);
+    final genreSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.genre);
+    final folderSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.folder);
     addedAlbums
       ..removeDuplicates()
       ..loop((e, index) {
-        mainMapAlbums.value[e]?.sortByAlts((e) => e.year, [(e) => e.trackNo, (e) => e.title]);
+        mainMapAlbums.value[e]?.sortByAlts(albumSorters);
       });
     addedArtists
       ..removeDuplicates()
       ..loop((e, index) {
-        mainMapArtists.value[e]?.sortByAlt((e) => e.year, (e) => e.title);
+        mainMapArtists.value[e]?.sortByAlts(artistSorters);
       });
     addedGenres
       ..removeDuplicates()
       ..loop((e, index) {
-        mainMapGenres.value[e]?.sortByAlt((e) => e.year, (e) => e.title);
+        mainMapGenres.value[e]?.sortByAlts(genreSorters);
       });
     addedFolders
       ..removeDuplicates()
       ..loop((e, index) {
-        mainMapFolders[e]?.sortBy((e) => e.filename.toLowerCase());
+        mainMapFolders[e]?.sortByAlts(folderSorters);
       });
 
     _sortAll();

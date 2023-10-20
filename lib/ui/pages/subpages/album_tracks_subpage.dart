@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -26,40 +27,43 @@ class AlbumTracksPage extends StatelessWidget {
     final name = tracks.album;
     return BackgroundWrapper(
       child: Obx(
-        () => NamidaTracksList(
-          queueSource: QueueSource.album,
-          queueLength: tracks.length,
-          queue: tracks,
-          displayTrackNumber: settings.displayTrackNumberinAlbumPage.value,
-          header: SubpagesTopContainer(
-            title: name,
-            source: QueueSource.album,
-            subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
-            thirdLineText: tracks.albumArtist,
-            heroTag: 'album_$albumIdentifier',
-            imageWidget: shouldAlbumBeSquared
-                ? MultiArtworkContainer(
-                    size: Get.width * 0.35,
-                    heroTag: 'album_$albumIdentifier',
-                    paths: [tracks.pathToImage],
-                  )
-                : Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 12.0),
-                    padding: const EdgeInsets.all(3.0),
-                    child: NamidaHero(
-                      tag: 'album_$albumIdentifier',
-                      child: ArtworkWidget(
-                        thumbnailSize: Get.width * 0.35,
-                        forceSquared: false,
-                        path: tracks.pathToImage,
-                        compressed: false,
-                        borderRadius: 12.0,
+        () {
+          Indexer.inst.mainMapAlbums.value; // to update after sorting
+          return NamidaTracksList(
+            queueSource: QueueSource.album,
+            queueLength: tracks.length,
+            queue: tracks,
+            displayTrackNumber: settings.displayTrackNumberinAlbumPage.value,
+            header: SubpagesTopContainer(
+              title: name,
+              source: QueueSource.album,
+              subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
+              thirdLineText: tracks.albumArtist,
+              heroTag: 'album_$albumIdentifier',
+              imageWidget: shouldAlbumBeSquared
+                  ? MultiArtworkContainer(
+                      size: Get.width * 0.35,
+                      heroTag: 'album_$albumIdentifier',
+                      paths: [tracks.pathToImage],
+                    )
+                  : Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 12.0),
+                      padding: const EdgeInsets.all(3.0),
+                      child: NamidaHero(
+                        tag: 'album_$albumIdentifier',
+                        child: ArtworkWidget(
+                          thumbnailSize: Get.width * 0.35,
+                          forceSquared: false,
+                          path: tracks.pathToImage,
+                          compressed: false,
+                          borderRadius: 12.0,
+                        ),
                       ),
                     ),
-                  ),
-            tracks: tracks,
-          ),
-        ),
+              tracks: tracks,
+            ),
+          );
+        },
       ),
     );
   }

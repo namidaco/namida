@@ -34,6 +34,7 @@ import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -807,6 +808,26 @@ extension RouteUtils on NamidaRoute {
 
     final queue = route == RouteType.SUBPAGE_queueTracks ? name.getQueue() : null;
 
+    MediaType? sortingTracksMediaType;
+    switch (route) {
+      case RouteType.SUBPAGE_albumTracks:
+        sortingTracksMediaType = MediaType.album;
+        break;
+      case RouteType.SUBPAGE_artistTracks:
+        sortingTracksMediaType = MediaType.artist;
+        break;
+      case RouteType.SUBPAGE_genreTracks:
+        sortingTracksMediaType = MediaType.genre;
+        break;
+      // -- sorting icon is displayed in folder page itself
+      // case RouteType.PAGE_folders:
+      //   sortingTracksMediaType = MediaType.folder;
+      //   break;
+
+      default:
+        null;
+    }
+
     return <Widget>[
       // -- Stats Icon
       getAnimatedCrossFade(
@@ -850,6 +871,15 @@ extension RouteUtils on NamidaRoute {
           onTap: (isLiked) async => await QueueController.inst.toggleFavButton(queue!),
         ),
         shouldShow: queue != null,
+      ),
+      getAnimatedCrossFade(
+        child: NamidaAppBarIcon(
+          icon: Broken.sort,
+          onPressed: () {
+            NamidaOnTaps.inst.onSubPageTracksSortIconTap(sortingTracksMediaType!);
+          },
+        ),
+        shouldShow: sortingTracksMediaType != null,
       ),
 
       getAnimatedCrossFade(
@@ -1064,6 +1094,7 @@ class _NamidaConverters {
         SortType.dateAdded: lang.DATE_ADDED,
         SortType.dateModified: lang.DATE_MODIFIED,
         SortType.discNo: lang.DISC_NUMBER,
+        SortType.trackNo: lang.TRACK_NUMBER,
         SortType.filename: lang.FILE_NAME,
         SortType.duration: lang.DURATION,
         SortType.genresList: lang.GENRES,

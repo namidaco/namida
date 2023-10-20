@@ -3,8 +3,10 @@ import 'package:get/get.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 
 class Folders {
   static Folders get inst => _instance;
@@ -64,6 +66,7 @@ class Folders {
     if (LibraryTab.folders.scrollController.hasClients) {
       LibraryTab.folders.scrollController.jumpTo(0);
     }
+    currentFolder.value?.tracks.sortByAlts(SearchSortController.inst.getMediaTracksSortingComparables(MediaType.folder));
   }
 
   void stepOut() {

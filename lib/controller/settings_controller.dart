@@ -241,6 +241,13 @@ class SettingsController {
     AlbumIdentifier.albumName,
   ].obs;
 
+  final mediaItemsTrackSorting = <MediaType, List<SortType>>{
+    MediaType.album: [SortType.trackNo, SortType.year, SortType.title],
+    MediaType.artist: [SortType.year, SortType.title],
+    MediaType.genre: [SortType.year, SortType.title],
+    MediaType.folder: [SortType.filename],
+  }.obs;
+
   bool didSupportNamida = false;
 
   Future<void> prepareSettingsFile() async {
@@ -432,7 +439,11 @@ class SettingsController {
           )) ??
           queueInsertion.map((key, value) => MapEntry(key, value));
 
-      ///
+      final mediaItemsTrackSortingInStorage = json["mediaItemsTrackSorting"] as Map? ?? {};
+      mediaItemsTrackSorting.value = {
+        for (final e in mediaItemsTrackSortingInStorage.entries)
+          MediaType.values.getEnum(e.key) ?? MediaType.track: (e.value as List?)?.map((v) => SortType.values.getEnum(v) ?? SortType.title).toList() ?? <SortType>[SortType.year]
+      };
     } catch (e) {
       printy(e, isError: true);
       await file.delete();
@@ -594,6 +605,7 @@ class SettingsController {
       'trackItem': trackItem.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
       'playerOnInterrupted': playerOnInterrupted.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
       'queueInsertion': queueInsertion.map((key, value) => MapEntry(key.convertToString, value.toJson())),
+      'mediaItemsTrackSorting': mediaItemsTrackSorting.map((key, value) => MapEntry(key.convertToString, value.map((e) => e.convertToString).toList())),
     };
     await file.writeAsJson(res);
 
@@ -1185,6 +1197,7 @@ class SettingsController {
     if (mostPlayedCustomisStartOfDay != null) {
       this.mostPlayedCustomisStartOfDay.value = mostPlayedCustomisStartOfDay;
     }
+
     if (didSupportNamida != null) {
       this.didSupportNamida = didSupportNamida;
     }
@@ -1210,6 +1223,7 @@ class SettingsController {
     if (tagFieldsToEdit1 != null) {
       tagFieldsToEdit.insertSafe(index, tagFieldsToEdit1);
     }
+
     _writeToStorage();
   }
 
@@ -1335,6 +1349,7 @@ class SettingsController {
         tagFieldsToEdit.remove(t);
       });
     }
+
     _writeToStorage();
   }
 
@@ -1350,6 +1365,11 @@ class SettingsController {
 
   void updateQueueInsertion(QueueInsertionType type, QueueInsertion qi) {
     queueInsertion[type] = qi;
+    _writeToStorage();
+  }
+
+  void updateMediaItemsTrackSorting(MediaType media, List<SortType> allsorts) {
+    mediaItemsTrackSorting[media] = allsorts;
     _writeToStorage();
   }
 }

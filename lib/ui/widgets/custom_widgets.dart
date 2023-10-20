@@ -237,6 +237,8 @@ class CustomListTile extends StatelessWidget {
   final int maxSubtitleLines;
   final Widget? trailingRaw;
   final VisualDensity? visualDensity;
+  final TextStyle? titleStyle;
+  final double borderR;
 
   const CustomListTile({
     Key? key,
@@ -254,6 +256,8 @@ class CustomListTile extends StatelessWidget {
     this.maxSubtitleLines = 4,
     this.trailingRaw,
     this.visualDensity,
+    this.titleStyle,
+    this.borderR = 20.0,
   }) : super(key: key);
 
   @override
@@ -265,7 +269,7 @@ class CustomListTile extends StatelessWidget {
       child: ListTile(
         enabled: enabled,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.0.multipliedRadius),
+          borderRadius: BorderRadius.circular(borderR.multipliedRadius),
         ),
         visualDensity: visualDensity,
         onTap: onTap,
@@ -290,7 +294,7 @@ class CustomListTile extends StatelessWidget {
             : leading,
         title: Text(
           title,
-          style: largeTitle ? context.theme.textTheme.displayLarge : context.theme.textTheme.displayMedium,
+          style: titleStyle ?? (largeTitle ? context.theme.textTheme.displayLarge : context.theme.textTheme.displayMedium),
           maxLines: subtitle != null ? 2 : 3,
           overflow: TextOverflow.ellipsis,
         ),

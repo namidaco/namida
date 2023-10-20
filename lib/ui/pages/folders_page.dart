@@ -12,6 +12,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -46,30 +47,41 @@ class FoldersPage extends StatelessWidget {
                   /// Folders in heirarchy
                   ? Column(
                       children: [
-                        ListTile(
-                          leading: iconWidget,
-                          title: Obx(
-                            () => Text(
-                              //todo .formatPath()
-                              Folders.inst.currentFolder.value?.path ?? lang.HOME,
-                              style: context.textTheme.displaySmall,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                          child: Obx(
+                            () => CustomListTile(
+                              borderR: 16.0,
+                              icon: Folders.inst.isHome.value ? Broken.home_2 : Broken.folder_2,
+                              title: Folders.inst.currentFolder.value?.path.formatPath() ?? lang.HOME,
+                              titleStyle: context.textTheme.displaySmall,
+                              onTap: () => Folders.inst.stepOut(),
+                              trailing: Row(
+                                children: [
+                                  Obx(
+                                    () {
+                                      final pathOfDefault = Folders.inst.isHome.value ? '' : Folders.inst.currentFolder.value?.path;
+                                      return NamidaIconButton(
+                                        horizontalPadding: 8.0,
+                                        tooltip: lang.SET_AS_DEFAULT,
+                                        icon: settings.defaultFolderStartupLocation.value == pathOfDefault ? Broken.archive_tick : Broken.save_2,
+                                        iconSize: 22.0,
+                                        onPressed: () => settings.save(
+                                          defaultFolderStartupLocation: Folders.inst.currentFolder.value?.path ?? '',
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  NamidaIconButton(
+                                    horizontalPadding: 8.0,
+                                    icon: Broken.sort,
+                                    onPressed: () {
+                                      NamidaOnTaps.inst.onSubPageTracksSortIconTap(MediaType.folder);
+                                    },
+                                  )
+                                ],
+                              ),
                             ),
-                          ),
-                          onTap: () => Folders.inst.stepOut(),
-                          trailing: Obx(
-                            () {
-                              final pathOfDefault = Folders.inst.isHome.value ? '' : Folders.inst.currentFolder.value?.path;
-                              return NamidaIconButton(
-                                tooltip: lang.SET_AS_DEFAULT,
-                                icon: settings.defaultFolderStartupLocation.value == pathOfDefault ? Broken.archive_tick : Broken.save_2,
-                                iconSize: 22.0,
-                                onPressed: () => settings.save(
-                                  defaultFolderStartupLocation: Folders.inst.currentFolder.value?.path ?? '',
-                                ),
-                              );
-                            },
                           ),
                         ),
                         Expanded(

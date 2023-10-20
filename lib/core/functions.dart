@@ -7,14 +7,17 @@ import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
@@ -160,6 +163,105 @@ class NamidaOnTaps {
         },
       );
     }
+  }
+
+  void onSubPageTracksSortIconTap(MediaType media) {
+    final sorters = (settings.mediaItemsTrackSorting[media] ?? []).obs;
+    final defaultSorts = <MediaType, List<SortType>>{
+      MediaType.album: [SortType.trackNo, SortType.year, SortType.title],
+      MediaType.artist: [SortType.year, SortType.title],
+      MediaType.genre: [SortType.year, SortType.title],
+      MediaType.folder: [SortType.filename],
+    };
+
+    final allSorts = List<SortType>.from(SortType.values).obs;
+    void resortVisualItems() => allSorts.sortByReverse((e) {
+          final active = sorters.contains(e);
+          return active ? sorters.length - sorters.indexOf(e) : sorters.indexOf(e);
+        });
+    resortVisualItems();
+
+    void resortMedia() {
+      settings.updateMediaItemsTrackSorting(media, sorters);
+      Indexer.inst.sortMediaTracksSubLists([media]);
+    }
+
+    NamidaNavigator.inst.navigateDialog(
+      onDismissing: resortMedia,
+      dialog: CustomBlurryDialog(
+        title: "${lang.SORT_BY} (${lang.REORDERABLE})",
+        actions: [
+          IconButton(
+            icon: const Icon(Broken.refresh),
+            tooltip: lang.RESTORE_DEFAULTS,
+            onPressed: () {
+              final defaults = defaultSorts[media] ?? [SortType.year];
+              sorters
+                ..clear()
+                ..addAll(defaults);
+              settings.updateMediaItemsTrackSorting(media, defaults);
+            },
+          ),
+          NamidaButton(
+            text: lang.DONE,
+            onPressed: () {
+              resortMedia();
+              NamidaNavigator.inst.closeDialog();
+            },
+          ),
+        ],
+        child: SizedBox(
+          width: Get.width,
+          height: Get.height * 0.4,
+          child: Obx(
+            () => NamidaListView(
+              padding: EdgeInsets.zero,
+              itemCount: allSorts.length,
+              itemExtents: null,
+              onReorder: (oldIndex, newIndex) {
+                if (newIndex > oldIndex) {
+                  newIndex -= 1;
+                }
+                final item = allSorts.removeAt(oldIndex);
+                allSorts.insert(newIndex, item);
+                final activeSorts = allSorts.where((element) => sorters.contains(element)).toList();
+                sorters
+                  ..clear()
+                  ..addAll(activeSorts);
+                settings.updateMediaItemsTrackSorting(media, activeSorts);
+              },
+              itemBuilder: (context, i) {
+                final sorting = allSorts[i];
+                return Padding(
+                  key: ValueKey(i),
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
+                  child: Obx(
+                    () {
+                      final isActive = sorters.contains(sorting);
+                      return ListTileWithCheckMark(
+                        title: "${i + 1}. ${sorting.toText()}",
+                        active: isActive,
+                        onTap: () {
+                          if (isActive && sorters.length <= 1) {
+                            showMinimumItemsSnack();
+                            return;
+                          }
+                          if (sorters.contains(sorting)) {
+                            sorters.remove(sorting);
+                          } else {
+                            sorters.insert(i, sorting);
+                          }
+                        },
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
