@@ -446,19 +446,24 @@ class PlaybackSettings extends StatelessWidget {
       Obx(
         () {
           final valInSet = settings.minTrackDurationToRestoreLastPosInMinutes.value;
+          const max = 121;
           return CustomListTile(
             icon: Broken.refresh_left_square,
             title: lang.MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION,
             trailing: NamidaWheelSlider(
-              totalCount: 120,
+              totalCount: max,
               initValue: valInSet,
               itemSize: 2,
               squeeze: 0.4,
               onValueChanged: (val) {
                 final v = (val) as int;
-                settings.save(minTrackDurationToRestoreLastPosInMinutes: v);
+                settings.save(minTrackDurationToRestoreLastPosInMinutes: v >= max ? -1 : v);
               },
-              text: valInSet == 0 ? lang.DONT_RESTORE_POSITION : "${valInSet}m",
+              text: valInSet == 0
+                  ? lang.ALWAYS_RESTORE
+                  : valInSet <= -1
+                      ? lang.DONT_RESTORE_POSITION
+                      : "${valInSet}m",
             ),
           );
         },

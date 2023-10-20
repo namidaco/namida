@@ -27,6 +27,7 @@ class LanguageKeys {
   late String ALBUMS;
   late String ALL_TIME;
   late String ALWAYS_ASK;
+  late String ALWAYS_RESTORE;
   late String ANIMATING_THUMBNAIL_INTENSITY;
   late String ANIMATING_THUMBNAIL_INVERSED_SUBTITLE;
   late String ANIMATING_THUMBNAIL_INVERSED;

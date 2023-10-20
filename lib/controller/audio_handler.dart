@@ -125,7 +125,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> tryRestoringLastPosition(Track trackPre) async {
     final minValueInSet = settings.minTrackDurationToRestoreLastPosInMinutes.value * 60;
 
-    if (minValueInSet > 0) {
+    if (minValueInSet >= 0) {
       final seekValueInMS = settings.seekDurationInSeconds.value * 1000;
       final track = trackPre.toTrackExt();
       final lastPos = track.stats.lastPositionInMs;
