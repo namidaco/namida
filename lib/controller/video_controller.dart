@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart' hide Response;
+import 'package:namida/core/functions.dart';
 import 'package:newpipeextractor_dart/models/streams.dart';
 import 'package:picture_in_picture/picture_in_picture.dart';
 import 'package:video_player/video_player.dart';
@@ -1034,29 +1035,19 @@ class VideoController {
     );
   }
 
-  Future<List<String>> _fetchVideoPathsFromStorage({bool strictNoMedia = true, bool forceReCheckDir = false}) async {
-    final allAvailableDirectories = await Indexer.inst.getAvailableDirectories(forceReCheck: forceReCheckDir);
-    final allVideoPaths = <String>[];
+  Future<Set<String>> _fetchVideoPathsFromStorage({bool strictNoMedia = true, bool forceReCheckDir = false}) async {
+    final allAvailableDirectories = await Indexer.inst.getAvailableDirectories(forceReCheck: forceReCheckDir, strictNoMedia: strictNoMedia);
 
-    final dirToExclude = settings.directoriesToExclude;
-    final dirToLoop = allAvailableDirectories.keys.toList();
-    dirToLoop.removeWhere((element) => allAvailableDirectories[element] ?? false);
+    final parameters = {
+      'allAvailableDirectories': allAvailableDirectories,
+      'directoriesToExclude': settings.directoriesToExclude.toList(),
+      'extensions': kVideoFilesExtensions,
+    };
 
-    await dirToLoop.loopFuture((d, index) async {
-      await for (final systemEntity in d.list()) {
-        if (systemEntity is File) {
-          final path = systemEntity.path;
-          if (!kVideoFilesExtensions.any((ext) => path.endsWith(ext))) {
-            continue;
-          }
-          if (dirToExclude.any((excludedDir) => path.startsWith(excludedDir))) {
-            continue;
-          }
+    final mapResult = await getFilesTypeIsolate.thready(parameters);
 
-          allVideoPaths.add(path);
-        }
-      }
-    });
+    final allVideoPaths = mapResult['allPaths'] as Set<String>;
+    // final excludedByNoMedia = mapResult['pathsExcludedByNoMedia'] as Set<String>;
     return allVideoPaths;
   }
 }
@@ -1200,8 +1191,8 @@ class _NamidaVideoPlayer {
     if (updateRatioOnly) {
       return await PictureInPicture.setAspectRatio(width: w, height: h);
     } else {
-    // final videoCtx = VideoController.inst.normalControlskey.currentContext ?? VideoController.inst.fullScreenControlskey.currentContext;
-    // final rect = videoCtx?.globalPaintBounds;
+      // final videoCtx = VideoController.inst.normalControlskey.currentContext ?? VideoController.inst.fullScreenControlskey.currentContext;
+      // final rect = videoCtx?.globalPaintBounds;
       return await PictureInPicture.enterPip(width: w, height: h /*, rectHint: rect */);
     }
   }
@@ -1221,7 +1212,7 @@ class _NamidaVideoPlayer {
     _isBuffering.value = _videoController?.value.isBuffering ?? false;
 
     if (_isBuffering.value) {
-      _bufferingCompleter?.completeIfWasnt();
+      _bufferingCompleter?.completeIfWasnt(false);
       _bufferingCompleter = null;
       _bufferingCompleter = Completer<bool>();
       if (!VideoController.inst.isCurrentlyInBackground && Player.inst.isPlaying && Player.inst.shouldCareAboutAVSync) {
@@ -1243,7 +1234,7 @@ class _NamidaVideoPlayer {
       _aspectRatio.value = null;
       _isBuffering.value = false;
       _buffered.value = null;
-      _bufferingCompleter?.completeIfWasnt();
+      _bufferingCompleter?.completeIfWasnt(false);
       _isCurrentVideoFromCache.value = false;
       await _videoController?.dispose();
 

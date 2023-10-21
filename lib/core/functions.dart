@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -370,4 +372,60 @@ bool checkIfQueueSameAsCurrent(List<Selectable> queue) {
 
 bool checkIfQueueSameAsAllTracks(List<Selectable> queue) {
   return checkIfListsSimilar(queue, allTracksInLibrary) == 1.0;
+}
+
+/// **takes:**
+/// ```
+/// {
+///   'allAvailableDirectories': <Directory, bool>{},
+///   'directoriesToExclude': <String>[],
+///   'extensions': <String>{},
+///   'respectNoMedia': bool ?? true,
+/// }
+/// ```
+///
+/// **returns:**
+/// ```
+/// {
+/// 'allPaths': <String>{},
+/// 'pathsExcludedByNoMedia': <String>{},
+/// }
+/// ```
+Map<String, Set<String>> getFilesTypeIsolate(Map parameters) {
+  final allAvailableDirectories = parameters['allAvailableDirectories'] as Map<Directory, bool>;
+  final directoriesToExclude = parameters['directoriesToExclude'] as List<String>? ?? [];
+  final extensions = parameters['extensions'] as Set<String>;
+  final respectNoMedia = parameters['respectNoMedia'] as bool? ?? true;
+
+  final allPaths = <String>{};
+  final excludedByNoMedia = <String>{};
+
+  allAvailableDirectories.keys.toList().loop((d, index) {
+    final hasNoMedia = allAvailableDirectories[d] ?? false;
+
+    for (final systemEntity in d.listSync()) {
+      if (systemEntity is File) {
+        final path = systemEntity.path;
+        // -- skip if not in extensions
+        if (!extensions.any((ext) => path.endsWith(ext))) {
+          continue;
+        }
+        // -- skip if in nomedia folder & specified to exclude
+        if (respectNoMedia && hasNoMedia) {
+          excludedByNoMedia.add(path);
+          continue;
+        }
+
+        // -- skips if the file is included in one of the excluded folders.
+        if (directoriesToExclude.any((exc) => path.startsWith(exc))) {
+          continue;
+        }
+        allPaths.add(path);
+      }
+    }
+  });
+  return {
+    'allPaths': allPaths,
+    'pathsExcludedByNoMedia': excludedByNoMedia,
+  };
 }

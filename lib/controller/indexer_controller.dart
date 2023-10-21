@@ -27,6 +27,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 
@@ -1159,12 +1160,13 @@ class Indexer {
     final parameters = {
       'allAvailableDirectories': allAvailableDirectories,
       'directoriesToExclude': settings.directoriesToExclude.toList(),
+      'extensions': kAudioFileExtensions,
     };
 
-    final mapResult = await _getAudioFilesIsolate.thready(parameters);
+    final mapResult = await getFilesTypeIsolate.thready(parameters);
 
-    final allPaths = mapResult['allPaths']!;
-    final excludedByNoMedia = mapResult['pathsExcludedByNoMedia']!;
+    final allPaths = mapResult['allPaths'] as Set<String>;
+    final excludedByNoMedia = mapResult['pathsExcludedByNoMedia'] as Set<String>;
 
     tracksExcludedByNoMedia.value += excludedByNoMedia.length;
 
@@ -1174,47 +1176,6 @@ class Indexer {
 
     printy("Paths Found: ${allPaths.length}");
     return allPaths;
-  }
-
-  /// ```
-  /// {
-  /// 'allPaths': <String>{},
-  /// 'pathsExcludedByNoMedia': <String>{},
-  /// }
-  /// ```
-  static Map<String, Set<String>> _getAudioFilesIsolate(Map parameters) {
-    final allAvailableDirectories = parameters['allAvailableDirectories'] as Map<Directory, bool>;
-    final directoriesToExclude = parameters['directoriesToExclude'] as List<String>;
-
-    final allPaths = <String>{};
-    final excludedByNoMedia = <String>{};
-
-    allAvailableDirectories.keys.toList().loop((d, index) {
-      final hasNoMedia = allAvailableDirectories[d] ?? false;
-
-      for (final systemEntity in d.listSync()) {
-        if (systemEntity is File) {
-          final path = systemEntity.path;
-          if (!kAudioFileExtensions.any((ext) => path.endsWith(ext))) {
-            continue;
-          }
-          if (hasNoMedia) {
-            excludedByNoMedia.add(path);
-            continue;
-          }
-
-          // Skips if the file is included in one of the excluded folders.
-          if (directoriesToExclude.any((exc) => path.startsWith(exc))) {
-            continue;
-          }
-          allPaths.add(path);
-        }
-      }
-    });
-    return {
-      'allPaths': allPaths,
-      'pathsExcludedByNoMedia': excludedByNoMedia,
-    };
   }
 
   bool? _latestRespectNoMedia;
