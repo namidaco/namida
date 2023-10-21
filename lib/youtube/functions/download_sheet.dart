@@ -525,6 +525,7 @@ Future<void> showDownloadVideoBottomSheet({
                                         ),
                                         onTap: () async {
                                           if (!await requestManageStoragePermission()) return;
+                                          requestIgnoreBatteryOptimizations();
                                           // ignore: use_build_context_synchronously
                                           Navigator.pop(context);
                                           final downloadedFile = await YoutubeController.inst.downloadYoutubeVideoRaw(

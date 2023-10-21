@@ -147,6 +147,7 @@ class SettingsController {
   final RxBool showUnknownFieldsInTrackInfoDialog = true.obs;
   final RxBool extractFeatArtistFromTitle = true.obs;
   final RxBool groupArtworksByAlbum = false.obs;
+  final RxBool canAskForBatteryOptimizations = true.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
     TagField.trackNumber,
     TagField.year,
@@ -384,6 +385,7 @@ class SettingsController {
       showUnknownFieldsInTrackInfoDialog.value = json['showUnknownFieldsInTrackInfoDialog'] ?? showUnknownFieldsInTrackInfoDialog.value;
       extractFeatArtistFromTitle.value = json['extractFeatArtistFromTitle'] ?? extractFeatArtistFromTitle.value;
       groupArtworksByAlbum.value = json['groupArtworksByAlbum'] ?? groupArtworksByAlbum.value;
+      canAskForBatteryOptimizations.value = json['canAskForBatteryOptimizations'] ?? canAskForBatteryOptimizations.value;
 
       final listFromStorage = List<String>.from(json['tagFieldsToEdit'] ?? []);
       tagFieldsToEdit.value = listFromStorage.isNotEmpty ? List<TagField>.from(listFromStorage.map((e) => TagField.values.getEnum(e))) : tagFieldsToEdit;
@@ -577,6 +579,7 @@ class SettingsController {
       'showUnknownFieldsInTrackInfoDialog': showUnknownFieldsInTrackInfoDialog.value,
       'extractFeatArtistFromTitle': extractFeatArtistFromTitle.value,
       'groupArtworksByAlbum': groupArtworksByAlbum.value,
+      'canAskForBatteryOptimizations': canAskForBatteryOptimizations.value,
       'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
       'wakelockMode': wakelockMode.value.convertToString,
       'localVideoMatchingType': localVideoMatchingType.value.convertToString,
@@ -741,6 +744,7 @@ class SettingsController {
     bool? showUnknownFieldsInTrackInfoDialog,
     bool? extractFeatArtistFromTitle,
     bool? groupArtworksByAlbum,
+    bool? canAskForBatteryOptimizations,
     List<TagField>? tagFieldsToEdit,
     WakelockMode? wakelockMode,
     LocalVideoMatchingType? localVideoMatchingType,
@@ -1156,6 +1160,9 @@ class SettingsController {
     }
     if (groupArtworksByAlbum != null) {
       this.groupArtworksByAlbum.value = groupArtworksByAlbum;
+    }
+    if (canAskForBatteryOptimizations != null) {
+      this.canAskForBatteryOptimizations.value = canAskForBatteryOptimizations;
     }
     if (tagFieldsToEdit != null) {
       tagFieldsToEdit.loop((d, index) {

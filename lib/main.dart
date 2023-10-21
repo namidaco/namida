@@ -220,6 +220,30 @@ Future<bool> requestStoragePermission({bool request = true}) async {
   return granted;
 }
 
+Future<bool> requestIgnoreBatteryOptimizations() async {
+  final granted = await Permission.ignoreBatteryOptimizations.isGranted;
+  if (granted) return true;
+  settings.save(canAskForBatteryOptimizations: true);
+  if (!settings.canAskForBatteryOptimizations.value) return false;
+
+  snackyy(
+    message: lang.IGNORE_BATTERY_OPTIMIZATIONS_SUBTITLE,
+    displaySeconds: 5,
+    top: false,
+    isError: true,
+    button: NamidaButton(
+      text: lang.DONT_ASK_AGAIN,
+      onPressed: () {
+        Get.closeCurrentSnackbar();
+        settings.save(canAskForBatteryOptimizations: false);
+      },
+    ),
+  );
+  await Future.delayed(const Duration(seconds: 1));
+  final p = await Permission.ignoreBatteryOptimizations.request();
+  return p.isGranted;
+}
+
 Future<bool> requestManageStoragePermission() async {
   Future<void> createDir() async => await Directory(settings.defaultBackupLocation.value).create(recursive: true);
   if (kSdkVersion < 30) {
