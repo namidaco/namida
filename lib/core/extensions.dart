@@ -366,3 +366,26 @@ extension CompleterCompleter<T> on Completer<T>? {
     if (c?.isCompleted == false) c?.complete(value);
   }
 }
+
+extension ScrollerPerf on ScrollController {
+  /// Animates a scrollview to a certain [offset] after jumping closer for faster performance
+  ///
+  /// The final distance to animate is defined by [jumpitator]
+  Future<void> animateToEff(
+    double offset, {
+    required Duration duration,
+    required Curve curve,
+    final double jumpitator = 800.0,
+  }) async {
+    final diff = offset - this.offset;
+
+    if (diff > jumpitator) {
+      // -- is now above the target, so we jump offset-jumpitator
+      jumpTo(offset - jumpitator);
+    } else if (diff < jumpitator) {
+      // -- is now under the target, so we jump offset+jumpitator
+      jumpTo(offset + jumpitator);
+    }
+    await animateTo(offset, duration: duration, curve: curve);
+  }
+}

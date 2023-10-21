@@ -206,7 +206,7 @@ class FoldersPage extends StatelessWidget {
                       child: NamidaIconButton(
                         padding: const EdgeInsets.all(7.0),
                         onPressed: () {
-                          scrollController.animateTo(Dimensions.inst.trackTileItemExtent * (Folders.inst.indexToScrollTo.value! + Folders.inst.currentFolderslist.length - 2),
+                          scrollController.animateToEff(Dimensions.inst.trackTileItemExtent * (Folders.inst.indexToScrollTo.value! + Folders.inst.currentFolderslist.length - 2),
                               duration: const Duration(milliseconds: 400), curve: Curves.bounceInOut);
                         },
                         icon: Broken.arrow_circle_down,

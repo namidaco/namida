@@ -1219,8 +1219,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                             child: Stack(
                               alignment: Alignment.bottomRight,
                               children: [
-                                Obx(
-                                  () => KnownExtentsReorderableListView.builder(
+                                NamidaListView(
                                     itemExtents: List.filled(Player.inst.currentQueue.length, Dimensions.inst.trackTileItemExtent),
                                     scrollController: MiniPlayerController.inst.queueScrollController,
                                     padding: EdgeInsets.only(bottom: 56.0 + SelectedTracksController.inst.bottomPadding.value),
@@ -1261,8 +1260,6 @@ class NamidaMiniPlayer extends StatelessWidget {
                                         ),
                                       );
                                     },
-                                    proxyDecorator: (child, index, animation) => child,
-                                  ),
                                 ),
                                 Container(
                                   width: context.width,

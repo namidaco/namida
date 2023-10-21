@@ -129,7 +129,7 @@ class MiniPlayerController {
       if (jump) {
         queueScrollController.jumpTo(trackTileItemScrollOffsetInQueue);
       } else {
-        queueScrollController.animateTo(
+        queueScrollController.animateToEff(
           trackTileItemScrollOffsetInQueue,
           duration: const Duration(milliseconds: 600),
           curve: Curves.fastEaseInToSlowEaseOut,
