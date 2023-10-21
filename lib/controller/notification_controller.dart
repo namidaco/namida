@@ -21,7 +21,7 @@ class NotificationService {
   final _historyImportChannelName = 'History Import';
   final _historyImportChannelDescription = 'Imports Tracks to History from a source';
 
-  final _youtubeDownloadID = 1;
+  final _youtubeDownloadID = 2;
   final _youtubeDownloadPayload = 'youtube_download';
   final _youtubeDownloadChannelName = 'Downloads';
   final _youtubeDownloadChannelDescription = 'Downlaod content from youtube';
@@ -188,6 +188,9 @@ class NotificationService {
           '$id',
           channelName,
           channelDescription: channelDescription,
+          groupKey: '$id',
+          category: AndroidNotificationCategory.progress,
+          setAsGroupSummary: true,
           channelShowBadge: false,
           importance: Importance.high,
           priority: Priority.high,
@@ -195,7 +198,7 @@ class NotificationService {
           showProgress: true,
           ongoing: true,
           visibility: NotificationVisibility.public,
-          // styleInformation: null, // this gets displayed instead of subtitle
+          styleInformation: BigTextStyleInformation(subtitle(sub)), // this gets displayed instead of subtitle
           largeIcon: pic,
           maxProgress: maxProgress,
           icon: 'ic_stat_musicnote',
