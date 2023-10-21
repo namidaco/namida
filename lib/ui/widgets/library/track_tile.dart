@@ -34,6 +34,7 @@ class TrackTile extends StatelessWidget {
   final bool selectable;
   final QueueSource queueSource;
   final void Function()? onRightAreaTap;
+  final double cardColorOpacity;
 
   const TrackTile({
     super.key,
@@ -50,6 +51,7 @@ class TrackTile extends StatelessWidget {
     this.selectable = true,
     required this.queueSource,
     this.onRightAreaTap,
+    this.cardColorOpacity = 0.9,
   });
 
   bool get _isFromQueue => queueSource == QueueSource.playerQueue;
@@ -108,7 +110,7 @@ class TrackTile extends StatelessWidget {
             final backgroundColor = bgColor ??
                 Color.alphaBlend(
                   isTrackSelected & !isInSelectedTracksPreview ? context.theme.focusColor : Colors.transparent,
-                  isTrackCurrentlyPlaying ? CurrentColor.inst.color : context.theme.cardTheme.color!,
+                  isTrackCurrentlyPlaying ? CurrentColor.inst.color : context.theme.cardTheme.color!.withOpacity(cardColorOpacity),
                 );
             return Padding(
               padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin),

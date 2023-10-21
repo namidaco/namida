@@ -47,7 +47,7 @@ class AppThemes {
       scaffoldBackgroundColor: pitchBlack ?? (light ? Color.alphaBlend(color.withAlpha(60), Colors.white) : null),
       splashColor: Colors.transparent,
       splashFactory: InkRipple.splashFactory,
-      highlightColor: light ? Colors.black.withAlpha(20) : Colors.white.withAlpha(10),
+      highlightColor: light ? Colors.black.withAlpha(20) : Colors.white.withAlpha(pitchBlack == null ? 10 : 20),
       disabledColor: light ? const Color.fromARGB(0, 160, 160, 160) : const Color.fromARGB(200, 60, 60, 60),
       applyElevationOverlayColor: false,
       appBarTheme: AppBarTheme(
@@ -77,7 +77,11 @@ class AppThemes {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: light ? Color.alphaBlend(getMainColorWithAlpha(30), Colors.white) : pitchBlack?.withOpacity(0.5),
+          backgroundColor: light
+              ? Color.alphaBlend(getMainColorWithAlpha(30), Colors.white)
+              : pitchBlack != null
+                  ? Color.alphaBlend(getMainColorWithAlpha(40), const Color.fromARGB(222, 10, 10, 10))
+                  : null,
         ),
       ),
       dialogBackgroundColor: lighterDialog

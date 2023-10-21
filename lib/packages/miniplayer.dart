@@ -1256,6 +1256,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                             displayRightDragHandler: true,
                                             draggableThumbnail: true,
                                             queueSource: QueueSource.playerQueue,
+                                            cardColorOpacity: 0.5,
                                           ),
                                         ),
                                       );
@@ -1414,8 +1415,9 @@ class NamidaMiniPlayer extends StatelessWidget {
           child: Column(
             children: [
               NamidaInkWell(
+                borderRadius: 10.0,
                 bgColor: context.theme.cardColor,
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
                 child: Text(title, style: context.textTheme.displayLarge),
               ),
               const SizedBox(height: 24.0),

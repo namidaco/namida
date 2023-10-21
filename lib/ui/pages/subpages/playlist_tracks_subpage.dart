@@ -561,7 +561,7 @@ class ThreeLineSmallContainers extends StatelessWidget {
         3,
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          curve: Curves.bounceIn,
+          curve: Curves.fastEaseInToSlowEaseOut,
           width: enabled ? 9.0 : 2.0,
           height: 1.2,
           margin: const EdgeInsets.symmetric(vertical: 1),

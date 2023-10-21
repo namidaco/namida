@@ -1065,7 +1065,13 @@ class _NamidaVideoPlayer {
   static _NamidaVideoPlayer get inst => _instance;
   static final _NamidaVideoPlayer _instance = _NamidaVideoPlayer._internal();
   _NamidaVideoPlayer._internal() {
-    PictureInPicture.onPipChanged = (isInPip) => _isInPip.value = isInPip;
+    PictureInPicture.onPipChanged = (isInPip) {
+      _isInPip.value = isInPip;
+      if (isInPip) {
+        NamidaNavigator.inst.closeAllDialogs();
+        NamidaNavigator.inst.popAllMenus();
+      }
+    };
   }
 
   Rxn<Widget>? get videoWidget => _videoWidget;
@@ -1185,16 +1191,19 @@ class _NamidaVideoPlayer {
 
   Future<void> setSpeed(double volume) async => await _execute(() async => await _videoController?.setPlaybackSpeed(volume));
 
-  Future<bool> enablePictureInPicture() async {
+  Future<bool> enablePictureInPicture({bool updateRatioOnly = false}) async {
+    VideoController.inst.normalControlskey.currentState?.setControlsVisibily(false);
+    VideoController.inst.fullScreenControlskey.currentState?.setControlsVisibily(false);
     final size = _videoController?.value.size;
+    final w = size?.width.toInt();
+    final h = size?.height.toInt();
+    if (updateRatioOnly) {
+      return await PictureInPicture.setAspectRatio(width: w, height: h);
+    } else {
     // final videoCtx = VideoController.inst.normalControlskey.currentContext ?? VideoController.inst.fullScreenControlskey.currentContext;
     // final rect = videoCtx?.globalPaintBounds;
-    final res = await PictureInPicture.enterPip(
-      width: size?.width.toInt(),
-      height: size?.height.toInt(),
-      // rectHint: rect,
-    );
-    return res;
+      return await PictureInPicture.enterPip(width: w, height: h /*, rectHint: rect */);
+    }
   }
 
   Future<void> _initializeController(VideoPlayerController c) async {
@@ -1203,6 +1212,7 @@ class _NamidaVideoPlayer {
     await _videoController!.initialize();
     _aspectRatio.value = _videoController?.value.aspectRatio;
     _videoController?.addListener(_updateBufferingStatus);
+    if (isInPip) enablePictureInPicture(updateRatioOnly: true); // rebuild aspect ratio
   }
 
   bool _didPauseInternally = false;

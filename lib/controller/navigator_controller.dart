@@ -141,7 +141,7 @@ class NamidaNavigator {
 
   Future<void> exitFullScreen({bool setOrientations = true}) async {
     if (!_isInFullScreen) return;
-    Get.close(1);
+    Get.back();
 
     await Future.wait([
       if (setOrientations) _setOrientations(false),

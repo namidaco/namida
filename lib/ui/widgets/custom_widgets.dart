@@ -12,7 +12,6 @@ import 'package:get/get.dart';
 import 'package:known_extents_list_view_builder/known_extents_reorderable_list_view_builder.dart';
 import 'package:known_extents_list_view_builder/known_extents_sliver_reorderable_list.dart';
 import 'package:like_button/like_button.dart';
-import 'package:picture_in_picture/widgets/lifecycle_handler.dart';
 import 'package:selectable_autolink_text/selectable_autolink_text.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -1258,7 +1257,7 @@ class NamidaWheelSlider<T> extends StatelessWidget {
           ),
           if (text != null) ...[
             SizedBox(height: textPadding),
-            Text(text!, style: TextStyle(color: context.textTheme.displaySmall?.color)),
+            FittedBox(child: Text(text!, style: TextStyle(color: context.textTheme.displaySmall?.color))),
           ]
         ],
       ),
@@ -2725,29 +2724,33 @@ class NamidaLifeCycleWrapper extends StatefulWidget {
 }
 
 class _NamidaLifeCycleWrapperState extends State<NamidaLifeCycleWrapper> with WidgetsBindingObserver {
-  late WidgetsBindingObserver observer;
-
   @override
-  void initState() {
-    super.initState();
-    observer = LifecycleEventHandler(
-      resumeCallBack: () async {
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    switch (state) {
+      case AppLifecycleState.resumed:
         await Future.wait([
           SystemChrome.setPreferredOrientations(kDefaultOrientations),
           SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values),
           if (widget.onResume != null) widget.onResume!(),
         ]);
-      },
-      suspendingCallBack: () async {
+        break;
+      case AppLifecycleState.inactive:
         await widget.onSuspending?.call();
-      },
-    );
-    WidgetsBinding.instance.addObserver(observer);
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(observer);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
