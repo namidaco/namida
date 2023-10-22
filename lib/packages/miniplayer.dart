@@ -2095,9 +2095,12 @@ class _AnimatingTrackImage extends StatelessWidget {
                       child: LyricsWrapper(
                         track: track,
                         cp: cp,
-                        child: const NamidaVideoWidget(
-                          key: Key('video_widget'),
-                          enableControls: false,
+                        child: GestureDetector(
+                          onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(),
+                          child: const NamidaVideoWidget(
+                            key: Key('video_widget'),
+                            enableControls: false,
+                          ),
                         ),
                       ),
                     )
