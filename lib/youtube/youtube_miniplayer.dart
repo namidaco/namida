@@ -91,10 +91,12 @@ class YoutubeMiniPlayer extends StatelessWidget {
               maxHeight: context.height,
               decoration: BoxDecoration(
                 color: context.isDarkMode
-                    ? Color.alphaBlend(
-                        CurrentColor.inst.color.withAlpha(10),
-                        const Color.fromARGB(255, 25, 25, 25),
-                      )
+                    ? settings.pitchBlack.value
+                        ? const Color.fromARGB(255, 0, 0, 0)
+                        : Color.alphaBlend(
+                            CurrentColor.inst.color.withAlpha(10),
+                            const Color.fromARGB(255, 25, 25, 25),
+                          )
                     : Color.alphaBlend(
                         CurrentColor.inst.color.withAlpha(40),
                         const Color.fromARGB(255, 250, 250, 250),
@@ -262,6 +264,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                   child: NamidaIconButton(
                                     horizontalPadding: 0.0,
                                     icon: Broken.next,
+                                    iconColor: context.defaultIconColor(),
                                     onPressed: () {
                                       Player.inst.next();
                                     },

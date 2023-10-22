@@ -684,8 +684,9 @@ class _RefreshLibraryIconState extends State<_RefreshLibraryIcon> with TickerPro
   Widget build(BuildContext context) {
     return RotationTransition(
       turns: turnsTween.animate(_RefreshLibraryIcon.controller),
-      child: const Icon(
+      child: Icon(
         Broken.refresh_2,
+        color: context.defaultIconColor(),
       ),
     );
   }

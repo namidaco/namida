@@ -1000,9 +1000,10 @@ Future<void> showGeneralPopupDialog(
                                         secondaryIconSize: 10.0,
                                         baseIconColor: iconColor,
                                       )
-                                    : const Icon(
+                                    : Icon(
                                         Broken.document,
                                         size: 20.0,
+                                        color: iconColor,
                                       ),
                                 iconSize: 20.0,
                                 onPressed: () => showLRCSetDialog(tracks.first, colorDelightened),

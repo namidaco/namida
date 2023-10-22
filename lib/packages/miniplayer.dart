@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 import 'package:animated_background/animated_background.dart';
 import 'package:get/get.dart';
-import 'package:known_extents_list_view_builder/known_extents_reorderable_list_view_builder.dart';
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -353,7 +352,8 @@ class NamidaMiniPlayer extends StatelessWidget {
                                 ),
                                 Expanded(
                                   child: NamidaInkWell(
-                                    borderRadius: 16.0,
+                                    borderRadius: 14.0,
+                                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
                                     onTap: () => NamidaOnTaps.inst.onAlbumTap(currentTrack.albumIdentifier),
                                     child: Column(
                                       mainAxisSize: MainAxisSize.min,
@@ -1220,46 +1220,46 @@ class NamidaMiniPlayer extends StatelessWidget {
                               alignment: Alignment.bottomRight,
                               children: [
                                 NamidaListView(
-                                    itemExtents: List.filled(Player.inst.currentQueue.length, Dimensions.inst.trackTileItemExtent),
-                                    scrollController: MiniPlayerController.inst.queueScrollController,
-                                    padding: EdgeInsets.only(bottom: 56.0 + SelectedTracksController.inst.bottomPadding.value),
-                                    onReorderStart: (index) => MiniPlayerController.inst.invokeStartReordering(),
-                                    onReorderEnd: (index) => MiniPlayerController.inst.invokeDoneReordering(),
-                                    onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
-                                    itemCount: Player.inst.currentQueue.length,
-                                    itemBuilder: (context, i) {
-                                      final track = Player.inst.currentQueue[i];
-                                      final key = "$i${track.track.path}";
-                                      return AnimatedOpacity(
-                                        key: Key('GD_$key'),
-                                        duration: const Duration(milliseconds: 300),
-                                        opacity: i < currentIndex ? 0.7 : 1.0,
-                                        child: FadeDismissible(
-                                          key: Key("Diss_$key"),
-                                          onDismissed: (direction) {
-                                            Player.inst.removeFromQueue(i);
+                                  itemExtents: List.filled(Player.inst.currentQueue.length, Dimensions.inst.trackTileItemExtent),
+                                  scrollController: MiniPlayerController.inst.queueScrollController,
+                                  padding: EdgeInsets.only(bottom: 56.0 + SelectedTracksController.inst.bottomPadding.value),
+                                  onReorderStart: (index) => MiniPlayerController.inst.invokeStartReordering(),
+                                  onReorderEnd: (index) => MiniPlayerController.inst.invokeDoneReordering(),
+                                  onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
+                                  itemCount: Player.inst.currentQueue.length,
+                                  itemBuilder: (context, i) {
+                                    final track = Player.inst.currentQueue[i];
+                                    final key = "$i${track.track.path}";
+                                    return AnimatedOpacity(
+                                      key: Key('GD_$key'),
+                                      duration: const Duration(milliseconds: 300),
+                                      opacity: i < currentIndex ? 0.7 : 1.0,
+                                      child: FadeDismissible(
+                                        key: Key("Diss_$key"),
+                                        onDismissed: (direction) {
+                                          Player.inst.removeFromQueue(i);
+                                          MiniPlayerController.inst.invokeDoneReordering();
+                                        },
+                                        onUpdate: (detailts) {
+                                          final isReordering = detailts.progress != 0.0;
+                                          if (isReordering) {
+                                            MiniPlayerController.inst.invokeStartReordering();
+                                          } else {
                                             MiniPlayerController.inst.invokeDoneReordering();
-                                          },
-                                          onUpdate: (detailts) {
-                                            final isReordering = detailts.progress != 0.0;
-                                            if (isReordering) {
-                                              MiniPlayerController.inst.invokeStartReordering();
-                                            } else {
-                                              MiniPlayerController.inst.invokeDoneReordering();
-                                            }
-                                          },
-                                          child: TrackTile(
-                                            index: i,
-                                            key: Key('tile_$key'),
-                                            trackOrTwd: track,
-                                            displayRightDragHandler: true,
-                                            draggableThumbnail: true,
-                                            queueSource: QueueSource.playerQueue,
-                                            cardColorOpacity: 0.5,
-                                          ),
+                                          }
+                                        },
+                                        child: TrackTile(
+                                          index: i,
+                                          key: Key('tile_$key'),
+                                          trackOrTwd: track,
+                                          displayRightDragHandler: true,
+                                          draggableThumbnail: true,
+                                          queueSource: QueueSource.playerQueue,
+                                          cardColorOpacity: 0.5,
                                         ),
-                                      );
-                                    },
+                                      ),
+                                    );
+                                  },
                                 ),
                                 Container(
                                   width: context.width,
