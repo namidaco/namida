@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
+import 'package:jiffy/jiffy.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:namida/core/enums.dart';
 import 'package:photo_view/photo_view.dart';
@@ -117,6 +118,14 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
       compressed: false,
     ),
   );
+
+  String releasedFromNow = '';
+  final parsed = DateTime.tryParse(trackExt.year.toString());
+  if (parsed != null) {
+    final fromNow = Jiffy.parseFromDateTime(parsed);
+    releasedFromNow = fromNow.fromNow();
+  }
+
   NamidaNavigator.inst.navigateDialog(
     colorScheme: color,
     lighterDialogColor: false,
@@ -321,7 +330,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                       if (shouldShowTheField(trackExt.year == 0))
                         TrackInfoListTile(
                           title: lang.YEAR,
-                          value: trackExt.year == 0 ? '?' : '${trackExt.year} (${trackExt.year.yearFormatted})',
+                          value: trackExt.year == 0 ? '?' : '${trackExt.year} (${trackExt.year.yearFormatted}${releasedFromNow == '' ? '' : ' | $releasedFromNow'})',
                           icon: Broken.calendar,
                         ),
 
