@@ -212,7 +212,7 @@ class VideoController {
   Future<void> addYTVideoToCacheMap(String id, NamidaVideo nv) async {
     _videoCacheIDMap.addNoDuplicatesForce(id, nv);
     // well, no matter what happens, sometimes the info coming has extra info
-    _videoCacheIDMap[id]?.removeDuplicates((element) => "${element.height}_${element.width}_${element.path}");
+    _videoCacheIDMap[id]?.removeDuplicates((element) => "${element.height}_${element.resolution}_${element.path}");
   }
 
   Future<void> addVideoFileToCacheMap(String id, File file) async {
@@ -287,7 +287,7 @@ class VideoController {
     if (possibleVideos.isNotEmpty) {
       possibleVideos.sortByReverseAlt(
         (e) {
-          if (e.width != 0) return e.width;
+          if (e.resolution != 0) return e.resolution;
           if (e.height != 0) return e.height;
           return 0;
         },
@@ -397,7 +397,7 @@ class VideoController {
       if (dv != null) currentPossibleVideos.addNoDuplicates(dv);
       currentPossibleVideos.sortByReverseAlt(
         (e) {
-          if (e.width != 0) return e.width;
+          if (e.resolution != 0) return e.resolution;
           if (e.height != 0) return e.height;
           return 0;
         },
@@ -531,7 +531,7 @@ class VideoController {
 
     final possibleCached = getNVFromID(id);
     possibleCached.sortByReverseAlt(
-      (e) => e.width,
+      (e) => e.resolution,
       (e) => e.frameratePrecise,
     );
 

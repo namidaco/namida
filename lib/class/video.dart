@@ -82,6 +82,7 @@ class YTWatch {
 }
 
 class NamidaVideo {
+  int get resolution => width < height ? width : height;
   final String path;
   final String? ytID;
   final String? nameInCache;

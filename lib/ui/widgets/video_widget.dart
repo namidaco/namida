@@ -840,7 +840,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 cachedQualities.removeWhere(
                                   (cq) {
                                     return ytQualities.any((ytq) {
-                                      final c1 = ytq.resolution?.startsWith(cq.height.toString()) ?? false;
+                                      final c1 = ytq.resolution?.startsWith(cq.resolution.toString()) ?? false;
                                       final c2 = ytq.sizeInBytes == cq.sizeInBytes;
                                       final isSame = c1 && c2;
                                       return isSame;
@@ -868,7 +868,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     ...cachedQualities.map(
                                       (element) => Obx(
                                         () => _getQualityChip(
-                                          title: '${element.height}p${element.framerateText()}',
+                                          title: '${element.resolution}p${element.framerateText()}',
                                           subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
                                           onPlay: (isSelected) {
                                             // sometimes video is not initialized so we need the second check
@@ -929,7 +929,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             () {
                                               final qts = Player.inst.currentVideoStream?.resolution;
                                               final c = Player.inst.currentCachedVideo;
-                                              final qtc = c == null ? null : '${c.height}p${c.framerateText()}';
+                                              final qtc = c == null ? null : '${c.resolution}p${c.framerateText()}';
                                               final qt = qts ?? qtc;
                                               return Row(
                                                 children: [
@@ -991,13 +991,11 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     final durMS = playerDuration.inMilliseconds;
                                     final videoBuffered = VideoController.vcontroller.buffered ?? Duration.zero;
                                     final audioBuffered = Player.inst.buffered;
-                                    // display audio buffer only if audio < video
-                                    final playerBufferedBigger = videoBuffered > audioBuffered ? videoBuffered : audioBuffered;
-                                    final playerBufferedLower = videoBuffered > audioBuffered ? audioBuffered : videoBuffered;
+                                    final videoCached = Player.inst.currentCachedVideo != null;
+                                    final audioCached = Player.inst.currentCachedAudio != null;
                                     final currentPositionMS = Player.inst.nowPlayingPosition;
                                     // this for audio only mode
-                                    final fullVideoBufferProgress = VideoController.vcontroller.isInitialized ? VideoController.vcontroller.isCurrentVideoFromCache : true;
-                                    final currentVideoAudioFromCache = fullVideoBufferProgress && Player.inst.isCurrentAudioFromCache;
+                                    // final currentVideoAudioFromCache = !VideoController.vcontroller.isInitialized || Player.inst.isCurrentAudioFromCache;
                                     final positionToDisplay = userSeekMS.value == 0 ? currentPositionMS : userSeekMS.value;
                                     final currentPercentage = durMS == 0.0 ? 0.0 : positionToDisplay / durMS;
                                     return Row(
@@ -1053,21 +1051,21 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                         currentPercentage,
                                                         160,
                                                       ),
-                                                      // -- low buffer
-                                                      if (currentVideoAudioFromCache || (playerBufferedLower > Duration.zero && durMS > 0))
+                                                      // -- video buffer
+                                                      if (videoCached || (videoBuffered > Duration.zero && durMS > 0))
                                                         _getSliderContainer(
                                                           colorScheme,
                                                           constraints,
-                                                          currentVideoAudioFromCache ? 1.0 : playerBufferedLower.inMilliseconds / durMS,
+                                                          videoCached ? 1.0 : videoBuffered.inMilliseconds / durMS,
                                                           80,
                                                           displayIndicator: true,
                                                         ),
-                                                      // -- big buffer
-                                                      if (currentVideoAudioFromCache || (playerBufferedBigger > Duration.zero && durMS > 0))
+                                                      // -- audio buffer
+                                                      if (audioCached || (audioBuffered > Duration.zero && durMS > 0))
                                                         _getSliderContainer(
                                                           colorScheme,
                                                           constraints,
-                                                          currentVideoAudioFromCache ? 1.0 : playerBufferedBigger.inMilliseconds / durMS,
+                                                          audioCached ? 1.0 : audioBuffered.inMilliseconds / durMS,
                                                           60,
                                                           displayIndicator: true,
                                                         ),

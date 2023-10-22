@@ -777,13 +777,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             streams.audioOnlyStreams?.firstOrNull;
         if (prefferedAudioStream?.url != null || prefferedVideoStream?.url != null) {
           final isStreamRequiredBetterThanCachedSet =
-              playedFromCacheDetails.$2 == null ? true : playedFromCacheDetails.$2 != null && (prefferedVideoStream?.width ?? 0) > (playedFromCacheDetails.$2?.width ?? 0);
+              playedFromCacheDetails.$2 == null ? true : playedFromCacheDetails.$2 != null && (prefferedVideoStream?.width ?? 0) > (playedFromCacheDetails.$2?.resolution ?? 0);
 
           currentVideoStream.value = isAudioOnlyPlayback
               ? null
               : isStreamRequiredBetterThanCachedSet
                   ? prefferedVideoStream
-                  : vos?.firstWhereEff((e) => e.width == (playedFromCacheDetails.$2?.width));
+                  : vos?.firstWhereEff((e) => e.width == (playedFromCacheDetails.$2?.resolution));
 
           currentAudioStream.value = prefferedAudioStream;
           currentVideoInfo.value = streams.videoInfo;
@@ -889,7 +889,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final allCachedVideos = VideoController.inst.getNVFromID(item.id);
     allCachedVideos.sortByReverseAlt(
       (e) {
-        if (e.width != 0) return e.width;
+        if (e.resolution != 0) return e.resolution;
         if (e.height != 0) return e.height;
         return 0;
       },
