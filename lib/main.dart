@@ -87,13 +87,14 @@ void main() async {
   Indexer.inst.updateColorPalettesSizeInStorage();
   Indexer.inst.updateVideosSizeInStorage();
 
-  FlutterNativeSplash.remove();
-
   QueueController.inst.prepareAllQueuesFile();
 
   await Player.inst.initializePlayer();
   PlaylistController.inst.prepareAllPlaylists();
   VideoController.inst.initialize();
+
+  FlutterNativeSplash.remove();
+
   await PlaylistController.inst.prepareDefaultPlaylistsFile();
   if (!shouldShowOnBoarding) await QueueController.inst.prepareLatestQueue();
 
@@ -114,7 +115,7 @@ void main() async {
   // runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding));
   _initializeCatcher(() => runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding)));
 
-  CurrentColor.inst.generateAllColorPalettes();
+  // CurrentColor.inst.generateAllColorPalettes();
   Folders.inst.onFirstLoad();
 }
 
