@@ -669,29 +669,46 @@ class VideoController {
   /// - DOES NOT handle: `new files`.
   /// - Returns a copy of the map but with valid videos only.
   Future<Map<String, List<NamidaVideo>>> _checkIfVideosInMapValid(Map<String, List<NamidaVideo>> idsMap) async {
-    final newIdsMap = <String, List<NamidaVideo>>{};
+    final res = await _checkIfVideosInMapValidIsolate.thready(idsMap);
+
+    final validMap = res['validMap'] as Map<String, List<NamidaVideo>>;
+    final shouldBeReExtracted = res['newIdsMap'] as Map<String, List<(FileStat, String)>>;
+
+    for (final newId in shouldBeReExtracted.entries) {
+      for (final statAndPath in newId.value) {
+        final nv = await _extractNVFromFFMPEG(
+          stats: statAndPath.$1,
+          id: newId.key,
+          path: statAndPath.$2,
+        );
+        validMap.addForce(newId.key, nv);
+      }
+    }
+
+    return validMap;
+  }
+
+  static Future<Map> _checkIfVideosInMapValidIsolate(Map<String, List<NamidaVideo>> idsMap) async {
+    final validMap = <String, List<NamidaVideo>>{};
+    final newIdsMap = <String, List<(FileStat, String)>>{};
 
     final videosInMap = idsMap.entries.toList();
-    await videosInMap.loopFuture((ve, _) async {
+
+    videosInMap.loop((ve, _) {
       final id = ve.key;
       final vl = ve.value;
-      await vl.loopFuture((v, _) async {
+      vl.loop((v, _) {
         final file = File(v.path);
         // --- File Exists, will be added either instantly, or by fetching new metadata.
-        if (await file.exists()) {
-          final stats = await file.stat();
+        if (file.existsSync()) {
+          final stats = file.statSync();
           // -- Video Exists, and already updated.
           if (v.sizeInBytes == stats.size) {
-            newIdsMap.addForce(id, v);
+            validMap.addForce(id, v);
           }
           // -- Video exists but needs to be updated.
           else {
-            final nv = await _extractNVFromFFMPEG(
-              stats: stats,
-              id: id,
-              path: v.path,
-            );
-            newIdsMap.addForce(id, nv);
+            newIdsMap.addForce(id, (stats, v.path));
           }
         }
 
@@ -700,7 +717,10 @@ class VideoController {
         // }
       });
     });
-    return newIdsMap;
+    return {
+      "validMap": validMap,
+      "newIdsMap": newIdsMap,
+    };
   }
 
   /// - Loops the currently existing files
@@ -709,17 +729,41 @@ class VideoController {
   /// - Returns a map with **new videos only**.
   /// - **New**: excludes files ending with `.download`
   Future<Map<String, List<NamidaVideo>>> _checkForNewVideosInCache(Map<String, List<NamidaVideo>> idsMap) async {
-    final dir = Directory(AppDirs.VIDEOS_CACHE);
+    final newIds = await _checkForNewVideosInCacheIsolate.thready({
+      'dirPath': AppDirs.VIDEOS_CACHE,
+      'idsMap': idsMap,
+    });
+
     final newIdsMap = <String, List<NamidaVideo>>{};
 
-    await for (final df in dir.list()) {
+    for (final newId in newIds.entries) {
+      for (final statAndPath in newId.value) {
+        final nv = await _extractNVFromFFMPEG(
+          stats: statAndPath.$1,
+          id: newId.key,
+          path: statAndPath.$2,
+        );
+        newIdsMap.addForce(newId.key, nv);
+      }
+    }
+
+    return newIdsMap;
+  }
+
+  static Future<Map<String, List<(FileStat, String)>>> _checkForNewVideosInCacheIsolate(Map params) async {
+    final dirPath = params['dirPath'] as String;
+    final idsMap = params['idsMap'] as Map<String, List<NamidaVideo>>;
+    final dir = Directory(dirPath);
+    final newIdsMap = <String, List<(FileStat, String)>>{};
+
+    for (final df in dir.listSync()) {
       if (df is File) {
         final filename = df.path.getFilename;
         if (filename.endsWith('.download')) continue; // first thing first
 
         final id = filename.substring(0, 11);
         final videosInMap = idsMap[id];
-        final stats = await df.stat();
+        final stats = df.statSync();
         final sizeInBytes = stats.size;
         if (videosInMap != null) {
           // if file exists in map and is valid
@@ -727,17 +771,10 @@ class VideoController {
             continue; // skipping since the map will contain only new entries
           }
         }
-        // -- hmmm looks like a new video, extract metadata
+        // -- hmmm looks like a new video, needs extraction
         try {
-          final nv = await _extractNVFromFFMPEG(
-            stats: stats,
-            id: id,
-            path: df.path,
-          );
-
-          newIdsMap.addForce(id, nv);
+          newIdsMap.addForce(id, (stats, df.path));
         } catch (e) {
-          printy(e, isError: true);
           continue;
         }
       }
