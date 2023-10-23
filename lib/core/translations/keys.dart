@@ -5,6 +5,8 @@ class LanguageKeys {
   late String ABOUT;
   late String ACTIVE;
   late String ADD_FOLDER;
+  late String ADD_LANGUAGE;
+  late String ADD_LANGUAGE_SUBTITLE;
   late String ADD_LRC_FILE;
   late String ADD_MORE_FROM_THIS_ALBUM;
   late String ADD_MORE_FROM_THIS_ARTIST;
@@ -160,6 +162,8 @@ class LanguageKeys {
   late String ENABLE_FOLDERS_HIERARCHY;
   late String ENABLE_GLOW_EFFECT;
   late String ENABLE_M3U_SYNC;
+  late String ENABLE_M3U_SYNC_NOTE_1;
+  late String ENABLE_M3U_SYNC_NOTE_2;
   late String ENABLE_M3U_SYNC_SUBTITLE;
   late String ENABLE_MINIPLAYER_PARTICLES;
   late String ENABLE_PARALLAX_EFFECT;
@@ -254,6 +258,7 @@ class LanguageKeys {
   late String INSERTED;
   late String INSTANTLY_APPLIES;
   late String ITEM;
+  late String I_READ_AND_AGREE;
   late String JUMP_TO_DAY;
   late String JUMP_TO_FIRST_TRACK_AFTER_QUEUE_FINISH;
   late String JUMP;

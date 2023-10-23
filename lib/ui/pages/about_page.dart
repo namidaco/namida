@@ -344,16 +344,12 @@ class _NamidaMarkdownElementBuilderHeader extends MarkdownElementBuilder {
 class _NamidaMarkdownElementBuilderCommitLink extends MarkdownElementBuilder {
   String? shortenLongHash(String? longHash, {int chars = 5}) {
     if (longHash == null || longHash == '') return null;
-    if (longHash.length >= chars * 2) {
-      return '${longHash.substring(0, chars)}...${longHash.substring(longHash.length - chars)}';
-    } else {
-      return longHash;
-    }
+    return longHash.substring(0, 7);
   }
 
   @override
   Widget? visitText(md.Text text, TextStyle? preferredStyle) {
-    final regex = RegExp(r'#([a-fA-F0-9]{40}):', caseSensitive: false);
+    final regex = RegExp(r'([a-fA-F0-9]{40}):', caseSensitive: false);
     final res = regex.firstMatch(text.text);
     final longHash = res?.group(1);
     final url = "${AppSocial.GITHUB}/commit/$longHash";
