@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:namida/class/lang.dart';
 import 'package:namida/controller/current_color.dart';
@@ -51,52 +52,57 @@ class ThemeSetting extends StatelessWidget {
                   text: lang.CONFIRM,
                 )
               ],
-              child: SizedBox(
-                height: (Language.availableLanguages.length * context.height * 0.08).withMaximum(context.height * 0.5),
-                width: context.width,
-                child: NamidaListView(
-                  padding: EdgeInsets.zero,
-                  itemExtents: null,
-                  itemCount: Language.availableLanguages.length,
-                  itemBuilder: (context, i) {
-                    final e = Language.availableLanguages[i];
-                    return Padding(
-                      key: Key(i.toString()),
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: Obx(
-                        () => ListTileWithCheckMark(
-                          leading: Container(
-                            padding: const EdgeInsets.all(4.0),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                width: 1.5,
-                                color: context.theme.colorScheme.onBackground.withAlpha(100),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    ...Language.availableLanguages.map(
+                      (e) => Padding(
+                        key: Key(e.code),
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: Obx(
+                          () => ListTileWithCheckMark(
+                            leading: Container(
+                              padding: const EdgeInsets.all(4.0),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  width: 1.5,
+                                  color: context.theme.colorScheme.onBackground.withAlpha(100),
+                                ),
+                              ),
+                              child: Text(
+                                e.name[0],
+                                style: const TextStyle(fontSize: 13.0),
                               ),
                             ),
-                            child: Text(
-                              e.name[0],
-                              style: const TextStyle(fontSize: 13.0),
+                            titleWidget: RichText(
+                              text: TextSpan(
+                                text: e.name,
+                                style: context.textTheme.displayMedium,
+                                children: [
+                                  TextSpan(
+                                    text: " (${e.country})",
+                                    style: context.textTheme.displaySmall,
+                                  ),
+                                ],
+                              ),
                             ),
+                            active: e == selectedLang.value,
+                            onTap: () => selectedLang.value = e,
                           ),
-                          titleWidget: RichText(
-                            text: TextSpan(
-                              text: e.name,
-                              style: context.textTheme.displayMedium,
-                              children: [
-                                TextSpan(
-                                  text: " (${e.country})",
-                                  style: context.textTheme.displaySmall,
-                                ),
-                              ],
-                            ),
-                          ),
-                          active: e == selectedLang.value,
-                          onTap: () => selectedLang.value = e,
                         ),
                       ),
-                    );
-                  },
+                    ),
+                    CustomListTile(
+                      visualDensity: VisualDensity.compact,
+                      icon: Broken.add_circle,
+                      title: lang.ADD_LANGUAGE,
+                      subtitle: lang.ADD_LANGUAGE_SUBTITLE,
+                      onTap: () {
+                        launchUrl(Uri.parse(AppSocial.TRANSLATION_REPO));
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),

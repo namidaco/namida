@@ -213,6 +213,12 @@ class AboutPage extends StatelessWidget {
                   ),
                   false.obs,
                 ),
+                NamidaAboutListTile(
+                  icon: Broken.language_circle,
+                  title: lang.ADD_LANGUAGE,
+                  subtitle: lang.ADD_LANGUAGE_SUBTITLE,
+                  link: AppSocial.TRANSLATION_REPO,
+                ),
               ],
             ),
           ),
