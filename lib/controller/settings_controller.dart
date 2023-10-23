@@ -78,7 +78,7 @@ class SettingsController {
   final RxInt indexMinFileSizeInB = (100 * 1024).obs;
   final RxList<String> trackSearchFilter = ['title', 'artist', 'album'].obs;
   final RxList<String> playlistSearchFilter = ['name', 'creationDate', 'modifiedDate', 'moods', 'comment'].obs;
-  final RxList<String> directoriesToScan = kDirectoriesPaths.toList().obs;
+  final RxList<String> directoriesToScan = kInitialDirectoriesToScan.toList().obs;
   final RxList<String> directoriesToExclude = <String>[].obs;
   final RxBool preventDuplicatedTracks = false.obs;
   final RxBool respectNoMedia = false.obs;

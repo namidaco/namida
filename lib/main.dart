@@ -13,7 +13,6 @@ import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:picture_in_picture/picture_in_picture.dart';
@@ -37,6 +36,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/main_page_wrapper.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 
@@ -56,25 +56,53 @@ void main() async {
     shouldShowOnBoarding = true;
   }
 
-  AppDirs.USER_DATA = await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
-  AppDirs.APP_CACHE = await getExternalCacheDirectories().then((value) async => value?.firstOrNull?.path ?? '');
+  try {
+    AppDirs.USER_DATA = await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
+  } catch (_) {}
+  try {
+    AppDirs.APP_CACHE = await getExternalCacheDirectories().then((value) async => value?.firstOrNull?.path ?? '');
+  } catch (_) {}
 
-  Future<void> createDirectories(List<String> paths) async {
-    paths.loop((p, i) async {
-      await Directory(p).create(recursive: true);
+  final paths = <String>[];
+
+  try {
+    final appStoragePaths = await getExternalStorageDirectories();
+    appStoragePaths?.loop((e, _) {
+      paths.add(e.path.split('/Android/data').first);
     });
+  } catch (_) {}
+
+  if (paths.isEmpty) {
+    try {
+      final pths = await ExternalPath.getExternalStorageDirectories();
+      paths.addAll(pths);
+    } catch (_) {}
   }
 
-  await createDirectories(AppDirs.values);
+  if (paths.isEmpty) {
+    try {
+      final pth = await ExternalPath.getExternalStoragePublicDirectory('');
+      paths.add(pth);
+    } catch (_) {}
+  }
 
-  final paths = await ExternalPath.getExternalStorageDirectories();
-  kStoragePaths.assignAll(paths);
-  kDirectoriesPaths.assignAll(paths.mappedUniqued((path) => "$path/${ExternalPath.DIRECTORY_MUSIC}"));
+  if (paths.isEmpty) {
+    paths.add('/storage/emulated/0'); // hope lost
+  }
+
+  // -- creating directories
+  AppDirs.values.loop((p, _) => Directory(p).createSync(recursive: true));
+
+  kStoragePaths.addAll(paths);
 
   AppDirs.INTERNAL_STORAGE = "${paths[0]}/Namida";
   final downloadsFolder = "${paths[0]}/Download/";
 
-  kDirectoriesPaths.addAll([downloadsFolder, AppDirs.INTERNAL_STORAGE]);
+  kInitialDirectoriesToScan.addAll([
+    ...paths.mappedUniqued((path) => "$path/Music"),
+    downloadsFolder,
+    AppDirs.INTERNAL_STORAGE,
+  ]);
 
   await settings.prepareSettingsFile();
   await Future.wait([

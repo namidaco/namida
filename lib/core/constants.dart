@@ -13,7 +13,7 @@ import 'package:namida/controller/settings_controller.dart';
 int kSdkVersion = 21;
 
 final Set<String> kStoragePaths = {};
-final Set<String> kDirectoriesPaths = {};
+final Set<String> kInitialDirectoriesToScan = {};
 final List<double> kDefaultWaveFormData = List<double>.filled(1, 2.0);
 final List<double> kDefaultScaleList = List<double>.filled(1, 0.01);
 final RegExp kYoutubeRegex = RegExp(
