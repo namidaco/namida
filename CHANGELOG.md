@@ -1,7 +1,7 @@
 # Namida Changelog
 
 ## 23/10/2023
-
+# v1.5.4
 ### 🎉 New Features:
    - dbf825608f799e708a2bd245cfdd667c4bce630a: pitch black theme
    - b82dce29d98b01f69fba1ea44bee7e131dd44a41: subpages tracks sorting
