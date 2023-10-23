@@ -1,20 +1,26 @@
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, depend_on_referenced_packages
 
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:path/path.dart' as p;
 import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 
 typedef Playlist = GeneralPlaylist<TrackWithDate>;
 
@@ -31,6 +37,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     int? creationDate,
     String comment = '',
     List<String> moods = const [],
+    String? m3uPath,
   }) async {
     final newTracks = tracks.mapped((e) => TrackWithDate(
           dateAdded: currentTimeMS,
@@ -43,6 +50,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
       creationDate: creationDate,
       comment: comment,
       moods: moods,
+      m3uPath: m3uPath,
     );
   }
 
@@ -105,7 +113,187 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     return rt.length;
   }
 
-  Future<void> prepareAllPlaylists() async => await super.prepareAllPlaylistsFile();
+  Future<void> exportPlaylistToM3UFile(Playlist playlist, String path) async {
+    await _saveM3UPlaylistToFile.thready({
+      'path': path,
+      'tracks': playlist.tracks,
+      'infoMap': _pathsM3ULookup,
+    });
+  }
+
+  Future<void> prepareAllPlaylists() async {
+    await super.prepareAllPlaylistsFile();
+    // -- preparing all playlist is awaited, for cases where
+    // -- similar name exists, so m3u overrides it
+    // -- this can produce in an outdated playlist version in cache
+    // -- which will be seen if the m3u file got deleted/renamed
+    await _prepareM3UPlaylists();
+  }
+
+  Future<void> _prepareM3UPlaylists() async {
+    final allAvailableDirectories = await Indexer.inst.getAvailableDirectories(strictNoMedia: false);
+
+    final parameters = {
+      'allAvailableDirectories': allAvailableDirectories,
+      'directoriesToExclude': <String>[],
+      'extensions': {'m3u', 'm3u8', 'M3U', 'M3U8'},
+      'respectNoMedia': false,
+    };
+
+    final mapResult = await getFilesTypeIsolate.thready(parameters);
+
+    final allPaths = mapResult['allPaths'] as Set<String>;
+    final resBoth = await _parseM3UPlaylistFiles.thready({
+      'paths': allPaths,
+      'libraryTracks': allTracksInLibrary,
+      'backupDirPath': AppDirs.M3UBackup,
+    });
+    final paths = resBoth['paths'] as Map<String, (String, List<Track>)>;
+    final infoMap = resBoth['infoMap'] as Map<String, String?>;
+
+    for (final e in paths.entries) {
+      final plName = e.key;
+      final m3uPath = e.value.$1;
+      final trs = e.value.$2;
+      final creationDate = File(m3uPath).statSync().modified.millisecondsSinceEpoch;
+      PlaylistController.inst.addNewPlaylist(plName, tracks: trs, m3uPath: m3uPath, creationDate: creationDate);
+    }
+    _pathsM3ULookup
+      ..clear()
+      ..addAll(infoMap);
+  }
+
+  /// saves each track m3u info for writing back
+  final _pathsM3ULookup = <String, String?>{}; // {trackPath: EXTINFO}
+
+  static Map _parseM3UPlaylistFiles(Map params) {
+    final paths = params['paths'] as Set<String>;
+    final allTracksPaths = params['libraryTracks'] as List<Track>; // used as a fallback lookup
+    final backupDirPath = params['backupDirPath'] as String; // used as a backup for newly found m3u files.
+
+    final all = <String, (String, List<Track>)>{};
+    final infoMap = <String, String?>{};
+    for (final path in paths) {
+      final file = File(path);
+      final filename = file.path.getFilenameWOExt;
+      final fullPaths = <String>[];
+      String? latestInfo;
+      for (final line in file.readAsLinesSync()) {
+        if (line.startsWith("#")) {
+          latestInfo = line;
+        } else {
+          String fullPath = line; // maybe is absolute path
+
+          if (!File(fullPath).existsSync()) {
+            fullPath = p.join(file.path.getDirectoryPath, line); // maybe was relative
+          }
+
+          if (!File(fullPath).existsSync()) {
+            final maybeTrack = allTracksPaths.firstWhereEff((e) => e.path.endsWith(line)); // no idea, trying to get from library
+            if (maybeTrack != null) fullPath = maybeTrack.path;
+          }
+
+          fullPaths.add(fullPath);
+          infoMap[fullPath] = latestInfo;
+        }
+      }
+      final tracks = fullPaths.map((e) => e.toTrack()).toList();
+      if (all[filename] == null) {
+        all[filename] = (path, tracks);
+      } else {
+        // -- filename already exists
+        all[file.path.formatPath()] = (path, tracks);
+      }
+
+      latestInfo = null; // resetting info between each file looping
+    }
+    // -- copying newly found m3u files as a backup
+    for (final m3u in all.entries) {
+      final backupFile = File("$backupDirPath${m3u.key}.m3u");
+      if (!backupFile.existsSync()) {
+        File(m3u.value.$1).copySync(backupFile.path);
+      }
+    }
+    return {
+      'paths': all,
+      'infoMap': infoMap,
+    };
+  }
+
+  static Future<void> _saveM3UPlaylistToFile(Map params) async {
+    final path = params['path'] as String;
+    final tracks = params['tracks'] as List<TrackWithDate>;
+    final infoMap = params['infoMap'] as Map<String, String?>;
+
+    final file = File(path);
+    file.deleteIfExistsSync();
+    file.createSync(recursive: true);
+    final sink = file.openWrite(mode: FileMode.append);
+    sink.write('#EXTM3U\n');
+    for (final trwd in tracks) {
+      final tr = trwd.track;
+      final trext = tr.track.toTrackExt();
+      final infoLine = infoMap[tr.path] ?? '#EXTINF:${trext.duration},${trext.originalArtist} - ${trext.title}';
+      final pathLine = tr.path;
+      sink.write("$infoLine\n$pathLine\n");
+    }
+
+    await sink.flush();
+    await sink.close();
+  }
+
+  Future<bool> _requestM3USyncPermission() async {
+    if (settings.enableM3USync.value) return true;
+
+    await NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        actions: [
+          const CancelButton(),
+          const SizedBox(width: 8.0),
+          NamidaButton(
+            text: lang.CONFIRM,
+            onPressed: () {
+              settings.save(enableM3USync: true);
+              NamidaNavigator.inst.closeDialog();
+            },
+          )
+        ],
+        title: lang.NOTE,
+        bodyText: '${lang.ENABLE_M3U_SYNC}?\n\n${lang.WARNING.toUpperCase()}: ${lang.ENABLE_M3U_SYNC_SUBTITLE}',
+      ),
+    );
+    return settings.enableM3USync.value;
+  }
+
+  Timer? writeTimer;
+
+  @override
+  FutureOr<void> onPlaylistTracksChanged(Playlist playlist) async {
+    final m3uPath = playlist.m3uPath;
+    if (m3uPath != null && await File(m3uPath).exists()) {
+      final didAgree = await _requestM3USyncPermission();
+
+      if (didAgree) {
+        // -- using IOSink sometimes produces errors when succesively opened/closed
+        // -- not ideal for cases where u constantly add/remove tracks
+        // -- so we save with only 2 seconds limit.
+        writeTimer?.cancel();
+        writeTimer = null;
+        writeTimer = Timer(const Duration(seconds: 2), () async {
+          await _saveM3UPlaylistToFile.thready({
+            'path': m3uPath,
+            'tracks': playlist.tracks,
+            'infoMap': _pathsM3ULookup,
+          });
+        });
+      }
+    }
+  }
+
+  @override
+  FutureOr<bool> canSavePlaylist(Playlist playlist) {
+    return playlist.m3uPath == null; // dont save m3u-based playlists;
+  }
 
   @override
   void sortPlaylists() => SearchSortController.inst.sortMedia(MediaType.playlist);

@@ -66,11 +66,13 @@ class AppDirs {
   static final VIDEOS_CACHE_TEMP = '$USER_DATA/Videos/Temp/';
   static final THUMBNAILS = '$USER_DATA/Thumbnails/'; // extracted video thumbnails
   static final LYRICS = '$USER_DATA/Lyrics/';
+  static final M3UBackup = '$USER_DATA/M3U Backup/'; // backups m3u on first found
 
   // ================= Internal Storage =================
   static final SAVED_ARTWORKS = '$INTERNAL_STORAGE/Artworks/';
   static final BACKUPS = '$INTERNAL_STORAGE/Backups/';
   static final COMPRESSED_IMAGES = '$INTERNAL_STORAGE/Compressed/';
+  static final M3UPlaylists = '$INTERNAL_STORAGE/M3U Playlists/';
 
   // ================= Youtube =================
   static final YOUTUBE_MAIN_DIRECTORY = '$USER_DATA/Youtube';
@@ -98,6 +100,7 @@ class AppDirs {
     AUDIOS_CACHE,
     THUMBNAILS,
     LYRICS,
+    M3UBackup,
     // -- Youtube
     YOUTUBE_MAIN_DIRECTORY,
     YT_PLAYLISTS,
@@ -227,7 +230,6 @@ const Set<String> kAudioFileExtensions = {
   '.its',
   '.kar',
   '.kfn',
-  '.m3u',
   '.m4r',
   '.mac',
   '.mka',

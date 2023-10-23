@@ -261,6 +261,17 @@ class PlaylistsPage extends StatelessWidget {
                                 gridCount: countPerRow,
                                 showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(key),
                                 onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
+                                widgetsInStack: [
+                                  if (playlist.m3uPath != null)
+                                    Positioned(
+                                      bottom: 8.0,
+                                      right: 8.0,
+                                      child: Tooltip(
+                                        message: lang.M3U_PLAYLIST,
+                                        child: const Icon(Broken.music_filter, size: 18.0),
+                                      ),
+                                    ),
+                                ],
                               ),
                             );
                           },

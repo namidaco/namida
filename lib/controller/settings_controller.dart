@@ -30,6 +30,7 @@ class SettingsController {
   final RxList<LibraryTab> libraryTabs = [
     LibraryTab.home,
     LibraryTab.tracks,
+    LibraryTab.artists,
     LibraryTab.playlists,
     LibraryTab.folders,
     LibraryTab.youtube,
@@ -147,6 +148,7 @@ class SettingsController {
   final RxBool showUnknownFieldsInTrackInfoDialog = true.obs;
   final RxBool extractFeatArtistFromTitle = true.obs;
   final RxBool groupArtworksByAlbum = false.obs;
+  final RxBool enableM3USync = false.obs;
   final RxBool canAskForBatteryOptimizations = true.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
     TagField.trackNumber,
@@ -385,6 +387,7 @@ class SettingsController {
       showUnknownFieldsInTrackInfoDialog.value = json['showUnknownFieldsInTrackInfoDialog'] ?? showUnknownFieldsInTrackInfoDialog.value;
       extractFeatArtistFromTitle.value = json['extractFeatArtistFromTitle'] ?? extractFeatArtistFromTitle.value;
       groupArtworksByAlbum.value = json['groupArtworksByAlbum'] ?? groupArtworksByAlbum.value;
+      enableM3USync.value = json['enableM3USync'] ?? enableM3USync.value;
       canAskForBatteryOptimizations.value = json['canAskForBatteryOptimizations'] ?? canAskForBatteryOptimizations.value;
 
       final listFromStorage = List<String>.from(json['tagFieldsToEdit'] ?? []);
@@ -579,6 +582,7 @@ class SettingsController {
       'showUnknownFieldsInTrackInfoDialog': showUnknownFieldsInTrackInfoDialog.value,
       'extractFeatArtistFromTitle': extractFeatArtistFromTitle.value,
       'groupArtworksByAlbum': groupArtworksByAlbum.value,
+      'enableM3USync': enableM3USync.value,
       'canAskForBatteryOptimizations': canAskForBatteryOptimizations.value,
       'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
       'wakelockMode': wakelockMode.value.convertToString,
@@ -744,6 +748,7 @@ class SettingsController {
     bool? showUnknownFieldsInTrackInfoDialog,
     bool? extractFeatArtistFromTitle,
     bool? groupArtworksByAlbum,
+    bool? enableM3USync,
     bool? canAskForBatteryOptimizations,
     List<TagField>? tagFieldsToEdit,
     WakelockMode? wakelockMode,
@@ -1160,6 +1165,9 @@ class SettingsController {
     }
     if (groupArtworksByAlbum != null) {
       this.groupArtworksByAlbum.value = groupArtworksByAlbum;
+    }
+    if (enableM3USync != null) {
+      this.enableM3USync.value = enableM3USync;
     }
     if (canAskForBatteryOptimizations != null) {
       this.canAskForBatteryOptimizations.value = canAskForBatteryOptimizations;

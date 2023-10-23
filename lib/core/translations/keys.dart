@@ -138,6 +138,7 @@ class LanguageKeys {
   late String DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE_SUBTITLE;
   late String DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE;
   late String DONE;
+  late String DONT_ASK_AGAIN;
   late String DONT_RESTORE_POSITION;
   late String DOWNLOAD;
   late String DOWNLOADING_WILL_OVERRIDE_IT;
@@ -158,6 +159,8 @@ class LanguageKeys {
   late String ENABLE_FADE_EFFECT_ON_PLAY_PAUSE;
   late String ENABLE_FOLDERS_HIERARCHY;
   late String ENABLE_GLOW_EFFECT;
+  late String ENABLE_M3U_SYNC;
+  late String ENABLE_M3U_SYNC_SUBTITLE;
   late String ENABLE_MINIPLAYER_PARTICLES;
   late String ENABLE_PARALLAX_EFFECT;
   late String ENABLE_PARTY_MODE_SUBTITLE;
@@ -173,6 +176,7 @@ class LanguageKeys {
   late String EXCLUDED_FODLERS;
   late String EXIT_APP_SUBTITLE;
   late String EXIT;
+  late String EXPORT_AS_M3U;
   late String EXTENSION;
   late String EXTERNAL_FILES;
   late String EXTRACT_ALL_COLOR_PALETTES_SUBTITLE;
@@ -234,6 +238,7 @@ class LanguageKeys {
   late String HOME;
   late String HOUR_FORMAT_12;
   late String IGNORES;
+  late String IGNORE_BATTERY_OPTIMIZATIONS_SUBTITLE;
   late String IMPORT_ALL;
   late String IMPORT_LAST_FM_HISTORY_GUIDE;
   late String IMPORT_LAST_FM_HISTORY;
@@ -271,6 +276,7 @@ class LanguageKeys {
   late String LOST_MEMORIES_SUBTITLE;
   late String LYRICIST;
   late String LYRICS;
+  late String M3U_PLAYLIST;
   late String MAKE_YOUR_FIRST_LISTEN;
   late String MANUAL_BACKUP_SUBTITLE;
   late String MANUAL_BACKUP;

@@ -6,6 +6,8 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
@@ -89,6 +91,13 @@ class PlaylistTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(width: 2.0),
+                    if (playlist.m3uPath != null) ...[
+                      Tooltip(
+                        message: lang.M3U_PLAYLIST,
+                        child: const Icon(Broken.music_filter, size: 18.0),
+                      ),
+                      const SizedBox(width: 2.0),
+                    ],
                     MoreIcon(
                       iconSize: 20,
                       onPressed: () => NamidaDialogs.inst.showPlaylistDialog(playlistName),

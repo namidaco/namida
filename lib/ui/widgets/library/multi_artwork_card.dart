@@ -16,6 +16,7 @@ class MultiArtworkCard extends StatelessWidget {
   final void Function()? onTap;
   final void Function()? showMenuFunction;
   final (double, double, double) dimensions;
+  final List<Widget> widgetsInStack;
 
   const MultiArtworkCard({
     super.key,
@@ -26,6 +27,7 @@ class MultiArtworkCard extends StatelessWidget {
     this.showMenuFunction,
     required this.heroTag,
     required this.dimensions,
+    this.widgetsInStack = const [],
   });
 
   @override
@@ -96,6 +98,7 @@ class MultiArtworkCard extends StatelessWidget {
                 onLongPress: showMenuFunction,
               ),
             ),
+            ...widgetsInStack,
           ],
         ),
       ),

@@ -39,6 +39,8 @@ import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 
+import 'package:namida/main.dart';
+
 Future<void> showGeneralPopupDialog(
   List<Track> tracks,
   String title,
@@ -315,6 +317,28 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
+  Future<void> exportPlaylist() async {
+    // function button won't be visible if playlistName == null.
+    if (!shoulShowPlaylistUtils()) return;
+    cancelSkipTimer();
+
+    NamidaNavigator.inst.closeDialog();
+    final pl = PlaylistController.inst.getPlaylist(playlistName!);
+    if (pl == null) return;
+
+    if (!await requestManageStoragePermission()) return;
+
+    final savePath = "${AppDirs.M3UPlaylists}${pl.name}.m3u";
+    await PlaylistController.inst.exportPlaylistToM3UFile(pl, savePath);
+    snackyy(
+      message: "${lang.SAVED_IN}: $savePath",
+      leftBarIndicatorColor: colorDelightened,
+      margin: EdgeInsets.zero,
+      top: false,
+      borderRadius: 0,
+    );
+  }
+
   void updatePathDialog(String newPath) {
     openDialog(
       CustomBlurryDialog(
@@ -507,6 +531,10 @@ Future<void> showGeneralPopupDialog(
               Expanded(child: bigIcon(Broken.edit_2, lang.RENAME_PLAYLIST, renamePlaylist)),
               const SizedBox(width: 8.0),
               Expanded(child: bigIcon(Broken.pen_remove, lang.DELETE_PLAYLIST, deletePlaylist)),
+              if (PlaylistController.inst.getPlaylist(playlistName ?? '')?.m3uPath == null) ...[
+                const SizedBox(width: 8.0),
+                Expanded(child: bigIcon(Broken.directbox_send, lang.EXPORT_AS_M3U, exportPlaylist)),
+              ],
               const SizedBox(width: 24.0),
             ],
           ),
@@ -716,19 +744,19 @@ Future<void> showGeneralPopupDialog(
                               () {
                                 final remainingSecondsToSkip = Player.inst.playErrorRemainingSecondsToSkip;
                                 return SmallListTile(
-                                title: lang.SKIP,
+                                  title: lang.SKIP,
                                   subtitle: remainingSecondsToSkip <= 0 ? null : '$remainingSecondsToSkip ${lang.SECONDS}',
-                                color: colorDelightened,
-                                compact: true,
-                                icon: Broken.next,
+                                  color: colorDelightened,
+                                  compact: true,
+                                  icon: Broken.next,
                                   trailing: remainingSecondsToSkip <= 0
-                                    ? null
-                                    : NamidaIconButton(
-                                        icon: Broken.close_circle,
-                                        iconColor: Get.context?.defaultIconColor(colorDelightened, Get.textTheme.displayMedium?.color),
-                                        onPressed: cancelSkipTimer,
-                                      ),
-                                onTap: onSkip,
+                                      ? null
+                                      : NamidaIconButton(
+                                          icon: Broken.close_circle,
+                                          iconColor: Get.context?.defaultIconColor(colorDelightened, Get.textTheme.displayMedium?.color),
+                                          onPressed: cancelSkipTimer,
+                                        ),
+                                  onTap: onSkip,
                                 );
                               },
                             );
