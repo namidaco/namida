@@ -382,7 +382,7 @@ extension ScrollerPerf on ScrollController {
     if (diff > jumpitator) {
       // -- is now above the target, so we jump offset-jumpitator
       jumpTo(offset - jumpitator);
-    } else if (diff < jumpitator) {
+    } else if (diff < -jumpitator) {
       // -- is now under the target, so we jump offset+jumpitator
       jumpTo(offset + jumpitator);
     }

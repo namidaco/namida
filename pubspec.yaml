@@ -22,7 +22,7 @@ dependencies:
   get:
     git:
       url: https://github.com/MSOB7YY/getx
-  permission_handler: ^10.4.3
+  permission_handler: ^11.0.1
   device_info_plus: ^8.1.0
   intl: ^0.18.0
   flutter_archive: ^5.0.0
@@ -46,7 +46,7 @@ dependencies:
   playlist_manager:
     git:
       url: https://github.com/namidaco/playlist_manager
-      ref: 1c1c6e3a0dde1c08f90190de02afcb498b49e173
+      ref: fa4895587001c30ef98cf4f3fd1429b6fdaa8f8a
   history_manager:
     git:
       url: https://github.com/namidaco/history_manager
@@ -57,7 +57,7 @@ dependencies:
   picture_in_picture:
     git:
       url: https://github.com/MSOB7YY/picture_in_picture
-      ref: 8989afc0e8b854819d79ace61da9b9544ad6068f
+      ref: f0a76aaf72d668db9bcb8e3289357ea9e065e852
   flutter_volume_controller: ^1.3.0
   flutter_markdown: ^0.6.17+3
   flutter_mailer: ^2.1.1

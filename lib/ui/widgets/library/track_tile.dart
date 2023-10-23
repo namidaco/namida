@@ -35,6 +35,7 @@ class TrackTile extends StatelessWidget {
   final QueueSource queueSource;
   final void Function()? onRightAreaTap;
   final double cardColorOpacity;
+  final double fadeOpacity;
 
   const TrackTile({
     super.key,
@@ -52,6 +53,7 @@ class TrackTile extends StatelessWidget {
     required this.queueSource,
     this.onRightAreaTap,
     this.cardColorOpacity = 0.9,
+    this.fadeOpacity = 0.0,
   });
 
   bool get _isFromQueue => queueSource == QueueSource.playerQueue;
@@ -114,219 +116,223 @@ class TrackTile extends StatelessWidget {
                 );
             return Padding(
               padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin),
-              child: NamidaInkWell(
-                borderRadius: 0.0,
-                bgColor: backgroundColor,
-                onTap: onTap ??
-                    () async {
-                      if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
-                        _selectTrack();
-                      } else {
-                        if (queueSource == QueueSource.search) {
-                          ScrollSearchController.inst.unfocusKeyboard();
-                          await Player.inst.playOrPause(
-                            settings.trackPlayMode.value.shouldBeIndex0 ? 0 : index,
-                            settings.trackPlayMode.value.getQueue(track),
-                            queueSource,
-                          );
-                        } else {
-                          await Player.inst.playOrPause(
-                            index,
-                            queueSource.toTracks(null, trackWithDate?.dateAdded.toDaysSince1970()),
-                            queueSource,
-                          );
-                        }
-                      }
-                    },
-                onLongPress: !selectable || onTap != null
-                    ? null
-                    : () {
-                        if (!isInSelectedTracksPreview) {
+              child: Material(
+                type: MaterialType.transparency,
+                child: InkWell(
+                  onTap: onTap ??
+                      () async {
+                        if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
                           _selectTrack();
+                        } else {
+                          if (queueSource == QueueSource.search) {
+                            ScrollSearchController.inst.unfocusKeyboard();
+                            await Player.inst.playOrPause(
+                              settings.trackPlayMode.value.shouldBeIndex0 ? 0 : index,
+                              settings.trackPlayMode.value.getQueue(track),
+                              queueSource,
+                            );
+                          } else {
+                            await Player.inst.playOrPause(
+                              index,
+                              queueSource.toTracks(null, trackWithDate?.dateAdded.toDaysSince1970()),
+                              queueSource,
+                            );
+                          }
                         }
                       },
-                child: SizedBox(
-                  height: Dimensions.inst.trackTileItemExtent,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
-                    child: Row(
-                      children: [
-                        const SizedBox(width: 12.0),
-                        Stack(
-                          alignment: Alignment.center,
+                  onLongPress: !selectable || onTap != null
+                      ? null
+                      : () {
+                          if (!isInSelectedTracksPreview) {
+                            _selectTrack();
+                          }
+                        },
+                  child: ColoredBox(
+                    color: backgroundColor,
+                    child: SizedBox(
+                      height: Dimensions.inst.trackTileItemExtent,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
+                        child: Row(
                           children: [
-                            AnimatedScale(
-                              duration: const Duration(milliseconds: 400),
-                              scale: isTrackCurrentlyPlaying ? 0.96 : 1.0,
-                              curve: Curves.easeInOut,
-                              child: SizedBox(
-                                width: thumbnailSize,
-                                height: thumbnailSize,
-                                child: NamidaHero(
-                                  tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
-                                  child: ArtworkWidget(
-                                    key: Key("$willSleepAfterThis${trackOrTwd.hashCode}"),
-                                    thumbnailSize: thumbnailSize,
-                                    path: track.pathToImage,
-                                    forceSquared: settings.forceSquaredTrackThumbnail.value,
-                                    useTrackTileCacheHeight: true,
-                                    onTopWidgets: [
-                                      if (displayTrackNumber)
-                                        Positioned(
-                                          bottom: 0,
-                                          right: 0,
-                                          child: NamidaBlurryContainer(
-                                            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
-                                            borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
-                                            child: Text(
-                                              (track.trackNo).toString(),
-                                              style: context.textTheme.displaySmall,
+                            const SizedBox(width: 12.0),
+                            Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                AnimatedScale(
+                                  duration: const Duration(milliseconds: 400),
+                                  scale: isTrackCurrentlyPlaying ? 0.96 : 1.0,
+                                  curve: Curves.easeInOut,
+                                  child: SizedBox(
+                                    width: thumbnailSize,
+                                    height: thumbnailSize,
+                                    child: NamidaHero(
+                                      tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
+                                      child: ArtworkWidget(
+                                        key: Key("$willSleepAfterThis${trackOrTwd.hashCode}"),
+                                        thumbnailSize: thumbnailSize,
+                                        path: track.pathToImage,
+                                        forceSquared: settings.forceSquaredTrackThumbnail.value,
+                                        useTrackTileCacheHeight: true,
+                                        onTopWidgets: [
+                                          if (displayTrackNumber)
+                                            Positioned(
+                                              bottom: 0,
+                                              right: 0,
+                                              child: NamidaBlurryContainer(
+                                                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
+                                                borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
+                                                child: Text(
+                                                  (track.trackNo).toString(),
+                                                  style: context.textTheme.displaySmall,
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ),
-                                      if (willSleepAfterThis)
-                                        Positioned(
-                                          bottom: 0,
-                                          right: 0,
-                                          child: Container(
-                                            padding: const EdgeInsets.all(2.0),
-                                            decoration: BoxDecoration(
-                                              color: context.theme.colorScheme.background.withAlpha(160),
-                                              borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                                            ),
-                                            child: const Icon(
-                                              Broken.timer_1,
-                                              size: 16.0,
-                                            ),
-                                          ),
-                                        )
-                                    ],
+                                          if (willSleepAfterThis)
+                                            Positioned(
+                                              bottom: 0,
+                                              right: 0,
+                                              child: Container(
+                                                padding: const EdgeInsets.all(2.0),
+                                                decoration: BoxDecoration(
+                                                  color: context.theme.colorScheme.background.withAlpha(160),
+                                                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                                                ),
+                                                child: const Icon(
+                                                  Broken.timer_1,
+                                                  size: 16.0,
+                                                ),
+                                              ),
+                                            )
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
+                                if (draggableThumbnail)
+                                  NamidaReordererableListener(
+                                    durationMs: 80,
+                                    isInQueue: queueSource == QueueSource.playerQueue,
+                                    index: index,
+                                    child: Container(
+                                      color: Colors.transparent,
+                                      height: trackTileHeight,
+                                      width: thumbnailSize,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(width: 12.0),
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // check if first row isnt empty
+                                  if (row1Text != '')
+                                    Text(
+                                      row1Text,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                      style: context.textTheme.displayMedium!.copyWith(
+                                        color: textColor?.withAlpha(170),
+                                      ),
+                                    ),
+
+                                  // check if second row isnt empty
+                                  if (row2Text != '')
+                                    Text(
+                                      row2Text,
+                                      style: context.textTheme.displaySmall?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                        color: textColor?.withAlpha(140),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+
+                                  // check if third row isnt empty
+                                  if (thirdLineText == '' && settings.displayThirdRow.value)
+                                    if (row3Text != '')
+                                      Text(
+                                        row3Text,
+                                        style: context.textTheme.displaySmall?.copyWith(
+                                          color: textColor?.withAlpha(130),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+
+                                  if (thirdLineText != '')
+                                    Text(
+                                      thirdLineText,
+                                      style: context.textTheme.displaySmall?.copyWith(color: textColor?.withAlpha(130)),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                ],
                               ),
                             ),
-                            if (draggableThumbnail)
+                            const SizedBox(width: 6.0),
+                            if (settings.displayFavouriteIconInListTile.value || rightItem1Text != '' || rightItem2Text != '')
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  if (rightItem1Text != '')
+                                    Text(
+                                      rightItem1Text,
+                                      style: context.textTheme.displaySmall?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                        color: textColor?.withAlpha(170),
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  if (rightItem2Text != '')
+                                    Text(
+                                      rightItem2Text,
+                                      style: context.textTheme.displaySmall?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                        color: textColor?.withAlpha(170),
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  if (settings.displayFavouriteIconInListTile.value)
+                                    NamidaLikeButton(
+                                      track: track,
+                                      size: 22.0,
+                                      color: textColor?.withAlpha(140) ?? context.textTheme.displayMedium?.color?.withAlpha(140),
+                                    ),
+                                ],
+                              ),
+                            if (displayRightDragHandler) ...[
+                              const SizedBox(width: 8.0),
                               NamidaReordererableListener(
-                                durationMs: 80,
+                                durationMs: 20,
                                 isInQueue: queueSource == QueueSource.playerQueue,
                                 index: index,
-                                child: Container(
-                                  color: Colors.transparent,
-                                  height: trackTileHeight,
-                                  width: thumbnailSize,
+                                child: FittedBox(
+                                  child: Icon(
+                                    Broken.menu_1,
+                                    color: textColor?.withAlpha(160),
+                                  ),
                                 ),
                               ),
+                            ],
+                            const SizedBox(width: 2.0),
+                            MoreIcon(
+                              padding: 6.0,
+                              iconColor: textColor?.withAlpha(160),
+                              onPressed: _triggerTrackDialog,
+                              onLongPress: _triggerTrackInfoDialog,
+                            ),
+                            if (trailingWidget == null) const SizedBox(width: 4.0),
+                            if (trailingWidget != null) ...[
+                              trailingWidget!,
+                              const SizedBox(width: 10.0),
+                            ],
                           ],
                         ),
-                        const SizedBox(width: 12.0),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // check if first row isnt empty
-                              if (row1Text != '')
-                                Text(
-                                  row1Text,
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                  style: context.textTheme.displayMedium!.copyWith(
-                                    color: textColor?.withAlpha(170),
-                                  ),
-                                ),
-
-                              // check if second row isnt empty
-                              if (row2Text != '')
-                                Text(
-                                  row2Text,
-                                  style: context.textTheme.displaySmall?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    color: textColor?.withAlpha(140),
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-
-                              // check if third row isnt empty
-                              if (thirdLineText == '' && settings.displayThirdRow.value)
-                                if (row3Text != '')
-                                  Text(
-                                    row3Text,
-                                    style: context.textTheme.displaySmall?.copyWith(
-                                      color: textColor?.withAlpha(130),
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-
-                              if (thirdLineText != '')
-                                Text(
-                                  thirdLineText,
-                                  style: context.textTheme.displaySmall?.copyWith(color: textColor?.withAlpha(130)),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 6.0),
-                        if (settings.displayFavouriteIconInListTile.value || rightItem1Text != '' || rightItem2Text != '')
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (rightItem1Text != '')
-                                Text(
-                                  rightItem1Text,
-                                  style: context.textTheme.displaySmall?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    color: textColor?.withAlpha(170),
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              if (rightItem2Text != '')
-                                Text(
-                                  rightItem2Text,
-                                  style: context.textTheme.displaySmall?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    color: textColor?.withAlpha(170),
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              if (settings.displayFavouriteIconInListTile.value)
-                                NamidaLikeButton(
-                                  track: track,
-                                  size: 22.0,
-                                  color: textColor?.withAlpha(140) ?? context.textTheme.displayMedium?.color?.withAlpha(140),
-                                ),
-                            ],
-                          ),
-                        if (displayRightDragHandler) ...[
-                          const SizedBox(width: 8.0),
-                          NamidaReordererableListener(
-                            durationMs: 20,
-                            isInQueue: queueSource == QueueSource.playerQueue,
-                            index: index,
-                            child: FittedBox(
-                              child: Icon(
-                                Broken.menu_1,
-                                color: textColor?.withAlpha(160),
-                              ),
-                            ),
-                          ),
-                        ],
-                        const SizedBox(width: 2.0),
-                        MoreIcon(
-                          padding: 6.0,
-                          iconColor: textColor?.withAlpha(160),
-                          onPressed: _triggerTrackDialog,
-                          onLongPress: _triggerTrackInfoDialog,
-                        ),
-                        if (trailingWidget == null) const SizedBox(width: 4.0),
-                        if (trailingWidget != null) ...[
-                          trailingWidget!,
-                          const SizedBox(width: 10.0),
-                        ],
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -334,6 +340,14 @@ class TrackTile extends StatelessWidget {
             );
           },
         ),
+        if (fadeOpacity > 0)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: ColoredBox(
+                color: context.theme.scaffoldBackgroundColor.withOpacity(fadeOpacity),
+              ),
+            ),
+          ),
         GestureDetector(
           onTap: onRightAreaTap ?? _triggerTrackDialog,
           onLongPress: _triggerTrackInfoDialog,
@@ -341,7 +355,7 @@ class TrackTile extends StatelessWidget {
             width: 36.0,
             color: Colors.transparent,
           ),
-        )
+        ),
       ],
     );
   }

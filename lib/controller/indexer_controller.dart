@@ -284,7 +284,7 @@ class Indexer {
     Future<Map<String, dynamic>> extracty(String trackPath, void Function(String err) onError) async {
       // -- most methods dont throw, except for timeout
       try {
-        const timeoutDuration = Duration(seconds: 10); // 10s for each method, 2 more fallback methods so totalDuration is upto 30s
+        const timeoutDuration = Duration(seconds: 15);
 
         // -- returns null early depending on size [byte] or duration [seconds]
         FileStat? fileStat;

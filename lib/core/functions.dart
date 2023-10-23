@@ -225,7 +225,7 @@ class NamidaOnTaps {
                   newIndex -= 1;
                 }
                 final item = allSorts.removeAt(oldIndex);
-                allSorts.insert(newIndex, item);
+                allSorts.insertSafe(newIndex, item);
                 final activeSorts = allSorts.where((element) => sorters.contains(element)).toList();
                 sorters
                   ..clear()
@@ -251,7 +251,7 @@ class NamidaOnTaps {
                           if (sorters.contains(sorting)) {
                             sorters.remove(sorting);
                           } else {
-                            sorters.insert(i, sorting);
+                            sorters.insertSafe(i, sorting);
                           }
                         },
                       );
@@ -402,27 +402,28 @@ Map<String, Set<String>> getFilesTypeIsolate(Map parameters) {
 
   allAvailableDirectories.keys.toList().loop((d, index) {
     final hasNoMedia = allAvailableDirectories[d] ?? false;
+    try {
+      for (final systemEntity in d.listSync()) {
+        if (systemEntity is File) {
+          final path = systemEntity.path;
+          // -- skip if not in extensions
+          if (!extensions.any((ext) => path.endsWith(ext))) {
+            continue;
+          }
+          // -- skip if in nomedia folder & specified to exclude
+          if (respectNoMedia && hasNoMedia) {
+            excludedByNoMedia.add(path);
+            continue;
+          }
 
-    for (final systemEntity in d.listSync()) {
-      if (systemEntity is File) {
-        final path = systemEntity.path;
-        // -- skip if not in extensions
-        if (!extensions.any((ext) => path.endsWith(ext))) {
-          continue;
+          // -- skips if the file is included in one of the excluded folders.
+          if (directoriesToExclude.any((exc) => path.startsWith(exc))) {
+            continue;
+          }
+          allPaths.add(path);
         }
-        // -- skip if in nomedia folder & specified to exclude
-        if (respectNoMedia && hasNoMedia) {
-          excludedByNoMedia.add(path);
-          continue;
-        }
-
-        // -- skips if the file is included in one of the excluded folders.
-        if (directoriesToExclude.any((exc) => path.startsWith(exc))) {
-          continue;
-        }
-        allPaths.add(path);
       }
-    }
+    } catch (_) {}
   });
   return {
     'allPaths': allPaths,

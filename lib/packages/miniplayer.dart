@@ -1230,33 +1230,28 @@ class NamidaMiniPlayer extends StatelessWidget {
                                   itemBuilder: (context, i) {
                                     final track = Player.inst.currentQueue[i];
                                     final key = "$i${track.track.path}";
-                                    return AnimatedOpacity(
-                                      key: Key('GD_$key'),
-                                      duration: const Duration(milliseconds: 300),
-                                      opacity: i < currentIndex ? 0.7 : 1.0,
-                                      child: FadeDismissible(
-                                        key: Key("Diss_$key"),
-                                        onDismissed: (direction) {
-                                          Player.inst.removeFromQueue(i);
+                                    return FadeDismissible(
+                                      key: Key("Diss_$key"),
+                                      onDismissed: (direction) {
+                                        Player.inst.removeFromQueue(i);
+                                        MiniPlayerController.inst.invokeDoneReordering();
+                                      },
+                                      onUpdate: (detailts) {
+                                        final isReordering = detailts.progress != 0.0;
+                                        if (isReordering) {
+                                          MiniPlayerController.inst.invokeStartReordering();
+                                        } else {
                                           MiniPlayerController.inst.invokeDoneReordering();
-                                        },
-                                        onUpdate: (detailts) {
-                                          final isReordering = detailts.progress != 0.0;
-                                          if (isReordering) {
-                                            MiniPlayerController.inst.invokeStartReordering();
-                                          } else {
-                                            MiniPlayerController.inst.invokeDoneReordering();
-                                          }
-                                        },
-                                        child: TrackTile(
-                                          index: i,
-                                          key: Key('tile_$key'),
-                                          trackOrTwd: track,
-                                          displayRightDragHandler: true,
-                                          draggableThumbnail: true,
-                                          queueSource: QueueSource.playerQueue,
-                                          cardColorOpacity: 0.5,
-                                        ),
+                                        }
+                                      },
+                                      child: TrackTile(
+                                        index: i,
+                                        trackOrTwd: track,
+                                        displayRightDragHandler: true,
+                                        draggableThumbnail: true,
+                                        queueSource: QueueSource.playerQueue,
+                                        cardColorOpacity: 0.5,
+                                        fadeOpacity: i < currentIndex ? 0.3 : 0.0,
                                       ),
                                     );
                                   },

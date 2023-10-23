@@ -471,10 +471,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_volume_controller
-      sha256: "7f88cb046b00fd80e98bcb7926b9e3879f004f30905109fdf6c5d09b8d28eb2e"
+      sha256: "1161957826183b46916adb4f1c9f91befce0d8415bd3fcd781f7faed9df62d46"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.7"
+    version: "1.3.0"
   flutter_web_plugins:
     dependency: transitive
     description: flutter
@@ -819,18 +819,18 @@ packages:
     dependency: "direct main"
     description:
       name: permission_handler
-      sha256: "63e5216aae014a72fe9579ccd027323395ce7a98271d9defa9d57320d001af81"
+      sha256: "284a66179cabdf942f838543e10413246f06424d960c92ba95c84439154fcac8"
       url: "https://pub.dev"
     source: hosted
-    version: "10.4.3"
+    version: "11.0.1"
   permission_handler_android:
     dependency: transitive
     description:
       name: permission_handler_android
-      sha256: "2ffaf52a21f64ac9b35fe7369bb9533edbd4f698e5604db8645b1064ff4cf221"
+      sha256: f9fddd3b46109bd69ff3f9efa5006d2d309b7aec0f3c1c5637a60a2d5659e76e
       url: "https://pub.dev"
     source: hosted
-    version: "10.3.3"
+    version: "11.1.0"
   permission_handler_apple:
     dependency: transitive
     description:
@@ -843,10 +843,10 @@ packages:
     dependency: transitive
     description:
       name: permission_handler_platform_interface
-      sha256: "7c6b1500385dd1d2ca61bb89e2488ca178e274a69144d26bbd65e33eae7c02a9"
+      sha256: "6760eb5ef34589224771010805bea6054ad28453906936f843a8cc4d3a55c4a4"
       url: "https://pub.dev"
     source: hosted
-    version: "3.11.3"
+    version: "3.12.0"
   permission_handler_windows:
     dependency: transitive
     description:
@@ -875,8 +875,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "8989afc0e8b854819d79ace61da9b9544ad6068f"
-      resolved-ref: "8989afc0e8b854819d79ace61da9b9544ad6068f"
+      ref: f0a76aaf72d668db9bcb8e3289357ea9e065e852
+      resolved-ref: f0a76aaf72d668db9bcb8e3289357ea9e065e852
       url: "https://github.com/MSOB7YY/picture_in_picture"
     source: git
     version: "0.0.1"
@@ -892,8 +892,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "1c1c6e3a0dde1c08f90190de02afcb498b49e173"
-      resolved-ref: "1c1c6e3a0dde1c08f90190de02afcb498b49e173"
+      ref: fa4895587001c30ef98cf4f3fd1429b6fdaa8f8a
+      resolved-ref: fa4895587001c30ef98cf4f3fd1429b6fdaa8f8a
       url: "https://github.com/namidaco/playlist_manager"
     source: git
     version: "0.0.1"

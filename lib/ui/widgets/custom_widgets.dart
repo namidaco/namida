@@ -1933,7 +1933,7 @@ class FadeDismissible extends StatelessWidget {
     this.direction = DismissDirection.horizontal,
   });
 
-  final RxDouble opacity = 1.0.obs;
+  final fadeOpacity = 0.0.obs;
 
   @override
   Widget build(BuildContext context) {
@@ -1941,13 +1941,14 @@ class FadeDismissible extends StatelessWidget {
       key: key!,
       onDismissed: onDismissed,
       onUpdate: (details) {
-        opacity.value = 1 - details.progress;
+        fadeOpacity.value = details.progress;
         if (onUpdate != null) onUpdate!(details);
       },
       direction: direction,
       child: Obx(
-        () => Opacity(
-          opacity: opacity.value,
+        () => AnimatedOpacity(
+          duration: const Duration(milliseconds: 100),
+          opacity: 1 - fadeOpacity.value,
           child: child,
         ),
       ),
