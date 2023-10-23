@@ -78,6 +78,10 @@ class Player {
 
   int get sleepingTrackIndex => sleepAfterTracks + currentIndex - 1;
 
+  // -- error playing track
+  void cancelPlayErrorSkipTimer() => _audioHandler.cancelPlayErrorSkipTimer();
+  int get playErrorRemainingSecondsToSkip => _audioHandler.playErrorRemainingSecondsToSkip;
+
   Future<void> initializePlayer() async {
     _audioHandler = await AudioService.init(
       builder: () => NamidaAudioVideoHandler(),

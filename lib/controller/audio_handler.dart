@@ -463,6 +463,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     MiniPlayerController.inst.reorderingQueueCompleterPlayer?.completeIfWasnt();
   }
 
+  int get playErrorRemainingSecondsToSkip => _playErrorRemainingSecondsToSkip.value;
+  Timer? _playErrorSkipTimer;
+  final _playErrorRemainingSecondsToSkip = 0.obs;
+  void cancelPlayErrorSkipTimer() {
+    _playErrorSkipTimer?.cancel();
+    _playErrorSkipTimer = null;
+    _playErrorRemainingSecondsToSkip.value = 0;
+  }
+
   Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, bool startPlaying) async {
     final tr = item.track;
     VideoController.inst.updateCurrentVideo(tr);
@@ -479,19 +488,38 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     try {
       await setPls();
     } catch (e) {
-      SchedulerBinding.instance.addPostFrameCallback((timeStamp) async {
-        if (item.track == currentTrack.track) {
-          // -- playing music from root folders still require `all_file_access`
-          // -- this is a fix for not playing some external files reported by some users.
-          final hadPermissionBefore = await Permission.manageExternalStorage.isGranted;
-          if (hadPermissionBefore) {
-            NamidaDialogs.inst.showTrackDialog(tr, isFromPlayerQueue: true, errorPlayingTrack: true, source: QueueSource.playerQueue);
-          } else {
-            final hasPermission = await requestManageStoragePermission();
-            if (hasPermission) await setPls();
-          }
+      if (item.track == currentTrack.track) {
+        // -- playing music from root folders still require `all_file_access`
+        // -- this is a fix for not playing some external files reported by some users.
+        final hadPermissionBefore = await Permission.manageExternalStorage.isGranted;
+        if (hadPermissionBefore) {
+          pause();
+          cancelPlayErrorSkipTimer();
+          _playErrorRemainingSecondsToSkip.value = 7;
+
+          _playErrorSkipTimer = Timer.periodic(
+            const Duration(seconds: 1),
+            (timer) {
+              _playErrorRemainingSecondsToSkip.value--;
+              if (_playErrorRemainingSecondsToSkip.value <= 0) {
+                NamidaNavigator.inst.closeDialog();
+                Player.inst.next();
+                timer.cancel();
+              }
+            },
+          );
+          NamidaDialogs.inst.showTrackDialog(
+            tr,
+            isFromPlayerQueue: true,
+            errorPlayingTrack: true,
+            source: QueueSource.playerQueue,
+          );
+        } else {
+          final hasPermission = await requestManageStoragePermission();
+          if (hasPermission) await setPls();
         }
-      });
+      }
+
       printy(e, isError: true);
       return;
     }

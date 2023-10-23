@@ -131,13 +131,7 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  Timer? playErrorSkipTimer;
-  final remainingSecondsToSkip = 0.obs;
-  cancelSkipTimer() {
-    playErrorSkipTimer?.cancel();
-    playErrorSkipTimer = null;
-    remainingSecondsToSkip.value = 0;
-  }
+  void cancelSkipTimer() => Player.inst.cancelPlayErrorSkipTimer();
 
   void setMoodsOrTags(List<String> initialMoods, void Function(List<String> moodsFinal) saveFunction, {bool isTags = false}) {
     final controller = TextEditingController();
@@ -713,31 +707,21 @@ Future<void> showGeneralPopupDialog(
                         if (errorPlayingTrack)
                           () {
                             void onSkip() {
+                              cancelSkipTimer();
                               NamidaNavigator.inst.closeDialog();
                               Player.inst.next();
                             }
 
-                            cancelSkipTimer();
-                            remainingSecondsToSkip.value = 7;
-
-                            playErrorSkipTimer = Timer.periodic(
-                              const Duration(seconds: 1),
-                              (timer) {
-                                remainingSecondsToSkip.value--;
-                                if (remainingSecondsToSkip.value <= 0) {
-                                  onSkip();
-                                  timer.cancel();
-                                }
-                              },
-                            );
                             return Obx(
-                              () => SmallListTile(
+                              () {
+                                final remainingSecondsToSkip = Player.inst.playErrorRemainingSecondsToSkip;
+                                return SmallListTile(
                                 title: lang.SKIP,
-                                subtitle: remainingSecondsToSkip.value <= 0 ? null : '${remainingSecondsToSkip.value} ${lang.SECONDS}',
+                                  subtitle: remainingSecondsToSkip <= 0 ? null : '$remainingSecondsToSkip ${lang.SECONDS}',
                                 color: colorDelightened,
                                 compact: true,
                                 icon: Broken.next,
-                                trailing: remainingSecondsToSkip.value <= 0
+                                  trailing: remainingSecondsToSkip <= 0
                                     ? null
                                     : NamidaIconButton(
                                         icon: Broken.close_circle,
@@ -745,7 +729,8 @@ Future<void> showGeneralPopupDialog(
                                         onPressed: cancelSkipTimer,
                                       ),
                                 onTap: onSkip,
-                              ),
+                                );
+                              },
                             );
                           }()
                       ],
