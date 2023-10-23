@@ -157,7 +157,7 @@ class MainPage extends StatelessWidget {
                           ...settings.libraryTabs.map(
                             (e) => NavigationDestination(
                               icon: Icon(e.toIcon()),
-                              label: e.toText(),
+                              label: settings.libraryTabs.length >= 7 ? '' : e.toText(),
                             ),
                           ),
                         ],

@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:path/path.dart' as p;
 import 'package:playlist_manager/playlist_manager.dart';
 
@@ -263,21 +264,42 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
   Future<bool> _requestM3USyncPermission() async {
     if (settings.enableM3USync.value) return true;
 
+    final didRead = false.obs;
+
     await NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         actions: [
           const CancelButton(),
           const SizedBox(width: 8.0),
-          NamidaButton(
-            text: lang.CONFIRM,
-            onPressed: () {
-              settings.save(enableM3USync: true);
-              NamidaNavigator.inst.closeDialog();
-            },
+          Obx(
+            () => NamidaButton(
+              enabled: didRead.value,
+              text: lang.CONFIRM,
+              onPressed: () {
+                settings.save(enableM3USync: true);
+                NamidaNavigator.inst.closeDialog();
+              },
+            ),
           )
         ],
         title: lang.NOTE,
-        bodyText: '${lang.ENABLE_M3U_SYNC}?\n\n${lang.WARNING.toUpperCase()}: ${lang.ENABLE_M3U_SYNC_SUBTITLE}',
+        child: Column(
+          children: [
+            Text(
+              '${lang.ENABLE_M3U_SYNC}?\n\n${lang.ENABLE_M3U_SYNC_NOTE_1}\n\n${lang.ENABLE_M3U_SYNC_NOTE_2.replaceFirst('_PLAYLISTS_BACKUP_PATH_', AppDirs.M3UBackup)}\n\n${lang.WARNING.toUpperCase()}: ${lang.ENABLE_M3U_SYNC_SUBTITLE}',
+              style: Get.textTheme.displayMedium,
+            ),
+            const SizedBox(height: 12.0),
+            Obx(
+              () => ListTileWithCheckMark(
+                icon: Broken.info_circle,
+                active: didRead.value,
+                title: lang.I_READ_AND_AGREE,
+                onTap: () => didRead.value = !didRead.value,
+              ),
+            ),
+          ],
+        ),
       ),
     );
     return settings.enableM3USync.value;

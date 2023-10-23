@@ -124,6 +124,7 @@ class AppSocial {
   static const GITHUB_ISSUES = '$GITHUB/issues';
   static const GITHUB_RELEASES = '$GITHUB/releases/';
   static const EMAIL = 'namida.coo@gmail.com';
+  static const TRANSLATION_REPO = 'https://github.com/namidaco/namida-translations';
 }
 
 /// Default Playlists IDs

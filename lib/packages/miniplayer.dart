@@ -2091,6 +2091,7 @@ class _AnimatingTrackImage extends StatelessWidget {
                         track: track,
                         cp: cp,
                         child: GestureDetector(
+                          onTap: () => Player.inst.refreshVideoSeekPosition(),
                           onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(),
                           child: const NamidaVideoWidget(
                             key: Key('video_widget'),
