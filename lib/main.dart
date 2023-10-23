@@ -112,6 +112,7 @@ void main() async {
 
   ScrollSearchController.inst.initialize();
   FlutterLocalNotificationsPlugin().cancelAll();
+  FlutterVolumeController.updateShowSystemUI(false);
 
   // runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding));
   _initializeCatcher(() => runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding)));

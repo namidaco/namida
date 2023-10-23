@@ -58,7 +58,7 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/picture_in_picture
       ref: 8989afc0e8b854819d79ace61da9b9544ad6068f
-  flutter_volume_controller: ^1.2.7
+  flutter_volume_controller: ^1.3.0
   flutter_markdown: ^0.6.17+3
   flutter_mailer: ^2.1.1
   lrc: ^1.0.2
