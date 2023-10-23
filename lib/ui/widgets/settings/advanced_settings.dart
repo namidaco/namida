@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:checkmark/checkmark.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:get/get.dart' hide Response;
+import 'package:namida/class/track.dart';
 
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
@@ -366,6 +367,15 @@ class AdvancedSettings extends StatelessWidget {
 
     final currentSort = 'size'.obs;
 
+    final localIdTrackMap = {for (final tr in allTracksInLibrary) tr.youtubeID: tr};
+
+    List<int> getTotalListensForID(String? id) {
+      final correspondingTrack = localIdTrackMap[id];
+      final local = correspondingTrack == null ? [] : HistoryController.inst.topTracksMapListens[correspondingTrack] ?? [];
+      final yt = YoutubeHistoryController.inst.topTracksMapListens[id] ?? [];
+      return [...local, ...yt];
+    }
+
     void sortBy(String type) {
       currentSort.value = type;
       switch (type) {
@@ -374,7 +384,7 @@ class AdvancedSettings extends StatelessWidget {
         case 'access_time':
           videoFiles.sortByAlt((e) => File(e.path).statSync().accessed, (e) => File(e.path).statSync().modified);
         case 'listen_count':
-          videoFiles.sortBy((e) => YoutubeHistoryController.inst.topTracksMapListens[e.ytID]?.length ?? 0);
+          videoFiles.sortBy((e) => getTotalListensForID(e.ytID).length);
         default:
           null;
       }
@@ -499,7 +509,7 @@ class AdvancedSettings extends StatelessWidget {
                         final video = videoFiles[index];
                         final id = video.ytID;
                         final title = id == null ? null : YoutubeController.inst.getBackupVideoInfo(id)?.title ?? YoutubeController.inst.fetchVideoDetailsFromCacheSync(id)?.name;
-                        final listens = YoutubeHistoryController.inst.topTracksMapListens[id]?.length ?? 0;
+                        final listens = getTotalListensForID(id).length;
                         return NamidaInkWell(
                           margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
                           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
