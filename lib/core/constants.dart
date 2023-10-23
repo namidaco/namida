@@ -280,6 +280,9 @@ const Set<String> kVideoFilesExtensions = {
   'mpeg4'
 };
 
+/// Extensions used to filter m3u files
+const Set<String> kM3UPlaylistsExtensions = {'m3u', 'm3u8', 'M3U', 'M3U8'};
+
 const kDefaultOrientations = <DeviceOrientation>[DeviceOrientation.portraitUp, DeviceOrientation.portraitDown];
 const kDefaultLang = NamidaLanguage(
   code: "en_US",

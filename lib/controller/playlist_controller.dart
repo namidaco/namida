@@ -130,13 +130,31 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     await _prepareM3UPlaylists();
   }
 
+  Future<List<Track>> readM3UFiles(Set<String> filesPaths) async {
+    final resBoth = await _parseM3UPlaylistFiles.thready({
+      'paths': filesPaths,
+      'libraryTracks': allTracksInLibrary,
+      'backupDirPath': AppDirs.M3UBackup,
+    });
+    final infoMap = resBoth['infoMap'] as Map<String, String?>;
+    _pathsM3ULookup.addAll(infoMap);
+
+    final paths = resBoth['paths'] as Map<String, (String, List<Track>)>;
+    final listy = <Track>[];
+    for (final p in paths.entries) {
+      listy.addAll(p.value.$2);
+    }
+
+    return listy;
+  }
+
   Future<void> _prepareM3UPlaylists() async {
     final allAvailableDirectories = await Indexer.inst.getAvailableDirectories(strictNoMedia: false);
 
     final parameters = {
       'allAvailableDirectories': allAvailableDirectories,
       'directoriesToExclude': <String>[],
-      'extensions': {'m3u', 'm3u8', 'M3U', 'M3U8'},
+      'extensions': kM3UPlaylistsExtensions,
       'respectNoMedia': false,
     };
 

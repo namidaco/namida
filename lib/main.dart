@@ -155,8 +155,23 @@ Future<void> _initializeIntenties() async {
   Future<void> playFiles(List<SharedFile> files) async {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       if (files.isNotEmpty) {
-        final paths = files.map((e) => e.realPath?.replaceAll('\\', '') ?? e.value).whereType<String>();
-        if (paths.isNotEmpty) {
+        final paths = <String>[];
+        final m3uPaths = <String>{};
+        files.loop((f, _) {
+          final path = f.realPath?.replaceAll('\\', '') ?? f.value;
+          if (path != null) {
+            if (kM3UPlaylistsExtensions.any((ext) => path.endsWith(ext))) {
+              m3uPaths.add(path);
+            } else {
+              paths.add(path);
+            }
+          }
+        });
+        if (m3uPaths.isNotEmpty) {
+          final allTracks = await PlaylistController.inst.readM3UFiles(m3uPaths);
+          final err = await playExternalFiles(allTracks.map((e) => e.path));
+          if (err != null) showErrorPlayingFileSnackbar(error: err);
+        } else if (paths.isNotEmpty) {
           final youtubeIds = paths.map((e) {
             final id = e.getYoutubeID;
             return id == '' ? null : id;
