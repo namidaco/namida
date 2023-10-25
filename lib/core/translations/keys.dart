@@ -401,6 +401,7 @@ class LanguageKeys {
   late String PREVENT_DUPLICATED_TRACKS_SUBTITLE;
   late String PREVENT_DUPLICATED_TRACKS;
   late String PREVIEW;
+  late String PRIORITIZE_EMBEDDED_LYRICS;
   late String PROGRESS;
   late String PROMPT_INDEXING_REFRESH;
   late String PROMPT_TO_CHANGE_TRACK_PATH;

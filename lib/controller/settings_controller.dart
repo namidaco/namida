@@ -150,6 +150,7 @@ class SettingsController {
   final RxBool groupArtworksByAlbum = false.obs;
   final RxBool enableM3USync = false.obs;
   final RxBool canAskForBatteryOptimizations = true.obs;
+  final RxBool prioritizeEmbeddedLyrics = true.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
     TagField.trackNumber,
     TagField.year,
@@ -390,6 +391,7 @@ class SettingsController {
       groupArtworksByAlbum.value = json['groupArtworksByAlbum'] ?? groupArtworksByAlbum.value;
       enableM3USync.value = json['enableM3USync'] ?? enableM3USync.value;
       canAskForBatteryOptimizations.value = json['canAskForBatteryOptimizations'] ?? canAskForBatteryOptimizations.value;
+      prioritizeEmbeddedLyrics.value = json['prioritizeEmbeddedLyrics'] ?? prioritizeEmbeddedLyrics.value;
 
       final listFromStorage = List<String>.from(json['tagFieldsToEdit'] ?? []);
       tagFieldsToEdit.value = listFromStorage.isNotEmpty ? List<TagField>.from(listFromStorage.map((e) => TagField.values.getEnum(e))) : tagFieldsToEdit;
@@ -586,6 +588,7 @@ class SettingsController {
       'groupArtworksByAlbum': groupArtworksByAlbum.value,
       'enableM3USync': enableM3USync.value,
       'canAskForBatteryOptimizations': canAskForBatteryOptimizations.value,
+      'prioritizeEmbeddedLyrics': prioritizeEmbeddedLyrics.value,
       'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
       'wakelockMode': wakelockMode.value.convertToString,
       'localVideoMatchingType': localVideoMatchingType.value.convertToString,
@@ -753,6 +756,7 @@ class SettingsController {
     bool? groupArtworksByAlbum,
     bool? enableM3USync,
     bool? canAskForBatteryOptimizations,
+    bool? prioritizeEmbeddedLyrics,
     List<TagField>? tagFieldsToEdit,
     WakelockMode? wakelockMode,
     LocalVideoMatchingType? localVideoMatchingType,
@@ -1175,6 +1179,9 @@ class SettingsController {
     }
     if (canAskForBatteryOptimizations != null) {
       this.canAskForBatteryOptimizations.value = canAskForBatteryOptimizations;
+    }
+    if (prioritizeEmbeddedLyrics != null) {
+      this.prioritizeEmbeddedLyrics.value = prioritizeEmbeddedLyrics;
     }
     if (tagFieldsToEdit != null) {
       tagFieldsToEdit.loop((d, index) {

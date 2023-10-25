@@ -36,6 +36,16 @@ class Lyrics {
 
     final embedded = track.lyrics;
 
+    if (settings.prioritizeEmbeddedLyrics.value && embedded != '') {
+      try {
+        final lrc = embedded.toLrc();
+        currentLyricsLRC.value = lrc;
+      } catch (e) {
+        currentLyricsText.value = embedded;
+      }
+      return;
+    }
+
     /// 1. device lrc
     /// 2. cached lrc
     /// 3. track embedded lrc

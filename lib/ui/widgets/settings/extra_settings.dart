@@ -227,6 +227,14 @@ class ExtrasSettings extends StatelessWidget {
               onChanged: (p0) => settings.save(enableSearchCleanup: !p0),
             ),
           ),
+          Obx(
+            () => CustomSwitchListTile(
+              icon: Broken.mobile_programming,
+              title: lang.PRIORITIZE_EMBEDDED_LYRICS,
+              value: settings.prioritizeEmbeddedLyrics.value,
+              onChanged: (p0) => settings.save(prioritizeEmbeddedLyrics: !p0),
+            ),
+          ),
           CustomListTile(
             icon: Broken.colorfilter,
             title: lang.EXTRACT_ALL_COLOR_PALETTES,
