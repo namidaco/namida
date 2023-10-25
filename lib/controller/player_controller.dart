@@ -350,6 +350,10 @@ class Player {
     await _audioHandler.pause();
   }
 
+  Future<void> dispose() async {
+    await _audioHandler.onDispose();
+  }
+
   Future<void> pauseRaw() async {
     await _audioHandler.onPauseRaw();
   }

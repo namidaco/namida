@@ -4,7 +4,7 @@ publish_to: "none"
 version: 1.5.4+231023
 
 environment:
-  sdk: ">=3.0.5 <4.0.0"
+  sdk: ">=3.1.4 <4.0.0"
 
 dependency_overrides:
   win32: ^3.0.0
@@ -57,7 +57,7 @@ dependencies:
   picture_in_picture:
     git:
       url: https://github.com/MSOB7YY/picture_in_picture
-      ref: f0a76aaf72d668db9bcb8e3289357ea9e065e852
+      ref: 8b1927af4781cb4a3b5e828053d42f404c79b947
   flutter_volume_controller: ^1.3.0
   flutter_markdown: ^0.6.17+3
   flutter_mailer: ^2.1.1

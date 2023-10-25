@@ -191,6 +191,7 @@ class SettingsController {
   final onNotificationTapAction = NotificationTapAction.openApp.obs;
   final onYoutubeLinkOpen = OnYoutubeLinkOpenAction.alwaysAsk.obs;
   final performanceMode = PerformanceMode.balanced.obs;
+  final killPlayerAfterDismissingAppMode = KillAppMode.never.obs;
 
   final RxMap<TrackTilePosition, TrackTileItem> trackItem = {
     TrackTilePosition.row1Item1: TrackTileItem.title,
@@ -420,6 +421,7 @@ class SettingsController {
       onNotificationTapAction.value = NotificationTapAction.values.getEnum(json['onNotificationTapAction']) ?? onNotificationTapAction.value;
       onYoutubeLinkOpen.value = OnYoutubeLinkOpenAction.values.getEnum(json['onYoutubeLinkOpen']) ?? onYoutubeLinkOpen.value;
       performanceMode.value = PerformanceMode.values.getEnum(json['performanceMode']) ?? performanceMode.value;
+      killPlayerAfterDismissingAppMode.value = KillAppMode.values.getEnum(json['killPlayerAfterDismissingAppMode']) ?? killPlayerAfterDismissingAppMode.value;
 
       trackItem.value = _getEnumMap(
             json['trackItem'],
@@ -594,6 +596,7 @@ class SettingsController {
       'onNotificationTapAction': onNotificationTapAction.value.convertToString,
       'onYoutubeLinkOpen': onYoutubeLinkOpen.value.convertToString,
       'performanceMode': performanceMode.value.convertToString,
+      'killPlayerAfterDismissingAppMode': killPlayerAfterDismissingAppMode.value.convertToString,
       'mostPlayedCustomDateRange': mostPlayedCustomDateRange.value.toJson(),
       'mostPlayedCustomisStartOfDay': mostPlayedCustomisStartOfDay.value,
 
@@ -760,6 +763,7 @@ class SettingsController {
     NotificationTapAction? onNotificationTapAction,
     OnYoutubeLinkOpenAction? onYoutubeLinkOpen,
     PerformanceMode? performanceMode,
+    KillAppMode? killPlayerAfterDismissingAppMode,
     DateRange? mostPlayedCustomDateRange,
     bool? mostPlayedCustomisStartOfDay,
     bool? didSupportNamida,
@@ -1205,6 +1209,9 @@ class SettingsController {
     }
     if (performanceMode != null) {
       this.performanceMode.value = performanceMode;
+    }
+    if (killPlayerAfterDismissingAppMode != null) {
+      this.killPlayerAfterDismissingAppMode.value = killPlayerAfterDismissingAppMode;
     }
     if (mostPlayedCustomDateRange != null) {
       this.mostPlayedCustomDateRange.value = mostPlayedCustomDateRange;

@@ -2712,53 +2712,50 @@ class NamidaLifeCycleWrapper extends StatefulWidget {
   final Widget child;
   final Future<void> Function()? onResume;
   final Future<void> Function()? onSuspending;
+  final Future<void> Function()? onDetach;
 
   const NamidaLifeCycleWrapper({
     super.key,
     required this.child,
     this.onResume,
     this.onSuspending,
+    this.onDetach,
   });
 
   @override
   State<NamidaLifeCycleWrapper> createState() => _NamidaLifeCycleWrapperState();
 }
 
-class _NamidaLifeCycleWrapperState extends State<NamidaLifeCycleWrapper> with WidgetsBindingObserver {
+class _NamidaLifeCycleWrapperState extends State<NamidaLifeCycleWrapper> {
+  late final AppLifecycleListener listener;
+
   @override
-  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
-    switch (state) {
-      case AppLifecycleState.resumed:
+  void initState() {
+    super.initState();
+
+    listener = AppLifecycleListener(
+      onResume: () async {
         await Future.wait([
           SystemChrome.setPreferredOrientations(kDefaultOrientations),
           SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values),
           if (widget.onResume != null) widget.onResume!(),
         ]);
-        break;
-      case AppLifecycleState.inactive:
-        await widget.onSuspending?.call();
-        break;
-      case AppLifecycleState.paused:
-      case AppLifecycleState.detached:
-    }
-  }
+      },
+      onInactive: () async => await widget.onSuspending?.call(),
+      onDetach: () async => await widget.onDetach?.call(),
+    );
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addObserver(listener);
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(listener);
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return widget.child;
-  }
+  Widget build(BuildContext context) => widget.child;
 }
 
 class NamidaAspectRatio extends StatelessWidget {

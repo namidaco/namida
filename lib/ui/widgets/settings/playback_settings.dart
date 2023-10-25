@@ -227,6 +227,39 @@ class PlaybackSettings extends StatelessWidget {
           },
         ),
       ),
+      CustomListTile(
+        title: lang.KILL_PLAYER_AFTER_DISMISSING_APP,
+        icon: Broken.forbidden_2,
+        trailingRaw: NamidaPopupWrapper(
+          children: [
+            ...KillAppMode.values.map(
+              (e) => Obx(
+                () => NamidaInkWell(
+                  margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                  borderRadius: 6.0,
+                  bgColor: settings.killPlayerAfterDismissingAppMode.value == e ? context.theme.cardColor : null,
+                  child: Text(
+                    e.toText(),
+                    style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
+                  ),
+                  onTap: () {
+                    settings.save(killPlayerAfterDismissingAppMode: e);
+                    NamidaNavigator.inst.popMenu(handleClosing: false);
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+            ),
+          ],
+          child: Obx(
+            () => Text(
+              settings.killPlayerAfterDismissingAppMode.value.toText(),
+              style: context.textTheme.displaySmall,
+            ),
+          ),
+        ),
+      ),
       Obx(
         () => CustomListTile(
           title: lang.ON_NOTIFICATION_TAP,

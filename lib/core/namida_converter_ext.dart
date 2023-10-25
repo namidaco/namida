@@ -470,6 +470,10 @@ extension PlayerRepeatModeUtils on RepeatMode {
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 }
 
+extension KillAppModeutils on KillAppMode {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
   String toText() => _NamidaConverters.inst.getTitle(this);
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
@@ -1276,6 +1280,11 @@ class _NamidaConverters {
         PerformanceMode.balanced: lang.BALANCED,
         PerformanceMode.goodLooking: lang.GOOD_LOOKING,
         PerformanceMode.custom: lang.CUSTOM,
+      },
+      KillAppMode: {
+        KillAppMode.never: lang.NEVER,
+        KillAppMode.ifNotPlaying: lang.IF_NOT_PLAYING,
+        KillAppMode.always: lang.ALWAYS,
       }
     };
 

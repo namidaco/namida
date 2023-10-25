@@ -28,6 +28,7 @@ class LanguageKeys {
   late String ALBUMS_COUNT;
   late String ALBUMS;
   late String ALL_TIME;
+  late String ALWAYS;
   late String ALWAYS_ASK;
   late String ALWAYS_RESTORE;
   late String ANIMATING_THUMBNAIL_INTENSITY;
@@ -241,6 +242,7 @@ class LanguageKeys {
   late String HISTORY_LISTENS_REPLACE_WARNING;
   late String HOME;
   late String HOUR_FORMAT_12;
+  late String IF_NOT_PLAYING;
   late String IGNORES;
   late String IGNORE_BATTERY_OPTIMIZATIONS_SUBTITLE;
   late String IMPORT_ALL;
@@ -268,6 +270,7 @@ class LanguageKeys {
   late String KEEP_SCREEN_AWAKE_MINIPLAYER_EXPANDED;
   late String KEEP_SCREEN_AWAKE_NONE;
   late String KEEP_SCREEN_AWAKE_WHEN;
+  late String KILL_PLAYER_AFTER_DISMISSING_APP;
   late String LANGUAGE;
   late String LIBRARY_TABS_REORDER;
   late String LIBRARY_TABS;
@@ -318,6 +321,7 @@ class LanguageKeys {
   late String MULTIPLE_TRACKS_TAGS_EDIT_NOTE;
   late String NAME_CONTAINS_BAD_CHARACTER;
   late String NAME;
+  late String NEVER;
   late String NEW_DIRECTORY;
   late String NEW_TRACKS_ADD;
   late String NEW_TRACKS_MOODS_SUBTITLE;

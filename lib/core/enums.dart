@@ -325,3 +325,9 @@ enum PerformanceMode {
   goodLooking,
   custom,
 }
+
+enum KillAppMode {
+  always,
+  ifNotPlaying,
+  never,
+}
