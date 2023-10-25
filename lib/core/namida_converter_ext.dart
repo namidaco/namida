@@ -470,7 +470,11 @@ extension PlayerRepeatModeUtils on RepeatMode {
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 }
 
-extension KillAppModeutils on KillAppMode {
+extension KillAppModeUtils on KillAppMode {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
+extension TrackSearchFilterUtils on TrackSearchFilter {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
@@ -1285,7 +1289,17 @@ class _NamidaConverters {
         KillAppMode.never: lang.NEVER,
         KillAppMode.ifNotPlaying: lang.IF_NOT_PLAYING,
         KillAppMode.always: lang.ALWAYS,
-      }
+      },
+      TrackSearchFilter: {
+        TrackSearchFilter.filename: lang.FILE_NAME,
+        TrackSearchFilter.title: lang.TITLE,
+        TrackSearchFilter.album: lang.ALBUM,
+        TrackSearchFilter.artist: lang.ARTIST,
+        TrackSearchFilter.albumartist: lang.ALBUM_ARTIST,
+        TrackSearchFilter.genre: lang.GENRE,
+        TrackSearchFilter.composer: lang.COMPOSER,
+        TrackSearchFilter.year: lang.YEAR,
+      },
     };
 
     // ====================================================

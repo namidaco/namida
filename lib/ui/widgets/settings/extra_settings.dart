@@ -124,96 +124,47 @@ class ExtrasSettings extends StatelessWidget {
               title: lang.FILTER_TRACKS_BY,
               trailingText: "${settings.trackSearchFilter.length}",
               onTap: () => NamidaNavigator.inst.navigateDialog(
-                dialog: Obx(
-                  () {
-                    return CustomBlurryDialog(
-                      title: lang.FILTER_TRACKS_BY,
-                      actions: [
-                        IconButton(
-                          icon: const Icon(Broken.refresh),
-                          tooltip: lang.RESTORE_DEFAULTS,
-                          onPressed: () {
-                            settings.removeFromList(trackSearchFilterAll: [
-                              'title',
-                              'album',
-                              'albumartist',
-                              'artist',
-                              'genre',
-                              'composer',
-                              'year',
-                            ]);
+                dialog: CustomBlurryDialog(
+                  title: lang.FILTER_TRACKS_BY,
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Broken.refresh),
+                      tooltip: lang.RESTORE_DEFAULTS,
+                      onPressed: () {
+                        settings.removeFromList(trackSearchFilterAll: TrackSearchFilter.values);
 
-                            settings.save(trackSearchFilter: ['title', 'artist', 'album']);
-                          },
-                        ),
-                        NamidaButton(
-                          text: lang.DONE,
-                          onPressed: NamidaNavigator.inst.closeDialog,
+                        settings.save(trackSearchFilter: [
+                          TrackSearchFilter.filename,
+                          TrackSearchFilter.title,
+                          TrackSearchFilter.artist,
+                          TrackSearchFilter.album,
+                        ]);
+                      },
+                    ),
+                    NamidaButton(
+                      text: lang.DONE,
+                      onPressed: NamidaNavigator.inst.closeDialog,
+                    ),
+                  ],
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ...TrackSearchFilter.values.map(
+                          (e) => Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Obx(
+                              () => ListTileWithCheckMark(
+                                title: e.toText(),
+                                onTap: () => _trackFilterOnTap(e),
+                                active: settings.trackSearchFilter.contains(e),
+                              ),
+                            ),
+                          ),
                         ),
                       ],
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(height: 12.0),
-                            ListTileWithCheckMark(
-                              title: lang.TITLE,
-                              onTap: () {
-                                _trackFilterOnTap(TrackSearchFilter.title);
-                              },
-                              active: settings.trackSearchFilter.contains('title'),
-                            ),
-                            const SizedBox(height: 12.0),
-                            ListTileWithCheckMark(
-                              title: lang.ALBUM,
-                              onTap: () {
-                                _trackFilterOnTap(TrackSearchFilter.album);
-                              },
-                              active: settings.trackSearchFilter.contains('album'),
-                            ),
-                            const SizedBox(height: 12.0),
-                            ListTileWithCheckMark(
-                              title: lang.ALBUM_ARTIST,
-                              onTap: () {
-                                _trackFilterOnTap(TrackSearchFilter.albumartist);
-                              },
-                              active: settings.trackSearchFilter.contains('albumartist'),
-                            ),
-                            const SizedBox(height: 12.0),
-                            ListTileWithCheckMark(
-                              title: lang.ARTIST,
-                              onTap: () {
-                                _trackFilterOnTap(TrackSearchFilter.artist);
-                              },
-                              active: settings.trackSearchFilter.contains('artist'),
-                            ),
-                            const SizedBox(height: 12.0),
-                            ListTileWithCheckMark(
-                              title: lang.GENRE,
-                              onTap: () {
-                                _trackFilterOnTap(TrackSearchFilter.genre);
-                              },
-                              active: settings.trackSearchFilter.contains('genre'),
-                            ),
-                            const SizedBox(height: 12.0),
-                            ListTileWithCheckMark(
-                              title: lang.COMPOSER,
-                              onTap: () {
-                                _trackFilterOnTap(TrackSearchFilter.composer);
-                              },
-                              active: settings.trackSearchFilter.contains('composer'),
-                            ),
-                            const SizedBox(height: 12.0),
-                            ListTileWithCheckMark(
-                              title: lang.YEAR,
-                              onTap: () => _trackFilterOnTap(TrackSearchFilter.year),
-                              active: settings.trackSearchFilter.contains('year'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -404,35 +355,7 @@ class ExtrasSettings extends StatelessWidget {
     );
   }
 
-  void _trackFilterOnTap(TrackSearchFilter filter) {
-    String type = '';
-    switch (filter) {
-      case TrackSearchFilter.title:
-        type = 'title';
-        break;
-      case TrackSearchFilter.album:
-        type = 'album';
-        break;
-      case TrackSearchFilter.albumartist:
-        type = 'albumartist';
-        break;
-      case TrackSearchFilter.artist:
-        type = 'artist';
-        break;
-
-      case TrackSearchFilter.genre:
-        type = 'genre';
-        break;
-      case TrackSearchFilter.composer:
-        type = 'composer';
-        break;
-      case TrackSearchFilter.year:
-        type = 'year';
-        break;
-      default:
-        null;
-    }
-
+  void _trackFilterOnTap(TrackSearchFilter type) {
     final canRemove = settings.trackSearchFilter.length > 1;
 
     if (settings.trackSearchFilter.contains(type)) {

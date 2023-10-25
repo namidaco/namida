@@ -3,8 +3,9 @@ import 'dart:io';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -140,10 +141,27 @@ class SearchSortController {
 
     final tsf = settings.trackSearchFilter;
     final cleanup = settings.enableSearchCleanup.value;
+
+    final map = Indexer.inst.allTracksMappedByPath.map((key, value) {
+      final artistsList = Indexer.splitArtist(
+        title: value.title,
+        originalArtist: value.originalArtist,
+        config: ArtistsSplitConfig.settings(),
+      );
+      final genresList = Indexer.splitGenre(
+        value.originalGenre,
+        config: GenresSplitConfig.settings(),
+      );
+      final valueMap = value.toJson();
+      valueMap['artistsList'] = artistsList;
+      valueMap['genresList'] = genresList;
+      return MapEntry(key, valueMap);
+    }); // ~0.000010 second
+
     final result = await _searchTracksIsolate.thready({
       'tsf': tsf.toList(),
       'cleanup': cleanup,
-      'tracks': tracksInfoList.toList(),
+      'tracks': map,
       'text': text,
     });
     final finalList = temp ? trackSearchTemp : trackSearchList;
@@ -578,38 +596,39 @@ class SearchSortController {
   }
 
   static List<Track> _searchTracksIsolate(Map parameters) {
-    final tsf = parameters['tsf'] as List<String>;
+    final tsf = parameters['tsf'] as List<TrackSearchFilter>;
     final cleanup = parameters['cleanup'] as bool;
-    final tracks = parameters['tracks'] as List<Track>;
+    final tracks = parameters['tracks'] as Map<Track, Map<String, dynamic>>;
     final text = parameters['text'] as String;
 
     final function = _functionOfCleanup(cleanup);
     String textCleanedForSearch(String textToClean) => function(textToClean);
 
-    final sTitle = tsf.contains('title');
-    final sAlbum = tsf.contains('album');
-    final sAlbumArtist = tsf.contains('albumartist');
-    final sArtist = tsf.contains('artist');
-    final sGenre = tsf.contains('genre');
-    final sComposer = tsf.contains('composer');
-    final sYear = tsf.contains('year');
+    bool hasF(TrackSearchFilter f) => tsf.contains(f);
 
     final finalList = <Track>[];
 
-    tracks.loop((tr, index) {
-      final item = tr.toTrackExt();
+    // -- well i dont think we need the overhead of converting the map into a TrackExtended Object.
+    // -- we'll just access the map values.
+    for (final entry in tracks.entries) {
+      final trExt = entry.value;
       final lctext = textCleanedForSearch(text);
 
-      if ((sTitle && textCleanedForSearch(item.title).contains(lctext)) ||
-          (sAlbum && textCleanedForSearch(item.album).contains(lctext)) ||
-          (sAlbumArtist && textCleanedForSearch(item.albumArtist).contains(lctext)) ||
-          (sArtist && item.artistsList.any((element) => textCleanedForSearch(element).contains(lctext))) ||
-          (sGenre && item.genresList.any((element) => textCleanedForSearch(element).contains(lctext))) ||
-          (sComposer && textCleanedForSearch(item.composer).contains(lctext)) ||
-          (sYear && textCleanedForSearch(item.year.toString()).contains(lctext))) {
-        finalList.add(tr);
+      if ((hasF(TrackSearchFilter.title) && textCleanedForSearch(trExt['title'] as String).contains(lctext)) ||
+          (hasF(TrackSearchFilter.filename) && textCleanedForSearch((trExt['path'] as String).getFilename).contains(lctext)) ||
+          (hasF(TrackSearchFilter.album) && textCleanedForSearch(trExt['album'] as String).contains(lctext)) ||
+          (hasF(TrackSearchFilter.albumartist) && textCleanedForSearch(trExt['albumArtist'] as String).contains(lctext)) ||
+          (hasF(TrackSearchFilter.artist) && (trExt['artistsList'] as List<String>).any((element) => textCleanedForSearch(element).contains(lctext))) ||
+          (hasF(TrackSearchFilter.genre) && (trExt['genresList'] as List<String>).any((element) => textCleanedForSearch(element).contains(lctext))) ||
+          (hasF(TrackSearchFilter.composer) && textCleanedForSearch(trExt['composer'] as String).contains(lctext)) ||
+          (hasF(TrackSearchFilter.year) && textCleanedForSearch((trExt['year'] as int).toString()).contains(lctext))) {
+        finalList.add(entry.key);
       }
-    });
+    }
+
+    // tracks.loop((tr, index) {
+
+    // });
     return finalList;
   }
 

@@ -76,7 +76,12 @@ class SettingsController {
   final RxBool playlistSortReversed = false.obs;
   final RxInt indexMinDurationInSec = 5.obs;
   final RxInt indexMinFileSizeInB = (100 * 1024).obs;
-  final RxList<String> trackSearchFilter = ['title', 'artist', 'album'].obs;
+  final RxList<TrackSearchFilter> trackSearchFilter = [
+    TrackSearchFilter.filename,
+    TrackSearchFilter.title,
+    TrackSearchFilter.artist,
+    TrackSearchFilter.album,
+  ].obs;
   final RxList<String> playlistSearchFilter = ['name', 'creationDate', 'modifiedDate', 'moods', 'comment'].obs;
   final RxList<String> directoriesToScan = kInitialDirectoriesToScan.toList().obs;
   final RxList<String> directoriesToExclude = <String>[].obs;
@@ -333,7 +338,14 @@ class SettingsController {
       indexMinDurationInSec.value = json['indexMinDurationInSec'] ?? indexMinDurationInSec.value;
       indexMinFileSizeInB.value = json['indexMinFileSizeInB'] ?? indexMinFileSizeInB.value;
 
-      trackSearchFilter.value = List<String>.from(json['trackSearchFilter'] ?? trackSearchFilter);
+      try {
+        // -- backward compability, since the previous type was String
+        final trackSearchFilterInStorage = List<String>.from(json['trackSearchFilter'] ?? []);
+        if (trackSearchFilterInStorage.isNotEmpty) {
+          trackSearchFilter.value = List<TrackSearchFilter>.from(trackSearchFilterInStorage.map((e) => TrackSearchFilter.values.getEnum(e)));
+        }
+      } catch (_) {}
+
       playlistSearchFilter.value = List<String>.from(json['playlistSearchFilter'] ?? playlistSearchFilter);
       directoriesToScan.value = List<String>.from(json['directoriesToScan'] ?? directoriesToScan);
       directoriesToExclude.value = List<String>.from(json['directoriesToExclude'] ?? directoriesToExclude);
@@ -531,7 +543,7 @@ class SettingsController {
       'playlistSortReversed': playlistSortReversed.value,
       'indexMinDurationInSec': indexMinDurationInSec.value,
       'indexMinFileSizeInB': indexMinFileSizeInB.value,
-      'trackSearchFilter': trackSearchFilter.toList(),
+      'trackSearchFilter': trackSearchFilter.mapped((e) => e.convertToString),
       'playlistSearchFilter': playlistSearchFilter.toList(),
       'directoriesToScan': directoriesToScan.toList(),
       'directoriesToExclude': directoriesToExclude.toList(),
@@ -691,7 +703,7 @@ class SettingsController {
     String? trackTileSeparator,
     int? indexMinDurationInSec,
     int? indexMinFileSizeInB,
-    List<String>? trackSearchFilter,
+    List<TrackSearchFilter>? trackSearchFilter,
     List<String>? playlistSearchFilter,
     List<String>? directoriesToScan,
     List<String>? directoriesToExclude,
@@ -1261,8 +1273,8 @@ class SettingsController {
     String? trackGenresSeparator,
     String? trackArtistsSeparatorsBlacklist1,
     String? trackGenresSeparatorsBlacklist1,
-    String? trackSearchFilter1,
-    List<String>? trackSearchFilterAll,
+    TrackSearchFilter? trackSearchFilter1,
+    List<TrackSearchFilter>? trackSearchFilterAll,
     String? playlistSearchFilter1,
     List<String>? playlistSearchFilterAll,
     String? directoriesToScan1,
