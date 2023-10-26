@@ -136,7 +136,7 @@ class SettingsController {
   final RxInt playerPlayFadeDurInMilli = 300.obs;
   final RxInt playerPauseFadeDurInMilli = 300.obs;
   final RxInt minTrackDurationToRestoreLastPosInMinutes = 5.obs;
-  final RxString lastPlayedTrackPath = ''.obs;
+  final RxInt lastPlayedTrackIndex = 0.obs;
   final RxBool displayFavouriteButtonInNotification = false.obs;
   final RxBool enableSearchCleanup = true.obs;
   final RxBool enableBottomNavBar = true.obs;
@@ -384,7 +384,7 @@ class SettingsController {
       playerPlayFadeDurInMilli.value = json['playerPlayFadeDurInMilli'] ?? playerPlayFadeDurInMilli.value;
       playerPauseFadeDurInMilli.value = json['playerPauseFadeDurInMilli'] as int? ?? playerPauseFadeDurInMilli.value;
       minTrackDurationToRestoreLastPosInMinutes.value = json['minTrackDurationToRestoreLastPosInMinutes'] ?? minTrackDurationToRestoreLastPosInMinutes.value;
-      lastPlayedTrackPath.value = json['lastPlayedTrackPath'] ?? lastPlayedTrackPath.value;
+      lastPlayedTrackIndex.value = json['lastPlayedTrackIndex'] ?? lastPlayedTrackIndex.value;
       displayFavouriteButtonInNotification.value = json['displayFavouriteButtonInNotification'] ?? displayFavouriteButtonInNotification.value;
       enableSearchCleanup.value = json['enableSearchCleanup'] ?? enableSearchCleanup.value;
       enableBottomNavBar.value = json['enableBottomNavBar'] ?? enableBottomNavBar.value;
@@ -581,7 +581,7 @@ class SettingsController {
       'playerPlayFadeDurInMilli': playerPlayFadeDurInMilli.value,
       'playerPauseFadeDurInMilli': playerPauseFadeDurInMilli.value,
       'minTrackDurationToRestoreLastPosInMinutes': minTrackDurationToRestoreLastPosInMinutes.value,
-      'lastPlayedTrackPath': lastPlayedTrackPath.value,
+      'lastPlayedTrackIndex': lastPlayedTrackIndex.value,
       'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
       'enableSearchCleanup': enableSearchCleanup.value,
       'enableBottomNavBar': enableBottomNavBar.value,
@@ -749,7 +749,7 @@ class SettingsController {
     int? playerPlayFadeDurInMilli,
     int? playerPauseFadeDurInMilli,
     int? minTrackDurationToRestoreLastPosInMinutes,
-    String? lastPlayedTrackPath,
+    int? lastPlayedTrackIndex,
     bool? displayFavouriteButtonInNotification,
     bool? enableSearchCleanup,
     bool? enableBottomNavBar,
@@ -1135,8 +1135,8 @@ class SettingsController {
     if (minTrackDurationToRestoreLastPosInMinutes != null) {
       this.minTrackDurationToRestoreLastPosInMinutes.value = minTrackDurationToRestoreLastPosInMinutes;
     }
-    if (lastPlayedTrackPath != null) {
-      this.lastPlayedTrackPath.value = lastPlayedTrackPath;
+    if (lastPlayedTrackIndex != null) {
+      this.lastPlayedTrackIndex.value = lastPlayedTrackIndex;
     }
     if (displayFavouriteButtonInNotification != null) {
       this.displayFavouriteButtonInNotification.value = displayFavouriteButtonInNotification;

@@ -200,12 +200,10 @@ class QueueController {
 
     if (latestQueue.isEmpty) return;
 
-    final latestTrack = settings.lastPlayedTrackPath.value.toTrack();
-
-    final index = latestQueue.indexOf(latestTrack).toIf(0, -1);
+    final index = settings.lastPlayedTrackIndex.value;
 
     await Player.inst.playOrPause(
-      index,
+      index > latestQueue.length - 1 ? 0 : index,
       latestQueue,
       QueueSource.playerQueue,
       startPlaying: false,

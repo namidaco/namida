@@ -540,7 +540,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     startSleepAfterMinCount();
     startCounterToAListen(pi);
     increaseListenTime();
-    settings.save(lastPlayedTrackPath: tr.path);
+    settings.save(lastPlayedTrackIndex: index);
     Lyrics.inst.updateLyrics(tr);
   }
 
