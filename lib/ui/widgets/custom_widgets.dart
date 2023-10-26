@@ -2727,31 +2727,30 @@ class NamidaLifeCycleWrapper extends StatefulWidget {
 }
 
 class _NamidaLifeCycleWrapperState extends State<NamidaLifeCycleWrapper> {
-  late final AppLifecycleListener listener;
+  late final MethodChannel namidaChannel;
 
   @override
   void initState() {
     super.initState();
+    // -- the new flutter update, calls AppLifecycleState.inactive whenever the app
+    // -- loses focus, like swiping notification center, not ideal for what we need
+    // -- so we use a method channel whenever `onUserLeaveHint` is called from FlutterActivity
+    namidaChannel = const MethodChannel('namida');
 
-    listener = AppLifecycleListener(
-      onResume: () async {
+    namidaChannel.setMethodCallHandler((call) async {
+      switch (call.method) {
+        case 'onResume':
         await Future.wait([
           SystemChrome.setPreferredOrientations(kDefaultOrientations),
           SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values),
           if (widget.onResume != null) widget.onResume!(),
         ]);
-      },
-      onInactive: () async => await widget.onSuspending?.call(),
-      onDetach: () async => await widget.onDetach?.call(),
-    );
-
-    WidgetsBinding.instance.addObserver(listener);
+        case 'onUserLeaveHint':
+          await widget.onSuspending?.call();
+        case 'onStop':
+          await widget.onDetach?.call();
   }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(listener);
-    super.dispose();
+    });
   }
 
   @override

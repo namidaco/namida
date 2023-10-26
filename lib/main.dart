@@ -22,6 +22,7 @@ import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/lifecycle_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -148,6 +149,24 @@ void main() async {
 
   // CurrentColor.inst.generateAllColorPalettes();
   Folders.inst.onFirstLoad();
+
+  _initLifeCycle();
+}
+
+void _initLifeCycle() {
+  LifeCycleController.inst.addOnDestroy('main', () async {
+    final mode = settings.killPlayerAfterDismissingAppMode.value;
+    if (mode == KillAppMode.always || (mode == KillAppMode.ifNotPlaying && !Player.inst.isPlaying)) {
+      await Player.inst.pause();
+      await Player.inst.dispose();
+    }
+  });
+  LifeCycleController.inst.addOnResume('main', () async {
+    CurrentColor.inst.refreshColorsAfterResumeApp();
+
+    VideoController.inst.isCurrentlyInBackground = false;
+    await NamidaNavigator.inst.exitFullScreen(setOrientations: false);
+  });
 }
 
 void _initializeCatcher(void Function() runAppFunction) {
@@ -323,15 +342,7 @@ class Namida extends StatelessWidget {
     return Stack(
       alignment: Alignment.bottomLeft,
       children: [
-        NamidaLifeCycleWrapper(
-          onDetach: () async {
-            final mode = settings.killPlayerAfterDismissingAppMode.value;
-            if (mode == KillAppMode.always || (mode == KillAppMode.ifNotPlaying && !Player.inst.isPlaying)) {
-              await Player.inst.pause();
-              await Player.inst.dispose();
-            }
-          },
-          child: Obx(
+        Obx(
             () {
               final locale = settings.selectedLanguage.value.code.split('_');
               return GetMaterialApp(
@@ -355,7 +366,6 @@ class Namida extends StatelessWidget {
                 ),
               );
             },
-          ),
         ),
 
         // prevent accidental opening for drawer when performing back gesture

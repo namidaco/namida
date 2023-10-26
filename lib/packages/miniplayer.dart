@@ -13,6 +13,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/lifecycle_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -46,6 +47,7 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
+import 'package:picture_in_picture/picture_in_picture.dart';
 
 class MiniPlayerParent extends StatefulWidget {
   final AnimationController animation;
@@ -64,6 +66,7 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
+    MiniPlayerController.inst.updateScreenValues(context); // useful for updating after split screen & if landscape ever got supported.
     return Obx(
       () => AnimatedTheme(
         duration: const Duration(milliseconds: 300),
@@ -131,42 +134,35 @@ class MiniPlayerSwitchers extends StatelessWidget {
           );
         }
 
+        LifeCycleController.inst.addOnSuspending('pip', () async {
+          if (settings.enablePip.value && Player.inst.isPlaying && VideoController.inst.currentVideo.value != null) {
+            await VideoController.vcontroller.enablePictureInPicture();
+            await NamidaNavigator.inst.enterFullScreen(
+              pipChild(),
+              setOrientations: false,
+            );
+            VideoController.inst.isCurrentlyInBackground = false; // since the pip needs the video
+          } else {
+            VideoController.inst.isCurrentlyInBackground = true;
+            if (VideoController.vcontroller.isInitialized && VideoController.vcontroller.isBuffering) {
+              Player.inst.play();
+            }
+          }
+        });
+
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 600),
-          child: NamidaLifeCycleWrapper(
-            onSuspending: () async {
-              if (settings.enablePip.value && Player.inst.isPlaying && VideoController.inst.currentVideo.value != null) {
-                await VideoController.vcontroller.enablePictureInPicture();
-                await NamidaNavigator.inst.enterFullScreen(
-                  pipChild(),
-                  setOrientations: false,
-                );
-                VideoController.inst.isCurrentlyInBackground = false; // since the pip needs the video
-              } else {
-                VideoController.inst.isCurrentlyInBackground = true;
-                if (VideoController.vcontroller.isInitialized && VideoController.vcontroller.isBuffering) {
-                  Player.inst.play();
-                }
-              }
-            },
-            onResume: () async {
-              CurrentColor.inst.refreshColorsAfterResumeApp();
-
-              VideoController.inst.isCurrentlyInBackground = false;
-              await NamidaNavigator.inst.exitFullScreen(setOrientations: false);
-            },
-            child: Obx(
-              () => VideoController.vcontroller.isInPip
-                  ? pipChild()
-                  : AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 500),
-                      child: Player.inst.nowPlayingTrack == kDummyTrack
-                          ? Player.inst.currentQueueYoutube.isNotEmpty
-                              ? const YoutubeMiniPlayer(key: Key('ytminiplayer'))
-                              : const SizedBox(key: Key('empty_miniplayer'))
-                          : const NamidaMiniPlayer(key: Key('actualminiplayer')),
-                    ),
-            ),
+          child: Obx(
+            () => VideoController.vcontroller.isInPip
+                ? pipChild()
+                : AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 500),
+                    child: Player.inst.nowPlayingTrack == kDummyTrack
+                        ? Player.inst.currentQueueYoutube.isNotEmpty
+                            ? const YoutubeMiniPlayer(key: Key('ytminiplayer'))
+                            : const SizedBox(key: Key('empty_miniplayer'))
+                        : const NamidaMiniPlayer(key: Key('actualminiplayer')),
+                  ),
           ),
         );
       },
