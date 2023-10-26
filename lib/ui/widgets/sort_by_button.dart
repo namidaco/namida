@@ -30,6 +30,7 @@ class SortByMenuTracks extends StatelessWidget {
               SortType.composer,
               SortType.genresList,
               SortType.year,
+              SortType.dateAdded,
               SortType.dateModified,
               SortType.bitrate,
               SortType.trackNo,
