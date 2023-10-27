@@ -101,6 +101,9 @@ class LanguageKeys {
   late String CREATE;
   late String CREATED_BACKUP_SUCCESSFULLY_SUB;
   late String CREATED_BACKUP_SUCCESSFULLY;
+  late String CROSSFADE_DURATION;
+  late String CROSSFADE_TRIGGER_SECONDS;
+  late String CROSSFADE_TRIGGER_SECONDS_DISABLED;
   late String CUSTOM;
   late String CUSTOMIZATIONS_SUBTITLE;
   late String CUSTOMIZATIONS;
@@ -159,6 +162,7 @@ class LanguageKeys {
   late String ENABLE_BLUR_EFFECT;
   late String ENABLE_BOTTOM_NAV_BAR_SUBTITLE;
   late String ENABLE_BOTTOM_NAV_BAR;
+  late String ENABLE_CROSSFADE_EFFECT;
   late String ENABLE_FADE_EFFECT_ON_PLAY_PAUSE;
   late String ENABLE_FOLDERS_HIERARCHY;
   late String ENABLE_GLOW_EFFECT;
@@ -245,6 +249,8 @@ class LanguageKeys {
   late String IF_NOT_PLAYING;
   late String IGNORES;
   late String IGNORE_BATTERY_OPTIMIZATIONS_SUBTITLE;
+  late String IMMERSIVE_MODE;
+  late String IMMERSIVE_MODE_SUBTITLE;
   late String IMPORT_ALL;
   late String IMPORT_LAST_FM_HISTORY_GUIDE;
   late String IMPORT_LAST_FM_HISTORY;

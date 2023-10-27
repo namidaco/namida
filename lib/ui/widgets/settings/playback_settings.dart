@@ -227,37 +227,15 @@ class PlaybackSettings extends StatelessWidget {
           },
         ),
       ),
-      CustomListTile(
-        title: lang.KILL_PLAYER_AFTER_DISMISSING_APP,
-        icon: Broken.forbidden_2,
-        trailingRaw: NamidaPopupWrapper(
-          children: [
-            ...KillAppMode.values.map(
-              (e) => Obx(
-                () => NamidaInkWell(
-                  margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                  borderRadius: 6.0,
-                  bgColor: settings.killPlayerAfterDismissingAppMode.value == e ? context.theme.cardColor : null,
-                  child: Text(
-                    e.toText(),
-                    style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
-                  ),
-                  onTap: () {
-                    settings.save(killPlayerAfterDismissingAppMode: e);
-                    NamidaNavigator.inst.popMenu(handleClosing: false);
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ),
-            ),
-          ],
-          child: Obx(
-            () => Text(
-              settings.killPlayerAfterDismissingAppMode.value.toText(),
-              style: context.textTheme.displaySmall,
-            ),
-          ),
+      Obx(
+        () => CustomListTile(
+          title: lang.KILL_PLAYER_AFTER_DISMISSING_APP,
+          icon: Broken.forbidden_2,
+          onTap: () {
+            final element = settings.killPlayerAfterDismissingAppMode.value.nextElement(KillAppMode.values);
+            settings.save(killPlayerAfterDismissingAppMode: element);
+          },
+          trailingText: settings.killPlayerAfterDismissingAppMode.value.toText(),
         ),
       ),
       Obx(
@@ -283,55 +261,120 @@ class PlaybackSettings extends StatelessWidget {
           value: settings.playerSkipSilenceEnabled.value,
         ),
       ),
-      Obx(
-        () => CustomSwitchListTile(
-          leading: const StackedIcon(
-            baseIcon: Broken.play,
-            secondaryIcon: Broken.pause,
-          ),
-          title: lang.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE,
-          onChanged: (value) {
-            settings.save(enableVolumeFadeOnPlayPause: !value);
-            Player.inst.setVolume(settings.playerVolume.value);
-          },
-          value: settings.enableVolumeFadeOnPlayPause.value,
+      // -- Crossfade
+      NamidaExpansionTile(
+        normalRightPadding: true,
+        initiallyExpanded: settings.enableCrossFade.value,
+        leading: const StackedIcon(
+          baseIcon: Broken.play,
+          secondaryIcon: Broken.pause,
         ),
-      ),
-      Obx(
-        () => CustomListTile(
-          enabled: settings.enableVolumeFadeOnPlayPause.value,
-          icon: Broken.play,
-          title: lang.PLAY_FADE_DURATION,
-          trailing: NamidaWheelSlider<int>(
-            totalCount: 1900 ~/ 50,
-            initValue: settings.playerPlayFadeDurInMilli.value ~/ 50,
-            itemSize: 2,
-            squeeze: 0.4,
-            onValueChanged: (val) {
-              final v = (val * 50 + 100);
-              settings.save(playerPlayFadeDurInMilli: v);
+        childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+        iconColor: context.defaultIconColor(),
+        titleText: lang.ENABLE_CROSSFADE_EFFECT,
+        onExpansionChanged: (value) {
+          settings.save(enableCrossFade: value);
+        },
+        trailing: Obx(() => CustomSwitch(active: settings.enableCrossFade.value)),
+        children: [
+          Obx(
+            () {
+              const stepper = 100;
+              const minVal = 100;
+              return CustomListTile(
+                enabled: settings.enableCrossFade.value,
+                icon: Broken.play,
+                title: lang.CROSSFADE_DURATION,
+                trailing: NamidaWheelSlider<int>(
+                  totalCount: (10000 - minVal) ~/ stepper,
+                  initValue: settings.crossFadeDurationMS.value ~/ stepper,
+                  itemSize: 5,
+                  squeeze: 1,
+                  onValueChanged: (val) {
+                    final v = (val * stepper + minVal);
+                    settings.save(crossFadeDurationMS: v);
+                  },
+                  text: settings.crossFadeDurationMS.value >= 1000 ? "${settings.crossFadeDurationMS.value / 1000}s" : "${settings.crossFadeDurationMS.value}ms",
+                ),
+              );
             },
-            text: "${settings.playerPlayFadeDurInMilli.value}ms",
           ),
-        ),
-      ),
-      Obx(
-        () => CustomListTile(
-          enabled: settings.enableVolumeFadeOnPlayPause.value,
-          icon: Broken.pause,
-          title: lang.PAUSE_FADE_DURATION,
-          trailing: NamidaWheelSlider<int>(
-            totalCount: 1900 ~/ 50,
-            initValue: settings.playerPauseFadeDurInMilli.value ~/ 50,
-            itemSize: 2,
-            squeeze: 0.4,
-            onValueChanged: (val) {
-              final v = (val * 50 + 100);
-              settings.save(playerPauseFadeDurInMilli: v);
+          Obx(
+            () {
+              final val = settings.crossFadeAutoTriggerSeconds.value;
+              return CustomListTile(
+                enabled: settings.enableCrossFade.value,
+                icon: Broken.pause,
+                title: val == 0 ? lang.CROSSFADE_TRIGGER_SECONDS_DISABLED : lang.CROSSFADE_TRIGGER_SECONDS.replaceFirst('_SECONDS_', "$val"),
+                trailing: NamidaWheelSlider<int>(
+                  totalCount: 30,
+                  initValue: val,
+                  itemSize: 7,
+                  squeeze: 1.4,
+                  onValueChanged: (val) {
+                    settings.save(crossFadeAutoTriggerSeconds: val);
+                  },
+                  text: "${val}s",
+                ),
+              );
             },
-            text: "${settings.playerPauseFadeDurInMilli.value}ms",
           ),
+        ],
+      ),
+      // -- Play/Pause Fade
+      NamidaExpansionTile(
+        normalRightPadding: true,
+        initiallyExpanded: settings.enableVolumeFadeOnPlayPause.value,
+        leading: const StackedIcon(
+          baseIcon: Broken.play,
+          secondaryIcon: Broken.pause,
         ),
+        childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+        iconColor: context.defaultIconColor(),
+        titleText: lang.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE,
+        onExpansionChanged: (value) {
+          settings.save(enableVolumeFadeOnPlayPause: value);
+          Player.inst.setVolume(settings.playerVolume.value);
+        },
+        trailing: Obx(() => CustomSwitch(active: settings.enableVolumeFadeOnPlayPause.value)),
+        children: [
+          Obx(
+            () => CustomListTile(
+              enabled: settings.enableVolumeFadeOnPlayPause.value,
+              icon: Broken.play,
+              title: lang.PLAY_FADE_DURATION,
+              trailing: NamidaWheelSlider<int>(
+                totalCount: 1900 ~/ 50,
+                initValue: settings.playerPlayFadeDurInMilli.value ~/ 50,
+                itemSize: 2,
+                squeeze: 0.4,
+                onValueChanged: (val) {
+                  final v = (val * 50 + 100);
+                  settings.save(playerPlayFadeDurInMilli: v);
+                },
+                text: "${settings.playerPlayFadeDurInMilli.value}ms",
+              ),
+            ),
+          ),
+          Obx(
+            () => CustomListTile(
+              enabled: settings.enableVolumeFadeOnPlayPause.value,
+              icon: Broken.pause,
+              title: lang.PAUSE_FADE_DURATION,
+              trailing: NamidaWheelSlider<int>(
+                totalCount: 1900 ~/ 50,
+                initValue: settings.playerPauseFadeDurInMilli.value ~/ 50,
+                itemSize: 2,
+                squeeze: 0.4,
+                onValueChanged: (val) {
+                  final v = (val * 50 + 100);
+                  settings.save(playerPauseFadeDurInMilli: v);
+                },
+                text: "${settings.playerPauseFadeDurInMilli.value}ms",
+              ),
+            ),
+          ),
+        ],
       ),
       Obx(
         () => CustomSwitchListTile(

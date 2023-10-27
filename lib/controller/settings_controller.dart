@@ -137,7 +137,10 @@ class SettingsController {
   final RxInt playerPlayFadeDurInMilli = 300.obs;
   final RxInt playerPauseFadeDurInMilli = 300.obs;
   final RxInt minTrackDurationToRestoreLastPosInMinutes = 5.obs;
+  final RxBool enableCrossFade = true.obs;
   final RxInt lastPlayedTrackIndex = 0.obs;
+  final RxInt crossFadeDurationMS = 500.obs;
+  final RxInt crossFadeAutoTriggerSeconds = 5.obs;
   final RxBool displayFavouriteButtonInNotification = false.obs;
   final RxBool enableSearchCleanup = true.obs;
   final RxBool enableBottomNavBar = true.obs;
@@ -386,7 +389,10 @@ class SettingsController {
       playerPlayFadeDurInMilli.value = json['playerPlayFadeDurInMilli'] ?? playerPlayFadeDurInMilli.value;
       playerPauseFadeDurInMilli.value = json['playerPauseFadeDurInMilli'] as int? ?? playerPauseFadeDurInMilli.value;
       minTrackDurationToRestoreLastPosInMinutes.value = json['minTrackDurationToRestoreLastPosInMinutes'] ?? minTrackDurationToRestoreLastPosInMinutes.value;
+      enableCrossFade.value = json['enableCrossFade'] ?? enableCrossFade.value;
       lastPlayedTrackIndex.value = json['lastPlayedTrackIndex'] ?? lastPlayedTrackIndex.value;
+      crossFadeDurationMS.value = json['crossFadeDurationMS'] ?? crossFadeDurationMS.value;
+      crossFadeAutoTriggerSeconds.value = json['crossFadeAutoTriggerSeconds'] ?? crossFadeAutoTriggerSeconds.value;
       displayFavouriteButtonInNotification.value = json['displayFavouriteButtonInNotification'] ?? displayFavouriteButtonInNotification.value;
       enableSearchCleanup.value = json['enableSearchCleanup'] ?? enableSearchCleanup.value;
       enableBottomNavBar.value = json['enableBottomNavBar'] ?? enableBottomNavBar.value;
@@ -584,7 +590,10 @@ class SettingsController {
       'playerPlayFadeDurInMilli': playerPlayFadeDurInMilli.value,
       'playerPauseFadeDurInMilli': playerPauseFadeDurInMilli.value,
       'minTrackDurationToRestoreLastPosInMinutes': minTrackDurationToRestoreLastPosInMinutes.value,
+      'enableCrossFade': enableCrossFade.value,
       'lastPlayedTrackIndex': lastPlayedTrackIndex.value,
+      'crossFadeDurationMS': crossFadeDurationMS.value,
+      'crossFadeAutoTriggerSeconds': crossFadeAutoTriggerSeconds.value,
       'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
       'enableSearchCleanup': enableSearchCleanup.value,
       'enableBottomNavBar': enableBottomNavBar.value,
@@ -753,7 +762,10 @@ class SettingsController {
     int? playerPlayFadeDurInMilli,
     int? playerPauseFadeDurInMilli,
     int? minTrackDurationToRestoreLastPosInMinutes,
+    bool? enableCrossFade,
     int? lastPlayedTrackIndex,
+    int? crossFadeDurationMS,
+    int? crossFadeAutoTriggerSeconds,
     bool? displayFavouriteButtonInNotification,
     bool? enableSearchCleanup,
     bool? enableBottomNavBar,
@@ -1142,8 +1154,17 @@ class SettingsController {
     if (minTrackDurationToRestoreLastPosInMinutes != null) {
       this.minTrackDurationToRestoreLastPosInMinutes.value = minTrackDurationToRestoreLastPosInMinutes;
     }
+    if (enableCrossFade != null) {
+      this.enableCrossFade.value = enableCrossFade;
+    }
     if (lastPlayedTrackIndex != null) {
       this.lastPlayedTrackIndex.value = lastPlayedTrackIndex;
+    }
+    if (crossFadeDurationMS != null) {
+      this.crossFadeDurationMS.value = crossFadeDurationMS;
+    }
+    if (crossFadeAutoTriggerSeconds != null) {
+      this.crossFadeAutoTriggerSeconds.value = crossFadeAutoTriggerSeconds;
     }
     if (displayFavouriteButtonInNotification != null) {
       this.displayFavouriteButtonInNotification.value = displayFavouriteButtonInNotification;

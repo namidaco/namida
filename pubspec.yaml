@@ -88,7 +88,7 @@ dependencies:
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
-      ref: abe0dc1bf5582047da8dc62f0049765be5182f18
+      ref: 4864b79a8a3550a1053ac875f0f8f1be16b987ed
 
   # ---- Video Indexing & Playback ----
   video_player:

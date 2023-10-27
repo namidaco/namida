@@ -478,11 +478,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     WaveformController.inst.generateWaveform(tr);
 
     Future<void> setPls() async {
-      final dur = await setAudioSource(tr.toAudioSource(currentIndex, currentQueue.length));
+      final dur = await setAudioSource(
+        tr.toAudioSource(currentIndex, currentQueue.length),
+        startPlaying: startPlaying,
+      );
       if (tr.duration == 0) {
         tr.duration = dur?.inSeconds ?? 0;
-        refreshNotification(currentItem);
       }
+      refreshNotification(currentItem);
     }
 
     try {
@@ -503,7 +506,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               _playErrorRemainingSecondsToSkip.value--;
               if (_playErrorRemainingSecondsToSkip.value <= 0) {
                 NamidaNavigator.inst.closeDialog();
-                Player.inst.next();
+                skipToNext();
                 timer.cancel();
               }
             },
@@ -527,12 +530,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     // -- The whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture]
     // -- sometimes don't get detected.
     await Future.wait([
-      onPauseRaw(),
+      // onPauseRaw(),
       tryRestoringLastPosition(tr),
     ]);
 
     if (startPlaying) {
-      setVolume(settings.playerVolume.value);
+      setVolume(userPlayerVolume);
       await _waitForAllBuffers();
       await _playAudioThenVideo();
     }
@@ -611,6 +614,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final cachedAudio = stream?.getCachedFile(videoId);
     if (cachedAudio != null && useCache) {
       await setAudioSource(AudioSource.file(cachedAudio.path, tag: mediaItem));
+      refreshNotification();
     } else if (stream != null && stream.url != null) {
       if (wasPlaying) {
         await Future.wait([
@@ -630,6 +634,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             },
           ),
         );
+        refreshNotification();
       }
 
       try {
@@ -725,7 +730,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     Future<void> plsplsplsPlay(bool waitForBuffer, bool wasPlayingFromCache, bool sourceChanged) async {
       if (startPlaying) {
-        setVolume(settings.playerVolume.value);
+        setVolume(userPlayerVolume);
         if (waitForBuffer) await _waitForAllBuffers();
         await _playAudioThenVideo();
         settings.wakelockMode.value.toggleOn(currentVideoStream.value != null || currentCachedVideo.value != null);
@@ -862,6 +867,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
                       ),
                     ),
           ]);
+          refreshNotification();
         }
       } catch (e) {
         if (item != currentVideo) return; // race avoidance when playing multiple videos
@@ -954,6 +960,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         langaugeName: cachedAudio.langaugeName,
         file: cachedAudio.file,
       );
+      refreshNotification();
       return (audioDetails, cachedVideo);
     } else if (cachedAudio != null && canPlayAudioOnly) {
       // -- play audio only
@@ -966,6 +973,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         langaugeName: cachedAudio.langaugeName,
         file: cachedAudio.file,
       );
+      refreshNotification();
       return (audioDetails, null);
     }
     return (null, null);
@@ -1081,6 +1089,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
+  bool get enableCrossFade => settings.enableCrossFade.value;
+
+  @override
+  int get defaultCrossFadeMilliseconds => settings.crossFadeDurationMS.value;
+
+  @override
+  int get defaultCrossFadeTriggerStartOffsetSeconds => settings.crossFadeAutoTriggerSeconds.value;
+
+  @override
   bool get displayFavouriteButtonInNotification => settings.displayFavouriteButtonInNotification.value;
 
   @override
@@ -1138,14 +1155,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  Future<void> play() async {
-    await onPlay();
-  }
+  Future<void> play() async => await onPlay();
 
   @override
-  Future<void> pause() async {
-    await onPause();
-  }
+  Future<void> pause() async => await onPause();
 
   Future<void> togglePlayPause() async {
     if (isPlaying) {
@@ -1157,8 +1170,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   Future<void> seek(Duration position) async {
-    final wasPlaying = isPlaying;
-
     Future<void> plsSeek() async => await onSeek(position);
 
     Future<void> plsPause() async {
@@ -1170,10 +1181,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     await currentItem?._execute(
       selectable: (finalItem) async {
-        await plsPause();
+        // await plsPause();
         await plsSeek();
+        refreshVideoPosition(false);
       },
       youtubeID: (finalItem) async {
+        final wasPlaying = isPlaying;
         await plsPause();
         if (_nextSeekCanSetAudioCache) {
           // -- try putting cache version if it was cached
@@ -1183,11 +1196,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           _isCurrentAudioFromCache = true;
         }
         await plsSeek();
+        await _waitForAllBuffers();
+        if (wasPlaying) await _playAudioThenVideo();
       },
     );
-
-    await _waitForAllBuffers();
-    if (wasPlaying) await _playAudioThenVideo();
   }
 
   @override

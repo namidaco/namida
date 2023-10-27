@@ -846,6 +846,7 @@ class NamidaExpansionTile extends StatelessWidget {
   final bool initiallyExpanded;
   final Widget? trailing;
   final ValueChanged? onExpansionChanged;
+  final bool normalRightPadding;
 
   const NamidaExpansionTile({
     super.key,
@@ -862,6 +863,7 @@ class NamidaExpansionTile extends StatelessWidget {
     this.initiallyExpanded = false,
     this.trailing,
     this.onExpansionChanged,
+    this.normalRightPadding = false,
   });
 
   @override
@@ -873,7 +875,7 @@ class NamidaExpansionTile extends StatelessWidget {
         initiallyExpanded: initiallyExpanded,
         onExpansionChanged: onExpansionChanged,
         expandedAlignment: Alignment.centerLeft,
-        tilePadding: const EdgeInsets.only(left: 16.0, right: 12.0),
+        tilePadding: EdgeInsets.only(left: 16.0, right: normalRightPadding ? 16.0 : 12.0),
         leading: leading ??
             Icon(
               icon,
@@ -1216,7 +1218,7 @@ class NamidaWheelSlider<T> extends StatelessWidget {
     this.perspective = 0.01,
     required this.totalCount,
     required this.initValue,
-    required this.itemSize,
+    this.itemSize = 5.0,
     this.squeeze = 1.0,
     this.isInfinite = false,
     required this.onValueChanged,
