@@ -26,7 +26,7 @@ class LifeCycleController {
           for (final fn in _onSuspending.values) {
             fn();
           }
-        case 'onStop':
+        case 'onDestroy':
           for (final fn in _onDestroy.values) {
             fn();
           }
