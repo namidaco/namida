@@ -22,6 +22,8 @@ class MiniPlayerController {
   static final MiniPlayerController _instance = MiniPlayerController._internal();
   MiniPlayerController._internal();
 
+  bool get _maintainStatusBarShowing => settings.hideStatusBarInExpandedMiniplayer.value;
+
   final ytMiniplayerKey = GlobalKey<NamidaYTMiniplayerState>();
 
   bool get isInQueue => animation.value > 1.0;
@@ -55,12 +57,6 @@ class MiniPlayerController {
   }
 
   AnimationController initializeSAnim(TickerProvider ticker) {
-    final media = MediaQueryData.fromView(window);
-    topInset = media.padding.top;
-    bottomInset = media.padding.bottom;
-    screenSize = media.size;
-    maxOffset = screenSize.height;
-    sMaxOffset = screenSize.width;
     sAnim = AnimationController(
       vsync: ticker,
       lowerBound: -1,
@@ -69,6 +65,15 @@ class MiniPlayerController {
     );
     updateBottomNavBarRelatedDimensions(settings.enableBottomNavBar.value);
     return sAnim;
+  }
+
+  void updateScreenValues(BuildContext context) {
+    final media = MediaQuery.of(context);
+    topInset = media.padding.top;
+    bottomInset = media.padding.bottom;
+    screenSize = media.size;
+    maxOffset = screenSize.height;
+    sMaxOffset = screenSize.width;
   }
 
   void updateBottomNavBarRelatedDimensions(bool isEnabled) {
@@ -305,12 +310,14 @@ class MiniPlayerController {
     if (_prevOffset < maxOffset) bounceUp = true;
     if (_prevOffset > maxOffset) bounceDown = true;
     _snap(haptic: haptic);
+    if (_maintainStatusBarShowing) SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
 
   void snapToMini({bool haptic = true}) {
     _offset = 0;
     bounceDown = false;
     _snap(haptic: haptic);
+    if (_maintainStatusBarShowing) SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
   }
 
   void _updateScrollPositionInQueue() {

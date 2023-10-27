@@ -133,6 +133,7 @@ class SettingsController {
   final RxInt seekDurationInSeconds = 5.obs;
   final RxInt seekDurationInPercentage = 2.obs;
   final RxBool isSeekDurationPercentage = false.obs;
+  final RxBool hideStatusBarInExpandedMiniplayer = false.obs;
   final RxInt playerPlayFadeDurInMilli = 300.obs;
   final RxInt playerPauseFadeDurInMilli = 300.obs;
   final RxInt minTrackDurationToRestoreLastPosInMinutes = 5.obs;
@@ -381,6 +382,7 @@ class SettingsController {
       seekDurationInSeconds.value = json['seekDurationInSeconds'] ?? seekDurationInSeconds.value;
       seekDurationInPercentage.value = json['seekDurationInPercentage'] ?? seekDurationInPercentage.value;
       isSeekDurationPercentage.value = json['isSeekDurationPercentage'] ?? isSeekDurationPercentage.value;
+      hideStatusBarInExpandedMiniplayer.value = json['hideStatusBarInExpandedMiniplayer'] ?? hideStatusBarInExpandedMiniplayer.value;
       playerPlayFadeDurInMilli.value = json['playerPlayFadeDurInMilli'] ?? playerPlayFadeDurInMilli.value;
       playerPauseFadeDurInMilli.value = json['playerPauseFadeDurInMilli'] as int? ?? playerPauseFadeDurInMilli.value;
       minTrackDurationToRestoreLastPosInMinutes.value = json['minTrackDurationToRestoreLastPosInMinutes'] ?? minTrackDurationToRestoreLastPosInMinutes.value;
@@ -578,6 +580,7 @@ class SettingsController {
       'seekDurationInSeconds': seekDurationInSeconds.value,
       'seekDurationInPercentage': seekDurationInPercentage.value,
       'isSeekDurationPercentage': isSeekDurationPercentage.value,
+      'hideStatusBarInExpandedMiniplayer': hideStatusBarInExpandedMiniplayer.value,
       'playerPlayFadeDurInMilli': playerPlayFadeDurInMilli.value,
       'playerPauseFadeDurInMilli': playerPauseFadeDurInMilli.value,
       'minTrackDurationToRestoreLastPosInMinutes': minTrackDurationToRestoreLastPosInMinutes.value,
@@ -746,6 +749,7 @@ class SettingsController {
     int? seekDurationInSeconds,
     int? seekDurationInPercentage,
     bool? isSeekDurationPercentage,
+    bool? hideStatusBarInExpandedMiniplayer,
     int? playerPlayFadeDurInMilli,
     int? playerPauseFadeDurInMilli,
     int? minTrackDurationToRestoreLastPosInMinutes,
@@ -1125,6 +1129,9 @@ class SettingsController {
     }
     if (isSeekDurationPercentage != null) {
       this.isSeekDurationPercentage.value = isSeekDurationPercentage;
+    }
+    if (hideStatusBarInExpandedMiniplayer != null) {
+      this.hideStatusBarInExpandedMiniplayer.value = hideStatusBarInExpandedMiniplayer;
     }
     if (playerPlayFadeDurInMilli != null) {
       this.playerPlayFadeDurInMilli.value = playerPlayFadeDurInMilli;

@@ -73,7 +73,7 @@ class AdvancedSettings extends StatelessWidget {
         child: Obx(
           () => Text(
             settings.performanceMode.value.toText(),
-            style: context.textTheme.displaySmall,
+            style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
           ),
         ),
       ),
