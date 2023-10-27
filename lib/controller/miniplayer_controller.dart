@@ -226,7 +226,7 @@ class MiniPlayerController {
     _sOffset -= details.primaryDelta ?? 0.0;
     _sOffset = _sOffset.clamp(-sMaxOffset, sMaxOffset);
 
-    sAnim.animateTo(_sOffset / sMaxOffset, duration: Duration.zero);
+    sAnim.animateTo(_sOffset / sMaxOffset * 1.25, duration: Duration.zero);
   }
 
   void gestureDetectorOnHorizontalDragEnd(DragEndDetails details) {
@@ -382,8 +382,9 @@ class MiniPlayerController {
   Future<void> snapToPrev() async {
     if (Player.inst.canJumpToPrevious) {
       _sOffset = -sMaxOffset;
-      await sAnim.animateTo(-1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
-      await Player.inst.previous();
+      Player.inst.previous();
+      // await sAnim.animateTo(-1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
+
       _sOffset = 0;
       await sAnim.animateTo(0.0, duration: Duration.zero);
 
@@ -400,8 +401,9 @@ class MiniPlayerController {
   Future<void> snapToNext() async {
     if (Player.inst.canJumpToNext) {
       _sOffset = sMaxOffset;
-      await sAnim.animateTo(1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
-      await Player.inst.next();
+      Player.inst.next();
+      // await sAnim.animateTo(1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
+
       _sOffset = 0;
       await sAnim.animateTo(0.0, duration: Duration.zero);
 

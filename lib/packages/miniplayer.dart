@@ -219,11 +219,11 @@ class NamidaMiniPlayer extends StatelessWidget {
         return Obx(
           () {
             final currentIndex = Player.inst.currentIndex;
-            // final indminus = refine(currentIndex - 1);
-            // final indplus = refine(currentIndex + 1);
-            // final prevTrack = Player.inst.currentQueue[indminus];
+            final indminus = refine(currentIndex - 1);
+            final indplus = refine(currentIndex + 1);
+            final prevTrack = Player.inst.currentQueue[indminus];
             final currentTrack = Player.inst.nowPlayingTrack;
-            // final nextTrack = Player.inst.currentQueue[indplus];
+            final nextTrack = Player.inst.currentQueue[indplus];
             final currentDuration = currentTrack.duration;
             final currentDurationInMS = currentDuration * 1000;
             return Stack(
@@ -1079,6 +1079,20 @@ class NamidaMiniPlayer extends StatelessWidget {
                       return Stack(
                         children: [
                           Opacity(
+                            opacity: -sAnim.value.clamp(-1.0, 0.0),
+                            child: Transform.translate(
+                              offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, 0),
+                              child: _TrackInfo(
+                                trackPre: prevTrack.track,
+                                p: bp,
+                                cp: bcp,
+                                bottomOffset: bottomOffset,
+                                maxOffset: maxOffset,
+                                screenSize: screenSize,
+                              ),
+                            ),
+                          ),
+                          Opacity(
                             opacity: 1 - sAnim.value.abs(),
                             child: Transform.translate(
                               offset: Offset(
@@ -1099,6 +1113,20 @@ class NamidaMiniPlayer extends StatelessWidget {
                               ),
                             ),
                           ),
+                          Opacity(
+                            opacity: sAnim.value.clamp(0.0, 1.0),
+                            child: Transform.translate(
+                              offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, 0),
+                              child: _TrackInfo(
+                                trackPre: nextTrack.track,
+                                p: bp,
+                                cp: bcp,
+                                bottomOffset: bottomOffset,
+                                maxOffset: maxOffset,
+                                screenSize: screenSize,
+                              ),
+                            ),
+                          )
                         ],
                       );
                     },
@@ -1115,24 +1143,24 @@ class NamidaMiniPlayer extends StatelessWidget {
 
                     return Stack(
                       children: [
-                        // Opacity(
-                        //   opacity: -sAnim.value.clamp(-1.0, 0.0),
-                        //   child: Transform.translate(
-                        //     offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, 0),
-                        //     child: _RawImageContainer(
-                        //       cp: bcp,
-                        //       p: bp,
-                        //       width: width,
-                        //       screenSize: screenSize,
-                        //       bottomOffset: bottomOffset,
-                        //       maxOffset: maxOffset,
-                        //       child: _TrackImage(
-                        //         track: prevTrack.track,
-                        //         cp: cp,
-                        //       ),
-                        //     ),
-                        //   ),
-                        // ),
+                        Opacity(
+                          opacity: -sAnim.value.clamp(-1.0, 0.0),
+                          child: Transform.translate(
+                            offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, 0),
+                            child: _RawImageContainer(
+                              cp: bcp,
+                              p: bp,
+                              width: width,
+                              screenSize: screenSize,
+                              bottomOffset: bottomOffset,
+                              maxOffset: maxOffset,
+                              child: _TrackImage(
+                                track: prevTrack.track,
+                                cp: cp,
+                              ),
+                            ),
+                          ),
+                        ),
                         Opacity(
                           opacity: 1 - sAnim.value.abs(),
                           child: Transform.translate(
@@ -1152,24 +1180,24 @@ class NamidaMiniPlayer extends StatelessWidget {
                             ),
                           ),
                         ),
-                        // Opacity(
-                        //   opacity: sAnim.value.clamp(0.0, 1.0),
-                        //   child: Transform.translate(
-                        //     offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, 0),
-                        //     child: _RawImageContainer(
-                        //       cp: bcp,
-                        //       p: bp,
-                        //       width: width,
-                        //       screenSize: screenSize,
-                        //       bottomOffset: bottomOffset,
-                        //       maxOffset: maxOffset,
-                        //       child: _TrackImage(
-                        //         track: nextTrack.track,
-                        //         cp: cp,
-                        //       ),
-                        //     ),
-                        //   ),
-                        // ),
+                        Opacity(
+                          opacity: sAnim.value.clamp(0.0, 1.0),
+                          child: Transform.translate(
+                            offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, 0),
+                            child: _RawImageContainer(
+                              cp: bcp,
+                              p: bp,
+                              width: width,
+                              screenSize: screenSize,
+                              bottomOffset: bottomOffset,
+                              maxOffset: maxOffset,
+                              child: _TrackImage(
+                                track: nextTrack.track,
+                                cp: cp,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     );
                   },
@@ -2077,7 +2105,7 @@ class _AnimatingTrackImage extends StatelessWidget {
           final isInversed = settings.animatingThumbnailInversed.value;
           return AnimatedScale(
             duration: const Duration(milliseconds: 100),
-            scale: isInversed ? 1.25 - finalScale : 1.13 + finalScale,
+            scale: isInversed ? 1.22 - finalScale : 1.13 + finalScale,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               child: VideoController.inst.shouldShowVideo
