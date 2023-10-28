@@ -24,7 +24,7 @@ jobs:
 
       - uses: dart-lang/setup-dart@v1
         with:
-          dart-sdk-version: '3.1.4'
+          sdk: '3.1.4'
 
       - uses: subosito/flutter-action@v2.11.0
         with:
