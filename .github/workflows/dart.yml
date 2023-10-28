@@ -22,15 +22,15 @@ jobs:
          token: ${{ secrets.ACCESS_TOKEN }}
          submodules: recursive
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2.11.0
         with:
-         flutter-version: '3.13.0'
+         flutter-version: '3.10.0'
 
       - name: Install dependencies
         run: flutter pub get
 
       - name: Build
-        run: flutter build apk --target-platform android-arm,android-arm64 --split-per-abi
+        run: flutter build apk --split-per-abi
 
       - name: Upload APKs
         run: |
