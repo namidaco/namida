@@ -30,6 +30,9 @@ jobs:
         with:
          flutter-version: '3.13.3'
 
+      - name: Setup credentials to access private repositories
+        run: git config --global url.https://${{ secrets.PAT }}@github.com/.insteadOf https://github.com/
+
       - name: Install dependencies
         run: flutter pub get
 
