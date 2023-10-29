@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-         token: ${{ secrets.PAT }}
+         token: ${{ secrets.PAT_ORG }}
          submodules: recursive
 
       - uses: dart-lang/setup-dart@v1
@@ -31,7 +31,7 @@ jobs:
          flutter-version: '3.13.3'
 
       - name: Setup credentials to access private repositories
-        run: git config --global url.https://${{ secrets.PAT }}@github.com/.insteadOf https://github.com/
+        run: git config --global url.https://${{ secrets.PAT_ORG }}@github.com/.insteadOf https://github.com/
 
       - name: Install dependencies
         run: flutter pub get
