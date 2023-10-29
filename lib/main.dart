@@ -343,34 +343,36 @@ class Namida extends StatelessWidget {
       alignment: Alignment.bottomLeft,
       children: [
         Obx(
-            () {
-              final locale = settings.selectedLanguage.value.code.split('_');
-              return GetMaterialApp(
-                key: Key(locale.join()),
-                themeAnimationDuration: const Duration(milliseconds: kThemeAnimationDurationMS),
-                debugShowCheckedModeBanner: false,
-                title: 'Namida',
-                // restorationScopeId: 'Namida',
-                theme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, true),
-                darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, false),
-                themeMode: settings.themeMode.value,
-                builder: (context, widget) {
-                  return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
+          () {
+            final locale = settings.selectedLanguage.value.code.split('_');
+            return GetMaterialApp(
+              key: Key(locale.join()),
+              themeAnimationDuration: const Duration(milliseconds: kThemeAnimationDurationMS),
+              debugShowCheckedModeBanner: false,
+              title: 'Namida',
+              // restorationScopeId: 'Namida',
+              theme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, true),
+              darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, false),
+              themeMode: settings.themeMode.value,
+              builder: (context, widget) {
+                return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
+              },
+              home: MainPageWrapper(
+                shouldShowOnBoarding: shouldShowOnBoarding,
+                onContextAvailable: (ctx) {
+                  _initialContext = ctx;
+                  _waitForFirstBuildContext.isCompleted ? null : _waitForFirstBuildContext.complete(true);
                 },
-                home: MainPageWrapper(
-                  shouldShowOnBoarding: shouldShowOnBoarding,
-                  onContextAvailable: (ctx) {
-                    _initialContext = ctx;
-                    _waitForFirstBuildContext.isCompleted ? null : _waitForFirstBuildContext.complete(true);
-                  },
-                ),
-              );
-            },
+              ),
+            );
+          },
         ),
 
         // prevent accidental opening for drawer when performing back gesture
-        AbsorbPointer(
-          child: SizedBox(
+        GestureDetector(
+          onHorizontalDragUpdate: (details) {},
+          child: Container(
+            color: Colors.transparent,
             width: 18.0,
             height: context.height * 0.8,
           ),
@@ -379,8 +381,10 @@ class Namida extends StatelessWidget {
         // prevent accidental miniplayer swipe when performing back gesture
         Positioned(
           right: 0,
-          child: AbsorbPointer(
-            child: SizedBox(
+          child: GestureDetector(
+            onHorizontalDragUpdate: (details) {},
+            child: Container(
+              color: Colors.transparent,
               width: 8.0,
               height: context.height,
             ),
