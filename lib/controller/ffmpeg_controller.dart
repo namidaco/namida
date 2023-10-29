@@ -83,30 +83,30 @@ class NamidaFFMPEG {
       final fieldName = _defaultTagsMap[t.key];
       if (fieldName != null) tagsMapToEditConverted[fieldName] = t.value;
     }
-    tagsMapToEditConverted.remove('dummy');
 
-    if (tagsMap[FFMPEGTagField.trackNumber] != null || tagsMap[FFMPEGTagField.discNumber] != null) {
-      oldTags ??= await extractMetadata(path).then((value) => value?.format?.tags);
-      void plsAddDT(String valInMap, (String, String?)? trackOrDisc) {
-        if (trackOrDisc != null) {
-          final trackN = trackOrDisc.$1;
-          final trackT = trackOrDisc.$2;
-          if (trackT == null && trackN != "0") {
-            tagsMapToEditConverted[valInMap] = trackN;
-          } else if (trackT != null) {
-            tagsMapToEditConverted[valInMap] = "${trackOrDisc.$1}/${trackOrDisc.$2}";
-          }
-        }
-      }
+    // if (tagsMap[FFMPEGTagField.trackNumber] != null || tagsMap[FFMPEGTagField.discNumber] != null) {
+    //   oldTags ??= await extractMetadata(path).then((value) => value?.format?.tags);
+    //   void plsAddDT(String valInMap, (String, String?)? trackOrDisc) {
+    //     if (trackOrDisc != null) {
+    //       final trackN = trackOrDisc.$1;
+    //       final trackT = trackOrDisc.$2;
+    //       if (trackT == null && trackN != "0") {
+    //         tagsMapToEditConverted[valInMap] = trackN;
+    //       } else if (trackT != null) {
+    //         tagsMapToEditConverted[valInMap] = "${trackOrDisc.$1}/${trackOrDisc.$2}";
+    //       }
+    //     }
+    //   }
 
-      final trackNT = _trackAndDiscSplitter(oldTags?.track);
-      final discNT = _trackAndDiscSplitter(oldTags?.disc);
-      plsAddDT("track", (tagsMapToEditConverted["track"] ?? trackNT?.$1 ?? "0", trackNT?.$2));
-      plsAddDT("disc", (tagsMapToEditConverted["disc"] ?? discNT?.$1 ?? "0", trackNT?.$2));
-    }
+    //   final trackNT = _trackAndDiscSplitter(oldTags?.track);
+    //   final discNT = _trackAndDiscSplitter(oldTags?.disc);
+    //   plsAddDT("track", (tagsMapToEditConverted["track"] ?? trackNT?.$1 ?? "0", trackNT?.$2));
+    //   plsAddDT("disc", (tagsMapToEditConverted["disc"] ?? discNT?.$1 ?? "0", trackNT?.$2));
+    // }
 
     final tagsString = tagsMapToEditConverted.entries.map((e) => e.value == null ? '' : '-metadata ${e.key}="${e.value}"').join(' '); // check if need to remove empty value tag
-    final didExecute = await _ffmpegExecute('-i "${tempFile.path}" $tagsString -c copy -y "$path"');
+
+    final didExecute = await _ffmpegExecute('-i "${tempFile.path}" $tagsString -id3v2_version 3 -write_id3v2 1 -c copy -y "$path"');
     // -- restoring original stats.
     if (originalStats != null) {
       await setFileStats(originalFile, originalStats);
@@ -352,22 +352,22 @@ class NamidaFFMPEG {
   /// Second is track/disc total, can exist or can be null.
   ///
   /// Returns null if splitting failed or [discOrTrack] == null.
-  (String, String?)? _trackAndDiscSplitter(String? discOrTrack) {
-    if (discOrTrack != null) {
-      final discNT = discOrTrack.split('/');
-      if (discNT.length == 2) {
-        // -- track/disc total exist
-        final discN = discNT.first; // might be 0 or more
-        final discT = discNT.last; // always more than 0
-        return (discN, discT);
-      } else if (discNT.length == 1) {
-        // -- only track/disc number is provided
-        final discN = discNT.first;
-        return (discN, null);
-      }
-    }
-    return null;
-  }
+  // (String, String?)? _trackAndDiscSplitter(String? discOrTrack) {
+  //   if (discOrTrack != null) {
+  //     final discNT = discOrTrack.split('/');
+  //     if (discNT.length == 2) {
+  //       // -- track/disc total exist
+  //       final discN = discNT.first; // might be 0 or more
+  //       final discT = discNT.last; // always more than 0
+  //       return (discN, discT);
+  //     } else if (discNT.length == 1) {
+  //       // -- only track/disc number is provided
+  //       final discN = discNT.first;
+  //       return (discN, null);
+  //     }
+  //   }
+  //   return null;
+  // }
 
   final _defaultTagsMap = <FFMPEGTagField, String>{
     FFMPEGTagField.year: "date",
@@ -389,6 +389,8 @@ class NamidaFFMPEG {
     FFMPEGTagField.lyricist: "LYRICIST",
     FFMPEGTagField.trackNumber: "track",
     FFMPEGTagField.discNumber: "disc",
+    FFMPEGTagField.trackTotal: "TRACKTOTAL",
+    FFMPEGTagField.discTotal: "DISCTOTAL",
   };
 }
 

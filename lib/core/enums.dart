@@ -181,6 +181,8 @@ enum FFMPEGTagField {
   year,
   trackNumber,
   discNumber,
+  trackTotal,
+  discTotal,
   comment,
   lyrics,
   remixer,
