@@ -256,6 +256,7 @@ class Lyrics {
       final lyricsRes = res.body.split(delimiter1).last.split(delimiter2).first;
       if (lyricsRes.contains('<meta charset="UTF-8">')) return '';
       if (lyricsRes.contains('please enable javascript on your web browser')) return '';
+      if (lyricsRes.contains('Error 500 (Server Error)')) return '';
       return lyricsRes;
     }
 
