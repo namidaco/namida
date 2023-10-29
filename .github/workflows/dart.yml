@@ -7,9 +7,9 @@ name: Dart
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -19,23 +19,23 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-         token: ${{ secrets.PAT_ORG }}
-         submodules: recursive
+          token: ${{ secrets.PAT_ORG }}
+          submodules: recursive
 
       - uses: dart-lang/setup-dart@v1
         with:
-          sdk: '3.1.4'
+          sdk: "3.1.4"
 
       - uses: subosito/flutter-action@v2.11.0
         with:
-         flutter-version: '3.13.3'
+          flutter-version: "3.13.8"
 
       - name: setup credentials for namidaco
         run: git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
 
       - name: setup credentials for MSOB7YY
         run: git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
-      
+
       - name: Install dependencies
         run: flutter pub get
 
