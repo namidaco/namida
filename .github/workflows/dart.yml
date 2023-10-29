@@ -48,8 +48,14 @@ jobs:
           mv build/app/outputs/flutter-apk/*.apk artifacts/
         shell: bash
 
-      - name: Archive build artifacts
+      - name: Upload arm64-v8a APK
         uses: actions/upload-artifact@v3
         with:
-          name: app-releases
-          path: artifacts/
+          name: app-arm64-v8a-release
+          path: artifacts/app-arm64-v8a-release.apk
+        
+      - name: Upload armeabi-v7a
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-armeabi-v7a-release
+          path: artifacts/app-armeabi-v7a-release.apk
