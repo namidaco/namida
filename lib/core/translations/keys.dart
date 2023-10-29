@@ -513,6 +513,7 @@ class LanguageKeys {
   late String SUPPORT;
   late String SUPREMACY;
   late String SUSSY_BAKA;
+  late String SWIPE_TO_OPEN_DRAWER;
   late String SYNCED;
   late String SYNOPSIS;
   late String TAG_FIELDS;

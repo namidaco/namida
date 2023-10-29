@@ -195,6 +195,14 @@ class ExtrasSettings extends StatelessWidget {
               onChanged: (p0) => settings.save(hideStatusBarInExpandedMiniplayer: !p0),
             ),
           ),
+          Obx(
+            () => CustomSwitchListTile(
+              icon: Broken.sidebar_right,
+              title: lang.SWIPE_TO_OPEN_DRAWER,
+              value: settings.swipeableDrawer.value,
+              onChanged: (isTrue) => settings.save(swipeableDrawer: !isTrue),
+            ),
+          ),
           CustomListTile(
             icon: Broken.colorfilter,
             title: lang.EXTRACT_ALL_COLOR_PALETTES,

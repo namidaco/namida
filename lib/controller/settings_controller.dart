@@ -160,6 +160,7 @@ class SettingsController {
   final RxBool enableM3USync = false.obs;
   final RxBool canAskForBatteryOptimizations = true.obs;
   final RxBool prioritizeEmbeddedLyrics = true.obs;
+  final RxBool swipeableDrawer = true.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
     TagField.trackNumber,
     TagField.year,
@@ -412,6 +413,7 @@ class SettingsController {
       enableM3USync.value = json['enableM3USync'] ?? enableM3USync.value;
       canAskForBatteryOptimizations.value = json['canAskForBatteryOptimizations'] ?? canAskForBatteryOptimizations.value;
       prioritizeEmbeddedLyrics.value = json['prioritizeEmbeddedLyrics'] ?? prioritizeEmbeddedLyrics.value;
+      swipeableDrawer.value = json['swipeableDrawer'] ?? swipeableDrawer.value;
 
       final listFromStorage = List<String>.from(json['tagFieldsToEdit'] ?? []);
       tagFieldsToEdit.value = listFromStorage.isNotEmpty ? List<TagField>.from(listFromStorage.map((e) => TagField.values.getEnum(e))) : tagFieldsToEdit;
@@ -613,6 +615,7 @@ class SettingsController {
       'enableM3USync': enableM3USync.value,
       'canAskForBatteryOptimizations': canAskForBatteryOptimizations.value,
       'prioritizeEmbeddedLyrics': prioritizeEmbeddedLyrics.value,
+      'swipeableDrawer': swipeableDrawer.value,
       'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
       'wakelockMode': wakelockMode.value.convertToString,
       'localVideoMatchingType': localVideoMatchingType.value.convertToString,
@@ -785,6 +788,7 @@ class SettingsController {
     bool? enableM3USync,
     bool? canAskForBatteryOptimizations,
     bool? prioritizeEmbeddedLyrics,
+    bool? swipeableDrawer,
     List<TagField>? tagFieldsToEdit,
     WakelockMode? wakelockMode,
     LocalVideoMatchingType? localVideoMatchingType,
@@ -1222,6 +1226,9 @@ class SettingsController {
     }
     if (prioritizeEmbeddedLyrics != null) {
       this.prioritizeEmbeddedLyrics.value = prioritizeEmbeddedLyrics;
+    }
+    if (swipeableDrawer != null) {
+      this.swipeableDrawer.value = swipeableDrawer;
     }
     if (tagFieldsToEdit != null) {
       tagFieldsToEdit.loop((d, index) {

@@ -580,6 +580,7 @@ class Language extends LanguageKeys {
 			SUPPORT = getKey("SUPPORT");
 			SUPREMACY = getKey("SUPREMACY");
 			SUSSY_BAKA = getKey("SUSSY_BAKA");
+			SWIPE_TO_OPEN_DRAWER = getKey("SWIPE_TO_OPEN_DRAWER");
 			SYNCED = getKey("SYNCED");
 			SYNOPSIS = getKey("SYNOPSIS");
 			TAG_FIELDS = getKey("TAG_FIELDS");
@@ -682,6 +683,7 @@ class Language extends LanguageKeys {
     }
   }
 }
+
 
 
 
