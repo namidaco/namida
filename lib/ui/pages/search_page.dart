@@ -188,7 +188,7 @@ class SearchPage extends StatelessWidget {
                                   final artistSearchTemp = SearchSortController.inst.artistSearchTemp;
                                   final genreSearchTemp = SearchSortController.inst.genreSearchTemp;
                                   final playlistSearchTemp = SearchSortController.inst.playlistSearchTemp;
-                                  final folderSearchTemp = SearchSortController.inst.folderSearchTemp;
+                                  final folderSearchTemp = SearchSortController.inst.folderSearchTemp.where((f) => Folder(f).tracks.isNotEmpty).toList();
 
                                   return CustomScrollView(
                                     controller: scrollController,
@@ -333,7 +333,6 @@ class SearchPage extends StatelessWidget {
                                           builder: (item) {
                                             final folder = Folder(item);
                                             final tracks = folder.tracks;
-                                            if (tracks.isEmpty) return const SizedBox();
 
                                             return NamidaInkWell(
                                               margin: const EdgeInsets.only(left: 6.0),
