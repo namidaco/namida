@@ -243,6 +243,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     final path = params['path'] as String;
     final tracks = params['tracks'] as List<TrackWithDate>;
     final infoMap = params['infoMap'] as Map<String, String?>;
+    final relative = params['relative'] as bool? ?? true;
 
     final file = File(path);
     file.deleteIfExistsSync();
@@ -253,7 +254,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
       final tr = trwd.track;
       final trext = tr.track.toTrackExt();
       final infoLine = infoMap[tr.path] ?? '#EXTINF:${trext.duration},${trext.originalArtist} - ${trext.title}';
-      final pathLine = tr.path;
+      final pathLine = relative ? tr.path.replaceFirst(path.getDirectoryPath, '') : tr.path;
       sink.write("$infoLine\n$pathLine\n");
     }
 
