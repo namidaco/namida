@@ -267,7 +267,7 @@ class PlaybackSettings extends StatelessWidget {
         initiallyExpanded: settings.enableCrossFade.value,
         leading: const StackedIcon(
           baseIcon: Broken.play,
-          secondaryIcon: Broken.pause,
+          secondaryIcon: Broken.recovery_convert,
         ),
         childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
         iconColor: context.defaultIconColor(),
@@ -283,7 +283,7 @@ class PlaybackSettings extends StatelessWidget {
               const minVal = 100;
               return CustomListTile(
                 enabled: settings.enableCrossFade.value,
-                icon: Broken.play,
+                icon: Broken.blend_2,
                 title: lang.CROSSFADE_DURATION,
                 trailing: NamidaWheelSlider<int>(
                   totalCount: (10000 - minVal) ~/ stepper,
@@ -304,7 +304,7 @@ class PlaybackSettings extends StatelessWidget {
               final val = settings.crossFadeAutoTriggerSeconds.value;
               return CustomListTile(
                 enabled: settings.enableCrossFade.value,
-                icon: Broken.pause,
+                icon: Broken.blend,
                 title: val == 0 ? lang.CROSSFADE_TRIGGER_SECONDS_DISABLED : lang.CROSSFADE_TRIGGER_SECONDS.replaceFirst('_SECONDS_', "$val"),
                 trailing: NamidaWheelSlider<int>(
                   totalCount: 30,
