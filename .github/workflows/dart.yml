@@ -40,7 +40,7 @@ jobs:
         run: flutter pub get
 
       - name: Build
-        run: flutter build apk --split-per-abi
+        run: flutter build apk --target-platform android-arm,android-arm64 --split-per-abi
 
       - name: Upload APKs
         run: |
