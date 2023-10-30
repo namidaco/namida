@@ -40,22 +40,16 @@ jobs:
         run: flutter pub get
 
       - name: Build
-        run: flutter build apk --target-platform android-arm,android-arm64 --split-per-abi
-
-      - name: Upload APKs
-        run: |
-          mkdir -p artifacts
-          mv build/app/outputs/flutter-apk/*.apk artifacts/
-        shell: bash
+        run: flutter build apk --target-platform android-arm,android-arm64 --release --split-per-abi -v
 
       - name: Upload arm64-v8a APK
         uses: actions/upload-artifact@v3
         with:
           name: app-arm64-v8a-release
-          path: artifacts/app-arm64-v8a-release.apk
-        
+          path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+
       - name: Upload armeabi-v7a
         uses: actions/upload-artifact@v3
         with:
           name: app-armeabi-v7a-release
-          path: artifacts/app-armeabi-v7a-release.apk
+          path: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
