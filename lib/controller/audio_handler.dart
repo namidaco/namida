@@ -1261,7 +1261,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 extension TrackToAudioSourceMediaItem on Selectable {
   UriAudioSource toAudioSource(int currentIndex, int queueLength) {
     return AudioSource.uri(
-      Uri.parse(track.path),
+      Uri.file(track.path),
       tag: toMediaItem(currentIndex, queueLength),
     );
   }
