@@ -369,12 +369,11 @@ class Namida extends StatelessWidget {
         ),
 
         // prevent accidental opening for drawer when performing back gesture
-        GestureDetector(
-          onHorizontalDragUpdate: (details) {},
-          child: Container(
-            color: Colors.transparent,
-            width: 18.0,
-            height: context.height * 0.8,
+        SizedBox(
+          width: 18.0,
+          height: context.height * 0.8,
+          child: GestureDetector(
+            onHorizontalDragUpdate: (details) {},
           ),
         ),
 
@@ -383,8 +382,7 @@ class Namida extends StatelessWidget {
           right: 0,
           child: GestureDetector(
             onHorizontalDragUpdate: (details) {},
-            child: Container(
-              color: Colors.transparent,
+            child: SizedBox(
               width: 8.0,
               height: context.height,
             ),
