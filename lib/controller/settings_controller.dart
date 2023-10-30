@@ -161,6 +161,7 @@ class SettingsController {
   final RxBool canAskForBatteryOptimizations = true.obs;
   final RxBool prioritizeEmbeddedLyrics = true.obs;
   final RxBool swipeableDrawer = true.obs;
+  final RxBool dismissibleMiniplayer = false.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
     TagField.trackNumber,
     TagField.year,
@@ -414,6 +415,7 @@ class SettingsController {
       canAskForBatteryOptimizations.value = json['canAskForBatteryOptimizations'] ?? canAskForBatteryOptimizations.value;
       prioritizeEmbeddedLyrics.value = json['prioritizeEmbeddedLyrics'] ?? prioritizeEmbeddedLyrics.value;
       swipeableDrawer.value = json['swipeableDrawer'] ?? swipeableDrawer.value;
+      dismissibleMiniplayer.value = json['dismissibleMiniplayer'] ?? dismissibleMiniplayer.value;
 
       final listFromStorage = List<String>.from(json['tagFieldsToEdit'] ?? []);
       tagFieldsToEdit.value = listFromStorage.isNotEmpty ? List<TagField>.from(listFromStorage.map((e) => TagField.values.getEnum(e))) : tagFieldsToEdit;
@@ -616,6 +618,7 @@ class SettingsController {
       'canAskForBatteryOptimizations': canAskForBatteryOptimizations.value,
       'prioritizeEmbeddedLyrics': prioritizeEmbeddedLyrics.value,
       'swipeableDrawer': swipeableDrawer.value,
+      'dismissibleMiniplayer': dismissibleMiniplayer.value,
       'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
       'wakelockMode': wakelockMode.value.convertToString,
       'localVideoMatchingType': localVideoMatchingType.value.convertToString,
@@ -789,6 +792,7 @@ class SettingsController {
     bool? canAskForBatteryOptimizations,
     bool? prioritizeEmbeddedLyrics,
     bool? swipeableDrawer,
+    bool? dismissibleMiniplayer,
     List<TagField>? tagFieldsToEdit,
     WakelockMode? wakelockMode,
     LocalVideoMatchingType? localVideoMatchingType,
@@ -1229,6 +1233,9 @@ class SettingsController {
     }
     if (swipeableDrawer != null) {
       this.swipeableDrawer.value = swipeableDrawer;
+    }
+    if (dismissibleMiniplayer != null) {
+      this.dismissibleMiniplayer.value = dismissibleMiniplayer;
     }
     if (tagFieldsToEdit != null) {
       tagFieldsToEdit.loop((d, index) {

@@ -251,6 +251,14 @@ class PlaybackSettings extends StatelessWidget {
       ),
       Obx(
         () => CustomSwitchListTile(
+          icon: Broken.sidebar_bottom,
+          title: lang.DISMISSIBLE_MINIPLAYER,
+          onChanged: (value) => settings.save(dismissibleMiniplayer: !value),
+          value: settings.dismissibleMiniplayer.value,
+        ),
+      ),
+      Obx(
+        () => CustomSwitchListTile(
           icon: Broken.forward,
           title: lang.SKIP_SILENCE,
           onChanged: (value) async {

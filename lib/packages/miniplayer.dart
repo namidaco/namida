@@ -47,7 +47,6 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
-import 'package:picture_in_picture/picture_in_picture.dart';
 
 class MiniPlayerParent extends StatefulWidget {
   final AnimationController animation;
@@ -157,7 +156,7 @@ class MiniPlayerSwitchers extends StatelessWidget {
                 ? pipChild()
                 : AnimatedSwitcher(
                     duration: const Duration(milliseconds: 500),
-                    child: Player.inst.nowPlayingTrack == kDummyTrack
+                    child: Player.inst.nowPlayingTrack == kDummyTrack || Player.inst.currentQueue.isEmpty
                         ? Player.inst.currentQueueYoutube.isNotEmpty
                             ? const YoutubeMiniPlayer(key: Key('ytminiplayer'))
                             : const SizedBox(key: Key('empty_miniplayer'))
@@ -1248,6 +1247,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                               alignment: Alignment.bottomRight,
                               children: [
                                 NamidaListView(
+                                  key: const Key('minikuru'),
                                   itemExtents: List.filled(Player.inst.currentQueue.length, Dimensions.inst.trackTileItemExtent),
                                   scrollController: MiniPlayerController.inst.queueScrollController,
                                   padding: EdgeInsets.only(bottom: 56.0 + SelectedTracksController.inst.bottomPadding.value),

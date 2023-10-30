@@ -189,6 +189,10 @@ class QueueController {
     return map;
   }
 
+  Future<void> emptyLatestQueue() async {
+    await File(AppPaths.LATEST_QUEUE).delete();
+  }
+
   /// Assigns the last queue to the [Player]
   Future<void> prepareLatestQueue() async {
     final latestQueue = <Track>[];

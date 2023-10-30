@@ -5,16 +5,17 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-
 import 'package:get/get.dart';
 
-import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/packages/mp.dart';
 
 class MiniPlayerController {
@@ -23,6 +24,7 @@ class MiniPlayerController {
   MiniPlayerController._internal();
 
   bool get _maintainStatusBarShowing => settings.hideStatusBarInExpandedMiniplayer.value;
+  bool get _defaultShouldDismissMiniplayer => settings.dismissibleMiniplayer.value;
 
   final ytMiniplayerKey = GlobalKey<NamidaYTMiniplayerState>();
 
@@ -45,12 +47,22 @@ class MiniPlayerController {
 
   final ScrollController queueScrollController = ScrollController();
 
+  Future<void> _onMiniplayerDismiss() async {
+    CurrentColor.inst.currentPlayingTrack.value = null;
+    await Player.inst.pause();
+    await [
+      Player.inst.clearQueue(),
+      Player.inst.dispose(),
+      QueueController.inst.emptyLatestQueue(),
+    ].execute();
+  }
+
   AnimationController initialize(TickerProvider ticker) {
     animation = AnimationController(
       vsync: ticker,
       duration: const Duration(milliseconds: 500),
-      upperBound: 2.1,
-      lowerBound: -0.1,
+      upperBound: 2.05,
+      lowerBound: -0.2,
       value: 0.0,
     );
     return animation;
@@ -256,6 +268,15 @@ class MiniPlayerController {
     bool shouldSnapToExpanded = false;
     bool shouldSnapToQueue = false;
     bool shouldSnapToMini = false;
+
+    if (distance == _headRoom) {
+      if (_defaultShouldDismissMiniplayer) {
+        snapToMini();
+        _onMiniplayerDismiss();
+        _toggleWakelockOff();
+        return;
+      }
+    }
 
     // speed threshold is an eyeballed value
     // used to actuate on fast flicks too

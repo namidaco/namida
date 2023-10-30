@@ -131,6 +131,7 @@ class LanguageKeys {
   late String DISC_NUMBER_TOTAL;
   late String DISC_NUMBER;
   late String DISLIKE;
+  late String DISMISSIBLE_MINIPLAYER;
   late String DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE_SUBTITLE;
   late String DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE;
   late String DISPLAY_ARTIST_BEFORE_TITLE;
