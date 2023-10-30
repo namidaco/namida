@@ -517,8 +517,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "011e76e2357cbecead75911eb2694c91507e9dd4"
-      resolved-ref: "011e76e2357cbecead75911eb2694c91507e9dd4"
+      ref: "7fd130c13f9f15b309173d0d1cb98071f434b28a"
+      resolved-ref: "7fd130c13f9f15b309173d0d1cb98071f434b28a"
       url: "https://github.com/namidaco/history_manager"
     source: git
     version: "0.0.1"

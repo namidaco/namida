@@ -52,7 +52,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
   final _shimmerList = List.filled(20, null);
-  bool _isLoading = true;
+  late bool _isLoading;
 
   final _recentlyAddedFull = <Track>[];
   final _recentlyAdded = <Track>[];
@@ -77,7 +77,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   void _fillLists() async {
-    await HistoryController.inst.waitForHistoryAndMostPlayedLoad;
+    if (HistoryController.inst.isHistoryLoaded) {
+      _isLoading = false;
+    } else {
+      _isLoading = true;
+      await HistoryController.inst.waitForHistoryAndMostPlayedLoad;
+    }
     final timeNow = DateTime.now();
 
     // -- Recently Added --
