@@ -57,6 +57,15 @@ extension TracksUtils on List<Track> {
     return 0;
   }
 
+  String get yearPreferyyyyMMdd {
+    if (isEmpty) return '';
+    for (int i = length - 1; i >= 0; i--) {
+      final y = this[i].yearPreferyyyyMMdd;
+      if (y != '') return y;
+    }
+    return '';
+  }
+
   /// should be upgraded to check if image file exist, but performance...
   String get pathToImage {
     if (isEmpty) return '';

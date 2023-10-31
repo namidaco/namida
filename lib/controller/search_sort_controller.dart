@@ -105,7 +105,7 @@ class SearchSortController {
       SortType.title: (e) => e.title.toLowerCase(),
       SortType.album: (e) => e.album.toLowerCase(),
       SortType.albumArtist: (e) => e.albumArtist.toLowerCase(),
-      SortType.year: (e) => e.year,
+      SortType.year: (e) => e.yearPreferyyyyMMdd,
       SortType.artistsList: (e) => e.artistsList.join().toLowerCase(),
       SortType.genresList: (e) => e.genresList.join().toLowerCase(),
       SortType.dateAdded: (e) => e.dateAdded,
@@ -336,7 +336,7 @@ class SearchSortController {
         );
         break;
       case SortType.year:
-        sortThis((e) => e.year);
+        sortThis((e) => e.yearPreferyyyyMMdd);
         break;
       case SortType.artistsList:
         sortThisAlts(
@@ -415,7 +415,7 @@ class SearchSortController {
         sortThis((e) => e.value.albumArtist.toLowerCase());
         break;
       case GroupSortType.year:
-        sortThis((e) => e.value.year);
+        sortThis((e) => e.value.yearPreferyyyyMMdd);
         break;
       case GroupSortType.artistsList:
         sortThis((e) => e.value.first.artistsList.join().toLowerCase());
@@ -465,7 +465,7 @@ class SearchSortController {
         sortThis((e) => e.value.albumArtist.toLowerCase());
         break;
       case GroupSortType.year:
-        sortThis((e) => e.value.year);
+        sortThis((e) => e.value.yearPreferyyyyMMdd);
         break;
       case GroupSortType.artistsList:
         sortThis((e) => e.key.toLowerCase());
@@ -519,7 +519,7 @@ class SearchSortController {
         sortThis((e) => e.value.albumArtist.toLowerCase());
         break;
       case GroupSortType.year:
-        sortThis((e) => e.value.year);
+        sortThis((e) => e.value.yearPreferyyyyMMdd);
         break;
       case GroupSortType.artistsList:
         sortThis((e) => e.value[0].artistsList.join().toLowerCase());

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:faudiotagger/models/tag.dart';
 import 'package:history_manager/history_manager.dart';
+import 'package:intl/intl.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/split_config.dart';
@@ -340,6 +341,15 @@ extension TrackExtUtils on TrackExtended {
 
   TrackStats get stats => Indexer.inst.trackStatsMap[toTrack()] ?? TrackStats(kDummyTrack, 0, [], [], 0);
 
+  String get yearPreferyyyyMMdd {
+    final tostr = year.toString();
+    final parsed = DateTime.tryParse(tostr);
+    if (parsed != null) {
+      return DateFormat('yyyyMMdd').format(parsed);
+    }
+    return tostr;
+  }
+
   TrackExtended copyWithTag({
     required Tag tag,
     int? dateModified,
@@ -445,6 +455,8 @@ extension TrackUtils on Track {
       Indexer.inst.allTracksMappedByPath[this] = trx.copyWith(duration: value);
     }
   }
+
+  String get yearPreferyyyyMMdd => toTrackExt().yearPreferyyyyMMdd;
 
   String get title => toTrackExt().title;
   String get originalArtist => toTrackExt().originalArtist;
