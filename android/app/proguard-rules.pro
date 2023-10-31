@@ -28,4 +28,6 @@
 -dontwarn android.arch.util.paging.CountedDataSource
 -dontwarn android.arch.persistence.room.paging.LimitOffsetDataSource
 -keep class com.artxdev.** { *; }
+-keep class com.namidaco.** { *; }
+-keep class org.jaudiotagger.** { *; }
 
