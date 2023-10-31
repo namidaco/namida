@@ -21,6 +21,12 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+// def keystoreProperties = new Properties()
+// def keystorePropertiesFile = rootProject.file('key.properties')
+// if (keystorePropertiesFile.exists()) {
+//         keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+// }
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
@@ -34,7 +40,7 @@ android {
         enable true
         reset()
         include "armeabi-v7a", "arm64-v8a"
-        universalApk false
+        universalApk true
         }
     }
     compileOptions {
@@ -61,21 +67,28 @@ android {
         versionName flutterVersionName
     }
 
-    signingConfigs {
-        // debug {
-        //     keyAlias 'androiddebug'
-        //     keyPassword 'android'
-        //     storeFile file('mykey.jks')
-        //     storePassword 'android'
-        // } 
+    // signingConfigs {
+    //     debug {
+    //        keyAlias keystoreProperties['keyAlias']
+    //        keyPassword keystoreProperties['keyPassword']
+    //        storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+    //        storePassword keystoreProperties['storePassword']
+    //     } 
 
-        // release {
-        //     // keyAlias 'androiddebug'
-        //     // keyPassword 'android'
-        //     // storeFile file('mykey.jks')
-        //     // storePassword 'android'
-        // }
-    }
+    //     release {
+    //        keyAlias keystoreProperties['keyAlias']
+    //        keyPassword keystoreProperties['keyPassword']
+    //        storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+    //        storePassword keystoreProperties['storePassword']
+    //     }
+
+    //     certificate {
+    //        keyAlias keystoreProperties['keyAlias']
+    //        keyPassword keystoreProperties['keyPassword']
+    //        storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+    //        storePassword keystoreProperties['storePassword']
+    //     }
+    // }
 
     buildTypes {
         debug {

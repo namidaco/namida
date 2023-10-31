@@ -36,11 +36,24 @@ jobs:
       - name: setup credentials for MSOB7YY
         run: git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
 
+      - name: flutter clean
+        run: flutter clean
+
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build
+      - name: Build APKs
         run: flutter build apk --target-platform android-arm,android-arm64 --release --split-per-abi -v
+
+      # - name: Sign App Bundle
+      #   uses: r0adkll/sign-android-release@v1
+      #   id: sign_app
+      #   with:
+      #     releaseDirectory: build/app/outputs/flutter-apk/
+      #     signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE_FILE_BASE64 }}
+      #     alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+      #     keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      #     keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
 
       - name: Upload arm64-v8a APK
         uses: actions/upload-artifact@v3
