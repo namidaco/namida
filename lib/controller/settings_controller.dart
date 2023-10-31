@@ -203,7 +203,7 @@ class SettingsController {
   final onNotificationTapAction = NotificationTapAction.openApp.obs;
   final onYoutubeLinkOpen = OnYoutubeLinkOpenAction.alwaysAsk.obs;
   final performanceMode = PerformanceMode.balanced.obs;
-  final killPlayerAfterDismissingAppMode = KillAppMode.never.obs;
+  final killPlayerAfterDismissingAppMode = KillAppMode.ifNotPlaying.obs;
 
   final RxMap<TrackTilePosition, TrackTileItem> trackItem = {
     TrackTilePosition.row1Item1: TrackTileItem.title,
