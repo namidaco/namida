@@ -91,6 +91,7 @@ class SettingsController {
   final RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
   final RxBool enableFoldersHierarchy = true.obs;
   final RxBool displayArtistBeforeTitle = true.obs;
+  final RxBool heatmapListensView = false.obs;
   final RxList<String> backupItemslist = [
     AppPaths.TRACKS,
     AppPaths.TRACKS_STATS,
@@ -361,6 +362,7 @@ class SettingsController {
       defaultFolderStartupLocation.value = json['defaultFolderStartupLocation'] ?? defaultFolderStartupLocation.value;
       enableFoldersHierarchy.value = json['enableFoldersHierarchy'] ?? enableFoldersHierarchy.value;
       displayArtistBeforeTitle.value = json['displayArtistBeforeTitle'] ?? displayArtistBeforeTitle.value;
+      heatmapListensView.value = json['heatmapListensView'] ?? heatmapListensView.value;
       backupItemslist.value = List<String>.from(json['backupItemslist'] ?? backupItemslist);
       enableVideoPlayback.value = json['enableVideoPlayback'] ?? enableVideoPlayback.value;
       enableLyrics.value = json['enableLyrics'] ?? enableLyrics.value;
@@ -565,6 +567,7 @@ class SettingsController {
       'defaultFolderStartupLocation': defaultFolderStartupLocation.value,
       'enableFoldersHierarchy': enableFoldersHierarchy.value,
       'displayArtistBeforeTitle': displayArtistBeforeTitle.value,
+      'heatmapListensView': heatmapListensView.value,
       'backupItemslist': backupItemslist.toList(),
       'enableVideoPlayback': enableVideoPlayback.value,
       'enableLyrics': enableLyrics.value,
@@ -731,6 +734,7 @@ class SettingsController {
     String? defaultFolderStartupLocation,
     bool? enableFoldersHierarchy,
     bool? displayArtistBeforeTitle,
+    bool? heatmapListensView,
     List<String>? backupItemslist,
     bool? enableVideoPlayback,
     bool? enableLyrics,
@@ -1042,6 +1046,9 @@ class SettingsController {
     }
     if (displayArtistBeforeTitle != null) {
       this.displayArtistBeforeTitle.value = displayArtistBeforeTitle;
+    }
+    if (heatmapListensView != null) {
+      this.heatmapListensView.value = heatmapListensView;
     }
     if (backupItemslist != null) {
       backupItemslist.loop((d, index) {

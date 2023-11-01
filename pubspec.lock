@@ -562,6 +562,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.3"
+  infinite_scroll_pagination:
+    dependency: transitive
+    description:
+      name: infinite_scroll_pagination
+      sha256: "9517328f4e373f08f57dbb11c5aac5b05554142024d6b60c903f3b73476d52db"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.2.0"
   intl:
     dependency: "direct main"
     description:
@@ -743,6 +751,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.1"
+  paged_vertical_calendar:
+    dependency: "direct main"
+    description:
+      name: paged_vertical_calendar
+      sha256: bca7385d0b810d9c010616515d75429ea9e89290316f928f6a7bb9af3ae01ac4
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.6"
   palette_generator:
     dependency: "direct main"
     description:
@@ -1007,6 +1023,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.1"
+  sliver_tools:
+    dependency: transitive
+    description:
+      name: sliver_tools
+      sha256: eae28220badfb9d0559207badcbbc9ad5331aac829a88cb0964d330d2a4636a6
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.12"
   source_span:
     dependency: transitive
     description:
