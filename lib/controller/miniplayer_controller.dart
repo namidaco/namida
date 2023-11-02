@@ -48,7 +48,7 @@ class MiniPlayerController {
   final ScrollController queueScrollController = ScrollController();
 
   Future<void> _onMiniplayerDismiss() async {
-    CurrentColor.inst.currentPlayingTrack.value = null;
+    CurrentColor.inst.resetCurrentPlayingTrack();
     await Player.inst.pause();
     await [
       Player.inst.clearQueue(),

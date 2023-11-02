@@ -82,6 +82,34 @@ class YoutubeMiniPlayer extends StatelessWidget {
             final videoDislikeCount = videoInfo?.dislikeCount ?? Player.inst.currentVideoInfo?.dislikeCount;
             final videoViewCount = videoInfo?.viewCount ?? Player.inst.currentVideoInfo?.viewCount;
 
+            final descriptionWidget = videoInfo == null
+                ? null
+                : Html(
+                    data: videoInfo.description ?? '',
+                    style: {
+                      '*': Style.fromTextStyle(
+                        context.textTheme.displayMedium!.copyWith(
+                          fontSize: 14.0.multipliedFontScale,
+                        ),
+                      ),
+                      'a': Style.fromTextStyle(
+                        context.textTheme.displayMedium!.copyWith(
+                          color: context.theme.colorScheme.primary.withAlpha(210),
+                          fontSize: 13.5.multipliedFontScale,
+                        ),
+                      )
+                    },
+                    onLinkTap: (url, attributes, element) async {
+                      if (url != null) {
+                        try {
+                          await launchUrlString(url, mode: LaunchMode.externalNonBrowserApplication);
+                        } catch (e) {
+                          await launchUrlString(url);
+                        }
+                      }
+                    },
+                  );
+
             return NamidaYTMiniplayer(
               key: MiniPlayerController.inst.ytMiniplayerKey,
               duration: const Duration(milliseconds: 1000),
@@ -172,7 +200,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      NamidaBasicShimmer(
+                                      NamidaDummyContainer(
                                         borderRadius: 4.0,
                                         height: 16.0,
                                         shimmerEnabled: videoInfo == null,
@@ -188,7 +216,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                         ),
                                       ),
                                       const SizedBox(height: 4.0),
-                                      NamidaBasicShimmer(
+                                      NamidaDummyContainer(
                                         borderRadius: 4.0,
                                         height: 10.0,
                                         shimmerEnabled: videoInfo == null,
@@ -325,196 +353,181 @@ class YoutubeMiniPlayer extends StatelessWidget {
 
                                             // --START-- title & subtitle
                                             SliverToBoxAdapter(
-                                              child: ExpansionTile(
-                                                initiallyExpanded: false,
-                                                maintainState: true,
-                                                expandedAlignment: Alignment.centerLeft,
-                                                expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                                                tilePadding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 14.0),
-                                                textColor: Color.alphaBlend(CurrentColor.inst.color.withAlpha(40), context.theme.colorScheme.onBackground),
-                                                collapsedTextColor: context.theme.colorScheme.onBackground,
-                                                iconColor: Color.alphaBlend(CurrentColor.inst.color.withAlpha(40), context.theme.colorScheme.onBackground),
-                                                collapsedIconColor: context.theme.colorScheme.onBackground,
-                                                childrenPadding: const EdgeInsets.all(18.0),
-                                                onExpansionChanged: (value) => isTitleExpanded.value = value,
-                                                trailing: Obx(
-                                                  () {
-                                                    final videoListens = YoutubeHistoryController.inst.topTracksMapListens[currentId] ?? [];
-                                                    return Row(
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: [
-                                                        if (videoListens.isNotEmpty)
-                                                          NamidaInkWell(
-                                                            borderRadius: 6.0,
-                                                            bgColor: CurrentColor.inst.color.withOpacity(0.7),
-                                                            onTap: () {
-                                                              showVideoListensDialog(currentId);
-                                                            },
-                                                            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                                                            child: Text(
-                                                              videoListens.length.formatDecimal(),
-                                                              style: context.textTheme.displaySmall?.copyWith(
-                                                                color: Colors.white.withOpacity(0.6),
+                                              child: ShimmerWrapper(
+                                                shimmerDurationMS: 550,
+                                                shimmerDelayMS: 250,
+                                                shimmerEnabled: videoInfo == null,
+                                                child: ExpansionTile(
+                                                  initiallyExpanded: false,
+                                                  maintainState: false,
+                                                  expandedAlignment: Alignment.centerLeft,
+                                                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                                                  tilePadding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 14.0),
+                                                  textColor: Color.alphaBlend(CurrentColor.inst.color.withAlpha(40), context.theme.colorScheme.onBackground),
+                                                  collapsedTextColor: context.theme.colorScheme.onBackground,
+                                                  iconColor: Color.alphaBlend(CurrentColor.inst.color.withAlpha(40), context.theme.colorScheme.onBackground),
+                                                  collapsedIconColor: context.theme.colorScheme.onBackground,
+                                                  childrenPadding: const EdgeInsets.all(18.0),
+                                                  onExpansionChanged: (value) => isTitleExpanded.value = value,
+                                                  trailing: Obx(
+                                                    () {
+                                                      final videoListens = YoutubeHistoryController.inst.topTracksMapListens[currentId] ?? [];
+                                                      return Row(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          if (videoListens.isNotEmpty)
+                                                            NamidaInkWell(
+                                                              borderRadius: 6.0,
+                                                              bgColor: CurrentColor.inst.color.withOpacity(0.7),
+                                                              onTap: () {
+                                                                showVideoListensDialog(currentId);
+                                                              },
+                                                              padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                                                              child: Text(
+                                                                videoListens.length.formatDecimal(),
+                                                                style: context.textTheme.displaySmall?.copyWith(
+                                                                  color: Colors.white.withOpacity(0.6),
+                                                                ),
                                                               ),
                                                             ),
+                                                          const SizedBox(width: 8.0),
+                                                          const Icon(
+                                                            Broken.arrow_down_2,
+                                                            size: 20.0,
                                                           ),
-                                                        const SizedBox(width: 8.0),
-                                                        const Icon(
-                                                          Broken.arrow_down_2,
-                                                          size: 20.0,
+                                                        ],
+                                                      );
+                                                    },
+                                                  ),
+                                                  title: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      NamidaDummyContainer(
+                                                        width: context.width * 0.8,
+                                                        height: 24.0,
+                                                        borderRadius: 6.0,
+                                                        shimmerEnabled: videoInfo == null,
+                                                        child: Text(
+                                                          videoInfo?.name ?? '',
+                                                          maxLines: isTitleExpanded.value ? 6 : 2,
+                                                          overflow: TextOverflow.ellipsis,
+                                                          style: context.textTheme.displayLarge,
                                                         ),
-                                                      ],
-                                                    );
-                                                  },
-                                                ),
-                                                title: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    NamidaBasicShimmer(
-                                                      width: context.width * 0.8,
-                                                      height: 24.0,
-                                                      borderRadius: 6.0,
-                                                      shimmerEnabled: videoInfo == null,
-                                                      child: Text(
-                                                        videoInfo?.name ?? '',
-                                                        maxLines: isTitleExpanded.value ? 6 : 2,
-                                                        overflow: TextOverflow.ellipsis,
-                                                        style: context.textTheme.displayLarge,
                                                       ),
-                                                    ),
-                                                    const SizedBox(height: 4.0),
-                                                    NamidaBasicShimmer(
-                                                      width: context.width * 0.7,
-                                                      height: 12.0,
-                                                      shimmerEnabled: videoInfo == null,
-                                                      child: () {
-                                                        final expandedDate = isTitleExpanded.value ? uploadDate : null;
-                                                        final collapsedDate = isTitleExpanded.value ? null : uploadDateAgo;
-                                                        return Text(
-                                                          [
-                                                            if (videoViewCount != null)
-                                                              "${videoViewCount.formatDecimalShort(isTitleExpanded.value)} ${videoViewCount == 0 ? lang.VIEW : lang.VIEWS}",
-                                                            if (expandedDate != null) expandedDate,
-                                                            if (collapsedDate != null) collapsedDate,
-                                                          ].join(' • '),
-                                                          style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
-                                                        );
-                                                      }(),
-                                                    ),
+                                                      const SizedBox(height: 4.0),
+                                                      NamidaDummyContainer(
+                                                        width: context.width * 0.7,
+                                                        height: 12.0,
+                                                        shimmerEnabled: videoInfo == null,
+                                                        child: () {
+                                                          final expandedDate = isTitleExpanded.value ? uploadDate : null;
+                                                          final collapsedDate = isTitleExpanded.value ? null : uploadDateAgo;
+                                                          return Text(
+                                                            [
+                                                              if (videoViewCount != null)
+                                                                "${videoViewCount.formatDecimalShort(isTitleExpanded.value)} ${videoViewCount == 0 ? lang.VIEW : lang.VIEWS}",
+                                                              if (expandedDate != null) expandedDate,
+                                                              if (collapsedDate != null) collapsedDate,
+                                                            ].join(' • '),
+                                                            style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                                                          );
+                                                        }(),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  children: [
+                                                    if (descriptionWidget != null) descriptionWidget,
                                                   ],
                                                 ),
-                                                children: [
-                                                  if (videoInfo != null)
-                                                    Html(
-                                                      data: videoInfo.description ?? '',
-                                                      style: {
-                                                        '*': Style.fromTextStyle(
-                                                          context.textTheme.displayMedium!.copyWith(
-                                                            fontSize: 14.0.multipliedFontScale,
-                                                          ),
-                                                        ),
-                                                        'a': Style.fromTextStyle(
-                                                          context.textTheme.displayMedium!.copyWith(
-                                                            color: context.theme.colorScheme.primary.withAlpha(210),
-                                                            fontSize: 13.5.multipliedFontScale,
-                                                          ),
-                                                        )
-                                                      },
-                                                      onLinkTap: (url, attributes, element) async {
-                                                        if (url != null) {
-                                                          try {
-                                                            await launchUrlString(url, mode: LaunchMode.externalNonBrowserApplication);
-                                                          } catch (e) {
-                                                            await launchUrlString(url);
-                                                          }
-                                                        }
-                                                      },
-                                                    ),
-                                                ],
                                               ),
                                             ),
                                             // --END-- title & subtitle
 
                                             // --START-- buttons
                                             SliverToBoxAdapter(
-                                              child: SizedBox(
-                                                height: 60.0,
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                  // shrinkWrap: true,
-                                                  // scrollDirection: Axis.horizontal,
-                                                  children: [
-                                                    const SizedBox(width: 18.0),
-                                                    SmallYTActionButton(
-                                                      title: videoInfo == null
-                                                          ? null
-                                                          : (videoLikeCount ?? 0) < 1
-                                                              ? lang.LIKE
-                                                              : videoLikeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
-                                                      icon: Broken.like_1,
-                                                      onPressed: () {},
-                                                    ),
-                                                    const SizedBox(width: 18.0),
-                                                    SmallYTActionButton(
-                                                      title: (videoDislikeCount ?? 0) < 1 ? lang.DISLIKE : videoDislikeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
-                                                      icon: Broken.dislike,
-                                                      onPressed: () {},
-                                                    ),
-                                                    const SizedBox(width: 18.0),
-                                                    SmallYTActionButton(
-                                                      title: lang.SHARE,
-                                                      icon: Broken.share,
-                                                      onPressed: () {
-                                                        final url = videoInfo?.url;
-                                                        if (url != null) Share.share(url);
-                                                      },
-                                                    ),
-                                                    const SizedBox(width: 18.0),
-                                                    SmallYTActionButton(
-                                                      title: lang.REFRESH,
-                                                      icon: Broken.refresh,
-                                                      onPressed: () async => await YoutubeController.inst.updateVideoDetails(currentId, forceRequest: true),
-                                                    ),
-                                                    const SizedBox(width: 18.0),
-                                                    Obx(
-                                                      () {
-                                                        final audioProgress = YoutubeController.inst.downloadsAudioProgressMap[currentId]?.values.firstOrNull;
-                                                        final audioPerc = audioProgress == null
+                                              child: ShimmerWrapper(
+                                                shimmerDurationMS: 550,
+                                                shimmerDelayMS: 250,
+                                                shimmerEnabled: videoInfo == null,
+                                                child: SizedBox(
+                                                  height: 60.0,
+                                                  child: Row(
+                                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                    // shrinkWrap: true,
+                                                    // scrollDirection: Axis.horizontal,
+                                                    children: [
+                                                      const SizedBox(width: 18.0),
+                                                      SmallYTActionButton(
+                                                        title: videoInfo == null
                                                             ? null
-                                                            : "${lang.AUDIO} ${(audioProgress.progress / audioProgress.totalProgress * 100).toStringAsFixed(0)}%";
-                                                        final videoProgress = YoutubeController.inst.downloadsVideoProgressMap[currentId]?.values.firstOrNull;
-                                                        final videoPerc = videoProgress == null
-                                                            ? null
-                                                            : "${lang.VIDEO} ${(videoProgress.progress / videoProgress.totalProgress * 100).toStringAsFixed(0)}%";
-
-                                                        final isDownloading = YoutubeController.inst.isDownloading[currentId] == true;
-                                                        return SmallYTActionButton(
-                                                          iconWidget: isDownloading
-                                                              ? DotsTriangle(
-                                                                  color: context.defaultIconColor(),
-                                                                  size: 24.0,
-                                                                )
-                                                              : null,
-                                                          titleWidget: videoPerc == null && audioPerc == null && isDownloading ? const LoadingIndicator() : null,
-                                                          title: videoPerc ?? audioPerc ?? lang.DOWNLOAD,
-                                                          icon: false ? Broken.tick_circle : Broken.import, // TODO: check if video already downloaded
-                                                          onPressed: () async => await showDownloadVideoBottomSheet(videoId: currentId),
-                                                        );
-                                                      },
-                                                    ),
-                                                    const SizedBox(width: 18.0),
-                                                    SmallYTActionButton(
-                                                      title: lang.SAVE,
-                                                      icon: Broken.music_playlist,
-                                                      onPressed: () => showAddToPlaylistSheet(
-                                                        ids: [currentId],
-                                                        idsNamesLookup: {
-                                                          currentId: videoInfo?.name ?? '',
+                                                            : (videoLikeCount ?? 0) < 1
+                                                                ? lang.LIKE
+                                                                : videoLikeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
+                                                        icon: Broken.like_1,
+                                                        onPressed: () {},
+                                                      ),
+                                                      const SizedBox(width: 18.0),
+                                                      SmallYTActionButton(
+                                                        title: (videoDislikeCount ?? 0) < 1 ? lang.DISLIKE : videoDislikeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
+                                                        icon: Broken.dislike,
+                                                        onPressed: () {},
+                                                      ),
+                                                      const SizedBox(width: 18.0),
+                                                      SmallYTActionButton(
+                                                        title: lang.SHARE,
+                                                        icon: Broken.share,
+                                                        onPressed: () {
+                                                          final url = videoInfo?.url;
+                                                          if (url != null) Share.share(url);
                                                         },
                                                       ),
-                                                    ),
-                                                    const SizedBox(width: 18.0),
-                                                  ],
+                                                      const SizedBox(width: 18.0),
+                                                      SmallYTActionButton(
+                                                        title: lang.REFRESH,
+                                                        icon: Broken.refresh,
+                                                        onPressed: () async => await YoutubeController.inst.updateVideoDetails(currentId, forceRequest: true),
+                                                      ),
+                                                      const SizedBox(width: 18.0),
+                                                      Obx(
+                                                        () {
+                                                          final audioProgress = YoutubeController.inst.downloadsAudioProgressMap[currentId]?.values.firstOrNull;
+                                                          final audioPerc = audioProgress == null
+                                                              ? null
+                                                              : "${lang.AUDIO} ${(audioProgress.progress / audioProgress.totalProgress * 100).toStringAsFixed(0)}%";
+                                                          final videoProgress = YoutubeController.inst.downloadsVideoProgressMap[currentId]?.values.firstOrNull;
+                                                          final videoPerc = videoProgress == null
+                                                              ? null
+                                                              : "${lang.VIDEO} ${(videoProgress.progress / videoProgress.totalProgress * 100).toStringAsFixed(0)}%";
+
+                                                          final isDownloading = YoutubeController.inst.isDownloading[currentId] == true;
+                                                          return SmallYTActionButton(
+                                                            iconWidget: isDownloading
+                                                                ? DotsTriangle(
+                                                                    color: context.defaultIconColor(),
+                                                                    size: 24.0,
+                                                                  )
+                                                                : null,
+                                                            titleWidget: videoPerc == null && audioPerc == null && isDownloading ? const LoadingIndicator() : null,
+                                                            title: videoPerc ?? audioPerc ?? lang.DOWNLOAD,
+                                                            icon: false ? Broken.tick_circle : Broken.import, // TODO: check if video already downloaded
+                                                            onPressed: () async => await showDownloadVideoBottomSheet(videoId: currentId),
+                                                          );
+                                                        },
+                                                      ),
+                                                      const SizedBox(width: 18.0),
+                                                      SmallYTActionButton(
+                                                        title: lang.SAVE,
+                                                        icon: Broken.music_playlist,
+                                                        onPressed: () => showAddToPlaylistSheet(
+                                                          ids: [currentId],
+                                                          idsNamesLookup: {
+                                                            currentId: videoInfo?.name ?? '',
+                                                          },
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 18.0),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
                                             ),
@@ -523,118 +536,163 @@ class YoutubeMiniPlayer extends StatelessWidget {
 
                                             // --START- channel
                                             SliverToBoxAdapter(
-                                              child: Row(
-                                                children: [
-                                                  const SizedBox(width: 18.0),
-                                                  NamidaBasicShimmer(
-                                                    width: 48.0,
-                                                    height: 48.0,
-                                                    borderRadius: 100.0,
-                                                    shimmerEnabled: channelThumbnail == null,
-                                                    child: YoutubeThumbnail(
-                                                      key: Key(channelThumbnail ?? ''),
-                                                      isImportantInCache: true,
-                                                      channelUrl: channelThumbnail ?? '',
+                                              child: ShimmerWrapper(
+                                                shimmerDurationMS: 550,
+                                                shimmerDelayMS: 250,
+                                                shimmerEnabled: channelName == null || channelThumbnail == null || channelSubs == null,
+                                                child: Row(
+                                                  children: [
+                                                    const SizedBox(width: 18.0),
+                                                    NamidaDummyContainer(
                                                       width: 48.0,
                                                       height: 48.0,
-                                                      isCircle: true,
+                                                      borderRadius: 100.0,
+                                                      shimmerEnabled: channelThumbnail == null,
+                                                      child: YoutubeThumbnail(
+                                                        key: Key(channelThumbnail ?? ''),
+                                                        isImportantInCache: true,
+                                                        channelUrl: channelThumbnail ?? '',
+                                                        width: 48.0,
+                                                        height: 48.0,
+                                                        isCircle: true,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  const SizedBox(width: 12.0),
-                                                  Expanded(
-                                                    child: Column(
-                                                      mainAxisAlignment: MainAxisAlignment.center,
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        FittedBox(
-                                                          child: Row(
-                                                            children: [
-                                                              NamidaBasicShimmer(
-                                                                width: 114.0,
-                                                                height: 12.0,
-                                                                borderRadius: 4.0,
-                                                                shimmerEnabled: channelName == null,
-                                                                child: Text(
-                                                                  channelName ?? '',
-                                                                  style: context.textTheme.displayMedium?.copyWith(
-                                                                    fontSize: 12.5.multipliedFontScale,
+                                                    const SizedBox(width: 12.0),
+                                                    Expanded(
+                                                      child: Column(
+                                                        mainAxisAlignment: MainAxisAlignment.center,
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          FittedBox(
+                                                            child: Row(
+                                                              children: [
+                                                                NamidaDummyContainer(
+                                                                  width: 114.0,
+                                                                  height: 12.0,
+                                                                  borderRadius: 4.0,
+                                                                  shimmerEnabled: channelName == null,
+                                                                  child: Text(
+                                                                    channelName ?? '',
+                                                                    style: context.textTheme.displayMedium?.copyWith(
+                                                                      fontSize: 12.5.multipliedFontScale,
+                                                                    ),
+                                                                    maxLines: 1,
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                    textAlign: TextAlign.start,
                                                                   ),
-                                                                  maxLines: 1,
-                                                                  overflow: TextOverflow.ellipsis,
-                                                                  textAlign: TextAlign.start,
                                                                 ),
-                                                              ),
-                                                              if (channelIsVerified) ...[
-                                                                const SizedBox(width: 4.0),
-                                                                const Icon(
-                                                                  Broken.shield_tick,
-                                                                  size: 14.0,
-                                                                ),
-                                                              ]
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        const SizedBox(height: 4.0),
-                                                        FittedBox(
-                                                          child: NamidaBasicShimmer(
-                                                            width: 92.0,
-                                                            height: 10.0,
-                                                            borderRadius: 4.0,
-                                                            shimmerEnabled: channelSubs == null,
-                                                            child: Text(
-                                                              [
-                                                                channelSubs?.formatDecimalShort(isTitleExpanded.value) ?? '?',
-                                                                (channelSubs ?? 0) < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS
-                                                              ].join(' '),
-                                                              style: context.textTheme.displaySmall,
-                                                              maxLines: 1,
-                                                              overflow: TextOverflow.ellipsis,
+                                                                if (channelIsVerified) ...[
+                                                                  const SizedBox(width: 4.0),
+                                                                  const Icon(
+                                                                    Broken.shield_tick,
+                                                                    size: 14.0,
+                                                                  ),
+                                                                ]
+                                                              ],
                                                             ),
                                                           ),
-                                                        ),
-                                                      ],
+                                                          const SizedBox(height: 4.0),
+                                                          FittedBox(
+                                                            child: NamidaDummyContainer(
+                                                              width: 92.0,
+                                                              height: 10.0,
+                                                              borderRadius: 4.0,
+                                                              shimmerEnabled: channelSubs == null,
+                                                              child: Text(
+                                                                [
+                                                                  channelSubs?.formatDecimalShort(isTitleExpanded.value) ?? '?',
+                                                                  (channelSubs ?? 0) < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS
+                                                                ].join(' '),
+                                                                style: context.textTheme.displaySmall,
+                                                                maxLines: 1,
+                                                                overflow: TextOverflow.ellipsis,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
                                                     ),
-                                                  ),
-                                                  const SizedBox(width: 12.0),
-                                                  TextButton(
-                                                    child: Row(
-                                                      children: [
-                                                        const Icon(Broken.video, size: 20.0),
-                                                        const SizedBox(width: 8.0),
-                                                        Text(lang.SUBSCRIBE),
-                                                      ],
+                                                    const SizedBox(width: 12.0),
+                                                    TextButton(
+                                                      child: Row(
+                                                        children: [
+                                                          const Icon(Broken.video, size: 20.0),
+                                                          const SizedBox(width: 8.0),
+                                                          Text(lang.SUBSCRIBE),
+                                                        ],
+                                                      ),
+                                                      onPressed: () {},
                                                     ),
-                                                    onPressed: () {},
-                                                  ),
-                                                  const SizedBox(width: 24.0),
-                                                ],
+                                                    const SizedBox(width: 24.0),
+                                                  ],
+                                                ),
                                               ),
                                             ),
                                             const SliverPadding(padding: EdgeInsets.only(top: 18.0)),
                                             // --END-- channel
 
                                             Obx(
-                                              () => SliverFixedExtentList.builder(
-                                                itemExtent: relatedThumbnailItemExtent,
-                                                itemCount: YoutubeController.inst.currentRelatedVideos.length,
-                                                itemBuilder: (context, index) {
-                                                  final item = YoutubeController.inst.currentRelatedVideos[index];
-                                                  if (item is StreamInfoItem || item == null) {
-                                                    return YoutubeVideoCard(
-                                                      thumbnailHeight: relatedThumbnailHeight,
-                                                      thumbnailWidth: relatedThumbnailWidth,
-                                                      isImageImportantInCache: false,
-                                                      video: item as StreamInfoItem?,
-                                                      playlistID: null,
-                                                    );
-                                                  } else if (item is YoutubePlaylist) {
-                                                    return YoutubePlaylistCard(playlist: item);
-                                                  } else if (item is YoutubeChannel) {
-                                                    return YoutubeChannelCard(channel: item);
-                                                  }
-                                                  return const SizedBox();
-                                                },
-                                              ),
+                                              () {
+                                                final feed = YoutubeController.inst.currentRelatedVideos;
+                                                if (feed.isNotEmpty && feed.first == null) {
+                                                  return SliverToBoxAdapter(
+                                                    child: ShimmerWrapper(
+                                                      transparent: false,
+                                                      shimmerEnabled: true,
+                                                      child: ListView.builder(
+                                                        physics: const NeverScrollableScrollPhysics(),
+                                                        itemCount: feed.length,
+                                                        shrinkWrap: true,
+                                                        itemBuilder: (context, index) {
+                                                          const item = null;
+                                                          return YoutubeVideoCard(
+                                                            key: Key("${item == null}_${context.hashCode}"),
+                                                            thumbnailHeight: relatedThumbnailHeight,
+                                                            thumbnailWidth: relatedThumbnailWidth,
+                                                            isImageImportantInCache: false,
+                                                            video: item,
+                                                            playlistID: null,
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
+                                                return SliverFixedExtentList.builder(
+                                                  itemExtent: relatedThumbnailItemExtent,
+                                                  itemCount: feed.length,
+                                                  itemBuilder: (context, index) {
+                                                    final item = feed[index];
+                                                    if (item is StreamInfoItem || item == null) {
+                                                      return ShimmerWrapper(
+                                                        transparent: false,
+                                                        shimmerDurationMS: 550,
+                                                        shimmerDelayMS: 250,
+                                                        shimmerEnabled: item == null,
+                                                        child: YoutubeVideoCard(
+                                                          key: Key("${item == null}_${context.hashCode}_${(item as StreamInfoItem?)?.id}"),
+                                                          thumbnailHeight: relatedThumbnailHeight,
+                                                          thumbnailWidth: relatedThumbnailWidth,
+                                                          isImageImportantInCache: false,
+                                                          video: item,
+                                                          playlistID: null,
+                                                        ),
+                                                      );
+                                                    } else if (item is YoutubePlaylist) {
+                                                      return YoutubePlaylistCard(
+                                                        key: Key("${context.hashCode}_${(item).id}"),
+                                                        playlist: item,
+                                                      );
+                                                    } else if (item is YoutubeChannel) {
+                                                      return YoutubeChannelCard(
+                                                        key: Key("${context.hashCode}_${(item as YoutubeChannelCard).channel?.id}"),
+                                                        channel: item,
+                                                      );
+                                                    }
+                                                    return const SizedBox();
+                                                  },
+                                                );
+                                              },
                                             ),
                                             const SliverPadding(padding: EdgeInsets.only(top: 12.0)),
 
@@ -684,12 +742,41 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                             Obx(
                                               () {
                                                 final comments = YoutubeController.inst.currentComments;
+                                                if (comments.isNotEmpty && comments.first == null) {
+                                                  return SliverToBoxAdapter(
+                                                    child: ShimmerWrapper(
+                                                      transparent: false,
+                                                      shimmerEnabled: true,
+                                                      child: ListView.builder(
+                                                        physics: const NeverScrollableScrollPhysics(),
+                                                        itemCount: comments.length,
+                                                        shrinkWrap: true,
+                                                        itemBuilder: (context, index) {
+                                                          const comment = null;
+                                                          return YTCommentCard(
+                                                            key: Key("${comment == null}_${context.hashCode}"),
+                                                            margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                                                            comment: comment,
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
                                                 return SliverList.builder(
                                                   itemCount: comments.length,
                                                   itemBuilder: (context, i) {
-                                                    return YTCommentCard(
-                                                      margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                                                      comment: comments[i],
+                                                    final comment = comments[i];
+                                                    return ShimmerWrapper(
+                                                      transparent: false,
+                                                      shimmerDurationMS: 550,
+                                                      shimmerDelayMS: 250,
+                                                      shimmerEnabled: comment == null,
+                                                      child: YTCommentCard(
+                                                        key: Key("${comment == null}_${context.hashCode}_${comment?.commentId}"),
+                                                        margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                                                        comment: comment,
+                                                      ),
                                                     );
                                                   },
                                                 );

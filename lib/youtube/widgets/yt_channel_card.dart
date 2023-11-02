@@ -36,7 +36,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
       child: Row(
         children: [
           SizedBox(width: thumbnailSize * 0.25),
-          NamidaBasicShimmer(
+          NamidaDummyContainer(
             width: thumbnailSize,
             height: thumbnailSize,
             shimmerEnabled: shimmerEnabled,
@@ -61,7 +61,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 12.0),
-                NamidaBasicShimmer(
+                NamidaDummyContainer(
                   width: context.width,
                   height: 10.0,
                   borderRadius: 4.0,
@@ -74,7 +74,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
                   ),
                 ),
                 const SizedBox(height: 2.0),
-                NamidaBasicShimmer(
+                NamidaDummyContainer(
                   width: context.width,
                   height: 8.0,
                   borderRadius: 4.0,
@@ -88,7 +88,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
                 ),
                 if (channel?.streamCount != null && channel?.streamCount != -1) ...[
                   const SizedBox(height: 2.0),
-                  NamidaBasicShimmer(
+                  NamidaDummyContainer(
                     width: context.width,
                     height: 8.0,
                     borderRadius: 4.0,

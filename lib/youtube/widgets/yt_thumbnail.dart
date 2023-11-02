@@ -66,6 +66,7 @@ class YoutubeThumbnail extends StatefulWidget {
 
 class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
   String? imagePath;
+  NamidaColor? imageColors;
   Color? smallBoxDynamicColor;
 
   bool get canFetchYTImage => widget.videoId != null || widget.channelUrl != null;
@@ -85,6 +86,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
 
   Future<void> _getThumbnail() async {
     if (_dontTouchMeImFetchingThumbnail?.isActive == true) return;
+    if (imagePath != null && imageColors != null) return;
     _dontTouchMeImFetchingThumbnail = null;
     _dontTouchMeImFetchingThumbnail = Timer(const Duration(seconds: 8), () {});
     imagePath = widget.localImagePath;
@@ -110,18 +112,19 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
       widget.onImageReady?.call(res);
 
       // -- only put the image if bytes are NOT valid, or if specified by parent
-      if (!widget.preferLowerRes || (imageBytes?.isEmpty ?? true)) {
+      if (imagePath == null && (!widget.preferLowerRes || (imageBytes?.isEmpty ?? true))) {
         imagePath = res?.path;
         if (mounted) setState(() {});
       }
     }
 
-    if (widget.extractColor && imagePath != null) {
+    if (imageColors == null && widget.extractColor && imagePath != null) {
       final c = await CurrentColor.inst.extractPaletteFromImage(
         imagePath!,
         useIsolate: true,
         paletteSaveDirectory: Directory(AppDirs.YT_PALETTES),
       );
+      imageColors = c ?? NamidaColor(used: null, mix: playerStaticColor, palette: [playerStaticColor]);
       smallBoxDynamicColor = c?.color;
       widget.onColorReady?.call(c);
       if (mounted) setState(() {});
@@ -153,7 +156,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
         icon: widget.channelUrl != null ? Broken.user : Broken.video,
         iconSize: widget.channelUrl != null ? null : widget.width * 0.3,
         forceSquared: true,
-        cacheHeight: widget.height?.round() ?? widget.width.round(),
+        cacheHeight: (widget.height?.round() ?? widget.width.round()) ~/ 1.4,
         onTopWidgets: [
           ...widget.onTopWidgets,
           if (widget.smallBoxText != null)

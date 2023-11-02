@@ -49,7 +49,7 @@ class YTCommentCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            NamidaBasicShimmer(
+            NamidaDummyContainer(
               width: 42.0,
               height: 42.0,
               borderRadius: 999,
@@ -85,7 +85,7 @@ class YTCommentCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2.0),
                   ],
-                  NamidaBasicShimmer(
+                  NamidaDummyContainer(
                     width: context.width * 0.5,
                     height: 12.0,
                     borderRadius: 6.0,
@@ -120,7 +120,7 @@ class YTCommentCard extends StatelessWidget {
                                 3,
                                 const Padding(
                                   padding: EdgeInsets.only(top: 2.0),
-                                  child: NamidaBasicShimmer(
+                                  child: NamidaDummyContainer(
                                     width: null,
                                     height: 12.0,
                                     borderRadius: 4.0,
@@ -150,7 +150,7 @@ class YTCommentCard extends StatelessWidget {
                     children: [
                       const Icon(Broken.like_1, size: 16.0),
                       const SizedBox(width: 4.0),
-                      NamidaBasicShimmer(
+                      NamidaDummyContainer(
                         width: 18.0,
                         height: 8.0,
                         borderRadius: 4.0,

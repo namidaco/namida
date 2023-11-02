@@ -316,6 +316,9 @@ class NamidaNavigator {
       final canIgoBackPls = Folders.inst.onBackButton();
       if (!canIgoBackPls) return;
     }
+    if (_currentMenusNumber > 0) {
+      return;
+    }
 
     // pop only if not in root, otherwise show _doubleTapToExit().
     if (currentWidgetStack.length > 1) {

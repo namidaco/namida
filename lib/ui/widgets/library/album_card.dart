@@ -24,6 +24,7 @@ class AlbumCard extends StatelessWidget {
   final String? topRightText;
   final String additionalHeroTag;
   final HomePageItems? homepageItem;
+  final bool dummyCard;
 
   const AlbumCard({
     super.key,
@@ -36,6 +37,7 @@ class AlbumCard extends StatelessWidget {
     this.topRightText,
     this.additionalHeroTag = '',
     this.homepageItem,
+    this.dummyCard = false,
   });
 
   @override
@@ -69,8 +71,8 @@ class AlbumCard extends StatelessWidget {
           ],
         ),
         child: NamidaInkWell(
-          onTap: () => NamidaOnTaps.inst.onAlbumTap(identifier),
-          onLongPress: () => NamidaDialogs.inst.showAlbumDialog(identifier),
+          onTap: () => dummyCard ? null : NamidaOnTaps.inst.onAlbumTap(identifier),
+          onLongPress: () => dummyCard ? null : NamidaDialogs.inst.showAlbumDialog(identifier),
           child: Column(
             children: [
               NamidaHero(
@@ -84,97 +86,100 @@ class AlbumCard extends StatelessWidget {
                   displayIcon: displayIcon,
                   forceSquared: !staggered,
                   staggered: staggered,
-                  onTopWidgets: [
-                    if (shouldDisplayTopRightDate)
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: NamidaBlurryContainer(
-                          child: Text(
-                            topRightText ?? finalYear,
-                            style: context.textTheme.displaySmall?.copyWith(fontSize: fontSizeBigger ?? fontSize, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                    Positioned(
-                      bottom: 2.0 + sizeAlternative,
-                      right: 2.0 + sizeAlternative,
-                      child: NamidaInkWell(
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              offset: const Offset(0.0, 2.0),
-                              color: context.theme.cardColor,
-                            ),
-                          ],
-                        ),
-                        borderRadius: 10.0,
-                        bgColor: context.theme.cardColor,
-                        onTap: () => Player.inst.playOrPause(0, album, QueueSource.album, homePageItem: homepageItem),
-                        padding: EdgeInsets.all(2.5 + sizeAlternative),
-                        child: Icon(Broken.play, size: 12.5 + 2.0 * sizeAlternative),
-                      ),
-                    )
-                  ],
-                ),
-              ),
-              Expanded(
-                flex: staggered ? 0 : 1,
-                child: Stack(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: fontSize * 0.7),
-                      width: double.infinity,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (staggered && !compact) SizedBox(height: fontSize * 0.7),
-                          NamidaHero(
-                            tag: 'line1_$hero',
-                            child: Text(
-                              album.album.overflow,
-                              style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize * 1.16),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (!settings.albumCardTopRightDate.value || album.albumArtist != '') ...[
-                            // if (!compact) const SizedBox(height: 2.0),
-                            if (shouldDisplayNormalDate || shouldDisplayAlbumArtist)
-                              NamidaHero(
-                                tag: 'line2_$hero',
+                  onTopWidgets: dummyCard
+                      ? []
+                      : [
+                          if (shouldDisplayTopRightDate)
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: NamidaBlurryContainer(
                                 child: Text(
-                                  [
-                                    if (shouldDisplayNormalDate) finalYear,
-                                    if (shouldDisplayAlbumArtist) album.albumArtist.overflow,
-                                  ].join(' - '),
-                                  style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize * 1.08),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  topRightText ?? finalYear,
+                                  style: context.textTheme.displaySmall?.copyWith(fontSize: fontSizeBigger ?? fontSize, fontWeight: FontWeight.bold),
                                 ),
                               ),
-                          ],
-                          // if (staggered && !compact) SizedBox(height: fontSize * 0.1),
-                          NamidaHero(
-                            tag: 'line3_$hero',
-                            child: Text(
-                              [
-                                album.displayTrackKeyword,
-                                album.totalDurationFormatted,
-                              ].join(' • '),
-                              style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          if (staggered && !compact) SizedBox(height: fontSize * 0.7),
+                          Positioned(
+                            bottom: 2.0 + sizeAlternative,
+                            right: 2.0 + sizeAlternative,
+                            child: NamidaInkWell(
+                              decoration: BoxDecoration(
+                                boxShadow: [
+                                  BoxShadow(
+                                    offset: const Offset(0.0, 2.0),
+                                    color: context.theme.cardColor,
+                                  ),
+                                ],
+                              ),
+                              borderRadius: 10.0,
+                              bgColor: context.theme.cardColor,
+                              onTap: () => Player.inst.playOrPause(0, album, QueueSource.album, homePageItem: homepageItem),
+                              padding: EdgeInsets.all(2.5 + sizeAlternative),
+                              child: Icon(Broken.play, size: 12.5 + 2.0 * sizeAlternative),
+                            ),
+                          )
                         ],
-                      ),
-                    ),
-                  ],
                 ),
               ),
+              if (!dummyCard)
+                Expanded(
+                  flex: staggered ? 0 : 1,
+                  child: Stack(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: fontSize * 0.7),
+                        width: double.infinity,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (staggered && !compact) SizedBox(height: fontSize * 0.7),
+                            NamidaHero(
+                              tag: 'line1_$hero',
+                              child: Text(
+                                album.album.overflow,
+                                style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize * 1.16),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (!settings.albumCardTopRightDate.value || album.albumArtist != '') ...[
+                              // if (!compact) const SizedBox(height: 2.0),
+                              if (shouldDisplayNormalDate || shouldDisplayAlbumArtist)
+                                NamidaHero(
+                                  tag: 'line2_$hero',
+                                  child: Text(
+                                    [
+                                      if (shouldDisplayNormalDate) finalYear,
+                                      if (shouldDisplayAlbumArtist) album.albumArtist.overflow,
+                                    ].join(' - '),
+                                    style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize * 1.08),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                            ],
+                            // if (staggered && !compact) SizedBox(height: fontSize * 0.1),
+                            NamidaHero(
+                              tag: 'line3_$hero',
+                              child: Text(
+                                [
+                                  album.displayTrackKeyword,
+                                  album.totalDurationFormatted,
+                                ].join(' • '),
+                                style: context.textTheme.displaySmall?.copyWith(fontSize: fontSize),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (staggered && !compact) SizedBox(height: fontSize * 0.7),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
         ),

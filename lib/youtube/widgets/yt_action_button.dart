@@ -32,17 +32,20 @@ class SmallYTActionButton extends StatelessWidget {
               padding: const EdgeInsets.all(6.0),
               child: Icon(icon),
             ),
-        NamidaBasicShimmer(
+        NamidaDummyContainer(
           width: 24.0,
           height: 8.0,
           borderRadius: 4.0,
-          fadeDurationMS: titleWidget == null ? 600 : 100,
           shimmerEnabled: title == null,
-          child: titleWidget ??
-              Text(
-                title ?? '',
-                style: context.textTheme.displaySmall,
-              ),
+          child: ShimmerWrapper(
+            shimmerEnabled: title == null,
+            fadeDurationMS: titleWidget == null ? 600 : 100,
+            child: titleWidget ??
+                Text(
+                  title ?? '',
+                  style: context.textTheme.displaySmall,
+                ),
+          ),
         ),
       ],
     );

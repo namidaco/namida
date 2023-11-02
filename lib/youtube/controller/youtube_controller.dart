@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
@@ -81,6 +82,7 @@ class YoutubeController {
   final currentYoutubeMetadataChannel = Rxn<YoutubeChannel>();
   final currentRelatedVideos = <YoutubeFeed?>[].obs;
   final currentComments = <YoutubeComment?>[].obs;
+  final commentToParsedHtml = <String, String?>{};
   final currentTotalCommentsCount = Rxn<int>();
   final isLoadingComments = false.obs;
   final currentYTQualities = <VideoOnlyStream>[].obs;
@@ -238,16 +240,26 @@ class YoutubeController {
     // -- Fetching Comments End.
     if (_canSafelyModifyMetadata(id)) {
       currentComments.clear();
-      currentComments.addAll(fetchedComments);
+      _fillCommentsLists(fetchedComments);
       currentTotalCommentsCount.value = fetchedComments.firstOrNull?.totalCommentsCount;
     }
+  }
+
+  void _fillCommentsLists(List<YoutubeComment?> comments) {
+    for (final c in comments) {
+      final cid = c?.commentId;
+      final ctxt = c?.commentText;
+      if (cid != null && ctxt != null) commentToParsedHtml[cid] = HtmlParser.parseHTML(ctxt).text;
+    }
+
+    currentComments.addAll(comments);
   }
 
   Future<void> _fetchNextComments(String id) async {
     if (_isCurrentCommentsFromCache) return;
     final comments = await NewPipeExtractorDart.comments.getNextComments();
     if (_canSafelyModifyMetadata(id)) {
-      currentComments.addAll(comments);
+      _fillCommentsLists(comments);
 
       // -- saving to cache
       final cachedFile = File("${AppDirs.YT_METADATA_COMMENTS}$id.txt");
