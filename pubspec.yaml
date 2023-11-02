@@ -76,7 +76,7 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio/
-      ref: 135a7ef763747092781776835a169ef5ab63b7e5
+      ref: ca68e2598bc61cb61f4ef8ad911894d90495e2a3
   audio_service:
     git:
       url: https://github.com/MSOB7YY/audio_service
@@ -90,7 +90,7 @@ dependencies:
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
-      ref: 14a0c716527c6db3b4956672d895030200bb3b1e
+      ref: e3f31702247a16d777c832ec4196be75e4ff098f
 
   # ---- Video Indexing & Playback ----
   video_player:

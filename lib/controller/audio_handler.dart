@@ -1089,6 +1089,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
+  bool get defaultSkipSilenceEnabled => settings.playerSkipSilenceEnabled.value;
+
+  @override
   bool get enableCrossFade => settings.enableCrossFade.value;
 
   @override
