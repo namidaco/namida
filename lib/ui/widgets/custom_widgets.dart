@@ -187,7 +187,7 @@ class CustomSwitchListTile extends StatelessWidget {
     this.rotateIcon,
     this.enabled = true,
     this.largeTitle = false,
-    this.maxSubtitleLines = 4,
+    this.maxSubtitleLines = 8,
     this.visualDensity,
   }) : super(key: key);
 
@@ -252,7 +252,7 @@ class CustomListTile extends StatelessWidget {
     this.trailingText,
     this.enabled = true,
     this.largeTitle = false,
-    this.maxSubtitleLines = 4,
+    this.maxSubtitleLines = 8,
     this.trailingRaw,
     this.visualDensity,
     this.titleStyle,

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -74,10 +75,32 @@ class ArtworkWidget extends StatefulWidget {
 
 class _ArtworkWidgetState extends State<ArtworkWidget> {
   late DisposableBuildContext<_ArtworkWidgetState> _disposableContext;
+
+  String? _imagePath;
+
   @override
   void initState() {
     super.initState();
+    _extractArtwork();
     _disposableContext = DisposableBuildContext<_ArtworkWidgetState>(this);
+  }
+
+  void _extractArtwork() async {
+    if (widget.path != null) {
+      if (File(widget.path!).existsSync()) {
+        _imagePath = widget.path;
+      } else {
+        if (!widget.compressed || Indexer.inst.artworksMap[widget.path] == null) {
+          final res = await Indexer.inst.getArtwork(
+            imagePath: widget.path!,
+            compressed: widget.compressed,
+            checkFileFirst: false,
+            size: widget.useTrackTileCacheHeight ? 200 : null,
+          );
+          if ((res.$1 != null || res.$2 != null) && widget.compressed) setState(() {});
+        }
+      }
+    }
   }
 
   @override
@@ -133,10 +156,10 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
       );
     }
 
-    final imagePath = widget.path;
-    final bytes = widget.bytes;
+    final bytes = widget.bytes ?? Indexer.inst.artworksMap[widget.path];
     final isValidBytes = bytes != null && bytes.isNotEmpty;
-    return (imagePath == null && !isValidBytes) || widget.forceDummyArtwork
+    print('HHHHHHHHHHHHH ${bytes?.length} || $_imagePath');
+    return (_imagePath == null && !isValidBytes) || widget.forceDummyArtwork
         ? getStockWidget(
             stackWithOnTopWidgets: true,
             bgc: widget.bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
@@ -159,14 +182,14 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      if (imagePath != null || isValidBytes)
+                      if (_imagePath != null || isValidBytes)
                         Image(
                           image: ScrollAwareImageProvider(
                             context: _disposableContext,
                             imageProvider: ResizeImage.resizeIfNeeded(
                               null,
                               finalCache,
-                              (isValidBytes ? MemoryImage(bytes) : FileImage(File(imagePath!))) as ImageProvider,
+                              (_imagePath != null ? FileImage(File(_imagePath!)) : MemoryImage(bytes!)) as ImageProvider,
                             ),
                           ),
                           gaplessPlayback: true,
@@ -260,7 +283,7 @@ class MultiArtworks extends StatelessWidget {
           builder: (context, c) {
             return paths.isEmpty
                 ? ArtworkWidget(
-                    key: UniqueKey(),
+                    key: const Key(''),
                     thumbnailSize: thumbnailSize,
                     path: allTracksInLibrary.firstOrNull?.pathToImage,
                     forceSquared: true,
@@ -274,7 +297,7 @@ class MultiArtworks extends StatelessWidget {
                   )
                 : paths.length == 1
                     ? ArtworkWidget(
-                        key: UniqueKey(),
+                        key: Key(paths.elementAt(0)),
                         thumbnailSize: thumbnailSize,
                         path: paths.elementAt(0),
                         forceSquared: true,
@@ -288,7 +311,7 @@ class MultiArtworks extends StatelessWidget {
                         ? Row(
                             children: [
                               ArtworkWidget(
-                                key: UniqueKey(),
+                                key: Key("0_${paths.elementAt(0)}"),
                                 thumbnailSize: thumbnailSize / 2,
                                 path: paths.elementAt(0),
                                 forceSquared: true,
@@ -299,7 +322,7 @@ class MultiArtworks extends StatelessWidget {
                                 height: c.maxHeight,
                               ),
                               ArtworkWidget(
-                                key: UniqueKey(),
+                                key: Key("1_${paths.elementAt(1)}"),
                                 thumbnailSize: thumbnailSize / 2,
                                 path: paths.elementAt(1),
                                 forceSquared: true,
@@ -317,7 +340,7 @@ class MultiArtworks extends StatelessWidget {
                                   Column(
                                     children: [
                                       ArtworkWidget(
-                                        key: UniqueKey(),
+                                        key: Key("0_${paths.elementAt(0)}"),
                                         thumbnailSize: thumbnailSize / 2,
                                         path: paths.elementAt(0),
                                         forceSquared: true,
@@ -328,7 +351,7 @@ class MultiArtworks extends StatelessWidget {
                                         height: c.maxHeight / 2,
                                       ),
                                       ArtworkWidget(
-                                        key: UniqueKey(),
+                                        key: Key("1_${paths.elementAt(1)}"),
                                         thumbnailSize: thumbnailSize / 2,
                                         path: paths.elementAt(1),
                                         forceSquared: true,
@@ -343,7 +366,7 @@ class MultiArtworks extends StatelessWidget {
                                   Column(
                                     children: [
                                       ArtworkWidget(
-                                        key: UniqueKey(),
+                                        key: Key("2_${paths.elementAt(2)}"),
                                         thumbnailSize: thumbnailSize / 2,
                                         path: paths.elementAt(2),
                                         forceSquared: true,
@@ -362,7 +385,7 @@ class MultiArtworks extends StatelessWidget {
                                   Row(
                                     children: [
                                       ArtworkWidget(
-                                        key: UniqueKey(),
+                                        key: Key("0_${paths.elementAt(0)}"),
                                         thumbnailSize: thumbnailSize / 2,
                                         path: paths.elementAt(0),
                                         forceSquared: true,
@@ -373,7 +396,7 @@ class MultiArtworks extends StatelessWidget {
                                         height: c.maxHeight / 2,
                                       ),
                                       ArtworkWidget(
-                                        key: UniqueKey(),
+                                        key: Key("1_${paths.elementAt(1)}"),
                                         thumbnailSize: thumbnailSize / 2,
                                         path: paths.elementAt(1),
                                         forceSquared: true,
@@ -388,7 +411,7 @@ class MultiArtworks extends StatelessWidget {
                                   Row(
                                     children: [
                                       ArtworkWidget(
-                                        key: UniqueKey(),
+                                        key: Key("2_${paths.elementAt(2)}"),
                                         thumbnailSize: thumbnailSize / 2,
                                         path: paths.elementAt(2),
                                         forceSquared: true,
@@ -399,7 +422,7 @@ class MultiArtworks extends StatelessWidget {
                                         height: c.maxHeight / 2,
                                       ),
                                       ArtworkWidget(
-                                        key: UniqueKey(),
+                                        key: Key("3_${paths.elementAt(3)}"),
                                         thumbnailSize: thumbnailSize / 2,
                                         path: paths.elementAt(3),
                                         forceSquared: true,

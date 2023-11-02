@@ -91,6 +91,11 @@ dependencies:
     git:
       url: https://github.com/namidaco/basic_audio_handler
       ref: e3f31702247a16d777c832ec4196be75e4ff098f
+  on_audio_query:
+    git:
+      url: https://github.com/MSOB7YY/on_audio_query
+      path: packages/on_audio_query
+      ref: 4661d8940dff588f1ca6b9488e5e953f3ba05226
 
   # ---- Video Indexing & Playback ----
   video_player:

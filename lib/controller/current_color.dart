@@ -249,9 +249,8 @@ class CurrentColor {
     bool useIsolate = _defaultUseIsolate,
     Directory? paletteSaveDirectory,
   }) async {
-    if (!forceReExtract && !await File(imagePath).exists()) {
-      return null;
-    }
+    // if (!forceReExtract && !await File(imagePath).exists()) return null; // _extractPaletteGenerator tries to get artwork from audio
+
     paletteSaveDirectory ??= Directory(AppDirs.PALETTES);
 
     final paletteFile = File("${paletteSaveDirectory.path}${imagePath.getFilenameWOExt}.palette");
@@ -299,14 +298,33 @@ class CurrentColor {
   }
 
   Future<Iterable<Color>> _extractPaletteGenerator(String imagePath, {bool useIsolate = _defaultUseIsolate}) async {
-    if (!await File(imagePath).exists()) return [];
+    Uint8List? bytes;
+    File? imageFile;
+
+    if (await File(imagePath).exists()) {
+      imageFile = File(imagePath);
+    } else {
+      bytes = await Indexer.inst
+          .getArtwork(
+            imagePath: imagePath,
+            compressed: true,
+          )
+          .then((value) => value.$2);
+    }
+
+    if (imageFile == null && bytes == null) return [];
 
     const defaultTimeout = Duration(seconds: 5);
+    final imageProvider = (bytes == null ? FileImage(imageFile!) : MemoryImage(bytes)) as ImageProvider;
     if (!useIsolate) {
-      final result = await PaletteGenerator.fromImageProvider(FileImage(File(imagePath)), filters: [], maximumColorCount: 28, timeout: defaultTimeout);
+      final result = await PaletteGenerator.fromImageProvider(
+        imageProvider,
+        filters: [],
+        maximumColorCount: 28,
+        timeout: defaultTimeout,
+      );
       return result.colors;
     } else {
-      final imageProvider = FileImage(File(imagePath));
       final ImageStream stream = imageProvider.resolve(
         const ImageConfiguration(size: null, devicePixelRatio: 1.0),
       );

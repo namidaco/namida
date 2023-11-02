@@ -477,6 +477,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     VideoController.inst.updateCurrentVideo(tr);
     WaveformController.inst.generateWaveform(tr);
 
+    // -- generating artwork in case it wasnt, to be displayed in notification
+    Indexer.inst.getArtwork(imagePath: tr.pathToImage, compressed: false).then((value) => refreshNotification());
+
     Future<void> setPls() async {
       final dur = await setAudioSource(
         tr.toAudioSource(currentIndex, currentQueue.length),

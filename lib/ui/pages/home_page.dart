@@ -861,6 +861,7 @@ class _MixesCardState extends State<_MixesCard> {
     Widget artworkWidget(bool titleInside) => NamidaHero(
           tag: 'mix_thumbnail_${widget.title}${widget.index}',
           child: ArtworkWidget(
+            compressed: false,
             blur: 1.5,
             borderRadius: titleInside ? 12.0 : 8.0,
             forceSquared: true,
@@ -905,6 +906,8 @@ class _MixesCardState extends State<_MixesCard> {
                         Text(
                           widget.title,
                           style: context.textTheme.displayLarge?.copyWith(fontSize: 15.0.multipliedFontScale),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -1104,6 +1107,7 @@ class _TrackCardState extends State<_TrackCard> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ArtworkWidget(
+              key: Key(track.path),
               blur: 0.0,
               forceSquared: true,
               path: track.pathToImage,

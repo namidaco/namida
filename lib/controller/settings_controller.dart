@@ -45,6 +45,7 @@ class SettingsController {
   final RxDouble albumListTileHeight = 90.0.obs;
   final RxDouble nowPlayingImageContainerHeight = 400.0.obs;
 
+  final RxBool useMediaStore = false.obs;
   final RxBool enableVolumeFadeOnPlayPause = true.obs;
   final RxBool displayTrackNumberinAlbumPage = true.obs;
   final RxBool albumCardTopRightDate = true.obs;
@@ -312,6 +313,7 @@ class SettingsController {
       albumListTileHeight.value = json['albumListTileHeight'] ?? albumListTileHeight.value;
       nowPlayingImageContainerHeight.value = json['nowPlayingImageContainerHeight'] ?? nowPlayingImageContainerHeight.value;
 
+      useMediaStore.value = json['useMediaStore'] ?? useMediaStore.value;
       enableVolumeFadeOnPlayPause.value = json['enableVolumeFadeOnPlayPause'] ?? enableVolumeFadeOnPlayPause.value;
       displayTrackNumberinAlbumPage.value = json['displayTrackNumberinAlbumPage'] ?? displayTrackNumberinAlbumPage.value;
       albumCardTopRightDate.value = json['albumCardTopRightDate'] ?? albumCardTopRightDate.value;
@@ -526,6 +528,7 @@ class SettingsController {
       'albumListTileHeight': albumListTileHeight.value,
       'nowPlayingImageContainerHeight': nowPlayingImageContainerHeight.value,
 
+      'useMediaStore': useMediaStore.value,
       'enableVolumeFadeOnPlayPause': enableVolumeFadeOnPlayPause.value,
       'displayTrackNumberinAlbumPage': displayTrackNumberinAlbumPage.value,
       'albumCardTopRightDate': albumCardTopRightDate.value,
@@ -690,6 +693,7 @@ class SettingsController {
     double? albumThumbnailSizeinList,
     double? albumListTileHeight,
     double? nowPlayingImageContainerHeight,
+    bool? useMediaStore,
     bool? enableVolumeFadeOnPlayPause,
     bool? displayTrackNumberinAlbumPage,
     bool? albumCardTopRightDate,
@@ -896,6 +900,9 @@ class SettingsController {
 
     if (nowPlayingImageContainerHeight != null) {
       this.nowPlayingImageContainerHeight.value = nowPlayingImageContainerHeight;
+    }
+    if (useMediaStore != null) {
+      this.useMediaStore.value = useMediaStore;
     }
     if (enableVolumeFadeOnPlayPause != null) {
       this.enableVolumeFadeOnPlayPause.value = enableVolumeFadeOnPlayPause;

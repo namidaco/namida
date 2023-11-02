@@ -2116,6 +2116,7 @@ class _AnimatingTrackImage extends StatelessWidget {
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
                       child: LyricsWrapper(
+                        key: Key(track.path),
                         track: track,
                         cp: cp,
                         child: GestureDetector(
@@ -2129,6 +2130,7 @@ class _AnimatingTrackImage extends StatelessWidget {
                       ),
                     )
                   : LyricsWrapper(
+                      key: Key(track.path),
                       track: track,
                       cp: cp,
                       child: _TrackImage(
@@ -2234,6 +2236,7 @@ class LyricsWrapper extends StatelessWidget {
     }
     return Obx(
       () => AnimatedSwitcher(
+        key: Key(track.path),
         duration: const Duration(milliseconds: 300),
         child: !settings.enableLyrics.value
             ? child

@@ -78,6 +78,36 @@ class IndexerSettings extends StatelessWidget {
     );
   }
 
+  Widget getMediaStoreWidget() {
+    return Obx(
+      () => CustomSwitchListTile(
+        icon: Broken.airdrop,
+        title: lang.USE_MEDIA_STORE,
+        subtitle: lang.USE_MEDIA_STORE_SUBTITLE,
+        value: settings.useMediaStore.value,
+        onChanged: (isTrue) {
+          settings.save(useMediaStore: !isTrue);
+          _showRefreshPromptDialog(false);
+        },
+      ),
+    );
+  }
+
+  Widget getGroupArtworksByAlbumWidget() {
+    return Obx(
+      () => CustomSwitchListTile(
+        icon: Broken.backward_item,
+        title: lang.GROUP_ARTWORKS_BY_ALBUM,
+        subtitle: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING,
+        value: settings.groupArtworksByAlbum.value,
+        onChanged: (isTrue) {
+          settings.save(groupArtworksByAlbum: !isTrue);
+          _showReindexingPrompt(title: lang.GROUP_ARTWORKS_BY_ALBUM, body: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING);
+        },
+      ),
+    );
+  }
+
   Widget getFoldersToScanWidget({
     required BuildContext context,
     bool initiallyExpanded = false,
@@ -316,18 +346,7 @@ class IndexerSettings extends StatelessWidget {
               value: settings.extractFeatArtistFromTitle.value,
             ),
           ),
-          Obx(
-            () => CustomSwitchListTile(
-              icon: Broken.backward_item,
-              title: lang.GROUP_ARTWORKS_BY_ALBUM,
-              subtitle: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING,
-              value: settings.groupArtworksByAlbum.value,
-              onChanged: (isTrue) {
-                settings.save(groupArtworksByAlbum: !isTrue);
-                _showReindexingPrompt(title: lang.GROUP_ARTWORKS_BY_ALBUM, body: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING);
-              },
-            ),
-          ),
+          getGroupArtworksByAlbumWidget(),
           Obx(
             () => CustomListTile(
               icon: Broken.arrow_square,
@@ -390,31 +409,35 @@ class IndexerSettings extends StatelessWidget {
               },
             ),
           ),
-          CustomListTile(
-            icon: Broken.profile_2user,
-            title: lang.TRACK_ARTISTS_SEPARATOR,
-            subtitle: lang.INSTANTLY_APPLIES,
-            trailingText: "${settings.trackArtistsSeparators.length}",
-            onTap: () async {
-              await _showSeparatorSymbolsDialog(
-                lang.TRACK_ARTISTS_SEPARATOR,
-                settings.trackArtistsSeparators,
-                trackArtistsSeparators: true,
-              );
-            },
+          Obx(
+            () => CustomListTile(
+              icon: Broken.profile_2user,
+              title: lang.TRACK_ARTISTS_SEPARATOR,
+              subtitle: lang.INSTANTLY_APPLIES,
+              trailingText: "${settings.trackArtistsSeparators.length}",
+              onTap: () async {
+                await _showSeparatorSymbolsDialog(
+                  lang.TRACK_ARTISTS_SEPARATOR,
+                  settings.trackArtistsSeparators,
+                  trackArtistsSeparators: true,
+                );
+              },
+            ),
           ),
-          CustomListTile(
-            icon: Broken.smileys,
-            title: lang.TRACK_GENRES_SEPARATOR,
-            subtitle: lang.INSTANTLY_APPLIES,
-            trailingText: "${settings.trackGenresSeparators.length}",
-            onTap: () async {
-              await _showSeparatorSymbolsDialog(
-                lang.TRACK_GENRES_SEPARATOR,
-                settings.trackGenresSeparators,
-                trackGenresSeparators: true,
-              );
-            },
+          Obx(
+            () => CustomListTile(
+              icon: Broken.smileys,
+              title: lang.TRACK_GENRES_SEPARATOR,
+              subtitle: lang.INSTANTLY_APPLIES,
+              trailingText: "${settings.trackGenresSeparators.length}",
+              onTap: () async {
+                await _showSeparatorSymbolsDialog(
+                  lang.TRACK_GENRES_SEPARATOR,
+                  settings.trackGenresSeparators,
+                  trackGenresSeparators: true,
+                );
+              },
+            ),
           ),
           Obx(
             () => CustomListTile(
@@ -453,6 +476,7 @@ class IndexerSettings extends StatelessWidget {
               ),
             ),
           ),
+          getMediaStoreWidget(),
           CustomListTile(
             icon: Broken.refresh,
             title: lang.RE_INDEX,

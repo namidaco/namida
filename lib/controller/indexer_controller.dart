@@ -10,6 +10,7 @@ import 'package:faudiotagger/models/faudiomodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 import 'package:path/path.dart' as p;
 import 'package:system_info2/system_info2.dart';
 
@@ -36,6 +37,7 @@ class Indexer {
   static final Indexer _instance = Indexer._internal();
   Indexer._internal();
 
+  bool get _defaultUseMediaStore => settings.useMediaStore.value;
   bool get _defaultGroupArtworksByAlbum => settings.groupArtworksByAlbum.value;
 
   final RxBool isIndexing = false.obs;
@@ -68,6 +70,7 @@ class Indexer {
   final Map<String, bool> _currentFileNamesMap = {};
 
   static final _faudiotagger = FAudioTagger();
+  final _audioQuery = OnAudioQuery();
 
   List<Track> get recentlyAddedTracks {
     final alltracks = List<Track>.from(tracksInfoList);
@@ -75,7 +78,80 @@ class Indexer {
     return alltracks;
   }
 
+  /// {imagePath: (TrackExtended, id)};
+  final _backupMediaStoreIDS = <String, (TrackExtended, int)>{};
+  final artworksMap = <String, Uint8List?>{};
+  final _artworksMap = <String, Completer<void>>{};
+  final _artworksMapFullRes = <String, Completer<void>>{};
+  Future<(File?, Uint8List?)> getArtwork({
+    required String imagePath,
+    bool checkFileFirst = true,
+    required bool compressed,
+    int? size,
+  }) async {
+    if (compressed && _artworksMap[imagePath] != null) {
+      await _artworksMap[imagePath]!.future;
+      return (null, artworksMap[imagePath]);
+    }
+
+    if (checkFileFirst && await File(imagePath).exists()) {
+      return (File(imagePath), null);
+    } else {
+      final info = _backupMediaStoreIDS[imagePath];
+      if (info != null) {
+        final id = info.$2;
+        Uint8List? artwork;
+        if (compressed) {
+          _artworksMap[imagePath] = Completer<Uint8List?>();
+
+          artwork = await _audioQuery.queryArtwork(
+            id,
+            ArtworkType.AUDIO,
+            format: ArtworkFormat.JPEG,
+            quality: null,
+            size: size?.clamp(48, 360) ?? 360,
+          );
+          artworksMap[imagePath] = artwork;
+          _artworksMap[imagePath]!.completeIfWasnt();
+          await _artworksMap[imagePath]?.future;
+          return (null, artworksMap[imagePath]);
+        } else {
+          _artworksMapFullRes[imagePath] = Completer<void>();
+          // -- try extracting full res using taggers
+          File? file;
+          file = await extractOneArtwork(
+            [info.$1.path],
+            albumIdendifiers: {info.$1.path: info.$1.albumIdentifier},
+          ).then((value) => value.firstOrNull);
+          if (file == null) {
+            artwork = await _audioQuery.queryArtwork(
+              id,
+              ArtworkType.AUDIO,
+              format: ArtworkFormat.PNG,
+              quality: 100,
+              size: 720,
+            );
+            if (artwork != null) {
+              final f = File(imagePath);
+              await FileImage(f).evict();
+              await f.writeAsBytes(artwork);
+              file = f;
+            }
+          }
+
+          _artworksMapFullRes[imagePath]!.completeIfWasnt(); // to notify that the process was done, but we dont store full res bytes
+          await _artworksMapFullRes[imagePath]?.future;
+          return (file, null);
+        }
+      }
+    }
+
+    return (null, null);
+  }
+
   Future<void> prepareTracksFile() async {
+    _fetchMediaStoreTracks(); // to fill ids map
+
     /// Only awaits if the track file exists, otherwise it will get into normally and start indexing.
     if (await File(AppPaths.TRACKS).existsAndValid()) {
       await readTrackData();
@@ -85,16 +161,17 @@ class Indexer {
     /// doesnt exists
     else {
       await File(AppPaths.TRACKS).create();
-      refreshLibraryAndCheckForDiff(forceReIndex: true);
+      refreshLibraryAndCheckForDiff(forceReIndex: true, useMediaStore: _defaultUseMediaStore);
     }
   }
 
   final _cancelableIndexingCompleter = <DateTime, Completer<void>>{};
 
-  Future<void> refreshLibraryAndCheckForDiff({Set<String>? currentFiles, bool forceReIndex = false}) async {
+  Future<void> refreshLibraryAndCheckForDiff({Set<String>? currentFiles, bool forceReIndex = false, bool? useMediaStore}) async {
     _cancelableIndexingCompleter.entries.lastOrNull?.value.complete(); // canceling previous indexing sessions
 
     isIndexing.value = true;
+    useMediaStore ??= _defaultUseMediaStore;
 
     final indexingTokenTime = DateTime.now();
     _cancelableIndexingCompleter[indexingTokenTime] = Completer<void>();
@@ -105,6 +182,7 @@ class Indexer {
         deletedPaths: {},
         forceReIndex: true,
         cancelTokenTime: indexingTokenTime,
+        useMediaStore: useMediaStore,
       );
     } else {
       currentFiles ??= await getAudioFiles();
@@ -113,6 +191,7 @@ class Indexer {
         deletedPaths: getDeletedPaths(currentFiles),
         forceReIndex: false,
         cancelTokenTime: indexingTokenTime,
+        useMediaStore: useMediaStore,
       );
     }
 
@@ -615,7 +694,21 @@ class Indexer {
         artworks[r.$1] = r.$3;
       }
     }
-    for (final trext in success.values) {
+
+    _addTracksToLists(success.values, checkForDuplicates);
+
+    extractOneArtwork(
+      tracksPath,
+      artworks: artworks,
+      forceReExtract: deleteOldArtwork,
+      extractColor: extractColor,
+      albumIdendifiers: {for (final r in success.entries) r.key: r.value.albumIdentifier},
+    );
+    return success;
+  }
+
+  void _addTracksToLists(Iterable<TrackExtended> tracks, bool checkForDuplicates) {
+    for (final trext in tracks) {
       final tr = trext.toTrack();
       allTracksMappedByPath[tr] = trext;
       _currentFileNamesMap[trext.path.getFilename] = true;
@@ -627,15 +720,6 @@ class Indexer {
         SearchSortController.inst.trackSearchList.add(tr);
       }
     }
-
-    extractOneArtwork(
-      tracksPath,
-      artworks: artworks,
-      forceReExtract: deleteOldArtwork,
-      extractColor: extractColor,
-      albumIdendifiers: {for (final r in success.entries) r.key: r.value.albumIdentifier},
-    );
-    return success;
   }
 
   /// - Extracts artwork from [bytes] or [pathOfAudio] and save to file.
@@ -898,10 +982,11 @@ class Indexer {
     required Set<String> deletedPaths,
     required bool forceReIndex,
     required DateTime cancelTokenTime,
+    required bool useMediaStore,
   }) async {
     if (forceReIndex) {
       _clearListsAndResetCounters();
-      audioFiles = await getAudioFiles(forceReCheckDirs: true);
+      if (!useMediaStore) audioFiles = await getAudioFiles(forceReCheckDirs: true);
     }
 
     printy("Audio Files New: ${audioFiles.length}");
@@ -914,54 +999,58 @@ class Indexer {
     final minDur = settings.indexMinDurationInSec.value; // Seconds
     final minSize = settings.indexMinFileSizeInB.value; // bytes
     final prevDuplicated = settings.preventDuplicatedTracks.value;
+    if (useMediaStore) {
+      final trs = await _fetchMediaStoreTracks();
+      _addTracksToLists(trs.map((e) => e.$1), false);
+    } else {
+      currentTrackPathBeingExtracted.value = '';
+      final chunkExtractList = <String>[];
+      final freeMemory = SysInfo.getFreePhysicalMemory();
+      final chunkSize = (freeMemory ~/ 6).clamp(8, 156);
+      if (audioFiles.isNotEmpty) {
+        // -- Extracting All Metadata
+        for (final trackPath in audioFiles) {
+          // breaks the loop if another indexing session has been started
+          if (_cancelableIndexingCompleter[cancelTokenTime]?.isCompleted == true) break;
 
-    currentTrackPathBeingExtracted.value = '';
-    final chunkExtractList = <String>[];
-    final freeMemory = SysInfo.getFreePhysicalMemory();
-    final chunkSize = (freeMemory ~/ 6).clamp(8, 156);
-    if (audioFiles.isNotEmpty) {
-      // -- Extracting All Metadata
-      for (final trackPath in audioFiles) {
-        // breaks the loop if another indexing session has been started
-        if (_cancelableIndexingCompleter[cancelTokenTime]?.isCompleted == true) break;
+          printy(trackPath);
+          // currentTrackPathBeingExtracted.value = trackPath;
 
-        printy(trackPath);
-        // currentTrackPathBeingExtracted.value = trackPath;
-
-        /// skip duplicated tracks according to filename
-        if (prevDuplicated) {
-          if (_currentFileNamesMap.keyExists(trackPath.getFilename)) {
-            duplicatedTracksLength.value++;
-            continue;
+          /// skip duplicated tracks according to filename
+          if (prevDuplicated) {
+            if (_currentFileNamesMap.keyExists(trackPath.getFilename)) {
+              duplicatedTracksLength.value++;
+              continue;
+            }
           }
-        }
 
-        if (chunkExtractList.isNotEmpty && chunkExtractList.length % chunkSize == 0) {
-          await extractOneTrack(
-            tracksPath: chunkExtractList,
-            minDur: minDur,
-            minSize: minSize,
-            onMinDurTrigger: () => filteredForSizeDurationTracks.value++,
-            onMinSizeTrigger: () => filteredForSizeDurationTracks.value++,
-            checkForDuplicates: false,
-          );
-          chunkExtractList.clear();
-        }
+          if (chunkExtractList.isNotEmpty && chunkExtractList.length % chunkSize == 0) {
+            await extractOneTrack(
+              tracksPath: chunkExtractList,
+              minDur: minDur,
+              minSize: minSize,
+              onMinDurTrigger: () => filteredForSizeDurationTracks.value++,
+              onMinSizeTrigger: () => filteredForSizeDurationTracks.value++,
+              checkForDuplicates: false,
+            );
+            chunkExtractList.clear();
+          }
 
-        chunkExtractList.add(trackPath);
+          chunkExtractList.add(trackPath);
+        }
+        // -- if there were any items left (length < chunkSize)
+        await extractOneTrack(
+          tracksPath: chunkExtractList,
+          minDur: minDur,
+          minSize: minSize,
+          onMinDurTrigger: () => filteredForSizeDurationTracks.value++,
+          onMinSizeTrigger: () => filteredForSizeDurationTracks.value++,
+          checkForDuplicates: false,
+        );
+        printy('Extracted All Metadata');
       }
-      // -- if there were any items left (length < chunkSize)
-      await extractOneTrack(
-        tracksPath: chunkExtractList,
-        minDur: minDur,
-        minSize: minSize,
-        onMinDurTrigger: () => filteredForSizeDurationTracks.value++,
-        onMinSizeTrigger: () => filteredForSizeDurationTracks.value++,
-        checkForDuplicates: false,
-      );
-      printy('Extracted All Metadata');
+      currentTrackPathBeingExtracted.value = '';
     }
-    currentTrackPathBeingExtracted.value = '';
 
     /// doing some checks to remove unqualified tracks.
     /// removes tracks after changing `duration` or `size`.
@@ -1241,6 +1330,71 @@ class Indexer {
       }
     }
     return allAvailableDirectories;
+  }
+
+  Future<List<(TrackExtended, int)>> _fetchMediaStoreTracks() async {
+    final allMusic = await _audioQuery.querySongs();
+    allMusic.retainWhere(
+        (element) => settings.directoriesToExclude.every((dir) => !element.data.startsWith(dir)) && settings.directoriesToScan.any((dir) => element.data.startsWith(dir)));
+    final tracks = <(TrackExtended, int)>[];
+    allMusic.loop((e, _) {
+      final map = e.getMap;
+      final artist = e.artist;
+      final artists = artist == null
+          ? <String>[]
+          : Indexer.splitArtist(
+              title: e.title,
+              originalArtist: artist,
+              config: ArtistsSplitConfig.settings(),
+            );
+      final genre = e.genre;
+      final genres = genre == null
+          ? <String>[]
+          : Indexer.splitGenre(
+              genre,
+              config: GenresSplitConfig.settings(),
+            );
+      final mood = map['mood'];
+      final moods = mood == null
+          ? <String>[]
+          : Indexer.splitGenre(
+              mood,
+              config: GenresSplitConfig.settings(),
+            );
+      final bitrate = (map['bitrate'] as String?).getIntValue();
+      final disc = (map['disc_number'] as String?).getIntValue();
+      final year = (map['year'] as String?).getIntValue();
+      final trext = TrackExtended(
+        title: e.title,
+        originalArtist: e.artist ?? UnknownTags.ARTIST,
+        artistsList: artists,
+        album: e.album ?? UnknownTags.ALBUM,
+        albumArtist: map['album_artist'] ?? UnknownTags.ALBUMARTIST,
+        originalGenre: e.genre ?? UnknownTags.GENRE,
+        genresList: genres,
+        originalMood: mood ?? '',
+        moodList: moods,
+        composer: e.composer ?? '',
+        trackNo: e.track ?? 0,
+        duration: e.duration == null ? 0 : e.duration! ~/ 1000,
+        year: year ?? 0,
+        size: e.size,
+        dateAdded: e.dateAdded ?? 0,
+        dateModified: e.dateModified ?? 0,
+        path: e.data,
+        comment: '',
+        bitrate: bitrate == null ? 0 : bitrate ~/ 1000,
+        sampleRate: 0,
+        format: '',
+        channels: '',
+        discNo: disc ?? 0,
+        language: '',
+        lyrics: '',
+      );
+      tracks.add((trext, e.id));
+      _backupMediaStoreIDS[trext.pathToImage] = (trext, e.id);
+    });
+    return tracks;
   }
 
   Future<void> updateImageSizeInStorage({String? newImagePath, File? oldDeletedFile}) async {

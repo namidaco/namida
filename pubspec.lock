@@ -70,8 +70,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "14a0c716527c6db3b4956672d895030200bb3b1e"
-      resolved-ref: "14a0c716527c6db3b4956672d895030200bb3b1e"
+      ref: e3f31702247a16d777c832ec4196be75e4ff098f
+      resolved-ref: e3f31702247a16d777c832ec4196be75e4ff098f
       url: "https://github.com/namidaco/basic_audio_handler"
     source: git
     version: "0.0.1"
@@ -554,6 +554,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.2"
+  id3:
+    dependency: transitive
+    description:
+      name: id3
+      sha256: "24176a6e08db6297c8450079e94569cd8387f913c817e5e3d862be7dc191e0b8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   image:
     dependency: transitive
     description:
@@ -598,8 +606,8 @@ packages:
     dependency: "direct main"
     description:
       path: just_audio
-      ref: "135a7ef763747092781776835a169ef5ab63b7e5"
-      resolved-ref: "135a7ef763747092781776835a169ef5ab63b7e5"
+      ref: ca68e2598bc61cb61f4ef8ad911894d90495e2a3
+      resolved-ref: ca68e2598bc61cb61f4ef8ad911894d90495e2a3
       url: "https://github.com/MSOB7YY/just_audio"
     source: git
     version: "0.9.35"
@@ -735,6 +743,47 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.5.0"
+  on_audio_query:
+    dependency: "direct main"
+    description:
+      path: "packages/on_audio_query"
+      ref: "4661d8940dff588f1ca6b9488e5e953f3ba05226"
+      resolved-ref: "4661d8940dff588f1ca6b9488e5e953f3ba05226"
+      url: "https://github.com/MSOB7YY/on_audio_query"
+    source: git
+    version: "2.9.0"
+  on_audio_query_android:
+    dependency: transitive
+    description:
+      name: on_audio_query_android
+      sha256: c0b946011ee7aa8ec76b21837f0cb0007120ac291202ed6c6fb4c498ba2ff6fe
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
+  on_audio_query_ios:
+    dependency: transitive
+    description:
+      name: on_audio_query_ios
+      sha256: "9b3efa39a656fa3720980e3c6a1f55b7257d0032a45ffeb3f70eaa2c7f10f929"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
+  on_audio_query_platform_interface:
+    dependency: transitive
+    description:
+      name: on_audio_query_platform_interface
+      sha256: c23e019a31bd0774828476e428fd33b0dd1d82c9d4791dba80429358fc65dcd3
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.7.0"
+  on_audio_query_web:
+    dependency: transitive
+    description:
+      name: on_audio_query_web
+      sha256: "990efa52d879e6caffa97f24b34acd9caa1ce2c4c4cb873fe5a899a9b1af02c7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.6.0"
   package_info_plus:
     dependency: transitive
     description:
@@ -954,14 +1003,14 @@ packages:
       url: "https://github.com/namidaco/queue_manager"
     source: git
     version: "0.0.1"
-  readmore:
+  read_more_text:
     dependency: "direct main"
     description:
-      name: readmore
-      sha256: "99c2483202f7c7e98c50834d72be2b119aefecf4497ca1960ae9d5f418eb1481"
+      name: read_more_text
+      sha256: "769750959f26a71408eb912e1b1e714713f72bf3efcc3f89e53c31b11101376c"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "0.0.5"
   rxdart:
     dependency: transitive
     description:

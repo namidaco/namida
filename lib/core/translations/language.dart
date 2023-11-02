@@ -634,6 +634,8 @@ class Language extends LanguageKeys {
 			UPDATING = getKey("UPDATING");
 			USED = getKey("USED");
 			USE_COLLAPSED_SETTING_TILES = getKey("USE_COLLAPSED_SETTING_TILES");
+			USE_MEDIA_STORE = getKey("USE_MEDIA_STORE");
+			USE_MEDIA_STORE_SUBTITLE = getKey("USE_MEDIA_STORE_SUBTITLE");
 			USE_PITCH_BLACK = getKey("USE_PITCH_BLACK");
 			USE_PITCH_BLACK_SUBTITLE = getKey("USE_PITCH_BLACK_SUBTITLE");
 			VALUE_BETWEEN_50_200 = getKey("VALUE_BETWEEN_50_200");
@@ -684,6 +686,8 @@ class Language extends LanguageKeys {
     }
   }
 }
+
+
 
 
 

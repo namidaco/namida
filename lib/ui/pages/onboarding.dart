@@ -81,8 +81,10 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
   @override
   Widget build(BuildContext context) {
     const indexer = IndexerSettings();
+    final useMediaStore = indexer.getMediaStoreWidget();
     final foldersToScan = indexer.getFoldersToScanWidget(context: context, initiallyExpanded: true);
     final foldersToExclude = indexer.getFoldersToExcludeWidget(context: context, initiallyExpanded: true);
+    final groupArtworksByAlbum = indexer.getGroupArtworksByAlbumWidget();
 
     const theme = ThemeSetting();
     final themeTile = theme.getThemeTile();
@@ -122,6 +124,8 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                 languageTile,
                                 performanceTile,
                                 libraryTabsTile,
+                                useMediaStore,
+                                groupArtworksByAlbum,
                                 foldersToScan,
                                 foldersToExclude,
                               ],
