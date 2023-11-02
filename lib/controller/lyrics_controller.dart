@@ -72,12 +72,17 @@ class Lyrics {
   }
 
   bool hasLyrics(Track tr) {
-    return tr.lyrics != '' || lyricsFileCache(tr).existsSync() || lyricsFileDevice(tr).existsSync() || lyricsFileText(tr).existsSync();
+    return tr.lyrics != '' || lyricsFileCache(tr).existsSync() || lyricsFilesDevice(tr).any((element) => element.existsSync()) || lyricsFileText(tr).existsSync();
   }
 
   File lyricsFileText(Track tr) => File(p.join(AppDirs.LYRICS, "${tr.filename}.txt"));
   File lyricsFileCache(Track tr) => File(p.join(AppDirs.LYRICS, "${tr.filename}.lrc"));
-  File lyricsFileDevice(Track tr) => File(p.join(tr.path.getDirectoryPath, "${tr.filename}.lrc"));
+  List<File> lyricsFilesDevice(Track tr) => [
+        File(p.join(tr.path.getDirectoryPath, "${tr.filename}.lrc")),
+        File(p.join(tr.path.getDirectoryPath, "${tr.filenameWOExt}.lrc")),
+        File(p.join(tr.path.getDirectoryPath, "${tr.filename}.LRC")),
+        File(p.join(tr.path.getDirectoryPath, "${tr.filenameWOExt}.LRC")),
+      ];
 
   Future<void> saveLyricsToCache(Track track, String lyricsText, bool isSynced) async {
     final fc = isSynced ? lyricsFileCache(track) : lyricsFileText(track);
@@ -87,7 +92,7 @@ class Lyrics {
 
   Future<Lrc?> _fetchLRCBasedLyrics(Track track, String trackLyrics) async {
     final fc = lyricsFileCache(track);
-    final lyricsFileLocal = lyricsFileDevice(track);
+    final lyricsFilesLocal = lyricsFilesDevice(track);
 
     Future<Lrc?> parseLRCFile(File file) async {
       final content = await file.readAsString();
@@ -103,14 +108,20 @@ class Lyrics {
     /// 1. device lrc
     /// 2. cached lrc
     /// 3. track embedded
-    if (await lyricsFileLocal.existsAndValid()) {
-      lrc = await parseLRCFile(lyricsFileLocal);
-    } else if (await fc.existsAndValid()) {
-      lrc = await parseLRCFile(fc);
-    } else if (trackLyrics != '') {
-      try {
-        lrc = trackLyrics.toLrc();
-      } catch (_) {}
+    for (final lf in lyricsFilesLocal) {
+      if (await lf.existsAndValid()) {
+        lrc = await parseLRCFile(lf);
+        break;
+      }
+    }
+    if (lrc == null) {
+      if (await fc.existsAndValid()) {
+        lrc = await parseLRCFile(fc);
+      } else if (trackLyrics != '') {
+        try {
+          lrc = trackLyrics.toLrc();
+        } catch (_) {}
+      }
     }
 
     /// 4. if still null, fetch from database.

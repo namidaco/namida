@@ -28,7 +28,7 @@ void showLRCSetDialog(Track track, Color colorScheme) {
   final embedded = track.lyrics;
   final cachedTxt = Lyrics.inst.lyricsFileText(track);
   final cachedLRC = Lyrics.inst.lyricsFileCache(track);
-  final localLRC = Lyrics.inst.lyricsFileDevice(track);
+  final localLRCFiles = Lyrics.inst.lyricsFilesDevice(track);
 
   if (embedded != '') {
     try {
@@ -80,18 +80,21 @@ void showLRCSetDialog(Track track, Color colorScheme) {
       ),
     );
   }
-  if (localLRC.existsSync()) {
-    availableLyrics.add(
-      LyricsModel(
-        lyrics: localLRC.readAsStringSync(),
-        synced: true,
-        fromInternet: false,
-        isInCache: false,
-        file: localLRC,
-        isEmbedded: false,
-      ),
-    );
+  for (final localLRC in localLRCFiles) {
+    if (localLRC.existsSync()) {
+      availableLyrics.add(
+        LyricsModel(
+          lyrics: localLRC.readAsStringSync(),
+          synced: true,
+          fromInternet: false,
+          isInCache: false,
+          file: localLRC,
+          isEmbedded: false,
+        ),
+      );
+    }
   }
+
   void updateForCurrentTrack() {
     if (track == Player.inst.nowPlayingTrack) {
       Lyrics.inst.updateLyrics(track);
