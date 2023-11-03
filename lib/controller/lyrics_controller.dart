@@ -5,6 +5,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:lrc/lrc.dart';
@@ -15,11 +16,15 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 
 class Lyrics {
   static Lyrics get inst => _instance;
   static final Lyrics _instance = Lyrics._internal();
   Lyrics._internal();
+
+  GlobalKey<LyricsLRCParsedViewState>? lrcViewKey;
+  final lrcViewKeyFullscreen = GlobalKey<LyricsLRCParsedViewState>();
 
   final currentLyricsText = ''.obs;
   final currentLyricsLRC = Rxn<Lrc>();
@@ -27,10 +32,18 @@ class Lyrics {
 
   Track? _currentTrack;
 
+  void _updateWidgets(Lrc? lrc) {
+    lrcViewKey?.currentState?.fillLists(lrc);
+    lrcViewKeyFullscreen.currentState?.fillLists(lrc);
+  }
+
   Future<void> updateLyrics(Track track, {bool preferEmbedded = false}) async {
     _currentTrack = track;
     currentLyricsText.value = '';
     currentLyricsLRC.value = null;
+    _updateWidgets(null);
+    lrcViewKey = GlobalKey<LyricsLRCParsedViewState>();
+
     lyricsCanBeAvailable.value = true;
     if (!settings.enableLyrics.value) return;
 
@@ -40,6 +53,7 @@ class Lyrics {
       try {
         final lrc = embedded.toLrc();
         currentLyricsLRC.value = lrc;
+        _updateWidgets(lrc);
       } catch (e) {
         currentLyricsText.value = embedded;
       }
@@ -55,6 +69,7 @@ class Lyrics {
     if (lrcLyrics != null) {
       if (_currentTrack == track) {
         currentLyricsLRC.value = lrcLyrics;
+        _updateWidgets(lrcLyrics);
       }
     } else {
       /// 1. cached txt lyrics

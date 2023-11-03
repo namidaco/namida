@@ -16,7 +16,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class LyricsLRCParsedView extends StatefulWidget {
   final double cp;
-  final Lrc lrc;
+  final Lrc? lrc;
   final Widget videoOrImage;
   final bool isFullScreenView;
   final Duration totalDuration;
@@ -31,15 +31,16 @@ class LyricsLRCParsedView extends StatefulWidget {
   });
 
   @override
-  State<LyricsLRCParsedView> createState() => _LyricsLRCParsedViewState();
+  State<LyricsLRCParsedView> createState() => LyricsLRCParsedViewState();
 }
 
-class _LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
+class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   late final ItemScrollController controller;
   late final ItemPositionsListener positionListener;
 
   late final int topDummyItems;
   late final int bottomDummyItems;
+
   @override
   void initState() {
     super.initState();
@@ -47,9 +48,20 @@ class _LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     bottomDummyItems = widget.isFullScreenView ? 32 : 12;
     controller = ItemScrollController();
     positionListener = ItemPositionsListener.create();
+    fillLists(widget.lrc);
+  }
 
+  Lrc? currentLRC;
+
+  void fillLists(Lrc? lrc) {
+    currentLRC = lrc;
+    if (lrc == null) {
+      timestampsMap.clear();
+      lyrics.clear();
+      return;
+    }
     // -- calculating timestamps multiplier, useful for spedup/nightcore
-    final llength = widget.lrc.length ?? '';
+    final llength = lrc.length ?? '';
     double cal = 0;
     if (llength != '') {
       final parts = llength.split(RegExp(r'[:.]'));
@@ -66,9 +78,9 @@ class _LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     timestampsMap
       ..clear()
       ..addEntries(
-        widget.lrc.lyrics.asMap().entries.map(
+        lrc.lyrics.asMap().entries.map(
           (e) {
-            final lineTimeStamp = e.value.timestamp + Duration(milliseconds: widget.lrc.offset ?? 0);
+            final lineTimeStamp = e.value.timestamp + Duration(milliseconds: lrc.offset ?? 0);
             final calculatedForSpedUpVersions = cal == 0 ? lineTimeStamp : (lineTimeStamp * cal);
             final newLrcLine = LrcLine(
               timestamp: calculatedForSpedUpVersions,
@@ -88,11 +100,6 @@ class _LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
       ..addAll(timestampsMap.values.map((e) => e.$2));
     _listenForPosition();
     _updateHighlightedLine(Player.inst.nowPlayingPosition.milliseconds, jump: true);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   void _listenForPosition() {
@@ -306,9 +313,10 @@ class _LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                       MaterialPageRoute(
                                         builder: (context) {
                                           return LyricsLRCParsedView(
+                                            key: Lyrics.inst.lrcViewKeyFullscreen,
                                             totalDuration: widget.totalDuration,
                                             cp: widget.cp,
-                                            lrc: widget.lrc,
+                                            lrc: currentLRC,
                                             videoOrImage: const SizedBox(),
                                             isFullScreenView: true,
                                           );

@@ -2245,9 +2245,9 @@ class LyricsWrapper extends StatelessWidget {
             ? child
             : Lyrics.inst.currentLyricsLRC.value != null
                 ? LyricsLRCParsedView(
-                    key: key,
+                    key: Lyrics.inst.lrcViewKey,
                     cp: cp,
-                    lrc: Lyrics.inst.currentLyricsLRC.value!,
+                    lrc: Lyrics.inst.currentLyricsLRC.value,
                     videoOrImage: child,
                     totalDuration: track.duration.seconds,
                   )
