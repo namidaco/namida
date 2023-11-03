@@ -244,54 +244,59 @@ class TrackTile extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 12.0),
                                   Expanded(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        // check if first row isnt empty
-                                        if (row1Text != '')
-                                          Text(
-                                            row1Text,
-                                            overflow: TextOverflow.ellipsis,
-                                            maxLines: 1,
-                                            style: context.textTheme.displayMedium!.copyWith(
-                                              color: textColor?.withAlpha(170),
-                                            ),
-                                          ),
+                                    child: trackOrTwd.track.toTrackExtOrNull() == null
+                                        ? Text(
+                                            trackOrTwd.track.path,
+                                            style: context.textTheme.displaySmall,
+                                          )
+                                        : Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              // check if first row isnt empty
+                                              if (row1Text != '')
+                                                Text(
+                                                  row1Text,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                  style: context.textTheme.displayMedium!.copyWith(
+                                                    color: textColor?.withAlpha(170),
+                                                  ),
+                                                ),
 
-                                        // check if second row isnt empty
-                                        if (row2Text != '')
-                                          Text(
-                                            row2Text,
-                                            style: context.textTheme.displaySmall?.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              color: textColor?.withAlpha(140),
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
+                                              // check if second row isnt empty
+                                              if (row2Text != '')
+                                                Text(
+                                                  row2Text,
+                                                  style: context.textTheme.displaySmall?.copyWith(
+                                                    fontWeight: FontWeight.w500,
+                                                    color: textColor?.withAlpha(140),
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
 
-                                        // check if third row isnt empty
-                                        if (thirdLineText == '' && settings.displayThirdRow.value)
-                                          if (row3Text != '')
-                                            Text(
-                                              row3Text,
-                                              style: context.textTheme.displaySmall?.copyWith(
-                                                color: textColor?.withAlpha(130),
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
+                                              // check if third row isnt empty
+                                              if (thirdLineText == '' && settings.displayThirdRow.value)
+                                                if (row3Text != '')
+                                                  Text(
+                                                    row3Text,
+                                                    style: context.textTheme.displaySmall?.copyWith(
+                                                      color: textColor?.withAlpha(130),
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
 
-                                        if (thirdLineText != '')
-                                          Text(
-                                            thirdLineText,
-                                            style: context.textTheme.displaySmall?.copyWith(color: textColor?.withAlpha(130)),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                              if (thirdLineText != '')
+                                                Text(
+                                                  thirdLineText,
+                                                  style: context.textTheme.displaySmall?.copyWith(color: textColor?.withAlpha(130)),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                            ],
                                           ),
-                                      ],
-                                    ),
                                   ),
                                   const SizedBox(width: 6.0),
                                   if (settings.displayFavouriteIconInListTile.value || rightItem1Text != '' || rightItem2Text != '')
