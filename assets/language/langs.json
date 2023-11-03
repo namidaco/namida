@@ -2,11 +2,6 @@
   {
     "code": "en_US",
     "name": "English",
-    "country":"United States"
-  }, 
-  {
-    "code": "ar_SA",
-    "name": "Arabic",
-    "country":"Saudi Arabia"
+    "country": "United States"
   }
 ]

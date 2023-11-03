@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:namida/controller/json_to_history_parser.dart';
@@ -33,6 +34,55 @@ class NotificationService {
       ),
       onDidReceiveBackgroundNotificationResponse: (details) => _onDidReceiveLocalNotification(details),
       onDidReceiveNotificationResponse: (details) => _onDidReceiveLocalNotification(details),
+    );
+  }
+
+  void mediaNotification({
+    required String title,
+    required String subText,
+    required String subtitle,
+    String? imagePath,
+    required int progressMS,
+    required int durationMS,
+    required DateTime displayTime,
+    required Color? color,
+  }) {
+    const id = 10;
+    final pic = imagePath == null ? null : FilePathAndroidBitmap(imagePath);
+
+    _flutterLocalNotificationsPlugin.show(
+      id,
+      title,
+      subtitle,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          '$id',
+          'media',
+          channelDescription: 'media',
+          groupKey: '$id',
+          category: AndroidNotificationCategory.progress,
+          setAsGroupSummary: true,
+          channelShowBadge: false,
+          importance: Importance.high,
+          priority: Priority.high,
+          onlyAlertOnce: true,
+          showProgress: true,
+          ongoing: true,
+          visibility: NotificationVisibility.public,
+          styleInformation: const MediaStyleInformation(), // this gets displayed instead of subtitle
+          largeIcon: pic,
+          progress: progressMS,
+          maxProgress: durationMS,
+          icon: 'ic_stat_musicnote',
+          subText: subText,
+          color: color,
+          colorized: true,
+          // showWhen: displayTime != null,
+          when: displayTime.millisecondsSinceEpoch,
+          // tag: tag,
+        ),
+      ),
+      // payload: payload,
     );
   }
 

@@ -380,9 +380,9 @@ class Namida extends StatelessWidget {
         // prevent accidental miniplayer swipe when performing back gesture
         Positioned(
           right: 0,
-            child: SizedBox(
-              width: 8.0,
-              height: context.height,
+          child: SizedBox(
+            width: 8.0,
+            height: context.height,
             child: GestureDetector(
               onHorizontalDragUpdate: (details) {},
             ),
