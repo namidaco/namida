@@ -308,6 +308,7 @@ class CurrentColor {
           .getArtwork(
             imagePath: imagePath,
             compressed: true,
+            size: 200,
           )
           .then((value) => value.$2);
     }

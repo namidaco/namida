@@ -1246,43 +1246,47 @@ class NamidaMiniPlayer extends StatelessWidget {
                             child: Stack(
                               alignment: Alignment.bottomRight,
                               children: [
-                                NamidaListView(
-                                  key: const Key('minikuru'),
-                                  itemExtents: List.filled(Player.inst.currentQueue.length, Dimensions.inst.trackTileItemExtent),
-                                  scrollController: MiniPlayerController.inst.queueScrollController,
-                                  padding: EdgeInsets.only(bottom: 56.0 + SelectedTracksController.inst.bottomPadding.value),
-                                  onReorderStart: (index) => MiniPlayerController.inst.invokeStartReordering(),
-                                  onReorderEnd: (index) => MiniPlayerController.inst.invokeDoneReordering(),
-                                  onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
-                                  itemCount: Player.inst.currentQueue.length,
-                                  itemBuilder: (context, i) {
-                                    final track = Player.inst.currentQueue[i];
-                                    final key = "$i${track.track.path}";
-                                    return FadeDismissible(
-                                      key: Key("Diss_$key"),
-                                      onDismissed: (direction) {
-                                        Player.inst.removeFromQueue(i);
-                                        MiniPlayerController.inst.invokeDoneReordering();
-                                      },
-                                      onUpdate: (detailts) {
-                                        final isReordering = detailts.progress != 0.0;
-                                        if (isReordering) {
-                                          MiniPlayerController.inst.invokeStartReordering();
-                                        } else {
+                                DefaultTextStyle(
+                                  style: context.textTheme.displayMedium!,
+                                  child: NamidaListView(
+                                    key: const Key('minikuru'),
+                                    itemExtents: List.filled(Player.inst.currentQueue.length, Dimensions.inst.trackTileItemExtent),
+                                    scrollController: MiniPlayerController.inst.queueScrollController,
+                                    padding: EdgeInsets.only(bottom: 56.0 + SelectedTracksController.inst.bottomPadding.value),
+                                    onReorderStart: (index) => MiniPlayerController.inst.invokeStartReordering(),
+                                    onReorderEnd: (index) => MiniPlayerController.inst.invokeDoneReordering(),
+                                    onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
+                                    itemCount: Player.inst.currentQueue.length,
+                                    itemBuilder: (context, i) {
+                                      final track = Player.inst.currentQueue[i];
+                                      final key = "$i${track.track.path}";
+                                      return FadeDismissible(
+                                        key: Key("Diss_$key"),
+                                        onDismissed: (direction) {
+                                          Player.inst.removeFromQueue(i);
                                           MiniPlayerController.inst.invokeDoneReordering();
-                                        }
-                                      },
-                                      child: TrackTile(
-                                        index: i,
-                                        trackOrTwd: track,
-                                        displayRightDragHandler: true,
-                                        draggableThumbnail: true,
-                                        queueSource: QueueSource.playerQueue,
-                                        cardColorOpacity: 0.5,
-                                        fadeOpacity: i < currentIndex ? 0.3 : 0.0,
-                                      ),
-                                    );
-                                  },
+                                        },
+                                        onUpdate: (detailts) {
+                                          final isReordering = detailts.progress != 0.0;
+                                          if (isReordering) {
+                                            MiniPlayerController.inst.invokeStartReordering();
+                                          } else {
+                                            MiniPlayerController.inst.invokeDoneReordering();
+                                          }
+                                        },
+                                        child: TrackTile(
+                                          key: Key("tt_$key"),
+                                          index: i,
+                                          trackOrTwd: track,
+                                          displayRightDragHandler: true,
+                                          draggableThumbnail: true,
+                                          queueSource: QueueSource.playerQueue,
+                                          cardColorOpacity: 0.5,
+                                          fadeOpacity: i < currentIndex ? 0.3 : 0.0,
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 ),
                                 Container(
                                   width: context.width,
@@ -2231,9 +2235,8 @@ class LyricsWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (cp == 0.0) {
-      return child;
-    }
+    // if (cp == 0.0) return child;
+
     return Obx(
       () => AnimatedSwitcher(
         key: Key(track.path),

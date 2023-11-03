@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
-import 'package:readmore/readmore.dart';
+import 'package:read_more_text/read_more_text.dart';
 
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
+
+final _readmoreWidgets = <String?, Widget>{};
+int? _themeHashCode;
 
 class YTCommentCard extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
@@ -29,6 +32,48 @@ class YTCommentCard extends StatelessWidget {
     final isPinned = comment?.pinned ?? false;
 
     final containerColor = context.theme.cardColor.withAlpha(100);
+    final readmoreColor = context.theme.colorScheme.primary.withAlpha(160);
+
+    final cid = comment?.commentId;
+
+    final invalidContext = _themeHashCode == null || _themeHashCode != context.theme.hashCode;
+    if (invalidContext || _readmoreWidgets[cid] == null && cid != null) {
+      _themeHashCode = context.theme.hashCode;
+      final text = YoutubeController.inst.commentToParsedHtml[cid] ?? commentText;
+      if (text != null) {
+        _readmoreWidgets.optimizedAdd(
+          [
+            MapEntry(
+              cid,
+              ReadMoreText(
+                text,
+                numLines: 5,
+                readMoreText: lang.SHOW_MORE,
+                readLessText: '',
+                readLessIcon: Icon(
+                  Broken.arrow_up_3,
+                  size: 18.0,
+                  color: readmoreColor,
+                ),
+                readMoreIcon: Icon(
+                  Broken.arrow_down_2,
+                  size: 18.0,
+                  color: readmoreColor,
+                ),
+                readMoreTextStyle: context.textTheme.displaySmall?.copyWith(color: readmoreColor),
+                style: context.textTheme.displaySmall?.copyWith(
+                  fontSize: 13.5.multipliedFontScale,
+                  fontWeight: FontWeight.w500,
+                  color: context.theme.colorScheme.onBackground.withAlpha(220),
+                ),
+              ),
+            ),
+          ],
+          200,
+        );
+      }
+    }
+
     return Container(
       margin: margin,
       padding: const EdgeInsets.all(10.0),
@@ -50,14 +95,14 @@ class YTCommentCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             NamidaDummyContainer(
-              width: 42.0,
-              height: 42.0,
+              width: 38.0,
+              height: 38.0,
               borderRadius: 999,
               shimmerEnabled: uploaderAvatar == null,
               child: YoutubeThumbnail(
                 isImportantInCache: false,
                 channelUrl: uploaderAvatar,
-                width: 42.0,
+                width: 38.0,
                 isCircle: true,
               ),
             ),
@@ -131,19 +176,7 @@ class YTCommentCard extends StatelessWidget {
                               ),
                             ],
                           )
-                        : ReadMoreText(
-                            HtmlParser.parseHTML(commentText).text,
-                            trimLines: 5,
-                            colorClickableText: context.theme.colorScheme.primary.withAlpha(200),
-                            trimMode: TrimMode.Line,
-                            trimCollapsedText: lang.SHOW_MORE,
-                            trimExpandedText: '',
-                            style: context.textTheme.displaySmall?.copyWith(
-                              fontSize: 13.5.multipliedFontScale,
-                              fontWeight: FontWeight.w500,
-                              color: context.theme.colorScheme.onBackground.withAlpha(220),
-                            ),
-                          ),
+                        : _readmoreWidgets[cid],
                   ),
                   const SizedBox(height: 8.0),
                   Row(

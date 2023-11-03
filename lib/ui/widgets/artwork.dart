@@ -158,7 +158,6 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
 
     final bytes = widget.bytes ?? Indexer.inst.artworksMap[widget.path];
     final isValidBytes = bytes != null && bytes.isNotEmpty;
-    print('HHHHHHHHHHHHH ${bytes?.length} || $_imagePath');
     return (_imagePath == null && !isValidBytes) || widget.forceDummyArtwork
         ? getStockWidget(
             stackWithOnTopWidgets: true,

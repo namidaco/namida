@@ -56,7 +56,7 @@ class NamidaNavigator {
 
   void popAllMenus() {
     if (_currentMenusNumber > 0) {
-      Get.close(_currentMenusNumber);
+      Get.until((route) => route.isFirst);
       _currentMenusNumber = 0;
     }
     _printMenus();

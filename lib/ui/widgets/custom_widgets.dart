@@ -1921,37 +1921,43 @@ class NamidaContainerDivider extends StatelessWidget {
   }
 }
 
-class FadeDismissible extends StatelessWidget {
+class FadeDismissible extends StatefulWidget {
   final Widget child;
   final void Function(DismissDirection onDismissed)? onDismissed;
   final void Function(DismissUpdateDetails detailts)? onUpdate;
   final DismissDirection direction;
 
-  FadeDismissible({
-    super.key,
+  const FadeDismissible({
+    required super.key,
     required this.child,
     this.onDismissed,
     this.onUpdate,
     this.direction = DismissDirection.horizontal,
   });
 
-  final fadeOpacity = 0.0.obs;
+  @override
+  State<FadeDismissible> createState() => _FadeDismissibleState();
+}
+
+class _FadeDismissibleState extends State<FadeDismissible> {
+  final fadeOpacity = ValueNotifier(0.0);
 
   @override
   Widget build(BuildContext context) {
     return Dismissible(
-      key: key!,
-      onDismissed: onDismissed,
+      key: widget.key!,
+      onDismissed: widget.onDismissed,
       onUpdate: (details) {
         fadeOpacity.value = details.progress;
-        if (onUpdate != null) onUpdate!(details);
+        if (widget.onUpdate != null) widget.onUpdate!(details);
       },
-      direction: direction,
-      child: Obx(
-        () => AnimatedOpacity(
+      direction: widget.direction,
+      child: ValueListenableBuilder(
+        valueListenable: fadeOpacity,
+        builder: (context, value, child) => AnimatedOpacity(
           duration: const Duration(milliseconds: 100),
           opacity: 1 - fadeOpacity.value,
-          child: child,
+          child: widget.child,
         ),
       ),
     );
@@ -2742,16 +2748,16 @@ class _NamidaLifeCycleWrapperState extends State<NamidaLifeCycleWrapper> {
     namidaChannel.setMethodCallHandler((call) async {
       switch (call.method) {
         case 'onResume':
-        await Future.wait([
-          SystemChrome.setPreferredOrientations(kDefaultOrientations),
-          SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values),
-          if (widget.onResume != null) widget.onResume!(),
-        ]);
+          await Future.wait([
+            SystemChrome.setPreferredOrientations(kDefaultOrientations),
+            SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values),
+            if (widget.onResume != null) widget.onResume!(),
+          ]);
         case 'onUserLeaveHint':
           await widget.onSuspending?.call();
         case 'onStop':
           await widget.onDetach?.call();
-  }
+      }
     });
   }
 

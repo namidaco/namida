@@ -18,6 +18,9 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
 
+final _trackTileWidgets = <String, Widget?>{};
+int? _themeHashCode;
+
 class TrackTile extends StatelessWidget {
   final int index;
   final Selectable trackOrTwd;
@@ -84,8 +87,8 @@ class TrackTile extends StatelessWidget {
         queueSource == QueueSource.queuePage ||
         queueSource == QueueSource.playerQueue ||
         queueSource == QueueSource.history;
-    final isInSelectedTracksPreview = queueSource == QueueSource.selectedTracks;
 
+    final isInSelectedTracksPreview = queueSource == QueueSource.selectedTracks;
     return Stack(
       alignment: Alignment.centerRight,
       children: [
@@ -93,7 +96,6 @@ class TrackTile extends StatelessWidget {
           () {
             final willSleepAfterThis = queueSource == QueueSource.playerQueue && Player.inst.enableSleepAfterTracks && Player.inst.sleepingTrackIndex == index;
 
-            // final TrackItem tritem = settings.trackItem.value;
             final double thumbnailSize = settings.trackThumbnailSizeinList.value;
             final double trackTileHeight = settings.trackListTileHeight.value;
             final bool isTrackSelected = SelectedTracksController.inst.isTrackSelected(trackOrTwd);
@@ -103,241 +105,264 @@ class TrackTile extends StatelessWidget {
             final bool isTrackCurrentlyPlaying = isRightIndex && isTrackSame && isRightHistoryList;
 
             final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
-
             final row1Text = _joinTrackItems(TrackTilePosition.row1Item1, TrackTilePosition.row1Item2, TrackTilePosition.row1Item3, track);
             final row2Text = _joinTrackItems(TrackTilePosition.row2Item1, TrackTilePosition.row2Item2, TrackTilePosition.row2Item3, track);
             final row3Text = _joinTrackItems(TrackTilePosition.row3Item1, TrackTilePosition.row3Item2, TrackTilePosition.row3Item3, track);
             final rightItem1Text = _getChoosenTrackTileItem(TrackTilePosition.rightItem1, track);
             final rightItem2Text = _getChoosenTrackTileItem(TrackTilePosition.rightItem2, track);
+
             final backgroundColor = bgColor ??
                 Color.alphaBlend(
                   isTrackSelected & !isInSelectedTracksPreview ? context.theme.focusColor : Colors.transparent,
                   isTrackCurrentlyPlaying ? CurrentColor.inst.color : context.theme.cardTheme.color!.withOpacity(cardColorOpacity),
                 );
-            return Padding(
-              padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin),
-              child: Material(
-                type: MaterialType.transparency,
-                child: InkWell(
-                  onTap: onTap ??
-                      () async {
-                        if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
-                          _selectTrack();
-                        } else {
-                          if (queueSource == QueueSource.search) {
-                            ScrollSearchController.inst.unfocusKeyboard();
-                            await Player.inst.playOrPause(
-                              settings.trackPlayMode.value.shouldBeIndex0 ? 0 : index,
-                              settings.trackPlayMode.value.getQueue(track),
-                              queueSource,
-                            );
-                          } else {
-                            await Player.inst.playOrPause(
-                              index,
-                              queueSource.toTracks(null, trackWithDate?.dateAdded.toDaysSince1970()),
-                              queueSource,
-                            );
-                          }
-                        }
-                      },
-                  onLongPress: !selectable || onTap != null
-                      ? null
-                      : () {
-                          if (!isInSelectedTracksPreview) {
-                            _selectTrack();
-                          }
-                        },
-                  child: ColoredBox(
-                    color: backgroundColor,
-                    child: SizedBox(
-                      height: Dimensions.inst.trackTileItemExtent,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
-                        child: Row(
-                          children: [
-                            const SizedBox(width: 12.0),
-                            Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                AnimatedScale(
-                                  duration: const Duration(milliseconds: 400),
-                                  scale: isTrackCurrentlyPlaying ? 0.96 : 1.0,
-                                  curve: Curves.easeInOut,
-                                  child: SizedBox(
-                                    width: thumbnailSize,
-                                    height: thumbnailSize,
-                                    child: NamidaHero(
-                                      tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
-                                      child: ArtworkWidget(
-                                        key: Key("$willSleepAfterThis${trackOrTwd.hashCode}"),
-                                        thumbnailSize: thumbnailSize,
-                                        path: track.pathToImage,
-                                        forceSquared: settings.forceSquaredTrackThumbnail.value,
-                                        useTrackTileCacheHeight: true,
-                                        onTopWidgets: [
-                                          if (displayTrackNumber)
-                                            Positioned(
-                                              bottom: 0,
-                                              right: 0,
-                                              child: NamidaBlurryContainer(
-                                                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
-                                                borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
-                                                child: Text(
-                                                  (track.trackNo).toString(),
-                                                  style: context.textTheme.displaySmall,
-                                                ),
-                                              ),
+
+            final props =
+                "${trackOrTwd.track.path}${displayRightDragHandler}_${draggableThumbnail}_${bgColor}_${trailingWidget?.hashCode}_${playlistName}_${thirdLineText}_${displayTrackNumber}_${selectable}_${cardColorOpacity}_$fadeOpacity";
+            final vars =
+                "${willSleepAfterThis}_${thumbnailSize}_${trackTileHeight}_${isTrackSelected}_${isTrackSame}_${isRightHistoryList}_${isRightIndex}_$isTrackCurrentlyPlaying";
+            final key = "$props$vars ";
+            final invalidContext = _themeHashCode == null || _themeHashCode != context.theme.hashCode;
+            if (invalidContext) {
+              _themeHashCode = context.theme.hashCode;
+              _trackTileWidgets[key] = null;
+            }
+
+            if (_trackTileWidgets[key] != null) return _trackTileWidgets[key]!;
+
+            _trackTileWidgets.optimizedAdd(
+              [
+                MapEntry(
+                  key,
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin),
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: InkWell(
+                        onTap: onTap ??
+                            () async {
+                              if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
+                                _selectTrack();
+                              } else {
+                                if (queueSource == QueueSource.search) {
+                                  ScrollSearchController.inst.unfocusKeyboard();
+                                  await Player.inst.playOrPause(
+                                    settings.trackPlayMode.value.shouldBeIndex0 ? 0 : index,
+                                    settings.trackPlayMode.value.getQueue(track),
+                                    queueSource,
+                                  );
+                                } else {
+                                  await Player.inst.playOrPause(
+                                    index,
+                                    queueSource.toTracks(null, trackWithDate?.dateAdded.toDaysSince1970()),
+                                    queueSource,
+                                  );
+                                }
+                              }
+                            },
+                        onLongPress: !selectable || onTap != null
+                            ? null
+                            : () {
+                                if (!isInSelectedTracksPreview) {
+                                  _selectTrack();
+                                }
+                              },
+                        child: ColoredBox(
+                          color: backgroundColor,
+                          child: SizedBox(
+                            height: Dimensions.inst.trackTileItemExtent,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
+                              child: Row(
+                                children: [
+                                  const SizedBox(width: 12.0),
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      AnimatedScale(
+                                        duration: const Duration(milliseconds: 400),
+                                        scale: isTrackCurrentlyPlaying ? 0.96 : 1.0,
+                                        curve: Curves.easeInOut,
+                                        child: SizedBox(
+                                          width: thumbnailSize,
+                                          height: thumbnailSize,
+                                          child: NamidaHero(
+                                            tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
+                                            child: ArtworkWidget(
+                                              key: Key("$willSleepAfterThis${trackOrTwd.hashCode}"),
+                                              thumbnailSize: thumbnailSize,
+                                              path: track.pathToImage,
+                                              forceSquared: settings.forceSquaredTrackThumbnail.value,
+                                              useTrackTileCacheHeight: true,
+                                              onTopWidgets: [
+                                                if (displayTrackNumber)
+                                                  Positioned(
+                                                    bottom: 0,
+                                                    right: 0,
+                                                    child: NamidaBlurryContainer(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
+                                                      borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
+                                                      child: Text(
+                                                        (track.trackNo).toString(),
+                                                        style: context.textTheme.displaySmall,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                if (willSleepAfterThis)
+                                                  Positioned(
+                                                    bottom: 0,
+                                                    right: 0,
+                                                    child: Container(
+                                                      padding: const EdgeInsets.all(2.0),
+                                                      decoration: BoxDecoration(
+                                                        color: context.theme.colorScheme.background.withAlpha(160),
+                                                        borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                                                      ),
+                                                      child: const Icon(
+                                                        Broken.timer_1,
+                                                        size: 16.0,
+                                                      ),
+                                                    ),
+                                                  )
+                                              ],
                                             ),
-                                          if (willSleepAfterThis)
-                                            Positioned(
-                                              bottom: 0,
-                                              right: 0,
-                                              child: Container(
-                                                padding: const EdgeInsets.all(2.0),
-                                                decoration: BoxDecoration(
-                                                  color: context.theme.colorScheme.background.withAlpha(160),
-                                                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                                                ),
-                                                child: const Icon(
-                                                  Broken.timer_1,
-                                                  size: 16.0,
-                                                ),
-                                              ),
-                                            )
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                if (draggableThumbnail)
-                                  NamidaReordererableListener(
-                                    durationMs: 80,
-                                    isInQueue: queueSource == QueueSource.playerQueue,
-                                    index: index,
-                                    child: Container(
-                                      color: Colors.transparent,
-                                      height: trackTileHeight,
-                                      width: thumbnailSize,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(width: 12.0),
-                            Expanded(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // check if first row isnt empty
-                                  if (row1Text != '')
-                                    Text(
-                                      row1Text,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                      style: context.textTheme.displayMedium!.copyWith(
-                                        color: textColor?.withAlpha(170),
-                                      ),
-                                    ),
-
-                                  // check if second row isnt empty
-                                  if (row2Text != '')
-                                    Text(
-                                      row2Text,
-                                      style: context.textTheme.displaySmall?.copyWith(
-                                        fontWeight: FontWeight.w500,
-                                        color: textColor?.withAlpha(140),
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-
-                                  // check if third row isnt empty
-                                  if (thirdLineText == '' && settings.displayThirdRow.value)
-                                    if (row3Text != '')
-                                      Text(
-                                        row3Text,
-                                        style: context.textTheme.displaySmall?.copyWith(
-                                          color: textColor?.withAlpha(130),
+                                          ),
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
                                       ),
-
-                                  if (thirdLineText != '')
-                                    Text(
-                                      thirdLineText,
-                                      style: context.textTheme.displaySmall?.copyWith(color: textColor?.withAlpha(130)),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 6.0),
-                            if (settings.displayFavouriteIconInListTile.value || rightItem1Text != '' || rightItem2Text != '')
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  if (rightItem1Text != '')
-                                    Text(
-                                      rightItem1Text,
-                                      style: context.textTheme.displaySmall?.copyWith(
-                                        fontWeight: FontWeight.w500,
-                                        color: textColor?.withAlpha(170),
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  if (rightItem2Text != '')
-                                    Text(
-                                      rightItem2Text,
-                                      style: context.textTheme.displaySmall?.copyWith(
-                                        fontWeight: FontWeight.w500,
-                                        color: textColor?.withAlpha(170),
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  if (settings.displayFavouriteIconInListTile.value)
-                                    NamidaLikeButton(
-                                      track: track,
-                                      size: 22.0,
-                                      color: textColor?.withAlpha(140) ?? context.textTheme.displayMedium?.color?.withAlpha(140),
-                                    ),
-                                ],
-                              ),
-                            if (displayRightDragHandler) ...[
-                              const SizedBox(width: 8.0),
-                              NamidaReordererableListener(
-                                durationMs: 20,
-                                isInQueue: queueSource == QueueSource.playerQueue,
-                                index: index,
-                                child: FittedBox(
-                                  child: Icon(
-                                    Broken.menu_1,
-                                    color: textColor?.withAlpha(160),
+                                      if (draggableThumbnail)
+                                        NamidaReordererableListener(
+                                          durationMs: 80,
+                                          isInQueue: queueSource == QueueSource.playerQueue,
+                                          index: index,
+                                          child: Container(
+                                            color: Colors.transparent,
+                                            height: trackTileHeight,
+                                            width: thumbnailSize,
+                                          ),
+                                        ),
+                                    ],
                                   ),
-                                ),
+                                  const SizedBox(width: 12.0),
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // check if first row isnt empty
+                                        if (row1Text != '')
+                                          Text(
+                                            row1Text,
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                            style: context.textTheme.displayMedium!.copyWith(
+                                              color: textColor?.withAlpha(170),
+                                            ),
+                                          ),
+
+                                        // check if second row isnt empty
+                                        if (row2Text != '')
+                                          Text(
+                                            row2Text,
+                                            style: context.textTheme.displaySmall?.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              color: textColor?.withAlpha(140),
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+
+                                        // check if third row isnt empty
+                                        if (thirdLineText == '' && settings.displayThirdRow.value)
+                                          if (row3Text != '')
+                                            Text(
+                                              row3Text,
+                                              style: context.textTheme.displaySmall?.copyWith(
+                                                color: textColor?.withAlpha(130),
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+
+                                        if (thirdLineText != '')
+                                          Text(
+                                            thirdLineText,
+                                            style: context.textTheme.displaySmall?.copyWith(color: textColor?.withAlpha(130)),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6.0),
+                                  if (settings.displayFavouriteIconInListTile.value || rightItem1Text != '' || rightItem2Text != '')
+                                    Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        if (rightItem1Text != '')
+                                          Text(
+                                            rightItem1Text,
+                                            style: context.textTheme.displaySmall?.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              color: textColor?.withAlpha(170),
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        if (rightItem2Text != '')
+                                          Text(
+                                            rightItem2Text,
+                                            style: context.textTheme.displaySmall?.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              color: textColor?.withAlpha(170),
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        if (settings.displayFavouriteIconInListTile.value)
+                                          NamidaLikeButton(
+                                            track: track,
+                                            size: 22.0,
+                                            color: textColor?.withAlpha(140) ?? context.textTheme.displayMedium?.color?.withAlpha(140),
+                                          ),
+                                      ],
+                                    ),
+                                  if (displayRightDragHandler) ...[
+                                    const SizedBox(width: 8.0),
+                                    NamidaReordererableListener(
+                                      durationMs: 20,
+                                      isInQueue: queueSource == QueueSource.playerQueue,
+                                      index: index,
+                                      child: FittedBox(
+                                        child: Icon(
+                                          Broken.menu_1,
+                                          color: textColor?.withAlpha(160),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(width: 2.0),
+                                  MoreIcon(
+                                    padding: 6.0,
+                                    iconColor: textColor?.withAlpha(160),
+                                    onPressed: _triggerTrackDialog,
+                                    onLongPress: _triggerTrackInfoDialog,
+                                  ),
+                                  if (trailingWidget == null) const SizedBox(width: 4.0),
+                                  if (trailingWidget != null) ...[
+                                    trailingWidget!,
+                                    const SizedBox(width: 10.0),
+                                  ],
+                                ],
                               ),
-                            ],
-                            const SizedBox(width: 2.0),
-                            MoreIcon(
-                              padding: 6.0,
-                              iconColor: textColor?.withAlpha(160),
-                              onPressed: _triggerTrackDialog,
-                              onLongPress: _triggerTrackInfoDialog,
                             ),
-                            if (trailingWidget == null) const SizedBox(width: 4.0),
-                            if (trailingWidget != null) ...[
-                              trailingWidget!,
-                              const SizedBox(width: 10.0),
-                            ],
-                          ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ),
+                )
+              ],
+              300,
             );
+            return _trackTileWidgets[key]!;
           },
         ),
         if (fadeOpacity > 0)
