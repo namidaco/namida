@@ -34,12 +34,28 @@ class _YoutubePageState extends State<YoutubePage> with AutomaticKeepAliveClient
     return BackgroundWrapper(
       child: Obx(
         () {
-          final feed = YoutubeController.inst.homepageFeed;
-          final List<YoutubeFeed?> l = [];
-          if (feed.isEmpty) {
-            l.addAll(List.filled(20, null));
-          } else {
-            l.addAll(feed);
+          final homepageFeed = YoutubeController.inst.homepageFeed;
+          final feed = homepageFeed.isEmpty ? List<YoutubeFeed?>.filled(10, null) : homepageFeed;
+
+          if (feed.isNotEmpty && feed.first == null) {
+            return ShimmerWrapper(
+              transparent: false,
+              shimmerEnabled: true,
+              child: ListView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: feed.length,
+                shrinkWrap: true,
+                itemBuilder: (context, index) {
+                  return YoutubeVideoCard(
+                    isImageImportantInCache: false,
+                    video: null,
+                    playlistID: null,
+                    thumbnailWidth: thumbnailWidth,
+                    thumbnailHeight: thumbnailHeight,
+                  );
+                },
+              ),
+            );
           }
           return NamidaListView(
             // padding: const EdgeInsets.only(top: 32.0, bottom: kBottomPadding),
@@ -51,7 +67,7 @@ class _YoutubePageState extends State<YoutubePage> with AutomaticKeepAliveClient
               ),
             ),
             itemBuilder: (context, i) {
-              final feedItem = l[i];
+              final feedItem = feed[i];
               return YoutubeVideoCard(
                 key: ValueKey(i),
                 isImageImportantInCache: false,
@@ -61,8 +77,8 @@ class _YoutubePageState extends State<YoutubePage> with AutomaticKeepAliveClient
                 thumbnailHeight: thumbnailHeight,
               );
             },
-            itemCount: l.length,
-            itemExtents: List.filled(l.length, thumbnailItemExtent),
+            itemCount: feed.length,
+            itemExtents: List.filled(feed.length, thumbnailItemExtent),
           );
         },
       ),

@@ -517,6 +517,7 @@ class AdvancedSettings extends StatelessWidget {
                           child: Row(
                             children: [
                               ArtworkWidget(
+                                key: Key(id ?? ''),
                                 thumbnailSize: 92.0,
                                 iconSize: 24.0,
                                 width: 92,

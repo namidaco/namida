@@ -15,9 +15,12 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
+import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class TrackTileCustomization extends StatelessWidget {
   const TrackTileCustomization({super.key});
+
+  void _onSettingsChanged() => TrackTileManager.onTrackItemPropChange();
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +40,7 @@ class TrackTileCustomization extends StatelessWidget {
             onChanged: (value) {
               settings.save(forceSquaredTrackThumbnail: !value);
               Player.inst.refreshRxVariables();
+              _onSettingsChanged();
               if (!value && settings.trackThumbnailSizeinList.toInt() != settings.trackListTileHeight.toInt()) {
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
@@ -92,9 +96,10 @@ class TrackTileCustomization extends StatelessWidget {
             icon: Broken.chart_1,
             rotateIcon: 1,
             title: lang.DISPLAY_THIRD_ROW_IN_TRACK_TILE,
-            onChanged: (_) => settings.save(
-              displayThirdRow: !settings.displayThirdRow.value,
-            ),
+            onChanged: (isTrue) {
+              settings.save(displayThirdRow: !isTrue);
+              _onSettingsChanged();
+            },
             value: settings.displayThirdRow.value,
           ),
         ),
@@ -103,9 +108,10 @@ class TrackTileCustomization extends StatelessWidget {
             icon: Broken.coin,
             rotateIcon: 3,
             title: lang.DISPLAY_THIRD_ITEM_IN_ROW_IN_TRACK_TILE,
-            onChanged: (_) => settings.save(
-              displayThirdItemInEachRow: !settings.displayThirdItemInEachRow.value,
-            ),
+            onChanged: (isTrue) {
+              settings.save(displayThirdItemInEachRow: !isTrue);
+              _onSettingsChanged();
+            },
             value: settings.displayThirdItemInEachRow.value,
           ),
         ),
@@ -113,9 +119,10 @@ class TrackTileCustomization extends StatelessWidget {
           () => CustomSwitchListTile(
             icon: Broken.heart,
             title: lang.DISPLAY_FAVOURITE_ICON_IN_TRACK_TILE,
-            onChanged: (_) => settings.save(
-              displayFavouriteIconInListTile: !settings.displayFavouriteIconInListTile.value,
-            ),
+            onChanged: (isTrue) {
+              settings.save(displayFavouriteIconInListTile: !isTrue);
+              _onSettingsChanged();
+            },
             value: settings.displayFavouriteIconInListTile.value,
           ),
         ),
@@ -269,7 +276,7 @@ class TrackTileCustomization extends StatelessWidget {
     );
   }
 
-  _showTrackItemsDialog(TrackTilePosition p) {
+  void _showTrackItemsDialog(TrackTilePosition p) {
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         title: lang.CHOOSE,
@@ -287,6 +294,7 @@ class TrackTileCustomization extends StatelessWidget {
                 title: trItem.toText(),
                 onTap: () {
                   settings.updateTrackItemList(p, trItem);
+                  _onSettingsChanged();
                   NamidaNavigator.inst.closeDialog();
                 },
                 active: settings.trackItem[p] == trItem,

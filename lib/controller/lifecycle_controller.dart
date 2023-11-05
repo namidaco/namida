@@ -14,7 +14,7 @@ class LifeCycleController {
 
   late final MethodChannel namidaChannel;
 
-  _initLiseners() {
+  void _initLiseners() {
     namidaChannel.setMethodCallHandler((call) async {
       switch (call.method) {
         case 'onResume':

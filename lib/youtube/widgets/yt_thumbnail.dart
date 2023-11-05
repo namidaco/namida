@@ -156,7 +156,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
         icon: widget.channelUrl != null ? Broken.user : Broken.video,
         iconSize: widget.channelUrl != null ? null : widget.width * 0.3,
         forceSquared: true,
-        cacheHeight: (widget.height?.round() ?? widget.width.round()) ~/ 1.4,
+        cacheHeight: (widget.height?.round() ?? widget.width.round()) ~/ 1.2,
         onTopWidgets: [
           ...widget.onTopWidgets,
           if (widget.smallBoxText != null)

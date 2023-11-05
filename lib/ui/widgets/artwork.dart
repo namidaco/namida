@@ -95,7 +95,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
             imagePath: widget.path!,
             compressed: widget.compressed,
             checkFileFirst: false,
-            size: widget.useTrackTileCacheHeight ? 200 : null,
+            size: widget.useTrackTileCacheHeight ? 240 : null,
           );
           if ((res.$1 != null || res.$2 != null) && widget.compressed) setState(() {});
         }

@@ -26,6 +26,7 @@ void showSettingDialogWithTextField({
   bool dateTimeFormat = false,
   bool trackTileSeparator = false,
   bool addNewPlaylist = false,
+  void Function()? onTrackTileSettingsChanged,
 }) async {
   final controller = TextEditingController();
   final formKey = GlobalKey<FormState>();
@@ -48,6 +49,8 @@ void showSettingDialogWithTextField({
     );
   }
 
+  void onTTSetChange() => onTrackTileSettingsChanged?.call();
+
   NamidaNavigator.inst.navigateDialog(
     dialog: Form(
       key: formKey,
@@ -61,11 +64,13 @@ void showSettingDialogWithTextField({
                 if (trackThumbnailSizeinList) {
                   settings.save(trackThumbnailSizeinList: 70.0);
                   showResetToDefaultSnackBar("${settings.trackThumbnailSizeinList.value}", title: title);
+                  onTTSetChange();
                 }
                 if (trackListTileHeight) {
                   settings.save(trackListTileHeight: 70.0);
                   showResetToDefaultSnackBar("${settings.trackListTileHeight.value}", title: title);
                   Dimensions.inst.updateTrackTileDimensions();
+                  onTTSetChange();
                 }
                 if (albumThumbnailSizeinList) {
                   settings.save(albumThumbnailSizeinList: 90.0);
@@ -92,6 +97,7 @@ void showSettingDialogWithTextField({
                 if (trackTileSeparator) {
                   settings.save(trackTileSeparator: '•');
                   showResetToDefaultSnackBar("${settings.trackTileSeparator}", title: title);
+                  onTTSetChange();
                 }
 
                 NamidaNavigator.inst.closeDialog();
@@ -106,10 +112,12 @@ void showSettingDialogWithTextField({
               if (formKey.currentState!.validate()) {
                 if (trackThumbnailSizeinList) {
                   settings.save(trackThumbnailSizeinList: double.parse(controller.text));
+                  onTTSetChange();
                 }
                 if (trackListTileHeight) {
                   settings.save(trackListTileHeight: double.parse(controller.text));
                   Dimensions.inst.updateTrackTileDimensions();
+                  onTTSetChange();
                 }
                 if (albumThumbnailSizeinList) {
                   settings.save(albumThumbnailSizeinList: double.parse(controller.text));
@@ -130,6 +138,7 @@ void showSettingDialogWithTextField({
                 }
                 if (trackTileSeparator) {
                   settings.save(trackTileSeparator: controller.text);
+                  onTTSetChange();
                 }
                 if (addNewPlaylist) {
                   PlaylistController.inst.addNewPlaylist(controller.text);

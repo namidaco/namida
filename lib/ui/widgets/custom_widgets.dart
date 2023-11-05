@@ -2845,8 +2845,8 @@ class _NamidaTabViewState extends State<NamidaTabView> with SingleTickerProvider
               )
               .toList(),
           splashBorderRadius: BorderRadius.circular(12.0.multipliedRadius),
-          indicatorPadding: const EdgeInsets.symmetric(horizontal: 32.0),
-          indicatorSize: TabBarIndicatorSize.tab,
+          // indicatorPadding: const EdgeInsets.symmetric(horizontal: 32.0),
+          indicatorSize: TabBarIndicatorSize.label,
         ),
         Expanded(
           child: TabBarView(
