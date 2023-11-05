@@ -21,7 +21,6 @@ void showSettingDialogWithTextField({
   bool trackListTileHeight = false,
   bool albumThumbnailSizeinList = false,
   bool albumListTileHeight = false,
-  bool nowPlayingImageContainerHeight = false,
   bool borderRadiusMultiplier = false,
   bool fontScaleFactor = false,
   bool dateTimeFormat = false,
@@ -77,10 +76,7 @@ void showSettingDialogWithTextField({
                   showResetToDefaultSnackBar("${settings.albumListTileHeight.value}", title: title);
                   Dimensions.inst.updateAlbumTileDimensions();
                 }
-                if (nowPlayingImageContainerHeight) {
-                  settings.save(nowPlayingImageContainerHeight: 400.0);
-                  showResetToDefaultSnackBar("${settings.nowPlayingImageContainerHeight.value}", title: title);
-                }
+
                 if (borderRadiusMultiplier) {
                   settings.save(borderRadiusMultiplier: 1.0);
                   showResetToDefaultSnackBar("${settings.borderRadiusMultiplier.value}", title: title);
@@ -123,9 +119,6 @@ void showSettingDialogWithTextField({
                   Dimensions.inst.updateAlbumTileDimensions();
                 }
 
-                if (nowPlayingImageContainerHeight) {
-                  settings.save(nowPlayingImageContainerHeight: double.parse(controller.text));
-                }
                 if (borderRadiusMultiplier) {
                   settings.save(borderRadiusMultiplier: double.parse(controller.text));
                 }

@@ -43,7 +43,6 @@ class SettingsController {
   final RxDouble trackListTileHeight = 70.0.obs;
   final RxDouble albumThumbnailSizeinList = 90.0.obs;
   final RxDouble albumListTileHeight = 90.0.obs;
-  final RxDouble nowPlayingImageContainerHeight = 400.0.obs;
 
   final RxBool useMediaStore = false.obs;
   final RxBool enableVolumeFadeOnPlayPause = true.obs;
@@ -311,7 +310,6 @@ class SettingsController {
       trackListTileHeight.value = json['trackListTileHeight'] ?? trackListTileHeight.value;
       albumThumbnailSizeinList.value = json['albumThumbnailSizeinList'] ?? albumThumbnailSizeinList.value;
       albumListTileHeight.value = json['albumListTileHeight'] ?? albumListTileHeight.value;
-      nowPlayingImageContainerHeight.value = json['nowPlayingImageContainerHeight'] ?? nowPlayingImageContainerHeight.value;
 
       useMediaStore.value = json['useMediaStore'] ?? useMediaStore.value;
       enableVolumeFadeOnPlayPause.value = json['enableVolumeFadeOnPlayPause'] ?? enableVolumeFadeOnPlayPause.value;
@@ -526,7 +524,6 @@ class SettingsController {
       'trackListTileHeight': trackListTileHeight.value,
       'albumThumbnailSizeinList': albumThumbnailSizeinList.value,
       'albumListTileHeight': albumListTileHeight.value,
-      'nowPlayingImageContainerHeight': nowPlayingImageContainerHeight.value,
 
       'useMediaStore': useMediaStore.value,
       'enableVolumeFadeOnPlayPause': enableVolumeFadeOnPlayPause.value,
@@ -692,7 +689,6 @@ class SettingsController {
     double? trackListTileHeight,
     double? albumThumbnailSizeinList,
     double? albumListTileHeight,
-    double? nowPlayingImageContainerHeight,
     bool? useMediaStore,
     bool? enableVolumeFadeOnPlayPause,
     bool? displayTrackNumberinAlbumPage,
@@ -898,9 +894,6 @@ class SettingsController {
       this.albumListTileHeight.value = albumListTileHeight;
     }
 
-    if (nowPlayingImageContainerHeight != null) {
-      this.nowPlayingImageContainerHeight.value = nowPlayingImageContainerHeight;
-    }
     if (useMediaStore != null) {
       this.useMediaStore.value = useMediaStore;
     }
