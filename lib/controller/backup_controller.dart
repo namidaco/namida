@@ -7,10 +7,16 @@ import 'package:intl/intl.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/main.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 
 class BackupController {
   static BackupController get inst => _instance;
@@ -168,10 +174,28 @@ class BackupController {
       }
     }
 
-    Indexer.inst.refreshLibraryAndCheckForDiff();
     Indexer.inst.updateImageSizeInStorage();
+    Indexer.inst.updateColorPalettesSizeInStorage();
     Indexer.inst.updateVideosSizeInStorage();
+    await _readNewFiles();
     snackyy(title: lang.RESTORED_BACKUP_SUCCESSFULLY, message: lang.RESTORED_BACKUP_SUCCESSFULLY_SUB);
     isRestoringBackup.value = false;
+  }
+
+  Future<void> _readNewFiles() async {
+    await settings.prepareSettingsFile();
+    Indexer.inst.prepareTracksFile();
+
+    QueueController.inst.prepareAllQueuesFile();
+
+    PlaylistController.inst.prepareAllPlaylists();
+    VideoController.inst.initialize();
+
+    await PlaylistController.inst.prepareDefaultPlaylistsFile();
+    // await QueueController.inst.prepareLatestQueue();
+
+    YoutubePlaylistController.inst.prepareAllPlaylists();
+    await YoutubePlaylistController.inst.prepareDefaultPlaylistsFile();
+    YoutubeController.inst.fillBackupInfoMap(); // for history videos info.
   }
 }

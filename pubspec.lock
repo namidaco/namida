@@ -949,8 +949,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: fa4895587001c30ef98cf4f3fd1429b6fdaa8f8a
-      resolved-ref: fa4895587001c30ef98cf4f3fd1429b6fdaa8f8a
+      ref: "2a511214c0cd2b9e0bc14c55a063a55ccc3ab56d"
+      resolved-ref: "2a511214c0cd2b9e0bc14c55a063a55ccc3ab56d"
       url: "https://github.com/namidaco/playlist_manager"
     source: git
     version: "0.0.1"
