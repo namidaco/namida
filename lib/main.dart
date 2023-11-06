@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:catcher/catcher.dart';
 import 'package:external_path/external_path.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -44,6 +45,7 @@ import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Paint.enableDithering = true; // for smooth gradient effect.
+  GestureBinding.instance.resamplingEnabled = true; // for 120hz displays, should make scrolling smoother.
 
   /// Getting Device info
   kSdkVersion = await PictureInPicture.getPlatformSdk();
@@ -344,9 +346,9 @@ class Namida extends StatelessWidget {
       children: [
         Obx(
           () {
-            final locale = settings.selectedLanguage.value.code.split('_');
+            final locale = settings.selectedLanguage.value;
             return GetMaterialApp(
-              key: Key(locale.join()),
+              key: Key(locale.code),
               themeAnimationDuration: const Duration(milliseconds: kThemeAnimationDurationMS),
               debugShowCheckedModeBanner: false,
               title: 'Namida',

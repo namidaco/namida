@@ -61,7 +61,7 @@ class MiniPlayerController {
     animation = AnimationController(
       vsync: ticker,
       duration: const Duration(milliseconds: 500),
-      upperBound: 2.05,
+      upperBound: 2.03,
       lowerBound: -0.2,
       value: 0.0,
     );

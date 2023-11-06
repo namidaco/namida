@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:known_extents_list_view_builder/sliver_known_extents_list.dart';
@@ -63,6 +62,7 @@ class HistoryTracksPage extends StatelessWidget {
                 key: UniqueKey(),
                 itemExtents: HistoryController.inst.allItemsExtentsHistory,
                 delegate: SliverChildBuilderDelegate(
+                  childCount: HistoryController.inst.historyDays.length,
                   (context, index) {
                     final day = days[index];
                     final dayInMs = Duration(days: day).inMilliseconds;
@@ -157,7 +157,6 @@ class HistoryTracksPage extends StatelessWidget {
                       ),
                     );
                   },
-                  childCount: HistoryController.inst.historyDays.length,
                 ),
               );
             },
