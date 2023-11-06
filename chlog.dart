@@ -68,7 +68,7 @@ void main(List<String> argumentsPre) async {
     final firstPart = parts.first.toLowerCase().trim().split(' ');
     final hash = firstPart.first;
     final key = firstPart.last;
-    final val = "#$hash: ${parts.last.trim()}";
+    final val = "$hash: ${parts.last.trim()}";
     if (map[key] == null) {
       map[key] = [val];
     } else {

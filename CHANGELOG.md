@@ -1,5 +1,66 @@
 # Namida Changelog
 
+## 06/11/2023
+# v1.6.8
+### 🎉 New Features:
+   - 1dda153b1d97d220de22a4d674334ba185301ef1: Crossfade support
+   - 553523304b81749d7b336ff990fc895ad513f55d: Crossfade for youtube playback
+   - 90651ae93f86e7cc9be6bb588f5d3661e635c62b: Media Store API Implementation
+   - 8fe2959d6d6fe7bbaa29276860dc4bd9718632b4: Heatmap view for listens
+   - 415ce4e48e2c88f70703821cee82598458c4052e: Dismissible Miniplayer
+   - 02c356585653a19b0012af229e111acd594bb012: Swipe to open drawer option
+   - 64cf448de51268f8bd76ec1fc232454c66d831ca: Immersive mode (Hides Status & Navigation bars while Miniplayer is expanded)
+   - b7aa3255be5601b50cd64991c5d08f958a653807: Add filename to track search filters
+   - b3e1ee11d928d8ce7be8732178649119f12a399b: Prioritize embedded lyrics option
+   - 800965ce1a27b894d747197137b88b14130304b8: Kill player after app dismiss option
+   - 0caecd7fab757314bb21b0233d3ac466475c8a00: Subpages sorting reverse order
+
+### 🛠️ Bug fixes & Improvements:
+- chore:
+   - 5189dec8ab3f32663d501f3613c21df12b85812d: ui fixes
+   - fadffd894f3aec72cfbf6b7cd7841a15f31ebc58: various tweaks & fixes
+   - b0b33faa670e6652b64e280714261a5212da4476: display track path for missing track
+   - 20cb6386baba1624167e90ce0a9fa8dfff168176: more local lrc file patterns #46
+   - a26ddd07b9a00a9510494d8a19fa6bf1e870d59e: increase skip silence values (min 2 seconds, below 512 pcm)
+   - 39d13c4b4cd6f1c9014c6bc6dd37e031eb813fe0: sorting by year (now parses the year first)
+   - be452745511dfe6f02ad9266e14cff3b2445e6b7: KillAppMode.ifNotPlaying by default
+   - 768f852fc070f384be0bcdbedcdc6220aff093c4: aborbers work only on horizontal drag
+   - a532c97a01d0aaa74b3c5f13f96ee54fee257702: expose auto show status bar for fullscreen video (currently disabled)
+   - da044896e684a86a7ad538fc7610588d53a9ea10: save m3u paths as relative instead of absolute, as long they exist with the parent m3u
+   - 39d7fc8b5ad577e379709ea83977296dbb09c3f2: drop useless settings flag
+   - e2250982cf5b1ca7e5471514d0c9b7c3e727e944: miniplayer ui tweaks
+   - 983464c3854c91b42753bb39691e837945ac1625: lifecycle onDestroy
+   - 0ab0292a436e68a72a76a7082552db1e9e6e4e27: save last played track index instead of path
+   - d7610037d73b943ff3d374b4daf258ef8fae4de4: add sort by date added
+   - e033629e9a76c54970979e9a0178fc919ef2695d: edge swipe absorbers for the whole app
+   - df4c577ff8d159d52b1cf2ecbc52aea221630bc5: improvements
+   - 20213948cea8c3982651506ba60ecfe5a8819a66: add language button
+   - ad131eaac44f0b6b535cd9a5763561e96350eb68: performance improvements & fixes
+   - ec568328ecbda4c8252a6a273a9e2694c81e2cff: skip tracks after 7 seconds when failed
+   - ea7d5bb9a5df441c2a05d0c9b41ecdc9558d508b: dont show system volume ui
+   - 28280cf066ab191fa93d34dfc33670b93ab86ef2: using local history for video cache total listens sort
+- fix:
+   - 3ed495f9df3717186efcc5e110b3da395c987120: jaudiotagger removed classes, this fixes all tagger issues reported before
+   - d344461af32c59c757432f7519a0009b9fbd0189: lyrics not being updated properly, fixes #25
+   - ef6e8090e506512b9ae442f7ed3882d74bedf5e4: playing files containing # or ? in filename
+   - 49b1ec1a1da1da1646cda2d09436c020b68c5eed: swipe absorbers
+   - 7a80567e598c554bdfdae22b6c352c13bc10984f: track total & disc total saved by ffmpeg
+   - 312b2bc39f4432b35c9af6e91f7a8305567e4684: using failed google lyrics
+   - e3f79bf8709f045109c576ae8d774658e7279555: empty queue while switching to yt queue
+   - e84f15e8f7c2bccb60d27cd65787faf01e0fa2b0: folders search count
+   - a38e02b60ddbba502f07cc6ab3db1d64ef6b831b: onBoarding button overflow
+   - f2915759748483776fc5abe17fe9f49d0b15aa97: restoring backup now will re-initialize lists
+   - 59a7dcc391c01dcf6731db506723ec3538861290: playing after sleep mode paused playback
+- perf:
+   - 4c41353d6007fd434758afdbc8fccc2154d06390: performance improvements & ui tweaks
+   - 77a74817b9ffa5bc9836e98f4729a8db382a4148: perfomance optimizations
+   - 7f77d6398f37190d0b526a6fe7a6d6fcb596cc27: youtube shimmer cards & scroll performance
+   - b02bbed5007e782eb5e920c47c8a605bde13b468: main page loading
+- core:
+   - 0d24bf3594b64a785203f707d99d2117c5fccfe7: custom lifecycle controller logic
+   - d1836550878d0b7b4496a061b43181253cbd238c: experimental mediaNotification()
+
+
 ## 23/10/2023
 # v1.5.4
 ### 🎉 New Features:
