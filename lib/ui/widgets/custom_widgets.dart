@@ -479,7 +479,8 @@ class CustomBlurryDialog extends StatelessWidget {
                         child: SizedBox(
                           width: context.width - insetPadding.left - insetPadding.right,
                           child: Wrap(
-                            alignment: WrapAlignment.end,
+                            alignment: leftAction == null ? WrapAlignment.end : WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               if (leftAction != null) ...[
                                 const SizedBox(width: 6.0),

@@ -96,7 +96,7 @@ void showTrackAdvancedDialog({
                 title: lang.RE_INDEX,
                 icon: Broken.direct_inbox,
                 subtitle: shouldShow ? "${reIndexedTracksSuccessful.value}/${tracksUniqued.length}$secondLine" : null,
-                trailing: NamidaInkWell(
+                trailingRaw: NamidaInkWell(
                   padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
                   bgColor: theme.cardColor,
                   onTap: () => willUpdateArtwork.value = !willUpdateArtwork.value,
