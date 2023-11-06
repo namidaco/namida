@@ -156,55 +156,58 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                         ),
                         child: Row(
                           children: [
-                            NamidaInkWell(
-                              animationDurationMS: 100,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  width: 1.5,
-                                  color: didGrantStoragePermission
-                                      ? Colors.green.withOpacity(0.3)
-                                      : didDenyStoragePermission
-                                          ? Colors.red.withOpacity(0.3)
-                                          : Colors.transparent,
+                            Expanded(
+                              child: NamidaInkWell(
+                                animationDurationMS: 100,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    width: 1.5,
+                                    color: didGrantStoragePermission
+                                        ? Colors.green.withOpacity(0.3)
+                                        : didDenyStoragePermission
+                                            ? Colors.red.withOpacity(0.3)
+                                            : Colors.transparent,
+                                  ),
+                                ),
+                                onTap: _requestPermission,
+                                borderRadius: didGrantStoragePermission ? 8.0 : 16.0,
+                                bgColor: context.theme.cardColor,
+                                margin: const EdgeInsets.all(12.0),
+                                padding: const EdgeInsets.all(12.0),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        lang.GRANT_STORAGE_PERMISSION,
+                                        style: context.textTheme.displayMedium,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12.0),
+                                    NamidaCheckMark(
+                                      size: 16.0,
+                                      active: didGrantStoragePermission,
+                                    ),
+                                  ],
                                 ),
                               ),
-                              onTap: _requestPermission,
-                              borderRadius: didGrantStoragePermission ? 8.0 : 16.0,
-                              bgColor: context.theme.cardColor,
-                              margin: const EdgeInsets.all(12.0),
-                              padding: const EdgeInsets.all(12.0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    lang.GRANT_STORAGE_PERMISSION,
-                                    style: context.textTheme.displayMedium,
-                                  ),
-                                  const SizedBox(width: 12.0),
-                                  NamidaCheckMark(
-                                    size: 16.0,
-                                    active: didGrantStoragePermission,
-                                  ),
-                                ],
-                              ),
                             ),
-                            Expanded(
-                              child: AnimatedOpacity(
-                                duration: const Duration(milliseconds: 400),
-                                opacity: didGrantStoragePermission ? 1.0 : 0.5,
-                                child: NamidaInkWell(
-                                  onTap: () async {
-                                    await _requestPermission();
-                                    _navigateToNamida();
-                                  },
-                                  borderRadius: 8.0,
-                                  bgColor: context.theme.cardColor,
-                                  margin: const EdgeInsets.all(12.0),
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: const Icon(
-                                    Broken.arrow_right,
-                                    size: 24.0,
-                                  ),
+                            AnimatedOpacity(
+                              duration: const Duration(milliseconds: 400),
+                              opacity: didGrantStoragePermission ? 1.0 : 0.5,
+                              child: NamidaInkWell(
+                                width: context.width * 0.2,
+                                onTap: () async {
+                                  await _requestPermission();
+                                  _navigateToNamida();
+                                },
+                                borderRadius: 8.0,
+                                bgColor: context.theme.cardColor,
+                                margin: const EdgeInsets.all(12.0),
+                                padding: const EdgeInsets.all(12.0),
+                                child: const Icon(
+                                  Broken.arrow_right,
+                                  size: 24.0,
                                 ),
                               ),
                             ),
