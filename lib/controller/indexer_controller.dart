@@ -236,27 +236,34 @@ class Indexer {
   void sortMediaTracksSubLists(List<MediaType> medias) {
     medias.loop((e, index) {
       final sorters = SearchSortController.inst.getMediaTracksSortingComparables(e);
-      void sortPls(Iterable<List<Track>> trs) {
-        for (final e in trs) {
-          e.sortByAlts(sorters);
+      void sortPls(Iterable<List<Track>> trs, MediaType type) {
+        final reverse = settings.mediaItemsTrackSortingReverse[type] ?? false;
+        if (reverse) {
+          for (final e in trs) {
+            e.sortByReverseAlts(sorters);
+          }
+        } else {
+          for (final e in trs) {
+            e.sortByAlts(sorters);
+          }
         }
       }
 
       switch (e) {
         case MediaType.album:
-          sortPls(mainMapAlbums.value.values);
+          sortPls(mainMapAlbums.value.values, MediaType.album);
           mainMapAlbums.refresh();
           break;
         case MediaType.artist:
-          sortPls(mainMapArtists.value.values);
+          sortPls(mainMapArtists.value.values, MediaType.artist);
           mainMapArtists.refresh();
           break;
         case MediaType.genre:
-          sortPls(mainMapGenres.value.values);
+          sortPls(mainMapGenres.value.values, MediaType.genre);
           mainMapGenres.refresh();
           break;
         case MediaType.folder:
-          sortPls(mainMapFolders.values);
+          sortPls(mainMapFolders.values, MediaType.folder);
           mainMapFolders.refresh();
           break;
         default:

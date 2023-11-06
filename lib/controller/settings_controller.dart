@@ -265,6 +265,13 @@ class SettingsController {
     MediaType.folder: [SortType.filename],
   }.obs;
 
+  final mediaItemsTrackSortingReverse = <MediaType, bool>{
+    MediaType.album: false,
+    MediaType.artist: false,
+    MediaType.genre: false,
+    MediaType.folder: false,
+  }.obs;
+
   bool didSupportNamida = false;
 
   Future<void> prepareSettingsFile() async {
@@ -479,6 +486,8 @@ class SettingsController {
         for (final e in mediaItemsTrackSortingInStorage.entries)
           MediaType.values.getEnum(e.key) ?? MediaType.track: (e.value as List?)?.map((v) => SortType.values.getEnum(v) ?? SortType.title).toList() ?? <SortType>[SortType.year]
       };
+      final mediaItemsTrackSortingReverseInStorage = json["mediaItemsTrackSortingReverse"] as Map? ?? {};
+      mediaItemsTrackSortingReverse.value = {for (final e in mediaItemsTrackSortingReverseInStorage.entries) MediaType.values.getEnum(e.key) ?? MediaType.track: e.value};
     } catch (e) {
       printy(e, isError: true);
       await file.delete();
@@ -652,6 +661,7 @@ class SettingsController {
       'playerOnInterrupted': playerOnInterrupted.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
       'queueInsertion': queueInsertion.map((key, value) => MapEntry(key.convertToString, value.toJson())),
       'mediaItemsTrackSorting': mediaItemsTrackSorting.map((key, value) => MapEntry(key.convertToString, value.map((e) => e.convertToString).toList())),
+      'mediaItemsTrackSortingReverse': mediaItemsTrackSortingReverse.map((key, value) => MapEntry(key.convertToString, value)),
     };
     await file.writeAsJson(res);
 
@@ -1460,6 +1470,11 @@ class SettingsController {
 
   void updateMediaItemsTrackSorting(MediaType media, List<SortType> allsorts) {
     mediaItemsTrackSorting[media] = allsorts;
+    _writeToStorage();
+  }
+
+  void updateMediaItemsTrackSortingReverse(MediaType media, bool isReverse) {
+    mediaItemsTrackSortingReverse[media] = isReverse;
     _writeToStorage();
   }
 }

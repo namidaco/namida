@@ -215,51 +215,70 @@ class NamidaOnTaps {
         child: SizedBox(
           width: Get.width,
           height: Get.height * 0.4,
-          child: Obx(
-            () => NamidaListView(
-              padding: EdgeInsets.zero,
-              itemCount: allSorts.length,
-              itemExtents: null,
-              onReorder: (oldIndex, newIndex) {
-                if (newIndex > oldIndex) {
-                  newIndex -= 1;
-                }
-                final item = allSorts.removeAt(oldIndex);
-                allSorts.insertSafe(newIndex, item);
-                final activeSorts = allSorts.where((element) => sorters.contains(element)).toList();
-                sorters
-                  ..clear()
-                  ..addAll(activeSorts);
-                settings.updateMediaItemsTrackSorting(media, activeSorts);
-              },
-              itemBuilder: (context, i) {
-                final sorting = allSorts[i];
-                return Padding(
-                  key: ValueKey(i),
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
-                  child: Obx(
-                    () {
-                      final isActive = sorters.contains(sorting);
-                      return ListTileWithCheckMark(
-                        title: "${i + 1}. ${sorting.toText()}",
-                        active: isActive,
-                        onTap: () {
-                          if (isActive && sorters.length <= 1) {
-                            showMinimumItemsSnack();
-                            return;
-                          }
-                          if (sorters.contains(sorting)) {
-                            sorters.remove(sorting);
-                          } else {
-                            sorters.insertSafe(i, sorting);
-                          }
-                        },
+          child: Column(
+            children: [
+              Obx(
+                () {
+                  final currentlyReverse = settings.mediaItemsTrackSortingReverse[media] ?? false;
+                  return ListTileWithCheckMark(
+                    title: lang.REVERSE_ORDER,
+                    active: currentlyReverse,
+                    onTap: () {
+                      settings.updateMediaItemsTrackSortingReverse(media, !currentlyReverse);
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 12.0),
+              Expanded(
+                child: Obx(
+                  () => NamidaListView(
+                    padding: EdgeInsets.zero,
+                    itemCount: allSorts.length,
+                    itemExtents: null,
+                    onReorder: (oldIndex, newIndex) {
+                      if (newIndex > oldIndex) {
+                        newIndex -= 1;
+                      }
+                      final item = allSorts.removeAt(oldIndex);
+                      allSorts.insertSafe(newIndex, item);
+                      final activeSorts = allSorts.where((element) => sorters.contains(element)).toList();
+                      sorters
+                        ..clear()
+                        ..addAll(activeSorts);
+                      settings.updateMediaItemsTrackSorting(media, activeSorts);
+                    },
+                    itemBuilder: (context, i) {
+                      final sorting = allSorts[i];
+                      return Padding(
+                        key: ValueKey(i),
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
+                        child: Obx(
+                          () {
+                            final isActive = sorters.contains(sorting);
+                            return ListTileWithCheckMark(
+                              title: "${i + 1}. ${sorting.toText()}",
+                              active: isActive,
+                              onTap: () {
+                                if (isActive && sorters.length <= 1) {
+                                  showMinimumItemsSnack();
+                                  return;
+                                }
+                                if (sorters.contains(sorting)) {
+                                  sorters.remove(sorting);
+                                } else {
+                                  sorters.insertSafe(i, sorting);
+                                }
+                              },
+                            );
+                          },
+                        ),
                       );
                     },
                   ),
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
