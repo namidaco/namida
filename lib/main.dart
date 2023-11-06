@@ -45,7 +45,9 @@ import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Paint.enableDithering = true; // for smooth gradient effect.
-  GestureBinding.instance.resamplingEnabled = true; // for 120hz displays, should make scrolling smoother.
+
+  // -- x this makes some issues with GestureDetector
+  // GestureBinding.instance.resamplingEnabled = true; // for 120hz displays, should make scrolling smoother.
 
   /// Getting Device info
   kSdkVersion = await PictureInPicture.getPlatformSdk();

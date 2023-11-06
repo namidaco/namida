@@ -443,10 +443,12 @@ class CustomBlurryDialog extends StatelessWidget {
                                     width: 10.0,
                                   ),
                                 ],
-                                Text(
-                                  title ?? '',
-                                  style: ctxth.textTheme.displayMedium,
-                                  textAlign: TextAlign.center,
+                                Expanded(
+                                  child: Text(
+                                    title ?? '',
+                                    style: ctxth.textTheme.displayMedium,
+                                    textAlign: TextAlign.center,
+                                  ),
                                 ),
                               ],
                             ),
@@ -476,15 +478,14 @@ class CustomBlurryDialog extends StatelessWidget {
                       child: FittedBox(
                         child: SizedBox(
                           width: context.width - insetPadding.left - insetPadding.right,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                          child: Wrap(
+                            alignment: WrapAlignment.end,
                             children: [
                               if (leftAction != null) ...[
                                 const SizedBox(width: 6.0),
                                 leftAction!,
                                 const SizedBox(width: 6.0),
                               ],
-                              const Spacer(),
                               ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
                             ],
                           ),
@@ -1117,12 +1118,17 @@ class AboutPageTileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomCollapsedListTile(
-      title: lang.ABOUT,
-      subtitle: null,
-      icon: Broken.info_circle,
-      rawPage: true,
-      page: const AboutPage(),
+    return Obx(
+      () {
+        settings.selectedLanguage.value;
+        return CustomCollapsedListTile(
+          title: lang.ABOUT,
+          subtitle: null,
+          icon: Broken.info_circle,
+          rawPage: true,
+          page: const AboutPage(),
+        );
+      },
     );
   }
 }
