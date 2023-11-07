@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:history_manager/history_manager.dart';
 import 'package:known_extents_list_view_builder/sliver_known_extents_list.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
-import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -22,6 +20,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
+import 'package:namida/ui/pages/subpages/most_played_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
@@ -171,83 +170,25 @@ class HistoryTracksPage extends StatelessWidget {
 class MostPlayedTracksPage extends StatelessWidget {
   const MostPlayedTracksPage({super.key});
 
-  void _onSelectingTimeRange({
-    required MostPlayedTimeRange? mptr,
-    DateRange? dateCustom,
-    bool? isStartOfDay,
-  }) {
-    settings.save(
-      mostPlayedTimeRange: mptr,
-      mostPlayedCustomDateRange: dateCustom,
-      mostPlayedCustomisStartOfDay: isStartOfDay,
-    );
-    HistoryController.inst.updateTempMostPlayedPlaylist(
-      mptr: mptr,
-      customDateRange: dateCustom,
-      isStartOfDay: isStartOfDay,
-    );
-    NamidaNavigator.inst.closeDialog();
-  }
-
-  bool _isEnabled(MostPlayedTimeRange type) => type == settings.mostPlayedTimeRange.value;
-
-  Widget _getChipChild({
-    required BuildContext context,
-    DateRange? dateCustom,
-    required MostPlayedTimeRange mptr,
-    Widget? Function(Color? textColor)? trailing,
-  }) {
-    final dateText = dateCustom == null || dateCustom == DateRange.dummy()
-        ? null
-        : "${dateCustom.oldest.millisecondsSinceEpoch.dateFormattedOriginalNoYears(dateCustom.newest)} → ${dateCustom.newest.millisecondsSinceEpoch.dateFormattedOriginalNoYears(dateCustom.oldest)}";
-
-    final textColor = _isEnabled(mptr) ? const Color.fromARGB(200, 255, 255, 255) : null;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2.0),
-      child: GestureDetector(
-        onTap: () => _onSelectingTimeRange(
-          dateCustom: dateCustom,
-          mptr: mptr,
-        ),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-          decoration: BoxDecoration(
-            color: _isEnabled(mptr) ? CurrentColor.inst.currentColorScheme.withAlpha(160) : context.theme.cardColor,
-            borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-          ),
-          child: Row(
-            children: [
-              Text(
-                dateText ?? mptr.toText(),
-                style: context.textTheme.displaySmall?.copyWith(
-                  color: textColor,
-                  fontSize: dateText == null ? null : 12.0.multipliedFontScale,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              if (trailing != null) ...[
-                const SizedBox(width: 2.0),
-                trailing(textColor)!,
-              ]
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return BackgroundWrapper(
-      child: Obx(
-        () {
-          final finalListenMap = HistoryController.inst.currentTopTracksMapListens;
-          final tracks = QueueSource.mostPlayed.toTracks();
-          final mostplayedOptions = List<MostPlayedTimeRange>.from(MostPlayedTimeRange.values)..remove(MostPlayedTimeRange.custom);
-          return NamidaListView(
-            itemExtents: tracks.toTrackItemExtents(),
-            header: SubpagesTopContainer(
+    return Obx(
+      () {
+        final tracks = QueueSource.mostPlayed.toTracks();
+        return MostPlayedItemsPage(
+          itemExtents: tracks.toTrackItemExtents(),
+          historyController: HistoryController.inst,
+          customDateRange: settings.mostPlayedCustomDateRange,
+          isTimeRangeChipEnabled: (type) => type == settings.mostPlayedTimeRange.value,
+          onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {
+            settings.save(
+              mostPlayedTimeRange: mptr,
+              mostPlayedCustomDateRange: dateCustom,
+              mostPlayedCustomisStartOfDay: isStartOfDay,
+            );
+          },
+          header: (timeRangeChips, bottomPadding) {
+            return SubpagesTopContainer(
               source: QueueSource.mostPlayed,
               title: k_PLAYLIST_NAME_MOST_PLAYED.translatePlaylistName(),
               subtitle: tracks.displayTrackKeyword,
@@ -258,119 +199,41 @@ class MostPlayedTracksPage extends StatelessWidget {
                 paths: tracks.toImagePaths(),
               ),
               tracks: tracks,
-              bottomPadding: 0.0,
-              bottomWidget: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Row(
-                  children: [
-                    const SizedBox(width: 8.0),
-                    NamidaInkWell(
-                      animationDurationMS: 200,
-                      borderRadius: 6.0,
-                      bgColor: context.theme.cardTheme.color,
-                      padding: const EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                        border: _isEnabled(MostPlayedTimeRange.custom) ? Border.all(color: CurrentColor.inst.color) : null,
-                        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Broken.calendar, size: 18.0),
-                          const SizedBox(width: 4.0),
-                          Text(
-                            'Custom',
-                            style: context.textTheme.displayMedium,
-                          ),
-                          const SizedBox(width: 4.0),
-                          const Icon(Broken.arrow_down_2, size: 14.0),
-                        ],
-                      ),
-                      onTap: () {
-                        showCalendarDialog(
-                          title: lang.CHOOSE,
-                          buttonText: lang.CONFIRM,
-                          useHistoryDates: true,
-                          onGenerate: (dates) => _onSelectingTimeRange(
-                            dateCustom: DateRange(oldest: dates.first, newest: dates.last),
-                            mptr: MostPlayedTimeRange.custom,
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 4.0),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            Obx(
-                              () {
-                                final dateRange = settings.mostPlayedCustomDateRange.value;
-                                return _getChipChild(
-                                  context: context,
-                                  mptr: MostPlayedTimeRange.custom,
-                                  dateCustom: dateRange,
-                                  trailing: (textColor) => NamidaIconButton(
-                                    padding: EdgeInsets.zero,
-                                    icon: Broken.close_circle,
-                                    iconSize: 14.0,
-                                    iconColor: textColor,
-                                    onPressed: () => _onSelectingTimeRange(mptr: MostPlayedTimeRange.allTime, dateCustom: DateRange.dummy()),
-                                  ),
-                                ).animateEntrance(
-                                  showWhen: dateRange.oldest != DateTime(0),
-                                  durationMS: 400,
-                                  reverseDurationMS: 200,
-                                );
-                              },
-                            ),
-                            ...mostplayedOptions.map(
-                              (action) => _getChipChild(
-                                context: context,
-                                mptr: action,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            padding: const EdgeInsets.only(bottom: kBottomPadding),
-            itemCount: finalListenMap.length,
-            itemBuilder: (context, i) {
-              final track = tracks[i];
-              final listens = finalListenMap[track] ?? [];
+              bottomPadding: bottomPadding,
+              bottomWidget: timeRangeChips,
+            );
+          },
+          itemBuilder: (context, i, listensMap) {
+            final track = tracks[i];
+            final listens = listensMap[track] ?? [];
 
-              return AnimatingTile(
-                key: ValueKey(i),
-                position: i,
-                child: TrackTile(
-                  draggableThumbnail: false,
-                  index: i,
-                  trackOrTwd: tracks[i],
-                  queueSource: QueueSource.mostPlayed,
-                  playlistName: k_PLAYLIST_NAME_MOST_PLAYED,
-                  onRightAreaTap: () => showTrackListensDialog(track.track, datesOfListen: listens),
-                  trailingWidget: Container(
-                    padding: const EdgeInsets.all(6.0),
-                    decoration: BoxDecoration(
-                      color: context.theme.scaffoldBackgroundColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      listens.length.formatDecimal(),
-                      style: context.textTheme.displaySmall,
-                    ),
+            return AnimatingTile(
+              key: Key("${track}_$i"),
+              position: i,
+              child: TrackTile(
+                key: Key("${track}_$i"),
+                draggableThumbnail: false,
+                index: i,
+                trackOrTwd: tracks[i],
+                queueSource: QueueSource.mostPlayed,
+                playlistName: k_PLAYLIST_NAME_MOST_PLAYED,
+                onRightAreaTap: () => showTrackListensDialog(track.track, datesOfListen: listens),
+                trailingWidget: Container(
+                  padding: const EdgeInsets.all(6.0),
+                  decoration: BoxDecoration(
+                    color: context.theme.scaffoldBackgroundColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    listens.length.formatDecimal(),
+                    style: context.textTheme.displaySmall,
                   ),
                 ),
-              );
-            },
-          );
-        },
-      ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

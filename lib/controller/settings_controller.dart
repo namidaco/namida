@@ -185,9 +185,13 @@ class SettingsController {
 
   final Rx<TrackPlayMode> trackPlayMode = TrackPlayMode.searchResults.obs;
 
-  final Rx<MostPlayedTimeRange> mostPlayedTimeRange = MostPlayedTimeRange.allTime.obs;
+  final mostPlayedTimeRange = MostPlayedTimeRange.allTime.obs;
   final mostPlayedCustomDateRange = DateRange.dummy().obs;
   final mostPlayedCustomisStartOfDay = true.obs;
+
+  final ytMostPlayedTimeRange = MostPlayedTimeRange.allTime.obs;
+  final ytMostPlayedCustomDateRange = DateRange.dummy().obs;
+  final ytMostPlayedCustomisStartOfDay = true.obs;
 
   /// Track Items
   final RxBool displayThirdRow = true.obs;
@@ -441,6 +445,10 @@ class SettingsController {
       mostPlayedCustomDateRange.value = json['mostPlayedCustomDateRange'] != null ? DateRange.fromJson(json['mostPlayedCustomDateRange']) : mostPlayedCustomDateRange.value;
       mostPlayedCustomisStartOfDay.value = json['mostPlayedCustomisStartOfDay'] ?? mostPlayedCustomisStartOfDay.value;
 
+      ytMostPlayedTimeRange.value = MostPlayedTimeRange.values.getEnum(json['ytMostPlayedTimeRange']) ?? ytMostPlayedTimeRange.value;
+      ytMostPlayedCustomDateRange.value = json['ytMostPlayedCustomDateRange'] != null ? DateRange.fromJson(json['ytMostPlayedCustomDateRange']) : ytMostPlayedCustomDateRange.value;
+      ytMostPlayedCustomisStartOfDay.value = json['ytMostPlayedCustomisStartOfDay'] ?? ytMostPlayedCustomisStartOfDay.value;
+
       /// Track Items
       displayThirdRow.value = json['displayThirdRow'] ?? displayThirdRow.value;
       displayThirdItemInEachRow.value = json['displayThirdItemInEachRow'] ?? displayThirdItemInEachRow.value;
@@ -637,13 +645,16 @@ class SettingsController {
       'localVideoMatchingCheckSameDir': localVideoMatchingCheckSameDir.value,
       'playerRepeatMode': playerRepeatMode.value.convertToString,
       'trackPlayMode': trackPlayMode.value.convertToString,
-      'mostPlayedTimeRange': mostPlayedTimeRange.value.convertToString,
       'onNotificationTapAction': onNotificationTapAction.value.convertToString,
       'onYoutubeLinkOpen': onYoutubeLinkOpen.value.convertToString,
       'performanceMode': performanceMode.value.convertToString,
       'killPlayerAfterDismissingAppMode': killPlayerAfterDismissingAppMode.value.convertToString,
+      'mostPlayedTimeRange': mostPlayedTimeRange.value.convertToString,
       'mostPlayedCustomDateRange': mostPlayedCustomDateRange.value.toJson(),
       'mostPlayedCustomisStartOfDay': mostPlayedCustomisStartOfDay.value,
+      'ytMostPlayedTimeRange': ytMostPlayedTimeRange.value.convertToString,
+      'ytMostPlayedCustomDateRange': ytMostPlayedCustomDateRange.value.toJson(),
+      'ytMostPlayedCustomisStartOfDay': ytMostPlayedCustomisStartOfDay.value,
 
       /// Track Items
       'displayThirdRow': displayThirdRow.value,
@@ -813,13 +824,16 @@ class SettingsController {
     bool? localVideoMatchingCheckSameDir,
     RepeatMode? playerRepeatMode,
     TrackPlayMode? trackPlayMode,
-    MostPlayedTimeRange? mostPlayedTimeRange,
     NotificationTapAction? onNotificationTapAction,
     OnYoutubeLinkOpenAction? onYoutubeLinkOpen,
     PerformanceMode? performanceMode,
     KillAppMode? killPlayerAfterDismissingAppMode,
+    MostPlayedTimeRange? mostPlayedTimeRange,
     DateRange? mostPlayedCustomDateRange,
     bool? mostPlayedCustomisStartOfDay,
+    MostPlayedTimeRange? ytMostPlayedTimeRange,
+    DateRange? ytMostPlayedCustomDateRange,
+    bool? ytMostPlayedCustomisStartOfDay,
     bool? didSupportNamida,
   }) {
     if (selectedLanguage != null) {
@@ -1276,9 +1290,6 @@ class SettingsController {
     if (trackPlayMode != null) {
       this.trackPlayMode.value = trackPlayMode;
     }
-    if (mostPlayedTimeRange != null) {
-      this.mostPlayedTimeRange.value = mostPlayedTimeRange;
-    }
     if (onNotificationTapAction != null) {
       this.onNotificationTapAction.value = onNotificationTapAction;
     }
@@ -1291,11 +1302,23 @@ class SettingsController {
     if (killPlayerAfterDismissingAppMode != null) {
       this.killPlayerAfterDismissingAppMode.value = killPlayerAfterDismissingAppMode;
     }
+    if (mostPlayedTimeRange != null) {
+      this.mostPlayedTimeRange.value = mostPlayedTimeRange;
+    }
     if (mostPlayedCustomDateRange != null) {
       this.mostPlayedCustomDateRange.value = mostPlayedCustomDateRange;
     }
     if (mostPlayedCustomisStartOfDay != null) {
       this.mostPlayedCustomisStartOfDay.value = mostPlayedCustomisStartOfDay;
+    }
+    if (ytMostPlayedTimeRange != null) {
+      this.ytMostPlayedTimeRange.value = ytMostPlayedTimeRange;
+    }
+    if (ytMostPlayedCustomDateRange != null) {
+      this.ytMostPlayedCustomDateRange.value = ytMostPlayedCustomDateRange;
+    }
+    if (ytMostPlayedCustomisStartOfDay != null) {
+      this.ytMostPlayedCustomisStartOfDay.value = ytMostPlayedCustomisStartOfDay;
     }
 
     if (didSupportNamida != null) {

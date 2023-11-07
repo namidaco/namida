@@ -5,7 +5,6 @@ import 'dart:io';
 
 import 'package:catcher/catcher.dart';
 import 'package:external_path/external_path.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';

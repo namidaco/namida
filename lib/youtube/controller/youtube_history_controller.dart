@@ -62,13 +62,13 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
   }
 
   @override
-  MostPlayedTimeRange get currentMostPlayedTimeRange => settings.mostPlayedTimeRange.value;
+  MostPlayedTimeRange get currentMostPlayedTimeRange => settings.ytMostPlayedTimeRange.value;
 
   @override
-  DateRange get mostPlayedCustomDateRange => settings.mostPlayedCustomDateRange.value;
+  DateRange get mostPlayedCustomDateRange => settings.ytMostPlayedCustomDateRange.value;
 
   @override
-  bool get mostPlayedCustomIsStartOfDay => settings.mostPlayedCustomisStartOfDay.value;
+  bool get mostPlayedCustomIsStartOfDay => settings.ytMostPlayedCustomisStartOfDay.value;
 
   @override
   double get trackTileItemExtent => Dimensions.youtubeCardItemExtent;

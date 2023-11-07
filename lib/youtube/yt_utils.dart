@@ -46,8 +46,9 @@ class YTUtils {
     required String videoId,
     required BuildContext context,
     Color? iconsColor,
+    List<int> overrideListens = const [],
   }) {
-    final listens = YoutubeHistoryController.inst.topTracksMapListens[videoId] ?? [];
+    final listens = overrideListens.isNotEmpty ? overrideListens : YoutubeHistoryController.inst.topTracksMapListens[videoId] ?? [];
     return [
       if (listens.isNotEmpty)
         NamidaInkWell(
