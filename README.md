@@ -27,6 +27,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 - [Installation](#installation)
 - [Permission Note](#permission-note)
 - [Special Thanks](#special-thanks)
+- [Contribute](#contribute)
 - [Donate](#donate)
 - [Social](#social)
 - [LICENSE](#license)
@@ -194,6 +195,10 @@ Animating Thumbnail        |  Recommends & Listens
 >   <br>
 
 > ### © Logo by @midjourney
+
+# Contribute
+- You can help translating Namida to your language on [translation repo](https://github.com/namidaco/namida-translations)
+- Building is not currently possible, see why on https://github.com/namidaco/namida/issues/37#issuecomment-1780341883
 
 # Donate
 
