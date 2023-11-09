@@ -208,6 +208,10 @@ Animating Thumbnail        |  Recommends & Listens
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/U7U0PF2L5)
 
+> Bitcoin: bc1ql802k98ml3aum4v2cm9am4kg2lm5w8w6w2xlhh
+
+> ETH/MATIC: 0x13f1a519228C83BBbDE11BAF804515672f9C6c2A
+
 - Don't forget to 🌟 star the repo if you like the project.
 
 # Social
