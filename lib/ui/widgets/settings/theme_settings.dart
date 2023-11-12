@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -50,6 +54,27 @@ class ThemeSetting extends StatelessWidget {
               title: lang.LANGUAGE,
               normalTitleStyle: true,
               actions: [
+                NamidaButton(
+                  onPressed: () async {
+                    final files = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['json', 'JSON']);
+                    final path = files?.files.firstOrNull?.path;
+                    if (path != null) {
+                      try {
+                        final st = await File(path).readAsString();
+                        final map = await jsonDecode(st);
+                        final didUpdate = await Language.inst.loadLanguage(path.getFilenameWOExt, map);
+                        if (didUpdate) {
+                          NamidaNavigator.inst.closeDialog();
+                        } else {
+                          snackyy(title: lang.ERROR, message: 'Unknown Error', isError: true);
+                        }
+                      } catch (e) {
+                        snackyy(title: lang.ERROR, message: e.toString(), isError: true);
+                      }
+                    }
+                  },
+                  text: lang.LOCAL,
+                ),
                 const CancelButton(),
                 NamidaButton(
                   onPressed: () async => (await lang.update(lang: selectedLang.value)).closeDialog(),

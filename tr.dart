@@ -73,8 +73,7 @@ ${keys.map((e) => '  late String $e;').join('\n')}
     final mapText = keys.map((e) => '\t\t\t$e = getKey("$e");').join('\n');
     await langFile.writeAsString("""$firstPiece$splitterOne
 $mapText
-\t\t\t$splitterTwo$lastPiece
-""");
+\t\t\t$splitterTwo$lastPiece""");
 
     // -- All Langauges files
     const encoder = JsonEncoder.withIndent('  ');
