@@ -62,14 +62,15 @@ Future<bool> _addKey(String argKey, String argValue) async {
     await file.writeAsString("""
 // ignore_for_file: non_constant_identifier_names
 // AUTO GENERATED FILE
-  
+
 abstract class LanguageKeys {
   Map<String, String> get languageMap;
   Map<String, String> get languageMapDefault;
   String _getKey(String key) => languageMap[key] ?? languageMapDefault[key] ?? '';
 
 ${keys.map((e) => "  String get $e => _getKey('$e');").join('\n')}
-}""");
+}
+""");
 
     // -- Controller file
 //     final langFile = File(_controllerFilePath);
@@ -112,7 +113,7 @@ Future<bool> _removeKey(String keyToRemove) async {
     final lines = await file.readAsLines();
     final indToRemove = lines.indexWhere((element) => element.contains("String get $keyToRemove => _getKey('$keyToRemove');"));
     lines.removeAt(indToRemove);
-    await file.writeAsString(lines.join('\n'));
+    await file.writeAsString('${lines.join('\n')}\n');
 
     // -- Controller file
     // final langFile = File(_controllerFilePath);
