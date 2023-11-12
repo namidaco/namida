@@ -12,9 +12,6 @@ import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
-final _readmoreWidgets = <String?, Widget>{};
-int? _themeHashCode;
-
 class YTCommentCard extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
   final YoutubeComment? comment;
@@ -35,44 +32,6 @@ class YTCommentCard extends StatelessWidget {
     final readmoreColor = context.theme.colorScheme.primary.withAlpha(160);
 
     final cid = comment?.commentId;
-
-    final invalidContext = _themeHashCode == null || _themeHashCode != context.theme.hashCode;
-    if (invalidContext || _readmoreWidgets[cid] == null && cid != null) {
-      _themeHashCode = context.theme.hashCode;
-      final text = YoutubeController.inst.commentToParsedHtml[cid] ?? commentText;
-      if (text != null) {
-        _readmoreWidgets.optimizedAdd(
-          [
-            MapEntry(
-              cid,
-              ReadMoreText(
-                text,
-                numLines: 5,
-                readMoreText: lang.SHOW_MORE,
-                readLessText: '',
-                readLessIcon: Icon(
-                  Broken.arrow_up_3,
-                  size: 18.0,
-                  color: readmoreColor,
-                ),
-                readMoreIcon: Icon(
-                  Broken.arrow_down_2,
-                  size: 18.0,
-                  color: readmoreColor,
-                ),
-                readMoreTextStyle: context.textTheme.displaySmall?.copyWith(color: readmoreColor),
-                style: context.textTheme.displaySmall?.copyWith(
-                  fontSize: 13.5.multipliedFontScale,
-                  fontWeight: FontWeight.w500,
-                  color: context.theme.colorScheme.onBackground.withAlpha(220),
-                ),
-              ),
-            ),
-          ],
-          200,
-        );
-      }
-    }
 
     return Container(
       margin: margin,
@@ -176,7 +135,28 @@ class YTCommentCard extends StatelessWidget {
                               ),
                             ],
                           )
-                        : _readmoreWidgets[cid],
+                        : ReadMoreText(
+                            YoutubeController.inst.commentToParsedHtml[cid] ?? commentText,
+                            numLines: 5,
+                            readMoreText: lang.SHOW_MORE,
+                            readLessText: '',
+                            readLessIcon: Icon(
+                              Broken.arrow_up_3,
+                              size: 18.0,
+                              color: readmoreColor,
+                            ),
+                            readMoreIcon: Icon(
+                              Broken.arrow_down_2,
+                              size: 18.0,
+                              color: readmoreColor,
+                            ),
+                            readMoreTextStyle: context.textTheme.displaySmall?.copyWith(color: readmoreColor),
+                            style: context.textTheme.displaySmall?.copyWith(
+                              fontSize: 13.5.multipliedFontScale,
+                              fontWeight: FontWeight.w500,
+                              color: context.theme.colorScheme.onBackground.withAlpha(220),
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 8.0),
                   Row(

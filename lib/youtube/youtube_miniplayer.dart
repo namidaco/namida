@@ -39,6 +39,22 @@ import 'package:namida/youtube/widgets/yt_video_card.dart';
 class YoutubeMiniPlayer extends StatelessWidget {
   const YoutubeMiniPlayer({super.key});
 
+  Widget _opacityWrapper({
+    bool enabled = false,
+    required double opacity,
+    required Widget child,
+    Key? key,
+  }) {
+    if (opacity == 0) return const SizedBox();
+    return enabled
+        ? Opacity(
+            key: key,
+            opacity: opacity,
+            child: child,
+          )
+        : child;
+  }
+
   @override
   Widget build(BuildContext context) {
     const space1sb = 8.0;
@@ -121,18 +137,22 @@ class YoutubeMiniPlayer extends StatelessWidget {
               minHeight: miniplayerHeight,
               maxHeight: context.height,
               decoration: BoxDecoration(
-                color: context.isDarkMode
-                    ? settings.pitchBlack.value
-                        ? const Color.fromARGB(255, 0, 0, 0)
-                        : Color.alphaBlend(
-                            CurrentColor.inst.color.withAlpha(10),
-                            const Color.fromARGB(255, 25, 25, 25),
-                          )
-                    : Color.alphaBlend(
-                        CurrentColor.inst.color.withAlpha(40),
-                        const Color.fromARGB(255, 250, 250, 250),
-                      ),
+                color: context.theme.scaffoldBackgroundColor,
               ),
+              onDismiss: settings.dismissibleMiniplayer.value
+                  ? () async {
+                      CurrentColor.inst.resetCurrentPlayingTrack();
+                      await Player.inst.pause();
+                      await [
+                        Player.inst.clearQueue(),
+                        Player.inst.dispose(),
+                      ].execute();
+                      Player.inst.setPlayerVolume(settings.playerVolume.value);
+                    }
+                  : null,
+              onDismissing: (dismissPercentage) {
+                Player.inst.setPlayerVolume(dismissPercentage.clamp(0.0, settings.playerVolume.value));
+              },
               onHeightChange: (percentage) => MiniPlayerController.inst.animateMiniplayer(percentage),
               builder: (double height, double p) {
                 final percentageOriginal = p.clamp(0.0, 1.0);
@@ -197,8 +217,10 @@ class YoutubeMiniPlayer extends StatelessWidget {
                               SizedBox(width: finalspace3sb),
                               SizedBox(
                                 width: (context.width - finalthumbnailsize - finalspace1sb - finalspace3sb - finalspace4buttons - finalspace5sb).clamp(0, context.width),
-                                child: Opacity(
+                                child: _opacityWrapper(
+                                  enabled: true,
                                   opacity: reverseOpacity,
+                                  key: Key("${currentId}_title_button1"),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,8 +260,10 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              Opacity(
+                              _opacityWrapper(
+                                enabled: true,
                                 opacity: reverseOpacity,
+                                key: Key("${currentId}_title_button2"),
                                 child: SizedBox(
                                   width: finalspace4buttons / 2,
                                   height: miniplayerHeight,
@@ -252,7 +276,9 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                         children: [
                                           if (isLoading)
                                             IgnorePointer(
-                                              child: Opacity(
+                                              child: _opacityWrapper(
+                                                enabled: true,
+                                                key: Key("${currentId}_button_loading"),
                                                 opacity: 0.3,
                                                 child: ThreeArchedCircle(
                                                   color: context.defaultIconColor(),
@@ -287,8 +313,10 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              Opacity(
+                              _opacityWrapper(
+                                enabled: true,
                                 opacity: reverseOpacity,
+                                key: Key("${currentId}_title_button3"),
                                 child: SizedBox(
                                   width: finalspace4buttons / 2,
                                   height: miniplayerHeight,
@@ -307,7 +335,9 @@ class YoutubeMiniPlayer extends StatelessWidget {
                           ],
                         ),
                         // -- progress bar
-                        Opacity(
+                        _opacityWrapper(
+                          enabled: true,
+                          key: Key("${currentId}_progress_bar"),
                           opacity: 1.0 * reverseOpacity,
                           child: IgnorePointer(
                             child: Obx(
@@ -336,9 +366,11 @@ class YoutubeMiniPlayer extends StatelessWidget {
                         child: Stack(
                           alignment: Alignment.bottomCenter,
                           children: [
-                            Opacity(
+                            _opacityWrapper(
+                              key: Key("${(percentage * 4 - 3).withMinimum(0)}"),
                               opacity: (percentage * 4 - 3).withMinimum(0),
                               child: Listener(
+                                key: Key("${currentId}_body_listener"),
                                 onPointerDown: (event) => YoutubeController.inst.cancelDimTimer(),
                                 onPointerUp: (event) => YoutubeController.inst.startDimTimer(),
                                 child: LazyLoadListView(
@@ -347,20 +379,24 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                   scrollController: YoutubeController.inst.scrollController,
                                   listview: (controller) => ObxValue<RxBool>(
                                     (isTitleExpanded) => Stack(
+                                      key: Key("${currentId}_body_stack"),
                                       children: [
                                         CustomScrollView(
                                           // key: PageStorageKey(currentId), // duplicate errors
+                                          physics: const ClampingScrollPhysics(),
                                           controller: controller,
                                           slivers: [
                                             SliverPadding(padding: EdgeInsets.only(top: inversePercOriginal * 48.0)),
 
                                             // --START-- title & subtitle
                                             SliverToBoxAdapter(
+                                              key: Key("${currentId}_title"),
                                               child: ShimmerWrapper(
                                                 shimmerDurationMS: 550,
                                                 shimmerDelayMS: 250,
                                                 shimmerEnabled: videoInfo == null,
                                                 child: ExpansionTile(
+                                                  // key: Key(currentId),
                                                   initiallyExpanded: false,
                                                   maintainState: false,
                                                   expandedAlignment: Alignment.centerLeft,
@@ -448,24 +484,23 @@ class YoutubeMiniPlayer extends StatelessWidget {
 
                                             // --START-- buttons
                                             SliverToBoxAdapter(
+                                              key: Key("${currentId}_buttons"),
                                               child: ShimmerWrapper(
                                                 shimmerDurationMS: 550,
                                                 shimmerDelayMS: 250,
                                                 shimmerEnabled: videoInfo == null,
                                                 child: SizedBox(
-                                                  height: 60.0,
-                                                  child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                    // shrinkWrap: true,
-                                                    // scrollDirection: Axis.horizontal,
+                                                  width: context.width,
+                                                  child: Wrap(
+                                                    alignment: WrapAlignment.spaceEvenly,
                                                     children: [
-                                                      const SizedBox(width: 18.0),
+                                                      const SizedBox(width: 4.0),
                                                       SmallYTActionButton(
                                                         title: videoInfo == null
                                                             ? null
-                                                            : (videoLikeCount ?? 0) < 1
+                                                            : videoLikeCount < 1
                                                                 ? lang.LIKE
-                                                                : videoLikeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
+                                                                : videoLikeCount.formatDecimalShort(isTitleExpanded.value),
                                                         icon: Broken.like_1,
                                                         smallIconWidget: FittedBox(
                                                           child: NamidaRawLikeButton(
@@ -479,13 +514,13 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                           ),
                                                         ),
                                                       ),
-                                                      const SizedBox(width: 18.0),
+                                                      const SizedBox(width: 4.0),
                                                       SmallYTActionButton(
                                                         title: (videoDislikeCount ?? 0) < 1 ? lang.DISLIKE : videoDislikeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
                                                         icon: Broken.dislike,
                                                         onPressed: () {},
                                                       ),
-                                                      const SizedBox(width: 18.0),
+                                                      const SizedBox(width: 4.0),
                                                       SmallYTActionButton(
                                                         title: lang.SHARE,
                                                         icon: Broken.share,
@@ -494,13 +529,13 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                           if (url != null) Share.share(url);
                                                         },
                                                       ),
-                                                      const SizedBox(width: 18.0),
+                                                      const SizedBox(width: 4.0),
                                                       SmallYTActionButton(
                                                         title: lang.REFRESH,
                                                         icon: Broken.refresh,
                                                         onPressed: () async => await YoutubeController.inst.updateVideoDetails(currentId, forceRequest: true),
                                                       ),
-                                                      const SizedBox(width: 18.0),
+                                                      const SizedBox(width: 4.0),
                                                       Obx(
                                                         () {
                                                           final audioProgress = YoutubeController.inst.downloadsAudioProgressMap[currentId]?.values.firstOrNull;
@@ -527,7 +562,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                           );
                                                         },
                                                       ),
-                                                      const SizedBox(width: 18.0),
+                                                      const SizedBox(width: 4.0),
                                                       SmallYTActionButton(
                                                         title: lang.SAVE,
                                                         icon: Broken.music_playlist,
@@ -538,7 +573,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                           },
                                                         ),
                                                       ),
-                                                      const SizedBox(width: 18.0),
+                                                      const SizedBox(width: 4.0),
                                                     ],
                                                   ),
                                                 ),
@@ -549,6 +584,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
 
                                             // --START- channel
                                             SliverToBoxAdapter(
+                                              key: Key("${currentId}_channel"),
                                               child: ShimmerWrapper(
                                                 shimmerDurationMS: 550,
                                                 shimmerDelayMS: 250,
@@ -572,6 +608,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                     ),
                                                     const SizedBox(width: 12.0),
                                                     Expanded(
+                                                      // key: Key(currentId),
                                                       child: Column(
                                                         mainAxisAlignment: MainAxisAlignment.center,
                                                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -649,10 +686,12 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                 final feed = YoutubeController.inst.currentRelatedVideos;
                                                 if (feed.isNotEmpty && feed.first == null) {
                                                   return SliverToBoxAdapter(
+                                                    key: Key("${currentId}_feed_shimmer"),
                                                     child: ShimmerWrapper(
                                                       transparent: false,
                                                       shimmerEnabled: true,
                                                       child: ListView.builder(
+                                                        key: Key("${currentId}_feedlist_shimmer"),
                                                         physics: const NeverScrollableScrollPhysics(),
                                                         itemCount: feed.length,
                                                         shrinkWrap: true,
@@ -672,6 +711,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                   );
                                                 }
                                                 return SliverFixedExtentList.builder(
+                                                  key: Key("${currentId}_feedlist"),
                                                   itemExtent: relatedThumbnailItemExtent,
                                                   itemCount: feed.length,
                                                   itemBuilder: (context, index) {
@@ -714,6 +754,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                               () {
                                                 final totalCommentsCount = YoutubeController.inst.currentTotalCommentsCount.value;
                                                 return Padding(
+                                                  key: Key("${currentId}_comments_header"),
                                                   padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
                                                   child: Row(
                                                     mainAxisAlignment: MainAxisAlignment.start,
@@ -730,6 +771,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                       ),
                                                       const Spacer(),
                                                       NamidaIconButton(
+                                                        // key: Key(currentId),
                                                         tooltip: YoutubeController.inst.isCurrentCommentsFromCache ? lang.CACHE : null,
                                                         icon: Broken.refresh,
                                                         iconSize: 22.0,
@@ -757,10 +799,12 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                 final comments = YoutubeController.inst.currentComments;
                                                 if (comments.isNotEmpty && comments.first == null) {
                                                   return SliverToBoxAdapter(
+                                                    key: Key("${currentId}_comments_shimmer"),
                                                     child: ShimmerWrapper(
                                                       transparent: false,
                                                       shimmerEnabled: true,
                                                       child: ListView.builder(
+                                                        // key: Key(currentId),
                                                         physics: const NeverScrollableScrollPhysics(),
                                                         itemCount: comments.length,
                                                         shrinkWrap: true,
@@ -777,6 +821,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                   );
                                                 }
                                                 return SliverList.builder(
+                                                  key: Key("${currentId}_comments"),
                                                   itemCount: comments.length,
                                                   itemBuilder: (context, i) {
                                                     final comment = comments[i];
@@ -853,6 +898,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
 
                             // -- dimming
                             Positioned.fill(
+                              key: const Key('dimmie'),
                               child: IgnorePointer(
                                 child: Obx(
                                   () => AnimatedSwitcher(

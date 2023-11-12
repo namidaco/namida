@@ -9,7 +9,9 @@ class SmallYTActionButton extends StatelessWidget {
   final IconData icon;
   final void Function()? onPressed;
   final Widget? iconWidget;
+  final Widget? smallIconWidget;
   final Widget? titleWidget;
+  final double? width;
 
   const SmallYTActionButton({
     super.key,
@@ -17,37 +19,44 @@ class SmallYTActionButton extends StatelessWidget {
     required this.icon,
     this.onPressed,
     this.iconWidget,
+    this.smallIconWidget,
     this.titleWidget,
+    this.width,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        iconWidget ??
-            NamidaInkWell(
-              borderRadius: 32.0,
-              onTap: onPressed,
-              padding: const EdgeInsets.all(6.0),
-              child: Icon(icon),
-            ),
-        NamidaDummyContainer(
-          width: 24.0,
-          height: 8.0,
-          borderRadius: 4.0,
-          shimmerEnabled: title == null,
-          child: ShimmerWrapper(
+    return SizedBox(
+      width: width,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          iconWidget ??
+              NamidaInkWell(
+                borderRadius: 32.0,
+                onTap: onPressed,
+                padding: const EdgeInsets.all(8.0),
+                child: smallIconWidget ?? Icon(icon),
+              ),
+          NamidaDummyContainer(
+            width: 24.0,
+            height: 8.0,
+            borderRadius: 4.0,
             shimmerEnabled: title == null,
-            fadeDurationMS: titleWidget == null ? 600 : 100,
-            child: titleWidget ??
-                Text(
-                  title ?? '',
-                  style: context.textTheme.displaySmall,
-                ),
+            child: ShimmerWrapper(
+              shimmerEnabled: title == null,
+              fadeDurationMS: titleWidget == null ? 600 : 100,
+              child: titleWidget ??
+                  Text(
+                    title ?? '',
+                    style: context.textTheme.displaySmall,
+                    softWrap: true,
+                    maxLines: 2,
+                  ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

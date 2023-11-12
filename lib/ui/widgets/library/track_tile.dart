@@ -18,9 +18,6 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
 
-// final _trackTileWidgets = <String, Widget?>{};
-// int? _themeHashCode;
-
 class TrackTile extends StatelessWidget {
   final int index;
   final Selectable trackOrTwd;
@@ -79,12 +76,6 @@ class TrackTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final invalidContext = _themeHashCode == null || _themeHashCode != context.theme.hashCode;
-    // if (invalidContext) {
-    //   _themeHashCode = context.theme.hashCode;
-    //   _trackTileWidgets.clear();
-    // }
-
     final track = _tr;
     final trackWithDate = _twd;
     final comingFromQueue = _isFromQueue;
@@ -122,14 +113,6 @@ class TrackTile extends StatelessWidget {
                   isTrackSelected & !isInSelectedTracksPreview ? context.theme.focusColor : Colors.transparent,
                   isTrackCurrentlyPlaying ? CurrentColor.inst.color : context.theme.cardTheme.color!.withOpacity(cardColorOpacity),
                 );
-
-            // final props =
-            // "${trackOrTwd.track.path}${displayRightDragHandler}_${draggableThumbnail}_${textColor}_${backgroundColor}_${trailingWidget?.hashCode}_${playlistName}_${thirdLineText}_${displayTrackNumber}_${selectable}_${cardColorOpacity}_$fadeOpacity";
-            // final notImp = '${isTrackSelected}_${isTrackSame}_${isRightHistoryList}_$isRightIndex'; // only used for [isTrackCurrentlyPlaying].
-            // final vars = "${willSleepAfterThis}_${thumbnailSize}_${trackTileHeight}_$isTrackCurrentlyPlaying";
-            // final key = "$props$vars ";
-
-            // if (_trackTileWidgets[key] != null) return _trackTileWidgets[key]!;
 
             return Padding(
               padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin),
@@ -360,7 +343,6 @@ class TrackTile extends StatelessWidget {
                 ),
               ),
             );
-            // return _trackTileWidgets[key]!;
           },
         ),
         if (fadeOpacity > 0)
