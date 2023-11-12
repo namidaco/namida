@@ -138,8 +138,6 @@ class YTUtils {
       }
     }
 
-    String? refineForQuotes(String? text) => text?.replaceAll('"', r'\"');
-
     String? synopsis;
     if (description != null) {
       try {
@@ -147,12 +145,12 @@ class YTUtils {
       } catch (_) {}
     }
     return {
-      FFMPEGTagField.title: refineForQuotes(title),
-      FFMPEGTagField.artist: refineForQuotes(artist),
-      FFMPEGTagField.album: refineForQuotes(album),
+      FFMPEGTagField.title: title,
+      FFMPEGTagField.artist: artist,
+      FFMPEGTagField.album: album,
       FFMPEGTagField.comment: YoutubeController.inst.getYoutubeLink(id),
       FFMPEGTagField.year: date == null ? null : DateFormat('yyyyMMdd').format(date),
-      FFMPEGTagField.synopsis: refineForQuotes(synopsis),
+      FFMPEGTagField.synopsis: synopsis,
     };
   }
 

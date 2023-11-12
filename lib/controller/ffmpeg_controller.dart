@@ -81,7 +81,7 @@ class NamidaFFMPEG {
     final tagsMapToEditConverted = <String, String?>{};
     for (final t in tagsMap.entries) {
       final fieldName = _defaultTagsMap[t.key];
-      if (fieldName != null) tagsMapToEditConverted[fieldName] = t.value;
+      if (fieldName != null) tagsMapToEditConverted[fieldName] = t.value?.replaceAll('"', r'\"');
     }
 
     // if (tagsMap[FFMPEGTagField.trackNumber] != null || tagsMap[FFMPEGTagField.discNumber] != null) {
