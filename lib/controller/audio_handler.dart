@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:basic_audio_handler/basic_audio_handler.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_utils/src/extensions/num_extensions.dart';
@@ -208,6 +209,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   // ==============================================================================================
   // ================================== QueueManager Overriden ====================================
 
+  Color? latestExtractedColor;
+
   @override
   void onIndexChanged(int newIndex, Q newItem) async {
     refreshNotification(newItem);
@@ -223,6 +226,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           if (color != null && finalItem == currentItem) {
             // -- only update if same item is still playing, i.e. user didn't skip.
             CurrentColor.inst.updatePlayerColorFromColor(color.color);
+            latestExtractedColor = color.color;
           }
         }
       },

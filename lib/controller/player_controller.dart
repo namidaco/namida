@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
@@ -77,6 +78,8 @@ class Player {
   int get totalListenedTimeInSec => _audioHandler.totalListenedTimeInSec;
 
   int get sleepingTrackIndex => sleepAfterTracks + currentIndex - 1;
+
+  Color? get latestExtractedColor => _audioHandler.latestExtractedColor;
 
   // -- error playing track
   void cancelPlayErrorSkipTimer() => _audioHandler.cancelPlayErrorSkipTimer();

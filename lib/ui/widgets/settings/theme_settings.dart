@@ -22,7 +22,11 @@ class ThemeSetting extends StatelessWidget {
   const ThemeSetting({super.key});
 
   Future<void> _refreshColorCurrentTrack() async {
-    await CurrentColor.inst.updatePlayerColorFromTrack(Player.inst.nowPlayingTWD, null);
+    if (Player.inst.currentQueueYoutube.isNotEmpty && Player.inst.latestExtractedColor != null) {
+      CurrentColor.inst.updatePlayerColorFromColor(Player.inst.latestExtractedColor!);
+    } else {
+      await CurrentColor.inst.updatePlayerColorFromTrack(Player.inst.nowPlayingTWD, null);
+    }
   }
 
   Widget getThemeTile() {
