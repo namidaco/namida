@@ -1065,7 +1065,7 @@ class VideoController {
       height: videoStream?.height ?? 0,
       width: videoStream?.width ?? 0,
       sizeInBytes: stats.size,
-      creationTimeMS: stats.changed.millisecondsSinceEpoch,
+      creationTimeMS: stats.creationDate.millisecondsSinceEpoch,
       frameratePrecise: frameratePrecise ?? 0.0,
       durationMS: videoStream?.duration?.inMilliseconds ?? mediaInfo?.format?.duration?.inMilliseconds ?? 0,
       bitrate: int.tryParse(videoStream?.bitRate ?? '') ?? 0,

@@ -572,7 +572,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                             onTap: _navigateToRecentlyListened,
                             topRightText: (track) {
                               if (track == null) return null;
-                              return Jiffy.parseFromMillisecondsSinceEpoch(track.track.dateModified).fromNow(
+                              return Jiffy.parseFromMillisecondsSinceEpoch(track.track.dateAdded).fromNow(
                                 withPrefixAndSuffix: false,
                               );
                             },
@@ -1213,7 +1213,7 @@ class RecentlyAddedTracksPage extends StatelessWidget {
         queueSource: QueueSource.recentlyAdded,
         queue: tracksSorted,
         thirdLineText: (track) {
-          final dateMS = track.track.dateModified;
+          final dateMS = track.track.dateAdded;
           final ago = Jiffy.parseFromMillisecondsSinceEpoch(dateMS).fromNow(withPrefixAndSuffix: true);
           return "${dateMS.dateAndClockFormattedOriginal} (~$ago)";
         },

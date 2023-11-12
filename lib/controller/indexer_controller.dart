@@ -433,7 +433,7 @@ class Indexer {
           duration: 0,
           year: 0,
           size: fileStat?.size ?? 0,
-          dateAdded: fileStat?.changed.millisecondsSinceEpoch ?? 0,
+          dateAdded: fileStat?.creationDate.millisecondsSinceEpoch ?? 0,
           dateModified: fileStat?.modified.millisecondsSinceEpoch ?? 0,
           path: trackPath,
           comment: '',

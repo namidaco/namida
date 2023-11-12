@@ -174,7 +174,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
       final plName = e.key;
       final m3uPath = e.value.$1;
       final trs = e.value.$2;
-      final creationDate = File(m3uPath).statSync().modified.millisecondsSinceEpoch;
+      final creationDate = File(m3uPath).statSync().creationDate.millisecondsSinceEpoch;
       PlaylistController.inst.addNewPlaylist(plName, tracks: trs, m3uPath: m3uPath, creationDate: creationDate);
     }
     _pathsM3ULookup

@@ -376,6 +376,22 @@ extension FunctionsExecuter<T> on Iterable<Future<T>?> {
   }
 }
 
+extension FileStatsUtils<T> on FileStat {
+  DateTime get creationDate {
+    DateTime lowest = modified;
+
+    bool validateLower(DateTime date) {
+      return changed != DateTime(1970) && (lowest == DateTime(1970) || date.microsecondsSinceEpoch < lowest.microsecondsSinceEpoch);
+    }
+
+    if (validateLower(changed)) lowest = changed;
+
+    if (validateLower(accessed)) lowest = accessed;
+
+    return lowest;
+  }
+}
+
 extension CompleterCompleter<T> on Completer<T>? {
   void completeIfWasnt([FutureOr<T>? value]) async {
     final c = this;
