@@ -47,33 +47,41 @@ Future<bool> _addKey(String argKey, String argValue) async {
     final lines = stream.transform(utf8.decoder).transform(const LineSplitter());
 
     await for (final line in lines) {
-      final pieces = line.split('late String ');
-      if (pieces.length == 2) {
-        final withoutSC = pieces.last.split('');
-        withoutSC.removeLast();
-        keys.add(withoutSC.join());
-      }
+      final regexRes = RegExp(r'(?<=String get )(.*)(?= =>)');
+      final match = regexRes.firstMatch(line)?[0];
+      if (match != null) keys.add(match);
+
+      // final pieces = line.split('String get ');
+      // if (pieces.length == 2) {
+      //   final withoutSC = pieces.last.split('');
+      //   withoutSC.removeLast();
+      //   keys.add(withoutSC.join());
+      // }
     }
     keys.insertWithOrder(argKey);
     await file.writeAsString("""
 // ignore_for_file: non_constant_identifier_names
 // AUTO GENERATED FILE
   
-class LanguageKeys {
-${keys.map((e) => '  late String $e;').join('\n')}
+abstract class LanguageKeys {
+  Map<String, String> get languageMap;
+  Map<String, String> get languageMapDefault;
+  String _getKey(String key) => languageMap[key] ?? languageMapDefault[key] ?? '';
+
+${keys.map((e) => "  String get $e => _getKey('$e');").join('\n')}
 }""");
 
     // -- Controller file
-    final langFile = File(_controllerFilePath);
-    final langController = await langFile.readAsString();
-    const splitterOne = '// -- Keys Start ---------------------------------------------------------';
-    const splitterTwo = '// -- Keys End ---------------------------------------------------------';
-    final firstPiece = langController.split(splitterOne).first;
-    final lastPiece = langController.split(splitterTwo).last;
-    final mapText = keys.map((e) => '\t\t\t$e = getKey("$e");').join('\n');
-    await langFile.writeAsString("""$firstPiece$splitterOne
-$mapText
-\t\t\t$splitterTwo$lastPiece""");
+//     final langFile = File(_controllerFilePath);
+//     final langController = await langFile.readAsString();
+//     const splitterOne = '// -- Keys Start ---------------------------------------------------------';
+//     const splitterTwo = '// -- Keys End ---------------------------------------------------------';
+//     final firstPiece = langController.split(splitterOne).first;
+//     final lastPiece = langController.split(splitterTwo).last;
+//     final mapText = keys.map((e) => '\t\t\t$e = getKey("$e");').join('\n');
+//     await langFile.writeAsString("""$firstPiece$splitterOne
+// $mapText
+// \t\t\t$splitterTwo$lastPiece""");
 
     // -- All Langauges files
     const encoder = JsonEncoder.withIndent('  ');
@@ -102,21 +110,21 @@ Future<bool> _removeKey(String keyToRemove) async {
     // -- Keys File
     final file = File(_keysFilePath);
     final lines = await file.readAsLines();
-    final indToRemove = lines.indexWhere((element) => element.contains('late String $keyToRemove;'));
+    final indToRemove = lines.indexWhere((element) => element.contains("String get $keyToRemove => _getKey('$keyToRemove');"));
     lines.removeAt(indToRemove);
     await file.writeAsString(lines.join('\n'));
 
     // -- Controller file
-    final langFile = File(_controllerFilePath);
-    final langController = await langFile.readAsString();
-    const splitterOne = '// -- Keys Start ---------------------------------------------------------';
-    const splitterTwo = '// -- Keys End ---------------------------------------------------------';
-    final firstPiece = langController.split(splitterOne).first;
-    final lastPiece = langController.split(splitterTwo).last;
-    final oldMapText = langController.split(splitterOne).last.split(splitterTwo).first;
-    final mapLines = const LineSplitter().convert(oldMapText);
-    mapLines.removeWhere((element) => element.contains("$keyToRemove = "));
-    await langFile.writeAsString("$firstPiece$splitterOne${mapLines.join('\n')}$splitterTwo$lastPiece");
+    // final langFile = File(_controllerFilePath);
+    // final langController = await langFile.readAsString();
+    // const splitterOne = '// -- Keys Start ---------------------------------------------------------';
+    // const splitterTwo = '// -- Keys End ---------------------------------------------------------';
+    // final firstPiece = langController.split(splitterOne).first;
+    // final lastPiece = langController.split(splitterTwo).last;
+    // final oldMapText = langController.split(splitterOne).last.split(splitterTwo).first;
+    // final mapLines = const LineSplitter().convert(oldMapText);
+    // mapLines.removeWhere((element) => element.contains("$keyToRemove = "));
+    // await langFile.writeAsString("$firstPiece$splitterOne${mapLines.join('\n')}$splitterTwo$lastPiece");
 
     // -- All Langauges files
     const encoder = JsonEncoder.withIndent('  ');
@@ -161,5 +169,5 @@ extension OrderedInsert<T extends Comparable> on List<T> {
 }
 
 const _keysFilePath = 'lib/core/translations/keys.dart';
-const _controllerFilePath = 'lib/core/translations/language.dart';
+// const _controllerFilePath = 'lib/core/translations/language.dart';
 const _languagesDirectoryPath = 'assets/language/translations';
