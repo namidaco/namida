@@ -1,6 +1,7 @@
 // ignore_for_file: depend_on_referenced_packages
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -248,6 +249,12 @@ extension TRACKPLAYMODE on TrackPlayMode {
 }
 
 extension ConvertPathToTrack on String {
+  Future<TrackExtended?> removeTrackThenExtract({bool onlyIfNewFileExists = true}) async {
+    if (onlyIfNewFileExists && !await File(this).exists()) return null;
+    Indexer.inst.allTracksMappedByPath.remove(Track(this));
+    return (await Indexer.inst.extractOneTrack(tracksPath: [this]))[this];
+  }
+
   Future<TrackExtended?> toTrackExtOrExtract() async => toTrackExtOrNull() ?? (await Indexer.inst.extractOneTrack(tracksPath: [this]))[this];
   Track toTrack() => Track(this);
   Track? toTrackOrNull() => Indexer.inst.allTracksMappedByPath[toTrack()] == null ? null : toTrack();

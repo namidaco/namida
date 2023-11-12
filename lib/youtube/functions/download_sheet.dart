@@ -569,7 +569,7 @@ Future<void> showDownloadVideoBottomSheet({
 
                                             // -- adding to library, only if audio downloaded
                                             if (selectedAudioOnlyStream.value != null && selectedVideoOnlyStream.value == null) {
-                                              await downloadedFile?.path.toTrackExtOrExtract();
+                                              await downloadedFile?.path.removeTrackThenExtract();
                                             }
                                           },
                                         ),
