@@ -131,12 +131,22 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
     }
   }
 
+  Key? _latestKey;
   Key get thumbKey => Key("$smallBoxDynamicColor${widget.videoId}${widget.channelUrl}${imageBytes?.length}$imagePath${widget.smallBoxText}");
 
   @override
   Widget build(BuildContext context) {
-    if (imagePath == null && canFetchImage) {
+    if (_latestKey != thumbKey) {
+      _latestKey = thumbKey;
+      _dontTouchMeImFetchingThumbnail?.cancel();
+      imagePath = null;
+      imageBytes = null;
+      imageColors = null;
+      smallBoxDynamicColor = null;
+      _getThumbnail();
+    } else if (imagePath == null && canFetchImage) {
       _getThumbnail(); // for failed requests
+      _latestKey = thumbKey;
     }
     return Padding(
       padding: widget.margin ?? EdgeInsets.zero,

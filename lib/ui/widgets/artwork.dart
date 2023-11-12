@@ -77,6 +77,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
   late DisposableBuildContext<_ArtworkWidgetState> _disposableContext;
 
   String? _imagePath;
+  Key? _latestKey;
 
   @override
   void initState() {
@@ -129,15 +130,17 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
     Widget getStockWidget({
       final Color? bgc,
       required final bool stackWithOnTopWidgets,
+      final Key? key,
     }) {
       final icon = Icon(
         widget.displayIcon ? widget.icon : null,
         size: widget.iconSize ?? widget.thumbnailSize / 2,
       );
       return Container(
+        key: key,
         width: boxWidth,
         height: boxHeight,
-        clipBehavior: Clip.hardEdge,
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: widget.bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
           borderRadius: borderR,
@@ -158,12 +161,21 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
 
     final bytes = widget.bytes ?? Indexer.inst.artworksMap[widget.path];
     final isValidBytes = bytes != null && bytes.isNotEmpty;
+    final key = widget.key ?? Key("${widget.path}_${bytes?.length}");
+    if (_latestKey == null) {
+      _latestKey = key;
+    } else if (_latestKey != key) {
+      _latestKey = key;
+      _extractArtwork();
+    }
     return (_imagePath == null && !isValidBytes) || widget.forceDummyArtwork
         ? getStockWidget(
+            key: key,
             stackWithOnTopWidgets: true,
             bgc: widget.bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
           )
         : SizedBox(
+            key: key,
             width: widget.staggered ? null : boxWidth,
             height: widget.staggered ? null : boxHeight,
             child: Align(
@@ -172,7 +184,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
                 borderRadius: widget.borderRadius.multipliedRadius,
                 blur: widget.blur,
                 child: Container(
-                  clipBehavior: Clip.hardEdge,
+                  clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     borderRadius: borderR,
                     shape: shape,
