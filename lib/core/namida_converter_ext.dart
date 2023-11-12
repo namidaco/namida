@@ -34,9 +34,9 @@ import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
-import 'package:namida/core/functions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
@@ -64,6 +64,9 @@ import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/pages/youtube_home_view.dart';
+import 'package:namida/youtube/pages/yt_history_page.dart';
+import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
+import 'package:namida/youtube/youtube_playlists_view.dart';
 
 extension LibraryTabToEnum on int {
   LibraryTab toEnum() => settings.libraryTabs.elementAt(this);
@@ -676,8 +679,25 @@ extension WidgetsPagess on Widget {
         route = RouteType.SETTINGS_subpage;
         name = (this as SettingsSubPage).title;
         break;
+
       case YouTubeHomeView:
         route = RouteType.YOUTUBE_HOME;
+        break;
+      case YoutubePlaylistsView:
+        route = RouteType.YOUTUBE_PLAYLISTS;
+        break;
+      case YTNormalPlaylistSubpage:
+        route = RouteType.YOUTUBE_PLAYLIST_SUBPAGE;
+        name = (this as YTNormalPlaylistSubpage).playlist.name;
+        break;
+      case YoutubeHistoryPage:
+        route = RouteType.YOUTUBE_HISTORY_SUBPAGE;
+        break;
+      case YTMostPlayedVideosPage:
+        route = RouteType.YOUTUBE_MOST_PLAYED_SUBPAGE;
+        break;
+      case YTLikedVideosPage:
+        route = RouteType.YOUTUBE_LIKED_SUBPAGE;
         break;
     }
 

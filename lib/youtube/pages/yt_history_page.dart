@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:known_extents_list_view_builder/sliver_known_extents_list.dart';
+import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -93,6 +95,7 @@ class YoutubeHistoryPage extends StatelessWidget {
                                 videos: videos,
                                 index: i,
                                 day: day,
+                                playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
                               );
                             },
                           ),

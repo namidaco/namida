@@ -46,7 +46,7 @@ class AppPaths {
   static final NAMIDA_LOGO = '${AppDirs.ARTWORKS}.ARTWORKS.NAMIDA_DEFAULT_ARTWORK.PNG';
 
   // ================= Youtube =================
-  static final YT_FAVOURITES_PLAYLIST = '${AppDirs.YOUTUBE_MAIN_DIRECTORY}/ytfavs.json';
+  static final YT_LIKES_PLAYLIST = '${AppDirs.YOUTUBE_MAIN_DIRECTORY}/yt_likes.json';
 }
 
 /// Directories used by Namida

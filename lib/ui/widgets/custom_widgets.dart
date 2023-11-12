@@ -1276,18 +1276,24 @@ class NamidaWheelSlider<T> extends StatelessWidget {
 
 class NamidaRawLikeButton extends StatelessWidget {
   final double size;
-  final Color? color;
+  final Color? enabledColor;
+  final Color? disabledColor;
   final bool? isLiked;
   final EdgeInsetsGeometry padding;
   final Future<void> Function(bool isLiked) onTap;
+  final IconData likedIcon;
+  final IconData normalIcon;
 
   const NamidaRawLikeButton({
     super.key,
     this.size = 24.0,
-    this.color,
+    this.enabledColor,
+    this.disabledColor,
     required this.isLiked,
     required this.onTap,
     this.padding = EdgeInsets.zero,
+    this.likedIcon = Broken.heart_tick,
+    this.normalIcon = Broken.heart,
   });
 
   @override
@@ -1311,13 +1317,13 @@ class NamidaRawLikeButton extends StatelessWidget {
       },
       likeBuilder: (value) => value
           ? Icon(
-              Broken.heart_tick,
-              color: color ?? context.theme.colorScheme.primary,
+              likedIcon,
+              color: enabledColor ?? context.theme.colorScheme.primary,
               size: size,
             )
           : Icon(
-              Broken.heart,
-              color: color ?? context.theme.colorScheme.secondary,
+              normalIcon,
+              color: disabledColor ?? context.theme.colorScheme.secondary,
               size: size,
             ),
     );
@@ -1334,7 +1340,8 @@ class NamidaLikeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaRawLikeButton(
       size: size,
-      color: color,
+      enabledColor: color,
+      disabledColor: color,
       isLiked: track?.isFavourite,
       onTap: (isLiked) async {
         if (track != null) {
@@ -1360,7 +1367,7 @@ class NamidaIconButton extends StatefulWidget {
   const NamidaIconButton({
     super.key,
     this.padding,
-    this.horizontalPadding = 10.0,
+    this.horizontalPadding = 8.0,
     this.verticalPadding = 0.0,
     required this.icon,
     this.onPressed,
@@ -1807,6 +1814,7 @@ class NamidaDrawerListTile extends StatelessWidget {
 
 class SearchPageTitleRow extends StatelessWidget {
   final String title;
+  final String subtitle;
   final IconData icon;
   final Widget? trailing;
   final String? buttonText;
@@ -1815,6 +1823,7 @@ class SearchPageTitleRow extends StatelessWidget {
   const SearchPageTitleRow({
     super.key,
     required this.title,
+    this.subtitle = '',
     required this.icon,
     this.trailing,
     this.buttonText,
@@ -1831,20 +1840,31 @@ class SearchPageTitleRow extends StatelessWidget {
           children: [
             Icon(icon),
             const SizedBox(width: 8.0),
-            Text(
-              title,
-              style: context.textTheme.displayLarge?.copyWith(fontSize: 15.5.multipliedFontScale),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: context.textTheme.displayLarge?.copyWith(fontSize: 15.5.multipliedFontScale),
+                ),
+                if (subtitle != '')
+                  Text(
+                    subtitle,
+                    style: context.textTheme.displaySmall,
+                  ),
+              ],
             ),
           ],
         ),
         const Spacer(),
-        TextButton.icon(
-          style: TextButton.styleFrom(foregroundColor: context.theme.listTileTheme.iconColor),
-          icon: Icon(buttonIcon, size: 20.0),
-          label: Text(buttonText ?? ''),
-          onPressed: onPressed,
-        ),
-        const SizedBox(width: 16.0),
+        trailing ??
+            TextButton.icon(
+              style: TextButton.styleFrom(foregroundColor: context.theme.listTileTheme.iconColor),
+              icon: Icon(buttonIcon, size: 20.0),
+              label: Text(buttonText ?? ''),
+              onPressed: onPressed,
+            ),
+        const SizedBox(width: 8.0),
       ],
     );
   }
@@ -2663,7 +2683,7 @@ class NamidaPopupWrapper extends StatelessWidget {
   _showPopupMenu(BuildContext context) async {
     final RenderBox button = context.findRenderObject()! as RenderBox;
     final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
-    const Offset offset = Offset.zero;
+    const Offset offset = Offset(0, -64);
     final RelativeRect position = RelativeRect.fromRect(
       Rect.fromPoints(
         button.localToGlobal(offset, ancestor: overlay),
@@ -2798,6 +2818,7 @@ class NamidaTabView extends StatefulWidget {
   final List<String> tabs;
   final List<Widget> children;
   final void Function(int index) onIndexChanged;
+  final bool isScrollable;
 
   const NamidaTabView({
     super.key,
@@ -2805,6 +2826,7 @@ class NamidaTabView extends StatefulWidget {
     required this.initialIndex,
     required this.tabs,
     required this.onIndexChanged,
+    this.isScrollable = false,
   });
 
   @override
@@ -2843,6 +2865,7 @@ class _NamidaTabViewState extends State<NamidaTabView> with SingleTickerProvider
         TabBar(
           indicatorWeight: 3.0,
           controller: controller,
+          isScrollable: widget.isScrollable,
           tabs: widget.tabs
               .map(
                 (e) => Padding(

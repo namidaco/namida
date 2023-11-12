@@ -1138,6 +1138,8 @@ class CustomTagTextField extends StatelessWidget {
   final AutovalidateMode? validatorMode;
   final void Function(String value)? onFieldSubmitted;
   final double borderRadius;
+  final FocusNode? focusNode;
+
   CustomTagTextField({
     super.key,
     required this.controller,
@@ -1155,6 +1157,7 @@ class CustomTagTextField extends StatelessWidget {
     this.validatorMode,
     this.onFieldSubmitted,
     this.borderRadius = 16.0,
+    this.focusNode,
   });
   final RxBool didChange = false.obs;
   @override
@@ -1164,6 +1167,7 @@ class CustomTagTextField extends StatelessWidget {
     return SizedBox(
       width: null,
       child: TextFormField(
+        focusNode: focusNode,
         validator: validator,
         maxLength: maxLength,
         controller: controller,

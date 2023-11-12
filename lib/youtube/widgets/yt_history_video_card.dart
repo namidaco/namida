@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:jiffy/jiffy.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -21,6 +21,12 @@ class YTHistoryVideoCard extends StatelessWidget {
   final int? day;
   final int index;
   final List<int> overrideListens;
+  final PlaylistID? playlistID;
+  final bool minimalCard;
+  final bool displayTimeAgo;
+  final double? thumbnailHeight;
+  final double? minimalCardWidth;
+  final bool reversedList;
 
   const YTHistoryVideoCard({
     super.key,
@@ -28,23 +34,42 @@ class YTHistoryVideoCard extends StatelessWidget {
     required this.day,
     required this.index,
     this.overrideListens = const [],
+    required this.playlistID,
+    this.minimalCard = false,
+    this.displayTimeAgo = true,
+    this.thumbnailHeight,
+    this.minimalCardWidth,
+    this.reversedList = false,
   });
+
+  Widget _columnOrRow({required List<Widget> children, bool isRow = true}) {
+    return isRow ? Row(children: children) : Column(children: children);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final thumbHeight = thumbnailHeight ?? (minimalCard ? 24.0 * 3.2 : Dimensions.youtubeCardItemHeight);
+    final thumbWidth = minimalCardWidth ?? thumbHeight * 16 / 9;
+
+    final index = reversedList ? videos.length - 1 - this.index : this.index;
     final video = videos[index];
     final info = YoutubeController.inst.fetchVideoDetailsFromCacheSync(video.id);
     final duration = info?.duration?.inSeconds.secondsLabel;
     final menuItems = YTUtils.getVideoCardMenuItems(
       videoId: video.id,
       url: info?.url,
-      playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
+      playlistID: playlistID,
       idsNamesLookup: {video.id: info?.name},
     );
     final backupVideoInfo = YoutubeController.inst.getBackupVideoInfo(video.id);
     final videoTitle = info?.name ?? backupVideoInfo?.title ?? video.id;
     final videoSubtitle = info?.uploaderName ?? backupVideoInfo?.channel;
-    final dateText = video.dateTimeAdded.millisecondsSinceEpoch.dateAndClockFormattedOriginal;
+    final watchMS = video.dateTimeAdded.millisecondsSinceEpoch;
+    final dateText = !displayTimeAgo
+        ? ''
+        : minimalCard
+            ? Jiffy.parseFromMillisecondsSinceEpoch(watchMS).fromNow()
+            : watchMS.dateAndClockFormattedOriginal;
 
     return Obx(
       () {
@@ -56,26 +81,34 @@ class YTHistoryVideoCard extends StatelessWidget {
           openOnTap: false,
           childrenDefault: menuItems,
           child: NamidaInkWell(
+            borderRadius: minimalCard ? 8.0 : 10.0,
+            width: minimalCard ? thumbWidth : null,
             onTap: () {
               YTUtils.expandMiniplayer();
-              Player.inst.playOrPause(index, videos, QueueSource.others);
+              Player.inst.playOrPause(
+                  this.index, (reversedList ? videos.reversed : videos).map((e) => YoutubeID(id: e.id, watchNull: e.watchNull, playlistID: playlistID)), QueueSource.others);
             },
-            height: Dimensions.youtubeCardItemExtent,
-            margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: Dimensions.youtubeCardItemVerticalPadding),
+            height: minimalCard ? 100 : Dimensions.youtubeCardItemExtent,
+            margin: EdgeInsets.symmetric(horizontal: minimalCard ? 2.0 : 4.0, vertical: Dimensions.youtubeCardItemVerticalPadding),
             bgColor: isCurrentlyPlaying ? CurrentColor.inst.color.withAlpha(140) : (hightlightedColor ?? context.theme.cardColor),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12.0.multipliedRadius),
             ),
             child: Stack(
               children: [
-                Row(
+                _columnOrRow(
+                  isRow: !minimalCard,
                   children: [
-                    const SizedBox(width: Dimensions.youtubeCardItemVerticalPadding),
+                    SizedBox(
+                      width: minimalCard ? null : Dimensions.youtubeCardItemVerticalPadding,
+                      height: minimalCard ? 1.0 : null,
+                    ),
                     YoutubeThumbnail(
                       key: Key(video.id),
+                      borderRadius: 8.0,
                       isImportantInCache: true,
-                      width: (Dimensions.youtubeCardItemHeight * 16 / 9) - 3.0,
-                      height: Dimensions.youtubeCardItemHeight - 3.0,
+                      width: thumbWidth - 3.0,
+                      height: thumbHeight - 3.0,
                       videoId: video.id,
                       onTopWidgets: [
                         if (duration != null)
@@ -108,33 +141,43 @@ class YTHistoryVideoCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 12.0),
                     Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            videoTitle,
-                            maxLines: 2,
-                            style: context.textTheme.displayMedium?.copyWith(
-                              color: isCurrentlyPlaying ? Colors.white.withOpacity(0.7) : null,
-                            ),
-                          ),
-                          if (videoSubtitle != null)
+                      child: Padding(
+                        padding: minimalCard ? const EdgeInsets.all(4.0) : EdgeInsets.zero,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
-                              videoSubtitle,
-                              maxLines: 1,
-                              style: context.textTheme.displaySmall?.copyWith(
-                                color: isCurrentlyPlaying ? Colors.white.withOpacity(0.6) : null,
+                              videoTitle,
+                              maxLines: minimalCard ? 1 : 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: context.textTheme.displayMedium?.copyWith(
+                                fontSize: minimalCard ? 12.0.multipliedFontScale : null,
+                                color: isCurrentlyPlaying ? Colors.white.withOpacity(0.7) : null,
                               ),
                             ),
-                          Text(
-                            dateText,
-                            maxLines: 1,
-                            style: context.textTheme.displaySmall?.copyWith(
-                              color: isCurrentlyPlaying ? Colors.white.withOpacity(0.5) : null,
-                            ),
-                          ),
-                        ],
+                            if (videoSubtitle != null)
+                              Text(
+                                videoSubtitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: context.textTheme.displaySmall?.copyWith(
+                                  fontSize: minimalCard ? 11.5.multipliedFontScale : null,
+                                  color: isCurrentlyPlaying ? Colors.white.withOpacity(0.6) : null,
+                                ),
+                              ),
+                            if (dateText != '')
+                              Text(
+                                dateText,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: context.textTheme.displaySmall?.copyWith(
+                                  fontSize: minimalCard ? 11.0.multipliedFontScale : null,
+                                  color: isCurrentlyPlaying ? Colors.white.withOpacity(0.5) : null,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12.0),
@@ -142,7 +185,7 @@ class YTHistoryVideoCard extends StatelessWidget {
                 ),
                 Positioned(
                   bottom: 6.0,
-                  right: 12.0,
+                  right: minimalCard ? 6.0 : 12.0,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: YTUtils.getVideoCacheStatusIcons(
@@ -150,6 +193,7 @@ class YTHistoryVideoCard extends StatelessWidget {
                       videoId: video.id,
                       iconsColor: isCurrentlyPlaying ? Colors.white.withOpacity(0.5) : null,
                       overrideListens: overrideListens,
+                      displayCacheIcons: !minimalCard,
                     ),
                   ),
                 ),

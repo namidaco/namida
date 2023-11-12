@@ -95,91 +95,96 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
     );
   }
 
+  Widget getChipsRow(BuildContext context) {
+    final mostplayedOptions = List<MostPlayedTimeRange>.from(MostPlayedTimeRange.values)..remove(MostPlayedTimeRange.custom);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          const SizedBox(width: 8.0),
+          NamidaInkWell(
+            animationDurationMS: 200,
+            borderRadius: 6.0,
+            bgColor: context.theme.cardTheme.color,
+            padding: const EdgeInsets.all(8.0),
+            decoration: BoxDecoration(
+              border: _isEnabled(MostPlayedTimeRange.custom) ? Border.all(color: CurrentColor.inst.color) : null,
+              borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+            ),
+            child: Row(
+              children: [
+                const Icon(Broken.calendar, size: 18.0),
+                const SizedBox(width: 4.0),
+                Text(
+                  lang.CUSTOM,
+                  style: context.textTheme.displayMedium,
+                ),
+                const SizedBox(width: 4.0),
+                const Icon(Broken.arrow_down_2, size: 14.0),
+              ],
+            ),
+            onTap: () {
+              showCalendarDialog(
+                title: lang.CHOOSE,
+                buttonText: lang.CONFIRM,
+                useHistoryDates: true,
+                onGenerate: (dates) => _onSelectingTimeRange(
+                  dateCustom: DateRange(oldest: dates.first, newest: dates.last),
+                  mptr: MostPlayedTimeRange.custom,
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 4.0),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  Obx(
+                    () {
+                      final dateRange = customDateRange.value;
+                      return _getChipChild(
+                        context: context,
+                        mptr: MostPlayedTimeRange.custom,
+                        dateCustom: dateRange,
+                        trailing: (textColor) => NamidaIconButton(
+                          padding: EdgeInsets.zero,
+                          icon: Broken.close_circle,
+                          iconSize: 14.0,
+                          iconColor: textColor,
+                          onPressed: () => _onSelectingTimeRange(mptr: MostPlayedTimeRange.allTime, dateCustom: DateRange.dummy()),
+                        ),
+                      ).animateEntrance(
+                        showWhen: dateRange.oldest != DateTime(0),
+                        durationMS: 400,
+                        reverseDurationMS: 200,
+                      );
+                    },
+                  ),
+                  ...mostplayedOptions.map(
+                    (action) => _getChipChild(
+                      context: context,
+                      mptr: action,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BackgroundWrapper(
       child: Obx(
         () {
           final finalListenMap = historyController.currentTopTracksMapListens;
-          final mostplayedOptions = List<MostPlayedTimeRange>.from(MostPlayedTimeRange.values)..remove(MostPlayedTimeRange.custom);
-          final bottomWidget = Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Row(
-              children: [
-                const SizedBox(width: 8.0),
-                NamidaInkWell(
-                  animationDurationMS: 200,
-                  borderRadius: 6.0,
-                  bgColor: context.theme.cardTheme.color,
-                  padding: const EdgeInsets.all(8.0),
-                  decoration: BoxDecoration(
-                    border: _isEnabled(MostPlayedTimeRange.custom) ? Border.all(color: CurrentColor.inst.color) : null,
-                    borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Broken.calendar, size: 18.0),
-                      const SizedBox(width: 4.0),
-                      Text(
-                        lang.CUSTOM,
-                        style: context.textTheme.displayMedium,
-                      ),
-                      const SizedBox(width: 4.0),
-                      const Icon(Broken.arrow_down_2, size: 14.0),
-                    ],
-                  ),
-                  onTap: () {
-                    showCalendarDialog(
-                      title: lang.CHOOSE,
-                      buttonText: lang.CONFIRM,
-                      useHistoryDates: true,
-                      onGenerate: (dates) => _onSelectingTimeRange(
-                        dateCustom: DateRange(oldest: dates.first, newest: dates.last),
-                        mptr: MostPlayedTimeRange.custom,
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 4.0),
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        Obx(
-                          () {
-                            final dateRange = customDateRange.value;
-                            return _getChipChild(
-                              context: context,
-                              mptr: MostPlayedTimeRange.custom,
-                              dateCustom: dateRange,
-                              trailing: (textColor) => NamidaIconButton(
-                                padding: EdgeInsets.zero,
-                                icon: Broken.close_circle,
-                                iconSize: 14.0,
-                                iconColor: textColor,
-                                onPressed: () => _onSelectingTimeRange(mptr: MostPlayedTimeRange.allTime, dateCustom: DateRange.dummy()),
-                              ),
-                            ).animateEntrance(
-                              showWhen: dateRange.oldest != DateTime(0),
-                              durationMS: 400,
-                              reverseDurationMS: 200,
-                            );
-                          },
-                        ),
-                        ...mostplayedOptions.map(
-                          (action) => _getChipChild(
-                            context: context,
-                            mptr: action,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
+          final bottomWidget = getChipsRow(context);
           const bottomPadding = 0.0;
           return NamidaListView(
             itemExtents: itemExtents,

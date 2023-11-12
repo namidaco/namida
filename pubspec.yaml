@@ -173,6 +173,9 @@ flutter:
     - family: broken
       fonts:
         - asset: assets/fonts/broken.ttf
+    - family: broken_filled
+      fonts:
+        - asset: assets/fonts/broken_filled.ttf
     - family: LexendDeca
       fonts:
         - asset: assets/fonts/LexendDeca/LexendDeca-Black.ttf

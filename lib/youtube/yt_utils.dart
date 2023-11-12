@@ -47,6 +47,7 @@ class YTUtils {
     required BuildContext context,
     Color? iconsColor,
     List<int> overrideListens = const [],
+    bool displayCacheIcons = true,
   }) {
     final listens = overrideListens.isNotEmpty ? overrideListens : YoutubeHistoryController.inst.topTracksMapListens[videoId] ?? [];
     return [
@@ -63,16 +64,18 @@ class YTUtils {
             style: context.textTheme.displaySmall,
           ),
         ),
-      const SizedBox(width: 4.0),
-      Opacity(
-        opacity: VideoController.inst.getNVFromID(videoId).isNotEmpty ? 0.6 : 0.1,
-        child: Tooltip(message: lang.VIDEO_CACHE, child: Icon(Broken.video, size: 15.0, color: iconsColor)),
-      ),
-      const SizedBox(width: 4.0),
-      Opacity(
-        opacity: Player.inst.audioCacheMap[videoId] != null ? 0.6 : 0.1,
-        child: Tooltip(message: lang.AUDIO_CACHE, child: Icon(Broken.audio_square, size: 15.0, color: iconsColor)),
-      ),
+      if (displayCacheIcons) ...[
+        const SizedBox(width: 4.0),
+        Opacity(
+          opacity: VideoController.inst.getNVFromID(videoId).isNotEmpty ? 0.6 : 0.1,
+          child: Tooltip(message: lang.VIDEO_CACHE, child: Icon(Broken.video, size: 15.0, color: iconsColor)),
+        ),
+        const SizedBox(width: 4.0),
+        Opacity(
+          opacity: Player.inst.audioCacheMap[videoId] != null ? 0.6 : 0.1,
+          child: Tooltip(message: lang.AUDIO_CACHE, child: Icon(Broken.audio_square, size: 15.0, color: iconsColor)),
+        ),
+      ],
     ];
   }
 

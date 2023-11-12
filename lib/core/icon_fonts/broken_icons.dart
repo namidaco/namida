@@ -12,6 +12,11 @@ import 'package:flutter/widgets.dart';
 class Broken {
   Broken._();
 
+  static const String _fontFamilyFilled = 'broken_filled';
+
+  static const IconData dislike_filled = IconData(0xe900, fontFamily: _fontFamilyFilled);
+  static const IconData like_filled = IconData(0xe901, fontFamily: _fontFamilyFilled);
+
   static const String _fontFamily = 'broken';
 
   static const IconData woman = IconData(0xe900, fontFamily: _fontFamily);

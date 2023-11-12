@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart' as pc;
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -18,6 +19,7 @@ void showAddToPlaylistSheet({
   BuildContext? ctx,
   required Iterable<String> ids,
   required Map<String, String?> idsNamesLookup,
+  String playlistNameToAdd = '',
 }) async {
   final pcontroller = pc.YoutubePlaylistController.inst;
 
@@ -25,6 +27,12 @@ void showAddToPlaylistSheet({
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   final context = ctx ?? rootContext;
+
+  final videoNamesSubtitle = ids
+          .map((id) => idsNamesLookup[id] ?? YoutubeController.inst.getBackupVideoInfo(id)?.title ?? YoutubeController.inst.fetchVideoDetailsFromCacheSync(id)?.name ?? id)
+          .take(3)
+          .join(', ') +
+      (ids.length > 3 ? '... + ${ids.length - 3}' : '');
 
   await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
   // ignore: use_build_context_synchronously
@@ -53,14 +61,27 @@ void showAddToPlaylistSheet({
             const SizedBox(height: 6.0),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Text(
-                ids.map((e) => idsNamesLookup[e] ?? e).join(', '),
-                style: context.textTheme.displaySmall,
-              ),
+              child: playlistNameToAdd == ''
+                  ? Text(
+                      videoNamesSubtitle,
+                      style: context.textTheme.displaySmall,
+                    )
+                  : RichText(
+                      text: TextSpan(
+                        text: playlistNameToAdd,
+                        style: context.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600),
+                        children: [
+                          TextSpan(
+                            text: " ($videoNamesSubtitle)",
+                            style: context.textTheme.displaySmall,
+                          ),
+                        ],
+                      ),
+                    ),
             ),
             const SizedBox(height: 6.0),
             Expanded(
-              child: YoutubePlaylistsView(idsToAdd: ids),
+              child: YoutubePlaylistsView(idsToAdd: ids, displayMenu: false),
             ),
             const SizedBox(height: 6.0),
             Row(

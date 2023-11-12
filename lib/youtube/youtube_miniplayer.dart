@@ -24,6 +24,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/youtube_playlist_controller.dart' hide YoutubePlaylist;
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_listens_dialog.dart';
@@ -78,7 +79,9 @@ class YoutubeMiniPlayer extends StatelessWidget {
             final channelIsVerified = videoChannel?.isVerified ?? videoInfo?.isUploaderVerified ?? false;
             final channelSubs = videoChannel?.subscriberCount ?? Player.inst.currentChannelInfo?.subscriberCount;
 
-            final videoLikeCount = videoInfo?.likeCount ?? Player.inst.currentVideoInfo?.likeCount;
+            final isUserLiked = YoutubePlaylistController.inst.favouritesPlaylist.value.tracks.firstWhereEff((element) => element.id == currentId) != null;
+
+            final videoLikeCount = (isUserLiked ? 1 : 0) + (videoInfo?.likeCount ?? Player.inst.currentVideoInfo?.likeCount ?? 0);
             final videoDislikeCount = videoInfo?.dislikeCount ?? Player.inst.currentVideoInfo?.dislikeCount;
             final videoViewCount = videoInfo?.viewCount ?? Player.inst.currentVideoInfo?.viewCount;
 
@@ -464,7 +467,17 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                                 ? lang.LIKE
                                                                 : videoLikeCount?.formatDecimalShort(isTitleExpanded.value) ?? '?',
                                                         icon: Broken.like_1,
-                                                        onPressed: () {},
+                                                        smallIconWidget: FittedBox(
+                                                          child: NamidaRawLikeButton(
+                                                            likedIcon: Broken.like_filled,
+                                                            normalIcon: Broken.like_1,
+                                                            disabledColor: context.theme.iconTheme.color,
+                                                            isLiked: isUserLiked,
+                                                            onTap: (isLiked) async {
+                                                              YoutubePlaylistController.inst.favouriteButtonOnPressed(currentId);
+                                                            },
+                                                          ),
+                                                        ),
                                                       ),
                                                       const SizedBox(width: 18.0),
                                                       SmallYTActionButton(

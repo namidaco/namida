@@ -6,7 +6,9 @@ import 'dart:io';
 import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -73,8 +75,8 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
     return newtracks;
   }
 
-  Future<void> favouriteButtonOnPressed(String id) async {
-    await super.toggleTrackFavourite(
+  Future<bool> favouriteButtonOnPressed(String id) async {
+    return await super.toggleTrackFavourite(
       newTrack: YoutubeID(
         id: id,
         watchNull: YTWatch(dateNull: DateTime.now(), isYTMusic: false),
@@ -115,14 +117,21 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
 
   @override
   FutureOr<bool> canRemovePlaylist(YoutubePlaylist playlist) {
-    return true; // TODO: navigate back
+    // navigate back in case the current route is this playlist
+    final lastPage = NamidaNavigator.inst.currentRoute;
+    if (lastPage?.route == RouteType.YOUTUBE_PLAYLIST_SUBPAGE) {
+      if (lastPage?.name == playlist.name) {
+        NamidaNavigator.inst.popPage();
+      }
+    }
+    return true;
   }
 
   @override
   Map<String, dynamic> itemToJson(YoutubeID item) => item.toJson();
 
   @override
-  String get favouritePlaylistPath => AppPaths.YT_FAVOURITES_PLAYLIST;
+  String get favouritePlaylistPath => AppPaths.YT_LIKES_PLAYLIST;
 
   @override
   String get playlistsDirectory => AppDirs.YT_PLAYLISTS;

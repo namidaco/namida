@@ -148,23 +148,24 @@ class BackupAndRestore extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8.0),
-                        IgnorePointer(
-                          ignoring: !youtubeAvailable,
-                          child: AnimatedOpacity(
-                            duration: const Duration(milliseconds: 300),
-                            opacity: youtubeAvailable ? 1.0 : 0.6,
-                            child: NamidaIconButton(
-                              tooltip: lang.YOUTUBE,
-                              horizontalPadding: 0.0,
-                              icon: null,
-                              onPressed: () => onItemTap(youtubeItems),
-                              child: StackedIcon(
-                                iconSize: 28.0,
-                                baseIcon: Broken.video_square,
-                                smallChild: NamidaCheckMark(
-                                  size: 12.0,
-                                  active: isYoutubeIconChecked,
-                                ),
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 300),
+                          opacity: youtubeAvailable ? 1.0 : 0.6,
+                          child: NamidaIconButton(
+                            tooltip: lang.YOUTUBE,
+                            horizontalPadding: 0.0,
+                            icon: null,
+                            onPressed: () {
+                              if (youtubeAvailable) {
+                                onItemTap(youtubeItems);
+                              }
+                            },
+                            child: StackedIcon(
+                              iconSize: 28.0,
+                              baseIcon: Broken.video_square,
+                              smallChild: NamidaCheckMark(
+                                size: 12.0,
+                                active: isYoutubeIconChecked,
                               ),
                             ),
                           ),
@@ -222,7 +223,7 @@ class BackupAndRestore extends StatelessWidget {
                             youtubeAvailable: true,
                             youtubeItems: [
                               AppDirs.YT_PLAYLISTS,
-                              AppPaths.YT_FAVOURITES_PLAYLIST,
+                              AppPaths.YT_LIKES_PLAYLIST,
                             ],
                           ),
                           const SizedBox(height: 12.0),
@@ -289,6 +290,7 @@ class BackupAndRestore extends StatelessWidget {
                               AppDirs.VIDEOS_CACHE,
                             ],
                             youtubeAvailable: false,
+                            youtubeForceFollowItems: true,
                             youtubeItems: [],
                           ),
                           const SizedBox(height: 12.0),
