@@ -13,6 +13,7 @@ import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get.dart';
+import 'package:jiffy/jiffy.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:picture_in_picture/picture_in_picture.dart';
@@ -332,6 +333,16 @@ Future<bool> requestManageStoragePermission() async {
   return true;
 }
 
+Future<void> _setJiffyLocale(String code) async {
+  try {
+    await Jiffy.setLocale(code);
+  } catch (e) {
+    try {
+      await Jiffy.setLocale(code.split('_').first);
+    } catch (_) {}
+  }
+}
+
 BuildContext get rootContext => _initialContext;
 late BuildContext _initialContext;
 final _waitForFirstBuildContext = Completer<bool>();
@@ -348,6 +359,7 @@ class Namida extends StatelessWidget {
         Obx(
           () {
             final locale = settings.selectedLanguage.value;
+            _setJiffyLocale(locale.code);
             return GetMaterialApp(
               key: Key(locale.code),
               themeAnimationDuration: const Duration(milliseconds: kThemeAnimationDurationMS),
