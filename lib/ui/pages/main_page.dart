@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -270,8 +272,11 @@ class NamidaSearchBar extends StatelessWidget {
         },
         onFieldSubmitted: _onSubmitted,
         onChanged: (value) {
-          ClipboardController.inst.updateTextInControllerEmpty(value == '');
-          SearchSortController.inst.searchAll(value);
+          _searchFieldTimer?.cancel();
+          _searchFieldTimer = Timer(const Duration(milliseconds: 200), () {
+            ClipboardController.inst.updateTextInControllerEmpty(value == '');
+            SearchSortController.inst.searchAll(value);
+          });
         },
         // -- unfocusing produces weird bug while swiping for drawer
         // -- leaving it will leave the pointer while entering miniplayer
@@ -281,6 +286,8 @@ class NamidaSearchBar extends StatelessWidget {
     );
   }
 }
+
+Timer? _searchFieldTimer;
 
 class AlbumSearchResultsPage extends StatelessWidget {
   const AlbumSearchResultsPage({super.key});
