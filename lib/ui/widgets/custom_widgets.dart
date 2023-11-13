@@ -294,7 +294,7 @@ class CustomListTile extends StatelessWidget {
         title: Text(
           title,
           style: titleStyle ?? (largeTitle ? context.theme.textTheme.displayLarge : context.theme.textTheme.displayMedium),
-          maxLines: subtitle != null ? 2 : 3,
+          maxLines: subtitle != null ? 4 : 5,
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: subtitle != null
