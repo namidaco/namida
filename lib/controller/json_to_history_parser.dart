@@ -274,23 +274,6 @@ class JsonToHistoryParser {
 
     final isytsource = source == TrackSource.youtube || source == TrackSource.youtubeMusic;
 
-    // -- Removing previous source tracks.
-    if (isytsource) {
-      HistoryController.inst.removeSourcesTracksFromHistory(
-        [TrackSource.youtube, TrackSource.youtubeMusic],
-        oldestDate: oldestDate,
-        newestDate: newestDate,
-        andSave: false,
-      );
-    } else {
-      HistoryController.inst.removeSourcesTracksFromHistory(
-        [source],
-        oldestDate: oldestDate,
-        newestDate: newestDate,
-        andSave: false,
-      );
-    }
-
     await Future.delayed(Duration.zero);
 
     final startTime = DateTime.now();
@@ -335,11 +318,13 @@ class JsonToHistoryParser {
     isParsing.value = false;
 
     // -- local history --
+    HistoryController.inst.removeDuplicatedItems(datesAdded);
     HistoryController.inst.sortHistoryTracks(datesAdded);
     await HistoryController.inst.saveHistoryToStorage(datesAdded);
     HistoryController.inst.updateMostPlayedPlaylist();
 
     // -- youtube history --
+    YoutubeHistoryController.inst.removeDuplicatedItems(datesAddedYoutube);
     YoutubeHistoryController.inst.sortHistoryTracks(datesAddedYoutube);
     await YoutubeHistoryController.inst.saveHistoryToStorage(datesAddedYoutube);
     YoutubeHistoryController.inst.updateMostPlayedPlaylist();
