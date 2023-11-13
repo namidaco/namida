@@ -116,6 +116,7 @@ class SearchPage extends StatelessWidget {
                                   settings.removeFromList(activeSearchMediaTypes1: e);
                                 } else {
                                   settings.save(activeSearchMediaTypes: [e]);
+                                  SearchSortController.inst.searchAll(ScrollSearchController.inst.searchTextEditingController.text);
                                 }
                               },
                               margin: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 12.0),
