@@ -478,7 +478,7 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
 
     // Vertical translate
     if (widget.offset.top > 0 || widget.offset.bottom > 0) {
-      final translateY = MediaQuery.of(context).size.height * (widget.offset.top > 0 ? -widget.offset.top : widget.offset.bottom);
+      final translateY = MediaQuery.sizeOf(context).height * (widget.offset.top > 0 ? -widget.offset.top : widget.offset.bottom);
       container = Transform.translate(
         offset: Offset(0, translateY * (1 - _controller.value)),
         child: container,
@@ -530,7 +530,7 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
     }
     final Widget container = SizedBox(
       width: widget.proportionalChildArea ? _width - _widthWithOffset : _width,
-      height: MediaQuery.of(context).size.height,
+      height: MediaQuery.sizeOf(context).height,
       child: child,
     );
 
@@ -555,7 +555,7 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
   /// Trigger Area
   Widget? _trigger(AlignmentDirectional alignment, Widget? child) {
     final drawerIsStart = _position == InnerDrawerDirection.start;
-    final padding = MediaQuery.of(context).padding;
+    final padding = MediaQuery.paddingOf(context);
     double dragAreaWidth = drawerIsStart ? padding.left : padding.right;
 
     if (Directionality.of(context) == TextDirection.rtl) {
@@ -578,9 +578,9 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
     //assert(debugCheckHasMaterialLocalizations(context));
 
     /// initialize the correct width
-    if (_initWidth == 400 || MediaQuery.of(context).orientation != _orientation) {
+    if (_initWidth == 400 || MediaQuery.orientationOf(context) != _orientation) {
       _updateWidth();
-      _orientation = MediaQuery.of(context).orientation;
+      _orientation = MediaQuery.orientationOf(context);
     }
 
     /// wFactor depends of offset and is used by the second Align that contains the Scaffold

@@ -1440,13 +1440,11 @@ class NamidaPartyContainer extends StatelessWidget {
   final double spreadRadiusMultiplier;
   final double? width;
   final double? height;
-  final double opacity;
   const NamidaPartyContainer({
     super.key,
     this.spreadRadiusMultiplier = 1.0,
     this.width,
     this.height,
-    required this.opacity,
   });
 
   @override
@@ -1455,76 +1453,70 @@ class NamidaPartyContainer extends StatelessWidget {
       return Obx(
         () {
           final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
-          return Opacity(
-            opacity: opacity,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 400),
-              height: height,
-              width: width,
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: CurrentColor.inst.color.withAlpha(150),
-                    spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
-                    blurRadius: 10 + (200 * finalScale),
-                  ),
-                ],
-              ),
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 400),
+            height: height,
+            width: width,
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: CurrentColor.inst.color.withAlpha(150),
+                  spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
+                  blurRadius: 10 + (200 * finalScale),
+                ),
+              ],
             ),
           );
         },
       );
     } else {
-      return Opacity(
-        opacity: opacity,
-        child: Obx(
-          () {
-            final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
-            final firstHalf = CurrentColor.inst.paletteFirstHalf;
-            final secondHalf = CurrentColor.inst.paletteSecondHalf;
-            return height != null
-                ? Row(
-                    children: [
-                      ...firstHalf.map(
-                        (e) => AnimatedContainer(
-                          duration: const Duration(milliseconds: 400),
-                          height: height,
-                          width: width ?? context.width / firstHalf.length,
-                          decoration: BoxDecoration(
-                            boxShadow: [
-                              BoxShadow(
-                                color: e.withAlpha(150),
-                                spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
-                                blurRadius: 10 + (200 * finalScale),
-                              ),
-                            ],
-                          ),
+      return Obx(
+        () {
+          final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
+          final firstHalf = CurrentColor.inst.paletteFirstHalf;
+          final secondHalf = CurrentColor.inst.paletteSecondHalf;
+          return height != null
+              ? Row(
+                  children: [
+                    ...firstHalf.map(
+                      (e) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 400),
+                        height: height,
+                        width: width ?? context.width / firstHalf.length,
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: e.withAlpha(150),
+                              spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
+                              blurRadius: 10 + (200 * finalScale),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      ...secondHalf.map(
-                        (e) => AnimatedContainer(
-                          duration: const Duration(milliseconds: 400),
-                          height: height ?? context.height / secondHalf.length,
-                          width: width,
-                          decoration: BoxDecoration(
-                            boxShadow: [
-                              BoxShadow(
-                                color: e.withAlpha(150),
-                                spreadRadius: 140 * finalScale * spreadRadiusMultiplier,
-                                blurRadius: 10 + (200 * finalScale),
-                              ),
-                            ],
-                          ),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    ...secondHalf.map(
+                      (e) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 400),
+                        height: height ?? context.height / secondHalf.length,
+                        width: width,
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: e.withAlpha(150),
+                              spreadRadius: 140 * finalScale * spreadRadiusMultiplier,
+                              blurRadius: 10 + (200 * finalScale),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  );
-          },
-        ),
+                    ),
+                  ],
+                );
+        },
       );
     }
   }
@@ -1981,8 +1973,7 @@ class _FadeDismissibleState extends State<FadeDismissible> {
       direction: widget.direction,
       child: ValueListenableBuilder(
         valueListenable: fadeOpacity,
-        builder: (context, value, child) => AnimatedOpacity(
-          duration: const Duration(milliseconds: 100),
+        builder: (context, value, child) => NamidaOpacity(
           opacity: 1 - fadeOpacity.value,
           child: widget.child,
         ),
@@ -2928,6 +2919,33 @@ class ShaderFadingWidget extends StatelessWidget {
           colors: const [Colors.transparent, Colors.white, Colors.white, Colors.white, Colors.transparent],
         ).createShader(Rect.fromLTRB(0, 0, rect.width, rect.height));
       },
+      child: child,
+    );
+  }
+}
+
+class NamidaOpacity extends StatelessWidget {
+  final bool enabled;
+  final double opacity;
+  final Widget child;
+
+  const NamidaOpacity({
+    super.key,
+    required this.opacity,
+    required this.child,
+    this.enabled = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (opacity == 0) {
+      return const SizedBox();
+    } else if (!enabled || opacity == 1) {
+      return child;
+    }
+    return Opacity(
+      key: key,
+      opacity: opacity,
       child: child,
     );
   }

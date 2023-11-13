@@ -944,7 +944,7 @@ Future<void> showGeneralPopupDialog(
                       ),
 
                       isSingle && tracks.first == Player.inst.nowPlayingTrack
-                          ? Opacity(
+                          ? NamidaOpacity(
                               opacity: Player.inst.sleepAfterTracks == 1 ? 0.6 : 1.0,
                               child: IgnorePointer(
                                 ignoring: Player.inst.sleepAfterTracks == 1,

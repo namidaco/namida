@@ -4,6 +4,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 
 /// Used to retain state for cases like navigating after pip mode.
 bool _wasExpanded = false;
@@ -110,15 +111,6 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     settings.wakelockMode.value.toggleOff();
   }
 
-  Widget _opacityWrapper({bool enabled = true, required double opacity, required Widget child}) {
-    return enabled
-        ? Opacity(
-            opacity: opacity,
-            child: child,
-          )
-        : child;
-  }
-
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -171,7 +163,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
                     child: Material(
                       clipBehavior: Clip.hardEdge,
                       type: MaterialType.transparency,
-                      child: _opacityWrapper(
+                      child: NamidaOpacity(
                         enabled: controller.value < widget.minHeight,
                         opacity: dismissPercentage,
                         child: Container(

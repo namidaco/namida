@@ -384,7 +384,7 @@ class IndexerSettings extends StatelessWidget {
                         ...AlbumIdentifier.values.map(
                           (e) {
                             final isForcelyEnabled = e == AlbumIdentifier.albumName;
-                            return Opacity(
+                            return NamidaOpacity(
                               opacity: isForcelyEnabled ? 0.7 : 1.0,
                               child: Padding(
                                 padding: const EdgeInsets.all(6.0),

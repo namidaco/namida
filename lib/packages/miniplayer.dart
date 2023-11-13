@@ -78,7 +78,7 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
                 animation: widget.animation,
                 builder: (context, child) {
                   if (widget.animation.value > 0.01) {
-                    return Opacity(
+                    return NamidaOpacity(
                       opacity: widget.animation.value.clamp(0.0, 1.0),
                       child: const Wallpaper(gradient: false, particleOpacity: .3),
                     );
@@ -297,40 +297,45 @@ class NamidaMiniPlayer extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (settings.enablePartyModeInMiniplayer.value) ...[
-                  NamidaPartyContainer(
-                    height: 2,
-                    spreadRadiusMultiplier: 0.8,
+                if (settings.enablePartyModeInMiniplayer.value)
+                  NamidaOpacity(
                     opacity: cp,
-                  ),
-                  NamidaPartyContainer(
-                    width: 2,
-                    spreadRadiusMultiplier: 0.25,
-                    opacity: cp,
-                  ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: NamidaPartyContainer(
-                      height: 2,
-                      spreadRadiusMultiplier: 0.8,
-                      opacity: cp,
+                    child: const Stack(
+                      children: [
+                        NamidaPartyContainer(
+                          height: 2,
+                          spreadRadiusMultiplier: 0.8,
+                        ),
+                        NamidaPartyContainer(
+                          width: 2,
+                          spreadRadiusMultiplier: 0.25,
+                        ),
+                        Align(
+                          alignment: Alignment.bottomCenter,
+                          child: NamidaPartyContainer(
+                            height: 2,
+                            spreadRadiusMultiplier: 0.8,
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: NamidaPartyContainer(
+                            width: 2,
+                            spreadRadiusMultiplier: 0.25,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: NamidaPartyContainer(
-                      width: 2,
-                      spreadRadiusMultiplier: 0.25,
-                      opacity: cp,
-                    ),
-                  ),
-                ],
+                // if (settings.enablePartyModeInMiniplayer.value) ...[
+
+                // ],
 
                 /// Top Row
                 if (rcp > 0.0)
                   Material(
                     type: MaterialType.transparency,
-                    child: Opacity(
+                    child: NamidaOpacity(
                       opacity: rcp,
                       child: Transform.translate(
                         offset: Offset(0, (1 - bp) * -100),
@@ -417,7 +422,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                           alignment: Alignment.centerRight,
                           children: [
                             if (fastOpacity > 0.0)
-                              Opacity(
+                              NamidaOpacity(
                                 opacity: fastOpacity,
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 24.0 * (16 * (!bounceDown ? icp : 0.0) + 1)),
@@ -594,7 +599,7 @@ class NamidaMiniPlayer extends StatelessWidget {
 
                 /// Destination selector
                 if (opacity > 0.0)
-                  Opacity(
+                  NamidaOpacity(
                     opacity: opacity,
                     child: Transform.translate(
                       offset: Offset(0, -100 * ip),
@@ -964,7 +969,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                 if (opacity > 0.0)
                   Material(
                     type: MaterialType.transparency,
-                    child: Opacity(
+                    child: NamidaOpacity(
                       opacity: opacity,
                       child: Transform.translate(
                         offset: Offset(0, -100 * ip),
@@ -1075,11 +1080,13 @@ class NamidaMiniPlayer extends StatelessWidget {
                   child: AnimatedBuilder(
                     animation: sAnim,
                     builder: (context, child) {
+                      final leftOpacity = -sAnim.value.clamp(-1.0, 0.0);
+                      final rightOpacity = sAnim.value.clamp(0.0, 1.0);
                       return Stack(
                         children: [
-                          if (prevTrack != null)
-                            Opacity(
-                              opacity: -sAnim.value.clamp(-1.0, 0.0),
+                          if (prevTrack != null && leftOpacity > 0)
+                            NamidaOpacity(
+                              opacity: leftOpacity,
                               child: Transform.translate(
                                 offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, 0),
                                 child: _TrackInfo(
@@ -1092,7 +1099,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                                 ),
                               ),
                             ),
-                          Opacity(
+                          NamidaOpacity(
                             opacity: 1 - sAnim.value.abs(),
                             child: Transform.translate(
                               offset: Offset(
@@ -1113,9 +1120,9 @@ class NamidaMiniPlayer extends StatelessWidget {
                               ),
                             ),
                           ),
-                          if (nextTrack != null)
-                            Opacity(
-                              opacity: sAnim.value.clamp(0.0, 1.0),
+                          if (nextTrack != null && rightOpacity > 0)
+                            NamidaOpacity(
+                              opacity: rightOpacity,
                               child: Transform.translate(
                                 offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, 0),
                                 child: _TrackInfo(
@@ -1141,12 +1148,13 @@ class NamidaMiniPlayer extends StatelessWidget {
                     final verticalOffset = !bounceUp ? (-maxOffset + topInset + 108.0) * (!bounceDown ? qp : (1 - bp)) : 0.0;
                     final horizontalOffset = -sAnim.value * sMaxOffset / siParallax;
                     final width = velpy(a: 82.0, b: 92.0, c: qp);
-
+                    final leftOpacity = -sAnim.value.clamp(-1.0, 0.0);
+                    final rightOpacity = sAnim.value.clamp(0.0, 1.0);
                     return Stack(
                       children: [
-                        if (prevTrack != null)
-                          Opacity(
-                            opacity: -sAnim.value.clamp(-1.0, 0.0),
+                        if (prevTrack != null && leftOpacity > 0)
+                          NamidaOpacity(
+                            opacity: leftOpacity,
                             child: Transform.translate(
                               offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, 0),
                               child: _RawImageContainer(
@@ -1163,7 +1171,7 @@ class NamidaMiniPlayer extends StatelessWidget {
                               ),
                             ),
                           ),
-                        Opacity(
+                        NamidaOpacity(
                           opacity: 1 - sAnim.value.abs(),
                           child: Transform.translate(
                             offset: Offset(horizontalOffset, verticalOffset),
@@ -1182,9 +1190,9 @@ class NamidaMiniPlayer extends StatelessWidget {
                             ),
                           ),
                         ),
-                        if (nextTrack != null)
-                          Opacity(
-                            opacity: sAnim.value.clamp(0.0, 1.0),
+                        if (nextTrack != null && rightOpacity > 0)
+                          NamidaOpacity(
+                            opacity: rightOpacity,
                             child: Transform.translate(
                               offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, 0),
                               child: _RawImageContainer(
@@ -1208,7 +1216,7 @@ class NamidaMiniPlayer extends StatelessWidget {
 
                 /// Slider
                 if (slowOpacity > 0.0)
-                  Opacity(
+                  NamidaOpacity(
                     opacity: slowOpacity,
                     child: Transform.translate(
                       offset: Offset(
@@ -1232,15 +1240,15 @@ class NamidaMiniPlayer extends StatelessWidget {
                     ),
                   ),
 
-                if (qp > 0.0)
-                  Opacity(
-                    opacity: qp.clamp(0, 1),
+                if (qp > 0.05)
+                  NamidaOpacity(
+                    opacity: (qp - 0.05 + (qp * 0.05)).clamp(0, 1),
                     child: Transform.translate(
                       offset: Offset(0, (1 - qp) * maxOffset * 0.8),
                       child: SafeArea(
                         bottom: false,
                         child: Padding(
-                          padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 70),
+                          padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + 70),
                           child: ClipRRect(
                             borderRadius: BorderRadius.only(topLeft: Radius.circular(32.0.multipliedRadius), topRight: Radius.circular(32.0.multipliedRadius)),
                             child: Stack(
@@ -2069,7 +2077,7 @@ class _TrackInfo extends StatelessWidget {
                             ),
                           ),
                         ),
-                        Opacity(
+                        NamidaOpacity(
                           opacity: opacity,
                           child: Transform.translate(
                             offset: Offset(-100 * (1.0 - cp), 0.0),
@@ -2256,7 +2264,7 @@ class LyricsWrapper extends StatelessWidget {
                         alignment: Alignment.center,
                         children: [
                           child,
-                          Opacity(
+                          NamidaOpacity(
                             opacity: cp,
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(16.0.multipliedRadius),

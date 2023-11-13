@@ -166,7 +166,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                 ),
               )
             : widget.videoOrImage,
-        Opacity(
+        NamidaOpacity(
           opacity: widget.cp,
           child: ClipRRect(
             borderRadius: fullscreen ? BorderRadius.zero : BorderRadius.circular(16.0.multipliedRadius),

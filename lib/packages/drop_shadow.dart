@@ -11,7 +11,6 @@ class DropShadow extends StatelessWidget {
     this.blurRadius = 10.0,
     this.borderRadius = 0.0,
     this.offset = const Offset(0, 8),
-    this.opacity = 1.0,
     this.spread = 1.0,
     this.boxShadow,
     super.key,
@@ -31,9 +30,6 @@ class DropShadow extends StatelessWidget {
 
   /// Position of the shadow
   final Offset offset;
-
-  /// Opacity of the shadow
-  final double opacity;
 
   /// Size of the shadow
   final double spread;
@@ -69,12 +65,7 @@ class DropShadow extends StatelessWidget {
               /// Apply [BorderRadius] to the shadow
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(borderRadius),
-
-                /// Apply [Opacity] to the shadow
-                child: Opacity(
-                  opacity: opacity,
-                  child: bottomChild ?? child,
-                ),
+                child: bottomChild ?? child,
               ),
             ),
 

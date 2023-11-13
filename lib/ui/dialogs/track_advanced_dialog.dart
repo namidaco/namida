@@ -56,7 +56,7 @@ void showTrackAdvancedDialog({
       title: lang.ADVANCED,
       child: Column(
         children: [
-          Opacity(
+          NamidaOpacity(
             opacity: canShowClearDialog ? 1.0 : 0.6,
             child: IgnorePointer(
               ignoring: !canShowClearDialog,

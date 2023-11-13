@@ -217,7 +217,7 @@ Future<void> showDownloadVideoBottomSheet({
     isScrollControlled: true,
     context: context,
     builder: (context) {
-      final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+      final bottomPadding = MediaQuery.viewInsetsOf(context).bottom;
       return SizedBox(
         height: context.height * 0.65 + bottomPadding,
         width: context.width,

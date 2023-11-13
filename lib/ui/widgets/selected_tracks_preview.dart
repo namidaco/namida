@@ -41,7 +41,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
         return AnimatedPositioned(
           duration: const Duration(milliseconds: 100),
           bottom: initH + (navHeight * (1 - queueHeight)),
-          child: Opacity(
+          child: NamidaOpacity(
             opacity: (isInQueue ? percentage : 1 - percentage).clamp(0, 1),
             child: Obx(
               () {

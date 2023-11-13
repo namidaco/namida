@@ -232,7 +232,7 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
         child: AnimatedContainer(
           duration: Duration(milliseconds: widget.durationInMilliSeconds),
           height: _SBDimensions.d48,
-          width: (!switcher) ? _SBDimensions.d48 : (widget.searchBoxWidth ?? MediaQuery.of(context).size.width),
+          width: (!switcher) ? _SBDimensions.d48 : (widget.searchBoxWidth ?? MediaQuery.sizeOf(context).width),
           curve: Curves.easeOut,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(_SBDimensions.d30),
@@ -272,7 +272,7 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                   child: Container(
                     padding: const EdgeInsets.only(left: _SBDimensions.d10),
                     alignment: Alignment.topCenter,
-                    width: smallButtonTotalPaddingPart + (widget.searchBoxWidth ?? MediaQuery.of(context).size.width) / _SBDimensions.d1_7,
+                    width: smallButtonTotalPaddingPart + (widget.searchBoxWidth ?? MediaQuery.sizeOf(context).width) / _SBDimensions.d1_7,
                     child: _textFormField(context, smallButtonTotalPaddingPart),
                   ),
                 ),

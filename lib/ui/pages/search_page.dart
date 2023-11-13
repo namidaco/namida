@@ -105,7 +105,7 @@ class SearchPage extends StatelessWidget {
                           final list = settings.activeSearchMediaTypes;
                           final isActive = list.contains(e);
                           final isForcelyEnabled = e == MediaType.track;
-                          return Opacity(
+                          return NamidaOpacity(
                             opacity: isForcelyEnabled ? 0.6 : 1.0,
                             child: NamidaInkWell(
                               bgColor: isActive ? context.theme.colorScheme.secondary.withOpacity(0.12) : null,
@@ -161,7 +161,7 @@ class SearchPage extends StatelessWidget {
                             padding: const EdgeInsets.all(64.0).add(const EdgeInsets.only(bottom: 64.0)),
                             width: context.width,
                             height: context.height,
-                            child: Opacity(
+                            child: NamidaOpacity(
                               opacity: 0.8,
                               child: TweenAnimationBuilder(
                                 tween: Tween<double>(begin: 4.0, end: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? 4.0 : 12.0),
