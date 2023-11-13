@@ -27,6 +27,7 @@ class YTHistoryVideoCard extends StatelessWidget {
   final double? thumbnailHeight;
   final double? minimalCardWidth;
   final bool reversedList;
+  final String playlistName;
 
   const YTHistoryVideoCard({
     super.key,
@@ -40,6 +41,7 @@ class YTHistoryVideoCard extends StatelessWidget {
     this.thumbnailHeight,
     this.minimalCardWidth,
     this.reversedList = false,
+    required this.playlistName,
   });
 
   Widget _columnOrRow({required List<Widget> children, bool isRow = true}) {
@@ -60,6 +62,8 @@ class YTHistoryVideoCard extends StatelessWidget {
       url: info?.url,
       playlistID: playlistID,
       idsNamesLookup: {video.id: info?.name},
+      playlistName: playlistName,
+      videoYTID: video,
     );
     final backupVideoInfo = YoutubeController.inst.getBackupVideoInfo(video.id);
     final videoTitle = info?.name ?? backupVideoInfo?.title ?? video.id;

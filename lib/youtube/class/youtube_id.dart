@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:history_manager/history_manager.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/video_controller.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 
 class YoutubeID implements Playable, ItemWithDate {
@@ -86,5 +88,11 @@ extension YoutubeIDUtils on YoutubeID {
       dur = b?.duration;
     }
     return dur;
+  }
+}
+
+extension YoutubeIDSUtils on List<YoutubeID> {
+  Future<void> shareVideos() async {
+    await Share.share(map((e) => "${YoutubeController.inst.getYoutubeLink(e.id)} - ${e.dateTimeAdded.millisecondsSinceEpoch.dateAndClockFormattedOriginal}\n").join());
   }
 }

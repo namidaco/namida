@@ -2646,11 +2646,13 @@ class _LazyLoadListViewState extends State<LazyLoadListView> {
 class NamidaPopupItem {
   final IconData icon;
   final String title;
+  final String subtitle;
   final void Function() onTap;
 
   const NamidaPopupItem({
     required this.icon,
     required this.title,
+    this.subtitle = '',
     required this.onTap,
   });
 }
@@ -2680,10 +2682,10 @@ class NamidaPopupWrapper extends StatelessWidget {
     NamidaNavigator.inst.popMenu(handleClosing: handleClosing);
   }
 
-  _showPopupMenu(BuildContext context) async {
+  void _showPopupMenu(BuildContext context) async {
     final RenderBox button = context.findRenderObject()! as RenderBox;
     final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
-    const Offset offset = Offset(0, -64);
+    const offset = Offset(0.0, 24.0);
     final RelativeRect position = RelativeRect.fromRect(
       Rect.fromPoints(
         button.localToGlobal(offset, ancestor: overlay),
@@ -2704,9 +2706,19 @@ class NamidaPopupWrapper extends StatelessWidget {
                 children: [
                   Icon(e.icon, size: 20.0),
                   const SizedBox(width: 6.0),
-                  Text(
-                    e.title,
-                    style: context.textTheme.displayMedium,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        e.title,
+                        style: context.textTheme.displayMedium,
+                      ),
+                      if (e.subtitle != '')
+                        Text(
+                          e.subtitle,
+                          style: context.textTheme.displaySmall,
+                        ),
+                    ],
                   ),
                 ],
               ),

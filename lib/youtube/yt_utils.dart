@@ -13,6 +13,7 @@ import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/video_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -21,6 +22,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_listens_dialog.dart';
@@ -79,11 +81,51 @@ class YTUtils {
     ];
   }
 
+  static List<NamidaPopupItem> getVideosMenuItems({
+    required List<YoutubeID> videos,
+    List<NamidaPopupItem> moreItems = const [],
+    required String playlistName,
+  }) {
+    return [
+      NamidaPopupItem(
+        icon: Broken.share,
+        title: lang.SHARE,
+        onTap: videos.shareVideos,
+      ),
+      NamidaPopupItem(
+        icon: Broken.music_library_2,
+        title: lang.ADD_TO_PLAYLIST,
+        onTap: () {
+          showAddToPlaylistSheet(ids: videos.map((e) => e.id), idsNamesLookup: {});
+        },
+      ),
+      NamidaPopupItem(
+        icon: Broken.next,
+        title: lang.PLAY_NEXT,
+        onTap: () => Player.inst.addToQueue(videos, insertNext: true),
+      ),
+      NamidaPopupItem(
+        icon: Broken.play_cricle,
+        title: lang.PLAY_LAST,
+        onTap: () => Player.inst.addToQueue(videos, insertNext: false),
+      ),
+      if (playlistName != '')
+        NamidaPopupItem(
+          icon: Broken.trash,
+          title: lang.DELETE,
+          onTap: () => YTUtils.onRemoveVideosFromPlaylist(k_PLAYLIST_NAME_HISTORY, videos),
+        ),
+      ...moreItems,
+    ];
+  }
+
   static List<NamidaPopupItem> getVideoCardMenuItems({
     required String videoId,
     required String? url,
     required PlaylistID? playlistID,
     required Map<String, String?> idsNamesLookup,
+    String playlistName = '',
+    YoutubeID? videoYTID,
   }) {
     return [
       NamidaPopupItem(
@@ -123,6 +165,13 @@ class YTUtils {
           Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertNext: false);
         },
       ),
+      if (playlistName != '' && videoYTID != null)
+        NamidaPopupItem(
+          icon: Broken.box_remove,
+          title: lang.REMOVE_FROM_PLAYLIST,
+          subtitle: playlistName.translatePlaylistName(),
+          onTap: () => YTUtils.onRemoveVideosFromPlaylist(playlistName, [videoYTID]),
+        ),
     ];
   }
 
@@ -193,6 +242,54 @@ class YTUtils {
       });
       await NamidaNavigator.inst.navigateTo(
         const YoutubeHistoryPage(),
+      );
+    }
+  }
+
+  static Future<void> onRemoveVideosFromPlaylist(String name, List<YoutubeID> videosToDelete) async {
+    void showSnacky({required void Function() whatDoYouWant}) {
+      snackyy(
+        title: lang.UNDO_CHANGES,
+        message: lang.UNDO_CHANGES_DELETED_TRACK,
+        displaySeconds: 3,
+        button: TextButton(
+          onPressed: () {
+            Get.closeCurrentSnackbar();
+            whatDoYouWant();
+          },
+          child: Text(lang.UNDO),
+        ),
+      );
+    }
+
+    final bool isHistory = name == k_PLAYLIST_NAME_HISTORY;
+
+    if (isHistory) {
+      final tempList = List<YoutubeID>.from(videosToDelete);
+      await YoutubeHistoryController.inst.removeTracksFromHistory(videosToDelete);
+      showSnacky(
+        whatDoYouWant: () async {
+          await YoutubeHistoryController.inst.addTracksToHistory(tempList);
+          YoutubeHistoryController.inst.sortHistoryTracks(tempList.mapped((e) => e.dateTimeAdded.toDaysSince1970()));
+        },
+      );
+    } else {
+      final playlist = YoutubePlaylistController.inst.getPlaylist(name);
+      if (playlist == null) return;
+
+      final Map<YoutubeID, int> twdAndIndexes = {};
+      videosToDelete.loop((twd, index) {
+        twdAndIndexes[twd] = playlist.tracks.indexOf(twd);
+      });
+
+      await YoutubePlaylistController.inst.removeTracksFromPlaylist(playlist, twdAndIndexes.values.toList());
+      showSnacky(
+        whatDoYouWant: () async {
+          YoutubePlaylistController.inst.insertTracksInPlaylistWithEachIndex(
+            playlist,
+            twdAndIndexes,
+          );
+        },
       );
     }
   }

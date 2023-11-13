@@ -63,6 +63,7 @@ class YTMostPlayedVideosPage extends StatelessWidget {
           day: null,
           overrideListens: listens,
           playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
+          playlistName: '',
         );
       },
     );
@@ -84,25 +85,24 @@ class YTLikedVideosPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return YTNormalPlaylistSubpage(
-      playlist: YoutubePlaylistController.inst.favouritesPlaylist.value,
-      title: lang.FAVOURITES,
-      isEditable: false,
-      reversedList: true,
+    return Obx(
+      () => YTNormalPlaylistSubpage(
+        playlist: YoutubePlaylistController.inst.favouritesPlaylist.value,
+        isEditable: false,
+        reversedList: true,
+      ),
     );
   }
 }
 
 class YTNormalPlaylistSubpage extends StatefulWidget {
   final GeneralPlaylist<YoutubeID> playlist;
-  final String? title;
   final bool isEditable;
   final bool reversedList;
 
   const YTNormalPlaylistSubpage({
     super.key,
     required this.playlist,
-    this.title,
     this.isEditable = true,
     this.reversedList = false,
   });
@@ -117,7 +117,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
 
   @override
   void initState() {
-    playlistCurrentName = widget.title ?? widget.playlist.name;
+    playlistCurrentName = widget.playlist.name;
     super.initState();
   }
 
@@ -181,7 +181,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      playlistCurrentName,
+                                      playlistCurrentName.translatePlaylistName(),
                                       style: context.textTheme.displayLarge,
                                     ),
                                     const SizedBox(height: 6.0),
@@ -252,6 +252,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                     reversedList: widget.reversedList,
                     day: null,
                     playlistID: widget.playlist.playlistID,
+                    playlistName: playlistCurrentName,
                   );
                 },
               ),

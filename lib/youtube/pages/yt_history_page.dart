@@ -12,6 +12,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 class YoutubeHistoryPage extends StatelessWidget {
   const YoutubeHistoryPage({super.key});
@@ -71,10 +72,19 @@ class YoutubeHistoryPage extends StatelessWidget {
                                   style: context.textTheme.displayMedium,
                                 ),
                               ),
-                              NamidaIconButton(
-                                icon: Broken.more,
-                                iconSize: 22.0,
-                                onPressed: () {},
+                              NamidaPopupWrapper(
+                                openOnLongPress: false,
+                                childrenDefault: YTUtils.getVideosMenuItems(
+                                  playlistName: k_PLAYLIST_NAME_HISTORY,
+                                  videos: videos,
+                                ),
+                                child: const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                  child: Icon(
+                                    Broken.more,
+                                    size: 22.0,
+                                  ),
+                                ),
                               ),
                               const SizedBox(width: 2.0),
                             ],
@@ -96,6 +106,7 @@ class YoutubeHistoryPage extends StatelessWidget {
                                 index: i,
                                 day: day,
                                 playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
+                                playlistName: k_PLAYLIST_NAME_HISTORY,
                               );
                             },
                           ),

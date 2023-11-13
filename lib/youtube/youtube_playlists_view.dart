@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
@@ -14,12 +13,12 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
-import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/yt_history_page.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/widgets/yt_card.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 class YoutubePlaylistsView extends StatelessWidget {
   final Iterable<String> idsToAdd;
@@ -42,6 +41,7 @@ class YoutubePlaylistsView extends StatelessWidget {
     required IconData icon,
     required Widget viewAllPage,
     required Iterable<YoutubeID> videos,
+    required String playlistName,
     required String playlistID,
     required int totalVideosCountInMainList,
     Widget? subHeader,
@@ -122,6 +122,7 @@ class YoutubePlaylistsView extends StatelessWidget {
                         videos: finalVideos,
                         index: index,
                         day: null,
+                        playlistName: playlistName,
                         playlistID: PlaylistID(id: playlistID),
                         displayTimeAgo: displayTimeAgo,
                         minimalCardWidth: thumbWidth,
@@ -167,50 +168,62 @@ class YoutubePlaylistsView extends StatelessWidget {
           const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
           if (!isMinimalView) ...[
             Obx(
-              () => _getHorizontalSliverList(
-                title: lang.HISTORY,
-                icon: Broken.refresh,
-                viewAllPage: const YoutubeHistoryPage(),
-                videos: getHistoryVideos,
-                playlistID: k_PLAYLIST_NAME_HISTORY,
-                displayTimeAgo: true,
-                totalVideosCountInMainList: YoutubeHistoryController.inst.historyTracksLength,
-                displayShimmer: YoutubeHistoryController.inst.isLoadingHistory,
-              ),
+              () {
+                YoutubeHistoryController.inst.historyMap.value;
+                return _getHorizontalSliverList(
+                  title: lang.HISTORY,
+                  icon: Broken.refresh,
+                  viewAllPage: const YoutubeHistoryPage(),
+                  videos: getHistoryVideos,
+                  playlistName: k_PLAYLIST_NAME_HISTORY,
+                  playlistID: k_PLAYLIST_NAME_HISTORY,
+                  displayTimeAgo: true,
+                  totalVideosCountInMainList: YoutubeHistoryController.inst.historyTracksLength,
+                  displayShimmer: YoutubeHistoryController.inst.isLoadingHistory,
+                );
+              },
             ),
             const SliverPadding(padding: EdgeInsets.only(bottom: 8.0)),
             () {
               const page = YTMostPlayedVideosPage();
               return Obx(
-                () => _getHorizontalSliverList(
-                  title: lang.MOST_PLAYED,
-                  icon: Broken.crown_1,
-                  viewAllPage: page,
-                  padding: const EdgeInsets.only(top: 8.0),
-                  videos: YoutubeHistoryController.inst.currentMostPlayedTracks
-                      .map((e) => YoutubeID(
-                            id: e,
-                            playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
-                          ))
-                      .toList(),
-                  subHeader: page.getMainWidget(YoutubeHistoryController.inst.currentMostPlayedTracks.toList()).getChipsRow(context),
-                  playlistID: k_PLAYLIST_NAME_MOST_PLAYED,
-                  totalVideosCountInMainList: YoutubeHistoryController.inst.currentMostPlayedTracks.length,
-                  displayShimmer: YoutubeHistoryController.inst.isLoadingHistory,
-                ),
+                () {
+                  YoutubeHistoryController.inst.historyMap.value;
+                  return _getHorizontalSliverList(
+                    title: lang.MOST_PLAYED,
+                    icon: Broken.crown_1,
+                    viewAllPage: page,
+                    padding: const EdgeInsets.only(top: 8.0),
+                    videos: YoutubeHistoryController.inst.currentMostPlayedTracks
+                        .map((e) => YoutubeID(
+                              id: e,
+                              playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
+                            ))
+                        .toList(),
+                    subHeader: page.getMainWidget(YoutubeHistoryController.inst.currentMostPlayedTracks.toList()).getChipsRow(context),
+                    playlistName: '',
+                    playlistID: k_PLAYLIST_NAME_MOST_PLAYED,
+                    totalVideosCountInMainList: YoutubeHistoryController.inst.currentMostPlayedTracks.length,
+                    displayShimmer: YoutubeHistoryController.inst.isLoadingHistory,
+                  );
+                },
               );
             }(),
             const SliverPadding(padding: EdgeInsets.only(bottom: 8.0)),
             Obx(
-              () => _getHorizontalSliverList(
-                title: lang.FAVOURITES,
-                icon: Broken.like_1,
-                viewAllPage: const YTLikedVideosPage(),
-                videos: getFavouriteVideos,
-                playlistID: k_PLAYLIST_NAME_FAV,
-                displayTimeAgo: false,
-                totalVideosCountInMainList: YoutubePlaylistController.inst.favouritesPlaylist.value.tracks.length,
-              ),
+              () {
+                YoutubePlaylistController.inst.favouritesPlaylist.value;
+                return _getHorizontalSliverList(
+                  title: lang.FAVOURITES,
+                  icon: Broken.like_1,
+                  viewAllPage: const YTLikedVideosPage(),
+                  videos: getFavouriteVideos,
+                  playlistName: k_PLAYLIST_NAME_FAV,
+                  playlistID: k_PLAYLIST_NAME_FAV,
+                  displayTimeAgo: false,
+                  totalVideosCountInMainList: YoutubePlaylistController.inst.favouritesPlaylist.value.tracks.length,
+                );
+              },
             ),
             const SliverPadding(padding: EdgeInsets.only(bottom: 8.0)),
           ],
@@ -230,44 +243,26 @@ class YoutubePlaylistsView extends StatelessWidget {
           const SliverPadding(padding: EdgeInsets.only(bottom: 8.0)),
           Obx(
             () {
-              final pcontroller = YoutubePlaylistController.inst;
-              final playlistsNames = pcontroller.playlistsMap.keys.toList();
+              final playlistsMap = YoutubePlaylistController.inst.playlistsMap;
+              final playlistsNames = playlistsMap.keys.toList();
               return SliverFixedExtentList.builder(
                 itemExtent: Dimensions.youtubeCardItemExtent,
                 itemCount: playlistsNames.length,
                 itemBuilder: (context, index) {
                   final name = playlistsNames[index];
-                  final playlist = pcontroller.playlistsMap[name]!;
+                  final playlist = playlistsMap[name]!;
                   final menuItems = displayMenu
-                      ? [
-                          NamidaPopupItem(
-                            icon: Broken.share,
-                            title: lang.SHARE,
-                            onTap: playlist.shareVideos,
-                          ),
-                          NamidaPopupItem(
-                            icon: Broken.music_library_2,
-                            title: lang.ADD_TO_PLAYLIST,
-                            onTap: () {
-                              showAddToPlaylistSheet(ids: playlist.tracks.map((e) => e.id), idsNamesLookup: {}, playlistNameToAdd: playlist.name);
-                            },
-                          ),
-                          NamidaPopupItem(
-                            icon: Broken.next,
-                            title: lang.PLAY_NEXT,
-                            onTap: () => Player.inst.addToQueue(playlist.tracks, insertNext: true),
-                          ),
-                          NamidaPopupItem(
-                            icon: Broken.play_cricle,
-                            title: lang.PLAY_LAST,
-                            onTap: () => Player.inst.addToQueue(playlist.tracks, insertNext: false),
-                          ),
-                          NamidaPopupItem(
-                            icon: Broken.trash,
-                            title: lang.DELETE,
-                            onTap: () => playlist.promptDelete(name: playlist.name),
-                          ),
-                        ]
+                      ? YTUtils.getVideosMenuItems(
+                          videos: playlist.tracks,
+                          playlistName: '',
+                          moreItems: [
+                            NamidaPopupItem(
+                              icon: Broken.trash,
+                              title: lang.DELETE,
+                              onTap: () => playlist.promptDelete(name: playlist.name),
+                            ),
+                          ],
+                        )
                       : <NamidaPopupItem>[];
                   return NamidaPopupWrapper(
                     childrenDefault: menuItems,
@@ -301,7 +296,9 @@ class YoutubePlaylistsView extends StatelessWidget {
                                 YoutubePlaylistController.inst.addTracksToPlaylist(playlist, idsToAdd);
                               }
                             } else {
-                              NamidaNavigator.inst.navigateTo(YTNormalPlaylistSubpage(playlist: playlist));
+                              NamidaNavigator.inst.navigateTo(
+                                Obx(() => YTNormalPlaylistSubpage(playlist: YoutubePlaylistController.inst.getPlaylist(playlist.name)!)),
+                              );
                             }
                           },
                           smallBoxText: playlist.tracks.length.formatDecimal(),

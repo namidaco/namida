@@ -5,18 +5,14 @@ import 'package:get/get.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
-import 'package:share_plus/share_plus.dart';
 
 extension YoutubePlaylistShare on YoutubePlaylist {
-  Future<void> shareVideos() async {
-    await Share.share(tracks.map((e) => "${YoutubeController.inst.getYoutubeLink(e.id)} - ${e.dateTimeAdded.millisecondsSinceEpoch.dateAndClockFormattedOriginal}\n").join());
-  }
+  Future<void> shareVideos() async => await tracks.shareVideos();
 
   void promptDelete({required String name, Color? colorScheme}) {
     NamidaNavigator.inst.navigateDialog(
