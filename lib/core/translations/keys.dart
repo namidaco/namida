@@ -324,6 +324,7 @@ abstract class LanguageKeys {
   String get MISSING_ENTRIES => _getKey('MISSING_ENTRIES');
   String get MIXES => _getKey('MIXES');
   String get MONTH => _getKey('MONTH');
+  String get DUAL_MONTHS => _getKey('DUAL_MONTHS');
   String get MONTHS => _getKey('MONTHS');
   String get MOOD => _getKey('MOOD');
   String get MOODS => _getKey('MOODS');
@@ -521,6 +522,7 @@ abstract class LanguageKeys {
   String get SWIPE_TO_OPEN_DRAWER => _getKey('SWIPE_TO_OPEN_DRAWER');
   String get SYNCED => _getKey('SYNCED');
   String get SYNOPSIS => _getKey('SYNOPSIS');
+  String get SWAP_YN_IN_NEGATIVE_QUESTIONS => _getKey('SWAP_YN_IN_NEGATIVE_QUESTIONS')
   String get TAG_FIELDS => _getKey('TAG_FIELDS');
   String get TAGS => _getKey('TAGS');
   String get THEME_MODE_DARK => _getKey('THEME_MODE_DARK');
