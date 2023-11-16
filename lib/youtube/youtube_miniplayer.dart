@@ -17,7 +17,6 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:namida/packages/dots_triangle.dart';
 import 'package:namida/packages/mp.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -112,6 +111,9 @@ class YoutubeMiniPlayer extends StatelessWidget {
                       }
                     },
                   );
+
+            YoutubeController.inst.downloadedFilesMap; // for refreshing.
+            final downloadedFileExists = YoutubeController.inst.doesIDHasFileDownloaded(currentId) != null;
 
             return NamidaYTMiniplayer(
               key: MiniPlayerController.inst.ytMiniplayerKey,
@@ -541,9 +543,9 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                             ? Broken.play_circle
                                                             : wasDownloading
                                                                 ? Broken.pause_circle
-                                                                : false
+                                                                : downloadedFileExists
                                                                     ? Broken.tick_circle
-                                                                    : Broken.import; // TODO: check if video already downloaded
+                                                                    : Broken.import;
                                                         return SmallYTActionButton(
                                                           titleWidget: videoPerc == null && audioPerc == null && isDownloading ? const LoadingIndicator() : null,
                                                           title: videoPerc ?? audioPerc ?? lang.DOWNLOAD,

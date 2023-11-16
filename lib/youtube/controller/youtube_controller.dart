@@ -111,6 +111,11 @@ class YoutubeController {
   /// {groupName: {filename: YoutubeItemDownloadConfig}}
   final youtubeDownloadTasksMap = <String, Map<String, YoutubeItemDownloadConfig>>{}.obs;
 
+  /// Used to keep track of existing downloaded files, more performant than real-time checking.
+  ///
+  /// {groupName: {filename: File}}
+  final downloadedFilesMap = <String, Map<String, File?>>{}.obs;
+
   /// Temporarely saves StreamInfoItem info for flawless experience while waiting for real info.
   final _tempVideoInfosFromStreams = <String, StreamInfoItem>{}; // {id: StreamInfoItem()}
 
@@ -568,12 +573,33 @@ class YoutubeController {
         final res = await f.readAsJson() as Map<String, dynamic>?;
         if (res != null) {
           youtubeDownloadTasksMap[groupName] ??= {};
+          downloadedFilesMap[groupName] ??= {};
           for (final v in res.entries) {
-            youtubeDownloadTasksMap[groupName]![v.key] = YoutubeItemDownloadConfig.fromJson(v.value as Map<String, dynamic>);
+            final ytitem = YoutubeItemDownloadConfig.fromJson(v.value as Map<String, dynamic>);
+            final file = File("${AppDirs.YOUTUBE_DOWNLOADS}$groupName/${ytitem.filename}");
+            youtubeDownloadTasksMap[groupName]![v.key] = ytitem;
+            downloadedFilesMap[groupName]![v.key] = file.existsSync() ? file : null;
           }
         }
       }
     }
+    youtubeDownloadTasksMap.refresh();
+    downloadedFilesMap.refresh();
+  }
+
+  File? doesIDHasFileDownloaded(String id) {
+    for (final e in youtubeDownloadTasksMap.entries) {
+      for (final config in e.value.values) {
+        final groupName = e.key;
+        if (config.id == id) {
+          final file = downloadedFilesMap[groupName]?[config.filename];
+          if (file != null) {
+            return file;
+          }
+        }
+      }
+    }
+    return null;
   }
 
   void _matchIDsForItemConfig({
@@ -646,12 +672,13 @@ class YoutubeController {
   }) async {
     youtubeDownloadTasksMap[groupName] ??= {};
     if (remove) {
-      final directory = groupName == '' ? Directory(AppDirs.YOUTUBE_DOWNLOADS) : Directory("${AppDirs.YOUTUBE_DOWNLOADS}$groupName");
+      final directory = Directory("${AppDirs.YOUTUBE_DOWNLOADS}$groupName");
       await itemsConfig.loopFuture((c, _) async {
         _downloadClientsMap[groupName]?[c.filename]?.close(force: true);
         _downloadClientsMap[groupName]?.remove(c.filename);
         youtubeDownloadTasksMap[groupName]?.remove(c.filename);
         await File("$directory/${c.filename}").deleteIfExists();
+        downloadedFilesMap[groupName]?[c.filename] = null;
       });
     } else {
       itemsConfig.loop((c, _) {
@@ -660,6 +687,7 @@ class YoutubeController {
     }
 
     youtubeDownloadTasksMap.refresh();
+    downloadedFilesMap.refresh();
 
     await File("${AppDirs.YT_DOWNLOAD_TASKS}$groupName.json").writeAsJson(youtubeDownloadTasksMap[groupName]);
   }
@@ -680,7 +708,7 @@ class YoutubeController {
   }) async {
     _updateDownloadTask(groupName: groupName, itemsConfig: itemsConfig);
 
-    final directory = groupName == '' ? Directory(AppDirs.YOUTUBE_DOWNLOADS) : Directory("${AppDirs.YOUTUBE_DOWNLOADS}$groupName");
+    final directory = Directory("${AppDirs.YOUTUBE_DOWNLOADS}$groupName");
     await directory.create(recursive: true);
     for (final config in itemsConfig) {
       final videoID = config.id;
@@ -790,6 +818,8 @@ class YoutubeController {
         downloadedFile?.path.removeTrackThenExtract();
       }
 
+      downloadedFilesMap[groupName]?[config.filename] = downloadedFile;
+      downloadedFilesMap.refresh();
       await onFileDownloaded?.call(downloadedFile);
     }
   }
