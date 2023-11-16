@@ -14,7 +14,6 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -184,7 +183,7 @@ class YTUtils {
     ];
   }
 
-  static Map<FFMPEGTagField, String?> getMetadataInitialMap(String id, VideoInfo? info, {bool autoExtract = true}) {
+  static Map<String, String?> getMetadataInitialMap(String id, VideoInfo? info, {bool autoExtract = true}) {
     final date = info?.date;
     final description = info?.description;
     String? title = info?.name;
@@ -219,7 +218,7 @@ class YTUtils {
     required String videoId,
     required File audioFile,
     required File? thumbnailFile,
-    required Map<FFMPEGTagField, String?> tagsMap,
+    required Map<String, String?> tagsMap,
   }) async {
     final thumbnail = thumbnailFile ?? await VideoController.inst.getYoutubeThumbnailAndCache(id: videoId);
     if (thumbnail != null) {

@@ -6,8 +6,9 @@ import 'package:namida/youtube/widgets/yt_shimmer.dart';
 
 class SmallYTActionButton extends StatelessWidget {
   final String? title;
-  final IconData icon;
+  final IconData? icon;
   final void Function()? onPressed;
+  final void Function()? onLongPress;
   final Widget? iconWidget;
   final Widget? smallIconWidget;
   final Widget? titleWidget;
@@ -16,8 +17,9 @@ class SmallYTActionButton extends StatelessWidget {
   const SmallYTActionButton({
     super.key,
     required this.title,
-    required this.icon,
+    this.icon,
     this.onPressed,
+    this.onLongPress,
     this.iconWidget,
     this.smallIconWidget,
     this.titleWidget,
@@ -35,6 +37,7 @@ class SmallYTActionButton extends StatelessWidget {
               NamidaInkWell(
                 borderRadius: 32.0,
                 onTap: onPressed,
+                onLongPress: onLongPress,
                 padding: const EdgeInsets.all(8.0),
                 child: smallIconWidget ?? Icon(icon),
               ),

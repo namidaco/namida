@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';

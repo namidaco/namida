@@ -463,9 +463,9 @@ extension TagFieldsUtilsC on TagField {
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 }
 
-extension FFMPEGTagFieldUtilsC on FFMPEGTagField {
-  String toText() => _NamidaConverters.inst.getTitle(this);
-  IconData toIcon() => _NamidaConverters.inst.getIcon(this);
+extension FFMPEGTagFieldUtilsC on String {
+  String ffmpegTagToText() => _NamidaConverters.inst.ffmpegTagFieldName(this);
+  IconData ffmpegTagToIcon() => _NamidaConverters.inst.ffmpegTagFieldIcon(this);
 }
 
 extension PlayerRepeatModeUtils on RepeatMode {
@@ -1218,29 +1218,6 @@ class _NamidaConverters {
         TagField.recordLabel: lang.RECORD_LABEL,
         TagField.country: lang.COUNTRY,
       },
-      FFMPEGTagField: {
-        FFMPEGTagField.title: lang.TITLE,
-        FFMPEGTagField.album: lang.ALBUM,
-        FFMPEGTagField.artist: lang.ARTIST,
-        FFMPEGTagField.albumArtist: lang.ALBUM_ARTIST,
-        FFMPEGTagField.genre: lang.GENRE,
-        FFMPEGTagField.mood: lang.MOOD,
-        FFMPEGTagField.composer: lang.COMPOSER,
-        FFMPEGTagField.synopsis: lang.SYNOPSIS,
-        FFMPEGTagField.comment: lang.COMMENT,
-        FFMPEGTagField.description: lang.DESCRIPTION,
-        FFMPEGTagField.lyrics: lang.LYRICS,
-        FFMPEGTagField.trackNumber: lang.TRACK_NUMBER,
-        FFMPEGTagField.discNumber: lang.DISC_NUMBER,
-        FFMPEGTagField.trackTotal: lang.TRACK_NUMBER_TOTAL,
-        FFMPEGTagField.discTotal: lang.DISC_NUMBER_TOTAL,
-        FFMPEGTagField.year: lang.YEAR,
-        FFMPEGTagField.remixer: lang.REMIXER,
-        FFMPEGTagField.lyricist: lang.LYRICIST,
-        FFMPEGTagField.language: lang.LANGUAGE,
-        FFMPEGTagField.recordLabel: lang.RECORD_LABEL,
-        FFMPEGTagField.country: lang.COUNTRY,
-      },
       VideoPlaybackSource: {
         VideoPlaybackSource.auto: lang.AUTO,
         VideoPlaybackSource.youtube: lang.VIDEO_PLAYBACK_SOURCE_YOUTUBE,
@@ -1397,29 +1374,6 @@ class _NamidaConverters {
         TagField.recordLabel: Broken.ticket,
         TagField.country: Broken.house,
       },
-      FFMPEGTagField: {
-        FFMPEGTagField.title: Broken.music,
-        FFMPEGTagField.album: Broken.music_dashboard,
-        FFMPEGTagField.artist: Broken.microphone,
-        FFMPEGTagField.albumArtist: Broken.user,
-        FFMPEGTagField.genre: Broken.smileys,
-        FFMPEGTagField.mood: Broken.happyemoji,
-        FFMPEGTagField.composer: Broken.profile_2user,
-        FFMPEGTagField.synopsis: Broken.text,
-        FFMPEGTagField.comment: Broken.text_block,
-        FFMPEGTagField.description: Broken.note_text,
-        FFMPEGTagField.lyrics: Broken.message_text,
-        FFMPEGTagField.trackNumber: Broken.hashtag,
-        FFMPEGTagField.discNumber: Broken.hashtag,
-        FFMPEGTagField.trackTotal: Broken.hashtag,
-        FFMPEGTagField.discTotal: Broken.hashtag,
-        FFMPEGTagField.year: Broken.calendar,
-        FFMPEGTagField.remixer: Broken.radio,
-        FFMPEGTagField.lyricist: Broken.pen_add,
-        FFMPEGTagField.language: Broken.language_circle,
-        FFMPEGTagField.recordLabel: Broken.ticket,
-        FFMPEGTagField.country: Broken.house,
-      },
       InsertionSortingType: {
         InsertionSortingType.listenCount: Broken.award,
         InsertionSortingType.random: Broken.format_circle,
@@ -1438,6 +1392,53 @@ class _NamidaConverters {
         PerformanceMode.custom: Broken.candle,
       }
     };
+
+    final ffmpegToTitle = {
+      FFMPEGTagField.title: lang.TITLE,
+      FFMPEGTagField.album: lang.ALBUM,
+      FFMPEGTagField.artist: lang.ARTIST,
+      FFMPEGTagField.albumArtist: lang.ALBUM_ARTIST,
+      FFMPEGTagField.genre: lang.GENRE,
+      FFMPEGTagField.mood: lang.MOOD,
+      FFMPEGTagField.composer: lang.COMPOSER,
+      FFMPEGTagField.synopsis: lang.SYNOPSIS,
+      FFMPEGTagField.comment: lang.COMMENT,
+      FFMPEGTagField.description: lang.DESCRIPTION,
+      FFMPEGTagField.lyrics: lang.LYRICS,
+      FFMPEGTagField.trackNumber: lang.TRACK_NUMBER,
+      FFMPEGTagField.discNumber: lang.DISC_NUMBER,
+      FFMPEGTagField.trackTotal: lang.TRACK_NUMBER_TOTAL,
+      FFMPEGTagField.discTotal: lang.DISC_NUMBER_TOTAL,
+      FFMPEGTagField.year: lang.YEAR,
+      FFMPEGTagField.remixer: lang.REMIXER,
+      FFMPEGTagField.lyricist: lang.LYRICIST,
+      FFMPEGTagField.language: lang.LANGUAGE,
+      FFMPEGTagField.recordLabel: lang.RECORD_LABEL,
+      FFMPEGTagField.country: lang.COUNTRY,
+    };
+    final ffmpegToIcon = {
+      FFMPEGTagField.title: Broken.music,
+      FFMPEGTagField.album: Broken.music_dashboard,
+      FFMPEGTagField.artist: Broken.microphone,
+      FFMPEGTagField.albumArtist: Broken.user,
+      FFMPEGTagField.genre: Broken.smileys,
+      FFMPEGTagField.mood: Broken.happyemoji,
+      FFMPEGTagField.composer: Broken.profile_2user,
+      FFMPEGTagField.synopsis: Broken.text,
+      FFMPEGTagField.comment: Broken.text_block,
+      FFMPEGTagField.description: Broken.note_text,
+      FFMPEGTagField.lyrics: Broken.message_text,
+      FFMPEGTagField.trackNumber: Broken.hashtag,
+      FFMPEGTagField.discNumber: Broken.hashtag,
+      FFMPEGTagField.trackTotal: Broken.hashtag,
+      FFMPEGTagField.discTotal: Broken.hashtag,
+      FFMPEGTagField.year: Broken.calendar,
+      FFMPEGTagField.remixer: Broken.radio,
+      FFMPEGTagField.lyricist: Broken.pen_add,
+      FFMPEGTagField.language: Broken.language_circle,
+      FFMPEGTagField.recordLabel: Broken.ticket,
+      FFMPEGTagField.country: Broken.house,
+    };
     _toTitle
       ..clear()
       ..addAll(toTitle);
@@ -1447,11 +1448,21 @@ class _NamidaConverters {
     _toIcon
       ..clear()
       ..addAll(toIcon);
+
+    _ffmpegToTitle
+      ..clear()
+      ..addAll(ffmpegToTitle);
+    _ffmpegToIcon
+      ..clear()
+      ..addAll(ffmpegToIcon);
   }
 
   final _toTitle = <Type, Map<Enum, String>>{};
   final _toSubtitle = <Type, Map<Enum, String?>>{};
   final _toIcon = <Type, Map<Enum, IconData>>{};
+
+  final _ffmpegToTitle = <String, String>{};
+  final _ffmpegToIcon = <String, IconData>{};
 
   String getTitle(Enum enumValue) {
     return _toTitle[enumValue.runtimeType]![enumValue]!;
@@ -1463,5 +1474,13 @@ class _NamidaConverters {
 
   IconData getIcon(Enum enumValue) {
     return _toIcon[enumValue.runtimeType]![enumValue]!;
+  }
+
+  String ffmpegTagFieldName(String tag) {
+    return _ffmpegToTitle[tag]!;
+  }
+
+  IconData ffmpegTagFieldIcon(String tag) {
+    return _ffmpegToIcon[tag]!;
   }
 }

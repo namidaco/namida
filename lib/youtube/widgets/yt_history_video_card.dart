@@ -45,7 +45,7 @@ class YTHistoryVideoCard extends StatelessWidget {
   });
 
   Widget _columnOrRow({required List<Widget> children, bool isRow = true}) {
-    return isRow ? Row(children: children) : Column(children: children);
+    return isRow ? Row(children: children) : Column(crossAxisAlignment: CrossAxisAlignment.start, children: children);
   }
 
   @override
@@ -107,41 +107,43 @@ class YTHistoryVideoCard extends StatelessWidget {
                       width: minimalCard ? null : Dimensions.youtubeCardItemVerticalPadding,
                       height: minimalCard ? 1.0 : null,
                     ),
-                    YoutubeThumbnail(
-                      key: Key(video.id),
-                      borderRadius: 8.0,
-                      isImportantInCache: true,
-                      width: thumbWidth - 3.0,
-                      height: thumbHeight - 3.0,
-                      videoId: video.id,
-                      onTopWidgets: [
-                        if (duration != null)
-                          Positioned(
-                            bottom: 0.0,
-                            right: 0.0,
-                            child: Padding(
-                              padding: const EdgeInsets.all(3.0),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                                child: NamidaBgBlur(
-                                  blur: 2.0,
-                                  enabled: settings.enableBlurEffect.value,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
-                                    color: Colors.black.withOpacity(0.2),
-                                    child: Text(
-                                      duration,
-                                      style: context.textTheme.displaySmall?.copyWith(
-                                        color: Colors.white.withOpacity(0.8),
-                                        fontWeight: FontWeight.w500,
+                    Center(
+                      child: YoutubeThumbnail(
+                        key: Key(video.id),
+                        borderRadius: 8.0,
+                        isImportantInCache: true,
+                        width: thumbWidth - 3.0,
+                        height: thumbHeight - 3.0,
+                        videoId: video.id,
+                        onTopWidgets: [
+                          if (duration != null)
+                            Positioned(
+                              bottom: 0.0,
+                              right: 0.0,
+                              child: Padding(
+                                padding: const EdgeInsets.all(3.0),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                  child: NamidaBgBlur(
+                                    blur: 2.0,
+                                    enabled: settings.enableBlurEffect.value,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
+                                      color: Colors.black.withOpacity(0.2),
+                                      child: Text(
+                                        duration,
+                                        style: context.textTheme.displaySmall?.copyWith(
+                                          color: Colors.white.withOpacity(0.8),
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                     const SizedBox(width: 12.0),
                     Expanded(

@@ -12,7 +12,6 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/main.dart';
 
@@ -72,17 +71,14 @@ class NamidaFFMPEG {
   Future<bool> editMetadata({
     required String path,
     MIFormatTags? oldTags,
-    required Map<FFMPEGTagField, String?> tagsMap,
+    required Map<String, String?> tagsMap,
     bool keepFileStats = true,
   }) async {
     final originalFile = File(path);
     final originalStats = keepFileStats ? await originalFile.stat() : null;
     final tempFile = await originalFile.copy("${AppDirs.INTERNAL_STORAGE}/.temp_${path.hashCode}");
-    final tagsMapToEditConverted = <String, String?>{};
-    for (final t in tagsMap.entries) {
-      final fieldName = _defaultTagsMap[t.key];
-      if (fieldName != null) tagsMapToEditConverted[fieldName] = t.value?.replaceAll('"', r'\"');
-    }
+
+    tagsMap.updateAll((key, value) => value?.replaceAll('"', r'\"'));
 
     // if (tagsMap[FFMPEGTagField.trackNumber] != null || tagsMap[FFMPEGTagField.discNumber] != null) {
     //   oldTags ??= await extractMetadata(path).then((value) => value?.format?.tags);
@@ -104,7 +100,7 @@ class NamidaFFMPEG {
     //   plsAddDT("disc", (tagsMapToEditConverted["disc"] ?? discNT?.$1 ?? "0", trackNT?.$2));
     // }
 
-    final tagsString = tagsMapToEditConverted.entries.map((e) => e.value == null ? '' : '-metadata ${e.key}="${e.value}"').join(' '); // check if need to remove empty value tag
+    final tagsString = tagsMap.entries.map((e) => e.value == null ? '' : '-metadata ${e.key}="${e.value}"').join(' '); // check if need to remove empty value tag
 
     final didExecute = await _ffmpegExecute('-i "${tempFile.path}" $tagsString -id3v2_version 3 -write_id3v2 1 -c copy -y "$path"');
     // -- restoring original stats.
@@ -145,7 +141,7 @@ class NamidaFFMPEG {
 
     final cacheFile = File("${AppDirs.APP_CACHE}/${audioPath.hashCode}.${audioPath.getExtension}");
     final didSuccess = await _ffmpegExecute('-i "$audioPath" -i "$thumbnailPath" -map 0:a -map 1 -codec copy -disposition:v attached_pic -y "${cacheFile.path}"');
-    final canSafelyMoveBack = didSuccess && await cacheFile.length() > 0;
+    final canSafelyMoveBack = didSuccess && await cacheFile.exists() && await cacheFile.length() > 0;
     if (canSafelyMoveBack) {
       // only move output file back in case of success.
       await cacheFile.copy(audioPath);
@@ -368,30 +364,54 @@ class NamidaFFMPEG {
   //   }
   //   return null;
   // }
+}
 
-  final _defaultTagsMap = <FFMPEGTagField, String>{
-    FFMPEGTagField.year: "date",
-    FFMPEGTagField.language: "LANGUAGE",
-    FFMPEGTagField.artist: "artist",
-    FFMPEGTagField.album: "album",
-    FFMPEGTagField.composer: "composer",
-    FFMPEGTagField.description: "description", // add
-    FFMPEGTagField.remixer: "REMIXER",
-    FFMPEGTagField.synopsis: "synopsis", // add
-    FFMPEGTagField.title: "title",
-    FFMPEGTagField.albumArtist: "album_artist",
-    FFMPEGTagField.genre: "genre",
-    FFMPEGTagField.mood: "mood",
-    FFMPEGTagField.country: "Country",
-    FFMPEGTagField.recordLabel: "LABEL",
-    FFMPEGTagField.comment: "comment",
-    FFMPEGTagField.lyrics: "lyrics",
-    FFMPEGTagField.lyricist: "LYRICIST",
-    FFMPEGTagField.trackNumber: "track",
-    FFMPEGTagField.discNumber: "disc",
-    FFMPEGTagField.trackTotal: "TRACKTOTAL",
-    FFMPEGTagField.discTotal: "DISCTOTAL",
-  };
+class FFMPEGTagField {
+  static const String title = 'title';
+  static const String artist = 'artist';
+  static const String album = 'album';
+  static const String albumArtist = 'album_artist';
+  static const String composer = 'composer';
+  static const String synopsis = 'synopsis';
+  static const String description = 'description';
+  static const String genre = 'genre';
+  static const String mood = 'mood';
+  static const String year = 'date';
+  static const String trackNumber = 'track';
+  static const String discNumber = 'disc';
+  static const String trackTotal = 'TRACKTOTAL';
+  static const String discTotal = 'DISCTOTAL';
+  static const String comment = 'comment';
+  static const String lyrics = 'lyrics';
+  static const String remixer = 'REMIXER';
+  static const String lyricist = 'LYRICIST';
+  static const String language = 'LANGUAGE';
+  static const String recordLabel = 'LABEL';
+  static const String country = 'Country';
+
+  static const List<String> values = <String>[
+    title,
+    artist,
+    album,
+    albumArtist,
+    composer,
+    synopsis,
+    description,
+    genre,
+    mood,
+    year,
+    trackNumber,
+    discNumber,
+    trackTotal,
+    discTotal,
+    comment,
+    lyrics,
+    remixer,
+    lyricist,
+    language,
+    recordLabel,
+    country,
+  ];
 }
 
 class OperationProgress {

@@ -160,6 +160,7 @@ abstract class LanguageKeys {
   String get DUPLICATED_TRACKS => _getKey('DUPLICATED_TRACKS');
   String get DURATION => _getKey('DURATION');
   String get EDGE_COLORS_SWITCHING => _getKey('EDGE_COLORS_SWITCHING');
+  String get EDIT => _getKey('EDIT');
   String get EDIT_ARTWORK => _getKey('EDIT_ARTWORK');
   String get EDIT_TAGS => _getKey('EDIT_TAGS');
   String get EMPTY_NON_MEANINGFUL_TAG_FIELDS => _getKey('EMPTY_NON_MEANINGFUL_TAG_FIELDS');
@@ -268,6 +269,7 @@ abstract class LanguageKeys {
   String get INDEXER => _getKey('INDEXER');
   String get INFINITY_QUEUE_ON_NEXT_PREV => _getKey('INFINITY_QUEUE_ON_NEXT_PREV');
   String get INFINITY_QUEUE_ON_NEXT_PREV_SUBTITLE => _getKey('INFINITY_QUEUE_ON_NEXT_PREV_SUBTITLE');
+  String get INFO => _getKey('INFO');
   String get INSERTED => _getKey('INSERTED');
   String get INSTANTLY_APPLIES => _getKey('INSTANTLY_APPLIES');
   String get ITEM => _getKey('ITEM');
@@ -383,6 +385,7 @@ abstract class LanguageKeys {
   String get PALETTE_SELECTED_MIX => _getKey('PALETTE_SELECTED_MIX');
   String get PARSED => _getKey('PARSED');
   String get PATH => _getKey('PATH');
+  String get PAUSE => _getKey('PAUSE');
   String get PAUSE_FADE_DURATION => _getKey('PAUSE_FADE_DURATION');
   String get PAUSE_PLAYBACK => _getKey('PAUSE_PLAYBACK');
   String get PERCENTAGE => _getKey('PERCENTAGE');
@@ -454,10 +457,12 @@ abstract class LanguageKeys {
   String get RESET_TO_DEFAULT => _getKey('RESET_TO_DEFAULT');
   String get RESPECT_NO_MEDIA_SUBTITLE => _getKey('RESPECT_NO_MEDIA_SUBTITLE');
   String get RESPECT_NO_MEDIA => _getKey('RESPECT_NO_MEDIA');
+  String get RESTART => _getKey('RESTART');
   String get RESTORE_BACKUP => _getKey('RESTORE_BACKUP');
   String get RESTORE_DEFAULTS => _getKey('RESTORE_DEFAULTS');
   String get RESTORED_BACKUP_SUCCESSFULLY_SUB => _getKey('RESTORED_BACKUP_SUCCESSFULLY_SUB');
   String get RESTORED_BACKUP_SUCCESSFULLY => _getKey('RESTORED_BACKUP_SUCCESSFULLY');
+  String get RESUME => _getKey('RESUME');
   String get RESUME_IF_WAS_INTERRUPTED => _getKey('RESUME_IF_WAS_INTERRUPTED');
   String get RESUME_IF_WAS_PAUSED_BY_VOLUME => _getKey('RESUME_IF_WAS_PAUSED_BY_VOLUME');
   String get REVERSE_ORDER => _getKey('REVERSE_ORDER');

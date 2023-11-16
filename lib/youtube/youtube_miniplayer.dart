@@ -534,18 +534,37 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                             ? null
                                                             : "${lang.VIDEO} ${(videoProgress.progress / videoProgress.totalProgress * 100).toStringAsFixed(0)}%";
 
-                                                        final isDownloading = YoutubeController.inst.isDownloading[currentId] == true;
+                                                        final isDownloading = YoutubeController.inst.isDownloading[currentId]?.values.any((element) => element) == true;
+
+                                                        final wasDownloading = videoPerc != null || audioPerc != null;
+                                                        final icon = (wasDownloading && !isDownloading)
+                                                            ? Broken.play_circle
+                                                            : wasDownloading
+                                                                ? Broken.pause_circle
+                                                                : false
+                                                                    ? Broken.tick_circle
+                                                                    : Broken.import; // TODO: check if video already downloaded
                                                         return SmallYTActionButton(
-                                                          iconWidget: isDownloading
-                                                              ? DotsTriangle(
-                                                                  color: context.defaultIconColor(),
-                                                                  size: 24.0,
-                                                                )
-                                                              : null,
                                                           titleWidget: videoPerc == null && audioPerc == null && isDownloading ? const LoadingIndicator() : null,
                                                           title: videoPerc ?? audioPerc ?? lang.DOWNLOAD,
-                                                          icon: false ? Broken.tick_circle : Broken.import, // TODO: check if video already downloaded
-                                                          onPressed: () async => await showDownloadVideoBottomSheet(videoId: currentId),
+                                                          icon: icon,
+                                                          onLongPress: () async => await showDownloadVideoBottomSheet(videoId: currentId),
+                                                          onPressed: () async {
+                                                            if (isDownloading) {
+                                                              YoutubeController.inst.pauseDownloadTask(
+                                                                itemsConfig: [],
+                                                                videosIds: [currentId],
+                                                                groupName: '',
+                                                              );
+                                                            } else if (wasDownloading) {
+                                                              YoutubeController.inst.resumeDownloadTaskForIDs(
+                                                                videosIds: [currentId],
+                                                                groupName: '',
+                                                              );
+                                                            } else {
+                                                              await showDownloadVideoBottomSheet(videoId: currentId);
+                                                            }
+                                                          },
                                                         );
                                                       },
                                                     ),

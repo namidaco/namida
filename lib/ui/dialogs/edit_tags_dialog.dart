@@ -602,10 +602,10 @@ Future<void> _updateTracksMetadata({
         if (!didUpdate) {
           // -- 2. try with ffmpeg
           final ffmpegTagsMap = commentToInsert != ''
-              ? <FFMPEGTagField, String?>{
+              ? <String, String?>{
                   FFMPEGTagField.comment: oldComment == '' ? commentToInsert : '$commentToInsert\n$oldComment',
                 }
-              : <FFMPEGTagField, String?>{
+              : <String, String?>{
                   FFMPEGTagField.title: editedTags[TagField.title],
                   FFMPEGTagField.artist: editedTags[TagField.artist],
                   FFMPEGTagField.album: editedTags[TagField.album],

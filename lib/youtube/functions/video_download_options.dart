@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
+import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 Future<void> showVideoDownloadOptionsSheet({
   required BuildContext context,
   required String videoTitle,
   required VideoInfo videoInfo,
-  required Map<FFMPEGTagField, String?> tagMaps,
+  required Map<String, String?> tagMaps,
   required bool supportTagging,
 }) async {
   final controllersMap = {for (final t in FFMPEGTagField.values) t: TextEditingController(text: tagMaps[t])};
 
-  Widget getTextChip(FFMPEGTagField field) {
+  Widget getTextChip(String field) {
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 400),
       opacity: supportTagging ? 1.0 : 0.5,
@@ -29,15 +29,15 @@ Future<void> showVideoDownloadOptionsSheet({
         child: CustomTagTextField(
           controller: controllersMap[field]!,
           hintText: tagMaps[field] ?? '',
-          labelText: field.toText(),
-          icon: field.toIcon(),
+          labelText: field.ffmpegTagToText(),
+          icon: field.ffmpegTagToIcon(),
           onChanged: (value) => tagMaps[field] = value,
         ),
       ),
     );
   }
 
-  Widget getRow(List<FFMPEGTagField> fields) {
+  Widget getRow(List<String> fields) {
     return Row(
       children: [
         ...fields.map(

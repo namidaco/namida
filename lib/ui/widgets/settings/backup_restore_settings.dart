@@ -206,6 +206,7 @@ class BackupAndRestore extends StatelessWidget {
                               AppPaths.TOTAL_LISTEN_TIME,
                               AppPaths.VIDEOS_CACHE,
                               AppPaths.VIDEOS_LOCAL,
+                              AppDirs.YT_DOWNLOAD_TASKS,
                             ],
                             youtubeAvailable: true,
                             youtubeItems: [

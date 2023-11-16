@@ -134,8 +134,12 @@ void main() async {
   if (!shouldShowOnBoarding) await QueueController.inst.prepareLatestQueue();
 
   YoutubePlaylistController.inst.prepareAllPlaylists();
-  await YoutubePlaylistController.inst.prepareDefaultPlaylistsFile();
+
   YoutubeController.inst.fillBackupInfoMap(); // for history videos info.
+  await [
+    YoutubePlaylistController.inst.prepareDefaultPlaylistsFile(),
+    YoutubeController.inst.loadDownloadTasksInfoFile(),
+  ].execute();
 
   await _initializeIntenties();
 

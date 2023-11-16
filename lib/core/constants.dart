@@ -73,6 +73,7 @@ class AppDirs {
   static final BACKUPS = '$INTERNAL_STORAGE/Backups/';
   static final COMPRESSED_IMAGES = '$INTERNAL_STORAGE/Compressed/';
   static final M3UPlaylists = '$INTERNAL_STORAGE/M3U Playlists/';
+  static final YOUTUBE_DOWNLOADS = '$INTERNAL_STORAGE/Downloads/';
 
   // ================= Youtube =================
   static final YOUTUBE_MAIN_DIRECTORY = '$USER_DATA/Youtube';
@@ -86,6 +87,7 @@ class AppDirs {
   static final YT_METADATA_COMMENTS = '$YOUTUBE_MAIN_DIRECTORY/Metadata Comments/';
   static final YT_STATS = '$YOUTUBE_MAIN_DIRECTORY/Youtube Stats/';
   static final YT_PALETTES = '$YOUTUBE_MAIN_DIRECTORY/Palettes/';
+  static final YT_DOWNLOAD_TASKS = '$YOUTUBE_MAIN_DIRECTORY/Download Tasks/';
 
   // ===========================================
   static final List<String> values = [
@@ -112,6 +114,7 @@ class AppDirs {
     YT_METADATA_COMMENTS,
     YT_STATS,
     YT_PALETTES,
+    YT_DOWNLOAD_TASKS,
     // Internal Storage Directories are created on demand
   ];
 }

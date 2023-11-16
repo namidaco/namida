@@ -6,11 +6,9 @@ import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -19,6 +17,7 @@ import 'package:namida/main.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/functions/video_download_options.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
@@ -46,8 +45,8 @@ Future<void> showDownloadVideoBottomSheet({
   final formKey = GlobalKey<FormState>();
   final filenameExists = false.obs;
 
-  final tagsMap = <FFMPEGTagField, String?>{};
-  void updateTagsMap(Map<FFMPEGTagField, String?> map) {
+  final tagsMap = <String, String?>{};
+  void updateTagsMap(Map<String, String?> map) {
     for (final e in map.entries) {
       tagsMap[e.key] = e.value;
     }
@@ -467,7 +466,7 @@ Future<void> showDownloadVideoBottomSheet({
                               validatorMode: AutovalidateMode.always,
                               validator: (value) {
                                 if (value == null) return lang.PLEASE_ENTER_A_NAME;
-                                final file = File("${AppDirs.INTERNAL_STORAGE}/$value");
+                                final file = File("${AppDirs.YOUTUBE_DOWNLOADS}$value");
                                 void updateVal(bool exist) => WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                                       filenameExists.value = exist;
                                     });
@@ -530,47 +529,25 @@ Future<void> showDownloadVideoBottomSheet({
                                             requestIgnoreBatteryOptimizations();
                                             // ignore: use_build_context_synchronously
                                             Navigator.pop(context);
-                                            final downloadedFile = await YoutubeController.inst.downloadYoutubeVideoRaw(
-                                              id: videoId,
+                                            YoutubeController.inst.downloadYoutubeVideos(
                                               useCachedVersionsIfAvailable: true,
-                                              saveDirectory: Directory(AppDirs.INTERNAL_STORAGE),
-                                              filename: videoOutputFilenameController.text,
-                                              videoStream: selectedVideoOnlyStream.value,
-                                              audioStream: selectedAudioOnlyStream.value,
-                                              merge: true,
+                                              autoExtractTitleAndArtist: settings.ytAutoExtractVideoTagsFromInfo.value,
                                               keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
-                                              onInitialVideoFileSize: (initialFileSize) {},
-                                              onInitialAudioFileSize: (initialFileSize) {},
-                                              videoDownloadingStream: (downloadedBytes) {},
-                                              audioDownloadingStream: (downloadedBytes) {},
-                                              onAudioFileReady: (audioFile) async {
-                                                await YTUtils.writeAudioMetadata(
-                                                  videoId: videoId,
-                                                  audioFile: audioFile,
-                                                  thumbnailFile: videoThumbnail.value,
-                                                  tagsMap: tagsMap,
-                                                );
-                                              },
-                                              onVideoFileReady: (videoFile) async {
-                                                await NamidaFFMPEG.inst.editMetadata(
-                                                  path: videoFile.path,
-                                                  tagsMap: tagsMap,
-                                                );
-                                              },
+                                              downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
+                                              itemsConfig: [
+                                                YoutubeItemDownloadConfig(
+                                                  id: videoId,
+                                                  filename: videoOutputFilenameController.text,
+                                                  ffmpegTags: tagsMap,
+                                                  fileDate: videoDateTime,
+                                                  videoStream: selectedVideoOnlyStream.value,
+                                                  audioStream: selectedAudioOnlyStream.value,
+                                                  prefferedVideoQualityID: selectedVideoOnlyStream.value?.id,
+                                                  prefferedAudioQualityID: selectedAudioOnlyStream.value?.id,
+                                                  fetchMissingStreams: false,
+                                                ),
+                                              ],
                                             );
-
-                                            if (settings.downloadFilesWriteUploadDate.value) {
-                                              final d = videoDateTime;
-                                              if (d != null) {
-                                                await downloadedFile?.setLastAccessed(d);
-                                                await downloadedFile?.setLastModified(d);
-                                              }
-                                            }
-
-                                            // -- adding to library, only if audio downloaded
-                                            if (selectedAudioOnlyStream.value != null && selectedVideoOnlyStream.value == null) {
-                                              await downloadedFile?.path.removeTrackThenExtract();
-                                            }
                                           },
                                         ),
                                       ),

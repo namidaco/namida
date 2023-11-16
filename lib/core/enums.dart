@@ -168,30 +168,6 @@ enum TagField {
   country,
 }
 
-enum FFMPEGTagField {
-  title,
-  artist,
-  album,
-  albumArtist,
-  composer,
-  synopsis,
-  description,
-  genre,
-  mood,
-  year,
-  trackNumber,
-  discNumber,
-  trackTotal,
-  discTotal,
-  comment,
-  lyrics,
-  remixer,
-  lyricist,
-  language,
-  recordLabel,
-  country,
-}
-
 enum WakelockMode {
   none,
   expanded,
