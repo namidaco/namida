@@ -45,6 +45,8 @@ Future<void> showDownloadVideoBottomSheet({
   final formKey = GlobalKey<FormState>();
   final filenameExists = false.obs;
 
+  String groupName = '';
+
   final tagsMap = <String, String?>{};
   void updateTagsMap(Map<String, String?> map) {
     for (final e in map.entries) {
@@ -218,7 +220,7 @@ Future<void> showDownloadVideoBottomSheet({
     builder: (context) {
       final bottomPadding = MediaQuery.viewInsetsOf(context).bottom;
       return SizedBox(
-        height: context.height * 0.65 + bottomPadding,
+        height: context.height * 0.7 + bottomPadding,
         width: context.width,
         child: Padding(
           padding: const EdgeInsets.all(18.0).add(EdgeInsets.only(bottom: bottomPadding)),
@@ -316,6 +318,10 @@ Future<void> showDownloadVideoBottomSheet({
                                                 videoTitle: videoInfo.value!.name ?? '',
                                                 tagMaps: tagsMap,
                                                 supportTagging: !isWEBM,
+                                                onDownloadGroupNameChanged: (newFolderPath) {
+                                                  groupName = newFolderPath;
+                                                  formKey.currentState?.validate();
+                                                },
                                               );
                                             },
                                           ),
@@ -466,7 +472,7 @@ Future<void> showDownloadVideoBottomSheet({
                               validatorMode: AutovalidateMode.always,
                               validator: (value) {
                                 if (value == null) return lang.PLEASE_ENTER_A_NAME;
-                                final file = File("${AppDirs.YOUTUBE_DOWNLOADS}$value");
+                                final file = File("${AppDirs.YOUTUBE_DOWNLOADS}$groupName$value");
                                 void updateVal(bool exist) => WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                                       filenameExists.value = exist;
                                     });
@@ -534,6 +540,7 @@ Future<void> showDownloadVideoBottomSheet({
                                               autoExtractTitleAndArtist: settings.ytAutoExtractVideoTagsFromInfo.value,
                                               keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
                                               downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
+                                              groupName: groupName,
                                               itemsConfig: [
                                                 YoutubeItemDownloadConfig(
                                                   id: videoId,

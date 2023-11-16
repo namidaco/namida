@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/controller/ffmpeg_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -17,8 +21,62 @@ Future<void> showVideoDownloadOptionsSheet({
   required VideoInfo videoInfo,
   required Map<String, String?> tagMaps,
   required bool supportTagging,
+  required void Function(String newFolderPath) onDownloadGroupNameChanged,
 }) async {
+  final availableDirectoriesNames = <String>[];
+  for (final d in Directory(AppDirs.YOUTUBE_DOWNLOADS).listSync()) {
+    if (d is Directory) {
+      availableDirectoriesNames.add(d.path.split(Platform.pathSeparator).last);
+    }
+  }
   final controllersMap = {for (final t in FFMPEGTagField.values) t: TextEditingController(text: tagMaps[t])};
+  final groupName = ''.obs;
+
+  void onGroupNameChanged(String val) {
+    groupName.value = val;
+    onDownloadGroupNameChanged(val);
+  }
+
+  void onFolderAddTap() {
+    final c = TextEditingController();
+    final fk = GlobalKey<FormState>();
+    NamidaNavigator.inst.navigateDialog(
+      dialog: Form(
+        key: fk,
+        child: CustomBlurryDialog(
+          title: lang.ADD_FOLDER,
+          actions: [
+            const CancelButton(),
+            const SizedBox(width: 6.0),
+            NamidaButton(
+              text: lang.ADD,
+              onPressed: () {
+                if (fk.currentState?.validate() == true) {
+                  onGroupNameChanged(c.text);
+                  availableDirectoriesNames.add(c.text);
+                  NamidaNavigator.inst.closeDialog();
+                }
+              },
+            ),
+          ],
+          child: CustomTagTextField(
+            controller: c,
+            hintText: '',
+            labelText: lang.FOLDER,
+            validatorMode: AutovalidateMode.always,
+            validator: (value) {
+              if (value == null) return lang.PLEASE_ENTER_A_NAME;
+              if (value.isEmpty) return lang.EMPTY_VALUE;
+              if (availableDirectoriesNames.any((element) => element == value)) {
+                return lang.PLEASE_ENTER_A_DIFFERENT_NAME;
+              }
+              return null;
+            },
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget getTextChip(String field) {
     return AnimatedOpacity(
@@ -57,7 +115,7 @@ Future<void> showVideoDownloadOptionsSheet({
     builder: (context) {
       final bottomPadding = MediaQuery.viewInsetsOf(context).bottom;
       return SizedBox(
-        height: context.height * 0.6 + bottomPadding,
+        height: context.height * 0.65 + bottomPadding,
         width: context.width,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 18.0),
@@ -83,6 +141,7 @@ Future<void> showVideoDownloadOptionsSheet({
                   children: [
                     Obx(
                       () => CustomSwitchListTile(
+                        icon: Broken.document_code,
                         visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
                         title: lang.SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE,
                         value: settings.downloadFilesWriteUploadDate.value,
@@ -91,10 +150,57 @@ Future<void> showVideoDownloadOptionsSheet({
                     ),
                     Obx(
                       () => CustomSwitchListTile(
+                        icon: Broken.tick_circle,
                         visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
                         title: lang.KEEP_CACHED_VERSIONS,
                         value: settings.downloadFilesKeepCachedVersions.value,
                         onChanged: (isTrue) => settings.save(downloadFilesKeepCachedVersions: !isTrue),
+                      ),
+                    ),
+                    CustomListTile(
+                      leading: NamidaIconButton(
+                        icon: Broken.add_circle,
+                        iconColor: context.defaultIconColor(),
+                        horizontalPadding: 0.0,
+                        onPressed: onFolderAddTap,
+                      ),
+                      visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
+                      title: lang.FOLDER,
+                      trailingRaw: NamidaPopupWrapper(
+                        childrenDefault: [
+                          NamidaPopupItem(
+                            icon: Broken.add,
+                            title: lang.ADD,
+                            onTap: onFolderAddTap,
+                          ),
+                          NamidaPopupItem(
+                            icon: Broken.folder_2,
+                            title: lang.DEFAULT,
+                            onTap: () => onGroupNameChanged(''),
+                          ),
+                          ...availableDirectoriesNames.map(
+                            (name) {
+                              return NamidaPopupItem(
+                                icon: Broken.folder,
+                                title: name,
+                                onTap: () => onGroupNameChanged(name),
+                              );
+                            },
+                          ),
+                        ],
+                        child: Obx(
+                          () => Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(groupName.value == '' ? Broken.folder_2 : Broken.folder, size: 18.0),
+                              const SizedBox(width: 6.0),
+                              Text(
+                                groupName.value == '' ? lang.DEFAULT : groupName.value,
+                                style: context.textTheme.displayMedium,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 6.0),

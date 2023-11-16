@@ -101,7 +101,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final directory = groupName == '' ? Directory(AppDirs.YOUTUBE_DOWNLOADS) : Directory("${AppDirs.YOUTUBE_DOWNLOADS}$groupName");
+    final directory = Directory("${AppDirs.YOUTUBE_DOWNLOADS}$groupName");
     final item = videos[index];
     final downloadedFile = File("${directory.path}/${item.filename}");
 
