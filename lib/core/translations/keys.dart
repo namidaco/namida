@@ -65,6 +65,7 @@ abstract class LanguageKeys {
   String get CANCEL => _getKey('CANCEL');
   String get CHANGED => _getKey('CHANGED');
   String get CHANGELOG => _getKey('CHANGELOG');
+  String get CHANNEL => _getKey('CHANNEL');
   String get CHANNELS => _getKey('CHANNELS');
   String get CHECK_FOR_MORE => _getKey('CHECK_FOR_MORE');
   String get CHECK_LIST => _getKey('CHECK_LIST');

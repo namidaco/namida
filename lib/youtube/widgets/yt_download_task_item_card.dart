@@ -1,9 +1,14 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
+import 'package:jiffy/jiffy.dart';
+import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -12,6 +17,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -99,6 +105,134 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     YoutubeController.inst.cancelDownloadTask(itemsConfig: itemsConfig, groupName: groupName);
   }
 
+  void _showInfoDialog(
+    final BuildContext context,
+    final YoutubeItemDownloadConfig item,
+    final VideoInfo? info,
+    final String groupName,
+  ) {
+    final backupVideoInfo = YoutubeController.inst.getBackupVideoInfo(item.id);
+    final videoTitle = info?.name ?? backupVideoInfo?.title ?? item.id;
+    final videoSubtitle = info?.uploaderName ?? backupVideoInfo?.channel ?? '?';
+    final dateMS = info?.date?.millisecondsSinceEpoch;
+    final dateText = dateMS?.dateAndClockFormattedOriginal ?? '?';
+    final dateAgo = dateMS == null ? '' : "\n(${Jiffy.parseFromMillisecondsSinceEpoch(dateMS).fromNow()})";
+    final duration = info?.duration?.inSeconds.secondsLabel ?? '?';
+    final descriptionWidget = info == null
+        ? null
+        : Html(
+            data: info.description ?? '',
+            style: {
+              '*': Style.fromTextStyle(
+                context.textTheme.displaySmall!.copyWith(
+                  fontSize: 13.0.multipliedFontScale,
+                ),
+              ),
+              'a': Style.fromTextStyle(
+                context.textTheme.displaySmall!.copyWith(
+                  color: context.theme.colorScheme.primary.withAlpha(210),
+                  fontSize: 12.5.multipliedFontScale,
+                ),
+              )
+            },
+            onLinkTap: (url, attributes, element) async {
+              if (url != null) {
+                try {
+                  await launchUrlString(url, mode: LaunchMode.externalNonBrowserApplication);
+                } catch (e) {
+                  await launchUrlString(url);
+                }
+              }
+            },
+          );
+
+    final saveLocation = "${AppDirs.YOUTUBE_DOWNLOADS}$groupName/${item.filename}";
+
+    List<Widget> getTrailing(IconData icon, String text) {
+      return [
+        Icon(
+          icon,
+          size: 22.0,
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: Text(
+            text,
+            style: context.textTheme.displaySmall,
+          ),
+        ),
+      ];
+    }
+
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.INFO,
+        normalTitleStyle: true,
+        trailingWidgets: [
+          ...getTrailing(Broken.eye, info?.viewCount?.formatDecimalShort() ?? '?'),
+          const SizedBox(width: 6.0),
+          ...getTrailing(Broken.like_1, info?.likeCount?.formatDecimalShort() ?? '?'),
+        ],
+        child: SizedBox(
+          height: context.height * 0.6,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TrackInfoListTile(
+                  title: lang.TITLE,
+                  value: videoTitle,
+                  icon: Broken.text,
+                ),
+                TrackInfoListTile(
+                  title: lang.CHANNEL,
+                  value: videoSubtitle,
+                  icon: Broken.user,
+                ),
+                TrackInfoListTile(
+                  title: lang.DATE,
+                  value: "$dateText$dateAgo",
+                  icon: Broken.calendar,
+                ),
+                TrackInfoListTile(
+                  title: lang.DURATION,
+                  value: duration,
+                  icon: Broken.clock,
+                ),
+                TrackInfoListTile(
+                  title: lang.LINK,
+                  value: YoutubeController.inst.getYoutubeLink(item.id),
+                  icon: Broken.link_1,
+                ),
+                TrackInfoListTile(
+                  title: 'ID',
+                  value: item.id,
+                  icon: Broken.video_square,
+                ),
+                TrackInfoListTile(
+                  title: lang.PATH,
+                  value: saveLocation,
+                  icon: Broken.location,
+                ),
+                TrackInfoListTile(
+                  title: lang.DESCRIPTION,
+                  value: HtmlParser.parseHTML(info?.description ?? '').text,
+                  icon: Broken.message_text_1,
+                  child: descriptionWidget,
+                ),
+                TrackInfoListTile(
+                  title: lang.TAGS,
+                  value: item.ffmpegTags.entries.map((e) => "- ${e.key}: ${e.value}").join('\n'),
+                  icon: Broken.tag,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final directory = Directory("${AppDirs.YOUTUBE_DOWNLOADS}$groupName");
@@ -119,9 +253,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
       playlistName: '',
       videoYTID: null,
     );
-    // final backupVideoInfo = YoutubeController.inst.getBackupVideoInfo(video.id);
-    // final videoTitle = info?.name ?? backupVideoInfo?.title ?? video.id;
-    // final videoSubtitle = info?.uploaderName ?? backupVideoInfo?.channel;
+
     return NamidaPopupWrapper(
       openOnTap: false,
       openOnLongPress: true,
@@ -309,7 +441,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                           context: context,
                           title: lang.INFO,
                           icon: Broken.info_circle,
-                          onTap: () {},
+                          onTap: () => _showInfoDialog(context, video, info, groupName),
                         ),
                         const Spacer(),
                         Text(

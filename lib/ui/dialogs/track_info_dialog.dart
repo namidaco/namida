@@ -416,7 +416,16 @@ class TrackInfoListTile extends StatelessWidget {
   final String value;
   final IconData icon;
   final bool isComment;
-  const TrackInfoListTile({super.key, required this.title, required this.value, required this.icon, this.isComment = false});
+  final Widget? child;
+
+  const TrackInfoListTile({
+    super.key,
+    required this.title,
+    required this.value,
+    required this.icon,
+    this.isComment = false,
+    this.child,
+  });
 
   void _copyField(BuildContext context) {
     if (value == '') return;
@@ -455,15 +464,16 @@ class TrackInfoListTile extends StatelessWidget {
               style: context.theme.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(220)),
             ),
             const SizedBox(width: 4.0),
-            isComment
-                ? NamidaSelectableAutoLinkText(text: value == '' ? '?' : value)
-                : Text(
-                    value == '' ? '?' : value,
-                    style: context.theme.textTheme.displayMedium?.copyWith(
-                      color: Color.alphaBlend(context.theme.colorScheme.primary.withAlpha(140), context.textTheme.displayMedium!.color!),
-                      fontSize: 13.5.multipliedFontScale,
-                    ),
-                  ),
+            child ??
+                (isComment
+                    ? NamidaSelectableAutoLinkText(text: value == '' ? '?' : value)
+                    : Text(
+                        value == '' ? '?' : value,
+                        style: context.theme.textTheme.displayMedium?.copyWith(
+                          color: Color.alphaBlend(context.theme.colorScheme.primary.withAlpha(140), context.textTheme.displayMedium!.color!),
+                          fontSize: 13.5.multipliedFontScale,
+                        ),
+                      )),
           ],
         ),
       ),
