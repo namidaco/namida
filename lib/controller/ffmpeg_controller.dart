@@ -254,7 +254,7 @@ class NamidaFFMPEG {
           currentFailed++;
         } else {
           final file = await Indexer.inst
-              .extractOneArtwork(
+              .extractTracksArtworks(
                 [filee.path],
                 forceReExtract: true,
                 artworkPaths: {filee.path: cachedThumbnail.path},

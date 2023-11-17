@@ -3,13 +3,13 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
-import 'dart:isolate';
 
 import 'package:faudiotagger/faudiotagger.dart';
 import 'package:faudiotagger/models/faudiomodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:path/path.dart' as p;
 import 'package:system_info2/system_info2.dart';
@@ -119,7 +119,7 @@ class Indexer {
           _artworksMapFullRes[imagePath] = Completer<void>();
           // -- try extracting full res using taggers
           File? file;
-          file = await extractOneArtwork(
+          file = await extractTracksArtworks(
             [info.$1.path],
             albumIdendifiers: {info.$1.path: info.$1.albumIdentifier},
           ).then((value) => value.firstOrNull);
@@ -352,242 +352,231 @@ class Indexer {
     _sortAll();
   }
 
-  /// - Extracts Metadata for given track path
-  /// - Nullable only if [minDur] or [minSize] is used, or if extraction fails.
-  static Future<List<Map<String, dynamic>>> extractOneTrackIsolate(Map parameters) async {
-    final trackPaths = parameters["trackPaths"] as List<String>;
-    final minDur = parameters["minDur"] as int;
-    final minSize = parameters["minSize"] as int;
-    final tryExtractingFromFilename = parameters["tryExtractingFromFilename"] as bool;
-    final faudiomodelsSent = parameters["faudiomodels"] as Map;
-    final artworksSent = parameters["artworks"] as Map;
-    final logsPath = parameters["logsPath"] as String;
+  Future<(TrackExtended?, Uint8List?)> _extracty({
+    required String trackPath,
+    required void Function(String err) onError,
+    FAudioModel? faudiomodelSent,
+    Uint8List? artworkSent,
+    int minDur = 0,
+    int minSize = 0,
+    void Function()? onMinDurTrigger,
+    void Function()? onMinSizeTrigger,
+    required bool tryExtractingFromFilename,
+  }) async {
+    // -- most methods dont throw, except for timeout
+    try {
+      const timeoutDuration = Duration(seconds: 15);
 
-    final sendPort = parameters["sendPort"] as SendPort;
-    final token = parameters["token"] as RootIsolateToken;
-    BackgroundIsolateBinaryMessenger.ensureInitialized(token);
-
-    Future<Map<String, dynamic>> extracty(String trackPath, void Function(String err) onError) async {
-      // -- most methods dont throw, except for timeout
+      // -- returns null early depending on size [byte] or duration [seconds]
+      FileStat? fileStat;
       try {
-        const timeoutDuration = Duration(seconds: 15);
+        fileStat = File(trackPath).statSync();
+        if (minSize != 0 && fileStat.size < minSize) {
+          if (onMinSizeTrigger != null) onMinSizeTrigger();
+          return (null, null);
+        }
+      } catch (_) {}
 
-        // -- returns null early depending on size [byte] or duration [seconds]
-        FileStat? fileStat;
+      late TrackExtended finalTrackExtended;
+
+      FAudioModel? trackInfo = faudiomodelSent;
+      Uint8List? artwork = artworkSent;
+
+      // if one of them wasnt sent, we extract using tagger
+      if (trackInfo == null || artwork == null) {
         try {
-          fileStat = File(trackPath).statSync();
-          if (minSize != 0 && fileStat.size < minSize) {
-            return {
-              'path': _ExtractionErrorMessage.sizeLimit.name,
-              'errorMessage': _ExtractionErrorMessage.sizeLimit.name,
-            };
-          }
-        } catch (_) {}
-
-        late TrackExtended finalTrackExtended;
-
-        FAudioModel? trackInfo;
-        Uint8List? artwork;
-
-        // -- try filling from sent model & artwork
-        final faudiomodelSent = faudiomodelsSent[trackPath];
-        if (faudiomodelSent != null) {
-          try {
-            trackInfo = FAudioModel.fromMap(faudiomodelSent);
-          } catch (_) {}
+          final infoAndArtwork = await _faudiotagger.readAllData(path: trackPath, onError: onError).timeout(timeoutDuration);
+          trackInfo ??= infoAndArtwork;
+          artwork ??= infoAndArtwork?.firstArtwork;
+        } catch (e) {
+          printo(e, isError: true);
         }
-
-        artwork = artworksSent[trackPath];
-        // ----
-
-        // if one of them wasnt sent, we extract using tagger
-        if (trackInfo == null && artwork == null) {
-          try {
-            final infoAndArtwork = await _faudiotagger.readAllData(path: trackPath, onError: onError).timeout(timeoutDuration);
-            trackInfo ??= infoAndArtwork;
-            artwork ??= infoAndArtwork?.firstArtwork;
-          } catch (e) {
-            printo(e, isError: true);
-          }
-        }
-
-        if (trackInfo == null && !tryExtractingFromFilename) {
-          return {
-            'errorMessage': _ExtractionErrorMessage.failed.name,
-            'artwork': artwork,
-          };
-        }
-
-        final initialTrack = TrackExtended(
-          title: UnknownTags.TITLE,
-          originalArtist: UnknownTags.ARTIST,
-          artistsList: [UnknownTags.ARTIST],
-          album: UnknownTags.ALBUM,
-          albumArtist: UnknownTags.ALBUMARTIST,
-          originalGenre: UnknownTags.GENRE,
-          genresList: [UnknownTags.GENRE],
-          composer: UnknownTags.COMPOSER,
-          originalMood: UnknownTags.MOOD,
-          moodList: [UnknownTags.MOOD],
-          trackNo: 0,
-          duration: 0,
-          year: 0,
-          size: fileStat?.size ?? 0,
-          dateAdded: fileStat?.creationDate.millisecondsSinceEpoch ?? 0,
-          dateModified: fileStat?.modified.millisecondsSinceEpoch ?? 0,
-          path: trackPath,
-          comment: '',
-          bitrate: 0,
-          sampleRate: 0,
-          format: '',
-          channels: '',
-          discNo: 0,
-          language: '',
-          lyrics: '',
-        );
-        if (trackInfo != null) {
-          int durationInSeconds = trackInfo.length ?? 0;
-          // if (durationInSeconds == 0) {
-          //   final ap = AudioPlayer();
-          //   final dur = await ap.setFilePath(trackPath).timeout(timeoutDuration);
-          //   durationInSeconds = dur?.inSeconds ?? 0;
-          //   ap.dispose();
-          // }
-          if (minDur != 0 && durationInSeconds != 0 && durationInSeconds < minDur) {
-            return {
-              'errorMessage': _ExtractionErrorMessage.durationLimit.name,
-              'artwork': artwork,
-            };
-          }
-          // ===== Separation is now done from source =====
-          // ===== since settings are not accessible from isolate =====
-          // // -- Split Artists
-          // final artists = splitArtist(
-          //   title: trackInfo.title,
-          //   originalArtist: trackInfo.artist,
-          //   config: ArtistsSplitConfig.settings(),
-          // );
-
-          // // -- Split Genres
-          // final genres = splitGenre(
-          //   trackInfo.genre,
-          //   config: GenresSplitConfig.settings(),
-          // );
-
-          // // -- Split Moods (using same genre splitters)
-          // final moods = splitGenre(
-          //   trackInfo.mood,
-          //   config: GenresSplitConfig.settings(),
-          // );
-
-          String? trimOrNull(String? value) => value == null ? value : value.trimAll();
-          String? nullifyEmpty(String? value) => value == '' ? null : value;
-          String? doMagic(String? value) => nullifyEmpty(trimOrNull(value));
-
-          finalTrackExtended = initialTrack.copyWith(
-            title: doMagic(trackInfo.title),
-            originalArtist: doMagic(trackInfo.artist),
-            // artistsList: artists,
-            album: doMagic(trackInfo.album),
-            albumArtist: doMagic(trackInfo.albumArtist),
-            originalGenre: doMagic(trackInfo.genre),
-            // genresList: genres,
-            originalMood: doMagic(trackInfo.mood),
-            // moodList: moods,
-            composer: doMagic(trackInfo.composer),
-            trackNo: trackInfo.trackNumber.getIntValue(),
-            duration: durationInSeconds,
-            year: trackInfo.year.getIntValue(),
-            comment: trackInfo.comment,
-            bitrate: trackInfo.bitRate,
-            sampleRate: trackInfo.sampleRate,
-            format: trackInfo.format,
-            channels: trackInfo.channels,
-            discNo: trackInfo.discNumber.getIntValue(),
-            language: trackInfo.language,
-            lyrics: trackInfo.lyrics,
-          );
-
-          // ----- if the title || artist weren't found in the tag fields
-          final isTitleEmpty = finalTrackExtended.title == UnknownTags.TITLE;
-          final isArtistEmpty = finalTrackExtended.originalArtist == UnknownTags.ARTIST;
-          if (isTitleEmpty || isArtistEmpty) {
-            final extractedName = getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
-            final newTitle = isTitleEmpty ? extractedName.$1 : null;
-            final newArtists = isArtistEmpty ? [extractedName.$2] : null;
-            finalTrackExtended = finalTrackExtended.copyWith(
-              title: newTitle,
-              originalArtist: newArtists?.first,
-              artistsList: newArtists,
-            );
-          }
-          // ------------------------------------------------------------
-
-          // extractOneArtwork(
-          //   trackPath,
-          //   bytes: artwork,
-          //   forceReExtract: deleteOldArtwork,
-          //   extractColor: extractColor,
-          //   albumIdendifier: finalTrackExtended.albumIdentifier,
-          // );
-        } else {
-          // --- Adding dummy track with info extracted from filename.
-          final titleAndArtist = getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
-          final title = titleAndArtist.$1;
-          final artist = titleAndArtist.$2;
-          finalTrackExtended = initialTrack.copyWith(
-            title: title,
-            originalArtist: artist,
-            artistsList: [artist],
-          );
-          // extractOneArtwork(
-          //   trackPath,
-          //   forceReExtract: deleteOldArtwork,
-          //   extractColor: extractColor,
-          //   albumIdendifier: finalTrackExtended.albumIdentifier,
-          // );
-        }
-
-        final m = finalTrackExtended.toJson();
-        m['errorMessage'] = _ExtractionErrorMessage.success.name;
-        m['artwork'] = artwork;
-        return m;
-      } catch (e) {
-        return {'errorMessage': _ExtractionErrorMessage.timeout.name};
       }
-    }
 
-    if (trackPaths.isNotEmpty) {
-      final logsFile = File(logsPath);
+      if (trackInfo == null && !tryExtractingFromFilename) {
+        return (null, artwork);
+      }
+
+      final initialTrack = TrackExtended(
+        title: UnknownTags.TITLE,
+        originalArtist: UnknownTags.ARTIST,
+        artistsList: [UnknownTags.ARTIST],
+        album: UnknownTags.ALBUM,
+        albumArtist: UnknownTags.ALBUMARTIST,
+        originalGenre: UnknownTags.GENRE,
+        genresList: [UnknownTags.GENRE],
+        composer: UnknownTags.COMPOSER,
+        originalMood: UnknownTags.MOOD,
+        moodList: [UnknownTags.MOOD],
+        trackNo: 0,
+        duration: 0,
+        year: 0,
+        size: fileStat?.size ?? 0,
+        dateAdded: fileStat?.creationDate.millisecondsSinceEpoch ?? 0,
+        dateModified: fileStat?.modified.millisecondsSinceEpoch ?? 0,
+        path: trackPath,
+        comment: '',
+        bitrate: 0,
+        sampleRate: 0,
+        format: '',
+        channels: '',
+        discNo: 0,
+        language: '',
+        lyrics: '',
+      );
+      if (trackInfo != null) {
+        int durationInSeconds = trackInfo.length ?? 0;
+        if (durationInSeconds == 0) {
+          final ap = AudioPlayer();
+          final dur = await ap.setFilePath(trackPath).timeout(timeoutDuration);
+          durationInSeconds = dur?.inSeconds ?? 0;
+          ap.dispose();
+        }
+        if (minDur != 0 && durationInSeconds != 0 && durationInSeconds < minDur) {
+          if (onMinDurTrigger != null) onMinDurTrigger();
+          return (null, artwork);
+        }
+
+        // -- Split Artists
+        final artists = splitArtist(
+          title: trackInfo.title,
+          originalArtist: trackInfo.artist,
+          config: ArtistsSplitConfig.settings(),
+        );
+
+        // -- Split Genres
+        final genres = splitGenre(
+          trackInfo.genre,
+          config: GenresSplitConfig.settings(),
+        );
+
+        // -- Split Moods (using same genre splitters)
+        final moods = splitGenre(
+          trackInfo.mood,
+          config: GenresSplitConfig.settings(),
+        );
+
+        String? trimOrNull(String? value) => value == null ? value : value.trimAll();
+        String? nullifyEmpty(String? value) => value == '' ? null : value;
+        String? doMagic(String? value) => nullifyEmpty(trimOrNull(value));
+
+        finalTrackExtended = initialTrack.copyWith(
+          title: doMagic(trackInfo.title),
+          originalArtist: doMagic(trackInfo.artist),
+          artistsList: artists,
+          album: doMagic(trackInfo.album),
+          albumArtist: doMagic(trackInfo.albumArtist),
+          originalGenre: doMagic(trackInfo.genre),
+          genresList: genres,
+          originalMood: doMagic(trackInfo.mood),
+          moodList: moods,
+          composer: doMagic(trackInfo.composer),
+          trackNo: trackInfo.trackNumber.getIntValue(),
+          duration: durationInSeconds,
+          year: trackInfo.year.getIntValue(),
+          comment: trackInfo.comment,
+          bitrate: trackInfo.bitRate,
+          sampleRate: trackInfo.sampleRate,
+          format: trackInfo.format,
+          channels: trackInfo.channels,
+          discNo: trackInfo.discNumber.getIntValue(),
+          language: trackInfo.language,
+          lyrics: trackInfo.lyrics,
+        );
+
+        // ----- if the title || artist weren't found in the tag fields
+        final isTitleEmpty = finalTrackExtended.title == UnknownTags.TITLE;
+        final isArtistEmpty = finalTrackExtended.originalArtist == UnknownTags.ARTIST;
+        if (isTitleEmpty || isArtistEmpty) {
+          final extractedName = getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
+          final newTitle = isTitleEmpty ? extractedName.$1 : null;
+          final newArtists = isArtistEmpty ? [extractedName.$2] : null;
+          finalTrackExtended = finalTrackExtended.copyWith(
+            title: newTitle,
+            originalArtist: newArtists?.first,
+            artistsList: newArtists,
+          );
+        }
+        // ------------------------------------------------------------
+
+        // extractTracksArtworks(
+        //   trackPath,
+        //   bytes: artwork,
+        //   forceReExtract: deleteOldArtwork,
+        //   extractColor: extractColor,
+        //   albumIdendifier: finalTrackExtended.albumIdentifier,
+        // );
+      } else {
+        // --- Adding dummy track with info extracted from filename.
+        final titleAndArtist = getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
+        final title = titleAndArtist.$1;
+        final artist = titleAndArtist.$2;
+        finalTrackExtended = initialTrack.copyWith(
+          title: title,
+          originalArtist: artist,
+          artistsList: [artist],
+        );
+        // extractTracksArtworks(
+        //   trackPath,
+        //   forceReExtract: deleteOldArtwork,
+        //   extractColor: extractColor,
+        //   albumIdendifier: finalTrackExtended.albumIdentifier,
+        // );
+      }
+
+      return (finalTrackExtended, artwork);
+    } catch (e) {
+      onError(e.toString());
+      return (null, null);
+    }
+  }
+
+  Future<List<(String, TrackExtended?, Uint8List?)>> _extractySomeTracks({
+    required List<String> paths,
+    Map<String, FAudioModel?> audiomodels = const {},
+    Map<String, Uint8List?> artworks = const {},
+    int minDur = 0,
+    int minSize = 0,
+    void Function()? onMinDurTrigger,
+    void Function()? onMinSizeTrigger,
+    required bool tryExtractingFromFilename,
+  }) async {
+    final all = <(String, TrackExtended?, Uint8List?)>[];
+    if (paths.isNotEmpty) {
+      final logsFile = File(AppPaths.LOGS_TAGGER);
       await logsFile.create();
       final sink = logsFile.openWrite(mode: FileMode.append);
 
-      final all = <Map<String, dynamic>>[];
       final completer = Completer<void>();
       int extractedNumber = 0;
-      for (final trackPath in trackPaths) {
-        extracty(
-          trackPath,
-          (err) => sink.write('Error Extracting ["$trackPath"]: $err\n\n\n'),
+      for (final trackPath in paths) {
+        _extracty(
+          trackPath: trackPath,
+          onError: (err) => sink.write('Error Extracting ["$trackPath"]: $err\n\n\n'),
+          faudiomodelSent: audiomodels[trackPath],
+          artworkSent: artworks[trackPath],
+          tryExtractingFromFilename: tryExtractingFromFilename,
+          minDur: minDur,
+          minSize: minSize,
+          onMinDurTrigger: onMinDurTrigger,
+          onMinSizeTrigger: onMinSizeTrigger,
         ).then((r) {
-          sendPort.send(trackPath);
-          r['path'] = trackPath;
-          all.add(r);
+          currentTrackPathBeingExtracted.value = trackPath;
+          all.add((trackPath, r.$1, r.$2));
           extractedNumber++;
-          if (extractedNumber == trackPaths.length) completer.completeIfWasnt();
+          if (extractedNumber == paths.length) completer.completeIfWasnt();
         });
       }
       await completer.future;
       await sink.flush();
       await sink.close();
-      return all;
     }
-    return [];
+    return all;
   }
 
   /// - Extracts Metadata for given track path
   /// - Nullable only if [minDur] or [minSize] is used, or if extraction fails.
-  Future<Map<String, TrackExtended>> extractOneTrack({
+  Future<Map<String, TrackExtended>> extractTracksInfo({
     required List<String> tracksPath,
     int minDur = 0,
     int minSize = 0,
@@ -598,72 +587,20 @@ class Indexer {
     bool tryExtractingFromFilename = true,
     bool extractColor = false,
   }) async {
-    final ReceivePort receivePort = ReceivePort();
-    receivePort.listen((message) {
-      currentTrackPathBeingExtracted.value = message as String? ?? '';
-    });
-
-    Future<List<(String, TrackExtended?, Uint8List?)>> executeOnThread({
-      required List<String> paths,
-      Map<String, FAudioModel?> audiomodels = const {},
-      Map<String, Uint8List?> artworks = const {},
-    }) async {
-      final results = await extractOneTrackIsolate.thready({
-        "token": RootIsolateToken.instance,
-        "trackPaths": paths,
-        "minDur": minDur,
-        "minSize": minSize,
-        "tryExtractingFromFilename": tryExtractingFromFilename,
-        "faudiomodels": audiomodels.isEmpty ? {} : {for (final m in audiomodels.entries) m.key: m.value?.toMap()},
-        "artworks": artworks,
-        "sendPort": receivePort.sendPort,
-        "logsPath": AppPaths.LOGS_TAGGER,
-      });
-      final all = <(String, TrackExtended?, Uint8List?)>[];
-      for (final res in results) {
-        final path = res['path'] as String;
-        final artwork = res["artwork"] as Uint8List?;
-        final code = _ExtractionErrorMessage.values.getEnum(res['errorMessage'] as String);
-        TrackExtended? finalTrackExtended;
-        switch (code) {
-          case _ExtractionErrorMessage.durationLimit:
-            if (onMinDurTrigger != null) onMinDurTrigger();
-            break;
-          case _ExtractionErrorMessage.sizeLimit:
-            if (onMinSizeTrigger != null) onMinSizeTrigger();
-            break;
-          case _ExtractionErrorMessage.timeout || _ExtractionErrorMessage.failed:
-            printy('Error or timeout occured while extracting $path');
-            all.add((path, null, artwork));
-
-            break;
-          case _ExtractionErrorMessage.success:
-            {
-              try {
-                finalTrackExtended = TrackExtended.fromJson(
-                  res,
-                  artistsSplitConfig: ArtistsSplitConfig.settings(),
-                  genresSplitConfig: GenresSplitConfig.settings(),
-                );
-              } catch (_) {}
-            }
-            break;
-
-          default:
-            null;
-        }
-        all.add((path, finalTrackExtended, artwork));
-      }
-      return all;
-    }
-
     final success = <String, TrackExtended>{};
     final failed = <String>[];
     final artworks = <String, Uint8List?>{};
-    final results = await executeOnThread(paths: tracksPath);
+    final results = await _extractySomeTracks(
+      paths: tracksPath,
+      tryExtractingFromFilename: tryExtractingFromFilename,
+      minDur: minDur,
+      minSize: minSize,
+      onMinDurTrigger: onMinDurTrigger,
+      onMinSizeTrigger: onMinSizeTrigger,
+    );
     for (final r in results) {
       final trext = r.$2;
-      if (trext != null && trext.duration > 0) {
+      if (trext != null && trext.duration >= 0) {
         success[r.$1] = trext;
       } else {
         failed.add(r.$1);
@@ -688,10 +625,15 @@ class Indexer {
 
     await sink.flush();
     await sink.close();
-    final resultsFFMPEG = await executeOnThread(
+    final resultsFFMPEG = await _extractySomeTracks(
       paths: failed,
       audiomodels: ffmpegModel,
       artworks: artworks,
+      tryExtractingFromFilename: tryExtractingFromFilename,
+      minDur: minDur,
+      minSize: minSize,
+      onMinDurTrigger: onMinDurTrigger,
+      onMinSizeTrigger: onMinSizeTrigger,
     );
     for (final r in resultsFFMPEG) {
       if (r.$2 != null) {
@@ -704,7 +646,7 @@ class Indexer {
 
     _addTracksToLists(success.values, checkForDuplicates);
 
-    extractOneArtwork(
+    extractTracksArtworks(
       tracksPath,
       artworks: artworks,
       forceReExtract: deleteOldArtwork,
@@ -735,7 +677,7 @@ class Indexer {
   /// - `final art = bytes ?? await _faudiotagger.readArtwork(path: pathOfAudio);`
   /// - Sending [artworkPath] that points towards an image file will just copy it to [AppDirs.ARTWORKS]
   /// - Returns the Artwork Files created.
-  Future<List<File?>> extractOneArtwork(
+  Future<List<File?>> extractTracksArtworks(
     List<String> pathOfAudios, {
     Map<String, Uint8List?> artworks = const {},
     Map<String, String> artworkPaths = const {},
@@ -755,7 +697,7 @@ class Indexer {
       "initialSize": artworksSizeInStorage.value,
       "token": RootIsolateToken.instance,
     };
-    final resAndStats = await extractOneArtworkIsolate.thready(parameters);
+    final resAndStats = await extractTracksArtworksIsolate.thready(parameters);
     final artworkFiles = <File?>[];
 
     final res = resAndStats.$1;
@@ -790,7 +732,7 @@ class Indexer {
     return artworkFiles;
   }
 
-  static Future<(List<(String, File?)>, (int, int))> extractOneArtworkIsolate(Map parameters) async {
+  static Future<(List<(String, File?)>, (int, int))> extractTracksArtworksIsolate(Map parameters) async {
     final dirPath = parameters["dirPath"] as String;
     final pathOfAudios = parameters["pathOfAudios"] as List<String>;
     final artworks = parameters["artworks"] as Map<String, Uint8List?>;
@@ -893,7 +835,7 @@ class Indexer {
       if (tracksExisting[track] == false) {
         onProgress(false);
       } else {
-        final tr = await extractOneTrack(
+        final tr = await extractTracksInfo(
           tracksPath: [track.path],
           tryExtractingFromFilename: tryExtractingFromFilename,
           extractColor: true,
@@ -930,7 +872,7 @@ class Indexer {
       _currentFileNamesMap[nt.filename] = true;
 
       if (newArtworkPath != '') {
-        await extractOneArtwork(
+        await extractTracksArtworks(
           [ot.path],
           forceReExtract: true,
           artworkPaths: {ot.path: newArtworkPath},
@@ -1020,9 +962,6 @@ class Indexer {
           // breaks the loop if another indexing session has been started
           if (_cancelableIndexingCompleter[cancelTokenTime]?.isCompleted == true) break;
 
-          printy(trackPath);
-          // currentTrackPathBeingExtracted.value = trackPath;
-
           /// skip duplicated tracks according to filename
           if (prevDuplicated) {
             if (_currentFileNamesMap.keyExists(trackPath.getFilename)) {
@@ -1032,7 +971,7 @@ class Indexer {
           }
 
           if (chunkExtractList.isNotEmpty && chunkExtractList.length % chunkSize == 0) {
-            await extractOneTrack(
+            await extractTracksInfo(
               tracksPath: chunkExtractList,
               minDur: minDur,
               minSize: minSize,
@@ -1046,7 +985,7 @@ class Indexer {
           chunkExtractList.add(trackPath);
         }
         // -- if there were any items left (length < chunkSize)
-        await extractOneTrack(
+        await extractTracksInfo(
           tracksPath: chunkExtractList,
           minDur: minDur,
           minSize: minSize,
@@ -1543,12 +1482,4 @@ class _SplitArtistGenreConfig {
     required this.artistsConfig,
     required this.genresConfig,
   });
-}
-
-enum _ExtractionErrorMessage {
-  sizeLimit,
-  durationLimit,
-  timeout,
-  failed,
-  success,
 }

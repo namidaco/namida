@@ -57,7 +57,7 @@ class EditDeleteController {
     final saveDir = await Directory(AppDirs.SAVED_ARTWORKS).create();
     final saveDirPath = saveDir.path;
     final newPath = "$saveDirPath${Platform.pathSeparator}${track.filenameWOExt}.png";
-    final imgFiles = await Indexer.inst.extractOneArtwork(
+    final imgFiles = await Indexer.inst.extractTracksArtworks(
       [track.path],
       albumIdendifiers: {track.path: track.albumIdentifier},
     );

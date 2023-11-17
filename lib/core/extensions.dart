@@ -252,10 +252,10 @@ extension ConvertPathToTrack on String {
   Future<TrackExtended?> removeTrackThenExtract({bool onlyIfNewFileExists = true}) async {
     if (onlyIfNewFileExists && !await File(this).exists()) return null;
     Indexer.inst.allTracksMappedByPath.remove(Track(this));
-    return (await Indexer.inst.extractOneTrack(tracksPath: [this]))[this];
+    return (await Indexer.inst.extractTracksInfo(tracksPath: [this]))[this];
   }
 
-  Future<TrackExtended?> toTrackExtOrExtract() async => toTrackExtOrNull() ?? (await Indexer.inst.extractOneTrack(tracksPath: [this]))[this];
+  Future<TrackExtended?> toTrackExtOrExtract() async => toTrackExtOrNull() ?? (await Indexer.inst.extractTracksInfo(tracksPath: [this]))[this];
   Track toTrack() => Track(this);
   Track? toTrackOrNull() => Indexer.inst.allTracksMappedByPath[toTrack()] == null ? null : toTrack();
   TrackExtended? toTrackExtOrNull() => Indexer.inst.allTracksMappedByPath[Track(this)];
