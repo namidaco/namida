@@ -102,7 +102,10 @@ class YoutubeController {
   /// {id: <filename, int>{}}
   final currentSpeedsInByte = <String, RxMap<String, int>>{}.obs;
 
+  /// {id: <filename, bool>{}}
   final isDownloading = <String, RxMap<String, bool>>{}.obs;
+
+  /// {id: <filename, bool>{}}
   final isFetchingData = <String, RxMap<String, bool>>{}.obs;
 
   /// {groupName: <filename, Dio>{}}
@@ -637,12 +640,35 @@ class YoutubeController {
     );
   }
 
+  void resumeDownloadTasks({required String groupName}) {
+    final mapEntry = youtubeDownloadTasksMap[groupName];
+    if (mapEntry != null) {
+      YoutubeController.inst.downloadYoutubeVideos(
+        useCachedVersionsIfAvailable: true,
+        autoExtractTitleAndArtist: settings.ytAutoExtractVideoTagsFromInfo.value,
+        keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
+        downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
+        itemsConfig: mapEntry.values.toList(),
+        groupName: groupName,
+      );
+    }
+  }
+
   void pauseDownloadTask({
     required List<YoutubeItemDownloadConfig> itemsConfig,
     required String groupName,
     List<String> videosIds = const [],
+    bool allInGroupName = false,
   }) {
-    if (videosIds.isNotEmpty) {
+    if (allInGroupName) {
+      final mapEntry = _downloadClientsMap[groupName];
+      if (mapEntry != null) {
+        for (final e in mapEntry.values) {
+          e.close(force: true);
+        }
+        _downloadClientsMap.remove(groupName);
+      }
+    } else if (videosIds.isNotEmpty) {
       _matchIDsForItemConfig(
         videosIds: videosIds,
         onMatch: (groupName, config) {
@@ -721,7 +747,7 @@ class YoutubeController {
       isFetchingData[videoID]![config.filename] = true;
 
       // -- we are using url cuz we remove it when reading from json
-      if (config.fetchMissingStreams && config.videoStream?.url == null) {
+      if ((config.fetchMissingStreams || config.prefferedVideoQualityID != null) && config.videoStream?.url == null) {
         getAvailableVideoStreamsOnly(videoID).then((availableVideos) {
           _sortVideoStreams(availableVideos);
           if (config.prefferedVideoQualityID != null) {
@@ -733,8 +759,7 @@ class YoutubeController {
       } else {
         completerV.complete();
       }
-
-      if (config.fetchMissingStreams && config.audioStream?.url == null) {
+      if ((config.fetchMissingStreams || config.prefferedAudioQualityID != null) && config.audioStream?.url == null) {
         getAvailableAudioOnlyStreams(videoID).then((audios) {
           _sortAudioStreams(audios);
           if (config.prefferedAudioQualityID != null) {
@@ -1091,7 +1116,7 @@ class YoutubeController {
     return File(destinationFilePath);
   }
 
-  Dio? downloadClient;
+  Dio? _downloadClient;
   Future<NamidaVideo?> downloadYoutubeVideo({
     required String id,
     VideoStream? stream,
@@ -1140,8 +1165,8 @@ class YoutubeController {
       if (initialFileSizeOnDisk < erabaretaStreamSizeInBytes) {
         downloadStartRange = initialFileSizeOnDisk;
 
-        downloadClient = Dio(BaseOptions(headers: {HttpHeaders.rangeHeader: 'bytes=$downloadStartRange-'}));
-        final downloadStream = await downloadClient!
+        _downloadClient = Dio(BaseOptions(headers: {HttpHeaders.rangeHeader: 'bytes=$downloadStartRange-'}));
+        final downloadStream = await _downloadClient!
             .get<ResponseBody>(
               erabaretaStream.url ?? '',
               options: Options(responseType: ResponseType.stream),
@@ -1188,8 +1213,8 @@ class YoutubeController {
 
   void dispose({bool closeCurrentDownloadClient = true, bool closeAllClients = false}) {
     if (closeCurrentDownloadClient) {
-      downloadClient?.close(force: true);
-      downloadClient = null;
+      _downloadClient?.close(force: true);
+      _downloadClient = null;
     }
 
     if (closeAllClients) {

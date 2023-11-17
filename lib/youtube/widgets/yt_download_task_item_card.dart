@@ -194,7 +194,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                 final downloadInfoText = " • ${cp.fileSizeFormatted}/${ctp.fileSizeFormatted}$speedText";
                 final canDisplayPercentage = audioPerc != null || videoPerc != null;
 
-                final fileExists = downloadedFile.existsSync();
+                final fileExists = YoutubeController.inst.downloadedFilesMap[groupName]?[item.filename] != null;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

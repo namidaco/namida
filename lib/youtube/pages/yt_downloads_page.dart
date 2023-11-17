@@ -3,6 +3,7 @@ import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/widgets/yt_download_task_item_card.dart';
@@ -26,6 +27,37 @@ class YTDownloadsPage extends StatelessWidget {
                   return NamidaExpansionTile(
                     initiallyExpanded: true,
                     titleText: groupName,
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton.filledTonal(
+                          padding: EdgeInsets.zero,
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () {
+                            YoutubeController.inst.resumeDownloadTasks(groupName: groupName);
+                          },
+                          icon: const Icon(Broken.play, size: 18.0),
+                        ),
+                        IconButton.filledTonal(
+                          padding: EdgeInsets.zero,
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () {
+                            YoutubeController.inst.pauseDownloadTask(
+                              itemsConfig: [],
+                              groupName: groupName,
+                              allInGroupName: true,
+                            );
+                          },
+                          icon: const Icon(Broken.pause, size: 18.0),
+                        ),
+                        const SizedBox(width: 4.0),
+                        const Icon(
+                          Broken.arrow_down_2,
+                          size: 20.0,
+                        ),
+                        const SizedBox(width: 4.0),
+                      ],
+                    ),
                     leading: NamidaInkWell(
                       borderRadius: 8.0,
                       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),

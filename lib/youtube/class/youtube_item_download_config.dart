@@ -33,7 +33,7 @@ class YoutubeItemDownloadConfig {
       audioStream: map['audioStream'] == null ? null : AudioOnlyStream.fromMap(map['audioStream']),
       prefferedVideoQualityID: map['prefferedVideoQualityID'],
       prefferedAudioQualityID: map['prefferedAudioQualityID'],
-      fetchMissingStreams: map['fetchMissingStreams'],
+      fetchMissingStreams: map['fetchMissingStreams'] ?? true,
     );
   }
 
