@@ -9,6 +9,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
+import 'package:history_manager/history_manager.dart';
 import 'package:known_extents_list_view_builder/known_extents_reorderable_list_view_builder.dart';
 import 'package:known_extents_list_view_builder/known_extents_sliver_reorderable_list.dart';
 import 'package:like_button/like_button.dart';
@@ -19,7 +20,6 @@ import 'package:wheel_slider/wheel_slider.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -2356,8 +2356,9 @@ class NamidaInkWell extends StatelessWidget {
   }
 }
 
-class HistoryJumpToDayIcon extends StatelessWidget {
-  const HistoryJumpToDayIcon({super.key});
+class HistoryJumpToDayIcon<T extends ItemWithDate, E> extends StatelessWidget {
+  final HistoryManager<T, E> controller;
+  const HistoryJumpToDayIcon({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -2366,6 +2367,7 @@ class HistoryJumpToDayIcon extends StatelessWidget {
       tooltip: lang.JUMP_TO_DAY,
       onPressed: () {
         showCalendarDialog(
+          historyController: controller,
           title: lang.JUMP_TO_DAY,
           buttonText: lang.JUMP,
           calendarType: CalendarDatePicker2Type.single,
@@ -2373,12 +2375,12 @@ class HistoryJumpToDayIcon extends StatelessWidget {
           onGenerate: (dates) {
             NamidaNavigator.inst.closeDialog();
             final dayToScrollTo = dates.firstOrNull?.toDaysSince1970() ?? 0;
-            final days = HistoryController.inst.historyDays.toList();
+            final days = controller.historyDays.toList();
             days.removeWhere((element) => element <= dayToScrollTo);
-            final itemExtents = HistoryController.inst.allItemsExtentsHistory;
+            final itemExtents = controller.allItemsExtentsHistory;
             double totalScrollOffset = 0;
             days.loop((e, index) => totalScrollOffset += itemExtents[index]);
-            HistoryController.inst.scrollController.jumpTo(totalScrollOffset + 100.0);
+            controller.scrollController.jumpTo(totalScrollOffset + 100.0);
           },
         );
       },

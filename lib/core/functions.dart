@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:history_manager/history_manager.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
@@ -286,16 +287,19 @@ class NamidaOnTaps {
   }
 }
 
-Future<void> showCalendarDialog({
+Future<void> showCalendarDialog<T extends ItemWithDate, E>({
   required String title,
   required String buttonText,
   CalendarDatePicker2Type calendarType = CalendarDatePicker2Type.range,
   DateTime? firstDate,
   DateTime? lastDate,
   required bool useHistoryDates,
+  HistoryManager<T, E>? historyController,
   void Function(List<DateTime> dates)? onChanged,
   required void Function(List<DateTime> dates) onGenerate,
 }) async {
+  historyController ??= HistoryController.inst as HistoryManager<T, E>;
+
   final dates = <DateTime>[];
 
   final RxInt daysNumber = 0.obs;
@@ -359,8 +363,8 @@ Future<void> showCalendarDialog({
         },
         config: CalendarDatePicker2Config(
           calendarType: calendarType,
-          firstDate: useHistoryDates ? HistoryController.inst.oldestTrack?.dateAdded.milliSecondsSinceEpoch : firstDate,
-          lastDate: useHistoryDates ? HistoryController.inst.newestTrack?.dateAdded.milliSecondsSinceEpoch : lastDate,
+          firstDate: useHistoryDates ? historyController.oldestTrack?.dateTimeAdded : firstDate,
+          lastDate: useHistoryDates ? historyController.newestTrack?.dateTimeAdded : lastDate,
         ),
         value: const [],
       ),

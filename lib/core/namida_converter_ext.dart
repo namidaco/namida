@@ -61,6 +61,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/stats.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/pages/youtube_home_view.dart';
@@ -933,7 +934,10 @@ extension RouteUtils on NamidaRoute {
         shouldShow:
             route == RouteType.SUBPAGE_albumTracks || route == RouteType.SUBPAGE_artistTracks || route == RouteType.SUBPAGE_genreTracks || route == RouteType.SUBPAGE_queueTracks,
       ),
-      getAnimatedCrossFade(child: const HistoryJumpToDayIcon(), shouldShow: route == RouteType.SUBPAGE_historyTracks),
+
+      getAnimatedCrossFade(child: HistoryJumpToDayIcon(controller: HistoryController.inst), shouldShow: route == RouteType.SUBPAGE_historyTracks),
+
+      getAnimatedCrossFade(child: HistoryJumpToDayIcon(controller: YoutubeHistoryController.inst), shouldShow: route == RouteType.YOUTUBE_HISTORY_SUBPAGE),
 
       // ---- Playlist Tracks ----
       getAnimatedCrossFade(
