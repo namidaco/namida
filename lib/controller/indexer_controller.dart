@@ -165,23 +165,17 @@ class Indexer {
     }
   }
 
-  final _cancelableIndexingCompleter = <DateTime, Completer<void>>{};
-
   Future<void> refreshLibraryAndCheckForDiff({Set<String>? currentFiles, bool forceReIndex = false, bool? useMediaStore}) async {
-    _cancelableIndexingCompleter.entries.lastOrNull?.value.complete(); // canceling previous indexing sessions
+    if (isIndexing.value) return snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
 
     isIndexing.value = true;
     useMediaStore ??= _defaultUseMediaStore;
-
-    final indexingTokenTime = DateTime.now();
-    _cancelableIndexingCompleter[indexingTokenTime] = Completer<void>();
 
     if (forceReIndex || tracksInfoList.isEmpty) {
       await _fetchAllSongsAndWriteToFile(
         audioFiles: {},
         deletedPaths: {},
         forceReIndex: true,
-        cancelTokenTime: indexingTokenTime,
         useMediaStore: useMediaStore,
       );
     } else {
@@ -190,7 +184,6 @@ class Indexer {
         audioFiles: getNewFoundPaths(currentFiles),
         deletedPaths: getDeletedPaths(currentFiles),
         forceReIndex: false,
-        cancelTokenTime: indexingTokenTime,
         useMediaStore: useMediaStore,
       );
     }
@@ -930,7 +923,6 @@ class Indexer {
     required Set<String> audioFiles,
     required Set<String> deletedPaths,
     required bool forceReIndex,
-    required DateTime cancelTokenTime,
     required bool useMediaStore,
   }) async {
     if (forceReIndex) {
@@ -959,9 +951,6 @@ class Indexer {
       if (audioFiles.isNotEmpty) {
         // -- Extracting All Metadata
         for (final trackPath in audioFiles) {
-          // breaks the loop if another indexing session has been started
-          if (_cancelableIndexingCompleter[cancelTokenTime]?.isCompleted == true) break;
-
           /// skip duplicated tracks according to filename
           if (prevDuplicated) {
             if (_currentFileNamesMap.keyExists(trackPath.getFilename)) {
