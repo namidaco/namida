@@ -253,6 +253,109 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     );
   }
 
+  Future<bool> _confirmOperation({
+    required BuildContext context,
+    required String operationTitle,
+    String confirmMessage = '',
+  }) async {
+    bool confirmed = false;
+    final item = videos[index];
+    final itemDirectoryPath = "${AppDirs.YOUTUBE_DOWNLOADS}$groupName";
+    final file = File("$itemDirectoryPath/${item.filename}");
+
+    Widget getRow({required IconData icon, required List<String> texts}) {
+      return Row(
+        children: [
+          Icon(icon, size: 20.0),
+          const SizedBox(width: 6.0),
+          Expanded(
+            child: Text(
+              texts.where((element) => element != '').join(' • '),
+              style: context.textTheme.displaySmall,
+            ),
+          ),
+        ],
+      );
+    }
+
+    final videoStream = item.videoStream;
+    final audioStream = item.audioStream;
+    await NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.WARNING,
+        normalTitleStyle: true,
+        isWarning: true,
+        actions: [
+          const CancelButton(),
+          const SizedBox(width: 4.0),
+          NamidaButton(
+            text: (confirmMessage != '' ? confirmMessage : operationTitle).toUpperCase(),
+            onPressed: () {
+              confirmed = true;
+              NamidaNavigator.inst.closeDialog();
+            },
+          ),
+        ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 12.0),
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(text: "$operationTitle: ", style: context.textTheme.displayLarge),
+                    TextSpan(
+                      text: item.filename,
+                      style: context.textTheme.displayMedium,
+                    ),
+                    TextSpan(text: " ?", style: context.textTheme.displayLarge),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24.0),
+              getRow(icon: Broken.location, texts: [itemDirectoryPath]),
+              const SizedBox(height: 8.0),
+              if (file.existsSync()) ...[
+                getRow(
+                  icon: Broken.document_code,
+                  texts: [
+                    file.existsSync() ? file.lengthSync().fileSizeFormatted : '',
+                    (item.fileDate ?? file.statSync().creationDate).millisecondsSinceEpoch.dateAndClockFormattedOriginal,
+                  ],
+                ),
+                const SizedBox(height: 8.0),
+              ],
+              if (videoStream != null) ...[
+                getRow(
+                  icon: Broken.video_square,
+                  texts: [
+                    videoStream.sizeInBytes?.fileSizeFormatted ?? '',
+                    videoStream.bitrateText,
+                    videoStream.resolution ?? '',
+                  ],
+                ),
+                const SizedBox(height: 8.0),
+              ],
+              if (audioStream != null) ...[
+                getRow(
+                  icon: Broken.audio_square,
+                  texts: [
+                    audioStream.sizeInBytes?.fileSizeFormatted ?? '',
+                    audioStream.bitrateText,
+                  ],
+                ),
+                const SizedBox(height: 8.0),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+    return confirmed;
+  }
+
   @override
   Widget build(BuildContext context) {
     final directory = Directory("${AppDirs.YOUTUBE_DOWNLOADS}$groupName");
@@ -262,14 +365,13 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     const thumbHeight = 24.0 * 2.6;
     const thumbWidth = thumbHeight * 16 / 9;
 
-    final video = videos[index];
-    final info = YoutubeController.inst.fetchVideoDetailsFromCacheSync(video.id);
+    final info = YoutubeController.inst.fetchVideoDetailsFromCacheSync(item.id);
     final duration = info?.duration?.inSeconds.secondsLabel;
     final menuItems = YTUtils.getVideoCardMenuItems(
-      videoId: video.id,
+      videoId: item.id,
       url: info?.url,
       playlistID: null,
-      idsNamesLookup: {video.id: info?.name},
+      idsNamesLookup: {item.id: info?.name},
       playlistName: '',
       videoYTID: null,
     );
@@ -294,12 +396,12 @@ class YTDownloadTaskItemCard extends StatelessWidget {
           children: [
             const SizedBox(width: 4.0),
             YoutubeThumbnail(
-              key: Key(video.id),
+              key: Key(item.id),
               borderRadius: 8.0,
               isImportantInCache: true,
               width: thumbWidth,
               height: thumbHeight,
-              videoId: video.id,
+              videoId: item.id,
               onTopWidgets: [
                 if (duration != null)
                   Positioned(
@@ -420,20 +522,26 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                     context: context,
                                     title: lang.PAUSE,
                                     icon: Broken.pause,
-                                    onTap: () => _onPauseDownloadTap([video], isDownloading, context),
+                                    onTap: () => _onPauseDownloadTap([item], isDownloading, context),
                                   )
                                 : fileExists
                                     ? _getChip(
                                         context: context,
                                         title: lang.RESTART,
                                         icon: Broken.refresh,
-                                        onTap: () => _onPauseDownloadTap([video], isDownloading, context),
-                                      )
+                                        onTap: () async {
+                                          final confirmed = await _confirmOperation(
+                                            context: context,
+                                            operationTitle: lang.RESTART,
+                                          );
+                                          // ignore: use_build_context_synchronously
+                                          if (confirmed) _onPauseDownloadTap([item], isDownloading, context);
+                                        })
                                     : _getChip(
                                         context: context,
                                         title: lang.RESUME,
                                         icon: Broken.play,
-                                        onTap: () => _onPauseDownloadTap([video], isDownloading, context),
+                                        onTap: () => _onPauseDownloadTap([item], isDownloading, context),
                                       );
                           },
                         ),
@@ -443,13 +551,26 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                 title: lang.DELETE,
                                 icon: Broken.trash,
                                 betweenBrackets: fileExists ? downloadedFile.lengthSync().fileSizeFormatted : '',
-                                onTap: () => _onCancelDeleteDownloadTap([video]),
+                                onTap: () async {
+                                  final confirmed = await _confirmOperation(
+                                    context: context,
+                                    operationTitle: lang.DELETE,
+                                  );
+                                  if (confirmed) _onCancelDeleteDownloadTap([item]);
+                                },
                               )
                             : _getChip(
                                 context: context,
                                 title: lang.CANCEL,
                                 icon: Broken.close_circle,
-                                onTap: () => _onCancelDeleteDownloadTap([video]),
+                                onTap: () async {
+                                  final confirmed = await _confirmOperation(
+                                    context: context,
+                                    operationTitle: lang.CANCEL,
+                                    confirmMessage: lang.REMOVE,
+                                  );
+                                  if (confirmed) _onCancelDeleteDownloadTap([item]);
+                                },
                               ),
                         _getChip(
                           context: context,
@@ -461,7 +582,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                           context: context,
                           title: lang.INFO,
                           icon: Broken.info_circle,
-                          onTap: () => _showInfoDialog(context, video, info, groupName),
+                          onTap: () => _showInfoDialog(context, item, info, groupName),
                         ),
                         const Spacer(),
                         Text(
