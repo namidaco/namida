@@ -273,7 +273,7 @@ class NamidaFFMPEG {
         );
       }
     }
-    dio.close();
+    dio.close(force: true);
     currentOperations[OperationType.ytdlpThumbnailFix]!.value.currentFilePath = null;
   }
 

@@ -2172,7 +2172,7 @@ class _TrackImage extends StatelessWidget {
     return ArtworkWidget(
       key: Key(track.path),
       path: track.pathToImage,
-      thumbnailSize: Get.width,
+      thumbnailSize: context.width,
       compressed: false,
       borderRadius: 6.0 + 10.0 * cp,
       forceSquared: settings.forceSquaredTrackThumbnail.value,

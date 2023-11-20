@@ -143,6 +143,7 @@ class CurrentColor {
       NamidaColor? namidaColor;
 
       final trColors = await getTrackColors(track.track);
+      if (track.track != Player.inst.nowPlayingTrack) return; // -- check current track
       _namidaColorMiniplayer.value = trColors.color;
 
       if (settings.autoColor.value) {

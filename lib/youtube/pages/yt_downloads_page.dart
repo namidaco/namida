@@ -121,7 +121,7 @@ class YTDownloadsPage extends StatelessWidget {
           Obx(
             () => _isOnGoingSelected.value != null
                 ? Padding(
-                    padding: const EdgeInsets.only(bottom: 6.0),
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
                     child: Row(
                       children: [
                         const SizedBox(width: 24.0),
@@ -129,29 +129,31 @@ class YTDownloadsPage extends StatelessWidget {
                           YoutubeController.inst.youtubeDownloadTasksTempList.length.displayVideoKeyword,
                           style: context.textTheme.displayMedium?.copyWith(fontSize: 20.0.multipliedFontScale),
                         ),
-                        const Spacer(),
-                        IconButton.filledTonal(
-                          padding: EdgeInsets.zero,
-                          onPressed: () {
-                            YoutubeController.inst.youtubeDownloadTasksTempList.loop((e, index) {
-                              YoutubeController.inst.resumeDownloadTasks(groupName: e.$1);
-                            });
-                          },
-                          icon: const Icon(Broken.play, size: 20.0),
-                        ),
-                        IconButton.filledTonal(
-                          padding: EdgeInsets.zero,
-                          onPressed: () {
-                            YoutubeController.inst.youtubeDownloadTasksTempList.loop((e, index) {
-                              YoutubeController.inst.pauseDownloadTask(
-                                itemsConfig: [],
-                                groupName: e.$1,
-                                allInGroupName: true,
-                              );
-                            });
-                          },
-                          icon: const Icon(Broken.pause, size: 20.0),
-                        ),
+                        if (_isOnGoingSelected.value == true) ...[
+                          const Spacer(),
+                          NamidaIconButton(
+                            icon: Broken.play,
+                            iconSize: 24.0,
+                            onPressed: () {
+                              YoutubeController.inst.youtubeDownloadTasksTempList.loop((e, index) {
+                                YoutubeController.inst.resumeDownloadTasks(groupName: e.$1);
+                              });
+                            },
+                          ),
+                          NamidaIconButton(
+                            icon: Broken.pause,
+                            iconSize: 24.0,
+                            onPressed: () {
+                              YoutubeController.inst.youtubeDownloadTasksTempList.loop((e, index) {
+                                YoutubeController.inst.pauseDownloadTask(
+                                  itemsConfig: [],
+                                  groupName: e.$1,
+                                  allInGroupName: true,
+                                );
+                              });
+                            },
+                          ),
+                        ],
                         const SizedBox(width: 12.0),
                       ],
                     ),

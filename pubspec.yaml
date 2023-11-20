@@ -52,7 +52,7 @@ dependencies:
   history_manager:
     git:
       url: https://github.com/namidaco/history_manager
-      ref: 05eca4cb4009bc49d16ec5af2e5973cf55596239
+      ref: 0484c632d26d768e85003480bce316b28d3c2933
   flutter_html:
     git:
       url: https://github.com/zhourengui/flutter_html
@@ -69,9 +69,9 @@ dependencies:
   # ---- Path/File Providers ----
   path_provider: ^2.0.14
   external_path: ^1.0.3
-  file_picker: ^5.3.3
+  file_picker: "6.1.1"
 
-  # ----Audio Indexing & Playback ----
+  # ---- Audio Indexing & Playback ----
   just_audio:
     git:
       url: https://github.com/MSOB7YY/just_audio

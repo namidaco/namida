@@ -306,10 +306,10 @@ packages:
     dependency: "direct main"
     description:
       name: file_picker
-      sha256: "21145c9c268d54b1f771d8380c195d2d6f655e0567dc1ca2f9c134c02c819e0a"
+      sha256: "4e42aacde3b993c5947467ab640882c56947d9d27342a5b6f2895b23956954a6"
       url: "https://pub.dev"
     source: hosted
-    version: "5.3.3"
+    version: "6.1.1"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -517,8 +517,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "05eca4cb4009bc49d16ec5af2e5973cf55596239"
-      resolved-ref: "05eca4cb4009bc49d16ec5af2e5973cf55596239"
+      ref: "0484c632d26d768e85003480bce316b28d3c2933"
+      resolved-ref: "0484c632d26d768e85003480bce316b28d3c2933"
       url: "https://github.com/namidaco/history_manager"
     source: git
     version: "0.0.1"
