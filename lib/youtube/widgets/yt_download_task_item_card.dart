@@ -149,12 +149,13 @@ class YTDownloadTaskItemCard extends StatelessWidget {
 
     final saveLocation = "${AppDirs.YOUTUBE_DOWNLOADS}$groupName/${item.filename}";
 
-    List<Widget> getTrailing(IconData icon, String text, {Widget? iconWidget}) {
+    List<Widget> getTrailing(IconData icon, String text, {Widget? iconWidget, Color? iconColor}) {
       return [
         iconWidget ??
             Icon(
               icon,
               size: 18.0,
+              color: iconColor,
             ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -168,10 +169,15 @@ class YTDownloadTaskItemCard extends StatelessWidget {
 
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 38.0, vertical: 32.0),
         title: lang.INFO,
         normalTitleStyle: true,
         trailingWidgets: [
-          ...getTrailing(Broken.eye, info?.viewCount?.formatDecimalShort() ?? '?'),
+          ...getTrailing(
+            Broken.eye,
+            info?.viewCount?.formatDecimalShort() ?? '?',
+            iconColor: context.theme.colorScheme.primary,
+          ),
           const SizedBox(width: 6.0),
           ...() {
             final videoId = info?.id ?? '';
@@ -184,7 +190,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                 size: 18.0,
                 likedIcon: Broken.like_filled,
                 normalIcon: Broken.like_1,
-                disabledColor: context.theme.iconTheme.color,
+                disabledColor: context.theme.colorScheme.primary,
                 isLiked: isUserLiked,
                 onTap: (isLiked) async {
                   YoutubePlaylistController.inst.favouriteButtonOnPressed(videoId);
@@ -194,63 +200,153 @@ class YTDownloadTaskItemCard extends StatelessWidget {
           }(),
         ],
         child: SizedBox(
-          height: context.height * 0.6,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TrackInfoListTile(
-                  title: lang.TITLE,
-                  value: videoTitle,
-                  icon: Broken.text,
+          height: context.height * 0.7,
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TrackInfoListTile(
+                        title: lang.TITLE,
+                        value: videoTitle,
+                        icon: Broken.text,
+                      ),
+                      TrackInfoListTile(
+                        title: lang.CHANNEL,
+                        value: videoSubtitle,
+                        icon: Broken.user,
+                      ),
+                      TrackInfoListTile(
+                        title: lang.DATE,
+                        value: "$dateText$dateAgo",
+                        icon: Broken.calendar,
+                      ),
+                      TrackInfoListTile(
+                        title: lang.DURATION,
+                        value: duration,
+                        icon: Broken.clock,
+                      ),
+                      TrackInfoListTile(
+                        title: lang.LINK,
+                        value: YoutubeController.inst.getYoutubeLink(item.id),
+                        icon: Broken.link_1,
+                      ),
+                      TrackInfoListTile(
+                        title: 'ID',
+                        value: item.id,
+                        icon: Broken.video_square,
+                      ),
+                      TrackInfoListTile(
+                        title: lang.PATH,
+                        value: saveLocation,
+                        icon: Broken.location,
+                      ),
+                      TrackInfoListTile(
+                        title: lang.DESCRIPTION,
+                        value: HtmlParser.parseHTML(info?.description ?? '').text,
+                        icon: Broken.message_text_1,
+                        child: descriptionWidget,
+                      ),
+                      TrackInfoListTile(
+                        title: lang.TAGS,
+                        value: item.ffmpegTags.entries.map((e) => "- ${e.key}: ${e.value}").join('\n'),
+                        icon: Broken.tag,
+                      ),
+                    ]
+                        .addSeparators(
+                          separator: NamidaContainerDivider(
+                            height: 1.5,
+                            colorForce: context.theme.colorScheme.onBackground.withOpacity(0.2),
+                          ),
+                          skipFirst: 1,
+                        )
+                        .toList(),
+                  ),
                 ),
-                TrackInfoListTile(
-                  title: lang.CHANNEL,
-                  value: videoSubtitle,
-                  icon: Broken.user,
+              ),
+              const SizedBox(height: 6.0),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: context.theme.cardColor.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                 ),
-                TrackInfoListTile(
-                  title: lang.DATE,
-                  value: "$dateText$dateAgo",
-                  icon: Broken.calendar,
+                child: Padding(
+                  padding: const EdgeInsets.all(6.0),
+                  child: Column(
+                    children: [
+                      ..._getItemLocalInfoWidgets(context: context),
+                    ],
+                  ),
                 ),
-                TrackInfoListTile(
-                  title: lang.DURATION,
-                  value: duration,
-                  icon: Broken.clock,
-                ),
-                TrackInfoListTile(
-                  title: lang.LINK,
-                  value: YoutubeController.inst.getYoutubeLink(item.id),
-                  icon: Broken.link_1,
-                ),
-                TrackInfoListTile(
-                  title: 'ID',
-                  value: item.id,
-                  icon: Broken.video_square,
-                ),
-                TrackInfoListTile(
-                  title: lang.PATH,
-                  value: saveLocation,
-                  icon: Broken.location,
-                ),
-                TrackInfoListTile(
-                  title: lang.DESCRIPTION,
-                  value: HtmlParser.parseHTML(info?.description ?? '').text,
-                  icon: Broken.message_text_1,
-                  child: descriptionWidget,
-                ),
-                TrackInfoListTile(
-                  title: lang.TAGS,
-                  value: item.ffmpegTags.entries.map((e) => "- ${e.key}: ${e.value}").join('\n'),
-                  icon: Broken.tag,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
+  }
+
+  List<Widget> _getItemLocalInfoWidgets({
+    required BuildContext context,
+  }) {
+    final item = videos[index];
+    final itemDirectoryPath = "${AppDirs.YOUTUBE_DOWNLOADS}$groupName";
+    final file = File("$itemDirectoryPath/${item.filename}");
+
+    final videoStream = item.videoStream;
+    final audioStream = item.audioStream;
+
+    Widget getRow({required IconData icon, required List<String> texts}) {
+      return Row(
+        children: [
+          Icon(icon, size: 18.0),
+          const SizedBox(width: 6.0),
+          Expanded(
+            child: Text(
+              texts.where((element) => element != '').join(' • '),
+              style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0.multipliedFontScale),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return [
+      getRow(icon: Broken.location, texts: [itemDirectoryPath]),
+      const SizedBox(height: 6.0),
+      if (file.existsSync()) ...[
+        getRow(
+          icon: Broken.document_code,
+          texts: [
+            file.existsSync() ? file.lengthSync().fileSizeFormatted : '',
+            (item.fileDate ?? file.statSync().creationDate).millisecondsSinceEpoch.dateAndClockFormattedOriginal,
+          ],
+        ),
+        const SizedBox(height: 6.0),
+      ],
+      if (videoStream != null) ...[
+        getRow(
+          icon: Broken.video_square,
+          texts: [
+            videoStream.sizeInBytes?.fileSizeFormatted ?? '',
+            videoStream.bitrateText,
+            videoStream.resolution ?? '',
+          ],
+        ),
+        const SizedBox(height: 6.0),
+      ],
+      if (audioStream != null) ...[
+        getRow(
+          icon: Broken.audio_square,
+          texts: [
+            audioStream.sizeInBytes?.fileSizeFormatted ?? '',
+            audioStream.bitrateText,
+          ],
+        ),
+      ],
+    ];
   }
 
   Future<bool> _confirmOperation({
@@ -258,28 +354,8 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     required String operationTitle,
     String confirmMessage = '',
   }) async {
-    bool confirmed = false;
     final item = videos[index];
-    final itemDirectoryPath = "${AppDirs.YOUTUBE_DOWNLOADS}$groupName";
-    final file = File("$itemDirectoryPath/${item.filename}");
-
-    Widget getRow({required IconData icon, required List<String> texts}) {
-      return Row(
-        children: [
-          Icon(icon, size: 20.0),
-          const SizedBox(width: 6.0),
-          Expanded(
-            child: Text(
-              texts.where((element) => element != '').join(' • '),
-              style: context.textTheme.displaySmall,
-            ),
-          ),
-        ],
-      );
-    }
-
-    final videoStream = item.videoStream;
-    final audioStream = item.audioStream;
+    bool confirmed = false;
     await NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         title: lang.WARNING,
@@ -315,39 +391,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24.0),
-              getRow(icon: Broken.location, texts: [itemDirectoryPath]),
-              const SizedBox(height: 8.0),
-              if (file.existsSync()) ...[
-                getRow(
-                  icon: Broken.document_code,
-                  texts: [
-                    file.existsSync() ? file.lengthSync().fileSizeFormatted : '',
-                    (item.fileDate ?? file.statSync().creationDate).millisecondsSinceEpoch.dateAndClockFormattedOriginal,
-                  ],
-                ),
-                const SizedBox(height: 8.0),
-              ],
-              if (videoStream != null) ...[
-                getRow(
-                  icon: Broken.video_square,
-                  texts: [
-                    videoStream.sizeInBytes?.fileSizeFormatted ?? '',
-                    videoStream.bitrateText,
-                    videoStream.resolution ?? '',
-                  ],
-                ),
-                const SizedBox(height: 8.0),
-              ],
-              if (audioStream != null) ...[
-                getRow(
-                  icon: Broken.audio_square,
-                  texts: [
-                    audioStream.sizeInBytes?.fileSizeFormatted ?? '',
-                    audioStream.bitrateText,
-                  ],
-                ),
-                const SizedBox(height: 8.0),
-              ],
+              ..._getItemLocalInfoWidgets(context: context),
             ],
           ),
         ),

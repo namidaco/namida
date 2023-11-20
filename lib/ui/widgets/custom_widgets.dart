@@ -355,7 +355,7 @@ class CustomBlurryDialog extends StatelessWidget {
   final bool isWarning;
   final bool scrollable;
   final EdgeInsets insetPadding;
-  final EdgeInsetsGeometry? contentPadding;
+  final EdgeInsetsGeometry contentPadding;
   final ThemeData? theme;
 
   const CustomBlurryDialog({
@@ -372,7 +372,7 @@ class CustomBlurryDialog extends StatelessWidget {
     this.isWarning = false,
     this.insetPadding = const EdgeInsets.symmetric(horizontal: 50.0, vertical: 32.0),
     this.scrollable = true,
-    this.contentPadding,
+    this.contentPadding = const EdgeInsets.all(14.0),
     this.leftAction,
     this.theme,
   });
@@ -456,7 +456,7 @@ class CustomBlurryDialog extends StatelessWidget {
 
                   /// Body.
                   Padding(
-                    padding: contentPadding ?? const EdgeInsets.all(14.0),
+                    padding: contentPadding,
                     child: SizedBox(
                       width: context.width,
                       child: bodyText != null
@@ -1923,8 +1923,17 @@ class NamidaContainerDivider extends StatelessWidget {
   final double? width;
   final double height;
   final Color? color;
+  final Color? colorForce;
   final EdgeInsetsGeometry? margin;
-  const NamidaContainerDivider({super.key, this.width, this.height = 2.0, this.color, this.margin});
+
+  const NamidaContainerDivider({
+    super.key,
+    this.width,
+    this.height = 2.0,
+    this.color,
+    this.margin,
+    this.colorForce,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1933,7 +1942,7 @@ class NamidaContainerDivider extends StatelessWidget {
       width: width,
       margin: margin,
       decoration: BoxDecoration(
-        color: (color ?? context.theme.dividerColor).withAlpha(Get.isDarkMode ? 100 : 20),
+        color: colorForce ?? (color ?? context.theme.dividerColor).withAlpha(Get.isDarkMode ? 100 : 20),
         borderRadius: BorderRadius.circular(18.0.multipliedRadius),
       ),
     );
