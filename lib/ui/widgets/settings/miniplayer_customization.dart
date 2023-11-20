@@ -65,9 +65,9 @@ class MiniplayerCustomization extends StatelessWidget {
                                   title: '!!',
                                   bodyText: "EH? YOU DON'T WANT TO SUPPORT?",
                                   actions: [
-                                    NamidaSupportButton(title: lang.YES),
+                                    NamidaSupportButton(title: (lang.SWAP_YN_IN_NEGATIVE_QUESTIONS == '') ? lang.YES : lang.NO),
                                     NamidaButton(
-                                      text: lang.NO,
+                                      text: (lang.SWAP_YN_IN_NEGATIVE_QUESTIONS == '') ? lang.NO : lang.YES,
                                       onPressed: () {
                                         NamidaNavigator.inst.closeDialog();
                                         NamidaNavigator.inst.navigateDialog(

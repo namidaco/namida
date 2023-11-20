@@ -1255,7 +1255,7 @@ class _NamidaConverters {
         MostPlayedTimeRange.day3: "3 ${lang.DAYS}",
         MostPlayedTimeRange.week: lang.WEEK,
         MostPlayedTimeRange.month: lang.MONTH,
-        MostPlayedTimeRange.month3: "3 ${lang.MONTHS}",
+        MostPlayedTimeRange.month3: "3 ${(lang.DUAL_MONTHS == '') ? lang.MONTHS : lang.DUAL_MONTHS}",
         MostPlayedTimeRange.month6: "6 ${lang.MONTHS}",
         MostPlayedTimeRange.year: lang.YEAR,
         MostPlayedTimeRange.allTime: lang.ALL_TIME,
