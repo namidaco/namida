@@ -23,6 +23,7 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
@@ -148,12 +149,13 @@ class YTDownloadTaskItemCard extends StatelessWidget {
 
     final saveLocation = "${AppDirs.YOUTUBE_DOWNLOADS}$groupName/${item.filename}";
 
-    List<Widget> getTrailing(IconData icon, String text) {
+    List<Widget> getTrailing(IconData icon, String text, {Widget? iconWidget}) {
       return [
-        Icon(
-          icon,
-          size: 22.0,
-        ),
+        iconWidget ??
+            Icon(
+              icon,
+              size: 18.0,
+            ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4.0),
           child: Text(
@@ -171,7 +173,25 @@ class YTDownloadTaskItemCard extends StatelessWidget {
         trailingWidgets: [
           ...getTrailing(Broken.eye, info?.viewCount?.formatDecimalShort() ?? '?'),
           const SizedBox(width: 6.0),
-          ...getTrailing(Broken.like_1, info?.likeCount?.formatDecimalShort() ?? '?'),
+          ...() {
+            final videoId = info?.id ?? '';
+            final isUserLiked = YoutubePlaylistController.inst.favouritesPlaylist.value.tracks.firstWhereEff((element) => element.id == videoId) != null;
+            final videoLikeCount = info?.likeCount == null && !isUserLiked ? null : (isUserLiked ? 1 : 0) + (info?.likeCount ?? 0);
+            return getTrailing(
+              Broken.like_1,
+              videoLikeCount?.formatDecimalShort() ?? '?',
+              iconWidget: NamidaRawLikeButton(
+                size: 18.0,
+                likedIcon: Broken.like_filled,
+                normalIcon: Broken.like_1,
+                disabledColor: context.theme.iconTheme.color,
+                isLiked: isUserLiked,
+                onTap: (isLiked) async {
+                  YoutubePlaylistController.inst.favouriteButtonOnPressed(videoId);
+                },
+              ),
+            );
+          }(),
         ],
         child: SizedBox(
           height: context.height * 0.6,
