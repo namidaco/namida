@@ -214,7 +214,7 @@ class YoutubePlaylistsView extends StatelessWidget {
               () {
                 YoutubePlaylistController.inst.favouritesPlaylist.value;
                 return _getHorizontalSliverList(
-                  title: lang.FAVOURITES,
+                  title: lang.LIKED,
                   icon: Broken.like_1,
                   viewAllPage: const YTLikedVideosPage(),
                   videos: getFavouriteVideos,

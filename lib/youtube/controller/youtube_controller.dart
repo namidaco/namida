@@ -114,6 +114,8 @@ class YoutubeController {
   /// {groupName: {filename: YoutubeItemDownloadConfig}}
   final youtubeDownloadTasksMap = <String, Map<String, YoutubeItemDownloadConfig>>{}.obs;
 
+  final youtubeDownloadTasksTempList = <(String, YoutubeItemDownloadConfig)>[];
+
   /// Used to keep track of existing downloaded files, more performant than real-time checking.
   ///
   /// {groupName: {filename: File}}
@@ -703,6 +705,7 @@ class YoutubeController {
         _downloadClientsMap[groupName]?[c.filename]?.close(force: true);
         _downloadClientsMap[groupName]?.remove(c.filename);
         youtubeDownloadTasksMap[groupName]?.remove(c.filename);
+        print('KKKKKKKK ${File("$directory/${c.filename}").existsSync()}');
         await File("$directory/${c.filename}").deleteIfExists();
         downloadedFilesMap[groupName]?[c.filename] = null;
       });

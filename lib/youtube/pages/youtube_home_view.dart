@@ -4,6 +4,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/pages/youtube_page.dart';
+import 'package:namida/youtube/pages/yt_downloads_page.dart';
 import 'package:namida/youtube/youtube_playlists_view.dart';
 
 class YouTubeHomeView extends StatelessWidget {
@@ -11,7 +12,7 @@ class YouTubeHomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tabs = [lang.HOME, lang.PLAYLISTS];
+    final tabs = [lang.HOME, lang.PLAYLISTS, lang.DOWNLOADS];
     const historyIndex = 1;
     return BackgroundWrapper(
       child: NamidaTabView(
@@ -21,6 +22,7 @@ class YouTubeHomeView extends StatelessWidget {
         children: const [
           YoutubePage(),
           YoutubePlaylistsView(bottomPadding: kBottomPadding, scrollable: false),
+          YTDownloadsPage(),
         ],
       ),
     );
