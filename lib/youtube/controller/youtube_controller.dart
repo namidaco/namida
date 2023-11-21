@@ -511,10 +511,11 @@ class YoutubeController {
         failed: true,
       );
     } else {
+      final size = downloadedFile.fileSizeFormatted();
       NotificationService.inst.doneDownloadingYoutubeNotification(
         notificationID: nameIdentifier,
         videoTitle: downloadedFile.path.getFilenameWOExt,
-        subtitle: downloadedFile.existsSync() ? 'Downloaded ${downloadedFile.lengthSync().fileSizeFormatted}' : '',
+        subtitle: size == null ? '' : 'Downloaded: $size',
         imagePath: VideoController.inst.getYoutubeThumbnailFromCacheSync(id: videoId)?.path,
         failed: false,
       );

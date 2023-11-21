@@ -743,12 +743,12 @@ class Indexer {
       if (oldDeletedFile != null) {
         if (oldDeletedFile.existsSync()) {
           initialCount--;
-          initialSize -= oldDeletedFile.lengthSync();
+          initialSize -= oldDeletedFile.fileSizeSync() ?? 0;
         }
       }
       if (newImagePath != null) {
         initialCount++;
-        initialSize += File(newImagePath).lengthSync();
+        initialSize += File(newImagePath).fileSizeSync() ?? 0;
       }
     }
 
@@ -1337,12 +1337,12 @@ class Indexer {
       if (oldDeletedFile != null) {
         if (oldDeletedFile.existsSync()) {
           artworksInStorage.value--;
-          artworksSizeInStorage.value -= oldDeletedFile.lengthSync();
+          artworksSizeInStorage.value -= oldDeletedFile.fileSizeSync() ?? 0;
         }
       }
       if (newImagePath != null) {
         artworksInStorage.value++;
-        artworksSizeInStorage.value += File(newImagePath).lengthSync();
+        artworksSizeInStorage.value += File(newImagePath).fileSizeSync() ?? 0;
       }
 
       return;
@@ -1370,12 +1370,12 @@ class Indexer {
       if (oldDeletedFile != null) {
         if (oldDeletedFile.existsSync()) {
           initialCount--;
-          initialSize -= oldDeletedFile.lengthSync();
+          initialSize -= oldDeletedFile.fileSizeSync() ?? 0;
         }
       }
       if (newImagePath != null) {
         initialCount++;
-        initialSize += File(newImagePath).lengthSync();
+        initialSize += File(newImagePath).fileSizeSync() ?? 0;
       }
     } else {
       final dir = Directory(dirPath);
@@ -1383,7 +1383,7 @@ class Indexer {
       for (final f in dir.listSync()) {
         if (f is File) {
           initialCount++;
-          initialSize += f.lengthSync();
+          initialSize += f.fileSizeSync() ?? 0;
         }
       }
     }

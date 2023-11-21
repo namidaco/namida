@@ -376,7 +376,21 @@ extension FunctionsExecuter<T> on Iterable<Future<T>?> {
   }
 }
 
-extension FileStatsUtils<T> on FileStat {
+extension FileUtils on File {
+  int? fileSizeSync() {
+    try {
+      return lengthSync();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  String? fileSizeFormatted() {
+    return fileSizeSync()?.fileSizeFormatted;
+  }
+}
+
+extension FileStatsUtils on FileStat {
   DateTime get creationDate {
     DateTime lowest = modified;
 

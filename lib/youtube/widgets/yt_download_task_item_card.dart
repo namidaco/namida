@@ -320,7 +320,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
         getRow(
           icon: Broken.document_code,
           texts: [
-            file.existsSync() ? file.lengthSync().fileSizeFormatted : '',
+            file.fileSizeFormatted() ?? '',
             (item.fileDate ?? file.statSync().creationDate).millisecondsSinceEpoch.dateAndClockFormattedOriginal,
           ],
         ),
@@ -594,7 +594,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                 context: context,
                                 title: lang.DELETE,
                                 icon: Broken.trash,
-                                betweenBrackets: fileExists ? downloadedFile.lengthSync().fileSizeFormatted : '',
+                                betweenBrackets: downloadedFile.fileSizeFormatted() ?? '',
                                 onTap: () async {
                                   final confirmed = await _confirmOperation(
                                     context: context,
@@ -632,7 +632,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                         Text(
                           [
                             if (item.videoStream?.resolution != null) item.videoStream?.resolution ?? '',
-                            fileExists ? downloadedFile.lengthSync().fileSizeFormatted : '',
+                            downloadedFile.fileSizeFormatted() ?? '',
                           ].join(' • '),
                           style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
                         ),

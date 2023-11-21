@@ -962,7 +962,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       "dirPath": AppDirs.AUDIOS_CACHE,
       "id": item.id,
     });
-    final finalAudioFiles = audioFiles..sortByReverseAlt((e) => e.bitrate ?? 0, (e) => e.file.lengthSync());
+    final finalAudioFiles = audioFiles..sortByReverseAlt((e) => e.bitrate ?? 0, (e) => e.file.fileSizeSync() ?? 0);
     final cachedAudio = finalAudioFiles.firstOrNull;
 
     // ------ Playing ------
