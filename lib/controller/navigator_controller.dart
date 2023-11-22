@@ -10,6 +10,7 @@ import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -37,6 +38,8 @@ class NamidaNavigator {
   final heroController = HeroController();
 
   bool isInLanscape = false;
+
+  static const _defaultRouteAnimationDurMS = 500;
 
   Future<T?> showMenu<T>(Future? menuFunction) async {
     _currentMenusNumber++;
@@ -155,7 +158,7 @@ class NamidaNavigator {
     Widget page, {
     bool nested = true,
     Transition transition = Transition.cupertino,
-    int durationInMs = 500,
+    int durationInMs = _defaultRouteAnimationDurMS,
   }) async {
     currentWidgetStack.add(page.toNamidaRoute());
     _hideEverything();
@@ -257,7 +260,7 @@ class NamidaNavigator {
     Widget page, {
     bool nested = true,
     Transition transition = Transition.cupertino,
-    int durationInMs = 500,
+    int durationInMs = _defaultRouteAnimationDurMS,
   }) async {
     currentWidgetStack.removeLast();
     currentWidgetStack.add(page.toNamidaRoute());
@@ -298,7 +301,7 @@ class NamidaNavigator {
     );
   }
 
-  Future<void> popPage() async {
+  Future<void> popPage({bool waitForAnimation = false}) async {
     if (innerDrawerKey.currentState?.isOpened ?? false) {
       innerDrawerKey.currentState?.close();
       return;
@@ -309,6 +312,10 @@ class NamidaNavigator {
     }
     if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
       _hideSearchMenuAndUnfocus();
+      return;
+    }
+    if (SettingsSearchController.inst.canShowSearch) {
+      SettingsSearchController.inst.closeSearch();
       return;
     }
 
@@ -327,6 +334,7 @@ class NamidaNavigator {
     } else {
       await _doubleTapToExit();
     }
+    if (waitForAnimation) await Future.delayed(const Duration(milliseconds: _defaultRouteAnimationDurMS));
     currentRoute?.updateColorScheme();
     _hideSearchMenuAndUnfocus();
   }

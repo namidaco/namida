@@ -174,6 +174,7 @@ class CustomSwitchListTile extends StatelessWidget {
   final bool largeTitle;
   final int maxSubtitleLines;
   final VisualDensity? visualDensity;
+  final Color? bgColor;
 
   const CustomSwitchListTile({
     Key? key,
@@ -189,11 +190,13 @@ class CustomSwitchListTile extends StatelessWidget {
     this.largeTitle = false,
     this.maxSubtitleLines = 8,
     this.visualDensity,
+    this.bgColor,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return CustomListTile(
+      bgColor: bgColor,
       title: title,
       subtitle: subtitle,
       enabled: enabled,
@@ -238,6 +241,7 @@ class CustomListTile extends StatelessWidget {
   final VisualDensity? visualDensity;
   final TextStyle? titleStyle;
   final double borderR;
+  final Color? bgColor;
 
   const CustomListTile({
     Key? key,
@@ -257,6 +261,7 @@ class CustomListTile extends StatelessWidget {
     this.visualDensity,
     this.titleStyle,
     this.borderR = 20.0,
+    this.bgColor,
   }) : super(key: key);
 
   @override
@@ -267,6 +272,7 @@ class CustomListTile extends StatelessWidget {
       opacity: enabled ? 1.0 : 0.5,
       child: ListTile(
         enabled: enabled,
+        tileColor: bgColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(borderR.multipliedRadius),
         ),
@@ -849,6 +855,7 @@ class NamidaExpansionTile extends StatelessWidget {
   final Widget? trailing;
   final ValueChanged? onExpansionChanged;
   final bool normalRightPadding;
+  final Color? bgColor;
 
   const NamidaExpansionTile({
     super.key,
@@ -866,6 +873,7 @@ class NamidaExpansionTile extends StatelessWidget {
     this.trailing,
     this.onExpansionChanged,
     this.normalRightPadding = false,
+    this.bgColor,
   });
 
   @override
@@ -874,6 +882,8 @@ class NamidaExpansionTile extends StatelessWidget {
       // horizontalTitleGap: 12.0,
       dense: true,
       child: ExpansionTile(
+        collapsedBackgroundColor: bgColor,
+        backgroundColor: bgColor,
         initiallyExpanded: initiallyExpanded,
         onExpansionChanged: onExpansionChanged,
         expandedAlignment: Alignment.centerLeft,
@@ -1095,12 +1105,14 @@ class CancelButton extends StatelessWidget {
 }
 
 class CollapsedSettingTileWidget extends StatelessWidget {
-  const CollapsedSettingTileWidget({super.key});
+  final Color? bgColor;
+  const CollapsedSettingTileWidget({super.key, this.bgColor});
 
   @override
   Widget build(BuildContext context) {
     return Obx(
       () => CustomSwitchListTile(
+        bgColor: bgColor,
         icon: Broken.archive,
         title: lang.USE_COLLAPSED_SETTING_TILES,
         value: settings.useSettingCollapsedTiles.value,

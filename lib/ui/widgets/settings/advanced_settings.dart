@@ -15,6 +15,7 @@ import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -31,49 +32,83 @@ import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
-class AdvancedSettings extends StatelessWidget {
-  const AdvancedSettings({super.key});
+enum _AdvancedSettingKeys {
+  performanceMode,
+  rescanVideos,
+  removeSourceHistory,
+  updateDirPath,
+  fixYTDLPBigThumbnail,
+  compressImages,
+  maxImageCache,
+  maxVideoCache,
+  clearImageCache,
+  clearVideoCache,
+}
+
+class AdvancedSettings extends SettingSubpageProvider {
+  const AdvancedSettings({super.key, super.initialItem});
+
+  @override
+  SettingSubpageEnum get settingPage => SettingSubpageEnum.advanced;
+
+  @override
+  Map<Enum, List<String>> get lookupMap => {
+        _AdvancedSettingKeys.performanceMode: [lang.PERFORMANCE_MODE],
+        _AdvancedSettingKeys.rescanVideos: [lang.RESCAN_VIDEOS],
+        _AdvancedSettingKeys.removeSourceHistory: [lang.REMOVE_SOURCE_FROM_HISTORY],
+        _AdvancedSettingKeys.updateDirPath: [lang.UPDATE_DIRECTORY_PATH],
+        _AdvancedSettingKeys.fixYTDLPBigThumbnail: [lang.FIX_YTDLP_BIG_THUMBNAIL_SIZE],
+        _AdvancedSettingKeys.compressImages: [lang.COMPRESS_IMAGES],
+        _AdvancedSettingKeys.maxImageCache: [lang.MAX_IMAGE_CACHE_SIZE],
+        _AdvancedSettingKeys.maxVideoCache: [lang.MAX_VIDEO_CACHE_SIZE],
+        _AdvancedSettingKeys.clearImageCache: [lang.CLEAR_IMAGE_CACHE],
+        _AdvancedSettingKeys.clearVideoCache: [lang.CLEAR_VIDEO_CACHE],
+      };
 
   Widget getPerformanceTile(BuildContext context) {
-    return CustomListTile(
-      icon: Broken.cpu_setting,
-      title: lang.PERFORMANCE_MODE,
-      trailingRaw: NamidaPopupWrapper(
-        children: [
-          ...PerformanceMode.values.map(
-            (e) => Obx(
-              () => NamidaInkWell(
-                margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                borderRadius: 6.0,
-                bgColor: settings.performanceMode.value == e ? context.theme.cardColor : null,
-                child: Row(
-                  children: [
-                    Icon(
-                      e.toIcon(),
-                      size: 18.0,
-                    ),
-                    const SizedBox(width: 6.0),
-                    Text(
-                      e.toText(),
-                      style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
-                    ),
-                  ],
+    return getItemWrapper(
+      key: _AdvancedSettingKeys.performanceMode,
+      child: CustomListTile(
+        bgColor: getBgColor(_AdvancedSettingKeys.performanceMode),
+        icon: Broken.cpu_setting,
+        title: lang.PERFORMANCE_MODE,
+        trailingRaw: NamidaPopupWrapper(
+          children: [
+            ...PerformanceMode.values.map(
+              (e) => Obx(
+                () => NamidaInkWell(
+                  margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                  borderRadius: 6.0,
+                  bgColor: settings.performanceMode.value == e ? context.theme.cardColor : null,
+                  child: Row(
+                    children: [
+                      Icon(
+                        e.toIcon(),
+                        size: 18.0,
+                      ),
+                      const SizedBox(width: 6.0),
+                      Text(
+                        e.toText(),
+                        style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
+                      ),
+                    ],
+                  ),
+                  onTap: () {
+                    e.execute();
+                    settings.save(performanceMode: e);
+                    NamidaNavigator.inst.popMenu(handleClosing: false);
+                    Navigator.of(context).pop();
+                  },
                 ),
-                onTap: () {
-                  e.execute();
-                  settings.save(performanceMode: e);
-                  NamidaNavigator.inst.popMenu(handleClosing: false);
-                  Navigator.of(context).pop();
-                },
               ),
             ),
-          ),
-        ],
-        child: Obx(
-          () => Text(
-            settings.performanceMode.value.toText(),
-            style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
+          ],
+          child: Obx(
+            () => Text(
+              settings.performanceMode.value.toText(),
+              style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
+            ),
           ),
         ),
       ),
@@ -90,195 +125,222 @@ class AdvancedSettings extends StatelessWidget {
       child: Column(
         children: [
           getPerformanceTile(context),
-          CustomListTile(
-            leading: const StackedIcon(
-              baseIcon: Broken.video,
-              secondaryIcon: Broken.refresh,
+          getItemWrapper(
+            key: _AdvancedSettingKeys.rescanVideos,
+            child: CustomListTile(
+              bgColor: getBgColor(_AdvancedSettingKeys.rescanVideos),
+              leading: const StackedIcon(
+                baseIcon: Broken.video,
+                secondaryIcon: Broken.refresh,
+              ),
+              trailingRaw: Obx(
+                () {
+                  final current = VideoController.inst.localVideoExtractCurrent.value;
+                  final total = VideoController.inst.localVideoExtractTotal.value;
+                  final isCounterVisible = total != 0;
+                  final isLoadingVisible = current != null;
+
+                  if (!isCounterVisible && !isLoadingVisible) return Text("${VideoController.inst.localVideosTotalCount}");
+
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isCounterVisible) Text("$current/$total"),
+                      if (isLoadingVisible) const LoadingIndicator(),
+                    ],
+                  );
+                },
+              ),
+              title: lang.RESCAN_VIDEOS,
+              onTap: () async {
+                await VideoController.inst.scanLocalVideos(forceReScan: true, fillPathsOnly: true);
+                snackyy(title: lang.DONE, message: lang.FINISHED_UPDATING_LIBRARY);
+              },
             ),
-            trailingRaw: Obx(
-              () {
-                final current = VideoController.inst.localVideoExtractCurrent.value;
-                final total = VideoController.inst.localVideoExtractTotal.value;
-                final isCounterVisible = total != 0;
-                final isLoadingVisible = current != null;
+          ),
+          getItemWrapper(
+            key: _AdvancedSettingKeys.removeSourceHistory,
+            child: CustomListTile(
+              bgColor: getBgColor(_AdvancedSettingKeys.removeSourceHistory),
+              leading: const StackedIcon(
+                baseIcon: Broken.trash,
+                secondaryIcon: Broken.refresh,
+              ),
+              title: lang.REMOVE_SOURCE_FROM_HISTORY,
+              onTap: () async {
+                final RxList<TrackSource> sourcesToDelete = <TrackSource>[].obs;
+                bool isActive(TrackSource e) => sourcesToDelete.contains(e);
 
-                if (!isCounterVisible && !isLoadingVisible) return Text("${VideoController.inst.localVideosTotalCount}");
+                final RxMap<TrackSource, int> sourcesMap = <TrackSource, int>{}.obs;
+                void resetSourcesMap() {
+                  TrackSource.values.loop((e, index) {
+                    sourcesMap[e] = 0;
+                  });
+                }
 
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (isCounterVisible) Text("$current/$total"),
-                    if (isLoadingVisible) const LoadingIndicator(),
-                  ],
+                final RxInt totalTracksToBeRemoved = 0.obs;
+
+                final RxInt totalTracksBetweenDates = 0.obs;
+
+                void calculateTotalTracks(DateTime? oldest, DateTime? newest) {
+                  final sussyDays = HistoryController.inst.historyDays.toList();
+                  final isBetweenDays = oldest != null && newest != null;
+                  if (isBetweenDays) {
+                    final oldestDay = oldest.toDaysSince1970();
+                    final newestDay = newest.toDaysSince1970();
+
+                    sussyDays.retainWhere((element) => element >= oldestDay && element <= newestDay);
+                    printy(sussyDays);
+                  }
+                  resetSourcesMap();
+                  sussyDays.loop((d, index) {
+                    final tracks = HistoryController.inst.historyMap.value[d] ?? [];
+                    tracks.loop((twd, index) {
+                      sourcesMap.update(twd.source, (value) => value + 1, ifAbsent: () => 1);
+                    });
+                  });
+                  if (isBetweenDays) {
+                    totalTracksBetweenDates.value = sourcesMap.values.reduce((value, element) => value + element);
+                  }
+                  if (sourcesToDelete.isNotEmpty) {
+                    totalTracksToBeRemoved.value = 0;
+                    sourcesToDelete.loop((e, index) {
+                      totalTracksToBeRemoved.value += sourcesMap[e] ?? 0;
+                    });
+                  }
+                }
+
+                // -- filling each source with its tracks number.
+                calculateTotalTracks(null, null);
+
+                DateTime? oldestDate;
+                DateTime? newestDate;
+
+                NamidaNavigator.inst.navigateDialog(
+                  dialog: CustomBlurryDialog(
+                    title: lang.CHOOSE,
+                    actions: [
+                      const CancelButton(),
+                      NamidaButton(
+                        text: lang.REMOVE,
+                        onPressed: () async {
+                          final removedNum = await HistoryController.inst.removeSourcesTracksFromHistory(
+                            sourcesToDelete,
+                            oldestDate: oldestDate,
+                            newestDate: newestDate,
+                          );
+                          NamidaNavigator.inst.closeDialog();
+                          snackyy(title: lang.NOTE, message: "${lang.REMOVED} ${removedNum.displayTrackKeyword}");
+                        },
+                      )
+                    ],
+                    child: Obx(
+                      () => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 12.0),
+                          Row(
+                            children: [
+                              const SizedBox(width: 8.0),
+                              const Icon(Broken.danger),
+                              const SizedBox(width: 8.0),
+                              Obx(() => Text(
+                                    '${lang.TOTAL_TRACKS}: ${totalTracksToBeRemoved.value}',
+                                    style: context.textTheme.displayMedium,
+                                  )),
+                            ],
+                          ),
+                          const SizedBox(height: 12.0),
+                          ...sourcesMap.entries.map(
+                            (e) {
+                              final source = e.key;
+                              final count = e.value;
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 10.0),
+                                child: Obx(
+                                  () => ListTileWithCheckMark(
+                                    active: isActive(source),
+                                    title: '${source.convertToString} (${count.formatDecimal()})',
+                                    onTap: () {
+                                      if (isActive(source)) {
+                                        sourcesToDelete.remove(source);
+                                        totalTracksToBeRemoved.value -= count;
+                                      } else {
+                                        sourcesToDelete.add(source);
+                                        totalTracksToBeRemoved.value += count;
+                                      }
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 12.0),
+                          BetweenDatesTextButton(
+                            useHistoryDates: true,
+                            onConfirm: (dates) {
+                              oldestDate = dates.firstOrNull;
+                              newestDate = dates.lastOrNull;
+                              calculateTotalTracks(oldestDate, newestDate);
+                              NamidaNavigator.inst.closeDialog();
+                            },
+                            tracksLength: totalTracksBetweenDates.value,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 );
               },
             ),
-            title: lang.RESCAN_VIDEOS,
-            onTap: () async {
-              await VideoController.inst.scanLocalVideos(forceReScan: true, fillPathsOnly: true);
-              snackyy(title: lang.DONE, message: lang.FINISHED_UPDATING_LIBRARY);
-            },
           ),
-          CustomListTile(
-            leading: const StackedIcon(
-              baseIcon: Broken.trash,
-              secondaryIcon: Broken.refresh,
+          getItemWrapper(
+            key: _AdvancedSettingKeys.updateDirPath,
+            child: UpdateDirectoryPathListTile(
+              bgColor: getBgColor(_AdvancedSettingKeys.updateDirPath),
             ),
-            title: lang.REMOVE_SOURCE_FROM_HISTORY,
-            onTap: () async {
-              final RxList<TrackSource> sourcesToDelete = <TrackSource>[].obs;
-              bool isActive(TrackSource e) => sourcesToDelete.contains(e);
-
-              final RxMap<TrackSource, int> sourcesMap = <TrackSource, int>{}.obs;
-              void resetSourcesMap() {
-                TrackSource.values.loop((e, index) {
-                  sourcesMap[e] = 0;
-                });
-              }
-
-              final RxInt totalTracksToBeRemoved = 0.obs;
-
-              final RxInt totalTracksBetweenDates = 0.obs;
-
-              void calculateTotalTracks(DateTime? oldest, DateTime? newest) {
-                final sussyDays = HistoryController.inst.historyDays.toList();
-                final isBetweenDays = oldest != null && newest != null;
-                if (isBetweenDays) {
-                  final oldestDay = oldest.toDaysSince1970();
-                  final newestDay = newest.toDaysSince1970();
-
-                  sussyDays.retainWhere((element) => element >= oldestDay && element <= newestDay);
-                  printy(sussyDays);
-                }
-                resetSourcesMap();
-                sussyDays.loop((d, index) {
-                  final tracks = HistoryController.inst.historyMap.value[d] ?? [];
-                  tracks.loop((twd, index) {
-                    sourcesMap.update(twd.source, (value) => value + 1, ifAbsent: () => 1);
-                  });
-                });
-                if (isBetweenDays) {
-                  totalTracksBetweenDates.value = sourcesMap.values.reduce((value, element) => value + element);
-                }
-                if (sourcesToDelete.isNotEmpty) {
-                  totalTracksToBeRemoved.value = 0;
-                  sourcesToDelete.loop((e, index) {
-                    totalTracksToBeRemoved.value += sourcesMap[e] ?? 0;
-                  });
-                }
-              }
-
-              // -- filling each source with its tracks number.
-              calculateTotalTracks(null, null);
-
-              DateTime? oldestDate;
-              DateTime? newestDate;
-
-              NamidaNavigator.inst.navigateDialog(
-                dialog: CustomBlurryDialog(
-                  title: lang.CHOOSE,
-                  actions: [
-                    const CancelButton(),
-                    NamidaButton(
-                      text: lang.REMOVE,
-                      onPressed: () async {
-                        final removedNum = await HistoryController.inst.removeSourcesTracksFromHistory(
-                          sourcesToDelete,
-                          oldestDate: oldestDate,
-                          newestDate: newestDate,
-                        );
-                        NamidaNavigator.inst.closeDialog();
-                        snackyy(title: lang.NOTE, message: "${lang.REMOVED} ${removedNum.displayTrackKeyword}");
-                      },
-                    )
-                  ],
-                  child: Obx(
-                    () => Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 12.0),
-                        Row(
-                          children: [
-                            const SizedBox(width: 8.0),
-                            const Icon(Broken.danger),
-                            const SizedBox(width: 8.0),
-                            Obx(() => Text(
-                                  '${lang.TOTAL_TRACKS}: ${totalTracksToBeRemoved.value}',
-                                  style: context.textTheme.displayMedium,
-                                )),
-                          ],
-                        ),
-                        const SizedBox(height: 12.0),
-                        ...sourcesMap.entries.map(
-                          (e) {
-                            final source = e.key;
-                            final count = e.value;
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 10.0),
-                              child: Obx(
-                                () => ListTileWithCheckMark(
-                                  active: isActive(source),
-                                  title: '${source.convertToString} (${count.formatDecimal()})',
-                                  onTap: () {
-                                    if (isActive(source)) {
-                                      sourcesToDelete.remove(source);
-                                      totalTracksToBeRemoved.value -= count;
-                                    } else {
-                                      sourcesToDelete.add(source);
-                                      totalTracksToBeRemoved.value += count;
-                                    }
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 12.0),
-                        BetweenDatesTextButton(
-                          useHistoryDates: true,
-                          onConfirm: (dates) {
-                            oldestDate = dates.firstOrNull;
-                            newestDate = dates.lastOrNull;
-                            calculateTotalTracks(oldestDate, newestDate);
-                            NamidaNavigator.inst.closeDialog();
-                          },
-                          tracksLength: totalTracksBetweenDates.value,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
           ),
-          const UpdateDirectoryPathListTile(),
           // -- this will loop all choosen files, get yt thumbnail (download or cache), edit tags, without affecting file modified time.
-          const _FixYTDLPThumbnailSizeListTile(),
-          const _CompressImagesListTile(),
+          getItemWrapper(
+            key: _AdvancedSettingKeys.fixYTDLPBigThumbnail,
+            child: _FixYTDLPThumbnailSizeListTile(
+              bgColor: getBgColor(_AdvancedSettingKeys.fixYTDLPBigThumbnail),
+            ),
+          ),
+          getItemWrapper(
+            key: _AdvancedSettingKeys.compressImages,
+            child: _CompressImagesListTile(
+              bgColor: getBgColor(_AdvancedSettingKeys.compressImages),
+            ),
+          ),
 
           () {
             const stepper = 8 * 4;
             const minimumValue = stepper;
             int getValue(int mb) => (mb - minimumValue) ~/ stepper;
-            return Obx(
-              () {
-                return CustomListTile(
-                  leading: const StackedIcon(
-                    baseIcon: Broken.gallery,
-                    secondaryIcon: Broken.cpu,
-                  ),
-                  title: lang.MAX_IMAGE_CACHE_SIZE,
-                  trailing: NamidaWheelSlider<int>(
-                    totalCount: getValue(4 * 1024), // 4 GB
-                    initValue: getValue(settings.imagesMaxCacheInMB.value),
-                    itemSize: 5,
-                    text: (settings.imagesMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
-                    onValueChanged: (val) {
-                      settings.save(imagesMaxCacheInMB: minimumValue + (val * stepper));
-                    },
-                  ),
-                );
-              },
+            return getItemWrapper(
+              key: _AdvancedSettingKeys.maxImageCache,
+              child: Obx(
+                () {
+                  return CustomListTile(
+                    bgColor: getBgColor(_AdvancedSettingKeys.maxImageCache),
+                    leading: const StackedIcon(
+                      baseIcon: Broken.gallery,
+                      secondaryIcon: Broken.cpu,
+                    ),
+                    title: lang.MAX_IMAGE_CACHE_SIZE,
+                    trailing: NamidaWheelSlider<int>(
+                      totalCount: getValue(4 * 1024), // 4 GB
+                      initValue: getValue(settings.imagesMaxCacheInMB.value),
+                      itemSize: 5,
+                      text: (settings.imagesMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
+                      onValueChanged: (val) {
+                        settings.save(imagesMaxCacheInMB: minimumValue + (val * stepper));
+                      },
+                    ),
+                  );
+                },
+              ),
             );
           }(),
 
@@ -286,68 +348,81 @@ class AdvancedSettings extends StatelessWidget {
             const stepper = 8 * 32;
             const minimumValue = stepper;
             int getValue(int mb) => (mb - minimumValue) ~/ stepper;
-            return Obx(
-              () {
-                return CustomListTile(
-                  leading: const StackedIcon(
-                    baseIcon: Broken.video,
-                    secondaryIcon: Broken.cpu,
-                  ),
-                  title: lang.MAX_VIDEO_CACHE_SIZE,
-                  trailing: NamidaWheelSlider<int>(
-                    totalCount: getValue(10 * 1024), // 10 GB
-                    initValue: getValue(settings.videosMaxCacheInMB.value),
-                    itemSize: 5,
-                    text: (settings.videosMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
-                    onValueChanged: (val) {
-                      settings.save(videosMaxCacheInMB: minimumValue + (val * stepper));
-                    },
-                  ),
-                );
-              },
+            return getItemWrapper(
+              key: _AdvancedSettingKeys.maxVideoCache,
+              child: Obx(
+                () {
+                  return CustomListTile(
+                    bgColor: getBgColor(_AdvancedSettingKeys.maxVideoCache),
+                    leading: const StackedIcon(
+                      baseIcon: Broken.video,
+                      secondaryIcon: Broken.cpu,
+                    ),
+                    title: lang.MAX_VIDEO_CACHE_SIZE,
+                    trailing: NamidaWheelSlider<int>(
+                      totalCount: getValue(10 * 1024), // 10 GB
+                      initValue: getValue(settings.videosMaxCacheInMB.value),
+                      itemSize: 5,
+                      text: (settings.videosMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
+                      onValueChanged: (val) {
+                        settings.save(videosMaxCacheInMB: minimumValue + (val * stepper));
+                      },
+                    ),
+                  );
+                },
+              ),
             );
           }(),
 
-          const _ClearImageCacheListTile(),
+          getItemWrapper(
+            key: _AdvancedSettingKeys.clearImageCache,
+            child: _ClearImageCacheListTile(
+              bgColor: getBgColor(_AdvancedSettingKeys.clearImageCache),
+            ),
+          ),
 
-          Obx(
-            () => CustomListTile(
-              leading: const StackedIcon(
-                baseIcon: Broken.video,
-                secondaryIcon: Broken.close_circle,
+          getItemWrapper(
+            key: _AdvancedSettingKeys.clearVideoCache,
+            child: Obx(
+              () => CustomListTile(
+                bgColor: getBgColor(_AdvancedSettingKeys.clearVideoCache),
+                leading: const StackedIcon(
+                  baseIcon: Broken.video,
+                  secondaryIcon: Broken.close_circle,
+                ),
+                title: lang.CLEAR_VIDEO_CACHE,
+                trailingText: Indexer.inst.videosSizeInStorage.value.fileSizeFormatted,
+                onTap: () async {
+                  final allvideo = VideoController.inst.getCurrentVideosInCache();
+
+                  /// First Dialog
+                  NamidaNavigator.inst.navigateDialog(
+                    dialog: CustomBlurryDialog(
+                      isWarning: true,
+                      normalTitleStyle: true,
+                      bodyText: "${_getVideoSubtitleText(allvideo)}\n${lang.CLEAR_VIDEO_CACHE_NOTE}",
+                      actions: [
+                        /// Pressing Choose
+                        NamidaButton(
+                          text: lang.CHOOSE,
+                          onPressed: () {
+                            NamidaNavigator.inst.closeDialog();
+                            _showChooseVideosToDeleteDialog(allvideo);
+                          },
+                        ),
+                        const CancelButton(),
+                        NamidaButton(
+                          text: lang.DELETE.toUpperCase(),
+                          onPressed: () async {
+                            NamidaNavigator.inst.closeDialog();
+                            await Indexer.inst.clearVideoCache();
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-              title: lang.CLEAR_VIDEO_CACHE,
-              trailingText: Indexer.inst.videosSizeInStorage.value.fileSizeFormatted,
-              onTap: () async {
-                final allvideo = VideoController.inst.getCurrentVideosInCache();
-
-                /// First Dialog
-                NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    isWarning: true,
-                    normalTitleStyle: true,
-                    bodyText: "${_getVideoSubtitleText(allvideo)}\n${lang.CLEAR_VIDEO_CACHE_NOTE}",
-                    actions: [
-                      /// Pressing Choose
-                      NamidaButton(
-                        text: lang.CHOOSE,
-                        onPressed: () {
-                          NamidaNavigator.inst.closeDialog();
-                          _showChooseVideosToDeleteDialog(allvideo);
-                        },
-                      ),
-                      const CancelButton(),
-                      NamidaButton(
-                        text: lang.DELETE.toUpperCase(),
-                        onPressed: () async {
-                          NamidaNavigator.inst.closeDialog();
-                          await Indexer.inst.clearVideoCache();
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
             ),
           ),
         ],
@@ -580,7 +655,9 @@ class AdvancedSettings extends StatelessWidget {
 }
 
 class _ClearImageCacheListTile extends StatefulWidget {
-  const _ClearImageCacheListTile();
+  final Color? bgColor;
+
+  const _ClearImageCacheListTile({this.bgColor});
 
   @override
   State<_ClearImageCacheListTile> createState() => __ClearImageCacheListTileState();
@@ -629,6 +706,7 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
   Widget build(BuildContext context) {
     return Obx(
       () => CustomListTile(
+        bgColor: widget.bgColor,
         leading: const StackedIcon(
           baseIcon: Broken.image,
           secondaryIcon: Broken.close_circle,
@@ -692,11 +770,20 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
   final Color? colorScheme;
   final String? oldPath;
   final Iterable<String>? tracksPaths;
-  const UpdateDirectoryPathListTile({super.key, this.colorScheme, this.oldPath, this.tracksPaths});
+  final Color? bgColor;
+
+  const UpdateDirectoryPathListTile({
+    super.key,
+    this.colorScheme,
+    this.oldPath,
+    this.tracksPaths,
+    this.bgColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     return CustomListTile(
+      bgColor: bgColor,
       leading: StackedIcon(
         baseIcon: Broken.folder,
         secondaryIcon: Broken.music,
@@ -825,7 +912,9 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
 }
 
 class _FixYTDLPThumbnailSizeListTile extends StatelessWidget {
-  const _FixYTDLPThumbnailSizeListTile();
+  final Color? bgColor;
+
+  const _FixYTDLPThumbnailSizeListTile({this.bgColor});
 
   Future<void> _onFixYTDLPPress() async {
     if (!await requestManageStoragePermission()) return;
@@ -846,6 +935,7 @@ class _FixYTDLPThumbnailSizeListTile extends StatelessWidget {
         final totalFailed = p?.totalFailed ?? 0;
         final failedSubtitle = totalFailed > 0 ? "${lang.FAILED}: $totalFailed" : null;
         return CustomListTile(
+          bgColor: bgColor,
           leading: const StackedIcon(
             baseIcon: Broken.document_code_2,
             secondaryIcon: Broken.video_square,
@@ -861,7 +951,9 @@ class _FixYTDLPThumbnailSizeListTile extends StatelessWidget {
 }
 
 class _CompressImagesListTile extends StatelessWidget {
-  const _CompressImagesListTile();
+  final Color? bgColor;
+
+  const _CompressImagesListTile({this.bgColor});
 
   Future<void> _onCompressImagePress() async {
     if (NamidaFFMPEG.inst.currentOperations[OperationType.imageCompress]?.value.currentFilePath != null) return; // return if currently compressing.
@@ -968,6 +1060,7 @@ class _CompressImagesListTile extends StatelessWidget {
         final totalImagesToCompress = p?.totalFiles ?? 0;
         final totalFailed = p?.totalFailed ?? 0;
         return CustomListTile(
+          bgColor: bgColor,
           leading: const StackedIcon(
             baseIcon: Broken.gallery,
             secondaryIcon: Broken.magicpen,

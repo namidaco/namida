@@ -58,6 +58,7 @@ import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 import 'package:namida/ui/pages/tracks_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings_search_bar.dart';
 import 'package:namida/ui/widgets/stats.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
@@ -810,7 +811,9 @@ extension RouteUtils on NamidaRoute {
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 400),
-      child: finalWidget ?? ScrollSearchController.inst.searchBarWidget,
+      child: (route == RouteType.SETTINGS_page || route == RouteType.SETTINGS_subpage)
+          ? NamidaSettingSearchBar(closedChild: finalWidget)
+          : finalWidget ?? ScrollSearchController.inst.searchBarWidget,
     );
   }
 

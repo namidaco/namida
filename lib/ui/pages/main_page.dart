@@ -9,6 +9,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -19,6 +20,7 @@ import 'package:namida/packages/searchbar_animation.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/pages/search_page.dart';
+import 'package:namida/ui/pages/settings_search_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 
@@ -108,6 +110,16 @@ class MainPage extends StatelessWidget {
               () => AnimatedSwitcher(
                 duration: const Duration(milliseconds: 400),
                 child: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? const SearchPage() : null,
+              ),
+            ),
+          ),
+
+          // -- Settings Search Box
+          Positioned.fill(
+            child: Obx(
+              () => AnimatedSwitcher(
+                duration: const Duration(milliseconds: 400),
+                child: SettingsSearchController.inst.canShowSearch ? const SettingsSearchPage() : null,
               ),
             ),
           ),
