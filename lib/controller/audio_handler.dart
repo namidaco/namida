@@ -889,11 +889,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         }
       } catch (e) {
         if (item != currentVideo) return; // race avoidance when playing multiple videos
-        SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-          if (item == currentItem) {
-            snackyy(message: 'Error playing video: $e', top: false, isError: true);
-          }
-        });
+        void showSnackError(String nextAction) {
+          SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+            if (item == currentItem) {
+              snackyy(message: 'Error playing video, $nextAction: $e', top: false, isError: true);
+            }
+          });
+        }
+
+        showSnackError('trying again');
+
         printy(e, isError: true);
         playedFromCacheDetails = await _trySetYTVideoWithoutConnection(
           item: item,
@@ -903,7 +908,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           whatToAwait: () async => await playerStoppingSeikoo.future,
           startPlaying: startPlaying,
         );
-        if (!okaySetFromCache()) return;
+        if (!okaySetFromCache()) {
+          showSnackError('skipping');
+          skipToNext();
+        }
       }
     }
 
