@@ -8,6 +8,7 @@ abstract class LanguageKeys {
 
   String get ABOUT => _getKey('ABOUT');
   String get ACTIVE => _getKey('ACTIVE');
+  String get ADD_AUDIO_TO_LOCAL_LIBRARY => _getKey('ADD_AUDIO_TO_LOCAL_LIBRARY');
   String get ADD_FOLDER => _getKey('ADD_FOLDER');
   String get ADD_LANGUAGE => _getKey('ADD_LANGUAGE');
   String get ADD_LANGUAGE_SUBTITLE => _getKey('ADD_LANGUAGE_SUBTITLE');
@@ -22,7 +23,6 @@ abstract class LanguageKeys {
   String get ADVANCED_SETTINGS_SUBTITLE => _getKey('ADVANCED_SETTINGS_SUBTITLE');
   String get ADVANCED_SETTINGS => _getKey('ADVANCED_SETTINGS');
   String get ADVANCED => _getKey('ADVANCED');
-  String get AGO => _getKey('AGO');
   String get ALBUM_ARTIST => _getKey('ALBUM_ARTIST');
   String get ALBUM_ARTISTS => _getKey('ALBUM_ARTISTS');
   String get ALBUM_IDENTIFIERS => _getKey('ALBUM_IDENTIFIERS');
@@ -31,6 +31,7 @@ abstract class LanguageKeys {
   String get ALBUM => _getKey('ALBUM');
   String get ALBUMS_COUNT => _getKey('ALBUMS_COUNT');
   String get ALBUMS => _getKey('ALBUMS');
+  String get ALL => _getKey('ALL');
   String get ALL_TIME => _getKey('ALL_TIME');
   String get ALWAYS => _getKey('ALWAYS');
   String get ALWAYS_ASK => _getKey('ALWAYS_ASK');
@@ -53,6 +54,7 @@ abstract class LanguageKeys {
   String get AUTO => _getKey('AUTO');
   String get AUTOMATIC_BACKUP_SUBTITLE => _getKey('AUTOMATIC_BACKUP_SUBTITLE');
   String get AUTOMATIC_BACKUP => _getKey('AUTOMATIC_BACKUP');
+  String get AUTO_EXTRACT_TITLE_AND_ARTIST_FROM_VIDEO_TITLE => _getKey('AUTO_EXTRACT_TITLE_AND_ARTIST_FROM_VIDEO_TITLE');
   String get BACKUP_AND_RESTORE_SUBTITLE => _getKey('BACKUP_AND_RESTORE_SUBTITLE');
   String get BACKUP_AND_RESTORE => _getKey('BACKUP_AND_RESTORE');
   String get BALANCED => _getKey('BALANCED');
@@ -154,6 +156,7 @@ abstract class LanguageKeys {
   String get DONT_RESTORE_POSITION => _getKey('DONT_RESTORE_POSITION');
   String get DOWNLOAD => _getKey('DOWNLOAD');
   String get DOWNLOADING_WILL_OVERRIDE_IT => _getKey('DOWNLOADING_WILL_OVERRIDE_IT');
+  String get DOWNLOADS => _getKey('DOWNLOADS');
   String get DOWNLOADS_METADATA_TAGS => _getKey('DOWNLOADS_METADATA_TAGS');
   String get DOWNLOADS_METADATA_TAGS_SUBTITLE => _getKey('DOWNLOADS_METADATA_TAGS_SUBTITLE');
   String get DO_NOTHING => _getKey('DO_NOTHING');
@@ -218,6 +221,7 @@ abstract class LanguageKeys {
   String get FILTER_TRACKS_BY => _getKey('FILTER_TRACKS_BY');
   String get FILTER_TRACKS => _getKey('FILTER_TRACKS');
   String get FILTERED_BY_SIZE_AND_DURATION => _getKey('FILTERED_BY_SIZE_AND_DURATION');
+  String get FINISHED => _getKey('FINISHED');
   String get FINISHED_UPDATING_LIBRARY => _getKey('FINISHED_UPDATING_LIBRARY');
   String get FIX_YTDLP_BIG_THUMBNAIL_SIZE => _getKey('FIX_YTDLP_BIG_THUMBNAIL_SIZE');
   String get FOLDER_NAME => _getKey('FOLDER_NAME');
@@ -240,7 +244,6 @@ abstract class LanguageKeys {
   String get GO_TO_ARTIST => _getKey('GO_TO_ARTIST');
   String get GO_TO_CHANNEL => _getKey('GO_TO_CHANNEL');
   String get GO_TO_FOLDER => _getKey('GO_TO_FOLDER');
-  String get GRANT_ACCESS => _getKey('GRANT_ACCESS');
   String get GRANT_STORAGE_PERMISSION => _getKey('GRANT_STORAGE_PERMISSION');
   String get GROUP_ARTWORKS_BY_ALBUM => _getKey('GROUP_ARTWORKS_BY_ALBUM');
   String get GUIDE => _getKey('GUIDE');
@@ -289,6 +292,7 @@ abstract class LanguageKeys {
   String get LIBRARY_TABS_REORDER => _getKey('LIBRARY_TABS_REORDER');
   String get LIBRARY_TABS => _getKey('LIBRARY_TABS');
   String get LIKE => _getKey('LIKE');
+  String get LIKED => _getKey('LIKED');
   String get LINK => _getKey('LINK');
   String get LIST_OF_FOLDERS => _getKey('LIST_OF_FOLDERS');
   String get LOADING_FILE => _getKey('LOADING_FILE');
@@ -313,9 +317,7 @@ abstract class LanguageKeys {
   String get METADATA_READ_FAILED => _getKey('METADATA_READ_FAILED');
   String get MINIMUM_ONE_ITEM => _getKey('MINIMUM_ONE_ITEM');
   String get MINIMUM_ONE_ITEM_SUBTITLE => _getKey('MINIMUM_ONE_ITEM_SUBTITLE');
-  String get MIN_FILE_DURATION_SUBTITLE => _getKey('MIN_FILE_DURATION_SUBTITLE');
   String get MIN_FILE_DURATION => _getKey('MIN_FILE_DURATION');
-  String get MIN_FILE_SIZE_SUBTITLE => _getKey('MIN_FILE_SIZE_SUBTITLE');
   String get MIN_FILE_SIZE => _getKey('MIN_FILE_SIZE');
   String get MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION => _getKey('MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION');
   String get MIN_VALUE_CANT_BE_MORE_THAN_MAX => _getKey('MIN_VALUE_CANT_BE_MORE_THAN_MAX');
@@ -368,6 +370,7 @@ abstract class LanguageKeys {
   String get OLDEST_WATCH => _getKey('OLDEST_WATCH');
   String get OLD_DIRECTORY => _getKey('OLD_DIRECTORY');
   String get OLD_DIRECTORY_STILL_HAS_TRACKS => _getKey('OLD_DIRECTORY_STILL_HAS_TRACKS');
+  String get ONGOING => _getKey('ONGOING');
   String get ON_INTERRUPTION => _getKey('ON_INTERRUPTION');
   String get ON_NOTIFICATION_TAP => _getKey('ON_NOTIFICATION_TAP');
   String get ON_OPENING_YOUTUBE_LINK => _getKey('ON_OPENING_YOUTUBE_LINK');
@@ -380,6 +383,7 @@ abstract class LanguageKeys {
   String get OR => _getKey('OR');
   String get OTHERS => _getKey('OTHERS');
   String get OUTPUT => _getKey('OUTPUT');
+  String get OVERRIDE_OLD_FILES_IN_THE_SAME_FOLDER => _getKey('OVERRIDE_OLD_FILES_IN_THE_SAME_FOLDER');
   String get PALETTE => _getKey('PALETTE');
   String get PALETTE_MIX => _getKey('PALETTE_MIX');
   String get PALETTE_NEW_MIX => _getKey('PALETTE_NEW_MIX');
@@ -392,7 +396,6 @@ abstract class LanguageKeys {
   String get PERCENTAGE => _getKey('PERCENTAGE');
   String get PERFORMANCE_MODE => _getKey('PERFORMANCE_MODE');
   String get PERFORMANCE_NOTE => _getKey('PERFORMANCE_NOTE');
-  String get PERMISSION_UPDATE => _getKey('PERMISSION_UPDATE');
   String get PICK_COLORS_FROM_DEVICE_WALLPAPER => _getKey('PICK_COLORS_FROM_DEVICE_WALLPAPER');
   String get PICK_FROM_STORAGE => _getKey('PICK_FROM_STORAGE');
   String get PINNED => _getKey('PINNED');
@@ -590,7 +593,6 @@ abstract class LanguageKeys {
   String get VIDEO_ONLY => _getKey('VIDEO_ONLY');
   String get VIDEO_PLAYBACK_SOURCE_AUTO_SUBTITLE => _getKey('VIDEO_PLAYBACK_SOURCE_AUTO_SUBTITLE');
   String get VIDEO_PLAYBACK_SOURCE_LOCAL_EXAMPLE_SUBTITLE => _getKey('VIDEO_PLAYBACK_SOURCE_LOCAL_EXAMPLE_SUBTITLE');
-  String get VIDEO_PLAYBACK_SOURCE_LOCAL_EXAMPLE => _getKey('VIDEO_PLAYBACK_SOURCE_LOCAL_EXAMPLE');
   String get VIDEO_PLAYBACK_SOURCE_LOCAL_SUBTITLE => _getKey('VIDEO_PLAYBACK_SOURCE_LOCAL_SUBTITLE');
   String get VIDEO_PLAYBACK_SOURCE_LOCAL => _getKey('VIDEO_PLAYBACK_SOURCE_LOCAL');
   String get VIDEO_PLAYBACK_SOURCE_YOUTUBE_SUBTITLE => _getKey('VIDEO_PLAYBACK_SOURCE_YOUTUBE_SUBTITLE');
@@ -606,7 +608,6 @@ abstract class LanguageKeys {
   String get VOLUME => _getKey('VOLUME');
   String get WARNING => _getKey('WARNING');
   String get WAVEFORM_BARS_COUNT => _getKey('WAVEFORM_BARS_COUNT');
-  String get WAVEFORMS => _getKey('WAVEFORMS');
   String get WEBM_NO_EDIT_TAGS_SUPPORT => _getKey('WEBM_NO_EDIT_TAGS_SUPPORT');
   String get WEEK => _getKey('WEEK');
   String get YEAR => _getKey('YEAR');
