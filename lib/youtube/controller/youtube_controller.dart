@@ -114,6 +114,12 @@ class YoutubeController {
   /// {groupName: {filename: YoutubeItemDownloadConfig}}
   final youtubeDownloadTasksMap = <String, Map<String, YoutubeItemDownloadConfig>>{}.obs;
 
+  /// {groupName: {filename: bool}}
+  /// - `true` -> is in queue, will be downloaded when reached.
+  /// - `false` -> is paused. will be skipped when reached.
+  /// - `null` -> not specified.
+  final youtubeDownloadTasksInQueueMap = <String, Map<String, bool?>>{}.obs;
+
   final youtubeDownloadTasksTempList = <(String, YoutubeItemDownloadConfig)>[];
 
   /// Used to keep track of existing downloaded files, more performant than real-time checking.
@@ -631,7 +637,7 @@ class YoutubeController {
     _matchIDsForItemConfig(
       videosIds: videosIds,
       onMatch: (groupName, config) {
-        YoutubeController.inst.downloadYoutubeVideos(
+        downloadYoutubeVideos(
           useCachedVersionsIfAvailable: true,
           autoExtractTitleAndArtist: settings.ytAutoExtractVideoTagsFromInfo.value,
           keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
@@ -643,15 +649,15 @@ class YoutubeController {
     );
   }
 
-  void resumeDownloadTasks({required String groupName}) {
-    final mapEntry = youtubeDownloadTasksMap[groupName];
-    if (mapEntry != null) {
-      YoutubeController.inst.downloadYoutubeVideos(
+  void resumeDownloadTasks({required String groupName, List<YoutubeItemDownloadConfig> itemsConfig = const []}) {
+    final finalItems = itemsConfig.isNotEmpty ? itemsConfig : youtubeDownloadTasksMap[groupName]?.values.toList() ?? [];
+    if (finalItems.isNotEmpty) {
+      downloadYoutubeVideos(
         useCachedVersionsIfAvailable: true,
         autoExtractTitleAndArtist: settings.ytAutoExtractVideoTagsFromInfo.value,
         keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
         downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
-        itemsConfig: mapEntry.values.toList(),
+        itemsConfig: finalItems,
         groupName: groupName,
       );
     }
@@ -663,6 +669,7 @@ class YoutubeController {
     List<String> videosIds = const [],
     bool allInGroupName = false,
   }) {
+    youtubeDownloadTasksInQueueMap[groupName] ??= {};
     if (allInGroupName) {
       final mapEntry = _downloadClientsMap[groupName];
       if (mapEntry != null) {
@@ -671,56 +678,108 @@ class YoutubeController {
         }
         _downloadClientsMap.remove(groupName);
       }
+      itemsConfig.loop((c, _) {
+        _breakRetrievingInfoRequest(c);
+        youtubeDownloadTasksInQueueMap[groupName]?[c.filename] = false;
+      });
     } else if (videosIds.isNotEmpty) {
       _matchIDsForItemConfig(
         videosIds: videosIds,
         onMatch: (groupName, config) {
           _downloadClientsMap[groupName]?[config.filename]?.close(force: true);
           _downloadClientsMap[groupName]?.remove(config.filename);
+          youtubeDownloadTasksInQueueMap[groupName]?[config.filename] = false;
+          _breakRetrievingInfoRequest(config);
         },
       );
     } else {
       itemsConfig.loop((c, _) {
         _downloadClientsMap[groupName]?[c.filename]?.close(force: true);
         _downloadClientsMap[groupName]?.remove(c.filename);
+        youtubeDownloadTasksInQueueMap[groupName]?[c.filename] = false;
+        _breakRetrievingInfoRequest(c);
       });
     }
+  }
+
+  void _breakRetrievingInfoRequest(YoutubeItemDownloadConfig c) {
+    final err = Exception('Download was canceled by the user');
+    _completersVAI[c]?.$1.completeErrorIfWasnt(err);
+    _completersVAI[c]?.$2.completeErrorIfWasnt(err);
+    _completersVAI[c]?.$3.completeErrorIfWasnt(err);
   }
 
   Future<void> cancelDownloadTask({
     required List<YoutubeItemDownloadConfig> itemsConfig,
     required String groupName,
+    bool allInGroupName = false,
   }) async {
-    await _updateDownloadTask(itemsConfig: itemsConfig, groupName: groupName, remove: true);
+    await _updateDownloadTask(
+      itemsConfig: itemsConfig,
+      groupName: groupName,
+      remove: true,
+      allInGroupName: allInGroupName,
+    );
+  }
+
+  Future<void> cancelAllOnGoingTasks({
+    required List<YoutubeItemDownloadConfig> itemsConfig,
+    required String groupName,
+    bool allInGroupName = false,
+  }) async {
+    await _updateDownloadTask(
+      itemsConfig: itemsConfig,
+      groupName: groupName,
+      remove: true,
+      allInGroupName: allInGroupName,
+    );
   }
 
   Future<void> _updateDownloadTask({
     required List<YoutubeItemDownloadConfig> itemsConfig,
     required String groupName,
     bool remove = false,
+    bool allInGroupName = false,
   }) async {
     youtubeDownloadTasksMap[groupName] ??= {};
     if (remove) {
       final directory = Directory("${AppDirs.YOUTUBE_DOWNLOADS}$groupName");
-      await itemsConfig.loopFuture((c, _) async {
+      final itemsToCancel = allInGroupName ? youtubeDownloadTasksMap[groupName]!.values.toList() : itemsConfig;
+      await itemsToCancel.loopFuture((c, _) async {
         _downloadClientsMap[groupName]?[c.filename]?.close(force: true);
         _downloadClientsMap[groupName]?.remove(c.filename);
         youtubeDownloadTasksMap[groupName]?.remove(c.filename);
-        print('KKKKKKKK ${File("$directory/${c.filename}").existsSync()}');
+        youtubeDownloadTasksInQueueMap[groupName]?.remove(c.filename);
+        _breakRetrievingInfoRequest(c);
+        youtubeDownloadTasksTempList.remove((groupName, c));
         await File("$directory/${c.filename}").deleteIfExists();
         downloadedFilesMap[groupName]?[c.filename] = null;
       });
+
+      // -- remove groups if emptied.
+      if (youtubeDownloadTasksMap[groupName]?.isEmpty == true) {
+        youtubeDownloadTasksMap.remove(groupName);
+      }
     } else {
       itemsConfig.loop((c, _) {
         youtubeDownloadTasksMap[groupName]![c.filename] = c;
+        youtubeDownloadTasksInQueueMap[groupName]?[c.filename] = true;
       });
     }
 
     youtubeDownloadTasksMap.refresh();
     downloadedFilesMap.refresh();
 
-    await File("${AppDirs.YT_DOWNLOAD_TASKS}$groupName.json").writeAsJson(youtubeDownloadTasksMap[groupName]);
+    final mapToWrite = youtubeDownloadTasksMap[groupName];
+    final file = File("${AppDirs.YT_DOWNLOAD_TASKS}$groupName.json");
+    if (mapToWrite?.isNotEmpty == true) {
+      await file.writeAsJson(mapToWrite);
+    } else {
+      await file.tryDeleting();
+    }
   }
+
+  final _completersVAI = <YoutubeItemDownloadConfig, (Completer<void>, Completer<void>, Completer<void>)>{};
 
   Future<void> downloadYoutubeVideos({
     required List<YoutubeItemDownloadConfig> itemsConfig,
@@ -732,6 +791,7 @@ class YoutubeController {
     required bool autoExtractTitleAndArtist,
     bool deleteOldFile = true,
     bool addAudioToLocalLibrary = true,
+    bool audioOnly = false,
     List<String> preferredQualities = const [],
     Future<void> Function(File? downloadedFile)? onOldFileDeleted,
     Future<void> Function(File? deletedFile)? onFileDownloaded,

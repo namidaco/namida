@@ -113,6 +113,12 @@ extension TracksUtils on List<Track> {
   }
 }
 
+extension StringListJoiner on Iterable<String?> {
+  String joinText({String separator = ' • '}) {
+    return where((element) => element != null && element != '').join(separator);
+  }
+}
+
 extension DisplayKeywords on int {
   String get displayTrackKeyword => displayKeyword(lang.TRACK, lang.TRACKS);
   String get displayDayKeyword => displayKeyword(lang.DAY, lang.DAYS);
@@ -410,6 +416,11 @@ extension CompleterCompleter<T> on Completer<T>? {
   void completeIfWasnt([FutureOr<T>? value]) async {
     final c = this;
     if (c?.isCompleted == false) c?.complete(value);
+  }
+
+  void completeErrorIfWasnt(Object error, [StackTrace? stackTrace]) async {
+    final c = this;
+    if (c?.isCompleted == false) c?.completeError(error, stackTrace);
   }
 }
 

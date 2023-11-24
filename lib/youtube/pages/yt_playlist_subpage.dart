@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -20,6 +21,7 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
+import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
@@ -205,25 +207,37 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                 tooltip: lang.PLAY_LAST,
                                 onPressed: () => Player.inst.addToQueue(widget.playlist.tracks, insertNext: false),
                               ),
-                              if (widget.isEditable)
-                                NamidaIconButton(
-                                  iconColor: context.defaultIconColor(bgColor),
-                                  icon: Broken.edit_2,
-                                  onPressed: () async {
-                                    playlistCurrentName = await widget.playlist.showRenamePlaylistSheet(context: context, playlistName: playlistCurrentName);
-                                    setState(() {});
-                                  },
-                                ),
+                              NamidaIconButton(
+                                iconColor: context.defaultIconColor(bgColor),
+                                icon: Broken.import,
+                                onPressed: () async {
+                                  NamidaNavigator.inst.navigateTo(
+                                    YTPlaylistDownloadPage(
+                                      ids: widget.playlist.tracks,
+                                      playlistName: playlistCurrentName,
+                                    ),
+                                  );
+                                },
+                              ),
                               NamidaPopupWrapper(
                                 openOnLongPress: false,
                                 childrenDefault: [
                                   NamidaPopupItem(icon: Broken.share, title: lang.SHARE, onTap: widget.playlist.shareVideos),
-                                  if (widget.isEditable)
+                                  if (widget.isEditable) ...[
+                                    NamidaPopupItem(
+                                      icon: Broken.edit_2,
+                                      title: lang.RENAME_PLAYLIST,
+                                      onTap: () async {
+                                        playlistCurrentName = await widget.playlist.showRenamePlaylistSheet(context: context, playlistName: playlistCurrentName);
+                                        setState(() {});
+                                      },
+                                    ),
                                     NamidaPopupItem(
                                       icon: Broken.trash,
-                                      title: lang.DELETE,
+                                      title: lang.DELETE_PLAYLIST,
                                       onTap: () => widget.playlist.promptDelete(name: playlistCurrentName, colorScheme: bgColor),
                                     ),
+                                  ],
                                 ],
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 4.0),

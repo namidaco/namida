@@ -258,7 +258,7 @@ class YoutubePlaylistsView extends StatelessWidget {
                           moreItems: [
                             NamidaPopupItem(
                               icon: Broken.trash,
-                              title: lang.DELETE,
+                              title: lang.DELETE_PLAYLIST,
                               onTap: () => playlist.promptDelete(name: playlist.name),
                             ),
                           ],

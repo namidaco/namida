@@ -48,7 +48,7 @@ class AppThemes {
       splashColor: Colors.transparent,
       splashFactory: InkRipple.splashFactory,
       highlightColor: light ? Colors.black.withAlpha(20) : Colors.white.withAlpha(pitchBlack == null ? 10 : 25),
-      disabledColor: light ? const Color.fromARGB(0, 160, 160, 160) : const Color.fromARGB(200, 60, 60, 60),
+      disabledColor: light ? const Color.fromARGB(200, 160, 160, 160) : const Color.fromARGB(200, 60, 60, 60),
       applyElevationOverlayColor: false,
       appBarTheme: AppBarTheme(
         elevation: 0,

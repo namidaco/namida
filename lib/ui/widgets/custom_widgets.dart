@@ -1152,8 +1152,17 @@ class NamidaBlurryContainer extends StatelessWidget {
   final BorderRadius? borderRadius;
   final double? width;
   final double? height;
-  final EdgeInsetsGeometry? padding;
-  const NamidaBlurryContainer({super.key, required this.child, this.onTap, this.borderRadius, this.width, this.height, this.padding});
+  final EdgeInsetsGeometry padding;
+
+  const NamidaBlurryContainer({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.borderRadius,
+    this.width,
+    this.height,
+    this.padding = const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1167,7 +1176,7 @@ class NamidaBlurryContainer extends StatelessWidget {
       container: Container(
           width: width,
           height: height,
-          padding: padding ?? EdgeInsets.symmetric(horizontal: 6.0.multipliedRadius, vertical: 2.0),
+          padding: padding,
           decoration: BoxDecoration(
             color: context.theme.cardColor.withAlpha(settings.enableBlurEffect.value ? blurredAlphaLight : 220),
             borderRadius: borderRadius ??
@@ -2709,6 +2718,7 @@ class NamidaPopupWrapper extends StatelessWidget {
     );
     await NamidaNavigator.inst.showMenu(
       showMenu(
+        useRootNavigator: true,
         context: context,
         position: position,
         items: [

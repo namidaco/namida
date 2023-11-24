@@ -76,7 +76,7 @@ extension YoutubePlaylistShare on YoutubePlaylist {
                 Row(
                   children: [
                     SizedBox(width: context.width * 0.1),
-                    const CancelButton(),
+                    CancelButton(onPressed: Navigator.of(context).pop),
                     SizedBox(width: context.width * 0.1),
                     Expanded(
                       child: NamidaInkWell(
