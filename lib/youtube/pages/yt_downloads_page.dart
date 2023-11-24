@@ -3,6 +3,7 @@ import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -62,7 +63,8 @@ class YTDownloadsPage extends StatelessWidget {
         final smallList = YoutubeController.inst.youtubeDownloadTasksMap[key]?.values.toList();
         smallList?.reverseLoop((v, index) {
           final match = YoutubeController.inst.downloadedFilesMap[key]?[v.filename] == null;
-          if (match) itemsList.add((key, v));
+          final isDownloadingOrFetching = (YoutubeController.inst.isDownloading[v.id]?[v.filename] ?? false) || (YoutubeController.inst.isFetchingData[v.id]?[v.filename] ?? false);
+          if (match || isDownloadingOrFetching) itemsList.add((key, v));
         });
       });
     } else {
@@ -70,14 +72,70 @@ class YTDownloadsPage extends StatelessWidget {
         final smallList = YoutubeController.inst.youtubeDownloadTasksMap[key]?.values.toList();
         smallList?.reverseLoop((v, index) {
           final match = YoutubeController.inst.downloadedFilesMap[key]?[v.filename] != null;
-          if (match) itemsList.add((key, v));
+          final isDownloadingOrFetching = (YoutubeController.inst.isDownloading[v.id]?[v.filename] ?? false) || (YoutubeController.inst.isFetchingData[v.id]?[v.filename] ?? false);
+          if (match && !isDownloadingOrFetching) itemsList.add((key, v));
         });
       });
     }
   }
 
+  Future<bool> _confirmCancelDialog({
+    required BuildContext context,
+    String operationTitle = '',
+    String confirmMessage = '',
+    String groupTitle = '',
+    required int itemsLength,
+  }) async {
+    bool confirmed = false;
+
+    final groupTitleText = groupTitle == '' ? lang.DEFAULT : groupTitle;
+    await NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.WARNING,
+        normalTitleStyle: true,
+        isWarning: true,
+        actions: [
+          const CancelButton(),
+          const SizedBox(width: 4.0),
+          NamidaButton(
+            text: (confirmMessage != '' ? confirmMessage : lang.CONFIRM).toUpperCase(),
+            onPressed: () {
+              confirmed = true;
+              NamidaNavigator.inst.closeDialog();
+            },
+          ),
+        ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 12.0),
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(text: "$operationTitle: ", style: context.textTheme.displayLarge),
+                    TextSpan(
+                      text: '$groupTitleText ($itemsLength)',
+                      style: context.textTheme.displayMedium,
+                    ),
+                    TextSpan(text: " ?", style: context.textTheme.displayLarge),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12.0),
+            ],
+          ),
+        ),
+      ),
+    );
+    return confirmed;
+  }
+
   @override
   Widget build(BuildContext context) {
+    _updateTempList(_isOnGoingSelected.value); // refresh for when coming back to page.
+
     return BackgroundWrapper(
       child: Column(
         children: [
@@ -136,7 +194,7 @@ class YTDownloadsPage extends StatelessWidget {
                             iconSize: 24.0,
                             onPressed: () {
                               YoutubeController.inst.youtubeDownloadTasksTempList.loop((e, index) {
-                                YoutubeController.inst.resumeDownloadTasks(groupName: e.$1);
+                                YoutubeController.inst.resumeDownloadTasks(groupName: e.$1, itemsConfig: [e.$2]);
                               });
                             },
                           ),
@@ -146,11 +204,30 @@ class YTDownloadsPage extends StatelessWidget {
                             onPressed: () {
                               YoutubeController.inst.youtubeDownloadTasksTempList.loop((e, index) {
                                 YoutubeController.inst.pauseDownloadTask(
-                                  itemsConfig: [],
+                                  itemsConfig: [e.$2],
                                   groupName: e.$1,
-                                  allInGroupName: true,
                                 );
                               });
+                            },
+                          ),
+                          NamidaIconButton(
+                            icon: Broken.close_circle,
+                            iconSize: 24.0,
+                            onPressed: () async {
+                              final confirmed = await _confirmCancelDialog(
+                                context: context,
+                                operationTitle: lang.CANCEL,
+                                groupTitle: lang.ONGOING,
+                                itemsLength: YoutubeController.inst.youtubeDownloadTasksTempList.length,
+                              );
+                              if (confirmed) {
+                                YoutubeController.inst.youtubeDownloadTasksTempList.loop((e, index) {
+                                  YoutubeController.inst.cancelDownloadTask(
+                                    itemsConfig: [e.$2],
+                                    groupName: e.$1,
+                                  );
+                                });
+                              }
                             },
                           ),
                         ],
@@ -174,7 +251,7 @@ class YTDownloadsPage extends StatelessWidget {
                               final list = YoutubeController.inst.youtubeDownloadTasksMap[groupName]?.values.toList() ?? [];
                               return NamidaExpansionTile(
                                 initiallyExpanded: true,
-                                titleText: groupName,
+                                titleText: groupName == '' ? lang.DEFAULT : groupName,
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -198,6 +275,26 @@ class YTDownloadsPage extends StatelessWidget {
                                       },
                                       icon: const Icon(Broken.pause, size: 18.0),
                                     ),
+                                    IconButton.filledTonal(
+                                      padding: EdgeInsets.zero,
+                                      visualDensity: VisualDensity.compact,
+                                      onPressed: () async {
+                                        final confirmed = await _confirmCancelDialog(
+                                          context: context,
+                                          operationTitle: lang.CANCEL,
+                                          groupTitle: groupName,
+                                          itemsLength: list.length,
+                                        );
+                                        if (confirmed) {
+                                          YoutubeController.inst.cancelDownloadTask(
+                                            itemsConfig: [],
+                                            groupName: groupName,
+                                            allInGroupName: true,
+                                          );
+                                        }
+                                      },
+                                      icon: const Icon(Broken.close_circle, size: 18.0),
+                                    ),
                                     const SizedBox(width: 4.0),
                                     const Icon(
                                       Broken.arrow_down_2,
@@ -215,13 +312,10 @@ class YTDownloadsPage extends StatelessWidget {
                                     style: context.textTheme.displayLarge,
                                   ),
                                 ),
-                                children: list
-                                    .asMap()
-                                    .keys
-                                    .map(
-                                      (key) => YTDownloadTaskItemCard(videos: list, index: key, groupName: groupName),
-                                    )
-                                    .toList(),
+                                children: List<YTDownloadTaskItemCard>.generate(
+                                  list.length,
+                                  (index) => YTDownloadTaskItemCard(videos: list, index: index, groupName: groupName),
+                                ),
                               );
                             },
                           )

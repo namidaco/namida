@@ -38,6 +38,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     required this.index,
     required this.groupName,
   });
+
   Widget _getChip({
     required BuildContext context,
     required IconData icon,
@@ -45,6 +46,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     String betweenBrackets = '',
     bool displayTitle = false,
     void Function()? onTap,
+    Widget? Function(double size)? iconWidget,
   }) {
     final textWidget = RichText(
       text: TextSpan(
@@ -58,6 +60,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
         ],
       ),
     );
+    final iconSize = displayTitle ? 16.0 : 17.0;
     return NamidaInkWell(
       borderRadius: 6.0,
       padding: const EdgeInsets.only(left: 6.0, right: 6.0, top: 6.0, bottom: 6.0),
@@ -67,7 +70,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: displayTitle ? 16.0 : 17.0),
+            iconWidget?.call(iconSize) ?? Icon(icon, size: iconSize),
             if (displayTitle) ...[
               const SizedBox(width: 4.0),
               textWidget,
@@ -78,28 +81,30 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     );
   }
 
-  void _onPauseDownloadTap(List<YoutubeItemDownloadConfig> itemsConfig, bool isDownloading, BuildContext context) {
-    isDownloading
-        ? YoutubeController.inst.pauseDownloadTask(
-            itemsConfig: itemsConfig,
-            groupName: groupName,
-          )
-        : YoutubeController.inst.downloadYoutubeVideos(
-            useCachedVersionsIfAvailable: true,
-            autoExtractTitleAndArtist: settings.ytAutoExtractVideoTagsFromInfo.value,
-            keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
-            downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
-            itemsConfig: itemsConfig,
-            groupName: groupName,
-            onFileDownloaded: (downloadedFile) async {
-              if (downloadedFile != null) {
-                build(context);
-              }
-            },
-            onOldFileDeleted: (deletedFile) async {
-              build(context);
-            },
-          );
+  void _onPauseDownloadTap(List<YoutubeItemDownloadConfig> itemsConfig) {
+    YoutubeController.inst.pauseDownloadTask(
+      itemsConfig: itemsConfig,
+      groupName: groupName,
+    );
+  }
+
+  void _onResumeDownloadTap(List<YoutubeItemDownloadConfig> itemsConfig, BuildContext context) {
+    YoutubeController.inst.downloadYoutubeVideos(
+      useCachedVersionsIfAvailable: true,
+      autoExtractTitleAndArtist: settings.ytAutoExtractVideoTagsFromInfo.value,
+      keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
+      downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
+      itemsConfig: itemsConfig,
+      groupName: groupName,
+      onFileDownloaded: (downloadedFile) async {
+        if (downloadedFile != null) {
+          build(context);
+        }
+      },
+      onOldFileDeleted: (deletedFile) async {
+        build(context);
+      },
+    );
   }
 
   void _onCancelDeleteDownloadTap(List<YoutubeItemDownloadConfig> itemsConfig) {
@@ -305,7 +310,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
           const SizedBox(width: 6.0),
           Expanded(
             child: Text(
-              texts.where((element) => element != '').join(' • '),
+              texts.joinText(),
               style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0.multipliedFontScale),
             ),
           ),
@@ -419,6 +424,12 @@ class YTDownloadTaskItemCard extends StatelessWidget {
       playlistName: '',
       videoYTID: null,
     );
+
+    final itemIcon = item.videoStream != null
+        ? Broken.video
+        : item.audioStream != null
+            ? Broken.musicnote
+            : null;
 
     return NamidaPopupWrapper(
       openOnTap: false,
@@ -561,12 +572,15 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                         Obx(
                           () {
                             final isDownloading = YoutubeController.inst.isDownloading[item.id]?[item.filename] ?? false;
-                            return isDownloading
+                            final isFetching = YoutubeController.inst.isFetchingData[item.id]?[item.filename] ?? false;
+                            final willBeDownloaded = YoutubeController.inst.youtubeDownloadTasksInQueueMap[groupName]?[item.filename] == true;
+                            final canPause = isDownloading || isFetching;
+                            return canPause || willBeDownloaded
                                 ? _getChip(
                                     context: context,
                                     title: lang.PAUSE,
                                     icon: Broken.pause,
-                                    onTap: () => _onPauseDownloadTap([item], isDownloading, context),
+                                    onTap: () => _onPauseDownloadTap([item]),
                                   )
                                 : fileExists
                                     ? _getChip(
@@ -579,13 +593,13 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                             operationTitle: lang.RESTART,
                                           );
                                           // ignore: use_build_context_synchronously
-                                          if (confirmed) _onPauseDownloadTap([item], isDownloading, context);
+                                          if (confirmed) _onResumeDownloadTap([item], context);
                                         })
                                     : _getChip(
                                         context: context,
                                         title: lang.RESUME,
                                         icon: Broken.play,
-                                        onTap: () => _onPauseDownloadTap([item], isDownloading, context),
+                                        onTap: () => _onResumeDownloadTap([item], context),
                                       );
                           },
                         ),
@@ -631,11 +645,18 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                         const Spacer(),
                         Text(
                           [
-                            if (item.videoStream?.resolution != null) item.videoStream?.resolution ?? '',
-                            downloadedFile.fileSizeFormatted() ?? '',
-                          ].join(' • '),
+                            item.videoStream?.resolution,
+                            downloadedFile.fileSizeFormatted(),
+                          ].joinText(),
                           style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
                         ),
+                        const SizedBox(width: 4.0),
+                        if (itemIcon != null)
+                          Icon(
+                            itemIcon,
+                            size: 16.0,
+                            color: context.defaultIconColor(),
+                          ),
                         const SizedBox(width: 4.0),
                         fileExists
                             ? Icon(
