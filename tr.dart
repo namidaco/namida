@@ -10,14 +10,20 @@ import 'dart:io';
 /// * Notes:
 ///   - Key is not case sensitive, ex: `my_key`, `MY_KEY` & `My_key` are all valid.
 ///   - Key words should be separated with underscore.
+/// * NEW:
+///   - now supports multiple insertions, deletions.
+///   - only: `KEY` format is approved, ex: `KEY1,KEY2,KEY3`.
+///   - separated by commas (,)
+///   - if `KEY1,KEY2 VALUE` was used, only first key will be inserted
 void main(List<String> argumentsPre) async {
   final args = List<String>.from(argumentsPre);
   final shouldRemove = args.remove('-r');
-  final argKey = args[0].toUpperCase();
+  final argKeyhh = args[0].toUpperCase();
+  final argKeys = argKeyhh.split(',');
 
   // should remove
   if (shouldRemove) {
-    await _removeKey(argKey);
+    await _removeKeys(argKeys);
     return;
   }
 
@@ -25,20 +31,24 @@ void main(List<String> argumentsPre) async {
   if (args.length == 2) {
     // should add `KEY: value` normally
     final value = args[1];
-    await _addKey(argKey, value);
+    await _addKey({argKeys.first: value});
   } else
   // want to add `KEY` with identical value
   // ex: `MY_NAME` : `My name`
   if (args.length == 1) {
-    final valuePre = argKey.replaceAll('_', ' ').toLowerCase();
-    final value = "${valuePre[0].toUpperCase()}${valuePre.substring(1)}";
-    await _addKey(argKey, value);
+    final map = <String, String>{};
+    for (final argKey in argKeys) {
+      final valuePre = argKey.replaceAll('_', ' ').toLowerCase();
+      final value = "${valuePre[0].toUpperCase()}${valuePre.substring(1)}";
+      map[argKey] = value;
+    }
+    await _addKey(map);
   } else {
-    print('Error(Missing Arguments): Supported arguments: `KEY VALUE` | `KEY` | `-r KEY`');
+    print('Error(Missing Arguments): Supported arguments: `KEY VALUE` | `KEY` | `KEY1,KEY2` |`-r KEY`');
   }
 }
 
-Future<bool> _addKey(String argKey, String argValue) async {
+Future<bool> _addKey(Map<String, String> argKeysVals) async {
   try {
     // -- Keys File
     final file = File(_keysFilePath);
@@ -58,7 +68,9 @@ Future<bool> _addKey(String argKey, String argValue) async {
       //   keys.add(withoutSC.join());
       // }
     }
-    keys.insertWithOrder(argKey);
+    for (final argKey in argKeysVals.keys) {
+      keys.insertWithOrder(argKey);
+    }
     await file.writeAsString("""
 // ignore_for_file: non_constant_identifier_names
 // AUTO GENERATED FILE
@@ -91,28 +103,33 @@ ${keys.map((e) => "  String get $e => _getKey('$e');").join('\n')}
         if (fileSystem.path.endsWith('.json')) {
           final str = await fileSystem.readAsString();
           final map = await jsonDecode(str) as Map<String, dynamic>;
-          map.addAll({argKey: argValue});
+          map.addAll(argKeysVals);
           final sorted = Map<String, dynamic>.fromEntries(map.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
           await fileSystem.writeAsString(encoder.convert(sorted));
         }
       }
     }
-    print('Added Successfully');
+    print('Added ${argKeysVals.length} ${argKeysVals.length > 1 ? 'keys' : 'key'} Successfully');
     return true;
   } on Exception catch (e) {
-    print('Error Adding: $e\nRemoving Key...');
-    _removeKey(argKey);
+    print('Error Adding: $e\nRemoving Keys...');
+    _removeKeys(argKeysVals.keys);
     return false;
   }
 }
 
-Future<bool> _removeKey(String keyToRemove) async {
+Future<bool> _removeKeys(Iterable<String> keysToRemove) async {
   try {
     // -- Keys File
     final file = File(_keysFilePath);
     final lines = await file.readAsLines();
-    final indToRemove = lines.indexWhere((element) => element.contains("String get $keyToRemove => _getKey('$keyToRemove');"));
-    lines.removeAt(indToRemove);
+    // -- reverse looping for index-related issues
+    for (int i = lines.length - 1; i >= 0; i--) {
+      final line = lines[i];
+      if (keysToRemove.any((keyToRemove) => line.contains("String get $keyToRemove => _getKey('$keyToRemove');"))) {
+        lines.removeAt(i);
+      }
+    }
     await file.writeAsString('${lines.join('\n')}\n');
 
     // -- Controller file
@@ -134,7 +151,9 @@ Future<bool> _removeKey(String keyToRemove) async {
         if (fileSystem.path.endsWith('.json')) {
           final str = await fileSystem.readAsString();
           final map = await jsonDecode(str) as Map<String, dynamic>;
-          map.remove(keyToRemove);
+          for (final keyToRemove in keysToRemove) {
+            map.remove(keyToRemove);
+          }
           await fileSystem.writeAsString(encoder.convert(map));
         }
       }
