@@ -727,7 +727,16 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
                       text: "${lang.CLEAR.toUpperCase()} (${total.fileSizeFormatted})",
                       onPressed: () async {
                         NamidaNavigator.inst.closeDialog();
-                        await Indexer.inst.clearImageCache();
+
+                        for (final d in dirsChoosen) {
+                          await Directory(d).delete(recursive: true);
+                          await Directory(d).create();
+                        }
+
+                        if (dirsChoosen.contains(AppDirs.ARTWORKS)) {
+                          await Indexer.inst.clearImageCache();
+                        }
+
                         _fillSizes();
                       },
                     );
