@@ -93,8 +93,11 @@ class NamidaNavigator {
 
   void onFirstLoad() {
     final initialTab = settings.selectedLibraryTab.value;
-    navigateTo(initialTab.toWidget(), durationInMs: 0);
+    final isSearchTab = initialTab == LibraryTab.search;
+    final finalTab = isSearchTab ? settings.libraryTabs.first : initialTab;
+    navigateTo(finalTab.toWidget(), durationInMs: 0);
     Dimensions.inst.updateAllTileDimensions();
+    if (isSearchTab) ScrollSearchController.inst.animatePageController(initialTab);
   }
 
   Future<void> toggleFullScreen(Widget widget, {bool setOrientations = true, Future<void> Function()? onWillPop}) async {

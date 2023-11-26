@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart';
 
 import 'package:get/get.dart';
 
@@ -45,7 +46,9 @@ class ScrollSearchController {
     if (tab == LibraryTab.search) {
       ScrollSearchController.inst.toggleSearchMenu();
       await Future.delayed(const Duration(milliseconds: 100));
-      ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
+      SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+        ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
+      });
       return;
     }
 
