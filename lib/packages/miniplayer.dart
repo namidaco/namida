@@ -1240,9 +1240,9 @@ class NamidaMiniPlayer extends StatelessWidget {
                     ),
                   ),
 
-                if (qp > 0.05)
-                  NamidaOpacity(
-                    opacity: (qp - 0.05 + (qp * 0.05)).clamp(0, 1),
+                if (qp > 0 && !bounceUp)
+                  Opacity(
+                    opacity: qp.clamp(0, 1),
                     child: Transform.translate(
                       offset: Offset(0, (1 - qp) * maxOffset * 0.8),
                       child: SafeArea(
@@ -2264,7 +2264,7 @@ class LyricsWrapper extends StatelessWidget {
                         alignment: Alignment.center,
                         children: [
                           child,
-                          NamidaOpacity(
+                          Opacity(
                             opacity: cp,
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(16.0.multipliedRadius),

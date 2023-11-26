@@ -358,9 +358,7 @@ class MiniPlayerController {
 
     animateQueueToCurrentTrack(jump: true);
     updateIcon();
-    queueScrollController.addListener(() {
-      updateIcon();
-    });
+    queueScrollController.addListener(updateIcon);
   }
 
   Future<void> snapToQueue({bool animateScrollController = true, bool haptic = true}) async {
