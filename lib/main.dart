@@ -238,9 +238,17 @@ Future<void> _initializeIntenties() async {
             final id = e.getYoutubeID;
             return id == '' ? null : id;
           }).whereType<String>();
+          final ytPlaylists = paths.map((e) {
+            final match = e.isEmpty ? null : kYoutubeRegexPlaylists.firstMatch(e)?[0];
+            return match;
+          }).whereType<String>();
           if (youtubeIds.isNotEmpty) {
             await _waitForFirstBuildContext.future;
             settings.onYoutubeLinkOpen.value.execute(youtubeIds);
+          } else if (ytPlaylists.isNotEmpty) {
+            for (final pl in ytPlaylists) {
+              await settings.onYoutubeLinkOpen.value.executePlaylist(pl, context: rootContext);
+            }
           } else {
             final existing = paths.where((element) => File(element).existsSync()); // this for sussy links
             final err = await playExternalFiles(existing);
