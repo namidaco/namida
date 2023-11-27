@@ -229,11 +229,15 @@ class YoutubeController {
   }
 
   /// For full list of items, use [streams] getter in [playlist].
-  Future<List<StreamInfoItem>> getPlaylistStreams(YoutubePlaylist? playlist) async {
+  Future<List<StreamInfoItem>> getPlaylistStreams(YoutubePlaylist? playlist, {bool forceInitial = false}) async {
     if (playlist == null) return [];
-    final streams = await playlist.getStreamsNextPage();
+    final streams = forceInitial ? await playlist.getStreams() : await playlist.getStreamsNextPage();
     _fillTempVideoInfoMap(streams);
     return streams;
+  }
+
+  Future<YoutubePlaylist?> getPlaylistInfo(String playlistUrl, {bool forceInitial = false}) async {
+    return await NewPipeExtractorDart.playlists.getPlaylistDetails(playlistUrl);
   }
 
   Future<void> _fetchComments(String id, {bool forceRequest = false}) async {

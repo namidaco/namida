@@ -20,6 +20,10 @@ final RegExp kYoutubeRegex = RegExp(
   r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)(?:\S+)?',
   caseSensitive: false,
 );
+final RegExp kYoutubeRegexPlaylists = RegExp(
+  r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/playlist\?list=|youtu\.be/)([\w\-]+)(?:\S+)?',
+  caseSensitive: false,
+);
 
 /// Main Color
 const Color kMainColor = Color.fromARGB(160, 117, 128, 224);

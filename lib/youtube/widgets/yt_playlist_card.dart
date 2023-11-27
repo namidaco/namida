@@ -1,22 +1,19 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
 
-import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
-import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
+import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/widgets/yt_card.dart';
 
 class YoutubePlaylistCard extends StatelessWidget {
@@ -83,7 +80,7 @@ class YoutubePlaylistCard extends StatelessWidget {
           icon: Broken.import,
           title: lang.DOWNLOAD,
           onTap: () {
-            if (playlist != null) _showPlaylistDownloadSheet(context, playlist!);
+            if (playlist != null) playlist?.showPlaylistDownloadSheet(context: context);
           },
         ),
         NamidaPopupItem(
@@ -103,108 +100,6 @@ class YoutubePlaylistCard extends StatelessWidget {
           },
         ),
       ],
-    );
-  }
-
-  Future<void> _showPlaylistDownloadSheet(BuildContext context, YoutubePlaylist playlist) async {
-    final currentCount = playlist.streams.length.obs;
-    final totalCount = playlist.streamCount.obs;
-    const switchAnimationDur = Duration(milliseconds: 600);
-    const switchAnimationDurHalf = Duration(milliseconds: 300);
-
-    bool isTotalCountNull() => totalCount.value < 0;
-
-    await Future.delayed(Duration.zero);
-    // ignore: use_build_context_synchronously
-    showModalBottomSheet(
-      context: context,
-      useRootNavigator: true,
-      isDismissible: false,
-      builder: (context) {
-        final iconSize = context.width * 0.5;
-        final iconColor = context.theme.colorScheme.onBackground.withOpacity(0.6);
-        return SizedBox(
-          width: context.width,
-          child: Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Obx(
-                  () => AnimatedSwitcher(
-                    key: const Key('circle_switch'),
-                    duration: switchAnimationDurHalf,
-                    child: currentCount.value < totalCount.value || isTotalCountNull()
-                        ? ThreeArchedCircle(
-                            size: iconSize,
-                            color: iconColor,
-                          )
-                        : Icon(
-                            key: const Key('tick_switch'),
-                            Broken.tick_circle,
-                            size: iconSize,
-                            color: iconColor,
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 12.0),
-                Text(
-                  '${lang.FETCHING}...',
-                  style: context.textTheme.displayLarge,
-                ),
-                const SizedBox(height: 8.0),
-                Obx(
-                  () => Text(
-                    '${currentCount.value.formatDecimal()}/${isTotalCountNull() ? '?' : totalCount.value.formatDecimal()}',
-                    style: context.textTheme.displayLarge,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    if (isTotalCountNull() || currentCount.value == 0) {
-      await YoutubeController.inst.getPlaylistStreams(playlist, forceInitial: currentCount.value == 0);
-      currentCount.value = playlist.streams.length;
-      totalCount.value = playlist.streamCount < 0 ? playlist.streams.length : playlist.streamCount;
-    }
-
-    // -- if still not fetched
-    if (isTotalCountNull()) {
-      if (context.mounted) Navigator.of(context).pop();
-      currentCount.close();
-      return;
-    }
-
-    while (currentCount.value < totalCount.value) {
-      final res = await YoutubeController.inst.getPlaylistStreams(playlist);
-      if (res.isEmpty) break;
-      currentCount.value = playlist.streams.length;
-    }
-
-    await Future.delayed(switchAnimationDur);
-    if (context.mounted) Navigator.of(context).pop();
-
-    currentCount.close();
-
-    final plID = playlist.id;
-    final videoIDs = playlist.streams.map((e) => YoutubeID(
-          id: e.id ?? '',
-          playlistID: plID == null ? null : PlaylistID(id: plID),
-        ));
-    final infoLookup = <String, StreamInfoItem>{};
-    playlist.streams.loop((e, index) {
-      infoLookup[e.id ?? ''] = e;
-    });
-    NamidaNavigator.inst.navigateTo(
-      YTPlaylistDownloadPage(
-        ids: videoIDs.toList(),
-        playlistName: playlist.name ?? '',
-        infoLookup: infoLookup,
-      ),
     );
   }
 }
