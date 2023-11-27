@@ -518,9 +518,19 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
   Future<void> execute(Iterable<String> ids) async {
     switch (this) {
       case OnYoutubeLinkOpenAction.showDownload:
-        showDownloadVideoBottomSheet(videoId: ids.first);
+        if (ids.length == 1) {
+          showDownloadVideoBottomSheet(videoId: ids.first);
+        } else {
+          NamidaNavigator.inst.navigateTo(
+            YTPlaylistDownloadPage(
+              ids: ids.toList(),
+              playlistName: 'External - ${DateTime.now().millisecondsSinceEpoch.dateAndClockFormattedOriginal}',
+              infoLookup: const {},
+            ),
+          );
+        }
       case OnYoutubeLinkOpenAction.addToPlaylist:
-        final idnames = {for (final id in ids) id: YoutubeController.inst.fetchVideoDetailsFromCacheSync(id)?.name};
+        final idnames = {for (final id in ids) id: YoutubeController.inst.getBackupVideoInfo(id)?.title ?? YoutubeController.inst.fetchVideoDetailsFromCacheSync(id)?.name};
         showAddToPlaylistSheet(ids: ids, idsNamesLookup: idnames);
       case OnYoutubeLinkOpenAction.play:
         await Player.inst.playOrPause(0, ids.map((e) => YoutubeID(id: e, playlistID: null)), QueueSource.others);

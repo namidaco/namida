@@ -213,15 +213,22 @@ Future<void> _initializeIntenties() async {
         final paths = <String>[];
         final m3uPaths = <String>{};
         files.loop((f, _) {
-          final path = f.realPath?.replaceAll('\\', '') ?? f.value;
+          final path = f.realPath?.replaceAll('\\', '');
           if (path != null) {
             if (kM3UPlaylistsExtensions.any((ext) => path.endsWith(ext))) {
               m3uPaths.add(path);
             } else {
               paths.add(path);
             }
+          } else {
+            f.value?.split('\n').loop((e, index) {
+              e.split('https://').loop((line, index) {
+                if (line.isNotEmpty) paths.add("https://$line");
+              });
+            });
           }
         });
+
         if (m3uPaths.isNotEmpty) {
           final allTracks = await PlaylistController.inst.readM3UFiles(m3uPaths);
           final err = await playExternalFiles(allTracks.map((e) => e.path));
