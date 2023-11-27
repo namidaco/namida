@@ -209,6 +209,7 @@ abstract class LanguageKeys {
   String get FAILED_EDITS => _getKey('FAILED_EDITS');
   String get FAILED => _getKey('FAILED');
   String get FAVOURITES => _getKey('FAVOURITES');
+  String get FETCHING => _getKey('FETCHING');
   String get FILE_NAME_WO_EXT => _getKey('FILE_NAME_WO_EXT');
   String get FILE_NAME => _getKey('FILE_NAME');
   String get FILE => _getKey('FILE');
@@ -276,6 +277,7 @@ abstract class LanguageKeys {
   String get INFO => _getKey('INFO');
   String get INSERTED => _getKey('INSERTED');
   String get INSTANTLY_APPLIES => _getKey('INSTANTLY_APPLIES');
+  String get INVERT_SELECTION => _getKey('INVERT_SELECTION');
   String get ITEM => _getKey('ITEM');
   String get I_READ_AND_AGREE => _getKey('I_READ_AND_AGREE');
   String get JUMP_TO_DAY => _getKey('JUMP_TO_DAY');

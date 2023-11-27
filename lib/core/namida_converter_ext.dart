@@ -256,6 +256,34 @@ extension CacheGetterVideo on VideoOnlyStream {
   }
 }
 
+extension StreamInfoUtils on StreamInfoItem {
+  VideoInfo toVideoInfo() {
+    return VideoInfo(
+      id: id,
+      url: url,
+      name: name,
+      uploaderName: uploaderName,
+      uploaderUrl: uploaderUrl,
+      uploaderAvatarUrl: uploaderAvatarUrl,
+      date: date,
+      isDateApproximation: isDateApproximation,
+      description: null,
+      duration: duration,
+      viewCount: viewCount,
+      likeCount: null,
+      category: null,
+      ageLimit: null,
+      tags: null,
+      thumbnailUrl: thumbnailUrl,
+      isUploaderVerified: isUploaderVerified,
+      textualUploadDate: textualUploadDate,
+      uploaderSubscriberCount: -1,
+      privacy: null,
+      isShortFormContent: isShortFormContent,
+    );
+  }
+}
+
 extension FAudioTaggerFFMPEGExtractor on FAudioTagger {
   Future<(FAudioModel?, Uint8List?)> extractMetadata({
     required String trackPath,

@@ -215,6 +215,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                     YTPlaylistDownloadPage(
                                       ids: widget.playlist.tracks,
                                       playlistName: playlistCurrentName,
+                                      infoLookup: const {},
                                     ),
                                   );
                                 },

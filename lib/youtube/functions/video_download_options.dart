@@ -215,6 +215,7 @@ class YTDownloadOptionFolderListTile extends StatefulWidget {
   final String Function(String value)? subtitle;
   final double trailingPadding;
   final VisualDensity? visualDensity;
+  final double? maxTrailingWidth;
 
   const YTDownloadOptionFolderListTile({
     super.key,
@@ -223,6 +224,7 @@ class YTDownloadOptionFolderListTile extends StatefulWidget {
     this.subtitle,
     this.trailingPadding = 0,
     this.visualDensity,
+    this.maxTrailingWidth,
   });
 
   @override
@@ -235,6 +237,7 @@ class _YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderL
 
   @override
   void initState() {
+    availableDirectoriesNames[widget.initialFolder] = 0; // to put at first
     availableDirectoriesNames[''] = 0; // to put at first
     int rootFiles = 0;
     for (final d in Directory(AppDirs.YOUTUBE_DOWNLOADS).listSync()) {
@@ -315,7 +318,7 @@ class _YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderL
       visualDensity: widget.visualDensity,
       title: lang.FOLDER,
       subtitle: widget.subtitle?.call(groupName.value),
-      trailingRaw: NamidaPopupWrapper(
+      trailing: NamidaPopupWrapper(
         childrenDefault: [
           NamidaPopupItem(
             icon: Broken.add,
@@ -325,9 +328,13 @@ class _YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderL
           ...availableDirectoriesNames.keys.map(
             (name) {
               final title = name == '' ? lang.DEFAULT : name;
-              final icon = name == '' ? Broken.folder_2 : Broken.folder;
+              final icon = name == widget.initialFolder
+                  ? Broken.music_playlist
+                  : name == ''
+                      ? Broken.folder_2
+                      : Broken.folder;
               final count = availableDirectoriesNames[name];
-              final countText = count == null ? '' : " ($count)";
+              final countText = count == null || count == 0 ? '' : " ($count)";
               return NamidaPopupItem(
                 icon: icon,
                 title: "$title$countText",
@@ -340,15 +347,25 @@ class _YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderL
           () {
             final title = groupName.value == '' ? lang.DEFAULT : groupName.value;
             final count = availableDirectoriesNames[groupName.value];
-            final countText = count == null ? '' : " ($count)";
+            final countText = count == null || count == 0 ? '' : " ($count)";
             return Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(groupName.value == '' ? Broken.folder_2 : Broken.folder, size: 18.0),
+                Icon(
+                    groupName.value == widget.initialFolder
+                        ? Broken.music_playlist
+                        : groupName.value == ''
+                            ? Broken.folder_2
+                            : Broken.folder,
+                    size: 18.0),
                 const SizedBox(width: 6.0),
-                Text(
-                  "$title$countText",
-                  style: context.textTheme.displayMedium,
+                ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: 0, maxWidth: widget.maxTrailingWidth ?? context.width * 0.34),
+                  child: Text(
+                    "$title$countText",
+                    style: context.textTheme.displayMedium,
+                  ),
                 ),
                 SizedBox(width: widget.trailingPadding),
               ],

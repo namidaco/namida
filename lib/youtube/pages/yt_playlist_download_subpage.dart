@@ -3,14 +3,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -18,18 +21,26 @@ import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/functions/video_download_options.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
+import 'package:namida/youtube/youtube_miniplayer.dart';
 
 class YTPlaylistDownloadPage extends StatefulWidget {
   final List<YoutubeID> ids;
   final String playlistName;
-  const YTPlaylistDownloadPage({super.key, required this.ids, required this.playlistName});
+  final Map<String, StreamInfoItem> infoLookup;
+
+  const YTPlaylistDownloadPage({
+    super.key,
+    required this.ids,
+    required this.playlistName,
+    required this.infoLookup,
+  });
 
   @override
   State<YTPlaylistDownloadPage> createState() => _YTPlaylistDownloadPageState();
 }
 
 class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
-  final _selectedList = <String>{}.obs;
+  final _selectedList = <String>[].obs; // sometimes a yt playlist can have duplicates (yt bug) so a Set wont be useful.
   final _configMap = <String, YoutubeItemDownloadConfig>{}.obs;
   final _groupName = ''.obs;
 
@@ -101,6 +112,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                 children: [
                   const SizedBox(height: 12.0),
                   YTDownloadOptionFolderListTile(
+                    maxTrailingWidth: context.width * 0.2,
                     visualDensity: visualDensity,
                     initialFolder: _groupName.value,
                     onDownloadGroupNameChanged: (newFolderPath) {
@@ -194,6 +206,15 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     );
   }
 
+  double get _bottomPaddingEffective {
+    return (Player.inst.currentQueueYoutube.isNotEmpty
+            ? kYoutubeMiniplayerHeight
+            : Player.inst.currentQueue.isNotEmpty
+                ? kBottomPadding
+                : 0.0) +
+        12.0;
+  }
+
   @override
   Widget build(BuildContext context) {
     const hmultiplier = 0.9;
@@ -214,7 +235,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   trailing: Row(
                     children: [
                       NamidaIconButton(
-                        tooltip: 'Inverse Selection',
+                        tooltip: lang.INVERT_SELECTION,
                         icon: Broken.recovery_convert,
                         onPressed: () {
                           widget.ids.loop((e, index) {
@@ -236,6 +257,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                   : true,
                           onChanged: (value) {
                             if (_selectedList.length != widget.ids.length) {
+                              _selectedList.clear();
                               _addYTIDsToSelected(widget.ids);
                             } else {
                               _selectedList.clear();
@@ -257,225 +279,233 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                 },
               ),
               Expanded(
-                child: CustomScrollView(
-                  slivers: [
-                    const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
-                    SliverFixedExtentList.builder(
-                      itemExtent: Dimensions.youtubeCardItemExtent * hmultiplier,
-                      itemCount: widget.ids.length,
-                      itemBuilder: (context, index) {
-                        final id = widget.ids[index].id;
-                        final info = YoutubeController.inst.getTemporarelyVideoInfo(id) ?? YoutubeController.inst.fetchVideoDetailsFromCacheSync(id);
-                        final duration = info?.duration?.inSeconds.secondsLabel;
+                child: NamidaScrollbar(
+                  child: CustomScrollView(
+                    slivers: [
+                      const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
+                      SliverFixedExtentList.builder(
+                        itemExtent: Dimensions.youtubeCardItemExtent * hmultiplier,
+                        itemCount: widget.ids.length,
+                        itemBuilder: (context, index) {
+                          final id = widget.ids[index].id;
+                          final info = widget.infoLookup[id]?.toVideoInfo() ??
+                              YoutubeController.inst.getTemporarelyVideoInfo(id) ??
+                              YoutubeController.inst.fetchVideoDetailsFromCacheSync(id);
+                          final duration = info?.duration?.inSeconds.secondsLabel;
 
-                        return Obx(
-                          () {
-                            final isSelected = _selectedList.contains(id);
-                            // TODO: get filename somehow
-                            final filename = info?.name;
-                            final fileExists = File("${AppDirs.YOUTUBE_DOWNLOADS}${_groupName.value}/$filename").existsSync();
-                            return NamidaInkWell(
-                              animationDurationMS: 200,
-                              height: Dimensions.youtubeCardItemHeight * hmultiplier,
-                              margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: Dimensions.youtubeCardItemVerticalPadding * hmultiplier),
-                              borderRadius: 12.0,
-                              bgColor: context.theme.cardColor.withOpacity(0.3),
-                              decoration: isSelected
-                                  ? BoxDecoration(
-                                      border: Border.all(
-                                      color: context.theme.colorScheme.secondary.withOpacity(0.5),
-                                      width: 2.0,
-                                    ))
-                                  : const BoxDecoration(),
-                              onTap: () => _onItemTap(id),
-                              child: Stack(
-                                children: [
-                                  Row(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(4.0),
-                                        child: YoutubeThumbnail(
-                                          borderRadius: 8.0,
-                                          width: thumWidth - 4.0,
-                                          height: thumHeight - 4.0,
-                                          isImportantInCache: false,
-                                          videoId: id,
-                                          onTopWidgets: [
-                                            if (duration != null)
-                                              Positioned(
-                                                bottom: 0.0,
-                                                right: 0.0,
-                                                child: Padding(
-                                                  padding: const EdgeInsets.all(2.0),
-                                                  child: DecoratedBox(
-                                                    decoration: BoxDecoration(
-                                                      borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                                                      color: Colors.black.withOpacity(0.3),
-                                                    ),
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
-                                                      child: Text(
-                                                        duration,
-                                                        style: context.textTheme.displaySmall?.copyWith(
-                                                          color: Colors.white.withOpacity(0.8),
-                                                          fontWeight: FontWeight.w500,
+                          return Obx(
+                            () {
+                              final isSelected = _selectedList.contains(id);
+                              // TODO: get filename somehow
+                              final filename = info?.name;
+                              final fileExists = File("${AppDirs.YOUTUBE_DOWNLOADS}${_groupName.value}/$filename").existsSync();
+                              return NamidaInkWell(
+                                animationDurationMS: 200,
+                                height: Dimensions.youtubeCardItemHeight * hmultiplier,
+                                margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: Dimensions.youtubeCardItemVerticalPadding * hmultiplier),
+                                borderRadius: 12.0,
+                                bgColor: context.theme.cardColor.withOpacity(0.3),
+                                decoration: isSelected
+                                    ? BoxDecoration(
+                                        border: Border.all(
+                                        color: context.theme.colorScheme.secondary.withOpacity(0.5),
+                                        width: 2.0,
+                                      ))
+                                    : const BoxDecoration(),
+                                onTap: () => _onItemTap(id),
+                                child: Stack(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.all(4.0),
+                                          child: YoutubeThumbnail(
+                                            borderRadius: 8.0,
+                                            width: thumWidth - 4.0,
+                                            height: thumHeight - 4.0,
+                                            isImportantInCache: false,
+                                            videoId: id,
+                                            onTopWidgets: [
+                                              if (duration != null)
+                                                Positioned(
+                                                  bottom: 0.0,
+                                                  right: 0.0,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(2.0),
+                                                    child: DecoratedBox(
+                                                      decoration: BoxDecoration(
+                                                        borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                                        color: Colors.black.withOpacity(0.3),
+                                                      ),
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
+                                                        child: Text(
+                                                          duration,
+                                                          style: context.textTheme.displaySmall?.copyWith(
+                                                            color: Colors.white.withOpacity(0.8),
+                                                            fontWeight: FontWeight.w500,
+                                                          ),
                                                         ),
                                                       ),
                                                     ),
                                                   ),
                                                 ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4.0),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const SizedBox(height: 6.0),
+                                              Text(
+                                                info?.name ?? id,
+                                                style: context.textTheme.displayMedium,
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
-                                          ],
+                                              const SizedBox(height: 4.0),
+                                              Row(
+                                                children: [
+                                                  NamidaIconButton(
+                                                    horizontalPadding: 0.0,
+                                                    icon: fileExists ? Broken.tick_circle : Broken.import_2,
+                                                    iconSize: 15.0,
+                                                  ),
+                                                  const SizedBox(width: 2.0),
+                                                  Text(
+                                                    info?.uploaderName ?? '',
+                                                    style: context.textTheme.displaySmall,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 6.0),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(width: 4.0),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const SizedBox(height: 6.0),
-                                            Text(
-                                              info?.name ?? id,
-                                              style: context.textTheme.displayMedium,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(height: 4.0),
-                                            Row(
-                                              children: [
-                                                NamidaIconButton(
-                                                  horizontalPadding: 0.0,
-                                                  icon: fileExists ? Broken.tick_circle : Broken.import_2,
-                                                  iconSize: 15.0,
-                                                ),
-                                                const SizedBox(width: 2.0),
-                                                Text(
-                                                  info?.uploaderName ?? '',
-                                                  style: context.textTheme.displaySmall,
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 6.0),
-                                          ],
+                                        Checkbox.adaptive(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(4.0.multipliedRadius),
+                                          ),
+                                          value: isSelected,
+                                          onChanged: (value) => _onItemTap(id),
                                         ),
-                                      ),
-                                      Checkbox.adaptive(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(4.0.multipliedRadius),
+                                        const SizedBox(width: 4.0),
+                                      ],
+                                    ),
+                                    Positioned(
+                                      right: 0,
+                                      child: NamidaBlurryContainer(
+                                        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(6.0.multipliedRadius)),
+                                        padding: const EdgeInsets.only(top: 2.0, right: 8.0, left: 6.0, bottom: 2.0),
+                                        child: Text(
+                                          '${index + 1}',
+                                          style: context.textTheme.displaySmall,
                                         ),
-                                        value: isSelected,
-                                        onChanged: (value) => _onItemTap(id),
-                                      ),
-                                      const SizedBox(width: 4.0),
-                                    ],
-                                  ),
-                                  Positioned(
-                                    right: 0,
-                                    child: NamidaBlurryContainer(
-                                      borderRadius: BorderRadius.only(bottomLeft: Radius.circular(6.0.multipliedRadius)),
-                                      padding: const EdgeInsets.only(top: 2.0, right: 8.0, left: 6.0, bottom: 2.0),
-                                      child: Text(
-                                        '${index + 1}',
-                                        style: context.textTheme.displaySmall,
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                    const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding + 56.0 + 8.0)),
-                  ],
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                      Obx(() => SliverPadding(padding: EdgeInsets.only(bottom: _bottomPaddingEffective + 56.0 + 4.0))),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
-          Positioned(
-            bottom: kBottomPadding,
-            right: 12.0,
-            child: Row(
-              children: [
-                FloatingActionButton.small(
-                  backgroundColor: context.theme.disabledColor.withOpacity(1.0),
-                  heroTag: 'config_fab',
-                  child: Icon(Broken.setting_3, color: Colors.white.withOpacity(0.8)),
-                  onPressed: () {
-                    _showAllConfigDialog(context);
-                  },
-                ),
-                const SizedBox(width: 8.0),
-                Obx(
-                  () => AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: _selectedList.isEmpty ? 1 : 1.0,
-                    child: FloatingActionButton.extended(
-                      heroTag: 'download_fab',
-                      backgroundColor: (_selectedList.isEmpty ? context.theme.disabledColor : CurrentColor.inst.color).withOpacity(1.0),
-                      isExtended: true,
-                      icon: Icon(
-                        Broken.import_2,
-                        size: 28.0,
-                        color: Colors.white.withOpacity(0.7),
-                      ),
-                      label: Text(
-                        lang.DOWNLOAD,
-                        style: context.textTheme.displayMedium?.copyWith(
+          Obx(
+            () => AnimatedPositioned(
+              curve: Curves.fastEaseInToSlowEaseOut,
+              duration: const Duration(milliseconds: 400),
+              bottom: _bottomPaddingEffective,
+              right: 12.0,
+              child: Row(
+                children: [
+                  FloatingActionButton.small(
+                    backgroundColor: context.theme.disabledColor.withOpacity(1.0),
+                    heroTag: 'config_fab',
+                    child: Icon(Broken.setting_3, color: Colors.white.withOpacity(0.8)),
+                    onPressed: () {
+                      _showAllConfigDialog(context);
+                    },
+                  ),
+                  const SizedBox(width: 8.0),
+                  Obx(
+                    () => AnimatedOpacity(
+                      duration: const Duration(milliseconds: 300),
+                      opacity: _selectedList.isEmpty ? 1 : 1.0,
+                      child: FloatingActionButton.extended(
+                        heroTag: 'download_fab',
+                        backgroundColor: (_selectedList.isEmpty ? context.theme.disabledColor : CurrentColor.inst.color).withOpacity(1.0),
+                        isExtended: true,
+                        icon: Icon(
+                          Broken.import_2,
+                          size: 28.0,
                           color: Colors.white.withOpacity(0.7),
                         ),
+                        label: Text(
+                          lang.DOWNLOAD,
+                          style: context.textTheme.displayMedium?.copyWith(
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                        ),
+                        onPressed: () {
+                          if (_selectedList.isEmpty) return;
+                          NamidaNavigator.inst.popPage();
+                          YoutubeController.inst.downloadYoutubeVideos(
+                            groupName: widget.playlistName,
+                            itemsConfig: _selectedList
+                                .map(
+                                  (id) =>
+                                      _configMap[id] ??
+                                      YoutubeItemDownloadConfig(
+                                        id: id,
+                                        filename: () {
+                                          // TODO: better way inside controller
+                                          final info = YoutubeController.inst.getTemporarelyVideoInfo(id) ?? YoutubeController.inst.fetchVideoDetailsFromCacheSync(id);
+                                          final ext = downloadAudioOnly.value ? 'm4a' : 'mp4';
+                                          return "${info?.name ?? id}.$ext";
+                                        }(),
+                                        ffmpegTags: {},
+                                        fileDate: null,
+                                        videoStream: null,
+                                        audioStream: null,
+                                        prefferedVideoQualityID: null,
+                                        prefferedAudioQualityID: null,
+                                        fetchMissingStreams: true,
+                                      ),
+                                )
+                                .toList(),
+                            useCachedVersionsIfAvailable: true,
+                            autoExtractTitleAndArtist: autoExtractTitleAndArtist,
+                            keepCachedVersionsIfDownloaded: keepCachedVersionsIfDownloaded,
+                            downloadFilesWriteUploadDate: downloadFilesWriteUploadDate,
+                            addAudioToLocalLibrary: true,
+                            deleteOldFile: overrideOldFiles,
+                            audioOnly: downloadAudioOnly.value,
+                            preferredQualities: () {
+                              final list = <String>[];
+                              for (final q in kStockVideoQualities) {
+                                list.add(q);
+                                if (q == preferredQuality.value) break;
+                              }
+                              return list;
+                            }(),
+                          );
+                        },
                       ),
-                      onPressed: () {
-                        if (_selectedList.isEmpty) return;
-                        NamidaNavigator.inst.popPage();
-                        YoutubeController.inst.downloadYoutubeVideos(
-                          groupName: widget.playlistName,
-                          itemsConfig: _selectedList
-                              .map(
-                                (id) =>
-                                    _configMap[id] ??
-                                    YoutubeItemDownloadConfig(
-                                      id: id,
-                                      filename: () {
-                                        // TODO: better way inside controller
-                                        final info = YoutubeController.inst.getTemporarelyVideoInfo(id) ?? YoutubeController.inst.fetchVideoDetailsFromCacheSync(id);
-                                        final ext = downloadAudioOnly.value ? 'm4a' : 'mp4';
-                                        return "${info?.name ?? id}.$ext";
-                                      }(),
-                                      ffmpegTags: {},
-                                      fileDate: null,
-                                      videoStream: null,
-                                      audioStream: null,
-                                      prefferedVideoQualityID: null,
-                                      prefferedAudioQualityID: null,
-                                      fetchMissingStreams: true,
-                                    ),
-                              )
-                              .toList(),
-                          useCachedVersionsIfAvailable: true,
-                          autoExtractTitleAndArtist: autoExtractTitleAndArtist,
-                          keepCachedVersionsIfDownloaded: keepCachedVersionsIfDownloaded,
-                          downloadFilesWriteUploadDate: downloadFilesWriteUploadDate,
-                          addAudioToLocalLibrary: true,
-                          deleteOldFile: overrideOldFiles,
-                          audioOnly: downloadAudioOnly.value,
-                          preferredQualities: () {
-                            final list = <String>[];
-                            for (final q in kStockVideoQualities) {
-                              list.add(q);
-                              if (q == preferredQuality.value) break;
-                            }
-                            return list;
-                          }(),
-                        );
-                      },
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

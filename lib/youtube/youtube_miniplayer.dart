@@ -35,17 +35,20 @@ import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 
+const _space2ForThumbnail = 90.0;
+const kYoutubeMiniplayerHeight = 12.0 + _space2ForThumbnail * 9 / 16;
+
 class YoutubeMiniPlayer extends StatelessWidget {
   const YoutubeMiniPlayer({super.key});
 
   @override
   Widget build(BuildContext context) {
     const space1sb = 8.0;
-    const space2ForThumbnail = 90.0;
+    const space2ForThumbnail = _space2ForThumbnail;
     const space3sb = 8.0;
     const space4 = 38.0 * 2;
     const space5sb = 8.0;
-    const miniplayerHeight = 12.0 + space2ForThumbnail * 9 / 16;
+    const miniplayerHeight = kYoutubeMiniplayerHeight;
 
     final relatedThumbnailWidth = context.width * 0.36;
     final relatedThumbnailHeight = relatedThumbnailWidth * 9 / 16;

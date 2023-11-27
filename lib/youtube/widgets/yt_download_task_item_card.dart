@@ -152,7 +152,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
             },
           );
 
-    final saveLocation = "${AppDirs.YOUTUBE_DOWNLOADS}$groupName/${item.filename}";
+    final saveLocation = "${AppDirs.YOUTUBE_DOWNLOADS}$groupName/${item.filename}".replaceAll('//', '/');
 
     List<Widget> getTrailing(IconData icon, String text, {Widget? iconWidget, Color? iconColor}) {
       return [
@@ -320,8 +320,8 @@ class YTDownloadTaskItemCard extends StatelessWidget {
 
     return [
       getRow(icon: Broken.location, texts: [itemDirectoryPath]),
-      const SizedBox(height: 6.0),
       if (file.existsSync()) ...[
+        const SizedBox(height: 6.0),
         getRow(
           icon: Broken.document_code,
           texts: [
@@ -329,9 +329,9 @@ class YTDownloadTaskItemCard extends StatelessWidget {
             (item.fileDate ?? file.statSync().creationDate).millisecondsSinceEpoch.dateAndClockFormattedOriginal,
           ],
         ),
-        const SizedBox(height: 6.0),
       ],
       if (videoStream != null) ...[
+        const SizedBox(height: 6.0),
         getRow(
           icon: Broken.video_square,
           texts: [
@@ -340,9 +340,9 @@ class YTDownloadTaskItemCard extends StatelessWidget {
             videoStream.resolution ?? '',
           ],
         ),
-        const SizedBox(height: 6.0),
       ],
       if (audioStream != null) ...[
+        const SizedBox(height: 6.0),
         getRow(
           icon: Broken.audio_square,
           texts: [

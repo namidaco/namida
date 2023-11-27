@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously, depend_on_referenced_packages, implementation_imports
+// ignore_for_file: depend_on_referenced_packages, implementation_imports
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -180,6 +180,7 @@ class AboutPage extends StatelessWidget {
                       final stringy = await http.get(Uri.parse('https://raw.githubusercontent.com/namidaco/namida/main/CHANGELOG.md'));
                       isLoading.value = false;
                       await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
+                      // ignore: use_build_context_synchronously
                       showModalBottomSheet(
                         showDragHandle: true,
                         useRootNavigator: true,

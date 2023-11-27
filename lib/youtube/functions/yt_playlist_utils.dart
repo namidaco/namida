@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -46,6 +44,7 @@ extension YoutubePlaylistShare on YoutubePlaylist {
     focusNode.requestFocus();
 
     await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
+    // ignore: use_build_context_synchronously
     await showModalBottomSheet(
       context: context,
       useRootNavigator: true,
