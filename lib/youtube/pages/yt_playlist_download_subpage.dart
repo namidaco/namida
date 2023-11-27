@@ -215,9 +215,11 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
         12.0;
   }
 
+  double hmultiplier = 0.7;
+  double previousScale = 0.7;
+
   @override
   Widget build(BuildContext context) {
-    const hmultiplier = 0.9;
     final thumWidth = context.width * 0.3 * hmultiplier;
     final thumHeight = thumWidth * 9 / 16;
     return BackgroundWrapper(
@@ -302,7 +304,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                               return NamidaInkWell(
                                 animationDurationMS: 200,
                                 height: Dimensions.youtubeCardItemHeight * hmultiplier,
-                                margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: Dimensions.youtubeCardItemVerticalPadding * hmultiplier),
+                                margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: Dimensions.youtubeCardItemVerticalPadding * hmultiplier),
                                 borderRadius: 12.0,
                                 bgColor: context.theme.cardColor.withOpacity(0.3),
                                 decoration: isSelected
@@ -361,7 +363,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                               const SizedBox(height: 6.0),
                                               Text(
                                                 info?.name ?? id,
-                                                style: context.textTheme.displayMedium,
+                                                style: context.textTheme.displayMedium?.copyWith(fontSize: 15.0.multipliedFontScale * hmultiplier),
                                                 maxLines: 2,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -376,7 +378,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                                   const SizedBox(width: 2.0),
                                                   Text(
                                                     info?.uploaderName ?? '',
-                                                    style: context.textTheme.displaySmall,
+                                                    style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale * hmultiplier),
                                                     maxLines: 1,
                                                     overflow: TextOverflow.ellipsis,
                                                   ),
@@ -506,6 +508,12 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   ),
                 ],
               ),
+            ),
+          ),
+          Positioned.fill(
+            child: GestureDetector(
+              onScaleStart: (details) => previousScale = hmultiplier,
+              onScaleUpdate: (details) => setState(() => hmultiplier = (details.scale * previousScale).clamp(0.5, 2.0)),
             ),
           ),
         ],
