@@ -221,14 +221,14 @@ class Player {
   }
 
   /// returns true if tracks aren't empty.
-  bool addToQueue(
+  Future<bool> addToQueue(
     Iterable<Playable> tracks, {
     QueueInsertionType? insertionType,
     bool insertNext = false,
     bool insertAfterLatest = false,
     bool showSnackBar = true,
     String? emptyTracksMessage,
-  }) {
+  }) async {
     if (tracks.firstOrNull is Selectable) {
       final insertionDetails = insertionType?.toQueueInsertion();
       final shouldInsertNext = insertionDetails?.insertNext ?? insertNext;
@@ -240,7 +240,7 @@ class Player {
         snackyy(title: lang.NOTE, message: emptyTracksMessage ?? lang.NO_TRACKS_FOUND);
         return false;
       }
-      _audioHandler.addToQueue(
+      await _audioHandler.addToQueue(
         finalTracks,
         insertNext: shouldInsertNext,
         insertAfterLatest: insertAfterLatest,
@@ -254,7 +254,7 @@ class Player {
       }
       return true;
     } else if (tracks.firstOrNull is YoutubeID) {
-      _audioHandler.addToQueue(
+      await _audioHandler.addToQueue(
         tracks,
         insertNext: insertNext,
         insertAfterLatest: insertAfterLatest,
@@ -265,8 +265,8 @@ class Player {
     return false;
   }
 
-  void insertInQueue(List<Playable> tracks, int index) {
-    _audioHandler.insertInQueue(tracks, index);
+  Future<void> insertInQueue(Iterable<Playable> tracks, int index) async {
+    await _audioHandler.insertInQueue(tracks, index);
   }
 
   Future<void> removeFromQueue(int index) async {
@@ -420,6 +420,7 @@ class Player {
     bool shuffle = false,
     bool startPlaying = true,
     bool addAsNewQueue = true,
+    void Function(Playable currentItem)? onAssigningCurrentItem,
   }) async {
     await _audioHandler.assignNewQueue(
       playAtIndex: index,
@@ -438,6 +439,7 @@ class Player {
       onQueueEmpty: _audioHandler.togglePlayPause,
       startPlaying: startPlaying,
       shuffle: shuffle,
+      onAssigningCurrentItem: onAssigningCurrentItem,
     );
   }
 }

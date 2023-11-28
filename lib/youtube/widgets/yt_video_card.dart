@@ -8,6 +8,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/widgets/yt_card.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
@@ -18,6 +19,9 @@ class YoutubeVideoCard extends StatelessWidget {
   final void Function()? onTap;
   final double? thumbnailWidth;
   final double? thumbnailHeight;
+  final YoutubePlaylist? playlist;
+  final int? index;
+  final double fontMultiplier;
 
   const YoutubeVideoCard({
     super.key,
@@ -27,6 +31,9 @@ class YoutubeVideoCard extends StatelessWidget {
     this.onTap,
     this.thumbnailWidth,
     this.thumbnailHeight,
+    this.playlist,
+    this.index,
+    this.fontMultiplier = 1.0,
   });
 
   @override
@@ -44,6 +51,7 @@ class YoutubeVideoCard extends StatelessWidget {
       openOnTap: false,
       childrenDefault: menuItems,
       child: YoutubeCard(
+        fontMultiplier: fontMultiplier,
         thumbnailWidth: thumbnailWidth,
         thumbnailHeight: thumbnailHeight,
         isImageImportantInCache: isImageImportantInCache,
@@ -58,12 +66,32 @@ class YoutubeVideoCard extends StatelessWidget {
         ].join(' - '),
         thirdLineText: video?.uploaderName ?? '',
         onTap: onTap ??
-            () {
+            () async {
               if (idNull != null) {
                 Player.inst.playOrPause(
                   0,
                   [YoutubeID(id: videoId, playlistID: playlistID)],
                   QueueSource.others,
+                  onAssigningCurrentItem: (currentItem) async {
+                    // -- add the remaining playlist videos, only if the same item is still playing
+                    final playlist = this.playlist;
+                    final index = this.index;
+
+                    if (playlist != null && index != null) {
+                      await playlist.fetchAllPlaylistStreams(context: null);
+                      if (currentItem is YoutubeID && currentItem.id == videoId) {
+                        try {
+                          final firstHalf = playlist.streams.getRange(0, index).map((e) => YoutubeID(id: e.id ?? '', playlistID: playlistID));
+                          final lastHalf = playlist.streams.getRange(index + 1, playlist.streams.length).map((e) => YoutubeID(id: e.id ?? '', playlistID: playlistID));
+
+                          Player.inst.addToQueue(lastHalf); // adding first bcz inserting would mess up indexes in lastHalf.
+                          await Player.inst.insertInQueue(firstHalf, 0);
+                        } catch (e) {
+                          printy(e, isError: true);
+                        }
+                      }
+                    }
+                  },
                 );
                 YTUtils.expandMiniplayer();
               }

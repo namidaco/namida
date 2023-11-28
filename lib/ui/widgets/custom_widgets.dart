@@ -2730,19 +2730,21 @@ class NamidaPopupWrapper extends StatelessWidget {
                 children: [
                   Icon(e.icon, size: 20.0),
                   const SizedBox(width: 6.0),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        e.title,
-                        style: context.textTheme.displayMedium,
-                      ),
-                      if (e.subtitle != '')
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          e.subtitle,
-                          style: context.textTheme.displaySmall,
+                          e.title,
+                          style: context.textTheme.displayMedium,
                         ),
-                    ],
+                        if (e.subtitle != '')
+                          Text(
+                            e.subtitle,
+                            style: context.textTheme.displaySmall,
+                          ),
+                      ],
+                    ),
                   ),
                 ],
               ),

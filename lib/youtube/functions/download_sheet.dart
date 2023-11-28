@@ -533,7 +533,7 @@ Future<void> showDownloadVideoBottomSheet({
                                           onTap: () async {
                                             if (!await requestManageStoragePermission()) return;
                                             requestIgnoreBatteryOptimizations();
-                                            if (context.mounted) Navigator.pop(context);
+                                            if (context.mounted) context.safePop();
                                             YoutubeController.inst.downloadYoutubeVideos(
                                               useCachedVersionsIfAvailable: true,
                                               autoExtractTitleAndArtist: settings.ytAutoExtractVideoTagsFromInfo.value,

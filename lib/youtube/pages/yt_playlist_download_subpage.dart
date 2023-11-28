@@ -215,8 +215,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
         12.0;
   }
 
-  double _hmultiplier = 0.7;
-  double _previousScale = 0.7;
+  double _hmultiplier = 0.9;
+  double _previousScale = 0.9;
 
   @override
   Widget build(BuildContext context) {

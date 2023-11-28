@@ -369,17 +369,19 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     void Function()? onQueueEmpty,
     void Function()? onIndexAndQueueSame,
     void Function(List<Q> finalizedQueue)? onQueueDifferent,
+    void Function(Q currentItem)? onAssigningCurrentItem,
   }) async {
     await beforeQueueAddOrInsert(queue);
     await super.assignNewQueue(
       playAtIndex: playAtIndex,
       queue: queue,
       maximumItems: maximumItems,
+      startPlaying: startPlaying,
+      shuffle: shuffle,
       onIndexAndQueueSame: onIndexAndQueueSame,
       onQueueDifferent: onQueueDifferent,
       onQueueEmpty: onQueueEmpty,
-      startPlaying: startPlaying,
-      shuffle: shuffle,
+      onAssigningCurrentItem: onAssigningCurrentItem,
     );
   }
 

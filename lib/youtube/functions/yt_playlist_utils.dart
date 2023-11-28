@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart' as yt;
 import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/player_controller.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -14,7 +17,9 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
+import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
+import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 
 extension YoutubePlaylistShare on YoutubePlaylist {
   Future<void> shareVideos() async => await tracks.shareVideos();
@@ -196,9 +201,11 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
       totalCount.value = playlist.streamCount < 0 ? playlist.streams.length : playlist.streamCount;
     }
 
+    void plsPop() => context.safePop();
+
     // -- if still not fetched
     if (isTotalCountNull()) {
-      if (context != null && context.mounted) Navigator.of(context).pop();
+      plsPop();
       currentCount.close();
       return false;
     }
@@ -211,7 +218,7 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
 
     if (context != null) {
       await Future.delayed(switchAnimationDur);
-      if (context.mounted) Navigator.of(context).pop();
+      plsPop();
     }
 
     currentCount.close();
@@ -219,15 +226,30 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
     return true;
   }
 
-  Future<void> showPlaylistDownloadSheet({required BuildContext? context}) async {
-    final didFetch = await fetchAllPlaylistStreams(context: context);
-    if (!didFetch) return snackyy(title: lang.ERROR, message: 'error fetching playlist videos');
+  Future<List<YoutubeID>> fetchAllPlaylistAsYTIDs({required BuildContext? context}) async {
     final playlist = this;
-    final plID = playlist.id;
-    final videoIDs = playlist.streams.map((e) => YoutubeID(
-          id: e.id ?? '',
-          playlistID: plID == null ? null : PlaylistID(id: plID),
-        ));
+    final didFetch = await playlist.fetchAllPlaylistStreams(context: context);
+    if (!didFetch) snackyy(title: lang.ERROR, message: 'error fetching playlist videos');
+    return playlist.streams
+        .map(
+          (e) => YoutubeID(
+            id: e.id ?? '',
+            playlistID: getPlaylistID,
+          ),
+        )
+        .toList();
+  }
+
+  PlaylistID? get getPlaylistID {
+    final plId = id;
+    return plId == null ? null : PlaylistID(id: plId);
+  }
+
+  Future<void> showPlaylistDownloadSheet({required BuildContext? context}) async {
+    final videoIDs = await fetchAllPlaylistAsYTIDs(context: context?.mounted == true ? context : null);
+    if (videoIDs.isEmpty) return;
+
+    final playlist = this;
     final infoLookup = <String, yt.StreamInfoItem>{};
     playlist.streams.loop((e, index) {
       infoLookup[e.id ?? ''] = e;
@@ -239,5 +261,100 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
         infoLookup: infoLookup,
       ),
     );
+  }
+
+  List<NamidaPopupItem> getPopupMenuItems(
+    BuildContext context, {
+    bool displayDownloadItem = true,
+    bool displayShuffle = true,
+    bool displayPlay = true,
+    yt.YoutubePlaylist? playlistToOpen,
+  }) {
+    final countText = streamCount < 0 ? "+25" : streamCount.formatDecimalShort();
+    return [
+      NamidaPopupItem(
+        icon: Broken.music_playlist,
+        title: lang.ADD_TO_PLAYLIST,
+        onTap: () async {
+          final playlist = this;
+          final didFetch = await playlist.fetchAllPlaylistStreams(context: context);
+          if (!didFetch) return snackyy(title: lang.ERROR, message: 'error fetching playlist videos');
+
+          final ids = <String>[];
+          final info = <String, String?>{};
+          playlist.streams.loop((e, index) {
+            final id = e.id;
+            if (id != null) {
+              ids.add(id);
+              info[id] = e.name;
+            }
+          });
+
+          showAddToPlaylistSheet(
+            ids: ids,
+            idsNamesLookup: info,
+          );
+        },
+      ),
+      NamidaPopupItem(
+        icon: Broken.share,
+        title: lang.SHARE,
+        onTap: () {
+          if (url != null) Share.share(url!);
+        },
+      ),
+      if (displayDownloadItem)
+        NamidaPopupItem(
+          icon: Broken.import,
+          title: lang.DOWNLOAD,
+          onTap: () => showPlaylistDownloadSheet(context: context),
+        ),
+      if (playlistToOpen != null)
+        NamidaPopupItem(
+          icon: Broken.export_2,
+          title: lang.OPEN,
+          onTap: () {
+            NamidaNavigator.inst.navigateTo(YTHostedPlaylistSubpage(playlist: playlistToOpen));
+          },
+        ),
+      if (displayPlay)
+        NamidaPopupItem(
+          icon: Broken.play,
+          title: "${lang.PLAY} ($countText)",
+          onTap: () async {
+            final videos = await fetchAllPlaylistAsYTIDs(context: context);
+            if (videos.isEmpty) return;
+            Player.inst.playOrPause(0, videos, QueueSource.others);
+          },
+        ),
+      if (displayShuffle)
+        NamidaPopupItem(
+          icon: Broken.shuffle,
+          title: "${lang.SHUFFLE} ($countText)",
+          onTap: () async {
+            final videos = await fetchAllPlaylistAsYTIDs(context: context);
+            if (videos.isEmpty) return;
+            Player.inst.playOrPause(0, videos, QueueSource.others, shuffle: true);
+          },
+        ),
+      NamidaPopupItem(
+        icon: Broken.next,
+        title: "${lang.PLAY_NEXT} ($countText)",
+        onTap: () async {
+          final videos = await fetchAllPlaylistAsYTIDs(context: context);
+          if (videos.isEmpty) return;
+          Player.inst.addToQueue(videos, insertNext: true);
+        },
+      ),
+      NamidaPopupItem(
+        icon: Broken.play_cricle,
+        title: "${lang.PLAY_LAST} ($countText)",
+        onTap: () async {
+          final videos = await fetchAllPlaylistAsYTIDs(context: context);
+          if (videos.isEmpty) return;
+          Player.inst.addToQueue(videos, insertNext: false);
+        },
+      ),
+    ];
   }
 }

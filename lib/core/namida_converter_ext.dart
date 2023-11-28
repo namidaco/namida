@@ -756,6 +756,10 @@ extension WidgetsPagess on Widget {
         route = RouteType.YOUTUBE_PLAYLIST_SUBPAGE;
         name = (this as YTNormalPlaylistSubpage).playlist.name;
         break;
+      case YTHostedPlaylistSubpage:
+        route = RouteType.YOUTUBE_PLAYLIST_SUBPAGE_HOSTED;
+        name = (this as YTHostedPlaylistSubpage).playlist.name ?? '';
+        break;
       case YoutubeHistoryPage:
         route = RouteType.YOUTUBE_HISTORY_SUBPAGE;
         break;

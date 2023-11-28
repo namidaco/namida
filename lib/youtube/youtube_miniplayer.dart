@@ -746,6 +746,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                     return YoutubePlaylistCard(
                                                       key: Key("${context.hashCode}_${(item).id}"),
                                                       playlist: item,
+                                                      playOnTap: true,
                                                     );
                                                   } else if (item is YoutubeChannel) {
                                                     return YoutubeChannelCard(

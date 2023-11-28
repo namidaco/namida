@@ -359,12 +359,15 @@ extension WidgetsUtils on Widget {
   Widget toSliver() => SliverToBoxAdapter(child: this);
 }
 
-extension CloseDialogIfTrue on bool {
+extension CloseDialogIfTrueFuture on FutureOr<bool> {
   /// Closes dialog if [this == true].
   ///
   /// This is mainly created for [addToQueue] Function inside Player Class,
   /// where it should close the dialog only if there were tracks added.
-  void closeDialog([int count = 1]) => executeIfTrue(() => NamidaNavigator.inst.closeDialog(count));
+  void closeDialog([int count = 1]) async {
+    final res = await this;
+    res.executeIfTrue(() => NamidaNavigator.inst.closeDialog(count));
+  }
 }
 
 extension ThreadOpener<M, R> on ComputeCallback<M, R> {
@@ -444,5 +447,12 @@ extension ScrollerPerf on ScrollController {
       jumpTo(offset + jumpitator);
     }
     await animateTo(offset, duration: duration, curve: curve);
+  }
+}
+
+extension NavigatorUtils on BuildContext? {
+  void safePop({bool rootNavigator = false}) {
+    final context = this;
+    if (context != null && context.mounted) Navigator.of(context, rootNavigator: rootNavigator).maybePop();
   }
 }

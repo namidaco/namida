@@ -32,6 +32,7 @@ class YoutubeCard extends StatelessWidget {
   final bool isImageImportantInCache;
   final double? thumbnailWidth;
   final double? thumbnailHeight;
+  final double fontMultiplier;
 
   const YoutubeCard({
     super.key,
@@ -59,6 +60,7 @@ class YoutubeCard extends StatelessWidget {
     required this.isImageImportantInCache,
     this.thumbnailWidth,
     this.thumbnailHeight,
+    this.fontMultiplier = 1.0,
   });
 
   @override
@@ -104,7 +106,7 @@ class YoutubeCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 12.0),
+                      const SizedBox(height: 6.0),
                       NamidaDummyContainer(
                         width: context.width,
                         height: 10.0,
@@ -112,7 +114,7 @@ class YoutubeCard extends StatelessWidget {
                         shimmerEnabled: shimmerEnabled || title == '',
                         child: Text(
                           title,
-                          style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0.multipliedFontScale),
+                          style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0.multipliedFontScale * fontMultiplier),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -125,7 +127,10 @@ class YoutubeCard extends StatelessWidget {
                         shimmerEnabled: shimmerEnabled || subtitle == '',
                         child: Text(
                           subtitle,
-                          style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400),
+                          style: context.textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.w400,
+                            fontSize: 13.0.multipliedFontScale * fontMultiplier,
+                          ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -163,7 +168,7 @@ class YoutubeCard extends StatelessWidget {
                                     thirdLineText,
                                     style: context.textTheme.displaySmall?.copyWith(
                                       fontWeight: FontWeight.w400,
-                                      fontSize: 11.0.multipliedFontScale,
+                                      fontSize: 11.0.multipliedFontScale * fontMultiplier,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -177,7 +182,7 @@ class YoutubeCard extends StatelessWidget {
                             ],
                           ],
                         ),
-                      const SizedBox(height: 10.0),
+                      const SizedBox(height: 4.0),
                     ],
                   ),
                 ),
