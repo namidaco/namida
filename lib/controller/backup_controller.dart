@@ -127,8 +127,12 @@ class BackupController {
       });
 
       // seems like the files are already sorted but anyways
-      filessss.sortByReverse((e) => e.lastModifiedSync());
-      backupzip = filessss.firstOrNull;
+
+  Future<void> restoreBackupOnTap(bool auto) async {
+    File? backupzip;
+    if (auto) {
+      final sortedFiles = await _getBackupFilesSorted.thready(_backupDirectoryPath);
+      backupzip = sortedFiles.firstOrNull;
     } else {
       final filePicked = await FilePicker.platform.pickFiles(allowedExtensions: ['zip'], type: FileType.custom);
       final path = filePicked?.files.first.path;

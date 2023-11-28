@@ -399,14 +399,22 @@ class BackupAndRestore extends SettingSubpageProvider {
                             subtitle: lang.AUTOMATIC_BACKUP_SUBTITLE,
                             icon: Broken.autobrightness,
                             maxSubtitleLines: 22,
-                            onTap: () => BackupController.inst.restoreBackupOnTap(true),
+                            onTap: () async {
+                              if (!await requestManageStoragePermission()) return;
+
+                              NamidaNavigator.inst.closeDialog();
+                              BackupController.inst.restoreBackupOnTap(true);
+                            },
                           ),
                           CustomListTile(
                             title: lang.MANUAL_BACKUP,
                             subtitle: lang.MANUAL_BACKUP_SUBTITLE,
                             maxSubtitleLines: 22,
                             icon: Broken.hashtag,
-                            onTap: () => BackupController.inst.restoreBackupOnTap(false),
+                            onTap: () {
+                              NamidaNavigator.inst.closeDialog();
+                              BackupController.inst.restoreBackupOnTap(false);
+                            },
                           ),
                         ],
                       ),
