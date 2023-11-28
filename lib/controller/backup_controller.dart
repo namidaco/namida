@@ -107,26 +107,24 @@ class BackupController {
     isCreatingBackup.value = false;
   }
 
-  Future<void> restoreBackupOnTap(bool auto) async {
-    if (!await requestManageStoragePermission()) {
-      return;
-    }
-    NamidaNavigator.inst.closeDialog();
-    File? backupzip;
-    if (auto) {
-      final dir = Directory(_backupDirectoryPath);
-      final possibleFiles = dir.listSync();
+  static List<File> _getBackupFilesSorted(String dirPath) {
+    final dir = Directory(dirPath);
+    final possibleFiles = dir.listSync();
 
-      final List<File> filessss = [];
-      possibleFiles.loop((pf, index) {
+    final List<File> matchingBackups = [];
+    possibleFiles.loop((pf, index) {
+      if (pf is File) {
         if (pf.path.getFilename.startsWith('Namida Backup - ')) {
-          if (pf is File) {
-            filessss.add(pf);
-          }
+          matchingBackups.add(pf);
         }
-      });
+      }
+    });
 
-      // seems like the files are already sorted but anyways
+    // seems like the files are already sorted but anyways
+    matchingBackups.sortByReverse((e) => e.lastModifiedSync());
+
+    return matchingBackups;
+  }
 
   Future<void> restoreBackupOnTap(bool auto) async {
     File? backupzip;
