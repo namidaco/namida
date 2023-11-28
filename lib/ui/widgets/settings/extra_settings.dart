@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
+import 'package:namida/controller/clipboard_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -30,6 +31,7 @@ enum _ExtraSettingsKeys {
   prioritizeEmbeddedLyrics,
   immersiveMode,
   swipeToOpenDrawer,
+  enableClipboardMonitoring,
   extractAllPalettes,
 }
 
@@ -52,6 +54,7 @@ class ExtrasSettings extends SettingSubpageProvider {
         _ExtraSettingsKeys.prioritizeEmbeddedLyrics: [lang.PRIORITIZE_EMBEDDED_LYRICS],
         _ExtraSettingsKeys.immersiveMode: [lang.IMMERSIVE_MODE, lang.IMMERSIVE_MODE_SUBTITLE],
         _ExtraSettingsKeys.swipeToOpenDrawer: [lang.SWIPE_TO_OPEN_DRAWER],
+        _ExtraSettingsKeys.enableClipboardMonitoring: [lang.ENABLE_CLIPBOARD_MONITORING, lang.ENABLE_CLIPBOARD_MONITORING_SUBTITLE],
         _ExtraSettingsKeys.extractAllPalettes: [lang.EXTRACT_ALL_COLOR_PALETTES],
       };
 
@@ -276,6 +279,22 @@ class ExtrasSettings extends SettingSubpageProvider {
                 title: lang.SWIPE_TO_OPEN_DRAWER,
                 value: settings.swipeableDrawer.value,
                 onChanged: (isTrue) => settings.save(swipeableDrawer: !isTrue),
+              ),
+            ),
+          ),
+          getItemWrapper(
+            key: _ExtraSettingsKeys.enableClipboardMonitoring,
+            child: Obx(
+              () => CustomSwitchListTile(
+                bgColor: getBgColor(_ExtraSettingsKeys.enableClipboardMonitoring),
+                icon: Broken.clipboard_export,
+                title: lang.ENABLE_CLIPBOARD_MONITORING,
+                subtitle: lang.ENABLE_CLIPBOARD_MONITORING_SUBTITLE,
+                value: settings.enableClipboardMonitoring.value,
+                onChanged: (isTrue) {
+                  settings.save(enableClipboardMonitoring: !isTrue);
+                  ClipboardController.inst.setClipboardMonitoringStatus(!isTrue);
+                },
               ),
             ),
           ),

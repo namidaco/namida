@@ -9,12 +9,20 @@ class ClipboardController {
   ClipboardController._internal();
 
   Timer? _timer;
-  void initialize() {
+
+  void setClipboardMonitoringStatus(bool monitor) {
     _timer?.cancel();
     _timer = null;
-    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      _checkClipboardChanged();
-    });
+
+    if (monitor) {
+      _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+        _checkClipboardChanged();
+      });
+    } else {
+      _textInControllerEmpty.value = true;
+      _lastCopyUsed.value = '';
+      _clipboardText.value = '';
+    }
   }
 
   void _checkClipboardChanged() async {

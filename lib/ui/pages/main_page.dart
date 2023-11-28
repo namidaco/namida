@@ -249,7 +249,7 @@ class NamidaSearchBar extends StatelessWidget {
 
             return AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
-              child: empty || (clipboard != '' && !alreadyPasted)
+              child: clipboard != '' && (empty || !alreadyPasted)
                   ? NamidaIconButton(
                       horizontalPadding: 0,
                       icon: Broken.clipboard_tick,

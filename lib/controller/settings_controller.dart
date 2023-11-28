@@ -163,6 +163,7 @@ class SettingsController {
   final RxBool prioritizeEmbeddedLyrics = true.obs;
   final RxBool swipeableDrawer = true.obs;
   final RxBool dismissibleMiniplayer = false.obs;
+  final RxBool enableClipboardMonitoring = false.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
     TagField.trackNumber,
     TagField.year,
@@ -429,6 +430,7 @@ class SettingsController {
       prioritizeEmbeddedLyrics.value = json['prioritizeEmbeddedLyrics'] ?? prioritizeEmbeddedLyrics.value;
       swipeableDrawer.value = json['swipeableDrawer'] ?? swipeableDrawer.value;
       dismissibleMiniplayer.value = json['dismissibleMiniplayer'] ?? dismissibleMiniplayer.value;
+      enableClipboardMonitoring.value = json['enableClipboardMonitoring'] ?? enableClipboardMonitoring.value;
 
       final listFromStorage = List<String>.from(json['tagFieldsToEdit'] ?? []);
       tagFieldsToEdit.value = listFromStorage.isNotEmpty ? List<TagField>.from(listFromStorage.map((e) => TagField.values.getEnum(e))) : tagFieldsToEdit;
@@ -639,6 +641,7 @@ class SettingsController {
       'prioritizeEmbeddedLyrics': prioritizeEmbeddedLyrics.value,
       'swipeableDrawer': swipeableDrawer.value,
       'dismissibleMiniplayer': dismissibleMiniplayer.value,
+      'enableClipboardMonitoring': enableClipboardMonitoring.value,
       'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
       'wakelockMode': wakelockMode.value.convertToString,
       'localVideoMatchingType': localVideoMatchingType.value.convertToString,
@@ -818,6 +821,7 @@ class SettingsController {
     bool? prioritizeEmbeddedLyrics,
     bool? swipeableDrawer,
     bool? dismissibleMiniplayer,
+    bool? enableClipboardMonitoring,
     List<TagField>? tagFieldsToEdit,
     WakelockMode? wakelockMode,
     LocalVideoMatchingType? localVideoMatchingType,
@@ -1267,6 +1271,9 @@ class SettingsController {
     }
     if (dismissibleMiniplayer != null) {
       this.dismissibleMiniplayer.value = dismissibleMiniplayer;
+    }
+    if (enableClipboardMonitoring != null) {
+      this.enableClipboardMonitoring.value = enableClipboardMonitoring;
     }
     if (tagFieldsToEdit != null) {
       tagFieldsToEdit.loop((d, index) {

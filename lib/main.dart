@@ -115,7 +115,7 @@ void main() async {
     Language.initialize(),
   ]);
   ConnectivityController.inst.initialize();
-  ClipboardController.inst.initialize();
+  ClipboardController.inst.setClipboardMonitoringStatus(settings.enableClipboardMonitoring.value);
 
   /// updates values on startup
   Indexer.inst.updateImageSizeInStorage();
