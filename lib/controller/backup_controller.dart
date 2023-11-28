@@ -26,6 +26,8 @@ class BackupController {
   final RxBool isCreatingBackup = false.obs;
   final RxBool isRestoringBackup = false.obs;
 
+  String get _backupDirectoryPath => settings.defaultBackupLocation.value;
+
   Future<void> createBackupFile(List<String> backupItemsPaths) async {
     if (!await requestManageStoragePermission()) {
       return;
@@ -37,7 +39,7 @@ class BackupController {
     final date = format.format(DateTime.now().toLocal());
 
     // creates directories and file
-    final dir = await Directory(AppDirs.BACKUPS).create();
+    final dir = await Directory(_backupDirectoryPath).create();
     await File("${dir.path}/Namida Backup - $date.zip").create();
     final sourceDir = Directory(AppDirs.USER_DATA);
 
@@ -81,7 +83,7 @@ class BackupController {
         await ZipFile.createFromFiles(sourceDir: sourceDir, files: youtubeFilesOnly, zipFile: tempAllYoutube);
       }
 
-      final zipFile = File("${AppDirs.BACKUPS}Namida Backup - $date.zip");
+      final zipFile = File("$_backupDirectoryPath/Namida Backup - $date.zip");
       final allFiles = [
         if (tempAllLocal != null) tempAllLocal,
         if (tempAllYoutube != null) tempAllYoutube,
@@ -112,7 +114,7 @@ class BackupController {
     NamidaNavigator.inst.closeDialog();
     File? backupzip;
     if (auto) {
-      final dir = Directory(AppDirs.BACKUPS);
+      final dir = Directory(_backupDirectoryPath);
       final possibleFiles = dir.listSync();
 
       final List<File> filessss = [];
