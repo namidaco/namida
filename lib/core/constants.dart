@@ -74,7 +74,7 @@ class AppDirs {
 
   // ================= Internal Storage =================
   static final SAVED_ARTWORKS = '$INTERNAL_STORAGE/Artworks/';
-  static final BACKUPS = '$INTERNAL_STORAGE/Backups/';
+  static final BACKUPS = '$INTERNAL_STORAGE/Backups'; // only one without ending slash.
   static final COMPRESSED_IMAGES = '$INTERNAL_STORAGE/Compressed/';
   static final M3UPlaylists = '$INTERNAL_STORAGE/M3U Playlists/';
   static final YOUTUBE_DOWNLOADS = '$INTERNAL_STORAGE/Downloads/';

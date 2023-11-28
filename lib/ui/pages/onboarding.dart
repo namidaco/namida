@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -12,6 +13,7 @@ import 'package:namida/main.dart';
 import 'package:namida/main_page_wrapper.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/advanced_settings.dart';
+import 'package:namida/ui/widgets/settings/backup_restore_settings.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
@@ -78,6 +80,31 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
     QueueController.inst.prepareLatestQueue();
   }
 
+  void _onRestoreBackupIconTap() async {
+    await _requestPermission();
+    if (!didGrantStoragePermission) return;
+    const backupAndRestore = BackupAndRestore();
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        icon: Broken.refresh_circle,
+        normalTitleStyle: true,
+        title: lang.BACKUP_AND_RESTORE,
+        actions: [
+          NamidaButton(
+            text: lang.DONE,
+            onPressed: NamidaNavigator.inst.closeDialog,
+          ),
+        ],
+        child: Column(
+          children: [
+            backupAndRestore.getRestoreBackupWidget(),
+            backupAndRestore.getDefaultBackupLocationWidget(),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     const indexer = IndexerSettings();
@@ -107,6 +134,20 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
               icon: Broken.candle,
               title: lang.CONFIGURE,
               subtitle: lang.SETUP_FIRST_STARTUP,
+              trailing: Column(
+                children: [
+                  NamidaIconButton(
+                    tooltip: lang.RESTORE_BACKUP,
+                    icon: Broken.back_square,
+                    onPressed: _onRestoreBackupIconTap,
+                  ),
+                  const SizedBox(height: 2.0),
+                  ObxShow(
+                    showIf: BackupController.inst.isRestoringBackup,
+                    child: const LoadingIndicator(),
+                  ),
+                ],
+              ),
               childRaw: Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(4.0),
@@ -199,6 +240,9 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                 width: context.width * 0.2,
                                 onTap: () async {
                                   await _requestPermission();
+                                  if (BackupController.inst.isRestoringBackup.value) {
+                                    return snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+                                  }
                                   _navigateToNamida();
                                 },
                                 borderRadius: 8.0,

@@ -29,6 +29,8 @@ class BackupController {
   String get _backupDirectoryPath => settings.defaultBackupLocation.value;
 
   Future<void> createBackupFile(List<String> backupItemsPaths) async {
+    if (isCreatingBackup.value) return snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+
     if (!await requestManageStoragePermission()) {
       return;
     }
@@ -38,8 +40,10 @@ class BackupController {
     final format = DateFormat('yyyy-MM-dd hh.mm.ss');
     final date = format.format(DateTime.now().toLocal());
 
+    final backupDirPath = _backupDirectoryPath;
+
     // creates directories and file
-    final dir = await Directory(_backupDirectoryPath).create();
+    final dir = await Directory(backupDirPath).create();
     await File("${dir.path}/Namida Backup - $date.zip").create();
     final sourceDir = Directory(AppDirs.USER_DATA);
 
@@ -83,7 +87,7 @@ class BackupController {
         await ZipFile.createFromFiles(sourceDir: sourceDir, files: youtubeFilesOnly, zipFile: tempAllYoutube);
       }
 
-      final zipFile = File("$_backupDirectoryPath/Namida Backup - $date.zip");
+      final zipFile = File("$backupDirPath/Namida Backup - $date.zip");
       final allFiles = [
         if (tempAllLocal != null) tempAllLocal,
         if (tempAllYoutube != null) tempAllYoutube,
@@ -127,6 +131,8 @@ class BackupController {
   }
 
   Future<void> restoreBackupOnTap(bool auto) async {
+    if (isRestoringBackup.value) return snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+
     File? backupzip;
     if (auto) {
       final sortedFiles = await _getBackupFilesSorted.thready(_backupDirectoryPath);

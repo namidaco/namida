@@ -16,6 +16,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -63,6 +64,82 @@ class BackupAndRestore extends SettingSubpageProvider {
     );
   }
 
+  Widget getRestoreBackupWidget() {
+    return getItemWrapper(
+      key: _BackupAndRestoreKeys.restore,
+      child: CustomListTile(
+        bgColor: getBgColor(_BackupAndRestoreKeys.restore),
+        title: lang.RESTORE_BACKUP,
+        icon: Broken.back_square,
+        trailingRaw: ObxShow(
+          showIf: BackupController.inst.isRestoringBackup,
+          child: const LoadingIndicator(),
+        ),
+        onTap: () async {
+          if (BackupController.inst.isRestoringBackup.value) {
+            return snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+          }
+
+          NamidaNavigator.inst.navigateDialog(
+            dialog: CustomBlurryDialog(
+              normalTitleStyle: true,
+              title: lang.RESTORE_BACKUP,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    CustomListTile(
+                      title: lang.AUTOMATIC_BACKUP,
+                      subtitle: lang.AUTOMATIC_BACKUP_SUBTITLE,
+                      icon: Broken.autobrightness,
+                      maxSubtitleLines: 22,
+                      onTap: () async {
+                        if (!await requestManageStoragePermission()) return;
+
+                        NamidaNavigator.inst.closeDialog();
+                        BackupController.inst.restoreBackupOnTap(true);
+                      },
+                    ),
+                    CustomListTile(
+                      title: lang.MANUAL_BACKUP,
+                      subtitle: lang.MANUAL_BACKUP_SUBTITLE,
+                      maxSubtitleLines: 22,
+                      icon: Broken.hashtag,
+                      onTap: () {
+                        NamidaNavigator.inst.closeDialog();
+                        BackupController.inst.restoreBackupOnTap(false);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget getDefaultBackupLocationWidget() {
+    return getItemWrapper(
+      key: _BackupAndRestoreKeys.defaultLocation,
+      child: Obx(
+        () => CustomListTile(
+          bgColor: getBgColor(_BackupAndRestoreKeys.defaultLocation),
+          title: lang.DEFAULT_BACKUP_LOCATION,
+          icon: Broken.direct_inbox,
+          subtitle: settings.defaultBackupLocation.value,
+          onTap: () async {
+            final path = await FilePicker.platform.getDirectoryPath();
+
+            if (path != null) {
+              settings.save(defaultBackupLocation: path);
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -85,6 +162,10 @@ class BackupAndRestore extends SettingSubpageProvider {
                 child: const LoadingIndicator(),
               ),
               onTap: () {
+                if (BackupController.inst.isCreatingBackup.value) {
+                  return snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+                }
+
                 bool isActive(List<String> items) => items.every((element) => settings.backupItemslist.contains(element));
 
                 void onItemTap(List<String> items) {
@@ -376,74 +457,10 @@ class BackupAndRestore extends SettingSubpageProvider {
           ),
 
           // -- Restore Backup
-          getItemWrapper(
-            key: _BackupAndRestoreKeys.restore,
-            child: CustomListTile(
-              bgColor: getBgColor(_BackupAndRestoreKeys.restore),
-              title: lang.RESTORE_BACKUP,
-              icon: Broken.back_square,
-              trailingRaw: ObxShow(
-                showIf: BackupController.inst.isRestoringBackup,
-                child: const LoadingIndicator(),
-              ),
-              onTap: () async {
-                NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    normalTitleStyle: true,
-                    title: lang.RESTORE_BACKUP,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          CustomListTile(
-                            title: lang.AUTOMATIC_BACKUP,
-                            subtitle: lang.AUTOMATIC_BACKUP_SUBTITLE,
-                            icon: Broken.autobrightness,
-                            maxSubtitleLines: 22,
-                            onTap: () async {
-                              if (!await requestManageStoragePermission()) return;
-
-                              NamidaNavigator.inst.closeDialog();
-                              BackupController.inst.restoreBackupOnTap(true);
-                            },
-                          ),
-                          CustomListTile(
-                            title: lang.MANUAL_BACKUP,
-                            subtitle: lang.MANUAL_BACKUP_SUBTITLE,
-                            maxSubtitleLines: 22,
-                            icon: Broken.hashtag,
-                            onTap: () {
-                              NamidaNavigator.inst.closeDialog();
-                              BackupController.inst.restoreBackupOnTap(false);
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+          getRestoreBackupWidget(),
 
           // -- Default Backup Location
-          getItemWrapper(
-            key: _BackupAndRestoreKeys.defaultLocation,
-            child: Obx(
-              () => CustomListTile(
-                bgColor: getBgColor(_BackupAndRestoreKeys.defaultLocation),
-                title: lang.DEFAULT_BACKUP_LOCATION,
-                icon: Broken.direct_inbox,
-                subtitle: settings.defaultBackupLocation.value,
-                onTap: () async {
-                  final path = await FilePicker.platform.getDirectoryPath();
-
-                  if (path != null) {
-                    settings.save(defaultBackupLocation: path);
-                  }
-                },
-              ),
-            ),
-          ),
+          getDefaultBackupLocationWidget(),
 
           // -- Import Youtube History
           getItemWrapper(
