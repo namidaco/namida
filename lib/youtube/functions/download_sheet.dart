@@ -61,10 +61,10 @@ Future<void> showDownloadVideoBottomSheet({
     } else {
       final audioOnly = selectedAudioOnlyStream.value != null && selectedVideoOnlyStream.value == null;
       if (audioOnly) {
-        final filenameRealAudio = "$videoTitle.${selectedAudioOnlyStream.value?.formatSuffix}";
+        final filenameRealAudio = videoTitle;
         videoOutputFilenameController.text = filenameRealAudio;
       } else {
-        final filenameRealVideo = "${videoTitle}_${selectedVideoOnlyStream.value?.resolution}.${selectedVideoOnlyStream.value?.formatSuffix}";
+        final filenameRealVideo = "${videoTitle}_${selectedVideoOnlyStream.value?.resolution}";
         videoOutputFilenameController.text = filenameRealVideo;
       }
     }

@@ -890,6 +890,7 @@ class YoutubeController {
         useCachedVersionsIfAvailable: useCachedVersionsIfAvailable,
         saveDirectory: directory,
         filename: config.filename,
+        fileExtension: config.videoStream?.formatSuffix ?? config.audioStream?.formatSuffix ?? '',
         videoStream: config.videoStream,
         audioStream: config.audioStream,
         merge: true,
@@ -975,6 +976,7 @@ class YoutubeController {
     required bool useCachedVersionsIfAvailable,
     required Directory saveDirectory,
     required String filename,
+    required String fileExtension,
     required VideoStream? videoStream,
     required AudioOnlyStream? audioStream,
     required Map<String, String?> ffmpegTags,
@@ -990,6 +992,8 @@ class YoutubeController {
     required Future<void> Function(File? deletedFile)? onOldFileDeleted,
   }) async {
     if (id == '') return null;
+
+    filename = "$filename.$fileExtension";
 
     final filenameClean = cleanupFilename(filename);
 
