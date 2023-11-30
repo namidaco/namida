@@ -656,8 +656,15 @@ class YoutubeController {
     );
   }
 
-  Future<void> resumeDownloadTasks({required String groupName, List<YoutubeItemDownloadConfig> itemsConfig = const []}) async {
+  Future<void> resumeDownloadTasks({
+    required String groupName,
+    List<YoutubeItemDownloadConfig> itemsConfig = const [],
+    bool skipExistingFiles = true,
+  }) async {
     final finalItems = itemsConfig.isNotEmpty ? itemsConfig : youtubeDownloadTasksMap[groupName]?.values.toList() ?? [];
+    if (skipExistingFiles) {
+      finalItems.removeWhere((element) => YoutubeController.inst.downloadedFilesMap[groupName]?[element.filename] != null);
+    }
     if (finalItems.isNotEmpty) {
       await downloadYoutubeVideos(
         useCachedVersionsIfAvailable: true,
