@@ -122,6 +122,11 @@ class YoutubeController {
   /// - `null` -> not specified.
   final youtubeDownloadTasksInQueueMap = <String, Map<String, bool?>>{}.obs;
 
+  /// {groupName: dateMS}
+  ///
+  /// used to sort group names by latest edited.
+  final latestEditedGroupDownloadTask = <String, int>{};
+
   /// Used to keep track of existing downloaded files, more performant than real-time checking.
   ///
   /// {groupName: {filename: File}}
@@ -583,7 +588,7 @@ class YoutubeController {
 
   Future<int?> _getContentSize(String url) async => await NewPipeExtractorDart.httpClient.getContentLength(url);
 
-  String cleanupFilename(String filename) => filename.replaceAll(RegExp(r'[#\$|/\\!^:]', caseSensitive: false), '_');
+  String cleanupFilename(String filename) => filename.replaceAll(RegExp(r'[#\$|/\\!^:"]', caseSensitive: false), '_');
 
   Future<void> loadDownloadTasksInfoFile() async {
     await for (final f in Directory(AppDirs.YT_DOWNLOAD_TASKS).list()) {
@@ -591,8 +596,12 @@ class YoutubeController {
         final groupName = f.path.getFilename.split('.').first;
         final res = await f.readAsJson() as Map<String, dynamic>?;
         if (res != null) {
+          final fileModified = f.statSync().modified;
           youtubeDownloadTasksMap[groupName] ??= {};
           downloadedFilesMap[groupName] ??= {};
+          if (fileModified != DateTime(1970)) {
+            latestEditedGroupDownloadTask[groupName] ??= fileModified.millisecondsSinceEpoch;
+          }
           for (final v in res.entries) {
             final ytitem = YoutubeItemDownloadConfig.fromJson(v.value as Map<String, dynamic>);
             final file = File("${AppDirs.YOUTUBE_DOWNLOADS}$groupName/${ytitem.filename}");
@@ -704,7 +713,6 @@ class YoutubeController {
         for (final c in groupConfigs.values) {
           onMatch(groupName, c);
         }
-        youtubeDownloadTasksMap.remove(groupName);
       }
     } else if (videosIds.isNotEmpty) {
       _matchIDsForItemConfig(
@@ -772,6 +780,8 @@ class YoutubeController {
 
     youtubeDownloadTasksMap.refresh();
     downloadedFilesMap.refresh();
+
+    latestEditedGroupDownloadTask[groupName] = DateTime.now().millisecondsSinceEpoch;
 
     final mapToWrite = youtubeDownloadTasksMap[groupName];
     final file = File("${AppDirs.YT_DOWNLOAD_TASKS}$groupName.json");

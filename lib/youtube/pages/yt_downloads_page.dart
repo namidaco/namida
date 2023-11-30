@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:get/get.dart';
+import 'package:jiffy/jiffy.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -32,8 +33,8 @@ class YTDownloadsPage extends StatelessWidget {
         return NamidaInkWell(
           bgColor: enabled ? CurrentColor.inst.color : context.theme.cardColor,
           borderRadius: 6.0,
-          margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+          margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
           animationDurationMS: 300,
           onTap: onTap,
           child: Row(
@@ -280,6 +281,7 @@ class YTDownloadsPage extends StatelessWidget {
               child: Obx(
                 () {
                   final keys = YoutubeController.inst.youtubeDownloadTasksMap.keys.toList();
+                  keys.sortByReverse((e) => YoutubeController.inst.latestEditedGroupDownloadTask[e] ?? 0);
                   return CustomScrollView(
                     slivers: [
                       _isOnGoingSelected == null
@@ -288,72 +290,79 @@ class YTDownloadsPage extends StatelessWidget {
                               itemBuilder: (context, index) {
                                 final groupName = keys[index];
                                 final list = YoutubeController.inst.youtubeDownloadTasksMap[groupName]?.values.toList() ?? [];
-                                return NamidaExpansionTile(
-                                  initiallyExpanded: true,
-                                  titleText: groupName == '' ? lang.DEFAULT : groupName,
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton.filledTonal(
-                                        padding: EdgeInsets.zero,
-                                        visualDensity: VisualDensity.compact,
-                                        onPressed: () {
-                                          YoutubeController.inst.resumeDownloadTasks(groupName: groupName);
-                                        },
-                                        icon: const Icon(Broken.play, size: 18.0),
-                                      ),
-                                      IconButton.filledTonal(
-                                        padding: EdgeInsets.zero,
-                                        visualDensity: VisualDensity.compact,
-                                        onPressed: () {
-                                          YoutubeController.inst.pauseDownloadTask(
-                                            itemsConfig: [],
-                                            groupName: groupName,
-                                            allInGroupName: true,
-                                          );
-                                        },
-                                        icon: const Icon(Broken.pause, size: 18.0),
-                                      ),
-                                      IconButton.filledTonal(
-                                        padding: EdgeInsets.zero,
-                                        visualDensity: VisualDensity.compact,
-                                        onPressed: () async {
-                                          final confirmed = await _confirmCancelDialog(
-                                            context: context,
-                                            operationTitle: lang.CANCEL,
-                                            groupTitle: groupName,
-                                            itemsLength: list.length,
-                                          );
-                                          if (confirmed) {
-                                            YoutubeController.inst.cancelDownloadTask(
+                                final lastEditedMSSE = YoutubeController.inst.latestEditedGroupDownloadTask[groupName] ?? 0;
+                                final lastEditedAgo = lastEditedMSSE == 0 ? null : Jiffy.parseFromMillisecondsSinceEpoch(lastEditedMSSE).fromNow();
+
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0),
+                                  child: NamidaExpansionTile(
+                                    initiallyExpanded: true,
+                                    titleText: groupName == '' ? lang.DEFAULT : groupName,
+                                    subtitleText: lastEditedAgo,
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton.filledTonal(
+                                          padding: EdgeInsets.zero,
+                                          visualDensity: VisualDensity.compact,
+                                          onPressed: () {
+                                            YoutubeController.inst.resumeDownloadTasks(groupName: groupName);
+                                          },
+                                          icon: const Icon(Broken.play, size: 18.0),
+                                        ),
+                                        IconButton.filledTonal(
+                                          padding: EdgeInsets.zero,
+                                          visualDensity: VisualDensity.compact,
+                                          onPressed: () {
+                                            YoutubeController.inst.pauseDownloadTask(
                                               itemsConfig: [],
                                               groupName: groupName,
                                               allInGroupName: true,
                                             );
-                                          }
-                                        },
-                                        icon: const Icon(Broken.close_circle, size: 18.0),
-                                      ),
-                                      const SizedBox(width: 4.0),
-                                      const Icon(
-                                        Broken.arrow_down_2,
-                                        size: 20.0,
-                                      ),
-                                      const SizedBox(width: 4.0),
-                                    ],
-                                  ),
-                                  leading: NamidaInkWell(
-                                    borderRadius: 8.0,
-                                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                                    bgColor: context.theme.cardColor,
-                                    child: Text(
-                                      "${list.length}",
-                                      style: context.textTheme.displayLarge,
+                                          },
+                                          icon: const Icon(Broken.pause, size: 18.0),
+                                        ),
+                                        IconButton.filledTonal(
+                                          padding: EdgeInsets.zero,
+                                          visualDensity: VisualDensity.compact,
+                                          onPressed: () async {
+                                            final confirmed = await _confirmCancelDialog(
+                                              context: context,
+                                              operationTitle: lang.CANCEL,
+                                              groupTitle: groupName,
+                                              itemsLength: list.length,
+                                            );
+                                            if (confirmed) {
+                                              YoutubeController.inst.cancelDownloadTask(
+                                                itemsConfig: [],
+                                                groupName: groupName,
+                                                allInGroupName: true,
+                                              );
+                                            }
+                                          },
+                                          icon: const Icon(Broken.close_circle, size: 18.0),
+                                        ),
+                                        const SizedBox(width: 4.0),
+                                        const Icon(
+                                          Broken.arrow_down_2,
+                                          size: 20.0,
+                                        ),
+                                        const SizedBox(width: 4.0),
+                                      ],
                                     ),
-                                  ),
-                                  children: List<YTDownloadTaskItemCard>.generate(
-                                    list.length,
-                                    (index) => YTDownloadTaskItemCard(videos: list, index: index, groupName: groupName),
+                                    leading: NamidaInkWell(
+                                      borderRadius: 8.0,
+                                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                      bgColor: context.theme.cardColor,
+                                      child: Text(
+                                        "${list.length}",
+                                        style: context.textTheme.displayLarge,
+                                      ),
+                                    ),
+                                    children: List<YTDownloadTaskItemCard>.generate(
+                                      list.length,
+                                      (index) => YTDownloadTaskItemCard(videos: list, index: index, groupName: groupName),
+                                    ),
                                   ),
                                 );
                               },

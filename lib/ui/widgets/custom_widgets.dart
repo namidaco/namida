@@ -847,6 +847,7 @@ class NamidaExpansionTile extends StatelessWidget {
   final IconData? trailingIcon;
   final double trailingIconSize;
   final String titleText;
+  final String? subtitleText;
   final Color? textColor;
   final Color? textColorScheme;
   final List<Widget> children;
@@ -865,6 +866,7 @@ class NamidaExpansionTile extends StatelessWidget {
     this.trailingIcon = Broken.arrow_down_2,
     this.trailingIconSize = 20.0,
     required this.titleText,
+    this.subtitleText,
     this.textColor,
     this.textColorScheme,
     this.children = const <Widget>[],
@@ -902,17 +904,27 @@ class NamidaExpansionTile extends StatelessWidget {
                       icon: Icon(trailingIcon, size: trailingIconSize),
                     ),
                   )),
-        title: Text(
-          titleText,
-          style: context.textTheme.displayMedium?.copyWith(
-            color: textColor ??
-                (textColorScheme == null
-                    ? null
-                    : Color.alphaBlend(
-                        textColorScheme!.withAlpha(40),
-                        context.textTheme.displayMedium!.color!,
-                      )),
-          ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              titleText,
+              style: context.textTheme.displayMedium?.copyWith(
+                color: textColor ??
+                    (textColorScheme == null
+                        ? null
+                        : Color.alphaBlend(
+                            textColorScheme!.withAlpha(40),
+                            context.textTheme.displayMedium!.color!,
+                          )),
+              ),
+            ),
+            if (subtitleText != null)
+              Text(
+                subtitleText!,
+                style: context.textTheme.displaySmall,
+              ),
+          ],
         ),
         childrenPadding: childrenPadding,
         children: children,

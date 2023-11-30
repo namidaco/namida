@@ -576,32 +576,32 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                             final willBeDownloaded = YoutubeController.inst.youtubeDownloadTasksInQueueMap[groupName]?[item.filename] == true;
                             final fileExists = YoutubeController.inst.downloadedFilesMap[groupName]?[item.filename] != null;
 
-                            return willBeDownloaded || isDownloading || isFetching
+                            return fileExists
                                 ? _getChip(
                                     context: context,
-                                    title: lang.PAUSE,
-                                    icon: Broken.pause,
-                                    iconWidget: (size) => StackedIcon(
-                                      baseIcon: Broken.pause,
-                                      secondaryIcon: Broken.timer,
-                                      iconSize: size,
-                                      secondaryIconSize: 10.0,
-                                    ),
-                                    onTap: () => _onPauseDownloadTap([item]),
-                                  )
-                                : fileExists
+                                    title: lang.RESTART,
+                                    icon: Broken.refresh,
+                                    onTap: () async {
+                                      final confirmed = await _confirmOperation(
+                                        context: context,
+                                        operationTitle: lang.RESTART,
+                                      );
+                                      // ignore: use_build_context_synchronously
+                                      if (confirmed) _onResumeDownloadTap([item], context);
+                                    })
+                                : willBeDownloaded || isDownloading || isFetching
                                     ? _getChip(
                                         context: context,
-                                        title: lang.RESTART,
-                                        icon: Broken.refresh,
-                                        onTap: () async {
-                                          final confirmed = await _confirmOperation(
-                                            context: context,
-                                            operationTitle: lang.RESTART,
-                                          );
-                                          // ignore: use_build_context_synchronously
-                                          if (confirmed) _onResumeDownloadTap([item], context);
-                                        })
+                                        title: lang.PAUSE,
+                                        icon: Broken.pause,
+                                        iconWidget: (size) => StackedIcon(
+                                          baseIcon: Broken.pause,
+                                          secondaryIcon: Broken.timer,
+                                          iconSize: size,
+                                          secondaryIconSize: 10.0,
+                                        ),
+                                        onTap: () => _onPauseDownloadTap([item]),
+                                      )
                                     : _getChip(
                                         context: context,
                                         title: lang.RESUME,

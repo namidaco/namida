@@ -393,6 +393,7 @@ abstract class LanguageKeys {
   String get PALETTE_MIX => _getKey('PALETTE_MIX');
   String get PALETTE_NEW_MIX => _getKey('PALETTE_NEW_MIX');
   String get PALETTE_SELECTED_MIX => _getKey('PALETTE_SELECTED_MIX');
+  String get PARALLEL_DOWNLOADS => _getKey('PARALLEL_DOWNLOADS');
   String get PARSED => _getKey('PARSED');
   String get PATH => _getKey('PATH');
   String get PAUSE => _getKey('PAUSE');
