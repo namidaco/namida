@@ -22,6 +22,7 @@ Future<void> showVideoDownloadOptionsSheet({
   required Map<String, String?> tagMaps,
   required bool supportTagging,
   required void Function(String newFolderPath) onDownloadGroupNameChanged,
+  required bool showSpecificFileOptions,
 }) async {
   final controllersMap = {for (final t in FFMPEGTagField.values) t: TextEditingController(text: tagMaps[t])};
 
@@ -86,28 +87,30 @@ Future<void> showVideoDownloadOptionsSheet({
               Expanded(
                 child: ListView(
                   children: [
-                    Obx(
-                      () => CustomSwitchListTile(
-                        icon: Broken.document_code,
-                        visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
-                        title: lang.SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE,
-                        value: settings.downloadFilesWriteUploadDate.value,
-                        onChanged: (isTrue) => settings.save(downloadFilesWriteUploadDate: !isTrue),
+                    if (showSpecificFileOptions) ...[
+                      Obx(
+                        () => CustomSwitchListTile(
+                          icon: Broken.document_code,
+                          visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
+                          title: lang.SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE,
+                          value: settings.downloadFilesWriteUploadDate.value,
+                          onChanged: (isTrue) => settings.save(downloadFilesWriteUploadDate: !isTrue),
+                        ),
                       ),
-                    ),
-                    Obx(
-                      () => CustomSwitchListTile(
-                        icon: Broken.tick_circle,
-                        visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
-                        title: lang.KEEP_CACHED_VERSIONS,
-                        value: settings.downloadFilesKeepCachedVersions.value,
-                        onChanged: (isTrue) => settings.save(downloadFilesKeepCachedVersions: !isTrue),
+                      Obx(
+                        () => CustomSwitchListTile(
+                          icon: Broken.tick_circle,
+                          visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
+                          title: lang.KEEP_CACHED_VERSIONS,
+                          value: settings.downloadFilesKeepCachedVersions.value,
+                          onChanged: (isTrue) => settings.save(downloadFilesKeepCachedVersions: !isTrue),
+                        ),
                       ),
-                    ),
-                    YTDownloadOptionFolderListTile(
-                      onDownloadGroupNameChanged: onDownloadGroupNameChanged,
-                      visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
-                    ),
+                      YTDownloadOptionFolderListTile(
+                        onDownloadGroupNameChanged: onDownloadGroupNameChanged,
+                        visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
+                      ),
+                    ],
                     const SizedBox(height: 6.0),
                     if (!supportTagging) ...[
                       const SizedBox(height: 12.0),

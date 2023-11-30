@@ -19,6 +19,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_download_options.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/youtube_miniplayer.dart';
@@ -58,7 +59,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   @override
   void initState() {
     _groupName.value = widget.playlistName;
-    _addYTIDsToSelected(widget.ids);
+    _addAllYTIDsToSelected();
+    _fillConfigMap();
     super.initState();
   }
 
@@ -72,8 +74,43 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     super.dispose();
   }
 
-  void _addYTIDsToSelected(List<YoutubeID> ids) {
-    _selectedList.addAll(ids.map((e) => e.id));
+  void _fillConfigMap() {
+    widget.ids.loop((e, index) {
+      final id = e.id;
+      final info = YoutubeController.inst.getTemporarelyVideoInfo(id) ?? YoutubeController.inst.fetchVideoDetailsFromCacheSync(id);
+      final filename = info?.name ?? id;
+      _configMap[id] = YoutubeItemDownloadConfig(
+        id: id,
+        filename: filename,
+        ffmpegTags: {},
+        fileDate: null,
+        videoStream: null,
+        audioStream: null,
+        prefferedVideoQualityID: null,
+        prefferedAudioQualityID: null,
+        fetchMissingStreams: true,
+      );
+    });
+  }
+
+  void _addAllYTIDsToSelected() {
+    _selectedList.addAll(widget.ids.map((e) => e.id));
+  }
+
+  Future<void> _onEditIconTap({
+    required String id,
+    required VideoInfo? info,
+  }) async {
+    await showDownloadVideoBottomSheet(
+      showSpecificFileOptionsInEditTagDialog: false,
+      videoId: id,
+      info: info,
+      confirmButtonText: lang.CONFIRM,
+      onConfirmButtonTap: (groupName, config) {
+        _configMap[id] = config;
+        return true;
+      },
+    );
   }
 
   void _showAllConfigDialog(BuildContext context) {
@@ -260,7 +297,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                           onChanged: (value) {
                             if (_selectedList.length != widget.ids.length) {
                               _selectedList.clear();
-                              _addYTIDsToSelected(widget.ids);
+                              _addAllYTIDsToSelected();
                             } else {
                               _selectedList.clear();
                             }
@@ -388,6 +425,13 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                             ],
                                           ),
                                         ),
+                                        const SizedBox(width: 4.0),
+                                        NamidaIconButton(
+                                          horizontalPadding: 0.0,
+                                          icon: Broken.edit_2,
+                                          iconSize: 20.0,
+                                          onPressed: () => _onEditIconTap(id: id, info: info),
+                                        ),
                                         Checkbox.adaptive(
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(4.0.multipliedRadius),
@@ -464,28 +508,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                           NamidaNavigator.inst.popPage();
                           YoutubeController.inst.downloadYoutubeVideos(
                             groupName: widget.playlistName,
-                            itemsConfig: _selectedList
-                                .map(
-                                  (id) =>
-                                      _configMap[id] ??
-                                      YoutubeItemDownloadConfig(
-                                        id: id,
-                                        filename: () {
-                                          // TODO: better way inside controller
-                                          final info = YoutubeController.inst.getTemporarelyVideoInfo(id) ?? YoutubeController.inst.fetchVideoDetailsFromCacheSync(id);
-                                          final ext = downloadAudioOnly.value ? 'm4a' : 'mp4';
-                                          return "${info?.name ?? id}.$ext";
-                                        }(),
-                                        ffmpegTags: {},
-                                        fileDate: null,
-                                        videoStream: null,
-                                        audioStream: null,
-                                        prefferedVideoQualityID: null,
-                                        prefferedAudioQualityID: null,
-                                        fetchMissingStreams: true,
-                                      ),
-                                )
-                                .toList(),
+                            itemsConfig: _selectedList.map((id) => _configMap[id]!).toList(),
                             useCachedVersionsIfAvailable: true,
                             autoExtractTitleAndArtist: autoExtractTitleAndArtist,
                             keepCachedVersionsIfDownloaded: keepCachedVersionsIfDownloaded,

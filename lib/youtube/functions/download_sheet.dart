@@ -28,6 +28,7 @@ Future<void> showDownloadVideoBottomSheet({
   BuildContext? ctx,
   required String videoId,
   Color? colorScheme,
+  bool showSpecificFileOptionsInEditTagDialog = true,
 }) async {
   colorScheme ??= CurrentColor.inst.color;
   final context = ctx ?? rootContext;
@@ -312,142 +313,7 @@ Future<void> showDownloadVideoBottomSheet({
                                                 );
                                               }
 
-                                              showVideoDownloadOptionsSheet(
-                                                context: context,
-                                                videoInfo: videoInfo.value!,
-                                                videoTitle: videoInfo.value!.name ?? '',
-                                                tagMaps: tagsMap,
-                                                supportTagging: !isWEBM,
-                                                onDownloadGroupNameChanged: (newFolderPath) {
-                                                  groupName = newFolderPath;
-                                                  formKey.currentState?.validate();
-                                                },
-                                              );
-                                            },
-                                          ),
-                                          if (isWEBM)
-                                            IgnorePointer(
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.circular(6),
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: context.theme.scaffoldBackgroundColor,
-                                                      spreadRadius: 0,
-                                                      blurRadius: 3.0,
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: const Icon(
-                                                  Broken.info_circle,
-                                                  color: Colors.red,
-                                                  size: 16.0,
-                                                ),
-                                              ),
-                                            )
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: ListView(
-                              shrinkWrap: true,
-                              children: [
-                                Obx(
-                                  () {
-                                    final e = selectedAudioOnlyStream.value;
-                                    final subtitle = e == null ? null : "${e.bitrateText} • ${e.formatSuffix} • ${e.sizeInBytes?.fileSizeFormatted}";
-                                    return getTextWidget(
-                                      title: lang.AUDIO,
-                                      subtitle: subtitle,
-                                      icon: Broken.audio_square,
-                                      onCloseIconTap: () => selectedAudioOnlyStream.value = null,
-                                      onSussyIconTap: () {
-                                        showAudioWebm.value = !showAudioWebm.value;
-                                        if (showAudioWebm.value == false && selectedAudioOnlyStream.value?.formatSuffix == 'webm') {
-                                          selectedAudioOnlyStream.value = video.value?.audioOnlyStreams?.firstOrNull;
-                                        }
-                                      },
-                                    );
-                                  },
-                                ),
-                                if (video.value!.audioOnlyStreams != null)
-                                  Obx(
-                                    () => getPopupItem(
-                                      items: showAudioWebm.value
-                                          ? video.value!.audioOnlyStreams!
-                                          : video.value!.audioOnlyStreams!.where((element) => element.formatSuffix != 'webm').toList(),
-                                      itemBuilder: (element) {
-                                        return Obx(
-                                          () {
-                                            final cacheFile = element.getCachedFile(videoId);
-                                            return getQualityButton(
-                                              selected: selectedAudioOnlyStream.value == element,
-                                              cacheExists: cacheFile != null,
-                                              title: "${element.codec} • ${element.sizeInBytes?.fileSizeFormatted}",
-                                              subtitle: "${element.formatSuffix} • ${element.bitrateText}",
-                                              onTap: () => selectedAudioOnlyStream.value = element,
-                                            );
-                                          },
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                getDivider(),
-                                Obx(
-                                  () {
-                                    final e = selectedVideoOnlyStream.value;
-                                    final subtitle = e == null ? null : "${e.resolution} • ${e.sizeInBytes?.fileSizeFormatted}";
-                                    return getTextWidget(
-                                      title: lang.VIDEO,
-                                      subtitle: subtitle,
-                                      icon: Broken.video_square,
-                                      onCloseIconTap: () => selectedVideoOnlyStream.value = null,
-                                      onSussyIconTap: () {
-                                        showVideoWebm.value = !showVideoWebm.value;
-                                        if (showVideoWebm.value == false && selectedVideoOnlyStream.value?.formatSuffix == 'webm') {
-                                          selectedVideoOnlyStream.value = video.value?.videoOnlyStreams?.firstOrNull;
-                                        }
-                                      },
-                                    );
-                                  },
-                                ),
-                                if (video.value!.videoOnlyStreams != null)
-                                  Obx(
-                                    () {
-                                      return getPopupItem(
-                                        items: showVideoWebm.value
-                                            ? video.value!.videoOnlyStreams!
-                                            : video.value!.videoOnlyStreams!.where((element) => element.formatSuffix != 'webm').toList(),
-                                        itemBuilder: (element) {
-                                          return Obx(
-                                            () {
-                                              final cacheFile = element.getCachedFile(videoId);
-                                              return getQualityButton(
-                                                selected: selectedVideoOnlyStream.value == element,
-                                                cacheExists: cacheFile != null,
-                                                title: "${element.resolution} • ${element.sizeInBytes?.fileSizeFormatted}",
-                                                subtitle: "${element.formatSuffix} • ${element.bitrateText}",
-                                                onTap: () => selectedVideoOnlyStream.value = element,
-                                              );
-                                            },
-                                          );
-                                        },
-                                      );
-                                    },
-                                  ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 12.0),
-                          Obx(() {
-                            final videoOnly = selectedVideoOnlyStream.value != null && selectedAudioOnlyStream.value == null ? lang.VIDEO_ONLY : null;
-                            final audioOnly = selectedVideoOnlyStream.value == null && selectedAudioOnlyStream.value != null ? lang.AUDIO_ONLY : null;
-                            final audioAndVideo = selectedVideoOnlyStream.value != null && selectedAudioOnlyStream.value != null ? "${lang.VIDEO} + ${lang.AUDIO}" : null;
+                                      showSpecificFileOptions: showSpecificFileOptionsInEditTagDialog,
 
                             return RichText(
                               text: TextSpan(
