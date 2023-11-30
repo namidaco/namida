@@ -678,9 +678,9 @@ class YoutubeController {
   }) {
     youtubeDownloadTasksInQueueMap[groupName] ??= {};
     void onMatch(String groupName, YoutubeItemDownloadConfig config) {
+      youtubeDownloadTasksInQueueMap[groupName]![config.filename] = false;
       _downloadClientsMap[groupName]?[config.filename]?.close(force: true);
       _downloadClientsMap[groupName]?.remove(config.filename);
-      youtubeDownloadTasksInQueueMap[groupName]![config.filename] = false;
       _breakRetrievingInfoRequest(config);
     }
 
@@ -1174,13 +1174,15 @@ class YoutubeController {
     }
 
     isDownloading[id]![filenameClean] = false;
+
+    final wasPaused = youtubeDownloadTasksInQueueMap[groupName]?[filenameClean] == false;
     _doneDownloadingNotification(
       videoId: id,
       videoTitle: filename,
       nameIdentifier: filenameClean,
       filename: filenameClean,
       downloadedFile: df,
-      canceledByUser: false, // TODO: find a way for when downloads are paused.
+      canceledByUser: wasPaused,
     );
     return df;
   }
