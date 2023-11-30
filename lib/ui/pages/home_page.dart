@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 
-import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 import 'package:history_manager/history_manager.dart';
@@ -420,7 +419,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     return BackgroundWrapper(
-      child: CupertinoScrollbar(
+      child: NamidaScrollbar(
         child: ShimmerWrapper(
           shimmerDurationMS: 550,
           shimmerDelayMS: 250,

@@ -2166,6 +2166,7 @@ class NamidaListView extends StatelessWidget {
   final List<Widget>? moreWidgets;
   final bool buildDefaultDragHandles;
   final ScrollPhysics? physics;
+  final Map<String, int> scrollConfig;
 
   const NamidaListView({
     super.key,
@@ -2182,13 +2183,14 @@ class NamidaListView extends StatelessWidget {
     this.onReorderStart,
     this.onReorderEnd,
     this.physics,
+    this.scrollConfig = const {},
   });
 
   @override
   Widget build(BuildContext context) {
     final sc = scrollController ?? ScrollController();
     return AnimationLimiter(
-      child: CupertinoScrollbar(
+      child: NamidaScrollbar(
         controller: sc,
         child: Column(
           children: [
@@ -2247,6 +2249,7 @@ class NamidaTracksList extends StatelessWidget {
   final bool displayTrackNumber;
   final bool shouldAnimate;
   final String Function(Selectable track)? thirdLineText;
+  final Map<String, int> scrollConfig;
 
   const NamidaTracksList({
     super.key,
@@ -2265,6 +2268,7 @@ class NamidaTracksList extends StatelessWidget {
     this.displayTrackNumber = false,
     this.shouldAnimate = true,
     this.thirdLineText,
+    this.scrollConfig = const {},
   });
 
   @override
@@ -2277,6 +2281,7 @@ class NamidaTracksList extends StatelessWidget {
       itemExtents: List<double>.filled(queueLength, Dimensions.inst.trackTileItemExtent),
       padding: padding,
       physics: physics,
+      scrollConfig: scrollConfig,
       itemBuilder: itemBuilder ??
           (context, i) {
             if (queue != null) {
@@ -2345,6 +2350,7 @@ class NamidaInkWell extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
   final double? width;
   final double? height;
+  final AlignmentGeometry? alignment;
 
   /// Setting this to [true] will force the [borderRadius] to be [0.0].
   final bool transparentHighlight;
@@ -2362,6 +2368,7 @@ class NamidaInkWell extends StatelessWidget {
     this.margin,
     this.width,
     this.height,
+    this.alignment,
   });
 
   @override
@@ -2369,6 +2376,7 @@ class NamidaInkWell extends StatelessWidget {
     final realBorderRadius = transparentHighlight ? 0.0 : borderRadius;
     final borderR = BorderRadius.circular(realBorderRadius.multipliedRadius);
     return AnimatedContainer(
+      alignment: alignment,
       height: height,
       width: width,
       margin: margin,
@@ -2994,6 +3002,141 @@ class NamidaOpacity extends StatelessWidget {
       key: key,
       opacity: opacity,
       child: child,
+    );
+  }
+}
+
+class NamidaScrollbar extends StatelessWidget {
+  final ScrollController? controller;
+  final Widget child;
+  const NamidaScrollbar({super.key, this.controller, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoScrollbar(
+      controller: controller,
+      child: child,
+    );
+  }
+}
+
+class NamidaAZScrollbar extends StatefulWidget {
+  final Widget child;
+  final ScrollController? controller;
+  final Map<String, int> scrollConfig;
+  final double? itemExtent;
+
+  const NamidaAZScrollbar({
+    super.key,
+    required this.child,
+    this.controller,
+    this.scrollConfig = const {},
+    this.itemExtent,
+  });
+
+  @override
+  State<NamidaAZScrollbar> createState() => _NamidaAZScrollbarState();
+}
+
+class _NamidaAZScrollbarState extends State<NamidaAZScrollbar> {
+  ScrollController? controller;
+  final stackKey = GlobalKey<State<StatefulWidget>>();
+  final columnKey = GlobalKey<State<StatefulWidget>>();
+  double stackHeight = 0;
+  double columnHeight = 1;
+  static const verticalPadding = 6.0;
+  final characters = <String>[];
+  final items = <Text>[];
+
+  final _selectedChar = (0.0, '').obs;
+
+  @override
+  void initState() {
+    controller = widget.controller;
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      final s = columnKey.currentContext?.size;
+      if (s != null) stackHeight = s.height;
+      final h = columnKey.currentContext?.size?.height;
+      if (h != null) columnHeight = h;
+    });
+    stackHeight = stackHeight;
+
+    for (final e in widget.scrollConfig.entries) {
+      characters.add(e.key);
+      items.add(Text(e.key));
+    }
+
+    super.initState();
+  }
+
+  void onScroll(double dy) {
+    final controller = this.controller!;
+    final columnHeight = columnKey.currentContext?.size?.height ?? 1;
+    final p = (dy) / (columnHeight - verticalPadding * 2);
+    final index = ((p * items.length).clamp(0, items.length - 1)).floor();
+    final character = characters[index];
+    _selectedChar.value = (p, character);
+    if (controller.positions.isNotEmpty) {
+      final p = controller.positions.last;
+      final toOffset = (widget.scrollConfig[character] ?? 1) * (widget.itemExtent ?? 0);
+      controller.jumpTo(toOffset.toDouble().clamp(0.0, p.maxScrollExtent));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (controller == null || widget.scrollConfig.isEmpty) {
+      return NamidaScrollbar(
+        controller: controller,
+        child: widget.child,
+      );
+    }
+
+    return Stack(
+      key: stackKey,
+      alignment: Alignment.center,
+      children: [
+        widget.child,
+        Obx(
+          () => Positioned(
+            right: 14.0,
+            top: _selectedChar.value.$1 * columnHeight,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 8.0),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: context.theme.cardColor),
+              child: Text(_selectedChar.value.$2),
+            ),
+          ),
+        ),
+        Positioned(
+          right: 0,
+          child: SizedBox(
+            width: 14.0,
+            height: stackHeight,
+            child: FittedBox(
+              child: DefaultTextStyle(
+                style: context.textTheme.displaySmall!.copyWith(fontSize: stackHeight / widget.scrollConfig.length),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: verticalPadding),
+                  decoration: BoxDecoration(
+                    color: context.theme.scaffoldBackgroundColor.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                  ),
+                  child: GestureDetector(
+                    onVerticalDragDown: (details) => onScroll(details.localPosition.dy),
+                    onVerticalDragUpdate: (details) => onScroll(details.localPosition.dy),
+                    child: Text(
+                      widget.scrollConfig.keys.join('\n'),
+                      key: columnKey,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

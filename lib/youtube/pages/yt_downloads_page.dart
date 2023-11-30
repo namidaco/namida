@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
 
@@ -277,7 +276,7 @@ class YTDownloadsPage extends StatelessWidget {
                 : const SizedBox(),
           ),
           Expanded(
-            child: CupertinoScrollbar(
+            child: NamidaScrollbar(
               child: Obx(
                 () {
                   final keys = YoutubeController.inst.youtubeDownloadTasksMap.keys.toList();

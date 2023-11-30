@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 
@@ -41,7 +40,7 @@ class ArtistsPage extends StatelessWidget {
     final artistDimensions = Dimensions.inst.getArtistCardDimensions(countPerRow);
 
     return BackgroundWrapper(
-      child: CupertinoScrollbar(
+      child: NamidaScrollbar(
         controller: scrollController,
         child: AnimationLimiter(
           child: Obx(

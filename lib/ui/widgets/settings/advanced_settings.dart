@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:checkmark/checkmark.dart';
-import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:namida/class/track.dart';
 
@@ -535,7 +534,7 @@ class AdvancedSettings extends SettingSubpageProvider {
             ),
           ),
         ],
-        child: CupertinoScrollbar(
+        child: NamidaScrollbar(
           child: SizedBox(
             width: Get.width,
             height: Get.height * 0.65,

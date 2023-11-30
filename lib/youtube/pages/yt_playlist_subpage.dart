@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart' as yt;
 import 'package:playlist_manager/module/playlist_id.dart';
@@ -135,7 +134,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
       duration: const Duration(milliseconds: 300),
       data: AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode),
       child: BackgroundWrapper(
-        child: CupertinoScrollbar(
+        child: NamidaScrollbar(
           child: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
@@ -355,7 +354,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
       duration: const Duration(milliseconds: 300),
       data: AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode),
       child: BackgroundWrapper(
-        child: CupertinoScrollbar(
+        child: NamidaScrollbar(
           controller: controller,
           child: CustomScrollView(
             controller: controller,

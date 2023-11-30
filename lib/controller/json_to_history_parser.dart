@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
@@ -155,7 +154,7 @@ class JsonToHistoryParser {
                 child: Obx(
                   () {
                     final missing = _latestMissingMap.entries.toList()..sortByReverse((e) => e.value.length);
-                    return CupertinoScrollbar(
+                    return NamidaScrollbar(
                       child: ListView.separated(
                         separatorBuilder: (context, index) => const SizedBox(height: 8.0),
                         itemCount: missing.length,

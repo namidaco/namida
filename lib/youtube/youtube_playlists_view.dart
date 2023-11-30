@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:get/get.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 
@@ -162,7 +161,7 @@ class YoutubePlaylistsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMinimalView = minimalView ?? idsToAdd.isNotEmpty;
 
-    return CupertinoScrollbar(
+    return NamidaScrollbar(
       child: CustomScrollView(
         slivers: [
           const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
@@ -42,8 +41,7 @@ class AlbumsPage extends StatelessWidget {
     final albumDimensions = Dimensions.inst.getAlbumCardDimensions(countPerRow);
 
     return BackgroundWrapper(
-      child: CupertinoScrollbar(
-        controller: scrollController,
+      child: NamidaScrollbar(
         child: AnimationLimiter(
           child: Column(
             children: [
