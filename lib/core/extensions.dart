@@ -299,19 +299,19 @@ extension TitleAndArtistUtils on String {
         return (a, title);
       }
     }
-    final regexDoesntCareAboutSpaces = RegExp(
-      r'^(.*?)(?:\s?-\s?|\s?\|\s?|\s?by\s|\s?["「])(.*?)(?:"|」)?$',
-      caseSensitive: false,
-    );
-    final match = regexDoesntCareAboutSpaces.firstMatch(input);
-    if (match != null) {
-      final artist = match.group(1)?.trim();
-      final title = match.group(2)?.trim();
-      if (artist != null && title != null) {
-        final a = artist.startsWith('「') ? artist.replaceRange(0, 1, '') : artist;
-        return (a, title);
-      }
-    }
+    // final regexDoesntCareAboutSpaces = RegExp(
+    //   r'^(.*?)(?:\s?-\s?|\s?\|\s?|\s?by\s|\s?["「])(.*?)(?:"|」)?$',
+    //   caseSensitive: false,
+    // );
+    // final match = regexDoesntCareAboutSpaces.firstMatch(input);
+    // if (match != null) {
+    //   final artist = match.group(1)?.trim();
+    //   final title = match.group(2)?.trim();
+    //   if (artist != null && title != null) {
+    //     final a = artist.startsWith('「') ? artist.replaceRange(0, 1, '') : artist;
+    //     return (a, title);
+    //   }
+    // }
     return (null, null);
   }
 
