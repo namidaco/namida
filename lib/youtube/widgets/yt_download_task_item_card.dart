@@ -574,12 +574,19 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                             final isDownloading = YoutubeController.inst.isDownloading[item.id]?[item.filename] ?? false;
                             final isFetching = YoutubeController.inst.isFetchingData[item.id]?[item.filename] ?? false;
                             final willBeDownloaded = YoutubeController.inst.youtubeDownloadTasksInQueueMap[groupName]?[item.filename] == true;
-                            final canPause = isDownloading || isFetching;
-                            return canPause || willBeDownloaded
+                            final fileExists = YoutubeController.inst.downloadedFilesMap[groupName]?[item.filename] != null;
+
+                            return willBeDownloaded || isDownloading || isFetching
                                 ? _getChip(
                                     context: context,
                                     title: lang.PAUSE,
                                     icon: Broken.pause,
+                                    iconWidget: (size) => StackedIcon(
+                                      baseIcon: Broken.pause,
+                                      secondaryIcon: Broken.timer,
+                                      iconSize: size,
+                                      secondaryIconSize: 10.0,
+                                    ),
                                     onTap: () => _onPauseDownloadTap([item]),
                                   )
                                 : fileExists

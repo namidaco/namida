@@ -9,10 +9,11 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/youtube_item_download_config.dart';
+import 'package:namida/youtube/controller/parallel_downloads_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_ongoing_finished_downloads.dart';
 import 'package:namida/youtube/widgets/yt_download_task_item_card.dart';
-
-final _isOnGoingSelected = Rxn<bool>();
 
 class YTDownloadsPage extends StatelessWidget {
   const YTDownloadsPage({super.key});
@@ -26,7 +27,7 @@ class YTDownloadsPage extends StatelessWidget {
   }) {
     return Obx(
       () {
-        final enabled = isOnGoing == _isOnGoingSelected.value;
+        final enabled = isOnGoing == YTOnGoingFinishedDownloads.inst.isOnGoingSelected.value;
         final color = enabled ? Colors.white.withOpacity(0.7) : null;
         return NamidaInkWell(
           bgColor: enabled ? CurrentColor.inst.color : context.theme.cardColor,
@@ -49,34 +50,6 @@ class YTDownloadsPage extends StatelessWidget {
         );
       },
     );
-  }
-
-  void _updateTempList(bool? forIsGoing) {
-    final itemsList = YoutubeController.inst.youtubeDownloadTasksTempList;
-    itemsList.clear();
-    if (forIsGoing == null) return;
-
-    // -- separate same functions bcz dont wanna check in each loop.
-    // -- reverseLoop to insert newer first.
-    if (forIsGoing) {
-      YoutubeController.inst.youtubeDownloadTasksMap.keys.toList().reverseLoop((key, index) {
-        final smallList = YoutubeController.inst.youtubeDownloadTasksMap[key]?.values.toList();
-        smallList?.reverseLoop((v, index) {
-          final match = YoutubeController.inst.downloadedFilesMap[key]?[v.filename] == null;
-          final isDownloadingOrFetching = (YoutubeController.inst.isDownloading[v.id]?[v.filename] ?? false) || (YoutubeController.inst.isFetchingData[v.id]?[v.filename] ?? false);
-          if (match || isDownloadingOrFetching) itemsList.add((key, v));
-        });
-      });
-    } else {
-      YoutubeController.inst.youtubeDownloadTasksMap.keys.toList().reverseLoop((key, index) {
-        final smallList = YoutubeController.inst.youtubeDownloadTasksMap[key]?.values.toList();
-        smallList?.reverseLoop((v, index) {
-          final match = YoutubeController.inst.downloadedFilesMap[key]?[v.filename] != null;
-          final isDownloadingOrFetching = (YoutubeController.inst.isDownloading[v.id]?[v.filename] ?? false) || (YoutubeController.inst.isFetchingData[v.id]?[v.filename] ?? false);
-          if (match && !isDownloadingOrFetching) itemsList.add((key, v));
-        });
-      });
-    }
   }
 
   Future<bool> _confirmCancelDialog({
@@ -132,68 +105,133 @@ class YTDownloadsPage extends StatelessWidget {
     return confirmed;
   }
 
+  void _showParallelDownloadsDialog() async {
+    final tempCount = YoutubeParallelDownloadsHandler.inst.maxParallelDownloadingItems.obs;
+    await NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.CONFIGURE,
+        normalTitleStyle: true,
+        actions: [
+          const CancelButton(),
+          const SizedBox(width: 4.0),
+          NamidaButton(
+            text: lang.CONFIRM,
+            onPressed: () {
+              YoutubeParallelDownloadsHandler.inst.setMaxParalellDownloads(tempCount.value);
+              NamidaNavigator.inst.closeDialog();
+            },
+          ),
+        ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12.0),
+            CustomListTile(
+              icon: Broken.flash,
+              title: lang.PARALLEL_DOWNLOADS,
+              trailing: Obx(
+                () => NamidaWheelSlider<int>(
+                  totalCount: 10,
+                  initValue: tempCount.value,
+                  onValueChanged: (val) => tempCount.value = val.withMinimum(1),
+                  text: tempCount.value.toString(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12.0),
+          ],
+        ),
+      ),
+    );
+    tempCount.close();
+  }
+
+  bool? get _isOnGoingSelected => YTOnGoingFinishedDownloads.inst.isOnGoingSelected.value;
+  set _isOnGoingSelected(bool? val) => YTOnGoingFinishedDownloads.inst.isOnGoingSelected.value = val;
+  void _updateTempList(bool? forIsGoing) => YTOnGoingFinishedDownloads.inst.updateTempList(forIsGoing);
+  void _refreshTempList() => YTOnGoingFinishedDownloads.inst.refreshList();
+  RxList<(String, YoutubeItemDownloadConfig)> get _downloadTasksTempList => YTOnGoingFinishedDownloads.inst.youtubeDownloadTasksTempList;
+
   @override
   Widget build(BuildContext context) {
-    _updateTempList(_isOnGoingSelected.value); // refresh for when coming back to page.
+    _refreshTempList(); // refresh for when coming back to page.
 
     return BackgroundWrapper(
       child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(4.0),
-            child: Wrap(
+            child: Row(
               children: [
-                _getFilterChip(
-                  context: context,
-                  title: lang.ALL,
-                  icon: Broken.task,
-                  onTap: () {
-                    _updateTempList(null);
-                    _isOnGoingSelected.value = null;
-                  },
-                  isOnGoing: null,
+                Expanded(
+                  child: Wrap(
+                    children: [
+                      _getFilterChip(
+                        context: context,
+                        title: lang.ALL,
+                        icon: Broken.task,
+                        onTap: () {
+                          _updateTempList(null);
+                          _isOnGoingSelected = null;
+                        },
+                        isOnGoing: null,
+                      ),
+                      _getFilterChip(
+                        context: context,
+                        title: lang.ONGOING,
+                        icon: Broken.import,
+                        onTap: () {
+                          _updateTempList(true);
+                          _isOnGoingSelected = true;
+                        },
+                        isOnGoing: true,
+                      ),
+                      _getFilterChip(
+                        context: context,
+                        title: lang.FINISHED,
+                        icon: Broken.tick_circle,
+                        onTap: () {
+                          _updateTempList(false);
+                          _isOnGoingSelected = false;
+                        },
+                        isOnGoing: false,
+                      ),
+                    ],
+                  ),
                 ),
-                _getFilterChip(
-                  context: context,
-                  title: lang.ONGOING,
-                  icon: Broken.import,
-                  onTap: () {
-                    _updateTempList(true);
-                    _isOnGoingSelected.value = true;
-                  },
-                  isOnGoing: true,
-                ),
-                _getFilterChip(
-                  context: context,
-                  title: lang.FINISHED,
-                  icon: Broken.tick_circle,
-                  onTap: () {
-                    _updateTempList(false);
-                    _isOnGoingSelected.value = false;
-                  },
-                  isOnGoing: false,
-                ),
+                // -- still some issues.
+                // NamidaIconButton(
+                //   icon: null,
+                //   tooltip: lang.PARALLEL_DOWNLOADS,
+                //   onPressed: _showParallelDownloadsDialog,
+                //   child: Obx(
+                //     () => StackedIcon(
+                //       baseIcon: Broken.flash,
+                //       secondaryText: YoutubeParallelDownloadsHandler.inst.maxParallelDownloadingItems.toString(),
+                //     ),
+                //   ),
+                // ),
               ],
             ),
           ),
           Obx(
-            () => _isOnGoingSelected.value != null
+            () => _isOnGoingSelected != null
                 ? Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12.0),
                     child: Row(
                       children: [
                         const SizedBox(width: 24.0),
                         Text(
-                          YoutubeController.inst.youtubeDownloadTasksTempList.length.displayVideoKeyword,
+                          _downloadTasksTempList.length.displayVideoKeyword,
                           style: context.textTheme.displayMedium?.copyWith(fontSize: 20.0.multipliedFontScale),
                         ),
-                        if (_isOnGoingSelected.value == true) ...[
+                        if (_isOnGoingSelected == true) ...[
                           const Spacer(),
                           NamidaIconButton(
                             icon: Broken.play,
                             iconSize: 24.0,
                             onPressed: () {
-                              YoutubeController.inst.youtubeDownloadTasksTempList.loop((e, index) {
+                              _downloadTasksTempList.loop((e, index) {
                                 YoutubeController.inst.resumeDownloadTasks(groupName: e.$1, itemsConfig: [e.$2]);
                               });
                             },
@@ -202,7 +240,7 @@ class YTDownloadsPage extends StatelessWidget {
                             icon: Broken.pause,
                             iconSize: 24.0,
                             onPressed: () {
-                              YoutubeController.inst.youtubeDownloadTasksTempList.loop((e, index) {
+                              _downloadTasksTempList.loop((e, index) {
                                 YoutubeController.inst.pauseDownloadTask(
                                   itemsConfig: [e.$2],
                                   groupName: e.$1,
@@ -218,10 +256,10 @@ class YTDownloadsPage extends StatelessWidget {
                                 context: context,
                                 operationTitle: lang.CANCEL,
                                 groupTitle: lang.ONGOING,
-                                itemsLength: YoutubeController.inst.youtubeDownloadTasksTempList.length,
+                                itemsLength: _downloadTasksTempList.length,
                               );
                               if (confirmed) {
-                                YoutubeController.inst.youtubeDownloadTasksTempList.loop((e, index) {
+                                _downloadTasksTempList.loop((e, index) {
                                   YoutubeController.inst.cancelDownloadTask(
                                     itemsConfig: [e.$2],
                                     groupName: e.$1,
@@ -238,103 +276,107 @@ class YTDownloadsPage extends StatelessWidget {
                 : const SizedBox(),
           ),
           Expanded(
-            child: Obx(() {
-              final keys = YoutubeController.inst.youtubeDownloadTasksMap.keys.toList();
-              return CupertinoScrollbar(
-                child: CustomScrollView(
-                  slivers: [
-                    _isOnGoingSelected.value == null
-                        ? SliverList.builder(
-                            itemCount: keys.length,
-                            itemBuilder: (context, index) {
-                              final groupName = keys[index];
-                              final list = YoutubeController.inst.youtubeDownloadTasksMap[groupName]?.values.toList() ?? [];
-                              return NamidaExpansionTile(
-                                initiallyExpanded: true,
-                                titleText: groupName == '' ? lang.DEFAULT : groupName,
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton.filledTonal(
-                                      padding: EdgeInsets.zero,
-                                      visualDensity: VisualDensity.compact,
-                                      onPressed: () {
-                                        YoutubeController.inst.resumeDownloadTasks(groupName: groupName);
-                                      },
-                                      icon: const Icon(Broken.play, size: 18.0),
-                                    ),
-                                    IconButton.filledTonal(
-                                      padding: EdgeInsets.zero,
-                                      visualDensity: VisualDensity.compact,
-                                      onPressed: () {
-                                        YoutubeController.inst.pauseDownloadTask(
-                                          itemsConfig: [],
-                                          groupName: groupName,
-                                          allInGroupName: true,
-                                        );
-                                      },
-                                      icon: const Icon(Broken.pause, size: 18.0),
-                                    ),
-                                    IconButton.filledTonal(
-                                      padding: EdgeInsets.zero,
-                                      visualDensity: VisualDensity.compact,
-                                      onPressed: () async {
-                                        final confirmed = await _confirmCancelDialog(
-                                          context: context,
-                                          operationTitle: lang.CANCEL,
-                                          groupTitle: groupName,
-                                          itemsLength: list.length,
-                                        );
-                                        if (confirmed) {
-                                          YoutubeController.inst.cancelDownloadTask(
+            child: CupertinoScrollbar(
+              child: Obx(
+                () {
+                  final keys = YoutubeController.inst.youtubeDownloadTasksMap.keys.toList();
+                  return CustomScrollView(
+                    slivers: [
+                      _isOnGoingSelected == null
+                          ? SliverList.builder(
+                              itemCount: keys.length,
+                              itemBuilder: (context, index) {
+                                final groupName = keys[index];
+                                final list = YoutubeController.inst.youtubeDownloadTasksMap[groupName]?.values.toList() ?? [];
+                                return NamidaExpansionTile(
+                                  initiallyExpanded: true,
+                                  titleText: groupName == '' ? lang.DEFAULT : groupName,
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton.filledTonal(
+                                        padding: EdgeInsets.zero,
+                                        visualDensity: VisualDensity.compact,
+                                        onPressed: () {
+                                          YoutubeController.inst.resumeDownloadTasks(groupName: groupName);
+                                        },
+                                        icon: const Icon(Broken.play, size: 18.0),
+                                      ),
+                                      IconButton.filledTonal(
+                                        padding: EdgeInsets.zero,
+                                        visualDensity: VisualDensity.compact,
+                                        onPressed: () {
+                                          YoutubeController.inst.pauseDownloadTask(
                                             itemsConfig: [],
                                             groupName: groupName,
                                             allInGroupName: true,
                                           );
-                                        }
-                                      },
-                                      icon: const Icon(Broken.close_circle, size: 18.0),
-                                    ),
-                                    const SizedBox(width: 4.0),
-                                    const Icon(
-                                      Broken.arrow_down_2,
-                                      size: 20.0,
-                                    ),
-                                    const SizedBox(width: 4.0),
-                                  ],
-                                ),
-                                leading: NamidaInkWell(
-                                  borderRadius: 8.0,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                                  bgColor: context.theme.cardColor,
-                                  child: Text(
-                                    "${list.length}",
-                                    style: context.textTheme.displayLarge,
+                                        },
+                                        icon: const Icon(Broken.pause, size: 18.0),
+                                      ),
+                                      IconButton.filledTonal(
+                                        padding: EdgeInsets.zero,
+                                        visualDensity: VisualDensity.compact,
+                                        onPressed: () async {
+                                          final confirmed = await _confirmCancelDialog(
+                                            context: context,
+                                            operationTitle: lang.CANCEL,
+                                            groupTitle: groupName,
+                                            itemsLength: list.length,
+                                          );
+                                          if (confirmed) {
+                                            YoutubeController.inst.cancelDownloadTask(
+                                              itemsConfig: [],
+                                              groupName: groupName,
+                                              allInGroupName: true,
+                                            );
+                                          }
+                                        },
+                                        icon: const Icon(Broken.close_circle, size: 18.0),
+                                      ),
+                                      const SizedBox(width: 4.0),
+                                      const Icon(
+                                        Broken.arrow_down_2,
+                                        size: 20.0,
+                                      ),
+                                      const SizedBox(width: 4.0),
+                                    ],
                                   ),
-                                ),
-                                children: List<YTDownloadTaskItemCard>.generate(
-                                  list.length,
-                                  (index) => YTDownloadTaskItemCard(videos: list, index: index, groupName: groupName),
-                                ),
-                              );
-                            },
-                          )
-                        : SliverList.builder(
-                            itemCount: YoutubeController.inst.youtubeDownloadTasksTempList.length,
-                            itemBuilder: (context, index) {
-                              final groupNameAndItem = YoutubeController.inst.youtubeDownloadTasksTempList[index];
-                              return YTDownloadTaskItemCard(
-                                videos: YoutubeController.inst.youtubeDownloadTasksTempList.map((e) => e.$2).toList(),
-                                index: index,
-                                groupName: groupNameAndItem.$1,
-                              );
-                            },
-                          ),
-                    const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
-                  ],
-                ),
-              );
-            }),
+                                  leading: NamidaInkWell(
+                                    borderRadius: 8.0,
+                                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                    bgColor: context.theme.cardColor,
+                                    child: Text(
+                                      "${list.length}",
+                                      style: context.textTheme.displayLarge,
+                                    ),
+                                  ),
+                                  children: List<YTDownloadTaskItemCard>.generate(
+                                    list.length,
+                                    (index) => YTDownloadTaskItemCard(videos: list, index: index, groupName: groupName),
+                                  ),
+                                );
+                              },
+                            )
+                          : Obx(
+                              () => SliverList.builder(
+                                itemCount: _downloadTasksTempList.length,
+                                itemBuilder: (context, index) {
+                                  final groupNameAndItem = _downloadTasksTempList[index];
+                                  return YTDownloadTaskItemCard(
+                                    videos: _downloadTasksTempList.map((e) => e.$2).toList(),
+                                    index: index,
+                                    groupName: groupNameAndItem.$1,
+                                  );
+                                },
+                              ),
+                            ),
+                      const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
+                    ],
+                  );
+                },
+              ),
+            ),
           ),
         ],
       ),

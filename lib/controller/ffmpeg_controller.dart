@@ -139,7 +139,12 @@ class NamidaFFMPEG {
     final audioFile = File(audioPath);
     final originalStats = keepOriginalFileStats ? await audioFile.stat() : null;
 
-    final cacheFile = File("${AppDirs.APP_CACHE}/${audioPath.hashCode}.${audioPath.getExtension}");
+    String ext = 'm4a';
+    try {
+      ext = audioPath.getExtension;
+    } catch (_) {}
+
+    final cacheFile = File("${AppDirs.APP_CACHE}/${audioPath.hashCode}.$ext");
     final didSuccess = await _ffmpegExecute('-i "$audioPath" -i "$thumbnailPath" -map 0:a -map 1 -codec copy -disposition:v attached_pic -y "${cacheFile.path}"');
     final canSafelyMoveBack = didSuccess && await cacheFile.exists() && await cacheFile.length() > 0;
     if (canSafelyMoveBack) {
