@@ -49,16 +49,16 @@ class SettingsPage extends StatelessWidget {
           settings.useSettingCollapsedTiles.value
               ? const CollapsedSettingTiles()
               : ListView(
-                  children: const [
-                    ThemeSetting(),
-                    IndexerSettings(),
-                    PlaybackSettings(),
-                    CustomizationSettings(),
-                    YoutubeSettings(),
-                    ExtrasSettings(),
-                    BackupAndRestore(),
-                    AdvancedSettings(),
-                    Padding(
+                  children: [
+                    const ThemeSetting(),
+                    const IndexerSettings(),
+                    const PlaybackSettings(),
+                    const CustomizationSettings(),
+                    const YoutubeSettings(),
+                    const ExtrasSettings(),
+                    const BackupAndRestore(),
+                    const AdvancedSettings(),
+                    const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12.0),
                       child: AboutPageTileWidget(),
                     ),

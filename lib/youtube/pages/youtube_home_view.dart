@@ -19,10 +19,10 @@ class YouTubeHomeView extends StatelessWidget {
         initialIndex: historyIndex,
         tabs: tabs,
         onIndexChanged: (index) {},
-        children: const [
-          YoutubePage(),
-          YoutubePlaylistsView(bottomPadding: kBottomPadding, scrollable: false),
-          YTDownloadsPage(),
+        children: [
+          const YoutubePage(),
+          YoutubePlaylistsView(bottomPadding: Dimensions.inst.globalBottomPaddingTotal, scrollable: false),
+          const YTDownloadsPage(),
         ],
       ),
     );

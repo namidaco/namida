@@ -85,7 +85,7 @@ class AlbumsPage extends StatelessWidget {
                             controller: scrollController,
                             itemCount: finalAlbums.length,
                             itemExtent: settings.albumListTileHeight.value + 4.0 * 5,
-                            padding: const EdgeInsets.only(bottom: kBottomPadding),
+                            padding: kBottomPaddingInsets,
                             itemBuilder: (BuildContext context, int i) {
                               final albumId = finalAlbums[i];
                               return AnimatingTile(
@@ -103,7 +103,7 @@ class AlbumsPage extends StatelessWidget {
                           ? Expanded(
                               child: MasonryGridView.builder(
                                 controller: scrollController,
-                                padding: const EdgeInsets.only(bottom: kBottomPadding),
+                                padding: kBottomPaddingInsets,
                                 itemCount: finalAlbums.length,
                                 mainAxisSpacing: 8.0,
                                 gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow),
@@ -128,7 +128,7 @@ class AlbumsPage extends StatelessWidget {
                                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.75, mainAxisSpacing: 8.0),
                                 controller: scrollController,
                                 itemCount: finalAlbums.length,
-                                padding: const EdgeInsets.only(bottom: kBottomPadding),
+                                padding: kBottomPaddingInsets,
                                 itemBuilder: (BuildContext context, int i) {
                                   final albumId = finalAlbums[i];
                                   return AnimatingGrid(

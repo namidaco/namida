@@ -78,7 +78,7 @@ class ArtistsPage extends StatelessWidget {
                     child: ListView.builder(
                       controller: scrollController,
                       itemCount: finalArtists.length,
-                      padding: const EdgeInsets.only(bottom: kBottomPadding),
+                      padding: kBottomPaddingInsets,
                       itemExtent: 65.0 + 2.0 * 9,
                       itemBuilder: (BuildContext context, int i) {
                         final artist = finalArtists[i];
@@ -104,7 +104,7 @@ class ArtistsPage extends StatelessWidget {
                       ),
                       controller: scrollController,
                       itemCount: finalArtists.length,
-                      padding: const EdgeInsets.only(bottom: kBottomPadding),
+                      padding: kBottomPaddingInsets,
                       itemBuilder: (BuildContext context, int i) {
                         final artist = finalArtists[i];
                         return AnimatingGrid(

@@ -4,13 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/clipboard_controller.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -122,6 +125,44 @@ class MainPage extends StatelessWidget {
                 child: SettingsSearchController.inst.canShowSearch ? const SettingsSearchPage() : null,
               ),
             ),
+          ),
+
+          Obx(
+            () {
+              final shouldHide = settings.floatingActionButton.value == FABType.none ||
+                  NamidaNavigator.inst.currentRoute?.route == RouteType.SETTINGS_page || // bcz no search
+                  NamidaNavigator.inst.currentRoute?.route == RouteType.SETTINGS_subpage || // bcz no search
+                  NamidaNavigator.inst.currentRoute?.route == RouteType.YOUTUBE_PLAYLIST_DOWNLOAD_SUBPAGE || // bcz has fab
+                  (settings.floatingActionButton.value == FABType.shuffle && SelectedTracksController.inst.currentAllTracks.isEmpty);
+              return AnimatedPositioned(
+                key: const Key('fab_active'),
+                right: 12.0,
+                bottom: Dimensions.inst.globalBottomPaddingEffective,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.fastEaseInToSlowEaseOut,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: shouldHide
+                      ? const SizedBox(key: Key('fab_dummy'))
+                      : FloatingActionButton(
+                          backgroundColor: CurrentColor.inst.currentColorScheme.withOpacity(1.0),
+                          onPressed: () {
+                            final fab = settings.floatingActionButton.value;
+                            final forceSearch = ScrollSearchController.inst.isGlobalSearchMenuShown.value;
+                            if (forceSearch || fab == FABType.search) {
+                              ScrollSearchController.inst.toggleSearchMenu();
+                              ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
+                            } else if (fab == FABType.shuffle) {
+                              Player.inst.playOrPause(0, SelectedTracksController.inst.currentAllTracks, QueueSource.allTracks, shuffle: true);
+                            }
+                          },
+                          child: Icon(
+                            ScrollSearchController.inst.isGlobalSearchMenuShown.value ? Broken.search_status_1 : settings.floatingActionButton.value.toIcon(),
+                          ),
+                        ),
+                ),
+              );
+            },
           ),
 
           /// Bottom Glow/Shadow

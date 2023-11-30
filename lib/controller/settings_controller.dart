@@ -210,6 +210,7 @@ class SettingsController {
   final onYoutubeLinkOpen = OnYoutubeLinkOpenAction.alwaysAsk.obs;
   final performanceMode = PerformanceMode.balanced.obs;
   final killPlayerAfterDismissingAppMode = KillAppMode.ifNotPlaying.obs;
+  final floatingActionButton = FABType.none.obs;
 
   final RxMap<TrackTilePosition, TrackTileItem> trackItem = {
     TrackTilePosition.row1Item1: TrackTileItem.title,
@@ -467,6 +468,7 @@ class SettingsController {
       onYoutubeLinkOpen.value = OnYoutubeLinkOpenAction.values.getEnum(json['onYoutubeLinkOpen']) ?? onYoutubeLinkOpen.value;
       performanceMode.value = PerformanceMode.values.getEnum(json['performanceMode']) ?? performanceMode.value;
       killPlayerAfterDismissingAppMode.value = KillAppMode.values.getEnum(json['killPlayerAfterDismissingAppMode']) ?? killPlayerAfterDismissingAppMode.value;
+      floatingActionButton.value = FABType.values.getEnum(json['floatingActionButton']) ?? floatingActionButton.value;
 
       trackItem.value = _getEnumMap(
             json['trackItem'],
@@ -652,6 +654,7 @@ class SettingsController {
       'onYoutubeLinkOpen': onYoutubeLinkOpen.value.convertToString,
       'performanceMode': performanceMode.value.convertToString,
       'killPlayerAfterDismissingAppMode': killPlayerAfterDismissingAppMode.value.convertToString,
+      'floatingActionButton': floatingActionButton.value.convertToString,
       'mostPlayedTimeRange': mostPlayedTimeRange.value.convertToString,
       'mostPlayedCustomDateRange': mostPlayedCustomDateRange.value.toJson(),
       'mostPlayedCustomisStartOfDay': mostPlayedCustomisStartOfDay.value,
@@ -832,6 +835,7 @@ class SettingsController {
     OnYoutubeLinkOpenAction? onYoutubeLinkOpen,
     PerformanceMode? performanceMode,
     KillAppMode? killPlayerAfterDismissingAppMode,
+    FABType? floatingActionButton,
     MostPlayedTimeRange? mostPlayedTimeRange,
     DateRange? mostPlayedCustomDateRange,
     bool? mostPlayedCustomisStartOfDay,
@@ -1308,6 +1312,9 @@ class SettingsController {
     }
     if (killPlayerAfterDismissingAppMode != null) {
       this.killPlayerAfterDismissingAppMode.value = killPlayerAfterDismissingAppMode;
+    }
+    if (floatingActionButton != null) {
+      this.floatingActionButton.value = floatingActionButton;
     }
     if (mostPlayedTimeRange != null) {
       this.mostPlayedTimeRange.value = mostPlayedTimeRange;

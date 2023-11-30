@@ -276,10 +276,7 @@ class PlaylistsPage extends StatelessWidget {
                             );
                           },
                         ),
-                      if (!isInsideDialog)
-                        const SliverPadding(
-                          padding: EdgeInsets.only(bottom: kBottomPadding),
-                        )
+                      if (!isInsideDialog) kBottomPaddingWidgetSliver,
                     ],
                   ),
                 ),

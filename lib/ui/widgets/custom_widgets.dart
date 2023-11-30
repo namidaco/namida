@@ -2198,7 +2198,7 @@ class NamidaListView extends StatelessWidget {
                   ? KnownExtentsReorderableListView.builder(
                       itemExtents: itemExtents!,
                       scrollController: sc,
-                      padding: padding ?? const EdgeInsets.only(bottom: kBottomPadding),
+                      padding: padding ?? EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotal),
                       itemBuilder: itemBuilder,
                       itemCount: itemCount,
                       onReorder: onReorder ?? (oldIndex, newIndex) {},
@@ -2212,7 +2212,7 @@ class NamidaListView extends StatelessWidget {
                   : ReorderableListView.builder(
                       itemExtent: itemExtents?.firstOrNull,
                       scrollController: sc,
-                      padding: padding ?? const EdgeInsets.only(bottom: kBottomPadding),
+                      padding: padding ?? EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotal),
                       itemBuilder: itemBuilder,
                       itemCount: itemCount,
                       onReorder: onReorder ?? (oldIndex, newIndex) {},
@@ -2257,7 +2257,7 @@ class NamidaTracksList extends StatelessWidget {
     this.widgetsInColumn,
     this.paddingAfterHeader,
     this.scrollController,
-    this.padding = const EdgeInsets.only(bottom: kBottomPadding),
+    this.padding,
     required this.queueLength,
     this.isTrackSelectable = true,
     this.physics,

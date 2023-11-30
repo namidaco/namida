@@ -74,7 +74,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                   listview: (controller) {
                     return ListView.builder(
                       itemExtent: thumbnailItemExtent,
-                      padding: const EdgeInsets.only(bottom: kBottomPadding),
+                      padding: kBottomPaddingInsets,
                       itemCount: _searchResult.length,
                       controller: controller,
                       itemBuilder: (context, index) {

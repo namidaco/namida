@@ -160,7 +160,7 @@ class HistoryTracksPage extends StatelessWidget {
               );
             },
           ),
-          const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
+          kBottomPaddingWidgetSliver,
         ],
       ),
     );
@@ -373,7 +373,7 @@ class NormalPlaylistTracksPage extends StatelessWidget {
               ),
               tracks: tracks,
             ),
-            padding: const EdgeInsets.only(bottom: kBottomPadding),
+            padding: kBottomPaddingInsets,
             onReorder: (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
             itemBuilder: (context, i) {
               final trackWithDate = tracksWithDate[i];

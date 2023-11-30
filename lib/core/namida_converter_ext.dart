@@ -509,6 +509,11 @@ extension KillAppModeUtils on KillAppMode {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension FABTypeUtils on FABType {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+  IconData toIcon() => _NamidaConverters.inst.getIcon(this);
+}
+
 extension TrackSearchFilterUtils on TrackSearchFilter {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
@@ -759,6 +764,10 @@ extension WidgetsPagess on Widget {
       case YTHostedPlaylistSubpage:
         route = RouteType.YOUTUBE_PLAYLIST_SUBPAGE_HOSTED;
         name = (this as YTHostedPlaylistSubpage).playlist.name ?? '';
+        break;
+      case YTPlaylistDownloadPage:
+        route = RouteType.YOUTUBE_PLAYLIST_DOWNLOAD_SUBPAGE;
+        name = (this as YTPlaylistDownloadPage).playlistName;
         break;
       case YoutubeHistoryPage:
         route = RouteType.YOUTUBE_HISTORY_SUBPAGE;
@@ -1364,6 +1373,11 @@ class _NamidaConverters {
         KillAppMode.ifNotPlaying: lang.IF_NOT_PLAYING,
         KillAppMode.always: lang.ALWAYS,
       },
+      FABType: {
+        FABType.none: lang.NONE,
+        FABType.search: lang.SEARCH,
+        FABType.shuffle: lang.SHUFFLE,
+      },
       TrackSearchFilter: {
         TrackSearchFilter.filename: lang.FILE_NAME,
         TrackSearchFilter.title: lang.TITLE,
@@ -1465,7 +1479,12 @@ class _NamidaConverters {
         PerformanceMode.balanced: Broken.cd,
         PerformanceMode.goodLooking: Broken.buy_crypto,
         PerformanceMode.custom: Broken.candle,
-      }
+      },
+      FABType: {
+        FABType.none: Broken.status,
+        FABType.search: Broken.search_normal,
+        FABType.shuffle: Broken.shuffle,
+      },
     };
 
     final ffmpegToTitle = {

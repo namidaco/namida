@@ -24,6 +24,7 @@ enum _ExtraSettingsKeys {
   bottomNavBar,
   pip,
   foldersHierarchy,
+  fabType,
   defaultLibraryTab,
   libraryTabs,
   filterTracksBy,
@@ -48,6 +49,7 @@ class ExtrasSettings extends SettingSubpageProvider {
         _ExtraSettingsKeys.pip: ["${lang.ENABLE_PICTURE_IN_PICTURE} (${lang.BETA})"],
         _ExtraSettingsKeys.foldersHierarchy: [lang.ENABLE_FOLDERS_HIERARCHY],
         _ExtraSettingsKeys.defaultLibraryTab: [lang.DEFAULT_LIBRARY_TAB],
+        _ExtraSettingsKeys.fabType: [lang.FLOATING_ACTION_BUTTON],
         _ExtraSettingsKeys.libraryTabs: [lang.LIBRARY_TABS],
         _ExtraSettingsKeys.filterTracksBy: [lang.FILTER_TRACKS_BY],
         _ExtraSettingsKeys.searchCleanup: [lang.ENABLE_SEARCH_CLEANUP, lang.ENABLE_SEARCH_CLEANUP_SUBTITLE],
@@ -117,6 +119,50 @@ class ExtrasSettings extends SettingSubpageProvider {
             ),
           ),
           getItemWrapper(
+            key: _ExtraSettingsKeys.fabType,
+            child: Obx(
+              () => CustomListTile(
+                bgColor: getBgColor(_ExtraSettingsKeys.fabType),
+                icon: Broken.safe_home,
+                title: lang.FLOATING_ACTION_BUTTON,
+                trailingText: settings.floatingActionButton.value.toText(),
+                onTap: () {
+                  NamidaNavigator.inst.navigateDialog(
+                    dialog: CustomBlurryDialog(
+                      title: lang.FLOATING_ACTION_BUTTON,
+                      actions: [
+                        NamidaButton(
+                          text: lang.DONE,
+                          onPressed: NamidaNavigator.inst.closeDialog,
+                        ),
+                      ],
+                      child: SizedBox(
+                        width: context.width,
+                        child: Column(
+                          children: FABType.values
+                              .map(
+                                (e) => Obx(
+                                  () => Container(
+                                    margin: const EdgeInsets.all(4.0),
+                                    child: ListTileWithCheckMark(
+                                      title: e.toText(),
+                                      icon: e.toIcon(),
+                                      active: settings.floatingActionButton.value == e,
+                                      onTap: () => settings.save(floatingActionButton: e),
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          getItemWrapper(
             key: _ExtraSettingsKeys.defaultLibraryTab,
             child: Obx(
               () => CustomListTile(
@@ -134,7 +180,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                       ),
                     ],
                     child: SizedBox(
-                      width: Get.width,
+                      width: context.width,
                       child: Column(
                         children: [
                           Container(

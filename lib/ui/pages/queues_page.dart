@@ -41,7 +41,7 @@ class QueuesPage extends StatelessWidget {
                   );
                 },
               ),
-              const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
+              kBottomPaddingWidgetSliver,
             ],
           ),
         ),

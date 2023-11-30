@@ -209,6 +209,7 @@ enum RouteType {
   YOUTUBE_HOME,
   YOUTUBE_PLAYLISTS,
   YOUTUBE_PLAYLIST_SUBPAGE,
+  YOUTUBE_PLAYLIST_DOWNLOAD_SUBPAGE,
   YOUTUBE_PLAYLIST_SUBPAGE_HOSTED,
   YOUTUBE_LIKED_SUBPAGE,
   YOUTUBE_HISTORY_SUBPAGE,
@@ -326,4 +327,10 @@ enum SettingSubpageEnum {
   extra,
   backupRestore,
   advanced,
+}
+
+enum FABType {
+  none,
+  shuffle,
+  search,
 }

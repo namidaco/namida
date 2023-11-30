@@ -628,7 +628,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     skipFirst: 1,
                     separator: const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
                   ),
-                  const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
+                  kBottomPaddingWidgetSliver,
                 ],
               ),
             ),

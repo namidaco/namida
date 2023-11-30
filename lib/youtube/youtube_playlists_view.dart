@@ -312,7 +312,7 @@ class YoutubePlaylistsView extends StatelessWidget {
               );
             },
           ),
-          if (!isMinimalView) const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
+          if (!isMinimalView) kBottomPaddingWidgetSliver,
         ],
       ),
     );

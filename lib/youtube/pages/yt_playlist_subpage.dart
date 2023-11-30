@@ -275,7 +275,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                   );
                 },
               ),
-              const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
+              kBottomPaddingWidgetSliver,
             ],
           ),
         ),
@@ -513,7 +513,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
                       : const SizedBox(),
                 ),
               ),
-              const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
+              kBottomPaddingWidgetSliver,
             ],
           ),
         ),

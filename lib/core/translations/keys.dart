@@ -227,6 +227,7 @@ abstract class LanguageKeys {
   String get FINISHED => _getKey('FINISHED');
   String get FINISHED_UPDATING_LIBRARY => _getKey('FINISHED_UPDATING_LIBRARY');
   String get FIX_YTDLP_BIG_THUMBNAIL_SIZE => _getKey('FIX_YTDLP_BIG_THUMBNAIL_SIZE');
+  String get FLOATING_ACTION_BUTTON => _getKey('FLOATING_ACTION_BUTTON');
   String get FOLDER_NAME => _getKey('FOLDER_NAME');
   String get FOLDER => _getKey('FOLDER');
   String get FOLDERS => _getKey('FOLDERS');

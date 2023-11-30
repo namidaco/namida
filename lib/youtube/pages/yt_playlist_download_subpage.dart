@@ -7,7 +7,6 @@ import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -22,7 +21,6 @@ import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_download_options.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
-import 'package:namida/youtube/youtube_miniplayer.dart';
 
 class YTPlaylistDownloadPage extends StatefulWidget {
   final List<YoutubeID> ids;
@@ -243,14 +241,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     );
   }
 
-  double get _bottomPaddingEffective {
-    return (Player.inst.currentQueueYoutube.isNotEmpty
-            ? kYoutubeMiniplayerHeight
-            : Player.inst.currentQueue.isNotEmpty
-                ? kBottomPadding
-                : 0.0) +
-        12.0;
-  }
+  double get _bottomPaddingEffective => Dimensions.inst.globalBottomPaddingEffective;
 
   double _hmultiplier = 0.9;
   double _previousScale = 0.9;

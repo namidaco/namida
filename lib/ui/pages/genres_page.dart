@@ -76,7 +76,7 @@ class GenresPage extends StatelessWidget {
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.8, mainAxisSpacing: 8.0),
                     controller: scrollController,
                     itemCount: SearchSortController.inst.genreSearchList.length,
-                    padding: const EdgeInsets.only(bottom: kBottomPadding),
+                    padding: kBottomPaddingInsets,
                     itemBuilder: (BuildContext context, int i) {
                       final genre = SearchSortController.inst.genreSearchList[i];
                       return AnimatingGrid(

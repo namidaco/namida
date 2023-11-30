@@ -1,12 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/enums.dart';
+import 'package:namida/youtube/youtube_miniplayer.dart';
 
 class Dimensions {
   static Dimensions get inst => _instance;
   static final Dimensions _instance = Dimensions._internal();
   Dimensions._internal();
+
+  final _kMiniplayerBottomPadding = 90.0;
+
+  /// + active miniplayer padding
+  double get globalBottomPaddingEffective {
+    return (Player.inst.currentQueueYoutube.isNotEmpty
+            ? kYoutubeMiniplayerHeight
+            : Player.inst.currentQueue.isNotEmpty
+                ? _kMiniplayerBottomPadding
+                : 0.0) +
+        12.0;
+  }
+
+  /// + floating action button padding
+  double get _globalBottomPaddingFAB {
+    return settings.floatingActionButton.value != FABType.none ? 56.0 : 0.0;
+  }
+
+  /// + active miniplayer padding
+  /// + floating action button padding
+  double get globalBottomPaddingTotal {
+    return _globalBottomPaddingFAB + globalBottomPaddingEffective;
+  }
 
   static const tileBottomMargin = 4.0;
   static const tileBottomMargin6 = 6.0;
@@ -91,11 +118,11 @@ class Dimensions {
   /// {@endtemplate}
 }
 
+EdgeInsets get kBottomPaddingInsets => EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotal);
+SizedBox get kBottomPaddingWidget => SizedBox(height: Dimensions.inst.globalBottomPaddingTotal);
+SliverPadding get kBottomPaddingWidgetSliver => SliverPadding(padding: kBottomPaddingInsets);
+
 // ---- Constant Values ----
-
-const kBottomPadding = 102.0;
-const kBottomPaddingWidget = SizedBox(height: 102.0);
-
 const kHistoryDayHeaderHeight = 40.0;
 const kHistoryDayListTopPadding = 6.0;
 const kHistoryDayListBottomPadding = 12.0;

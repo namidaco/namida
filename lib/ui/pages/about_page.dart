@@ -31,7 +31,7 @@ class AboutPage extends StatelessWidget {
     const textTopPadding = 28.0 * 2;
     return BackgroundWrapper(
       child: ListView(
-        padding: const EdgeInsets.only(bottom: kBottomPadding),
+        padding: kBottomPaddingInsets,
         children: [
           SizedBox(height: topPadding),
           Container(

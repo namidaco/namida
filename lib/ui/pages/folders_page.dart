@@ -127,7 +127,7 @@ class FoldersPage extends StatelessWidget {
                                       },
                                     ),
                                   ],
-                                  const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
+                                  kBottomPaddingWidgetSliver,
                                 ],
                               ),
                             ),
@@ -183,7 +183,7 @@ class FoldersPage extends StatelessWidget {
                                       );
                                     },
                                   ),
-                                  const SliverPadding(padding: EdgeInsets.only(bottom: kBottomPadding)),
+                                  kBottomPaddingWidgetSliver,
                                 ],
                               ),
                             ),
@@ -196,7 +196,7 @@ class FoldersPage extends StatelessWidget {
           Obx(
             () => Folders.inst.indexToScrollTo.value != null
                 ? Positioned(
-                    bottom: kBottomPadding,
+                    bottom: Dimensions.inst.globalBottomPaddingTotal,
                     right: 12.0,
                     child: Container(
                       decoration: BoxDecoration(

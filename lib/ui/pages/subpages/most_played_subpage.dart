@@ -189,7 +189,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
           return NamidaListView(
             itemExtents: itemExtents,
             header: header(bottomWidget, bottomPadding),
-            padding: const EdgeInsets.only(bottom: kBottomPadding),
+            padding: kBottomPaddingInsets,
             itemCount: finalListenMap.length,
             itemBuilder: (context, i) => itemBuilder(context, i, finalListenMap),
           );
