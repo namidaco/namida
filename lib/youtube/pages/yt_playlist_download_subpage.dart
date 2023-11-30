@@ -352,6 +352,25 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                       ))
                                     : const BoxDecoration(),
                                 onTap: () => _onItemTap(id),
+                                onLongPress: () {
+                                  if (_selectedList.isEmpty) return;
+                                  int? latestIndex;
+                                  for (int i = widget.ids.length - 1; i >= 0; i--) {
+                                    final item = widget.ids[i];
+                                    if (_selectedList.contains(item.id)) {
+                                      latestIndex = i;
+                                      break;
+                                    }
+                                  }
+                                  if (latestIndex != null && index > latestIndex) {
+                                    final selectedRange = widget.ids.getRange(latestIndex + 1, index + 1);
+                                    selectedRange.toList().loop((e, index) {
+                                      if (!_selectedList.contains(e.id)) _selectedList.add(e.id);
+                                    });
+                                  } else {
+                                    _onItemTap(id);
+                                  }
+                                },
                                 child: Stack(
                                   children: [
                                     Row(
