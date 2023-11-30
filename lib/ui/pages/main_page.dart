@@ -129,11 +129,16 @@ class MainPage extends StatelessWidget {
 
           Obx(
             () {
-              final shouldHide = settings.floatingActionButton.value == FABType.none ||
-                  NamidaNavigator.inst.currentRoute?.route == RouteType.SETTINGS_page || // bcz no search
-                  NamidaNavigator.inst.currentRoute?.route == RouteType.SETTINGS_subpage || // bcz no search
-                  NamidaNavigator.inst.currentRoute?.route == RouteType.YOUTUBE_PLAYLIST_DOWNLOAD_SUBPAGE || // bcz has fab
-                  (settings.floatingActionButton.value == FABType.shuffle && SelectedTracksController.inst.currentAllTracks.isEmpty);
+              final fab = settings.floatingActionButton.value;
+              final route = NamidaNavigator.inst.currentRoute?.route;
+              final shouldHide = ScrollSearchController.inst.isGlobalSearchMenuShown.value
+                  ? false
+                  : fab == FABType.none ||
+                      route == RouteType.SETTINGS_page || // bcz no search
+                      route == RouteType.SETTINGS_subpage || // bcz no search
+                      route == RouteType.YOUTUBE_PLAYLIST_DOWNLOAD_SUBPAGE || // bcz has fab
+                      (fab == FABType.shuffle && SelectedTracksController.inst.currentAllTracks.isEmpty) ||
+                      (settings.selectedLibraryTab.value == LibraryTab.tracks && LibraryTab.tracks.isBarVisible == false);
               return AnimatedPositioned(
                 key: const Key('fab_active'),
                 right: 12.0,
@@ -141,10 +146,11 @@ class MainPage extends StatelessWidget {
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.fastEaseInToSlowEaseOut,
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
+                  duration: const Duration(milliseconds: 400),
                   child: shouldHide
                       ? const SizedBox(key: Key('fab_dummy'))
                       : FloatingActionButton(
+                          tooltip: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.CLEAR : settings.floatingActionButton.value.toText(),
                           backgroundColor: CurrentColor.inst.currentColorScheme.withOpacity(1.0),
                           onPressed: () {
                             final fab = settings.floatingActionButton.value;
