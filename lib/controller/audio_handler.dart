@@ -1129,7 +1129,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool get defaultSkipSilenceEnabled => settings.playerSkipSilenceEnabled.value;
 
   @override
-  bool get enableCrossFade => settings.enableCrossFade.value;
+  bool get enableCrossFade => settings.enableCrossFade.value && currentQueueYoutubeID.isEmpty;
 
   @override
   int get defaultCrossFadeMilliseconds => settings.crossFadeDurationMS.value;
