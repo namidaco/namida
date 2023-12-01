@@ -24,8 +24,9 @@ import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 extension YoutubePlaylistShare on YoutubePlaylist {
   Future<void> shareVideos() async => await tracks.shareVideos();
 
-  void promptDelete({required String name, Color? colorScheme}) {
-    NamidaNavigator.inst.navigateDialog(
+  Future<bool> promptDelete({required String name, Color? colorScheme}) async {
+    bool deleted = false;
+    await NamidaNavigator.inst.navigateDialog(
       colorScheme: colorScheme,
       dialogBuilder: (theme) => CustomBlurryDialog(
         isWarning: true,
@@ -36,6 +37,7 @@ extension YoutubePlaylistShare on YoutubePlaylist {
           NamidaButton(
             text: lang.DELETE.toUpperCase(),
             onPressed: () {
+              deleted = true;
               NamidaNavigator.inst.closeDialog();
               YoutubePlaylistController.inst.removePlaylist(this);
             },
@@ -43,6 +45,7 @@ extension YoutubePlaylistShare on YoutubePlaylist {
         ],
       ),
     );
+    return deleted;
   }
 
   Future<String> showRenamePlaylistSheet({

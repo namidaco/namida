@@ -96,16 +96,16 @@ class YTUtils {
   }) {
     return [
       NamidaPopupItem(
-        icon: Broken.share,
-        title: lang.SHARE,
-        onTap: videos.shareVideos,
-      ),
-      NamidaPopupItem(
         icon: Broken.music_library_2,
         title: lang.ADD_TO_PLAYLIST,
         onTap: () {
           showAddToPlaylistSheet(ids: videos.map((e) => e.id), idsNamesLookup: {});
         },
+      ),
+      NamidaPopupItem(
+        icon: Broken.share,
+        title: lang.SHARE,
+        onTap: videos.shareVideos,
       ),
       NamidaPopupItem(
         icon: Broken.next,

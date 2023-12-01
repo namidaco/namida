@@ -53,6 +53,7 @@ class ArtistCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
                     child: ContainerWithBorder(
                       child: ArtworkWidget(
+                        key: Key(artist.pathToImage),
                         thumbnailSize: thumbnailSize,
                         path: artist.pathToImage,
                         borderRadius: 10.0,

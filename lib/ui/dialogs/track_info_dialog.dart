@@ -111,6 +111,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
   final artwork = NamidaHero(
     tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}',
     child: ArtworkWidget(
+      key: Key(trackExt.pathToImage),
       path: trackExt.pathToImage,
       thumbnailSize: 120,
       forceSquared: settings.forceSquaredTrackThumbnail.value,

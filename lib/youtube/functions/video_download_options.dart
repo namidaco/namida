@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -17,8 +16,8 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 
 Future<void> showVideoDownloadOptionsSheet({
   required BuildContext context,
-  required String videoTitle,
-  required VideoInfo videoInfo,
+  required String? videoTitle,
+  required String? videoUploader,
   required Map<String, String?> tagMaps,
   required bool supportTagging,
   required void Function(String newFolderPath) onDownloadGroupNameChanged,
@@ -181,10 +180,16 @@ Future<void> showVideoDownloadOptionsSheet({
                     flex: 4,
                     child: InkWell(
                       onTap: () {
-                        final artistAndTitle = videoTitle.splitArtistAndTitle();
+                        (String?, String?) artistAndTitle = (null, null);
+                        if (tagMaps.isNotEmpty) {
+                          artistAndTitle = (tagMaps[FFMPEGTagField.artist], tagMaps[FFMPEGTagField.title]);
+                        }
+                        if (videoTitle != null && artistAndTitle.$1 == null && artistAndTitle.$2 == null) {
+                          artistAndTitle = videoTitle.splitArtistAndTitle();
+                        }
                         if (artistAndTitle.$1 != null) controllersMap[FFMPEGTagField.artist]?.text = artistAndTitle.$1!;
                         if (artistAndTitle.$2 != null) controllersMap[FFMPEGTagField.title]?.text = artistAndTitle.$2!;
-                        controllersMap[FFMPEGTagField.album]?.text = videoInfo.uploaderName ?? '';
+                        controllersMap[FFMPEGTagField.album]?.text = tagMaps[FFMPEGTagField.album] ?? videoUploader ?? '';
                       },
                       child: Text(
                         lang.AUTO_EXTRACT_TAGS_FROM_FILENAME,

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/youtube/youtube_miniplayer.dart';
@@ -13,6 +16,20 @@ class Dimensions {
   Dimensions._internal();
 
   final _kMiniplayerBottomPadding = 90.0;
+
+  bool get shouldHideFAB {
+    final fab = settings.floatingActionButton.value;
+    final route = NamidaNavigator.inst.currentRoute?.route;
+    final shouldHide = ScrollSearchController.inst.isGlobalSearchMenuShown.value
+        ? false
+        : fab == FABType.none ||
+            route == RouteType.SETTINGS_page || // bcz no search
+            route == RouteType.SETTINGS_subpage || // bcz no search
+            route == RouteType.YOUTUBE_PLAYLIST_DOWNLOAD_SUBPAGE || // bcz has fab
+            (fab == FABType.shuffle && SelectedTracksController.inst.currentAllTracks.isEmpty) ||
+            (settings.selectedLibraryTab.value == LibraryTab.tracks && LibraryTab.tracks.isBarVisible == false);
+    return shouldHide;
+  }
 
   /// + active miniplayer padding
   double get globalBottomPaddingEffective {
@@ -26,7 +43,7 @@ class Dimensions {
 
   /// + floating action button padding
   double get _globalBottomPaddingFAB {
-    return settings.floatingActionButton.value != FABType.none ? 56.0 : 0.0;
+    return shouldHideFAB ? 0.0 : kFABHeight;
   }
 
   /// + active miniplayer padding
@@ -129,6 +146,7 @@ const kHistoryDayListBottomPadding = 12.0;
 
 const kQueueBottomRowHeight = 48.0;
 const kExpandableBoxHeight = 48.0;
+const kFABHeight = 56.0;
 
 const kHistoryDayHeaderHeightWithPadding = kHistoryDayHeaderHeight + kHistoryDayListTopPadding + kHistoryDayListBottomPadding;
 

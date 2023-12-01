@@ -57,6 +57,7 @@ class AlbumTile extends StatelessWidget {
                   child: NamidaHero(
                     tag: hero,
                     child: ArtworkWidget(
+                      key: Key(album.pathToImage),
                       thumbnailSize: albumThumbnailSize,
                       path: album.pathToImage,
                       forceSquared: settings.forceSquaredAlbumThumbnail.value,

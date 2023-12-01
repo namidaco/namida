@@ -973,7 +973,7 @@ class VideoController {
     }
 
     final file = id != null ? File("${AppDirs.YT_THUMBNAILS}$id.png") : File("${AppDirs.YT_THUMBNAILS_CHANNELS}${channelUrl?.split('/').last}.png");
-    if (await file.exists()) {
+    if (file.existsSync()) {
       printy('Downloading Thumbnail Already Exists');
       trySavingLastAccessed(file);
       return file;
@@ -985,20 +985,21 @@ class VideoController {
     final bytes = await getYoutubeThumbnailAsBytes(youtubeId: id, url: channelUrl, keepInMemory: false);
     printy('Downloading Thumbnail Finished');
 
-    final savedFile = id != null
-        ? await _saveThumbnailToStorage(
-            videoPath: null,
-            bytes: bytes,
-            isLocal: false,
-            idOrFileNameWOExt: id,
-            isExtracted: false,
-          )
-        : await _saveChannelThumbnailToStorage(
-            file: file,
-            bytes: bytes,
-          );
-
-    trySavingLastAccessed(savedFile);
+    final savedFile = (id != null
+            ? _saveThumbnailToStorage(
+                videoPath: null,
+                bytes: bytes,
+                isLocal: false,
+                idOrFileNameWOExt: id,
+                isExtracted: false,
+              )
+            : _saveChannelThumbnailToStorage(
+                file: file,
+                bytes: bytes,
+              ))
+        .then((savedFile) {
+      trySavingLastAccessed(savedFile);
+    });
 
     return savedFile;
   }

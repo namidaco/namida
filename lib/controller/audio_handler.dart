@@ -774,8 +774,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     await VideoController.vcontroller.dispose();
 
-    (AudioCacheDetails?, NamidaVideo?) playedFromCacheDetails = (null, null);
-    bool okaySetFromCache() => playedFromCacheDetails.$1 != null && (canPlayAudioOnlyFromCache! || playedFromCacheDetails.$2 != null);
+    ({AudioCacheDetails? audio, NamidaVideo? video}) playedFromCacheDetails = (audio: null, video: null);
+    bool okaySetFromCache() => playedFromCacheDetails.audio != null && (canPlayAudioOnlyFromCache! || playedFromCacheDetails.video != null);
 
     /// try playing cache always for faster playback initialization, if the quality should be
     /// different then it will be set later after fetching.
@@ -788,8 +788,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       startPlaying: startPlaying,
     );
 
-    currentCachedAudio.value = playedFromCacheDetails.$1;
-    currentCachedVideo.value = playedFromCacheDetails.$2;
+    currentCachedAudio.value = playedFromCacheDetails.audio;
+    currentCachedVideo.value = playedFromCacheDetails.video;
 
     bool heyIhandledAudioPlaying = false;
     if (okaySetFromCache()) {
@@ -825,14 +825,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             streams.audioOnlyStreams?.firstWhereEff((e) => e.formatSuffix != 'webm') ??
             streams.audioOnlyStreams?.firstOrNull;
         if (prefferedAudioStream?.url != null || prefferedVideoStream?.url != null) {
-          final isStreamRequiredBetterThanCachedSet =
-              playedFromCacheDetails.$2 == null ? true : playedFromCacheDetails.$2 != null && (prefferedVideoStream?.width ?? 0) > (playedFromCacheDetails.$2?.resolution ?? 0);
+          final isStreamRequiredBetterThanCachedSet = playedFromCacheDetails.video == null
+              ? true
+              : playedFromCacheDetails.video != null && (prefferedVideoStream?.width ?? 0) > (playedFromCacheDetails.video?.resolution ?? 0);
 
           currentVideoStream.value = isAudioOnlyPlayback
               ? null
               : isStreamRequiredBetterThanCachedSet
                   ? prefferedVideoStream
-                  : vos?.firstWhereEff((e) => e.width == (playedFromCacheDetails.$2?.resolution));
+                  : vos?.firstWhereEff((e) => e.width == (playedFromCacheDetails.video?.resolution));
 
           currentAudioStream.value = prefferedAudioStream;
           currentVideoInfo.value = streams.videoInfo;
@@ -847,10 +848,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           await playerStoppingSeikoo.future;
           if (item != currentVideo) return; // race avoidance when playing multiple videos
           final isVideoCacheSameAsPrevSet = cachedVideo != null &&
-              playedFromCacheDetails.$2 != null &&
-              playedFromCacheDetails.$2?.path == cachedVideo.path; // only if not the same cache path (i.e. diff resolution)
+              playedFromCacheDetails.video != null &&
+              playedFromCacheDetails.video?.path == cachedVideo.path; // only if not the same cache path (i.e. diff resolution)
           final isAudioCacheSameAsPrevSet =
-              cachedAudio != null && playedFromCacheDetails.$1 != null && playedFromCacheDetails.$1?.file.path == cachedAudio.path; // only if not the same cache path
+              cachedAudio != null && playedFromCacheDetails.audio != null && playedFromCacheDetails.audio?.file.path == cachedAudio.path; // only if not the same cache path
           final shouldResetVideoSource = isAudioOnlyPlayback ? false : !isAudioOnlyPlayback && !isVideoCacheSameAsPrevSet;
           final shouldResetAudioSource = !isAudioCacheSameAsPrevSet;
 
@@ -941,7 +942,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   /// Returns Audio File and Video File.
-  Future<(AudioCacheDetails?, NamidaVideo?)> _trySetYTVideoWithoutConnection({
+  Future<({AudioCacheDetails? audio, NamidaVideo? video})> _trySetYTVideoWithoutConnection({
     required YoutubeID item,
     required int index,
     required bool canPlayAudioOnly,
@@ -994,7 +995,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         file: cachedAudio.file,
       );
       refreshNotification();
-      return (audioDetails, cachedVideo);
+      return (audio: audioDetails, video: cachedVideo);
     } else if (cachedAudio != null && canPlayAudioOnly) {
       // -- play audio only
       await whatToAwait();
@@ -1010,9 +1011,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         file: cachedAudio.file,
       );
       refreshNotification();
-      return (audioDetails, null);
+      return (audio: audioDetails, video: null);
     }
-    return (null, null);
+    return (audio: null, video: null);
   }
 
   static List<AudioCacheDetails> _getCachedAudiosForID(Map map) {
@@ -1250,9 +1251,22 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   Future<void> skipToQueueItem(int index, [bool? andPlay]) async => await onSkipToQueueItem(index, andPlay);
 
+  @protected
   @override
   Future<void> stop() async {
-    await [onStop(), VideoController.vcontroller.pause()].execute();
+    await [super.onStop(), VideoController.vcontroller.pause()].execute();
+    await super.stop();
+  }
+
+  @override
+  Future<void> onStop() async {
+    await stop();
+  }
+
+  @override
+  Future<void> onDispose() async {
+    await stop();
+    await super.onDispose();
   }
 
   @override

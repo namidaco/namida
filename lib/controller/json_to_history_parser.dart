@@ -299,8 +299,8 @@ class JsonToHistoryParser {
           missingEntry.loop((e, index) => allMissingEntries.addForce(e, e.dateMSSE));
         },
       );
-      datesAdded.addAll(res.$1);
-      datesAddedYoutube.addAll(res.$2);
+      datesAdded.addAll(res.historyDays);
+      datesAddedYoutube.addAll(res.ytHistoryDays);
       // await _addYoutubeSourceFromDirectory(isMatchingTypeLink, matchYT, matchYTMusic);
     }
     if (source == TrackSource.lastfm) {
@@ -350,7 +350,7 @@ class JsonToHistoryParser {
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
   ///
   /// The first one is for normal history, the second is for youtube history.
-  Future<(List<int>, List<int>)> _parseYTHistoryJsonAndAdd({
+  Future<({List<int> historyDays, List<int> ytHistoryDays})> _parseYTHistoryJsonAndAdd({
     required File file,
     required bool isMatchingTypeLink,
     required bool isMatchingTypeTitleAndArtist,
@@ -445,7 +445,7 @@ class JsonToHistoryParser {
     }
 
     isParsing.value = false;
-    return (datesToSave, datesToSaveYoutube);
+    return (historyDays: datesToSave, ytHistoryDays: datesToSaveYoutube);
   }
 
   bool _canSafelyAddToYTHistory({

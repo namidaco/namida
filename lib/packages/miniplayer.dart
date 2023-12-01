@@ -1242,7 +1242,7 @@ class NamidaMiniPlayer extends StatelessWidget {
 
                 if (qp > 0 && !bounceUp)
                   Opacity(
-                    opacity: qp.clamp(0, 1),
+                    opacity: qp.clamp(0.0, 1.0),
                     child: Transform.translate(
                       offset: Offset(0, (1 - qp) * maxOffset * 0.8),
                       child: SafeArea(
@@ -1250,17 +1250,18 @@ class NamidaMiniPlayer extends StatelessWidget {
                         child: Padding(
                           padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + 70),
                           child: ClipRRect(
-                            borderRadius: BorderRadius.only(topLeft: Radius.circular(32.0.multipliedRadius), topRight: Radius.circular(32.0.multipliedRadius)),
-                            child: Stack(
-                              alignment: Alignment.bottomRight,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(32.0.multipliedRadius),
+                              topRight: Radius.circular(32.0.multipliedRadius),
+                            ),
+                            child: Column(
                               children: [
-                                DefaultTextStyle(
-                                  style: context.textTheme.displayMedium!,
+                                Expanded(
                                   child: NamidaListView(
                                     key: const Key('minikuru'),
                                     itemExtents: List.filled(Player.inst.currentQueue.length, Dimensions.inst.trackTileItemExtent),
                                     scrollController: MiniPlayerController.inst.queueScrollController,
-                                    padding: EdgeInsets.only(bottom: 56.0 + SelectedTracksController.inst.bottomPadding.value),
+                                    padding: EdgeInsets.only(bottom: 8.0 + SelectedTracksController.inst.bottomPadding.value),
                                     onReorderStart: (index) => MiniPlayerController.inst.invokeStartReordering(),
                                     onReorderEnd: (index) => MiniPlayerController.inst.invokeDoneReordering(),
                                     onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),

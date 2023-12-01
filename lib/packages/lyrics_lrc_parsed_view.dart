@@ -225,32 +225,43 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 
                                       final color = CurrentColor.inst.color;
                                       final highlighted = timestampsMap[_latestUpdatedLine.value]?.$2;
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                                        child: PageStorage(
-                                          bucket: PageStorageBucket(),
-                                          child: ScrollablePositionedList.builder(
-                                            key: PageStorageKey(widget.key),
-                                            // initialAlignment: 0.4,
-                                            itemScrollController: controller,
-                                            itemCount: lyrics.length + topDummyItems + bottomDummyItems,
-                                            itemBuilder: (context, indexBefore) {
-                                              if (indexBefore < topDummyItems) return const SizedBox(height: 12.0);
-                                              if (indexBefore >= (lyrics.length + topDummyItems)) return const SizedBox(height: 12.0);
+                                      return PageStorage(
+                                        bucket: PageStorageBucket(),
+                                        child: ScrollablePositionedList.builder(
+                                          key: PageStorageKey(widget.key),
+                                          // initialAlignment: 0.4,
+                                          itemScrollController: controller,
+                                          itemCount: lyrics.length + topDummyItems + bottomDummyItems,
+                                          itemBuilder: (context, indexBefore) {
+                                            if (indexBefore < topDummyItems) return const SizedBox(height: 12.0);
+                                            if (indexBefore >= (lyrics.length + topDummyItems)) return const SizedBox(height: 12.0);
 
-                                              final index = indexBefore - topDummyItems;
-                                              final lrc = lyrics[index];
-                                              final selected = highlighted?.timestamp == lrc.timestamp;
-                                              final text = lrc.lyrics;
-                                              final bgColor =
-                                                  selected && text != '' ? Color.alphaBlend(color.withAlpha(140), context.theme.scaffoldBackgroundColor).withOpacity(0.5) : null;
+                                            final index = indexBefore - topDummyItems;
+                                            final lrc = lyrics[index];
+                                            final selected = highlighted?.timestamp == lrc.timestamp;
+                                            final text = lrc.lyrics;
+                                            final bgColor =
+                                                selected && text != '' ? Color.alphaBlend(color.withAlpha(140), context.theme.scaffoldBackgroundColor).withOpacity(0.5) : null;
 
-                                              final padding = selected ? 2.0 : 0.0;
+                                            final padding = selected ? 2.0 : 0.0;
 
-                                              return Stack(
-                                                alignment: Alignment.center,
-                                                children: [
-                                                  NamidaHero(
+                                            return Stack(
+                                              alignment: Alignment.center,
+                                              children: [
+                                                Positioned.fill(
+                                                  child: Material(
+                                                    type: MaterialType.transparency,
+                                                    child: InkWell(
+                                                      splashFactory: InkSparkle.splashFactory,
+                                                      onTap: () {
+                                                        Player.inst.seek(lrc.timestamp);
+                                                        _updateHighlightedLine(lrc.timestamp, forceAnimate: true);
+                                                      },
+                                                    ),
+                                                  ),
+                                                ),
+                                                IgnorePointer(
+                                                  child: NamidaHero(
                                                     tag: 'LYRICS_LINE_${lrc.timestamp}',
                                                     enabled: false,
                                                     child: AnimatedScale(
@@ -258,15 +269,11 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                                       curve: Curves.easeInOutCubicEmphasized,
                                                       scale: selected ? 1.0 : 0.95,
                                                       child: NamidaInkWell(
-                                                        onTap: () {
-                                                          Player.inst.seek(lrc.timestamp);
-                                                          _updateHighlightedLine(lrc.timestamp, forceAnimate: true);
-                                                        },
                                                         bgColor: bgColor,
                                                         borderRadius: 8.0,
                                                         animationDurationMS: 300,
-                                                        margin: EdgeInsets.symmetric(vertical: padding),
-                                                        padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 6.0),
+                                                        margin: EdgeInsets.symmetric(vertical: padding, horizontal: 4.0),
+                                                        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
                                                         child: Text(
                                                           text,
                                                           style: normalTextStyle.copyWith(
@@ -277,10 +284,10 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                                       ),
                                                     ),
                                                   ),
-                                                ],
-                                              );
-                                            },
-                                          ),
+                                                ),
+                                              ],
+                                            );
+                                          },
                                         ),
                                       );
                                     },

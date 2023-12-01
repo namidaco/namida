@@ -43,7 +43,7 @@ class ArtworkWidget extends StatefulWidget {
   final bool isCircle;
 
   const ArtworkWidget({
-    super.key,
+    required super.key,
     this.bytes,
     this.compressed = true,
     this.fadeMilliSeconds = 300,
@@ -77,13 +77,12 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
   late DisposableBuildContext<_ArtworkWidgetState> _disposableContext;
 
   String? _imagePath;
-  Key? _latestKey;
 
   @override
   void initState() {
     super.initState();
-    _extractArtwork();
     _disposableContext = DisposableBuildContext<_ArtworkWidgetState>(this);
+    _extractArtwork();
   }
 
   void _extractArtwork() async {
@@ -112,6 +111,10 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final bytes = widget.bytes ?? Indexer.inst.artworksMap[widget.path];
+    final key = Key("${widget.path}_${bytes?.length}");
+    final isValidBytes = bytes != null && bytes.isNotEmpty;
+
     final realWidthAndHeight = widget.forceSquared ? context.width : null;
 
     int? finalCache;
@@ -130,7 +133,6 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
     Widget getStockWidget({
       final Color? bgc,
       required final bool stackWithOnTopWidgets,
-      final Key? key,
     }) {
       final icon = Icon(
         widget.displayIcon ? widget.icon : null,
@@ -159,18 +161,8 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
       );
     }
 
-    final bytes = widget.bytes ?? Indexer.inst.artworksMap[widget.path];
-    final isValidBytes = bytes != null && bytes.isNotEmpty;
-    final key = widget.key ?? Key("${widget.path}_${bytes?.length}");
-    if (_latestKey == null) {
-      _latestKey = key;
-    } else if (_latestKey != key) {
-      _latestKey = key;
-      _extractArtwork();
-    }
     return (_imagePath == null && !isValidBytes) || widget.forceDummyArtwork
         ? getStockWidget(
-            key: key,
             stackWithOnTopWidgets: true,
             bgc: widget.bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
           )

@@ -92,23 +92,24 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
     imagePath = widget.localImagePath;
 
     if (imagePath == null) {
-      final res = await VideoController.inst.getYoutubeThumbnailAndCache(
-        id: widget.videoId,
-        channelUrl: widget.channelUrl,
-        isImportantInCache: widget.isImportantInCache,
-        // -- get lower res first
-        beforeFetchingFromInternet: () async {
-          final lowerRes = await VideoController.inst.getYoutubeThumbnailAsBytes(
-            youtubeId: widget.videoId,
-            lowerResYTID: true,
-            keepInMemory: true,
+      final res = VideoController.inst.getYoutubeThumbnailFromCacheSync() ??
+          await VideoController.inst.getYoutubeThumbnailAndCache(
+            id: widget.videoId,
+            channelUrl: widget.channelUrl,
+            isImportantInCache: widget.isImportantInCache,
+            // -- get lower res first
+            beforeFetchingFromInternet: () async {
+              final lowerRes = await VideoController.inst.getYoutubeThumbnailAsBytes(
+                youtubeId: widget.videoId,
+                lowerResYTID: true,
+                keepInMemory: true,
+              );
+              if (lowerRes != null && lowerRes.isNotEmpty) {
+                imageBytes = lowerRes;
+                if (mounted) setState(() {});
+              }
+            },
           );
-          if (lowerRes != null && lowerRes.isNotEmpty) {
-            imageBytes = lowerRes;
-            if (mounted) setState(() {});
-          }
-        },
-      );
       widget.onImageReady?.call(res);
 
       // -- only put the image if bytes are NOT valid, or if specified by parent

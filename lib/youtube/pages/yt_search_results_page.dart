@@ -6,6 +6,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/widgets/yt_channel_card.dart';
 import 'package:namida/youtube/widgets/yt_playlist_card.dart';
@@ -28,11 +29,18 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   String? _latestSearched;
 
   final _searchResult = <dynamic>[];
+  final _isFetching = false.obs;
   bool? _loading;
   @override
   void initState() {
     super.initState();
     fetchSearch();
+  }
+
+  @override
+  void dispose() {
+    _isFetching.close();
+    super.dispose();
   }
 
   Future<void> fetchSearch({String customText = ''}) async {
@@ -50,7 +58,9 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
 
   Future<void> _fetchSearchNextPage() async {
     if (_searchResult.isEmpty) return; // return if still fetching first results.
+    _isFetching.value = true;
     final result = await YoutubeController.inst.searchNextPage();
+    _isFetching.value = false;
     _searchResult.addAll(result);
     if (mounted) setState(() {});
   }
@@ -72,37 +82,56 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
               : LazyLoadListView(
                   onReachingEnd: () async => await _fetchSearchNextPage(),
                   listview: (controller) {
-                    return ListView.builder(
-                      itemExtent: thumbnailItemExtent,
-                      padding: kBottomPaddingInsets,
-                      itemCount: _searchResult.length,
+                    return CustomScrollView(
                       controller: controller,
-                      itemBuilder: (context, index) {
-                        final item = _searchResult[index];
-                        switch (item.runtimeType) {
-                          case StreamInfoItem:
-                            return YoutubeVideoCard(
-                              thumbnailHeight: thumbnailHeight,
-                              thumbnailWidth: thumbnailWidth,
-                              isImageImportantInCache: false,
-                              video: item,
-                              playlistID: null,
-                              onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item as StreamInfoItem),
-                            );
-                          case YoutubePlaylist:
-                            return YoutubePlaylistCard(
-                              playlist: item,
-                              thumbnailHeight: thumbnailHeight,
-                              thumbnailWidth: thumbnailWidth,
-                            );
-                          case YoutubeChannel:
-                            return YoutubeChannelCard(
-                              channel: item,
-                              thumbnailSize: context.width * 0.18,
-                            );
-                        }
-                        return const SizedBox();
-                      },
+                      slivers: [
+                        SliverFixedExtentList.builder(
+                          itemExtent: thumbnailItemExtent,
+                          itemCount: _searchResult.length,
+                          itemBuilder: (context, index) {
+                            final item = _searchResult[index];
+                            switch (item.runtimeType) {
+                              case StreamInfoItem:
+                                return YoutubeVideoCard(
+                                  thumbnailHeight: thumbnailHeight,
+                                  thumbnailWidth: thumbnailWidth,
+                                  isImageImportantInCache: false,
+                                  video: item,
+                                  playlistID: null,
+                                  onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item as StreamInfoItem),
+                                );
+                              case YoutubePlaylist:
+                                return YoutubePlaylistCard(
+                                  playlist: item,
+                                  thumbnailHeight: thumbnailHeight,
+                                  thumbnailWidth: thumbnailWidth,
+                                );
+                              case YoutubeChannel:
+                                return YoutubeChannelCard(
+                                  channel: item,
+                                  thumbnailSize: context.width * 0.18,
+                                );
+                            }
+                            return const SizedBox();
+                          },
+                        ),
+                        SliverToBoxAdapter(
+                          child: Obx(
+                            () => _isFetching.value
+                                ? const Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        LoadingIndicator(),
+                                      ],
+                                    ),
+                                  )
+                                : const SizedBox(),
+                          ),
+                        ),
+                        kBottomPaddingWidgetSliver,
+                      ],
                     );
                   },
                 ),

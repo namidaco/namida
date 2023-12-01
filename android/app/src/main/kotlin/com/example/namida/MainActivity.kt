@@ -14,7 +14,7 @@ class NamidaMainActivity : FlutterActivity() {
     private var channel: MethodChannel? = null
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
-        GeneratedPluginRegistrant.registerWith(flutterEngine)
+        // GeneratedPluginRegistrant.registerWith(flutterEngine)
         channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNELNAME)
     }
 

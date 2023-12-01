@@ -42,6 +42,7 @@ class AlbumsPage extends StatelessWidget {
 
     return BackgroundWrapper(
       child: NamidaScrollbar(
+        controller: scrollController,
         child: AnimationLimiter(
           child: Column(
             children: [

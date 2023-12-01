@@ -129,16 +129,7 @@ class MainPage extends StatelessWidget {
 
           Obx(
             () {
-              final fab = settings.floatingActionButton.value;
-              final route = NamidaNavigator.inst.currentRoute?.route;
-              final shouldHide = ScrollSearchController.inst.isGlobalSearchMenuShown.value
-                  ? false
-                  : fab == FABType.none ||
-                      route == RouteType.SETTINGS_page || // bcz no search
-                      route == RouteType.SETTINGS_subpage || // bcz no search
-                      route == RouteType.YOUTUBE_PLAYLIST_DOWNLOAD_SUBPAGE || // bcz has fab
-                      (fab == FABType.shuffle && SelectedTracksController.inst.currentAllTracks.isEmpty) ||
-                      (settings.selectedLibraryTab.value == LibraryTab.tracks && LibraryTab.tracks.isBarVisible == false);
+              final shouldHide = Dimensions.inst.shouldHideFAB;
               return AnimatedPositioned(
                 key: const Key('fab_active'),
                 right: 12.0,
@@ -151,7 +142,7 @@ class MainPage extends StatelessWidget {
                       ? const SizedBox(key: Key('fab_dummy'))
                       : FloatingActionButton(
                           tooltip: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.CLEAR : settings.floatingActionButton.value.toText(),
-                          backgroundColor: CurrentColor.inst.currentColorScheme.withOpacity(1.0),
+                          backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withOpacity(0.7), context.theme.cardColor),
                           onPressed: () {
                             final fab = settings.floatingActionButton.value;
                             final forceSearch = ScrollSearchController.inst.isGlobalSearchMenuShown.value;
@@ -164,6 +155,7 @@ class MainPage extends StatelessWidget {
                           },
                           child: Icon(
                             ScrollSearchController.inst.isGlobalSearchMenuShown.value ? Broken.search_status_1 : settings.floatingActionButton.value.toIcon(),
+                            color: const Color.fromRGBO(255, 255, 255, 0.8),
                           ),
                         ),
                 ),

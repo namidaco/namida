@@ -155,7 +155,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
                 final finalspace5sb = space5sb * inversePerc;
                 final finalpadding = 4.0 * inversePerc;
                 final finalbr = (8.0 * inversePerc).multipliedRadius;
-                final finalthumbnailsize = (space2ForThumbnail + context.width * percentage).clamp(space2ForThumbnail, context.width - finalspace1sb - finalspace3sb);
+                final finalthumbnailWidth = (space2ForThumbnail + context.width * percentage).clamp(space2ForThumbnail, context.width - finalspace1sb - finalspace3sb);
+                final finalthumbnailHeight = finalthumbnailWidth * 9 / 16;
 
                 return Column(
                   children: [
@@ -175,8 +176,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                     color: Colors.black,
                                     borderRadius: BorderRadius.circular(finalbr),
                                   ),
-                                  width: finalthumbnailsize,
-                                  height: finalthumbnailsize * 9 / 16,
+                                  width: finalthumbnailWidth,
+                                  height: finalthumbnailHeight,
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(finalbr),
                                     child: NamidaVideoWidget(
@@ -188,8 +189,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                       swipeUpToFullscreen: true,
                                       fallbackChild: YoutubeThumbnail(
                                         isImportantInCache: true,
-                                        width: finalthumbnailsize,
-                                        height: finalthumbnailsize * 9 / 16,
+                                        width: finalthumbnailWidth,
+                                        height: finalthumbnailHeight,
                                         borderRadius: 0,
                                         blur: 0,
                                         videoId: currentId,
@@ -205,7 +206,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                             if (reverseOpacity > 0) ...[
                               SizedBox(width: finalspace3sb),
                               SizedBox(
-                                width: (context.width - finalthumbnailsize - finalspace1sb - finalspace3sb - finalspace4buttons - finalspace5sb).clamp(0, context.width),
+                                width: (context.width - finalthumbnailWidth - finalspace1sb - finalspace3sb - finalspace4buttons - finalspace5sb).clamp(0, context.width),
                                 child: NamidaOpacity(
                                   key: Key("${currentId}_title_button1"),
                                   enabled: true,
@@ -350,7 +351,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                               },
                             ),
                           ),
-                        )
+                        ),
                       ],
                     ),
 

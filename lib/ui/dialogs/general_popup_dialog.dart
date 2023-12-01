@@ -603,6 +603,7 @@ Future<void> showGeneralPopupDialog(
                       NamidaHero(
                         tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${tracks.first.path}',
                         child: ArtworkWidget(
+                          key: Key(tracks.pathToImage),
                           path: tracks.pathToImage,
                           thumbnailSize: 60,
                           forceSquared: forceSquared,
