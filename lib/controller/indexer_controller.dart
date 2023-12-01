@@ -1296,8 +1296,8 @@ class Indexer {
               mood,
               config: GenresSplitConfig.settings(),
             );
-      final bitrate = (map['bitrate'] as String?).getIntValue();
-      final disc = (map['disc_number'] as String?).getIntValue();
+      final bitrate = map['bitrate'] as int?;
+      final disc = map['disc_number'] as int?;
       final year = (map['year'] as String?).getIntValue();
       final trext = TrackExtended(
         title: e.title,

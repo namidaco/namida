@@ -95,7 +95,7 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/on_audio_query
       path: packages/on_audio_query
-      ref: 4661d8940dff588f1ca6b9488e5e953f3ba05226
+      ref: 69c7653e4b04ff24e657bee7b8706838e93303d7
 
   # ---- Video Indexing & Playback ----
   video_player:
