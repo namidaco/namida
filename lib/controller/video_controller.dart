@@ -10,6 +10,7 @@ import 'package:get/get.dart' hide Response;
 import 'package:namida/core/functions.dart';
 import 'package:newpipeextractor_dart/models/streams.dart';
 import 'package:picture_in_picture/picture_in_picture.dart';
+import 'package:queue/queue.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:namida/class/media_info.dart';
@@ -864,7 +865,13 @@ class VideoController {
   static final _runningRequestsClients = <String, Dio>{};
   static final _runningRequestsMap = <String, Completer<Uint8List?>?>{};
 
-  Future<Uint8List?> getYoutubeThumbnailAsBytes({String? youtubeId, String? url, bool lowerResYTID = false, required bool keepInMemory}) async {
+  final _thumbQueue = Queue(parallel: 4);
+  Future<Uint8List?> getYoutubeThumbnailAsBytes({
+    String? youtubeId,
+    String? url,
+    bool lowerResYTID = false,
+    required bool keepInMemory,
+  }) async {
     if (youtubeId == null && url == null) return null;
 
     final links = url != null
@@ -880,20 +887,25 @@ class VideoController {
       }
 
       _runningRequestsClients[link] = Dio();
-      _runningRequestsMap.optimizedAdd([MapEntry(link, Completer<Uint8List?>())], 600); // most images are <~20kb so =12MB
-
       (Uint8List, int)? requestRes;
 
-      try {
-        final client = _runningRequestsClients[link]!;
-        final res = await client.get<Uint8List?>(
-          link,
-          options: Options(responseType: ResponseType.bytes),
-        );
-        requestRes = (res.data ?? Uint8List.fromList([]), res.statusCode ?? 404);
-      } catch (e) {
-        printy('getYoutubeThumbnailAsBytes: Error getting thumbnail at $link, trying again with lower quality.\n$e', isError: true);
-      }
+      // _runningRequestsMap.optimizedAdd([MapEntry(link, Completer<Uint8List?>())], 600); // most images are <~20kb so =12MB
+      _runningRequestsMap[link] ??= Completer<Uint8List?>(); // 600 - most images are <~20kb so =12MB
+
+      await _thumbQueue.add(() async {
+        try {
+          final client = _runningRequestsClients[link];
+          if (client != null) {
+            final res = await client.get<Uint8List?>(
+              link,
+              options: Options(responseType: ResponseType.bytes),
+            );
+            requestRes = (res.data ?? Uint8List.fromList([]), res.statusCode ?? 404);
+          }
+        } catch (e) {
+          printy('getYoutubeThumbnailAsBytes: Error getting thumbnail at $link, trying again with lower quality.\n$e', isError: true);
+        }
+      });
 
       // -- validation --
       final req = requestRes;
