@@ -2,7 +2,7 @@ import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 class YoutubeItemDownloadConfig {
   final String id;
-  final String filename;
+  String filename; // filename can be changed after deciding quality/codec, or manually.
   final Map<String, String?> ffmpegTags;
   DateTime? fileDate;
   VideoStream? videoStream;

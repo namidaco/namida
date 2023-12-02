@@ -14,6 +14,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
@@ -23,7 +24,9 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_ongoing_finished_downloads.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
+import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
@@ -60,7 +63,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
         ],
       ),
     );
-    final iconSize = displayTitle ? 16.0 : 17.0;
+    final iconSize = (displayTitle ? 16.0 : 17.0);
     return NamidaInkWell(
       borderRadius: 6.0,
       padding: const EdgeInsets.only(left: 6.0, right: 6.0, top: 6.0, bottom: 6.0),
@@ -405,6 +408,63 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     return confirmed;
   }
 
+  void _onEditIconTap({required YoutubeItemDownloadConfig config, required BuildContext context}) async {
+    await showDownloadVideoBottomSheet(
+      showSpecificFileOptionsInEditTagDialog: false,
+      videoId: config.id,
+      initialItemConfig: config,
+      confirmButtonText: lang.RESTART,
+      onConfirmButtonTap: (groupName, newConfig) {
+        _onCancelDeleteDownloadTap([config]);
+        _onResumeDownloadTap([newConfig], context);
+        YTOnGoingFinishedDownloads.inst.refreshList();
+        return true;
+      },
+    );
+  }
+
+  Future<String> _onRenameIconTap({
+    required BuildContext context,
+    required YoutubeItemDownloadConfig config,
+    required String groupName,
+  }) async {
+    return await showNamidaBottomSheetWithTextField(
+      context: context,
+      initalControllerText: config.filename,
+      title: lang.RENAME,
+      hintText: config.filename,
+      labelText: lang.FILE_NAME,
+      validator: (value) {
+        if (value == null || value.isEmpty) return lang.EMPTY_VALUE;
+
+        if (value.startsWith('.')) return "${lang.FILENAME_SHOULDNT_START_WITH} .";
+
+        final filenameClean = YoutubeController.inst.cleanupFilename(value);
+        if (value != filenameClean) {
+          const baddiesAll = r'#$|/\!^:"';
+          final baddies = baddiesAll.split('').where((element) => value.contains(element)).join();
+          return "${lang.NAME_CONTAINS_BAD_CHARACTER} $baddies";
+        }
+
+        return null;
+      },
+      buttonText: lang.SAVE,
+      onButtonTap: (text) async {
+        _onPauseDownloadTap([config]);
+        await YoutubeController.inst.renameConfigFilename(
+          config: config,
+          videoID: config.id,
+          newFilename: text,
+          groupName: groupName,
+          renameCacheFiles: true,
+        );
+        // ignore: use_build_context_synchronously
+        _onResumeDownloadTap([config], context);
+        return true;
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final directory = Directory("${AppDirs.YOUTUBE_DOWNLOADS}$groupName");
@@ -545,15 +605,16 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                             builder: (context, constraints) {
                               return Stack(
                                 children: [
-                                  Container(
-                                    alignment: Alignment.centerLeft,
-                                    height: 2.0,
-                                    decoration: BoxDecoration(
-                                      color: CurrentColor.inst.color.withOpacity(0.6),
-                                      borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                  if (finalPercentage.isFinite && finalPercentage > 0)
+                                    Container(
+                                      alignment: Alignment.centerLeft,
+                                      height: 2.0,
+                                      decoration: BoxDecoration(
+                                        color: CurrentColor.inst.color.withOpacity(0.6),
+                                        borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                      ),
+                                      width: finalPercentage * constraints.maxWidth,
                                     ),
-                                    width: finalPercentage * constraints.maxWidth,
-                                  ),
                                   Container(
                                     alignment: Alignment.centerLeft,
                                     height: 2.0,
@@ -581,113 +642,140 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                     // -- ItemActionsRow
                     Row(
                       children: [
-                        Obx(
-                          () {
-                            final isDownloading = YoutubeController.inst.isDownloading[item.id]?[item.filename] ?? false;
-                            final isFetching = YoutubeController.inst.isFetchingData[item.id]?[item.filename] ?? false;
-                            final willBeDownloaded = YoutubeController.inst.youtubeDownloadTasksInQueueMap[groupName]?[item.filename] == true;
-                            final fileExists = YoutubeController.inst.downloadedFilesMap[groupName]?[item.filename] != null;
+                        Expanded(
+                          child: ColoredBox(
+                            color: Colors.transparent,
+                            child: Wrap(
+                              runAlignment: WrapAlignment.center,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Obx(
+                                  () {
+                                    final isDownloading = YoutubeController.inst.isDownloading[item.id]?[item.filename] ?? false;
+                                    final isFetching = YoutubeController.inst.isFetchingData[item.id]?[item.filename] ?? false;
+                                    final willBeDownloaded = YoutubeController.inst.youtubeDownloadTasksInQueueMap[groupName]?[item.filename] == true;
+                                    final fileExists = YoutubeController.inst.downloadedFilesMap[groupName]?[item.filename] != null;
 
-                            return fileExists
-                                ? _getChip(
-                                    context: context,
-                                    title: lang.RESTART,
-                                    icon: Broken.refresh,
-                                    onTap: () async {
-                                      final confirmed = await _confirmOperation(
-                                        context: context,
-                                        operationTitle: lang.RESTART,
-                                      );
-                                      // ignore: use_build_context_synchronously
-                                      if (confirmed) _onResumeDownloadTap([item], context);
-                                    })
-                                : willBeDownloaded || isDownloading || isFetching
+                                    return fileExists
+                                        ? _getChip(
+                                            context: context,
+                                            title: lang.RESTART,
+                                            icon: Broken.refresh,
+                                            onTap: () async {
+                                              final confirmed = await _confirmOperation(
+                                                context: context,
+                                                operationTitle: lang.RESTART,
+                                              );
+                                              // ignore: use_build_context_synchronously
+                                              if (confirmed) _onResumeDownloadTap([item], context);
+                                            })
+                                        : willBeDownloaded || isDownloading || isFetching
+                                            ? _getChip(
+                                                context: context,
+                                                title: lang.PAUSE,
+                                                icon: Broken.pause,
+                                                iconWidget: (size) => StackedIcon(
+                                                  baseIcon: Broken.pause,
+                                                  secondaryIcon: Broken.timer,
+                                                  iconSize: size,
+                                                  secondaryIconSize: 10.0,
+                                                ),
+                                                onTap: () => _onPauseDownloadTap([item]),
+                                              )
+                                            : _getChip(
+                                                context: context,
+                                                title: lang.RESUME,
+                                                icon: Broken.play,
+                                                onTap: () => _onResumeDownloadTap([item], context),
+                                              );
+                                  },
+                                ),
+                                fileExists
                                     ? _getChip(
                                         context: context,
-                                        title: lang.PAUSE,
-                                        icon: Broken.pause,
-                                        iconWidget: (size) => StackedIcon(
-                                          baseIcon: Broken.pause,
-                                          secondaryIcon: Broken.timer,
-                                          iconSize: size,
-                                          secondaryIconSize: 10.0,
-                                        ),
-                                        onTap: () => _onPauseDownloadTap([item]),
+                                        title: lang.DELETE,
+                                        icon: Broken.trash,
+                                        betweenBrackets: downloadedFile.fileSizeFormatted() ?? '',
+                                        onTap: () async {
+                                          final confirmed = await _confirmOperation(
+                                            context: context,
+                                            operationTitle: lang.DELETE,
+                                          );
+                                          if (confirmed) _onCancelDeleteDownloadTap([item]);
+                                        },
                                       )
                                     : _getChip(
                                         context: context,
-                                        title: lang.RESUME,
-                                        icon: Broken.play,
-                                        onTap: () => _onResumeDownloadTap([item], context),
-                                      );
-                          },
-                        ),
-                        fileExists
-                            ? _getChip(
-                                context: context,
-                                title: lang.DELETE,
-                                icon: Broken.trash,
-                                betweenBrackets: downloadedFile.fileSizeFormatted() ?? '',
-                                onTap: () async {
-                                  final confirmed = await _confirmOperation(
+                                        title: lang.CANCEL,
+                                        icon: Broken.close_circle,
+                                        onTap: () async {
+                                          final confirmed = await _confirmOperation(
+                                            context: context,
+                                            operationTitle: lang.CANCEL,
+                                            confirmMessage: lang.REMOVE,
+                                          );
+                                          if (confirmed) _onCancelDeleteDownloadTap([item]);
+                                        },
+                                      ),
+                                _getChip(
+                                  context: context,
+                                  title: lang.RENAME,
+                                  icon: Broken.text,
+                                  onTap: () => _onRenameIconTap(
                                     context: context,
-                                    operationTitle: lang.DELETE,
-                                  );
-                                  if (confirmed) _onCancelDeleteDownloadTap([item]);
-                                },
-                              )
-                            : _getChip(
-                                context: context,
-                                title: lang.CANCEL,
-                                icon: Broken.close_circle,
-                                onTap: () async {
-                                  final confirmed = await _confirmOperation(
-                                    context: context,
-                                    operationTitle: lang.CANCEL,
-                                    confirmMessage: lang.REMOVE,
-                                  );
-                                  if (confirmed) _onCancelDeleteDownloadTap([item]);
-                                },
-                              ),
-                        _getChip(
-                          context: context,
-                          title: lang.EDIT,
-                          icon: Broken.edit_2,
-                          onTap: () {},
-                        ),
-                        _getChip(
-                          context: context,
-                          title: lang.INFO,
-                          icon: Broken.info_circle,
-                          onTap: () => _showInfoDialog(context, item, info, groupName),
-                        ),
-                        const Spacer(),
-                        Text(
-                          [
-                            item.videoStream?.resolution,
-                            downloadedFile.fileSizeFormatted(),
-                          ].joinText(),
-                          style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
-                        ),
-                        const SizedBox(width: 4.0),
-                        if (itemIcon != null)
-                          Icon(
-                            itemIcon,
-                            size: 16.0,
-                            color: context.defaultIconColor(),
+                                    config: item,
+                                    groupName: groupName,
+                                  ),
+                                ),
+                                _getChip(
+                                  context: context,
+                                  title: lang.EDIT,
+                                  icon: Broken.edit_2,
+                                  onTap: () => _onEditIconTap(config: item, context: context),
+                                ),
+                                _getChip(
+                                  context: context,
+                                  title: lang.INFO,
+                                  icon: Broken.info_circle,
+                                  onTap: () => _showInfoDialog(context, item, info, groupName),
+                                ),
+                              ],
+                            ),
                           ),
-                        const SizedBox(width: 4.0),
-                        fileExists
-                            ? Icon(
-                                Broken.tick_circle,
-                                size: 16.0,
-                                color: context.defaultIconColor(),
-                              )
-                            : Icon(
-                                Broken.import,
+                        ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              [
+                                item.videoStream?.resolution,
+                                downloadedFile.fileSizeFormatted(),
+                              ].joinText(),
+                              style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
+                            ),
+                            const SizedBox(width: 4.0),
+                            if (itemIcon != null)
+                              Icon(
+                                itemIcon,
                                 size: 16.0,
                                 color: context.defaultIconColor(),
                               ),
+                            const SizedBox(width: 4.0),
+                            fileExists
+                                ? Icon(
+                                    Broken.tick_circle,
+                                    size: 16.0,
+                                    color: context.defaultIconColor(),
+                                  )
+                                : Icon(
+                                    Broken.import,
+                                    size: 16.0,
+                                    color: context.defaultIconColor(),
+                                  ),
+                          ],
+                        )
                       ],
                     ),
                   ],

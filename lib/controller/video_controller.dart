@@ -898,7 +898,7 @@ class VideoController {
           if (client != null) {
             final res = await client.get<Uint8List?>(
               link,
-              options: Options(responseType: ResponseType.bytes),
+              options: Options(responseType: ResponseType.bytes, validateStatus: (status) => true),
             );
             requestRes = (res.data ?? Uint8List.fromList([]), res.statusCode ?? 404);
           }

@@ -456,3 +456,20 @@ extension NavigatorUtils on BuildContext? {
     if (context != null && context.mounted) Navigator.of(context, rootNavigator: rootNavigator).maybePop();
   }
 }
+
+extension DisposingUtils on TextEditingController {
+  Future<void> disposeAfterAnimation({int durationMS = 200, void Function()? also}) async {
+    void fn() {
+      dispose();
+      if (also != null) also();
+    }
+
+    await fn.executeDelayed(Duration(milliseconds: durationMS));
+  }
+}
+
+extension ExecuteDelayedUtils<T> on T Function() {
+  Future<T> executeDelayed(Duration dur) async {
+    return await Future.delayed(dur, this);
+  }
+}

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
@@ -8,6 +9,7 @@ import 'package:history_manager/history_manager.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -23,6 +25,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/artist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/genre_tracks_subpage.dart';
@@ -370,6 +373,95 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
       ),
     ),
   );
+}
+
+Future<String> showNamidaBottomSheetWithTextField({
+  required BuildContext context,
+  bool isScrollControlled = true,
+  bool useRootNavigator = true,
+  bool showDragHandle = true,
+  required String title,
+  String? initalControllerText,
+  required String hintText,
+  required String labelText,
+  required String? Function(String? value)? validator,
+  required String buttonText,
+  TextStyle? buttonTextStyle,
+  Color? buttonColor,
+  required FutureOr<bool> Function(String text) onButtonTap,
+}) async {
+  final controller = TextEditingController(text: initalControllerText);
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+  final focusNode = FocusNode();
+  focusNode.requestFocus();
+
+  await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
+  // ignore: use_build_context_synchronously
+  await showModalBottomSheet(
+    context: context,
+    useRootNavigator: useRootNavigator,
+    showDragHandle: showDragHandle,
+    isScrollControlled: isScrollControlled,
+    builder: (context) {
+      final bottomPadding = MediaQuery.viewInsetsOf(context).bottom;
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28.0).add(EdgeInsets.only(bottom: 18.0 + bottomPadding)),
+        child: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: context.textTheme.displayLarge,
+              ),
+              const SizedBox(height: 18.0),
+              CustomTagTextField(
+                focusNode: focusNode,
+                controller: controller,
+                hintText: hintText,
+                labelText: labelText,
+                validator: validator,
+              ),
+              const SizedBox(height: 18.0),
+              Row(
+                children: [
+                  SizedBox(width: context.width * 0.1),
+                  CancelButton(onPressed: context.safePop),
+                  SizedBox(width: context.width * 0.1),
+                  Expanded(
+                    child: NamidaInkWell(
+                      borderRadius: 12.0,
+                      padding: const EdgeInsets.all(12.0),
+                      height: 48.0,
+                      bgColor: buttonColor ?? CurrentColor.inst.color,
+                      decoration: const BoxDecoration(),
+                      child: Center(
+                        child: Text(
+                          buttonText,
+                          style: buttonTextStyle ?? context.textTheme.displayMedium?.copyWith(color: Colors.white.withOpacity(0.9)),
+                        ),
+                      ),
+                      onTap: () async {
+                        if (formKey.currentState!.validate()) {
+                          final canPop = await onButtonTap(controller.text);
+                          if (canPop && context.mounted) context.safePop();
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+  final t = controller.text;
+  controller.disposeAfterAnimation(also: focusNode.dispose);
+  return t;
 }
 
 // Returns a [0-1] scale representing how much similar both are.

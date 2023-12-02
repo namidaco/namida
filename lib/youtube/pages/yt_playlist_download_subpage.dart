@@ -326,8 +326,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                           return Obx(
                             () {
                               final isSelected = _selectedList.contains(id);
-                              // TODO: get filename somehow
-                              final filename = info?.name;
+                              final filename = _configMap[id]?.filename;
                               final fileExists = File("${AppDirs.YOUTUBE_DOWNLOADS}${_groupName.value}/$filename").existsSync();
                               return NamidaInkWell(
                                 animationDurationMS: 200,

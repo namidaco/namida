@@ -32,6 +32,7 @@ Future<void> showDownloadVideoBottomSheet({
   String confirmButtonText = '',
   bool Function(String groupName, YoutubeItemDownloadConfig config)? onConfirmButtonTap,
   bool showSpecificFileOptionsInEditTagDialog = true,
+  YoutubeItemDownloadConfig? initialItemConfig,
 }) async {
   colorScheme ??= CurrentColor.inst.color;
   final context = ctx ?? rootContext;
@@ -60,7 +61,13 @@ Future<void> showDownloadVideoBottomSheet({
     }
   }
 
-  void updatefilenameOutput() {
+  void updatefilenameOutput({String customName = ''}) {
+    if (customName != '') {
+      videoOutputFilenameController.text = customName;
+      return;
+    }
+    if (initialItemConfig != null) return; // cuz already set.
+
     final videoTitle = videoInfo.value?.name ?? videoId;
     if (selectedAudioOnlyStream.value == null && selectedVideoOnlyStream.value == null) {
       videoOutputFilenameController.text = videoTitle;
@@ -74,6 +81,11 @@ Future<void> showDownloadVideoBottomSheet({
         videoOutputFilenameController.text = filenameRealVideo;
       }
     }
+  }
+
+  if (initialItemConfig != null) {
+    updatefilenameOutput(customName: initialItemConfig.filename);
+    updateTagsMap(initialItemConfig.ffmpegTags);
   }
 
   YoutubeController.inst.getAvailableStreams(videoId).then((v) {
@@ -94,7 +106,7 @@ Future<void> showDownloadVideoBottomSheet({
     updatefilenameOutput();
     videoDateTime = videoInfo.value?.date;
     final meta = YTUtils.getMetadataInitialMap(videoId, videoInfo.value, autoExtract: settings.ytAutoExtractVideoTagsFromInfo.value);
-    updateTagsMap(meta);
+    if (initialItemConfig == null) updateTagsMap(meta);
   });
 
   Widget getQualityChipBase({
@@ -314,6 +326,7 @@ Future<void> showDownloadVideoBottomSheet({
                             ],
                           ),
                         ),
+                        const SizedBox(width: 6.0),
                         Obx(
                           () {
                             final isWEBM = selectedAudioOnlyStream.value?.formatSuffix == 'webm';
@@ -324,7 +337,7 @@ Future<void> showDownloadVideoBottomSheet({
                                   horizontalPadding: 0.0,
                                   icon: Broken.edit,
                                   onPressed: () {
-                                    if (videoInfo.value == null) return;
+                                    if (videoInfo.value == null && tagsMap.isEmpty) return;
 
                                     // webm doesnt support tag editing
                                     if (isWEBM) {
@@ -340,8 +353,8 @@ Future<void> showDownloadVideoBottomSheet({
 
                                     showVideoDownloadOptionsSheet(
                                       context: context,
-                                      videoInfo: videoInfo.value!,
-                                      videoTitle: videoInfo.value!.name ?? '',
+                                      videoTitle: videoInfo.value?.name,
+                                      videoUploader: videoInfo.value?.uploaderName,
                                       tagMaps: tagsMap,
                                       supportTagging: !isWEBM,
                                       showSpecificFileOptions: showSpecificFileOptionsInEditTagDialog,

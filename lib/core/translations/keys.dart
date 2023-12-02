@@ -212,6 +212,7 @@ abstract class LanguageKeys {
   String get FAILED => _getKey('FAILED');
   String get FAVOURITES => _getKey('FAVOURITES');
   String get FETCHING => _getKey('FETCHING');
+  String get FILENAME_SHOULDNT_START_WITH => _getKey('FILENAME_SHOULDNT_START_WITH');
   String get FILE_NAME_WO_EXT => _getKey('FILE_NAME_WO_EXT');
   String get FILE_NAME => _getKey('FILE_NAME');
   String get FILE => _getKey('FILE');
@@ -455,6 +456,7 @@ abstract class LanguageKeys {
   String get REMOVE_WHITESPACES => _getKey('REMOVE_WHITESPACES');
   String get REMOVE => _getKey('REMOVE');
   String get REMOVED => _getKey('REMOVED');
+  String get RENAME => _getKey('RENAME');
   String get RENAME_PLAYLIST => _getKey('RENAME_PLAYLIST');
   String get REORDERABLE => _getKey('REORDERABLE');
   String get REPEAT_FOR_N_TIMES => _getKey('REPEAT_FOR_N_TIMES');
