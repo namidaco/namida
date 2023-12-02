@@ -604,9 +604,29 @@ class YoutubeController {
           }
           for (final v in res.entries) {
             final ytitem = YoutubeItemDownloadConfig.fromJson(v.value as Map<String, dynamic>);
-            final file = File("${AppDirs.YOUTUBE_DOWNLOADS}$groupName/${ytitem.filename}");
+            final saveDirPath = "${AppDirs.YOUTUBE_DOWNLOADS}$groupName";
+            final file = File("$saveDirPath/${ytitem.filename}");
+            final fileExists = file.existsSync();
             youtubeDownloadTasksMap[groupName]![v.key] = ytitem;
-            downloadedFilesMap[groupName]![v.key] = file.existsSync() ? file : null;
+            downloadedFilesMap[groupName]![v.key] = fileExists ? file : null;
+            if (!fileExists) {
+              final aFile = File("$saveDirPath/.tempa_${ytitem.filename}");
+              final vFile = File("$saveDirPath/.tempv_${ytitem.filename}");
+              if (aFile.existsSync()) {
+                downloadsAudioProgressMap[ytitem.id] ??= <String, DownloadProgress>{}.obs;
+                downloadsAudioProgressMap[ytitem.id]![ytitem.filename] = DownloadProgress(
+                  progress: aFile.fileSizeSync() ?? 0,
+                  totalProgress: 0,
+                );
+              }
+              if (vFile.existsSync()) {
+                downloadsVideoProgressMap[ytitem.id] ??= <String, DownloadProgress>{}.obs;
+                downloadsVideoProgressMap[ytitem.id]![ytitem.filename] = DownloadProgress(
+                  progress: vFile.fileSizeSync() ?? 0,
+                  totalProgress: 0,
+                );
+              }
+            }
           }
         }
       }

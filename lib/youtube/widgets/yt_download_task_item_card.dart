@@ -500,10 +500,22 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                 final cp = videoP?.progress ?? audioP?.progress ?? 0;
                 final ctp = videoP?.totalProgress ?? audioP?.totalProgress ?? 0;
                 final speedText = speedB == null ? '' : ' (${speedB.fileSizeFormatted}/s)';
-                final downloadInfoText = " • ${cp.fileSizeFormatted}/${ctp.fileSizeFormatted}$speedText";
+                final downloadInfoText = "${cp.fileSizeFormatted}/${ctp.fileSizeFormatted}$speedText";
                 final canDisplayPercentage = audioPerc != null || videoPerc != null;
 
                 final fileExists = YoutubeController.inst.downloadedFilesMap[groupName]?[item.filename] != null;
+
+                double finalPercentage = 0.0;
+                if (fileExists) {
+                  finalPercentage = 1.0;
+                } else {
+                  if (audioPerc != null && !audioPerc.isNaN) {
+                    finalPercentage = audioPerc;
+                  } else if (videoPerc != null && !videoPerc.isNaN) {
+                    finalPercentage = videoPerc;
+                  }
+                }
+                final percentageText = finalPercentage.isInfinite ? '' : "${(finalPercentage * 100).toStringAsFixed(0)}%";
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -540,7 +552,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                       color: CurrentColor.inst.color.withOpacity(0.6),
                                       borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                     ),
-                                    width: (fileExists ? 1.0 : (audioPerc ?? videoPerc ?? 0.0)) * constraints.maxWidth,
+                                    width: finalPercentage * constraints.maxWidth,
                                   ),
                                   Container(
                                     alignment: Alignment.centerLeft,
@@ -561,7 +573,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                     if (canDisplayPercentage) ...[
                       const SizedBox(height: 4.0),
                       Text(
-                        "${audioPerc != null ? "${(audioPerc * 100).toStringAsFixed(0)}%" : videoPerc != null ? "${(videoPerc * 100).toStringAsFixed(0)}%" : ''}$downloadInfoText",
+                        [percentageText, downloadInfoText].joinText(),
                         style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
                       ),
                     ],
