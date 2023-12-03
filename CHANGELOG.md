@@ -1,5 +1,108 @@
 # Namida Changelog
 
+## 03/12/2023
+# v1.8.5
+### 🎉 New Features:
+   - 204d4da745ebc720b03431093e42f3805649b04d: search in settings
+   - 302bfd6029b16101844f01b84b920d8215bff2ad: floating action button (none, search, shuffle)
+   - 17bcf73f8f8edf084acc4636dd4366fd9a838a18: separate sorting for search tracks
+   - 2031d74bb7c8f06f2c90bbf8ce434f99866d78e8: artwork gestures - zoom in to enter lrc fullscreen (always, when lrc is visible) - zoom in/out to scale artwork (config, when lrc is not visible) - double tap to toggle lyrics (config, only when lrc is not visible to prevent delaying)
+   - 0caecd7fab757314bb21b0233d3ac466475c8a00: subpages sorting reverse order
+   - 493800c28acf396a4ee557237e0fc3f648ade872: most played page for youtube
+   - 73f9a24897699c31b0b4222f439d13f1991a2514: yt playlists support (normal, likes, most played, history)
+   - a3a5d310b333aa1c6dbee0cbc7634e257ccd7f5c: dismissible youtube miniplayer, closes #52
+   - 20ad7561a05e3fdb4426fda67249fb0e21bf9699: load language json dynamically
+   - 01fbaaa2f669361e45dc288a0ff1e1d4f3f14a84: creation date for files (simulation)
+   - 0c3e148ddcd6ab350550d9d64ecbceeb0c08e759: removeable yt videos from playlists
+   - 9967af0e68e5512e32c01748d50803b5427ce91b: download yt videos logic + ui comes with pause/resume/stop, supports download groups & between sessions resuming
+   - 090edbdab8bfe80b209b2d935f8cd55e55faec03: resume/stop for whole download group
+   - 6903b323d56879ce35779589047f0694cf251386: jump to day inside yt history
+   - a97b3150707868b354ba89095af98675ae8322ee: download filtering chips (all, ongoing, finished)
+   - 4eb90dc8f5f5f07429fc6b0825451dce55cd091b: youtube playlists downloads
+   - f7a37922ea12bdaa5dbc55027398b2896bda3268: ability to cancel downloads for groups
+   - c8f5a3e2a9a808bfce434c01db8fd50499680064: downlaod yt playlists (hosted)
+   - 575139962953a6b4fb6b9fc7674c819fc52fd93a: support downloading multiple external youtube links
+   - 1c4e022a817ea4311728ae639d048b4f9da38f7c: zoomable playlist download page
+   - 513a791575b33ce4666f8462383696341f8bbaf9: open-able external youtube playlists with default actions (download, play, addToPlaylist, alwaysAsk)
+   - ea50869867804f0f508711ad6a8f60ceff58fdb7: playlist view (hosted) comes with cool stuff, revamped menu too
+   - d14717005157b5e100fc8d6219c2f864ef47e037: toggle clipboard monitoring (disabled by default)
+   - c6cb1343f1320b596734e8e485c144bedf270ecb: restore backups on first installation #69
+   - 5c426a8ab764c3d818a4c5142d001653874d50fb: dismissible queues #69
+   - eeb50c1f2902ec8507c5bc057b866ff1df94b9e3: parallel youtube downloads
+   - 907e586bb3fe4130f19b015ab334b76117607041: sort downloading groups by last edited and few fixes
+   - 555c8f4a521d8ca99006034b5c375abc3b063faf: separate editable download items in batch download
+   - e500d93fb753aa3880baef703b994ef687bd1dbf: edit & rename download tasks
+   - b942779cfc58925f88aff4d6be27134717ef4297: toggle clearing artwork while re-indexing
+
+### 🛠️ Bug fixes & Improvements:
+- chore:
+   - fadffd894f3aec72cfbf6b7cd7841a15f31ebc58: various tweaks & fixes
+   - 5189dec8ab3f32663d501f3613c21df12b85812d: ui fixes
+   - 36b78c4d39f8f85e2e0cb48256c150d827317cef: downloaded yt music is force added to library replacing any old entry
+   - bfdefa555b7fe597cb9966b3d697463de71c2314: max list tile title lines
+   - 0f5670c8dcee78dcb0839501ea7d96d6ce4cea28: history import wont remove old listens in same time range and will only remove duplicates after finishing, extremely useful for when u already listened to videos in namida and want to import more
+   - 0593c8675670a040dda9a27fc5ec426ddc67ed81: 200ms delay when searching, for steady feel, #61
+   - 2afc16e41d27ae0c1d133b1cb79a703bf2ad739a: display if video is dowloaded in miniplayer
+   - e6886da84a39d3adc46eca72433b89764d94877f: choose download folder group while downloading yt video
+   - 4236835183cecfbf3420f485f496cf895d215d49: yt download task info dialog
+   - 9e9cff0b3aedee6491fce01e7e2d337ec868e6a4: real-time like button for downloaded item info
+   - 1e35ea6b26476b75d599cb580173874ef4153203: download confirm dialog (before delete, cancel or restart)
+   - 6d484b738584b07497ec93f7457dee443436dac6: few tweaks
+   - 726b8a8cc1650592eb11e3c3dee3af013a3728a0: more yt download item info inside info dialog
+   - 39530133bf3a22a037abbf80fb8c372093abec6f: file size try-catch
+   - 910e7ec43c573b5c9a9e4947187b254fa141dc5b: skipping if failed to play from youtube
+   - a7efa12bdb2a591ae8276dc5f8a853373f2f093b: few tweaks & fixes
+   - 32170610a542b03ff43b2441c97b0433f2ccee10: restoring backups manually no longer needs all_file_access permission only needed for automatic
+   - fdf9237abfad1192e884ff7963f3a976d993f64d: abosrbers for dismissible queues, #69 to allow more space for swiping right to open drawer
+   - c818f310cf976e05fdf23457026174c292cc8ced: download sheet loading ui rework
+   - 7026a1e15b219e69a8f947dc09c94cb7dbeddcf4: in-between selection for batch download page (by long pressing the item)
+   - 0031d46df4df2dc119bc0ab98e0a8bf92c03bed7: hide fab temp while scrolling tracks page and force show when search is opened
+   - 1e9fc0ef0ebf65848403e5e6e2d5678cd7f447cf: few fixes & tweaks + lrc view now has wider hittest (while tapping on lyrics line to seek) + fix skipping multiple times when crossfade enabled + player should be killed after sleep timer
+   - dc07003a5f517d877751f7c7fd297546b671aefe: disable crossfade for youtube still has some issues, and doesnt feel like its worth
+   - ea5d4c25104dd614352426807bd1cbd474a6747f: assign downloads progresses on startup
+   - 1390d8645520be064f389c70ad138b5ed0c0d6fb: persist audio-only playback for youtube
+   - c4ce7b7c72fc876102617f58dfa36400852bf971: save playlist videos info to storage
+   - d2ff8b311e2b0e3379a5d8faa43d68b4363982b9: some tweaks
+   - fa8c53f4df60e8dd959922b8f162d7013beafaff: optionally remember audio-only mode
+   
+- perf:
+   - ed91f91d87f151c60ce5eef47ed5787b092b2e1b: performance improvement using custom Opacity & MediaQuery.propertyOf()
+   - 8395cdedf05c374493e730d09f01e4d8a31f1cf3: improve search speed by 10x-30x~, #61
+   - 6e445edaa570759e7f57fe212843223d98fc72db: improve indexing speed by 38%~ this comes by dropping isolate, eliminating the need to serialize/deserialize data, reducing overhead & resulting in a more stable extraction
+   - 57d375878a57a58e0bb2f41ac2dda0ecd385b9b6: listing backup dir on isolate (for auto restoring)
+   - e22c22332a697549dafc38659620b73fa07f9c78: limit thumbnail requests to 4 at a time
+   
+- fix:
+   - 59a7dcc391c01dcf6731db506723ec3538861290: playing after sleep mode paused playback
+   - f2915759748483776fc5abe17fe9f49d0b15aa97: restoring backup now will re-initialize lists
+   - a38e02b60ddbba502f07cc6ab3db1d64ef6b831b: onBoarding button overflow
+   - ac117f51163b6998b168286d82b611375bc5d640: writing youtube metadata with quotes
+   - 90dd7d457ee9a4f26ee8484716f2ebafb7a6a24d: resetting color when toggling pitch black while playing yt video
+   - 8c5aa9f6134fabf431093825c41dac2c764d5e43: thumbnails not rebuilding
+   - 4f8511664a375cb55b97bc21d1138b372938ee2c: time prefixes after switching language
+   - 5079801572474284493ff3e4318108d3c6094e25: indexing stopping before starting just gave up on cancelation tokens, now will just display a snackbar and return
+   - 2f41539b8798eb4b1d76f0699932eedeee3bb78b: clearing image cache
+   - cdf7e1f0b6eb831b9094de01bd89c25f417b13f0: start up with search as default tab
+   - cc30f78f3369a4a85a2944cafac00026b0b1a892: user backup location not being used, #70 tehe
+   - fee447292c51081a0ef354d953cde4350bb4f665: dont display failed notification when pausing download (since pausing typically forces closes the http client)
+   - 2fad41eccf15d9f738dde7840d50b099685dfeb2: pressing batch resume button won't restart downloaded ones (both resuming and restarting share the same logic, since the client is already closed, and we always resume downloads)
+   - 1bc434a787af3d3d3aa2d252db0aba44f0a4146d: startup crash on some phones
+   
+- git:
+   - dbff88d40b69fcafe7be730b95adf3d8bfff92bf: stop tracking language submodule
+   
+- code:
+   - e7192159c80967830074f6ecad8fccc0bfad92d0: move ffmpeg quote refining to internal class
+   - 8658713e7f85c871694da9a5799c9c98faff3926: delete pubspec.lock
+   - 6c94265802aa6df569b95b9c3e47c20885977dc8: experimental AZScrollbar
+   
+- core:
+   - b5eb4268cecd4c011319c4d9ff164acadd6dcb85: new language logic currently accesses the lang map directly, without needing to assign each key manually
+   - d3a6c6fe291ff3b12f1d79affed1358945fcb252: now accepts multiple keys to add/remove
+   - 6ddf894248d999435875d55b20ec43ac0318be06: downloading video extension is now auto assigned this is required for editing filename in batch downloads
+   - 17bb0d871d6b0da476e46ae9dc933837dc1fa9d7: disable title & artist splitting when splitters are not separated by space
+
+
 ## 06/11/2023
 # v1.6.8
 ### 🎉 New Features:

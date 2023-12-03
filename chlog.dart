@@ -75,7 +75,7 @@ void main(List<String> argumentsPre) async {
       map[key]!.add(val);
     }
   }
-  final stringy = map.entries.map((e) => '- ${e.key}:\n${e.value.map((e) => '   - $e').join('\n')}');
+  final stringy = map.entries.map((e) => '- ${e.key}:\n${e.value.reversed.map((e) => '   - $e').join('\n')}');
   final dateText = DateFormat('dd/MM/yyyy').format(stopDatetime ?? DateTime.now());
   const title = '# Namida Changelog';
   final finalString = "$title\n\n## $dateText\n${stringy.join('\n')}\n${changelog.readAsStringSync().replaceFirst(title, '')}";
