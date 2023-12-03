@@ -2167,24 +2167,23 @@ class _AnimatingTrackImage extends StatelessWidget {
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
                   child: VideoController.inst.shouldShowVideo
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
-                          child: LyricsWrapper(
-                            key: Key(track.path),
-                            track: track,
-                            cp: cp,
-                            child: GestureDetector(
-                              onTap: () => Player.inst.refreshVideoSeekPosition(),
-                              onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(),
-                              child: const NamidaVideoWidget(
-                                key: Key('video_widget'),
-                                enableControls: false,
-                              ),
+                      ? LyricsWrapper(
+                          key: Key(track.path),
+                          enableChildBorderRadius: true,
+                          track: track,
+                          cp: cp,
+                          child: GestureDetector(
+                            onTap: () => Player.inst.refreshVideoSeekPosition(),
+                            onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(),
+                            child: const NamidaVideoWidget(
+                              key: Key('video_widget'),
+                              enableControls: false,
                             ),
                           ),
                         )
                       : LyricsWrapper(
                           key: Key(track.path),
+                          enableChildBorderRadius: false,
                           track: track,
                           cp: cp,
                           child: _TrackImage(
@@ -2277,37 +2276,46 @@ class LyricsWrapper extends StatelessWidget {
   final Widget child;
   final double cp;
   final Track track;
+  final bool enableChildBorderRadius;
 
   const LyricsWrapper({
     super.key,
     required this.child,
     required this.cp,
     required this.track,
+    required this.enableChildBorderRadius,
   });
 
   @override
   Widget build(BuildContext context) {
     // if (cp == 0.0) return child;
 
+    final childFinal = enableChildBorderRadius
+        ? ClipRRect(
+            borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
+            child: child,
+          )
+        : child;
+
     return Obx(
       () => AnimatedSwitcher(
         key: Key(track.path),
         duration: const Duration(milliseconds: 300),
         child: !settings.enableLyrics.value
-            ? child
+            ? childFinal
             : Lyrics.inst.currentLyricsLRC.value != null
                 ? LyricsLRCParsedView(
                     key: Lyrics.inst.lrcViewKey,
                     cp: cp,
                     lrc: Lyrics.inst.currentLyricsLRC.value,
-                    videoOrImage: child,
+                    videoOrImage: childFinal,
                     totalDuration: track.duration.seconds,
                   )
                 : Lyrics.inst.currentLyricsText.value != ''
                     ? Stack(
                         alignment: Alignment.center,
                         children: [
-                          child,
+                          childFinal,
                           Opacity(
                             opacity: cp,
                             child: ClipRRect(
@@ -2338,7 +2346,7 @@ class LyricsWrapper extends StatelessWidget {
                           ),
                         ],
                       )
-                    : child,
+                    : childFinal,
       ),
     );
   }

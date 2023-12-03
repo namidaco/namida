@@ -167,8 +167,10 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
       plsPop();
     }
 
-    currentCount.close();
-    totalCount.close();
+    () {
+      currentCount.close();
+      totalCount.close();
+    }.executeDelayed(const Duration(milliseconds: 200));
     return true;
   }
 

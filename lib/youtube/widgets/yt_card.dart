@@ -137,7 +137,7 @@ class YoutubeCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4.0),
                       const Spacer(),
-                      if (displayChannelThumbnail || displaythirdLineText)
+                      if (displayChannelThumbnail || displaythirdLineText || checkmarkStatus != null)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           mainAxisSize: MainAxisSize.min,
@@ -156,26 +156,27 @@ class YoutubeCard extends StatelessWidget {
                               ),
                               const SizedBox(width: 6.0),
                             ],
-                            Expanded(
-                              child: NamidaDummyContainer(
-                                width: context.width * 0.35,
-                                height: 8.0,
-                                shimmerEnabled: thirdLineText == '' || !displaythirdLineText,
-                                child: Container(
-                                  alignment: Alignment.centerLeft,
-                                  width: double.infinity,
-                                  child: Text(
-                                    thirdLineText,
-                                    style: context.textTheme.displaySmall?.copyWith(
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 11.0.multipliedFontScale * fontMultiplier,
+                            if (displaythirdLineText)
+                              Expanded(
+                                child: NamidaDummyContainer(
+                                  width: context.width * 0.35,
+                                  height: 8.0,
+                                  shimmerEnabled: thirdLineText == '' || !displaythirdLineText,
+                                  child: Container(
+                                    alignment: Alignment.centerLeft,
+                                    width: double.infinity,
+                                    child: Text(
+                                      thirdLineText,
+                                      style: context.textTheme.displaySmall?.copyWith(
+                                        fontWeight: FontWeight.w400,
+                                        fontSize: 11.0.multipliedFontScale * fontMultiplier,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ),
-                            ),
                             if (checkmarkStatus != null) ...[
                               const Spacer(),
                               NamidaCheckMark(size: 12.0, active: checkmarkStatus!),
