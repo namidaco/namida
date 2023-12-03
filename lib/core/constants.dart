@@ -126,7 +126,7 @@ class AppDirs {
 }
 
 class AppSocial {
-  static const APP_VERSION = 'v1.6.8-release';
+  static const APP_VERSION = 'v1.8.5-release';
   static const DONATE_KOFI = 'https://ko-fi.com/namidaco';
   static const DONATE_BUY_ME_A_COFFEE = 'https://www.buymeacoffee.com/namidaco';
   static const GITHUB = 'https://github.com/namidaco/namida';
