@@ -26,6 +26,7 @@ import 'package:namida/ui/widgets/library/album_card.dart';
 import 'package:namida/ui/widgets/library/artist_card.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_card.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/sort_by_button.dart';
 import 'package:namida/youtube/pages/yt_search_results_page.dart';
 
 class SearchPage extends StatelessWidget {
@@ -385,6 +386,47 @@ class SearchPage extends StatelessWidget {
                                             child: SearchPageTitleRow(
                                               title: '${lang.TRACKS} • ${SearchSortController.inst.trackSearchTemp.length}',
                                               icon: Broken.music_circle,
+                                              subtitleWidget: Row(
+                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                children: [
+                                                  NamidaPopupWrapper(
+                                                    useRootNavigator: false,
+                                                    children: const [SortByMenuTracksSearch()],
+                                                    child: NamidaInkWell(
+                                                      child: Obx(
+                                                        () {
+                                                          final isAuto = settings.tracksSortSearchIsAuto.value;
+                                                          final activeType = isAuto ? settings.tracksSort.value : settings.tracksSortSearch.value;
+                                                          return Text(
+                                                            activeType.toText() + (isAuto ? ' (${lang.AUTO})' : ''),
+                                                            style: context.textTheme.displaySmall?.copyWith(
+                                                              color: isAuto ? null : context.theme.colorScheme.secondary,
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 4.0),
+                                                  NamidaInkWell(
+                                                    onTap: () {
+                                                      if (settings.tracksSortSearchIsAuto.value) return;
+                                                      SearchSortController.inst.sortTracksSearch(reverse: !settings.tracksSortSearchReversed.value);
+                                                    },
+                                                    child: Obx(
+                                                      () {
+                                                        final isAuto = settings.tracksSortSearchIsAuto.value;
+                                                        final activeReverse = isAuto ? settings.tracksSortReversed.value : settings.tracksSortSearchReversed.value;
+                                                        return Icon(
+                                                          activeReverse ? Broken.arrow_up_3 : Broken.arrow_down_2,
+                                                          size: 16.0,
+                                                          color: isAuto ? null : context.theme.colorScheme.secondary,
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                               buttonIcon: Broken.play,
                                               buttonText: settings.trackPlayMode.value.toText(),
                                               onPressed: () {

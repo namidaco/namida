@@ -171,12 +171,16 @@ class SearchSortController {
         result.add(tr);
       }
     });
-
-    final finalList = temp ? trackSearchTemp : trackSearchList;
-
-    finalList
-      ..clear()
-      ..addAll(result);
+    if (temp) {
+      trackSearchTemp
+        ..clear()
+        ..addAll(result);
+      sortTracksSearch(canSkipSorting: true);
+    } else {
+      trackSearchList
+        ..clear()
+        ..addAll(result);
+    }
   }
 
   void _searchMediaType({required MediaType type, required String text, bool temp = false}) async {
@@ -312,12 +316,48 @@ class SearchSortController {
 
   /// Sorts Tracks and Saves automatically to settings
   void _sortTracks({SortType? sortBy, bool? reverse}) {
-    sortBy ??= settings.tracksSort.value;
-    reverse ??= settings.tracksSortReversed.value;
+    _sortTracksRaw(
+      sortBy: sortBy ?? settings.tracksSort.value,
+      reverse: reverse ?? settings.tracksSortReversed.value,
+      list: tracksInfoList,
+      onDone: (sortType, isReverse) {
+        settings.save(tracksSort: sortType, tracksSortReversed: isReverse);
+        _searchTracks(LibraryTab.tracks.textSearchController?.text ?? '');
+      },
+    );
+  }
 
-    void sortThis(Comparable Function(Track e) comparable) => reverse! ? tracksInfoList.sortByReverse(comparable) : tracksInfoList.sortBy(comparable);
-    void sortThisAlts(List<Comparable<dynamic> Function(Track tr)> alternatives) =>
-        reverse! ? tracksInfoList.sortByReverseAlts(alternatives) : tracksInfoList.sortByAlts(alternatives);
+  void sortTracksSearch({SortType? sortBy, bool? reverse, bool canSkipSorting = false}) {
+    final isAuto = settings.tracksSortSearchIsAuto.value;
+
+    sortBy ??= isAuto ? settings.tracksSort.value : settings.tracksSortSearch.value;
+    reverse ??= isAuto ? settings.tracksSortReversed.value : settings.tracksSortSearchReversed.value;
+
+    if (canSkipSorting) {
+      final identicalToMainOne = isAuto ? true : sortBy == settings.tracksSort.value && reverse == settings.tracksSortReversed.value;
+      if (identicalToMainOne) return; // since the looped list already has the same order
+    }
+
+    _sortTracksRaw(
+      sortBy: sortBy,
+      reverse: reverse,
+      list: trackSearchTemp,
+      onDone: (sortType, isReverse) {
+        if (!isAuto) {
+          settings.save(tracksSortSearch: sortType, tracksSortSearchReversed: isReverse);
+        }
+      },
+    );
+  }
+
+  void _sortTracksRaw({
+    required SortType? sortBy,
+    required bool reverse,
+    required List<Track> list,
+    required void Function(SortType? sortType, bool isReverse) onDone,
+  }) {
+    void sortThis(Comparable Function(Track e) comparable) => reverse ? list.sortByReverse(comparable) : list.sortBy(comparable);
+    void sortThisAlts(List<Comparable<dynamic> Function(Track tr)> alternatives) => reverse ? list.sortByReverseAlts(alternatives) : list.sortByAlts(alternatives);
 
     final sameAlbumSorters = getMediaTracksSortingComparables(MediaType.album);
     final sameArtistSorters = getMediaTracksSortingComparables(MediaType.artist);
@@ -394,15 +434,13 @@ class SearchSortController {
         sortThis((e) => e.stats.rating);
         break;
       case SortType.shuffle:
-        tracksInfoList.shuffle();
+        list.shuffle();
         break;
 
       default:
         null;
     }
-
-    settings.save(tracksSort: sortBy, tracksSortReversed: reverse);
-    _searchTracks(LibraryTab.tracks.textSearchController?.text ?? '');
+    onDone(sortBy, reverse);
   }
 
   /// Sorts Albums and Saves automatically to settings

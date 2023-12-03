@@ -66,6 +66,9 @@ class SettingsController {
   final RxList<String> trackGenresSeparatorsBlacklist = <String>[].obs;
   final Rx<SortType> tracksSort = SortType.title.obs;
   final RxBool tracksSortReversed = false.obs;
+  final Rx<SortType> tracksSortSearch = SortType.title.obs;
+  final RxBool tracksSortSearchReversed = false.obs;
+  final RxBool tracksSortSearchIsAuto = true.obs;
   final Rx<GroupSortType> albumSort = GroupSortType.album.obs;
   final RxBool albumSortReversed = false.obs;
   final Rx<GroupSortType> artistSort = GroupSortType.artistsList.obs;
@@ -347,6 +350,9 @@ class SettingsController {
       trackGenresSeparatorsBlacklist.value = List<String>.from(json['trackGenresSeparatorsBlacklist'] ?? trackGenresSeparatorsBlacklist);
       tracksSort.value = SortType.values.getEnum(json['tracksSort']) ?? tracksSort.value;
       tracksSortReversed.value = json['tracksSortReversed'] ?? tracksSortReversed.value;
+      tracksSortSearch.value = SortType.values.getEnum(json['tracksSortSearch']) ?? tracksSortSearch.value;
+      tracksSortSearchReversed.value = json['tracksSortSearchReversed'] ?? tracksSortSearchReversed.value;
+      tracksSortSearchIsAuto.value = json['tracksSortSearchIsAuto'] ?? tracksSortSearchIsAuto.value;
       albumSort.value = GroupSortType.values.getEnum(json['albumSort']) ?? albumSort.value;
       albumSortReversed.value = json['albumSortReversed'] ?? albumSortReversed.value;
       artistSort.value = GroupSortType.values.getEnum(json['artistSort']) ?? artistSort.value;
@@ -568,6 +574,9 @@ class SettingsController {
       'trackGenresSeparatorsBlacklist': trackGenresSeparatorsBlacklist.toList(),
       'tracksSort': tracksSort.value.convertToString,
       'tracksSortReversed': tracksSortReversed.value,
+      'tracksSortSearch': tracksSortSearch.value.convertToString,
+      'tracksSortSearchReversed': tracksSortSearchReversed.value,
+      'tracksSortSearchIsAuto': tracksSortSearchIsAuto.value,
       'albumSort': albumSort.value.convertToString,
       'albumSortReversed': albumSortReversed.value,
       'artistSort': artistSort.value.convertToString,
@@ -738,6 +747,9 @@ class SettingsController {
     List<String>? trackGenresSeparatorsBlacklist,
     SortType? tracksSort,
     bool? tracksSortReversed,
+    SortType? tracksSortSearch,
+    bool? tracksSortSearchReversed,
+    bool? tracksSortSearchIsAuto,
     GroupSortType? albumSort,
     bool? albumSortReversed,
     GroupSortType? artistSort,
@@ -993,6 +1005,15 @@ class SettingsController {
     }
     if (tracksSortReversed != null) {
       this.tracksSortReversed.value = tracksSortReversed;
+    }
+    if (tracksSortSearch != null) {
+      this.tracksSortSearch.value = tracksSortSearch;
+    }
+    if (tracksSortSearchReversed != null) {
+      this.tracksSortSearchReversed.value = tracksSortSearchReversed;
+    }
+    if (tracksSortSearchIsAuto != null) {
+      this.tracksSortSearchIsAuto.value = tracksSortSearchIsAuto;
     }
     if (albumSort != null) {
       this.albumSort.value = albumSort;

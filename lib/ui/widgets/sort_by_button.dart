@@ -5,7 +5,9 @@ import 'package:get/get.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class SortByMenuTracks extends StatelessWidget {
@@ -16,11 +18,12 @@ class SortByMenuTracks extends StatelessWidget {
     return Obx(
       () {
         final tracksSort = settings.tracksSort.value;
+        final reversed = settings.tracksSortReversed.value;
         return Column(
           children: [
             ListTileWithCheckMark(
-              active: settings.tracksSortReversed.value,
-              onTap: () => SearchSortController.inst.sortMedia(MediaType.track, reverse: !settings.tracksSortReversed.value),
+              active: reversed,
+              onTap: () => SearchSortController.inst.sortMedia(MediaType.track, reverse: !reversed),
             ),
             ...[
               SortType.title,
@@ -51,6 +54,97 @@ class SortByMenuTracks extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class SortByMenuTracksSearch extends StatelessWidget {
+  const SortByMenuTracksSearch({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: context.height * 0.5,
+      child: SingleChildScrollView(
+        child: Obx(
+          () {
+            final tracksSortSearch = settings.tracksSortSearch.value;
+            final reversed = settings.tracksSortSearchReversed.value;
+            final isAuto = settings.tracksSortSearchIsAuto.value;
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: ListTileWithCheckMark(
+                    icon: Broken.arrow_swap_horizontal,
+                    title: lang.AUTO,
+                    active: isAuto,
+                    onTap: () {
+                      settings.save(tracksSortSearchIsAuto: !isAuto);
+                      SearchSortController.inst.sortTracksSearch(canSkipSorting: false);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 4.0),
+                GestureDetector(
+                  onTap: isAuto ? () {} : null,
+                  child: ColoredBox(
+                    color: Colors.transparent,
+                    child: IgnorePointer(
+                      ignoring: isAuto,
+                      child: AnimatedOpacity(
+                        opacity: isAuto ? 0.6 : 1.0,
+                        duration: const Duration(milliseconds: 300),
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              child: ListTileWithCheckMark(
+                                active: isAuto ? settings.tracksSortReversed.value : reversed,
+                                onTap: () {
+                                  SearchSortController.inst.sortTracksSearch(reverse: !reversed);
+                                },
+                              ),
+                            ),
+                            ...[
+                              SortType.title,
+                              SortType.album,
+                              SortType.artistsList,
+                              SortType.albumArtist,
+                              SortType.composer,
+                              SortType.genresList,
+                              SortType.year,
+                              SortType.dateAdded,
+                              SortType.dateModified,
+                              SortType.bitrate,
+                              SortType.trackNo,
+                              SortType.discNo,
+                              SortType.filename,
+                              SortType.duration,
+                              SortType.sampleRate,
+                              SortType.size,
+                              SortType.rating,
+                              SortType.shuffle,
+                            ].map(
+                              (e) => SmallListTile(
+                                title: e.toText(),
+                                active: (isAuto ? settings.tracksSort.value : tracksSortSearch) == e,
+                                onTap: () {
+                                  SearchSortController.inst.sortTracksSearch(sortBy: e);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 }

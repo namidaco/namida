@@ -776,11 +776,11 @@ class ListTileWithCheckMark extends StatelessWidget {
   Widget build(BuildContext context) {
     final tileAlpha = context.isDarkMode ? 5 : 20;
     return Material(
-      borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+      borderRadius: BorderRadius.circular(14.0.multipliedRadius),
       color: tileColor ?? Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(tileAlpha), context.theme.cardTheme.color!),
       child: ListTile(
         horizontalTitleGap: 10.0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0.multipliedRadius)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.0.multipliedRadius)),
         leading: leading ??
             Icon(
               icon ?? Broken.arrange_circle,
@@ -1842,6 +1842,7 @@ class SearchPageTitleRow extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final Widget? trailing;
+  final Widget? subtitleWidget;
   final String? buttonText;
   final IconData? buttonIcon;
   final void Function()? onPressed;
@@ -1851,6 +1852,7 @@ class SearchPageTitleRow extends StatelessWidget {
     this.subtitle = '',
     required this.icon,
     this.trailing,
+    this.subtitleWidget,
     this.buttonText,
     this.buttonIcon,
     this.onPressed,
@@ -1872,6 +1874,7 @@ class SearchPageTitleRow extends StatelessWidget {
                   title,
                   style: context.textTheme.displayLarge?.copyWith(fontSize: 15.5.multipliedFontScale),
                 ),
+                if (subtitleWidget != null) subtitleWidget!,
                 if (subtitle != '')
                   Text(
                     subtitle,
@@ -2708,6 +2711,7 @@ class NamidaPopupWrapper extends StatelessWidget {
   final VoidCallback? onPop;
   final bool openOnTap;
   final bool openOnLongPress;
+  final bool useRootNavigator;
 
   const NamidaPopupWrapper({
     super.key,
@@ -2718,6 +2722,7 @@ class NamidaPopupWrapper extends StatelessWidget {
     this.onPop,
     this.openOnTap = true,
     this.openOnLongPress = true,
+    this.useRootNavigator = true,
   });
 
   void popMenu({bool handleClosing = true}) {
@@ -2738,7 +2743,7 @@ class NamidaPopupWrapper extends StatelessWidget {
     );
     await NamidaNavigator.inst.showMenu(
       showMenu(
-        useRootNavigator: true,
+        useRootNavigator: useRootNavigator,
         context: context,
         position: position,
         items: [
