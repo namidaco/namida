@@ -442,6 +442,7 @@ abstract class LanguageKeys {
   String get RECENT_ALBUMS => _getKey('RECENT_ALBUMS');
   String get RECENT_ARTISTS => _getKey('RECENT_ARTISTS');
   String get RECENT_LISTENS => _getKey('RECENT_LISTENS');
+  String get REMEMBER_AUDIO_ONLY_MODE => _getKey('REMEMBER_AUDIO_ONLY_MODE');
   String get REPLACE_ALL_LISTENS_WITH_ANOTHER_TRACK => _getKey('REPLACE_ALL_LISTENS_WITH_ANOTHER_TRACK');
   String get RE_INDEX_SUBTITLE => _getKey('RE_INDEX_SUBTITLE');
   String get RE_INDEX_WARNING => _getKey('RE_INDEX_WARNING');

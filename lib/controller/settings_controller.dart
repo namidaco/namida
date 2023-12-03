@@ -169,6 +169,7 @@ class SettingsController {
   final RxBool dismissibleMiniplayer = false.obs;
   final RxBool enableClipboardMonitoring = false.obs;
   final RxBool ytIsAudioOnlyMode = false.obs;
+  final RxBool ytRememberAudioOnly = false.obs;
   final RxBool artworkGestureScale = false.obs;
   final RxBool artworkGestureDoubleTapLRC = true.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
@@ -443,7 +444,8 @@ class SettingsController {
       swipeableDrawer.value = json['swipeableDrawer'] ?? swipeableDrawer.value;
       dismissibleMiniplayer.value = json['dismissibleMiniplayer'] ?? dismissibleMiniplayer.value;
       enableClipboardMonitoring.value = json['enableClipboardMonitoring'] ?? enableClipboardMonitoring.value;
-      ytIsAudioOnlyMode.value = json['ytIsAudioOnlyMode'] ?? ytIsAudioOnlyMode.value;
+      ytRememberAudioOnly.value = json['ytRememberAudioOnly'] ?? ytRememberAudioOnly.value;
+      if (ytRememberAudioOnly.value) ytIsAudioOnlyMode.value = json['ytIsAudioOnlyMode'] ?? ytIsAudioOnlyMode.value;
       artworkGestureScale.value = json['artworkGestureScale'] ?? artworkGestureScale.value;
       artworkGestureDoubleTapLRC.value = json['artworkGestureDoubleTapLRC'] ?? artworkGestureDoubleTapLRC.value;
 
@@ -663,6 +665,7 @@ class SettingsController {
       'dismissibleMiniplayer': dismissibleMiniplayer.value,
       'enableClipboardMonitoring': enableClipboardMonitoring.value,
       'ytIsAudioOnlyMode': ytIsAudioOnlyMode.value,
+      'ytRememberAudioOnly': ytRememberAudioOnly.value,
       'artworkGestureScale': artworkGestureScale.value,
       'artworkGestureDoubleTapLRC': artworkGestureDoubleTapLRC.value,
       'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
@@ -851,6 +854,7 @@ class SettingsController {
     bool? dismissibleMiniplayer,
     bool? enableClipboardMonitoring,
     bool? ytIsAudioOnlyMode,
+    bool? ytRememberAudioOnly,
     bool? artworkGestureScale,
     bool? artworkGestureDoubleTapLRC,
     List<TagField>? tagFieldsToEdit,
@@ -1265,6 +1269,7 @@ class SettingsController {
     if (ytPreferNewComments != null) {
       this.ytPreferNewComments.value = ytPreferNewComments;
     }
+
     if (ytAutoExtractVideoTagsFromInfo != null) {
       this.ytAutoExtractVideoTagsFromInfo.value = ytAutoExtractVideoTagsFromInfo;
     }
@@ -1321,6 +1326,9 @@ class SettingsController {
     }
     if (ytIsAudioOnlyMode != null) {
       this.ytIsAudioOnlyMode.value = ytIsAudioOnlyMode;
+    }
+    if (ytRememberAudioOnly != null) {
+      this.ytRememberAudioOnly.value = ytRememberAudioOnly;
     }
     if (artworkGestureScale != null) {
       this.artworkGestureScale.value = artworkGestureScale;

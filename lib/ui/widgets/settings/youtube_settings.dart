@@ -12,6 +12,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
 enum _YoutubeSettingKeys {
+  rememberAudioOnly,
   preferNewComments,
   dimMiniplayerAfter,
   dimIntensity,
@@ -27,6 +28,7 @@ class YoutubeSettings extends SettingSubpageProvider {
 
   @override
   Map<Enum, List<String>> get lookupMap => {
+        _YoutubeSettingKeys.rememberAudioOnly: [lang.REMEMBER_AUDIO_ONLY_MODE],
         _YoutubeSettingKeys.preferNewComments: [lang.YT_PREFER_NEW_COMMENTS, lang.YT_PREFER_NEW_COMMENTS_SUBTITLE],
         _YoutubeSettingKeys.dimMiniplayerAfter: [lang.DIM_MINIPLAYER_AFTER_SECONDS],
         _YoutubeSettingKeys.dimIntensity: [lang.DIM_INTENSITY],
@@ -42,6 +44,18 @@ class YoutubeSettings extends SettingSubpageProvider {
       icon: Broken.video,
       child: Column(
         children: [
+          getItemWrapper(
+            key: _YoutubeSettingKeys.rememberAudioOnly,
+            child: Obx(
+              () => CustomSwitchListTile(
+                bgColor: getBgColor(_YoutubeSettingKeys.rememberAudioOnly),
+                icon: Broken.musicnote,
+                title: lang.REMEMBER_AUDIO_ONLY_MODE,
+                value: settings.ytRememberAudioOnly.value,
+                onChanged: (isTrue) => settings.save(ytRememberAudioOnly: !isTrue),
+              ),
+            ),
+          ),
           getItemWrapper(
             key: _YoutubeSettingKeys.preferNewComments,
             child: Obx(
