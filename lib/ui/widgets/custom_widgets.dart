@@ -779,7 +779,7 @@ class ListTileWithCheckMark extends StatelessWidget {
       borderRadius: BorderRadius.circular(14.0.multipliedRadius),
       color: tileColor ?? Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(tileAlpha), context.theme.cardTheme.color!),
       child: ListTile(
-        horizontalTitleGap: 10.0,
+        horizontalTitleGap: dense ? 10.0 : 14.0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.0.multipliedRadius)),
         leading: leading ??
             Icon(

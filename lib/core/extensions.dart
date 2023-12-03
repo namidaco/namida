@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dart_extensions/dart_extensions.dart';
+import 'package:get/get_rx/src/rx_types/rx_types.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -471,5 +472,11 @@ extension DisposingUtils on TextEditingController {
 extension ExecuteDelayedUtils<T> on T Function() {
   Future<T> executeDelayed(Duration dur) async {
     return await Future.delayed(dur, this);
+  }
+}
+
+extension RxStreamClosing<T> on Rx<T> {
+  Future<void> closeAfterDelay({int durationMS = 500}) async {
+    return await Future.delayed(Duration(milliseconds: durationMS), close);
   }
 }

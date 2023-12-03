@@ -572,7 +572,8 @@ class IndexerSettings extends SettingSubpageProvider {
               title: lang.RE_INDEX,
               subtitle: lang.RE_INDEX_SUBTITLE,
               onTap: () async {
-                NamidaNavigator.inst.navigateDialog(
+                final clearArtworks = false.obs;
+                await NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
                     normalTitleStyle: true,
                     isWarning: true,
@@ -582,15 +583,40 @@ class IndexerSettings extends SettingSubpageProvider {
                         text: lang.RE_INDEX,
                         onPressed: () async {
                           NamidaNavigator.inst.closeDialog();
-                          Future.delayed(const Duration(milliseconds: 500), () {
+                          Future.delayed(const Duration(milliseconds: 500), () async {
+                            if (clearArtworks.value) {
+                              await Indexer.inst.clearImageCache();
+                            }
                             Indexer.inst.refreshLibraryAndCheckForDiff(forceReIndex: true);
                           });
                         },
                       ),
                     ],
-                    bodyText: lang.RE_INDEX_WARNING,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        children: [
+                          Text(
+                            lang.RE_INDEX_WARNING,
+                            style: context.textTheme.displayMedium,
+                          ),
+                          const SizedBox(height: 16.0),
+                          Obx(
+                            () => ListTileWithCheckMark(
+                              dense: true,
+                              icon: Broken.trash,
+                              title: lang.CLEAR_IMAGE_CACHE,
+                              subtitle: Indexer.inst.artworksSizeInStorage.value.fileSizeFormatted,
+                              active: clearArtworks.value,
+                              onTap: () => clearArtworks.value = !clearArtworks.value,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 );
+                clearArtworks.closeAfterDelay();
               },
             ),
           ),
