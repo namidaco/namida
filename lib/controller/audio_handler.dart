@@ -80,8 +80,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool get isFetchingInfo => _isFetchingInfo.value;
   final _isFetchingInfo = false.obs;
 
-  bool get isAudioOnlyPlayback => _isAudioOnlyPlayback;
-  bool _isAudioOnlyPlayback = false;
+  bool get isAudioOnlyPlayback => settings.ytIsAudioOnlyMode.value;
 
   bool get isCurrentAudioFromCache => _isCurrentAudioFromCache;
   bool _isCurrentAudioFromCache = false;
@@ -92,8 +91,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   // Completer<void>? _audioShouldBeLoading;
 
   Future<void> setAudioOnlyPlayback(bool audioOnly) async {
-    _isAudioOnlyPlayback = audioOnly;
-    if (_isAudioOnlyPlayback) {
+    settings.save(ytIsAudioOnlyMode: audioOnly);
+    if (audioOnly) {
       currentVideoStream.value = null;
       currentAudioStream.value = null;
       currentCachedVideo.value = null;

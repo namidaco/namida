@@ -167,6 +167,7 @@ class SettingsController {
   final RxBool swipeableDrawer = true.obs;
   final RxBool dismissibleMiniplayer = false.obs;
   final RxBool enableClipboardMonitoring = false.obs;
+  final RxBool ytIsAudioOnlyMode = false.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
     TagField.trackNumber,
     TagField.year,
@@ -438,6 +439,7 @@ class SettingsController {
       swipeableDrawer.value = json['swipeableDrawer'] ?? swipeableDrawer.value;
       dismissibleMiniplayer.value = json['dismissibleMiniplayer'] ?? dismissibleMiniplayer.value;
       enableClipboardMonitoring.value = json['enableClipboardMonitoring'] ?? enableClipboardMonitoring.value;
+      ytIsAudioOnlyMode.value = json['ytIsAudioOnlyMode'] ?? ytIsAudioOnlyMode.value;
 
       final listFromStorage = List<String>.from(json['tagFieldsToEdit'] ?? []);
       tagFieldsToEdit.value = listFromStorage.isNotEmpty ? List<TagField>.from(listFromStorage.map((e) => TagField.values.getEnum(e))) : tagFieldsToEdit;
@@ -653,6 +655,7 @@ class SettingsController {
       'swipeableDrawer': swipeableDrawer.value,
       'dismissibleMiniplayer': dismissibleMiniplayer.value,
       'enableClipboardMonitoring': enableClipboardMonitoring.value,
+      'ytIsAudioOnlyMode': ytIsAudioOnlyMode.value,
       'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
       'wakelockMode': wakelockMode.value.convertToString,
       'localVideoMatchingType': localVideoMatchingType.value.convertToString,
@@ -837,6 +840,7 @@ class SettingsController {
     bool? swipeableDrawer,
     bool? dismissibleMiniplayer,
     bool? enableClipboardMonitoring,
+    bool? ytIsAudioOnlyMode,
     List<TagField>? tagFieldsToEdit,
     WakelockMode? wakelockMode,
     LocalVideoMatchingType? localVideoMatchingType,
@@ -1299,6 +1303,9 @@ class SettingsController {
     }
     if (enableClipboardMonitoring != null) {
       this.enableClipboardMonitoring.value = enableClipboardMonitoring;
+    }
+    if (ytIsAudioOnlyMode != null) {
+      this.ytIsAudioOnlyMode.value = ytIsAudioOnlyMode;
     }
     if (tagFieldsToEdit != null) {
       tagFieldsToEdit.loop((d, index) {
