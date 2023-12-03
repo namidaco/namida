@@ -35,6 +35,23 @@ class LyricsLRCParsedView extends StatefulWidget {
 }
 
 class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
+  void enterFullScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) {
+          return LyricsLRCParsedView(
+            key: Lyrics.inst.lrcViewKeyFullscreen,
+            totalDuration: widget.totalDuration,
+            cp: widget.cp,
+            lrc: currentLRC,
+            videoOrImage: const SizedBox(),
+            isFullScreenView: true,
+          );
+        },
+      ),
+    );
+  }
+
   late final ItemScrollController controller;
   late final ItemPositionsListener positionListener;
 

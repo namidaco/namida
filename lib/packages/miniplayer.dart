@@ -2101,6 +2101,10 @@ class _TrackInfo extends StatelessWidget {
   }
 }
 
+double _previousScale = 1.0;
+final _lrcAdditionalScale = 0.0.obs;
+bool _isScalingLRC = false;
+
 class _AnimatingTrackImage extends StatelessWidget {
   final Track track;
   final double cp;
@@ -2116,44 +2120,83 @@ class _AnimatingTrackImage extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.all(12.0 * (1 - cp)),
       child: Obx(
-        () {
-          final additionalScale = VideoController.inst.videoZoomAdditionalScale.value;
-          final finalScale = (additionalScale * 0.02) + WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
-          final isInversed = settings.animatingThumbnailInversed.value;
-          return AnimatedScale(
-            duration: const Duration(milliseconds: 100),
-            scale: isInversed ? 1.22 - finalScale : 1.13 + finalScale,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: VideoController.inst.shouldShowVideo
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
-                      child: LyricsWrapper(
-                        key: Key(track.path),
-                        track: track,
-                        cp: cp,
-                        child: GestureDetector(
-                          onTap: () => Player.inst.refreshVideoSeekPosition(),
-                          onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(),
-                          child: const NamidaVideoWidget(
-                            key: Key('video_widget'),
-                            enableControls: false,
+        () => GestureDetector(
+          // -- only when lrc view is not visible, to prevent other gestures delaying.
+          onDoubleTap: settings.artworkGestureDoubleTapLRC.value && Lyrics.inst.currentLyricsLRC.value == null
+              ? () {
+                  settings.save(enableLyrics: !settings.enableLyrics.value);
+                  Lyrics.inst.updateLyrics(track);
+                }
+              : null,
+          onScaleStart: (details) {
+            final lrcState = Lyrics.inst.lrcViewKey?.currentState;
+            final lrcVisible = lrcState != null;
+            _isScalingLRC = lrcVisible;
+            _previousScale = lrcVisible ? 1.0 : settings.animatingThumbnailScaleMultiplier.value;
+          },
+          onScaleUpdate: (details) {
+            if (_isScalingLRC || settings.artworkGestureScale.value) {
+              final m = (details.scale * _previousScale);
+              if (_isScalingLRC) {
+                _lrcAdditionalScale.value = m;
+              } else {
+                settings.save(animatingThumbnailScaleMultiplier: m.clamp(0.4, 1.5));
+              }
+            }
+          },
+          onScaleEnd: (details) {
+            final lrcState = Lyrics.inst.lrcViewKey?.currentState;
+            if (lrcState != null) {
+              final pps = details.velocity.pixelsPerSecond;
+              if (pps.dx > 0 || pps.dy > 0) {
+                lrcState.enterFullScreen();
+              }
+            }
+            _lrcAdditionalScale.value = 0.0;
+          },
+          child: Obx(
+            () {
+              final additionalScaleVideo = 0.02 * VideoController.inst.videoZoomAdditionalScale.value;
+              final additionalScaleLRC = 0.02 * _lrcAdditionalScale.value;
+              final finalScale = additionalScaleLRC + additionalScaleVideo + WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
+              final isInversed = settings.animatingThumbnailInversed.value;
+              final userScaleMultiplier = settings.animatingThumbnailScaleMultiplier.value;
+              return AnimatedScale(
+                duration: const Duration(milliseconds: 100),
+                scale: (isInversed ? 1.22 - finalScale : 1.13 + finalScale) * userScaleMultiplier,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: VideoController.inst.shouldShowVideo
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
+                          child: LyricsWrapper(
+                            key: Key(track.path),
+                            track: track,
+                            cp: cp,
+                            child: GestureDetector(
+                              onTap: () => Player.inst.refreshVideoSeekPosition(),
+                              onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(),
+                              child: const NamidaVideoWidget(
+                                key: Key('video_widget'),
+                                enableControls: false,
+                              ),
+                            ),
+                          ),
+                        )
+                      : LyricsWrapper(
+                          key: Key(track.path),
+                          track: track,
+                          cp: cp,
+                          child: _TrackImage(
+                            track: track,
+                            cp: cp,
                           ),
                         ),
-                      ),
-                    )
-                  : LyricsWrapper(
-                      key: Key(track.path),
-                      track: track,
-                      cp: cp,
-                      child: _TrackImage(
-                        track: track,
-                        cp: cp,
-                      ),
-                    ),
-            ),
-          );
-        },
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }

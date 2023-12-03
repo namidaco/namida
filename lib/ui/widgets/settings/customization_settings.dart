@@ -54,6 +54,7 @@ enum _CustomizationSettingsKeys {
   movingParticles,
   thumbAnimationIntensity,
   thumbInverseAnimation,
+  artworkGesture,
   waveformBarsCount,
   displayAudioInfo,
   displayArtistBeforeTitle,
@@ -99,6 +100,7 @@ class CustomizationSettings extends SettingSubpageProvider {
         _CustomizationSettingsKeys.movingParticles: [lang.ENABLE_MINIPLAYER_PARTICLES],
         _CustomizationSettingsKeys.thumbAnimationIntensity: [lang.ANIMATING_THUMBNAIL_INTENSITY],
         _CustomizationSettingsKeys.thumbInverseAnimation: [lang.ANIMATING_THUMBNAIL_INVERSED, lang.ANIMATING_THUMBNAIL_INVERSED_SUBTITLE],
+        _CustomizationSettingsKeys.artworkGesture: [lang.ARTWORK_GESTURES],
         _CustomizationSettingsKeys.waveformBarsCount: [lang.WAVEFORM_BARS_COUNT],
         _CustomizationSettingsKeys.displayAudioInfo: [lang.DISPLAY_AUDIO_INFO_IN_MINIPLAYER],
         _CustomizationSettingsKeys.displayArtistBeforeTitle: [lang.DISPLAY_ARTIST_BEFORE_TITLE],
@@ -293,7 +295,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           ),
           _getAlbumCustomizationsTile(),
           _getTrackTileCustomizationsTile(context),
-          _getMiniplayerCustomizationsTile(),
+          _getMiniplayerCustomizationsTile(context),
         ],
       ),
     );
@@ -754,7 +756,7 @@ class CustomizationSettings extends SettingSubpageProvider {
     );
   }
 
-  Widget _getMiniplayerCustomizationsTile() {
+  Widget _getMiniplayerCustomizationsTile(BuildContext context) {
     return getItemWrapper(
       key: _CustomizationSettingsKeys.MINIPLAYERCUSTOMIZATION,
       child: NamidaExpansionTile(
@@ -917,6 +919,67 @@ class CustomizationSettings extends SettingSubpageProvider {
               ),
             ),
           ),
+          getItemWrapper(
+            key: _CustomizationSettingsKeys.artworkGesture,
+            child: NamidaExpansionTile(
+              icon: Broken.gallery,
+              iconColor: context.defaultIconColor(),
+              initiallyExpanded: true,
+              titleText: lang.ARTWORK_GESTURES,
+              childrenPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  NamidaIconButton(
+                    tooltip: lang.RESTORE_DEFAULTS,
+                    icon: Broken.refresh,
+                    iconSize: 20.0,
+                    onPressed: () {
+                      settings.save(
+                        artworkGestureScale: false,
+                        artworkGestureDoubleTapLRC: true,
+                        animatingThumbnailScaleMultiplier: 1.0,
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 4.0),
+                  const Icon(Broken.arrow_down_2, size: 20.0),
+                  const SizedBox(width: 12.0),
+                ],
+              ),
+              children: [
+                Obx(
+                  () => CustomSwitchListTile(
+                    visualDensity: VisualDensity.compact,
+                    icon: Broken.maximize,
+                    title: lang.SCALE_MULTIPLIER,
+                    subtitle: "${(settings.animatingThumbnailScaleMultiplier.value * 100).round()}%",
+                    value: settings.artworkGestureScale.value,
+                    onChanged: (value) {
+                      settings.save(artworkGestureScale: !value);
+                    },
+                  ),
+                ),
+                Obx(
+                  () => CustomSwitchListTile(
+                    visualDensity: VisualDensity.compact,
+                    leading: const StackedIcon(
+                      baseIcon: Broken.document,
+                      secondaryIcon: Broken.blend_2,
+                      secondaryIconSize: 12.0,
+                    ),
+                    title: lang.DOUBLE_TAP_TO_TOGGLE_LYRICS,
+                    value: settings.artworkGestureDoubleTapLRC.value,
+                    onChanged: (value) {
+                      settings.save(artworkGestureDoubleTapLRC: !value);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 6.0),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6.0),
           getItemWrapper(
             key: _CustomizationSettingsKeys.waveformBarsCount,
             child: Obx(

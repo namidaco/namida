@@ -117,6 +117,7 @@ class SettingsController {
   final RxBool enableLyrics = false.obs;
   final Rx<VideoPlaybackSource> videoPlaybackSource = VideoPlaybackSource.auto.obs;
   final RxList<String> youtubeVideoQualities = ['480p', '360p', '240p', '144p'].obs;
+  final RxDouble animatingThumbnailScaleMultiplier = 1.0.obs;
   final RxInt animatingThumbnailIntensity = 25.obs;
   final RxBool animatingThumbnailInversed = false.obs;
   final RxBool enablePartyModeInMiniplayer = false.obs;
@@ -168,6 +169,8 @@ class SettingsController {
   final RxBool dismissibleMiniplayer = false.obs;
   final RxBool enableClipboardMonitoring = false.obs;
   final RxBool ytIsAudioOnlyMode = false.obs;
+  final RxBool artworkGestureScale = false.obs;
+  final RxBool artworkGestureDoubleTapLRC = true.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
     TagField.trackNumber,
     TagField.year,
@@ -389,6 +392,7 @@ class SettingsController {
       videoPlaybackSource.value = VideoPlaybackSource.values.getEnum(json['VideoPlaybackSource']) ?? videoPlaybackSource.value;
       youtubeVideoQualities.value = List<String>.from(json['youtubeVideoQualities'] ?? youtubeVideoQualities);
 
+      animatingThumbnailScaleMultiplier.value = json['animatingThumbnailScaleMultiplier'] ?? animatingThumbnailScaleMultiplier.value;
       animatingThumbnailIntensity.value = json['animatingThumbnailIntensity'] ?? animatingThumbnailIntensity.value;
       animatingThumbnailInversed.value = json['animatingThumbnailInversed'] ?? animatingThumbnailInversed.value;
       enablePartyModeInMiniplayer.value = json['enablePartyModeInMiniplayer'] ?? enablePartyModeInMiniplayer.value;
@@ -440,6 +444,8 @@ class SettingsController {
       dismissibleMiniplayer.value = json['dismissibleMiniplayer'] ?? dismissibleMiniplayer.value;
       enableClipboardMonitoring.value = json['enableClipboardMonitoring'] ?? enableClipboardMonitoring.value;
       ytIsAudioOnlyMode.value = json['ytIsAudioOnlyMode'] ?? ytIsAudioOnlyMode.value;
+      artworkGestureScale.value = json['artworkGestureScale'] ?? artworkGestureScale.value;
+      artworkGestureDoubleTapLRC.value = json['artworkGestureDoubleTapLRC'] ?? artworkGestureDoubleTapLRC.value;
 
       final listFromStorage = List<String>.from(json['tagFieldsToEdit'] ?? []);
       tagFieldsToEdit.value = listFromStorage.isNotEmpty ? List<TagField>.from(listFromStorage.map((e) => TagField.values.getEnum(e))) : tagFieldsToEdit;
@@ -605,6 +611,7 @@ class SettingsController {
       'enableLyrics': enableLyrics.value,
       'videoPlaybackSource': videoPlaybackSource.value.convertToString,
       'youtubeVideoQualities': youtubeVideoQualities.toList(),
+      'animatingThumbnailScaleMultiplier': animatingThumbnailScaleMultiplier.value,
       'animatingThumbnailIntensity': animatingThumbnailIntensity.value,
       'animatingThumbnailInversed': animatingThumbnailInversed.value,
       'enablePartyModeInMiniplayer': enablePartyModeInMiniplayer.value,
@@ -656,6 +663,8 @@ class SettingsController {
       'dismissibleMiniplayer': dismissibleMiniplayer.value,
       'enableClipboardMonitoring': enableClipboardMonitoring.value,
       'ytIsAudioOnlyMode': ytIsAudioOnlyMode.value,
+      'artworkGestureScale': artworkGestureScale.value,
+      'artworkGestureDoubleTapLRC': artworkGestureDoubleTapLRC.value,
       'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
       'wakelockMode': wakelockMode.value.convertToString,
       'localVideoMatchingType': localVideoMatchingType.value.convertToString,
@@ -782,6 +791,7 @@ class SettingsController {
     bool? enableLyrics,
     VideoPlaybackSource? videoPlaybackSource,
     List<String>? youtubeVideoQualities,
+    double? animatingThumbnailScaleMultiplier,
     int? animatingThumbnailIntensity,
     bool? animatingThumbnailInversed,
     bool? enablePartyModeInMiniplayer,
@@ -841,6 +851,8 @@ class SettingsController {
     bool? dismissibleMiniplayer,
     bool? enableClipboardMonitoring,
     bool? ytIsAudioOnlyMode,
+    bool? artworkGestureScale,
+    bool? artworkGestureDoubleTapLRC,
     List<TagField>? tagFieldsToEdit,
     WakelockMode? wakelockMode,
     LocalVideoMatchingType? localVideoMatchingType,
@@ -1130,6 +1142,9 @@ class SettingsController {
     if (videoPlaybackSource != null) {
       this.videoPlaybackSource.value = videoPlaybackSource;
     }
+    if (animatingThumbnailScaleMultiplier != null) {
+      this.animatingThumbnailScaleMultiplier.value = animatingThumbnailScaleMultiplier;
+    }
     if (animatingThumbnailIntensity != null) {
       this.animatingThumbnailIntensity.value = animatingThumbnailIntensity;
     }
@@ -1306,6 +1321,12 @@ class SettingsController {
     }
     if (ytIsAudioOnlyMode != null) {
       this.ytIsAudioOnlyMode.value = ytIsAudioOnlyMode;
+    }
+    if (artworkGestureScale != null) {
+      this.artworkGestureScale.value = artworkGestureScale;
+    }
+    if (artworkGestureDoubleTapLRC != null) {
+      this.artworkGestureDoubleTapLRC.value = artworkGestureDoubleTapLRC;
     }
     if (tagFieldsToEdit != null) {
       tagFieldsToEdit.loop((d, index) {

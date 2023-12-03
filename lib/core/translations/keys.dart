@@ -44,6 +44,7 @@ abstract class LanguageKeys {
   String get ARTISTS => _getKey('ARTISTS');
   String get ARTWORK => _getKey('ARTWORK');
   String get ARTWORKS => _getKey('ARTWORKS');
+  String get ARTWORK_GESTURES => _getKey('ARTWORK_GESTURES');
   String get AUDIO => _getKey('AUDIO');
   String get AUDIO_CACHE => _getKey('AUDIO_CACHE');
   String get AUDIO_ONLY => _getKey('AUDIO_ONLY');
@@ -154,6 +155,7 @@ abstract class LanguageKeys {
   String get DONE => _getKey('DONE');
   String get DONT_ASK_AGAIN => _getKey('DONT_ASK_AGAIN');
   String get DONT_RESTORE_POSITION => _getKey('DONT_RESTORE_POSITION');
+  String get DOUBLE_TAP_TO_TOGGLE_LYRICS => _getKey('DOUBLE_TAP_TO_TOGGLE_LYRICS');
   String get DOWNLOAD => _getKey('DOWNLOAD');
   String get DOWNLOADING_WILL_OVERRIDE_IT => _getKey('DOWNLOADING_WILL_OVERRIDE_IT');
   String get DOWNLOADS => _getKey('DOWNLOADS');
@@ -483,6 +485,7 @@ abstract class LanguageKeys {
   String get SAMPLE_RATE => _getKey('SAMPLE_RATE');
   String get SAVE => _getKey('SAVE');
   String get SAVED_IN => _getKey('SAVED_IN');
+  String get SCALE_MULTIPLIER => _getKey('SCALE_MULTIPLIER');
   String get SEARCH => _getKey('SEARCH');
   String get SEARCH_YOUTUBE => _getKey('SEARCH_YOUTUBE');
   String get SECONDS => _getKey('SECONDS');
