@@ -234,18 +234,61 @@ class YoutubeController {
 
   String getYoutubeLink(String id) => id.toYTUrl();
 
-  VideoInfo? getTemporarelyVideoInfo(String id) {
+  VideoInfo? getTemporarelyVideoInfo(String id, {bool checkFromStorage = true}) {
     _tempVideoInfosFromStreams.remove('');
     final si = _tempVideoInfosFromStreams[id];
-    return si == null ? null : VideoInfo.fromStreamInfoItem(si);
+    if (si != null) return VideoInfo.fromStreamInfoItem(si);
+    if (checkFromStorage) {
+      final file = File('${AppDirs.YT_METADATA_TEMP}$id.txt');
+      final res = file.readAsJsonSync();
+      try {
+        final strInfo = StreamInfoItem.fromMap(res);
+        return VideoInfo.fromStreamInfoItem(strInfo);
+      } catch (_) {}
+    }
+    return null;
   }
 
   /// Keeps the map at max 2000 items. maintained by least recently used.
-  void _fillTempVideoInfoMap(Iterable<StreamInfoItem>? items) {
+  void _fillTempVideoInfoMap(Iterable<StreamInfoItem>? items) async {
     if (items != null) {
-      final entries = items.map((e) => MapEntry(e.id ?? '', e));
-      _tempVideoInfosFromStreams.optimizedAdd(entries, 2000);
+      final map = _tempVideoInfosFromStreams;
+
+      final entriesForStorage = <MapEntry<String, Map<String, String?>>>[];
+      for (final e in items) {
+        final id = e.id;
+        if (id != null) {
+          // -- adding to storage (later)
+          // -- we only add if it didnt exist in map before, to minimize writes
+          if (map[id] == null) entriesForStorage.add(MapEntry(id, e.toMap()));
+
+          // -- adding to memory (directly)
+          map.remove(id);
+          map[id] = e;
+        }
+      }
+      // -- clearing excess from map to keep it at 2000
+      final excess = map.length - 2000;
+      if (excess > 0) {
+        final excessKeys = map.keys.take(excess).toList();
+        excessKeys.loop((k, _) => map.remove(k));
+      }
+
+      await _saveTemporarelyVideoInfoIsolate.thready({
+        'dirPath': AppDirs.YT_METADATA_TEMP,
+        'entries': entriesForStorage,
+      });
     }
+  }
+
+  static void _saveTemporarelyVideoInfoIsolate(Map p) {
+    final dirPath = p['dirPath'] as String;
+    final entries = p['entries'] as List<MapEntry<String, Map<String, String?>>>;
+
+    entries.loop((e, index) {
+      final file = File('$dirPath${e.key}.txt');
+      file.writeAsJsonSync(e.value);
+    });
   }
 
   /// Checks if the requested id is still playing, since most functions are async and will often
@@ -295,7 +338,7 @@ class YoutubeController {
   }
 
   /// For full list of items, use [streams] getter in [playlist].
-  Future<List<StreamInfoItem>> getPlaylistStreams(YoutubePlaylist? playlist, {bool forceInitial = false}) async {
+  Future<List<StreamInfoItem>> getPlaylistStreams(YoutubePlaylist? playlist, {bool forceInitial = false, bool saveToStorage = true}) async {
     if (playlist == null) return [];
     final streams = forceInitial ? await playlist.getStreams() : await playlist.getStreamsNextPage();
     _fillTempVideoInfoMap(streams);
@@ -469,7 +512,11 @@ class YoutubeController {
     final cachedFile = File("${AppDirs.YT_METADATA}$id.txt");
     if (cachedFile.existsSync()) {
       final res = cachedFile.readAsJsonSync();
-      return VideoInfo.fromMap(res);
+      if (res != null) {
+        try {
+          return VideoInfo.fromMap(res);
+        } catch (_) {}
+      }
     }
     return null;
   }

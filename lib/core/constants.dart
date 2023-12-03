@@ -87,6 +87,7 @@ class AppDirs {
   static final YT_THUMBNAILS = '$YOUTUBE_MAIN_DIRECTORY/YTThumbnails/';
   static final YT_THUMBNAILS_CHANNELS = '$YOUTUBE_MAIN_DIRECTORY/YTThumbnails Channels/';
   static final YT_METADATA = '$YOUTUBE_MAIN_DIRECTORY/Metadata Videos/';
+  static final YT_METADATA_TEMP = '$YOUTUBE_MAIN_DIRECTORY/Metadata Videos Temp/';
   static final YT_METADATA_CHANNELS = '$YOUTUBE_MAIN_DIRECTORY/Metadata Channels/';
   static final YT_METADATA_COMMENTS = '$YOUTUBE_MAIN_DIRECTORY/Metadata Comments/';
   static final YT_STATS = '$YOUTUBE_MAIN_DIRECTORY/Youtube Stats/';
@@ -114,6 +115,7 @@ class AppDirs {
     YT_THUMBNAILS,
     YT_THUMBNAILS_CHANNELS,
     YT_METADATA,
+    YT_METADATA_TEMP,
     YT_METADATA_CHANNELS,
     YT_METADATA_COMMENTS,
     YT_STATS,

@@ -28,6 +28,7 @@ class YTHistoryVideoCard extends StatelessWidget {
   final double? minimalCardWidth;
   final bool reversedList;
   final String playlistName;
+  final bool openMenuOnLongPress;
 
   const YTHistoryVideoCard({
     super.key,
@@ -42,6 +43,7 @@ class YTHistoryVideoCard extends StatelessWidget {
     this.minimalCardWidth,
     this.reversedList = false,
     required this.playlistName,
+    this.openMenuOnLongPress = true,
   });
 
   Widget _columnOrRow({required List<Widget> children, bool isRow = true}) {
@@ -55,7 +57,7 @@ class YTHistoryVideoCard extends StatelessWidget {
 
     final index = reversedList ? videos.length - 1 - this.index : this.index;
     final video = videos[index];
-    final info = YoutubeController.inst.fetchVideoDetailsFromCacheSync(video.id);
+    final info = YoutubeController.inst.fetchVideoDetailsFromCacheSync(video.id) ?? YoutubeController.inst.getTemporarelyVideoInfo(video.id);
     final duration = info?.duration?.inSeconds.secondsLabel;
     final menuItems = YTUtils.getVideoCardMenuItems(
       videoId: video.id,
@@ -83,6 +85,7 @@ class YTHistoryVideoCard extends StatelessWidget {
         final hightlightedColor = sameDay && sameIndex ? context.theme.colorScheme.onBackground.withAlpha(40) : null;
         return NamidaPopupWrapper(
           openOnTap: false,
+          openOnLongPress: openMenuOnLongPress,
           childrenDefault: menuItems,
           child: NamidaInkWell(
             borderRadius: minimalCard ? 8.0 : 10.0,
