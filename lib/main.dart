@@ -247,7 +247,7 @@ Future<void> _initializeIntenties() async {
             settings.onYoutubeLinkOpen.value.execute(youtubeIds);
           } else if (ytPlaylists.isNotEmpty) {
             for (final pl in ytPlaylists) {
-              await settings.onYoutubeLinkOpen.value.executePlaylist(pl, context: rootContext);
+              await OnYoutubeLinkOpenAction.alwaysAsk.executePlaylist(pl, context: rootContext);
             }
           } else {
             final existing = paths.where((element) => File(element).existsSync()); // this for sussy links
