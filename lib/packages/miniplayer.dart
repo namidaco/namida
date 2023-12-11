@@ -134,7 +134,7 @@ class MiniPlayerSwitchers extends StatelessWidget {
         }
 
         LifeCycleController.inst.addOnSuspending('pip', () async {
-          if (settings.enablePip.value && Player.inst.isPlaying && VideoController.inst.currentVideo.value != null) {
+          if (settings.enablePip.value && Player.inst.isPlaying && VideoController.vcontroller.isInitialized) {
             await VideoController.vcontroller.enablePictureInPicture();
             await NamidaNavigator.inst.enterFullScreen(
               pipChild(),
