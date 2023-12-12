@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/clipboard_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -78,6 +79,9 @@ class SearchPage extends StatelessWidget {
           switch (index) {
             case 0:
               ScrollSearchController.inst.currentSearchType.value = SearchType.localTracks;
+              final srchTxt = ScrollSearchController.inst.searchTextEditingController.text;
+              ClipboardController.inst.updateTextInControllerEmpty(srchTxt == '');
+              SearchSortController.inst.searchAll(srchTxt);
               break;
             case 1:
               ScrollSearchController.inst.currentSearchType.value = SearchType.youtube;

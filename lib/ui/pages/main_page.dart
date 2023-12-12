@@ -328,11 +328,13 @@ class NamidaSearchBar extends StatelessWidget {
         },
         onFieldSubmitted: _onSubmitted,
         onChanged: (value) {
-          _searchFieldTimer?.cancel();
-          _searchFieldTimer = Timer(const Duration(milliseconds: 200), () {
-            ClipboardController.inst.updateTextInControllerEmpty(value == '');
-            SearchSortController.inst.searchAll(value);
-          });
+          if (ScrollSearchController.inst.currentSearchType.value == SearchType.localTracks) {
+            _searchFieldTimer?.cancel();
+            _searchFieldTimer = Timer(const Duration(milliseconds: 200), () {
+              ClipboardController.inst.updateTextInControllerEmpty(value == '');
+              SearchSortController.inst.searchAll(value);
+            });
+          }
         },
         // -- unfocusing produces weird bug while swiping for drawer
         // -- leaving it will leave the pointer while entering miniplayer
