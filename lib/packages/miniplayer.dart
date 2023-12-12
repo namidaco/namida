@@ -58,8 +58,9 @@ class MiniPlayerParent extends StatefulWidget {
 class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerProviderStateMixin {
   @override
   void initState() {
-    super.initState();
+    MiniPlayerController.inst.updateScreenValuesInitial();
     MiniPlayerController.inst.initializeSAnim(this);
+    super.initState();
   }
 
   @override

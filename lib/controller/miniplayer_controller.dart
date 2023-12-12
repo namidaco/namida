@@ -79,6 +79,15 @@ class MiniPlayerController {
     return sAnim;
   }
 
+  void updateScreenValuesInitial() {
+    final view = WidgetsBinding.instance.platformDispatcher.views.first;
+    topInset = view.padding.top;
+    bottomInset = view.padding.bottom;
+    screenSize = view.physicalSize;
+    maxOffset = screenSize.height;
+    sMaxOffset = screenSize.width;
+  }
+
   void updateScreenValues(BuildContext context) {
     final media = MediaQuery.of(context);
     topInset = media.padding.top;
