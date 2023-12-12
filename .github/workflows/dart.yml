@@ -37,9 +37,7 @@ jobs:
         run: git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
 
       - name: Git Submodule Update
-        run: |
-          git pull --recurse-submodules
-          git submodule update --remote --recursive
+        run: git clone https://github.com/namidaco/namida-translations/ assets/language
 
       - name: flutter clean
         run: flutter clean
