@@ -19,6 +19,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/main.dart';
 import 'package:namida/packages/searchbar_animation.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
@@ -228,15 +229,19 @@ class NamidaSearchBar extends StatelessWidget {
   const NamidaSearchBar({super.key, required this.searchBarKey});
 
   void _onSubmitted(String val) {
+    final ytPlaylistLink = kYoutubeRegexPlaylists.firstMatch(val)?[0];
+    if (ytPlaylistLink != null && ytPlaylistLink != '') {
+      OnYoutubeLinkOpenAction.alwaysAsk.executePlaylist(ytPlaylistLink, context: rootContext);
+      return;
+    }
+
     final ytlink = kYoutubeRegex.firstMatch(val)?[0];
     final ytID = ytlink?.getYoutubeID;
 
     if (ytlink != null && ytID != null && ytID != '') {
       ScrollSearchController.inst.searchTextEditingController.clear();
       Player.inst.playOrPause(0, [YoutubeID(id: ytlink.getYoutubeID, playlistID: null)], QueueSource.others);
-    }
-
-    if (ScrollSearchController.inst.currentSearchType.value == SearchType.youtube) {
+    } else if (ScrollSearchController.inst.currentSearchType.value == SearchType.youtube) {
       final latestSearch = ScrollSearchController.inst.ytSearchKey.currentState?.currentSearchText;
       if (latestSearch != val) {
         ScrollSearchController.inst.ytSearchKey.currentState?.fetchSearch(customText: val);
