@@ -48,7 +48,6 @@ app.*.map.json
 # Specific Files
 .removed_code.dart
 pubspec.lock
-assets/language/
 chlog_hash.dart
 temp_changelog.md
 temp_changelog_hash.md
