@@ -58,7 +58,6 @@ class SearchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ScrollController scrollController = ScrollController();
     final albumDimensions = Dimensions.inst.getAlbumCardDimensions(Dimensions.albumSearchGridCount);
     final artistDimensions = Dimensions.inst.getArtistCardDimensions(Dimensions.artistSearchGridCount);
     final genreDimensions = Dimensions.inst.getArtistCardDimensions(Dimensions.genreSearchGridCount);
@@ -183,9 +182,8 @@ class SearchPage extends StatelessWidget {
                           )
                         : AnimationLimiter(
                             key: const Key('fullsearch'),
-                            child: NamidaScrollbar(
-                              controller: scrollController,
-                              child: Obx(
+                            child: NamidaScrollbarWithController(
+                              child: (sc) => Obx(
                                 () {
                                   final activeList = settings.activeSearchMediaTypes;
 
@@ -196,7 +194,7 @@ class SearchPage extends StatelessWidget {
                                   final folderSearchTemp = SearchSortController.inst.folderSearchTemp.where((f) => Folder(f).tracks.isNotEmpty).toList();
 
                                   return CustomScrollView(
-                                    controller: scrollController,
+                                    controller: sc,
                                     slivers: [
                                       // == Albums ==
                                       if (activeList.contains(MediaType.album) && albumSearchTemp.isNotEmpty) ...[

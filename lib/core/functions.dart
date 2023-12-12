@@ -92,7 +92,14 @@ class NamidaOnTaps {
     HistoryController.inst.indexToHighlight.value = indexToHighlight;
     HistoryController.inst.dayOfHighLight.value = dayOfHighLight;
 
-    void jump() => HistoryController.inst.scrollController.jumpTo(initialScrollOffset);
+    void jump() {
+      if (HistoryController.inst.scrollController.hasClients) {
+        final p = HistoryController.inst.scrollController.positions.firstOrNull;
+        if (p != null && p.hasContentDimensions) {
+          HistoryController.inst.scrollController.jumpTo(initialScrollOffset);
+        }
+      }
+    }
 
     if (NamidaNavigator.inst.currentRoute?.route == RouteType.SUBPAGE_historyTracks) {
       NamidaNavigator.inst.closeAllDialogs();

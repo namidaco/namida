@@ -52,6 +52,12 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
     _requestPermission(request: false); // just to set it to true only if granted.
   }
 
+  @override
+  void dispose() {
+    c.dispose();
+    super.dispose();
+  }
+
   Future<void> _requestPermission({bool request = true}) async {
     didGrantStoragePermission = await requestStoragePermission(request: request);
     if (request) didDenyStoragePermission = !didGrantStoragePermission; // if user denied permission after requested

@@ -601,18 +601,16 @@ class JsonToHistoryParser {
     final oldestDay = oldestDate?.toDaysSince1970();
     final newestDay = newestDate?.toDaysSince1970();
 
-    totalJsonToParse.value = file.readAsLinesSync().length;
+    final lines = await file.readAsLines();
+    totalJsonToParse.value = lines.length;
     isLoadingFile.value = false;
-
-    final stream = file.openRead();
-    final lines = stream.transform(utf8.decoder).transform(const LineSplitter());
 
     final totalDaysToSave = <int>[];
     final tracksToAdd = <TrackWithDate>[];
 
     // used for cases where date couldnt be parsed, so it uses this one as a reference
     int? lastDate;
-    await for (final line in lines) {
+    for (final line in lines) {
       parsedHistoryJson.value++;
 
       /// updates history every 10 tracks

@@ -236,59 +236,61 @@ class CustomizationSettings extends SettingSubpageProvider {
                 icon: Broken.calendar_edit,
                 title: lang.DATE_TIME_FORMAT,
                 trailingText: "${settings.dateTimeFormat}",
-                onTap: () {
-                  final ScrollController scrollController = ScrollController();
+                onTap: () async {
+                  final scrollController = ScrollController();
 
-                  showSettingDialogWithTextField(
-                      title: lang.DATE_TIME_FORMAT,
-                      icon: Broken.calendar_edit,
-                      dateTimeFormat: true,
-                      topWidget: SizedBox(
-                        height: Get.height * 0.4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 58.0),
-                          child: Stack(
-                            children: [
-                              SingleChildScrollView(
-                                controller: scrollController,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    ...kDefaultDateTimeStrings.entries.map(
-                                      (e) => SmallListTile(
-                                        title: e.value,
-                                        active: settings.dateTimeFormat.value == e.key,
-                                        onTap: () {
-                                          settings.save(dateTimeFormat: e.key);
-                                          NamidaNavigator.inst.closeDialog();
-                                        },
-                                      ),
+                  await showSettingDialogWithTextField(
+                    title: lang.DATE_TIME_FORMAT,
+                    icon: Broken.calendar_edit,
+                    dateTimeFormat: true,
+                    topWidget: SizedBox(
+                      height: Get.height * 0.4,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 58.0),
+                        child: Stack(
+                          children: [
+                            SingleChildScrollView(
+                              controller: scrollController,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ...kDefaultDateTimeStrings.entries.map(
+                                    (e) => SmallListTile(
+                                      title: e.value,
+                                      active: settings.dateTimeFormat.value == e.key,
+                                      onTap: () {
+                                        settings.save(dateTimeFormat: e.key);
+                                        NamidaNavigator.inst.closeDialog();
+                                      },
                                     ),
-                                  ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 20,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(8.0),
+                                decoration: BoxDecoration(color: Get.theme.cardTheme.color, shape: BoxShape.circle),
+                                child: NamidaIconButton(
+                                  icon: Broken.arrow_circle_down,
+                                  onPressed: () {
+                                    scrollController.animateTo(
+                                      scrollController.position.maxScrollExtent,
+                                      duration: const Duration(milliseconds: 300),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  },
                                 ),
                               ),
-                              Positioned(
-                                bottom: 20,
-                                right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(8.0),
-                                  decoration: BoxDecoration(color: Get.theme.cardTheme.color, shape: BoxShape.circle),
-                                  child: NamidaIconButton(
-                                    icon: Broken.arrow_circle_down,
-                                    onPressed: () {
-                                      scrollController.animateTo(
-                                        scrollController.position.maxScrollExtent,
-                                        duration: const Duration(milliseconds: 300),
-                                        curve: Curves.easeInOut,
-                                      );
-                                    },
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
+                            )
+                          ],
                         ),
-                      ));
+                      ),
+                    ),
+                  );
+                  scrollController.disposeAfterAnimation();
                 },
               ),
             ),

@@ -12,12 +12,10 @@ class QueuesPage extends StatelessWidget {
   const QueuesPage({super.key});
   @override
   Widget build(BuildContext context) {
-    final sc = ScrollController();
     return AnimationLimiter(
       child: BackgroundWrapper(
-        child: NamidaScrollbar(
-          controller: sc,
-          child: CustomScrollView(
+        child: NamidaScrollbarWithController(
+          child: (sc) => CustomScrollView(
             controller: sc,
             slivers: [
               const SliverPadding(padding: EdgeInsets.only(top: Dimensions.tileBottomMargin6)),

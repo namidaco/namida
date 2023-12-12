@@ -389,7 +389,7 @@ extension FunctionsExecuter<T> on Iterable<Future<T>?> {
 extension DirectoryUtils on Directory {
   List<FileSystemEntity> listSyncSafe({bool recursive = false, bool followLinks = true}) {
     try {
-      return listSyncSafe(recursive: recursive, followLinks: followLinks);
+      return listSync(recursive: recursive, followLinks: followLinks);
     } catch (e) {
       return [];
     }
@@ -465,6 +465,17 @@ extension NavigatorUtils on BuildContext? {
   void safePop({bool rootNavigator = false}) {
     final context = this;
     if (context != null && context.mounted) Navigator.of(context, rootNavigator: rootNavigator).pop();
+  }
+}
+
+extension DisposingScrollUtils on ScrollController {
+  Future<void> disposeAfterAnimation({int durationMS = 2000, void Function()? also}) async {
+    void fn() {
+      dispose();
+      if (also != null) also();
+    }
+
+    await fn.executeDelayed(Duration(milliseconds: durationMS));
   }
 }
 

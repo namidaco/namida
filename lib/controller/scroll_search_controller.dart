@@ -85,6 +85,7 @@ class ScrollSearchController {
 
   void _assignScrollController(LibraryTab tab) {
     scrollController.removeListener(() {});
+    scrollController.dispose();
     scrollController = ScrollController(initialScrollOffset: tab.scrollPosition);
     scrollController.addListener(() {
       isBarVisibleMap[tab]?.value = scrollController.positions.lastOrNull?.userScrollDirection == ScrollDirection.forward;

@@ -2191,10 +2191,9 @@ class NamidaListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sc = scrollController ?? ScrollController();
     return AnimationLimiter(
       child: NamidaScrollbar(
-        controller: sc,
+        controller: scrollController,
         child: Column(
           children: [
             if (widgetsInColumn != null) ...widgetsInColumn!,
@@ -2202,7 +2201,7 @@ class NamidaListView extends StatelessWidget {
               child: itemExtents != null
                   ? KnownExtentsReorderableListView.builder(
                       itemExtents: itemExtents!,
-                      scrollController: sc,
+                      scrollController: scrollController,
                       padding: padding ?? EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotal),
                       itemBuilder: itemBuilder,
                       itemCount: itemCount,
@@ -2216,7 +2215,7 @@ class NamidaListView extends StatelessWidget {
                     )
                   : ReorderableListView.builder(
                       itemExtent: itemExtents?.firstOrNull,
-                      scrollController: sc,
+                      scrollController: scrollController,
                       padding: padding ?? EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotal),
                       itemBuilder: itemBuilder,
                       itemCount: itemCount,
@@ -2661,7 +2660,7 @@ class LazyLoadListView extends StatefulWidget {
 }
 
 class _LazyLoadListViewState extends State<LazyLoadListView> {
-  late ScrollController controller;
+  late final ScrollController controller;
   bool isExecuting = false;
 
   void _scrollListener() async {
@@ -2683,6 +2682,9 @@ class _LazyLoadListViewState extends State<LazyLoadListView> {
   @override
   void dispose() {
     controller.removeListener(_scrollListener);
+    if (widget.scrollController == null) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -3024,6 +3026,37 @@ class NamidaScrollbar extends StatelessWidget {
     return CupertinoScrollbar(
       controller: controller,
       child: child,
+    );
+  }
+}
+
+class NamidaScrollbarWithController extends StatefulWidget {
+  final Widget Function(ScrollController sc) child;
+  const NamidaScrollbarWithController({super.key, required this.child});
+
+  @override
+  State<NamidaScrollbarWithController> createState() => _NamidaScrollbarWithControllerState();
+}
+
+class _NamidaScrollbarWithControllerState extends State<NamidaScrollbarWithController> {
+  late final ScrollController _sc;
+  @override
+  void initState() {
+    _sc = ScrollController();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _sc.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoScrollbar(
+      controller: _sc,
+      child: widget.child(_sc),
     );
   }
 }

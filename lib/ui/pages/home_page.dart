@@ -299,7 +299,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  void showReorderHomeItemsDialog() {
+  void showReorderHomeItemsDialog() async {
     final subList = <HomePageItems>[].obs;
     HomePageItems.values.loop((e, index) {
       if (!settings.homePageItems.contains(e)) {
@@ -319,7 +319,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       jumpToLast();
     });
 
-    NamidaNavigator.inst.navigateDialog(
+    await NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         title: "${lang.CONFIGURE} (${lang.REORDERABLE})",
         actions: [
@@ -406,6 +406,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         ),
       ),
     );
+    mainListController.disposeAfterAnimation();
   }
 
   void _navigateToRecentlyListened() {

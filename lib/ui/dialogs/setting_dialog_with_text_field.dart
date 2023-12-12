@@ -12,7 +12,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-void showSettingDialogWithTextField({
+Future<void> showSettingDialogWithTextField({
   Widget? topWidget,
   String title = '',
   Widget? iconWidgets,
@@ -51,7 +51,7 @@ void showSettingDialogWithTextField({
 
   void onTTSetChange() => onTrackTileSettingsChanged?.call();
 
-  NamidaNavigator.inst.navigateDialog(
+  await NamidaNavigator.inst.navigateDialog(
     dialog: Form(
       key: formKey,
       child: CustomBlurryDialog(
@@ -202,4 +202,5 @@ void showSettingDialogWithTextField({
       ),
     ),
   );
+  controller.disposeAfterAnimation();
 }
