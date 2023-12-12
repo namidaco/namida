@@ -52,7 +52,7 @@ dependencies:
   history_manager:
     git:
       url: https://github.com/namidaco/history_manager
-      ref: 0484c632d26d768e85003480bce316b28d3c2933
+      ref: 1c00e916bf3f7f1d2dfaa3cbd7ceb7d50077c11b
   flutter_html:
     git:
       url: https://github.com/zhourengui/flutter_html

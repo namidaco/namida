@@ -25,8 +25,26 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
-class HistoryTracksPage extends StatelessWidget {
+class HistoryTracksPage extends StatefulWidget {
   const HistoryTracksPage({super.key});
+
+  @override
+  State<HistoryTracksPage> createState() => _HistoryTracksPageState();
+}
+
+class _HistoryTracksPageState extends State<HistoryTracksPage> {
+  @override
+  void initState() {
+    super.initState();
+    HistoryController.inst.canUpdateAllItemsExtentsInHistory = true;
+    HistoryController.inst.calculateAllItemsExtentsInHistory();
+  }
+
+  @override
+  void dispose() {
+    HistoryController.inst.canUpdateAllItemsExtentsInHistory = false;
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

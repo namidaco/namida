@@ -14,8 +14,26 @@ import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
-class YoutubeHistoryPage extends StatelessWidget {
+class YoutubeHistoryPage extends StatefulWidget {
   const YoutubeHistoryPage({super.key});
+
+  @override
+  State<YoutubeHistoryPage> createState() => _YoutubeHistoryPageState();
+}
+
+class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> {
+  @override
+  void initState() {
+    super.initState();
+    YoutubeHistoryController.inst.canUpdateAllItemsExtentsInHistory = true;
+    YoutubeHistoryController.inst.calculateAllItemsExtentsInHistory();
+  }
+
+  @override
+  void dispose() {
+    YoutubeHistoryController.inst.canUpdateAllItemsExtentsInHistory = false;
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
