@@ -226,14 +226,11 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
   tagsControllers[TagField.country] = TextEditingController(text: info?.country ?? '');
 
   Widget getTagTextField(TagField tag) {
-    final changed1 = tag == TagField.title && editedTags[TagField.title] != info?.title;
-    final changed2 = tag == TagField.artist && editedTags[TagField.artist] != info?.artist;
     return CustomTagTextField(
       controller: tagsControllers[tag]!,
       labelText: tag.toText(),
       hintText: tagsControllers[tag]!.text,
       icon: tag.toIcon(),
-      didEditField: (didAutoExtractFromFilename.value && (changed1 || changed2)).obs,
       onChanged: (value) {
         editedTags[tag] = value;
         canEditTags.value = true;
@@ -1122,7 +1119,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
   );
 }
 
-class CustomTagTextField extends StatelessWidget {
+class CustomTagTextField extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;
   final IconData? icon;
@@ -1134,13 +1131,12 @@ class CustomTagTextField extends StatelessWidget {
   final void Function(String value)? onChanged;
   final bool isNumeric;
   final TextInputType? keyboardType;
-  final RxBool? didEditField;
   final AutovalidateMode? validatorMode;
   final void Function(String value)? onFieldSubmitted;
   final double borderRadius;
   final FocusNode? focusNode;
 
-  CustomTagTextField({
+  const CustomTagTextField({
     super.key,
     required this.controller,
     required this.hintText,
@@ -1153,70 +1149,84 @@ class CustomTagTextField extends StatelessWidget {
     required this.labelText,
     this.isNumeric = false,
     this.keyboardType,
-    this.didEditField,
     this.validatorMode,
     this.onFieldSubmitted,
     this.borderRadius = 16.0,
     this.focusNode,
   });
-  final RxBool didChange = false.obs;
+
+  @override
+  State<CustomTagTextField> createState() => _CustomTagTextFieldState();
+}
+
+class _CustomTagTextFieldState extends State<CustomTagTextField> {
+  String initialText = '';
+  bool didChange = false;
+
+  @override
+  void initState() {
+    super.initState();
+    initialText = widget.controller.text;
+    widget.controller.addListener(_controllerListener);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_controllerListener);
+    super.dispose();
+  }
+
+  void _controllerListener() {
+    final ct = widget.controller.text;
+    if (widget.onChanged != null) widget.onChanged!(ct);
+    setState(() {
+      didChange = initialText != ct;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final borderR = borderRadius.multipliedRadius;
-    final borderRS = (borderRadius - 2.0).withMinimum(0).multipliedRadius;
-    return SizedBox(
-      width: null,
-      child: TextFormField(
-        focusNode: focusNode,
-        validator: validator,
-        maxLength: maxLength,
-        controller: controller,
-        textAlign: TextAlign.left,
-        maxLines: maxLines,
-        autovalidateMode: validatorMode,
-        keyboardType: keyboardType ?? (isNumeric ? TextInputType.number : null),
-        style: context.textTheme.displaySmall?.copyWith(fontSize: 14.5.multipliedFontScale, fontWeight: FontWeight.w600),
-        onTapOutside: (event) {
-          FocusScope.of(context).unfocus();
-        },
-        onChanged: (value) {
-          if (onChanged != null) onChanged!(value);
-          if (!didChange.value) {
-            didChange.value = true;
-          }
-        },
-        onFieldSubmitted: onFieldSubmitted,
-        decoration: InputDecoration(
-          label: labelText != ''
-              ? Obx(() {
-                  final reallyChanged = (didChange.value || (didEditField?.value ?? false));
-                  return Text('$labelText ${reallyChanged ? '(${lang.CHANGED})' : ''}');
-                })
-              : null,
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-          hintMaxLines: hintMaxLines,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-          errorMaxLines: 3,
-          suffixIcon: Icon(icon, size: 18.0),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(borderRS),
-            borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 2.0),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(borderR),
-            borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 1.0),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(borderR),
-            borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(borderR),
-            borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
-          ),
-          hintText: hintText,
-          hintStyle: context.textTheme.displaySmall?.copyWith(fontSize: 14.5.multipliedFontScale, color: context.textTheme.displaySmall?.color?.withAlpha(120)),
+    final borderR = widget.borderRadius.multipliedRadius;
+    final borderRS = (widget.borderRadius - 2.0).withMinimum(0).multipliedRadius;
+    return TextFormField(
+      focusNode: widget.focusNode,
+      validator: widget.validator,
+      maxLength: widget.maxLength,
+      controller: widget.controller,
+      textAlign: TextAlign.left,
+      maxLines: widget.maxLines,
+      autovalidateMode: widget.validatorMode,
+      keyboardType: widget.keyboardType ?? (widget.isNumeric ? TextInputType.number : null),
+      style: context.textTheme.displaySmall?.copyWith(fontSize: 14.5.multipliedFontScale, fontWeight: FontWeight.w600),
+      onTapOutside: (event) {
+        FocusScope.of(context).unfocus();
+      },
+      onFieldSubmitted: widget.onFieldSubmitted,
+      decoration: InputDecoration(
+        label: widget.labelText != '' ? Text('${widget.labelText} ${didChange ? '(${lang.CHANGED})' : ''}') : null,
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        hintMaxLines: widget.hintMaxLines,
+        contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+        errorMaxLines: 3,
+        suffixIcon: Icon(widget.icon, size: 18.0),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(borderRS),
+          borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 2.0),
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(borderR),
+          borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 1.0),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(borderR),
+          borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(borderR),
+          borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
+        ),
+        hintText: widget.hintText,
+        hintStyle: context.textTheme.displaySmall?.copyWith(fontSize: 14.5.multipliedFontScale, color: context.textTheme.displaySmall?.color?.withAlpha(120)),
       ),
     );
   }
