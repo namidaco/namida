@@ -63,6 +63,7 @@ import 'package:namida/ui/widgets/stats.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/youtube_playlist_controller.dart' as ytplc;
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
@@ -541,7 +542,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
         _showAskDialog(
           (action) => action.executePlaylist(playlistUrl, context: context, playlist: plInfo),
           playlistToOpen: plInfo,
-          context: context?.mounted == true ? context : null,
+          playlistToAddAs: plInfo,
         );
 
       default:
@@ -575,9 +576,19 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
     }
   }
 
-  void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap, {YoutubePlaylist? playlistToOpen, BuildContext? context}) {
+  void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap, {YoutubePlaylist? playlistToOpen, YoutubePlaylist? playlistToAddAs}) {
     final newVals = List<OnYoutubeLinkOpenAction>.from(OnYoutubeLinkOpenAction.values);
     newVals.remove(OnYoutubeLinkOpenAction.alwaysAsk);
+
+    String playlistNameToAddAs = playlistToAddAs?.name ?? '';
+    String suffix = '';
+    int suffixIndex = 1;
+    while (ytplc.YoutubePlaylistController.inst.playlistsMap["$playlistNameToAddAs$suffix"] != null) {
+      suffixIndex++;
+      suffix = ' ($suffixIndex)';
+    }
+    playlistNameToAddAs += suffix;
+
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         title: lang.CHOOSE,
@@ -591,22 +602,30 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
         child: Column(
           children: [
             if (playlistToOpen != null)
-              CustomListTile(
-                icon: Broken.export_2,
-                title: lang.OPEN,
-                onTap: () {
-                  NamidaNavigator.inst.closeDialog();
-                  context.safePop(rootNavigator: true);
-                  NamidaNavigator.inst.navigateTo(YTHostedPlaylistSubpage(playlist: playlistToOpen));
-                },
+              ...newVals.map(
+                (e) => CustomListTile(
+                  icon: e.toIcon(),
+                  title: e.toText(),
+                  onTap: () => onTap(e),
+                ),
               ),
-            ...newVals.map(
-              (e) => CustomListTile(
-                icon: e.toIcon(),
-                title: e.toText(),
-                onTap: () => onTap(e),
+            if (playlistNameToAddAs != '')
+              ObxValue<RxBool>(
+                (didAdd) => CustomListTile(
+                  enabled: !didAdd.value,
+                  icon: Broken.add_square,
+                  title: lang.ADD_AS_A_NEW_PLAYLIST,
+                  subtitle: playlistNameToAddAs,
+                  onTap: () {
+                    didAdd.value = true;
+                    ytplc.YoutubePlaylistController.inst.addNewPlaylist(
+                      playlistNameToAddAs,
+                      videoIds: playlistToAddAs?.streams.map((e) => e.id ?? '') ?? [],
+                    );
+                  },
+                ),
+                false.obs,
               ),
-            )
           ],
         ),
       ),

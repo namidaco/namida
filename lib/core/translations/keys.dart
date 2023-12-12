@@ -8,6 +8,7 @@ abstract class LanguageKeys {
 
   String get ABOUT => _getKey('ABOUT');
   String get ACTIVE => _getKey('ACTIVE');
+  String get ADD_AS_A_NEW_PLAYLIST => _getKey('ADD_AS_A_NEW_PLAYLIST');
   String get ADD_AUDIO_TO_LOCAL_LIBRARY => _getKey('ADD_AUDIO_TO_LOCAL_LIBRARY');
   String get ADD_FOLDER => _getKey('ADD_FOLDER');
   String get ADD_LANGUAGE => _getKey('ADD_LANGUAGE');
