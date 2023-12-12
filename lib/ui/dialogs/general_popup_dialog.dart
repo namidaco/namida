@@ -389,7 +389,7 @@ Future<void> showGeneralPopupDialog(
     final dirPath = await FilePicker.platform.getDirectoryPath();
     if (dirPath == null) return;
 
-    final files = Directory(dirPath).listSync();
+    final files = Directory(dirPath).listSyncSafe();
     files.removeWhere((element) => element is! File);
     if (files.isEmpty) {
       snackyy(title: lang.ERROR, message: lang.NO_TRACKS_FOUND_IN_DIRECTORY);

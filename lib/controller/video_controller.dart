@@ -757,7 +757,7 @@ class VideoController {
     final dir = Directory(dirPath);
     final newIdsMap = <String, List<(FileStat, String)>>{};
 
-    for (final df in dir.listSync()) {
+    for (final df in dir.listSyncSafe()) {
       if (df is File) {
         final filename = df.path.getFilename;
         if (filename.endsWith('.download')) continue; // first thing first
@@ -950,8 +950,8 @@ class VideoController {
 
     int totalDeletedBytes = 0;
 
-    final imagesVideos = Directory(dirPath).listSync();
-    final imagesChannels = Directory(dirPathChannel).listSync();
+    final imagesVideos = Directory(dirPath).listSyncSafe();
+    final imagesChannels = Directory(dirPathChannel).listSyncSafe();
     final images = [...imagesVideos, ...imagesChannels];
 
     images.sortBy((e) => e.statSync().accessed);

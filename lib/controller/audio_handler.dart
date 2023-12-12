@@ -1021,7 +1021,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     final newFiles = <AudioCacheDetails>[];
 
-    for (final fe in Directory(dirPath).listSync()) {
+    for (final fe in Directory(dirPath).listSyncSafe()) {
       final filename = fe.path.getFilename;
       final goodID = filename.startsWith(id);
       final isGood = fe is File && goodID && !filename.endsWith('.part') && !filename.endsWith('.mime');
@@ -1037,7 +1037,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   static Map<String, List<AudioCacheDetails>> _getAllAudiosInCache(String dirPath) {
     final newFiles = <String, List<AudioCacheDetails>>{};
 
-    for (final fe in Directory(dirPath).listSync()) {
+    for (final fe in Directory(dirPath).listSyncSafe()) {
       final filename = fe.path.getFilename;
       final isGood = fe is File && !filename.endsWith('.part') && !filename.endsWith('.mime');
 

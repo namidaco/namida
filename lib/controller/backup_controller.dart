@@ -113,7 +113,7 @@ class BackupController {
 
   static List<File> _getBackupFilesSorted(String dirPath) {
     final dir = Directory(dirPath);
-    final possibleFiles = dir.listSync();
+    final possibleFiles = dir.listSyncSafe();
 
     final List<File> matchingBackups = [];
     possibleFiles.loop((pf, index) {

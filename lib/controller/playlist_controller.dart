@@ -407,7 +407,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
 
   static Future<Map<String, Playlist>> _readPlaylistFilesCompute(String path) async {
     final map = <String, Playlist>{};
-    for (final f in Directory(path).listSync()) {
+    for (final f in Directory(path).listSyncSafe()) {
       if (f is File) {
         try {
           final response = f.readAsJsonSync();

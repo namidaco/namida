@@ -175,7 +175,7 @@ class QueueController {
 
   static Future<Map<int, Queue>> _readQueueFilesCompute(String path) async {
     final map = <int, Queue>{};
-    for (final f in Directory(path).listSync()) {
+    for (final f in Directory(path).listSyncSafe()) {
       if (f is File) {
         try {
           final response = f.readAsJsonSync();

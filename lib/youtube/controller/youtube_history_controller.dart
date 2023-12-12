@@ -46,7 +46,7 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
 
   static Future<Map<int, List<YoutubeID>>> _readHistoryFilesCompute(String path) async {
     final map = <int, List<YoutubeID>>{};
-    for (final f in Directory(path).listSync()) {
+    for (final f in Directory(path).listSyncSafe()) {
       if (f is File) {
         try {
           final response = f.readAsJsonSync();

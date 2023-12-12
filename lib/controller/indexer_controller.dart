@@ -1238,7 +1238,7 @@ class Indexer {
 
       if (directory.existsSync()) {
         allAvailableDirectories[directory] = false;
-        for (final file in directory.listSync(recursive: true, followLinks: true)) {
+        for (final file in directory.listSyncSafe(recursive: true, followLinks: true)) {
           if (file is Directory) {
             allAvailableDirectories[file] = false;
           }
@@ -1380,7 +1380,7 @@ class Indexer {
     } else {
       final dir = Directory(dirPath);
 
-      for (final f in dir.listSync()) {
+      for (final f in dir.listSyncSafe()) {
         if (f is File) {
           initialCount++;
           initialSize += f.fileSizeSync() ?? 0;

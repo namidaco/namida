@@ -114,7 +114,7 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
 
   static Future<Map<int, List<TrackWithDate>>> _readHistoryFilesCompute(String path) async {
     final map = <int, List<TrackWithDate>>{};
-    for (final f in Directory(path).listSync()) {
+    for (final f in Directory(path).listSyncSafe()) {
       if (f is File) {
         try {
           final response = f.readAsJsonSync();

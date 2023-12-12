@@ -386,6 +386,16 @@ extension FunctionsExecuter<T> on Iterable<Future<T>?> {
   }
 }
 
+extension DirectoryUtils on Directory {
+  List<FileSystemEntity> listSyncSafe({bool recursive = false, bool followLinks = true}) {
+    try {
+      return listSyncSafe(recursive: recursive, followLinks: followLinks);
+    } catch (e) {
+      return [];
+    }
+  }
+}
+
 extension FileUtils on File {
   int? fileSizeSync() {
     try {

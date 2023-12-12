@@ -149,7 +149,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
 
   static Future<Map<String, YoutubePlaylist>> _readPlaylistFilesCompute(String path) async {
     final map = <String, YoutubePlaylist>{};
-    for (final f in Directory(path).listSync()) {
+    for (final f in Directory(path).listSyncSafe()) {
       if (f is File) {
         try {
           final response = f.readAsJsonSync();

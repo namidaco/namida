@@ -696,7 +696,7 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
   static Map<String, int> _fillSizesIsolate(Set<String> dirs) {
     final map = <String, int>{};
     for (final d in dirs) {
-      map[d] = Directory(d).listSync().fold(0, (previousValue, element) => previousValue + element.statSync().size);
+      map[d] = Directory(d).listSyncSafe().fold(0, (previousValue, element) => previousValue + element.statSync().size);
     }
     return map;
   }

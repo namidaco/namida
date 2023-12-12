@@ -518,7 +518,7 @@ Map<String, Set<String>> getFilesTypeIsolate(Map parameters) {
   allAvailableDirectories.keys.toList().loop((d, index) {
     final hasNoMedia = allAvailableDirectories[d] ?? false;
     try {
-      for (final systemEntity in d.listSync()) {
+      for (final systemEntity in d.listSyncSafe()) {
         if (systemEntity is File) {
           final path = systemEntity.path;
           // -- skip if not in extensions

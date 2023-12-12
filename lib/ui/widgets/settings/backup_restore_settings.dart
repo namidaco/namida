@@ -183,7 +183,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                       totalSize += File(e).fileSizeSync() ?? 0;
                     } else if (FileSystemEntity.typeSync(e) == FileSystemEntityType.directory) {
                       int size = 0;
-                      Directory(e).listSync().loop((e, index) {
+                      Directory(e).listSyncSafe().loop((e, index) {
                         size += (e is File ? File(e.path).fileSizeSync() ?? 0 : 0);
                       });
                       totalSize += size;
