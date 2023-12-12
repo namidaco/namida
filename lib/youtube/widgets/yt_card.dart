@@ -66,8 +66,10 @@ class YoutubeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const verticalPadding = 8.0;
-    final thumbnailWidth = this.thumbnailWidth ?? thumbnailWidthPercentage * context.width * 0.36;
+    final thumbnailWidth = this.thumbnailWidth ?? (thumbnailWidthPercentage * context.width * 0.36);
     final thumbnailHeight = this.thumbnailHeight ?? (isCircle ? thumbnailWidth : thumbnailWidth * 9 / 16);
+
+    final channelThumbSize = 20.0 * thumbnailWidthPercentage;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: verticalPadding * 0.5, horizontal: 8.0),
@@ -111,7 +113,7 @@ class YoutubeCard extends StatelessWidget {
                         width: context.width,
                         height: 10.0,
                         borderRadius: 4.0,
-                        shimmerEnabled: shimmerEnabled || title == '',
+                        shimmerEnabled: shimmerEnabled && title == '',
                         child: Text(
                           title,
                           style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0.multipliedFontScale * fontMultiplier),
@@ -124,7 +126,7 @@ class YoutubeCard extends StatelessWidget {
                         width: context.width,
                         height: 8.0,
                         borderRadius: 4.0,
-                        shimmerEnabled: shimmerEnabled || subtitle == '',
+                        shimmerEnabled: shimmerEnabled && subtitle == '',
                         child: Text(
                           subtitle,
                           style: context.textTheme.displaySmall?.copyWith(
@@ -144,13 +146,13 @@ class YoutubeCard extends StatelessWidget {
                           children: [
                             if (displayChannelThumbnail) ...[
                               NamidaDummyContainer(
-                                width: 20.0,
-                                height: 20.0,
-                                shimmerEnabled: channelThumbnailUrl == null || !displayChannelThumbnail,
+                                width: channelThumbSize,
+                                height: channelThumbSize,
+                                shimmerEnabled: shimmerEnabled && (channelThumbnailUrl == null || !displayChannelThumbnail),
                                 child: YoutubeThumbnail(
                                   isImportantInCache: false,
                                   channelUrl: channelThumbnailUrl ?? '',
-                                  width: 20.0,
+                                  width: channelThumbSize,
                                   isCircle: true,
                                 ),
                               ),
@@ -161,7 +163,7 @@ class YoutubeCard extends StatelessWidget {
                                 child: NamidaDummyContainer(
                                   width: context.width * 0.35,
                                   height: 8.0,
-                                  shimmerEnabled: thirdLineText == '' || !displaythirdLineText,
+                                  shimmerEnabled: shimmerEnabled && (thirdLineText == '' || !displaythirdLineText),
                                   child: Container(
                                     alignment: Alignment.centerLeft,
                                     width: double.infinity,

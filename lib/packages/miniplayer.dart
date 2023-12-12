@@ -1,10 +1,10 @@
 // This is originally a part of [Tear Music](https://github.com/tearone/tearmusic), edited to fit Namida.
 // Credits goes for the original author @55nknown
 
-import 'package:flutter/material.dart';
-
 import 'package:animated_background/animated_background.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -36,17 +36,16 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/focused_menu.dart';
 import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 import 'package:namida/packages/miniplayer_raw.dart';
-import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
-import 'package:namida/youtube/widgets/yt_thumbnail.dart';
-import 'package:namida/youtube/youtube_miniplayer.dart';
-
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
+import 'package:namida/youtube/youtube_miniplayer.dart';
 
 class MiniPlayerParent extends StatefulWidget {
   final AnimationController animation;

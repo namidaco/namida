@@ -454,12 +454,12 @@ extension ScrollerPerf on ScrollController {
 extension NavigatorUtils on BuildContext? {
   void safePop({bool rootNavigator = false}) {
     final context = this;
-    if (context != null && context.mounted) Navigator.of(context, rootNavigator: rootNavigator).maybePop();
+    if (context != null && context.mounted) Navigator.of(context, rootNavigator: rootNavigator).pop();
   }
 }
 
 extension DisposingUtils on TextEditingController {
-  Future<void> disposeAfterAnimation({int durationMS = 200, void Function()? also}) async {
+  Future<void> disposeAfterAnimation({int durationMS = 2000, void Function()? also}) async {
     void fn() {
       dispose();
       if (also != null) also();

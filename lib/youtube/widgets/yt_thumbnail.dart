@@ -105,8 +105,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
                 keepInMemory: true,
               );
               if (lowerRes != null && lowerRes.isNotEmpty) {
-                imageBytes = lowerRes;
-                if (mounted) setState(() {});
+                if (mounted) setState(() => imageBytes = lowerRes);
               }
             },
           );
@@ -114,8 +113,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
 
       // -- only put the image if bytes are NOT valid, or if specified by parent
       if (imagePath == null && (!widget.preferLowerRes || (imageBytes?.isEmpty ?? true))) {
-        imagePath = res?.path;
-        if (mounted) setState(() {});
+        if (mounted) setState(() => imagePath = res?.path);
       }
     }
 
@@ -126,9 +124,8 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
         paletteSaveDirectory: Directory(AppDirs.YT_PALETTES),
       );
       imageColors = c ?? NamidaColor(used: null, mix: playerStaticColor, palette: [playerStaticColor]);
-      smallBoxDynamicColor = c?.color;
       widget.onColorReady?.call(c);
-      if (mounted) setState(() {});
+      if (mounted) setState(() => smallBoxDynamicColor = c?.color);
     }
   }
 

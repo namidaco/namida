@@ -995,7 +995,7 @@ class VideoController {
     await beforeFetchingFromInternet?.call();
 
     final bytes = await getYoutubeThumbnailAsBytes(youtubeId: id, url: channelUrl, keepInMemory: false);
-    printy('Downloading Thumbnail Finished');
+    printy('Downloading Thumbnail Finished with ${bytes?.length} bytes');
 
     final savedFile = (id != null
             ? _saveThumbnailToStorage(

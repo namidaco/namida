@@ -358,8 +358,8 @@ Future<void> showDownloadVideoBottomSheet({
                                       tagMaps: tagsMap,
                                       supportTagging: !isWEBM,
                                       showSpecificFileOptions: showSpecificFileOptionsInEditTagDialog,
-                                      onDownloadGroupNameChanged: (newFolderPath) {
-                                        groupName = newFolderPath;
+                                      onDownloadGroupNameChanged: (newGroupName) {
+                                        groupName = newGroupName;
                                         formKey.currentState?.validate();
                                       },
                                     );

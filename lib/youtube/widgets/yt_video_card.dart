@@ -22,6 +22,7 @@ class YoutubeVideoCard extends StatelessWidget {
   final YoutubePlaylist? playlist;
   final int? index;
   final double fontMultiplier;
+  final double thumbnailWidthPercentage;
 
   const YoutubeVideoCard({
     super.key,
@@ -34,6 +35,7 @@ class YoutubeVideoCard extends StatelessWidget {
     this.playlist,
     this.index,
     this.fontMultiplier = 1.0,
+    this.thumbnailWidthPercentage = 1.0,
   });
 
   @override
@@ -51,6 +53,7 @@ class YoutubeVideoCard extends StatelessWidget {
       openOnTap: false,
       childrenDefault: menuItems,
       child: YoutubeCard(
+        thumbnailWidthPercentage: thumbnailWidthPercentage,
         fontMultiplier: fontMultiplier,
         thumbnailWidth: thumbnailWidth,
         thumbnailHeight: thumbnailHeight,

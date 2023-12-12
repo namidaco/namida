@@ -147,12 +147,21 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
       totalCount.value = playlist.streamCount < 0 ? playlist.streams.length : playlist.streamCount;
     }
 
-    void plsPop() => context.safePop();
+    void plsPop() {
+      if (context?.mounted ?? false) context.safePop();
+    }
+
+    void closeRxStreams() {
+      () {
+        currentCount.close();
+        totalCount.close();
+      }.executeDelayed(const Duration(milliseconds: 200));
+    }
 
     // -- if still not fetched
     if (isTotalCountNull()) {
       plsPop();
-      currentCount.close();
+      closeRxStreams();
       return false;
     }
 
@@ -167,10 +176,7 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
       plsPop();
     }
 
-    () {
-      currentCount.close();
-      totalCount.close();
-    }.executeDelayed(const Duration(milliseconds: 200));
+    closeRxStreams();
     return true;
   }
 

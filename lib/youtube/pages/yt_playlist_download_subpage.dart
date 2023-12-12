@@ -75,20 +75,24 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   void _fillConfigMap() {
     widget.ids.loop((e, index) {
       final id = e.id;
-      final info = YoutubeController.inst.getTemporarelyVideoInfo(id) ?? YoutubeController.inst.fetchVideoDetailsFromCacheSync(id);
-      final filename = info?.name ?? id;
-      _configMap[id] = YoutubeItemDownloadConfig(
-        id: id,
-        filename: filename,
-        ffmpegTags: {},
-        fileDate: null,
-        videoStream: null,
-        audioStream: null,
-        prefferedVideoQualityID: null,
-        prefferedAudioQualityID: null,
-        fetchMissingStreams: true,
-      );
+      _configMap[id] = _getDummyDownloadConfig(id);
     });
+  }
+
+  YoutubeItemDownloadConfig _getDummyDownloadConfig(String id) {
+    final videoTitle = widget.infoLookup[id]?.name ?? YoutubeController.inst.getTemporarelyVideoInfo(id)?.name ?? YoutubeController.inst.fetchVideoDetailsFromCacheSync(id)?.name;
+    final filename = videoTitle ?? id;
+    return YoutubeItemDownloadConfig(
+      id: id,
+      filename: filename,
+      ffmpegTags: {},
+      fileDate: null,
+      videoStream: null,
+      audioStream: null,
+      prefferedVideoQualityID: null,
+      prefferedAudioQualityID: null,
+      fetchMissingStreams: true,
+    );
   }
 
   void _addAllYTIDsToSelected() {
@@ -517,7 +521,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                           NamidaNavigator.inst.popPage();
                           YoutubeController.inst.downloadYoutubeVideos(
                             groupName: widget.playlistName,
-                            itemsConfig: _selectedList.map((id) => _configMap[id]!).toList(),
+                            itemsConfig: _selectedList.map((id) => _configMap[id] ?? _getDummyDownloadConfig(id)).toList(),
                             useCachedVersionsIfAvailable: true,
                             autoExtractTitleAndArtist: autoExtractTitleAndArtist,
                             keepCachedVersionsIfDownloaded: keepCachedVersionsIfDownloaded,
