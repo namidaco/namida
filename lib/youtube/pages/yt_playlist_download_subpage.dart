@@ -43,6 +43,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   final _configMap = <String, YoutubeItemDownloadConfig>{}.obs;
   final _groupName = ''.obs;
 
+  final _folderController = GlobalKey<YTDownloadOptionFolderListTileState>();
+
   bool useCachedVersionsIfAvailable = true;
   bool autoExtractTitleAndArtist = settings.ytAutoExtractVideoTagsFromInfo.value;
   bool keepCachedVersionsIfDownloaded = false;
@@ -153,9 +155,14 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   YTDownloadOptionFolderListTile(
                     maxTrailingWidth: context.width * 0.2,
                     visualDensity: visualDensity,
+                    playlistName: widget.playlistName,
                     initialFolder: _groupName.value,
-                    onDownloadGroupNameChanged: (newFolderPath) {
-                      _groupName.value = newFolderPath;
+                    onDownloadGroupNameChanged: (newGroupName) {
+                      _groupName.value = newGroupName;
+                      _folderController.currentState?.onGroupNameChanged(newGroupName);
+                    },
+                    onDownloadFolderAdded: (newFolderName) {
+                      _folderController.currentState?.onFolderAdd(newFolderName);
                     },
                   ),
                   CustomSwitchListTile(
@@ -303,14 +310,18 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   ),
                 ),
               ),
-              YTDownloadOptionFolderListTile(
-                visualDensity: VisualDensity.compact,
-                trailingPadding: 12.0,
-                initialFolder: _groupName.value,
-                subtitle: (value) => "${AppDirs.YOUTUBE_DOWNLOADS}$value",
-                onDownloadGroupNameChanged: (newFolderPath) {
-                  _groupName.value = newFolderPath;
-                },
+              Obx(
+                () => YTDownloadOptionFolderListTile(
+                  key: _folderController,
+                  visualDensity: VisualDensity.compact,
+                  trailingPadding: 12.0,
+                  playlistName: widget.playlistName,
+                  initialFolder: _groupName.value,
+                  subtitle: (value) => "${AppDirs.YOUTUBE_DOWNLOADS}$value",
+                  onDownloadGroupNameChanged: (newGroupName) {
+                    _groupName.value = newGroupName;
+                  },
+                ),
               ),
               Expanded(
                 child: NamidaScrollbar(

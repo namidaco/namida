@@ -20,7 +20,7 @@ Future<void> showVideoDownloadOptionsSheet({
   required String? videoUploader,
   required Map<String, String?> tagMaps,
   required bool supportTagging,
-  required void Function(String newFolderPath) onDownloadGroupNameChanged,
+  required void Function(String newGroupName) onDownloadGroupNameChanged,
   required bool showSpecificFileOptions,
 }) async {
   final controllersMap = {for (final t in FFMPEGTagField.values) t: TextEditingController(text: tagMaps[t])};
@@ -218,8 +218,10 @@ Future<void> showVideoDownloadOptionsSheet({
 }
 
 class YTDownloadOptionFolderListTile extends StatefulWidget {
-  final void Function(String newFolderPath) onDownloadGroupNameChanged;
+  final void Function(String newGroupName) onDownloadGroupNameChanged;
+  final void Function(String newFolderName)? onDownloadFolderAdded;
   final String initialFolder;
+  final String playlistName;
   final String Function(String value)? subtitle;
   final double trailingPadding;
   final VisualDensity? visualDensity;
@@ -228,7 +230,9 @@ class YTDownloadOptionFolderListTile extends StatefulWidget {
   const YTDownloadOptionFolderListTile({
     super.key,
     required this.onDownloadGroupNameChanged,
+    this.onDownloadFolderAdded,
     this.initialFolder = '',
+    this.playlistName = '',
     this.subtitle,
     this.trailingPadding = 0,
     this.visualDensity,
@@ -236,17 +240,19 @@ class YTDownloadOptionFolderListTile extends StatefulWidget {
   });
 
   @override
-  State<YTDownloadOptionFolderListTile> createState() => _YTDownloadOptionFolderListTileState();
+  State<YTDownloadOptionFolderListTile> createState() => YTDownloadOptionFolderListTileState();
 }
 
-class _YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderListTile> {
+class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderListTile> {
   final groupName = ''.obs;
   final availableDirectoriesNames = <String, int>{};
 
   @override
   void initState() {
-    availableDirectoriesNames[widget.initialFolder] = 0; // to put at first
-    availableDirectoriesNames[''] = 0; // to put at first
+    // -- to put at first
+    availableDirectoriesNames[widget.playlistName] = 0;
+    availableDirectoriesNames[widget.initialFolder] = 0;
+    availableDirectoriesNames[''] = 0;
     int rootFiles = 0;
     for (final d in Directory(AppDirs.YOUTUBE_DOWNLOADS).listSync()) {
       if (d is Directory) {
@@ -271,7 +277,15 @@ class _YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderL
     widget.onDownloadGroupNameChanged(val);
   }
 
-  void onFolderAddTap() async {
+  void onFolderAdd(String name) {
+    onGroupNameChanged(name);
+    try {
+      availableDirectoriesNames[name] = Directory("${AppDirs.YOUTUBE_DOWNLOADS}$name").listSync().length; // prolly 0 but eghh maybe edge cases
+    } catch (_) {}
+    widget.onDownloadFolderAdded?.call(name);
+  }
+
+  void _onFolderAddTap() async {
     final c = TextEditingController();
     final fk = GlobalKey<FormState>();
     await NamidaNavigator.inst.navigateDialog(
@@ -286,8 +300,7 @@ class _YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderL
               text: lang.ADD,
               onPressed: () {
                 if (fk.currentState?.validate() == true) {
-                  onGroupNameChanged(c.text);
-                  availableDirectoriesNames[c.text] = Directory("${AppDirs.YOUTUBE_DOWNLOADS}${c.text}").listSync().length; // prolly 0 but eghh maybe edge cases
+                  onFolderAdd(c.text);
                   NamidaNavigator.inst.closeDialog();
                 }
               },
@@ -310,7 +323,7 @@ class _YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderL
         ),
       ),
     );
-    c.dispose();
+    c.disposeAfterAnimation();
   }
 
   @override
@@ -321,7 +334,7 @@ class _YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderL
         icon: Broken.add_circle,
         iconColor: context.defaultIconColor(),
         horizontalPadding: 0.0,
-        onPressed: onFolderAddTap,
+        onPressed: _onFolderAddTap,
       ),
       visualDensity: widget.visualDensity,
       title: lang.FOLDER,
@@ -331,12 +344,12 @@ class _YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderL
           NamidaPopupItem(
             icon: Broken.add,
             title: lang.ADD,
-            onTap: onFolderAddTap,
+            onTap: _onFolderAddTap,
           ),
           ...availableDirectoriesNames.keys.map(
             (name) {
               final title = name == '' ? lang.DEFAULT : name;
-              final icon = name == widget.initialFolder
+              final icon = name == widget.playlistName
                   ? Broken.music_playlist
                   : name == ''
                       ? Broken.folder_2
@@ -361,7 +374,7 @@ class _YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderL
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                    groupName.value == widget.initialFolder
+                    groupName.value == widget.playlistName
                         ? Broken.music_playlist
                         : groupName.value == ''
                             ? Broken.folder_2
@@ -369,7 +382,7 @@ class _YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderL
                     size: 18.0),
                 const SizedBox(width: 6.0),
                 ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: 0, maxWidth: widget.maxTrailingWidth ?? context.width * 0.34),
+                  constraints: BoxConstraints(minWidth: 0, maxWidth: context.width * 0.34),
                   child: Text(
                     "$title$countText",
                     style: context.textTheme.displayMedium,
