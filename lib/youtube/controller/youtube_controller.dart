@@ -133,11 +133,11 @@ class YoutubeController {
   final downloadedFilesMap = <String, Map<String, File?>>{}.obs;
 
   /// Temporarely saves StreamInfoItem info for flawless experience while waiting for real info.
-  final _tempVideoInfosFromStreams = <String, StreamInfoItem>{}; // {id: StreamInfoItem()}
+  final tempVideoInfosFromStreams = <String, StreamInfoItem>{}; // {id: StreamInfoItem()}
 
   /// Used for easily displaying title & channel inside history directly without needing to fetch or rely on cache.
   /// This comes mainly after a youtube history import
-  final _tempBackupVideoInfo = <String, YoutubeVideoHistory>{}; // {id: YoutubeVideoHistory()}
+  final tempBackupVideoInfo = <String, YoutubeVideoHistory>{}; // {id: YoutubeVideoHistory()}
 
   /// [renameCacheFiles] requires you to stop the download first, otherwise it might result in corrupted files.
   Future<void> renameConfigFilename({
@@ -200,21 +200,19 @@ class YoutubeController {
     await _writeTaskGroupToStorage(groupName: groupName);
   }
 
-  YoutubeVideoHistory? getBackupVideoInfo(String id) {
-    _tempVideoInfosFromStreams.remove('');
-    return _tempBackupVideoInfo[id];
-  }
+  YoutubeVideoHistory? getBackupVideoInfo(String id) => tempBackupVideoInfo[id];
 
   Future<void> fillBackupInfoMap() async {
     final map = await _fillBackupInfoMapIsolate.thready(AppDirs.YT_STATS);
-    _tempBackupVideoInfo
+    tempBackupVideoInfo
       ..clear()
       ..addAll(map);
+    tempBackupVideoInfo.remove('');
   }
 
   static Map<String, YoutubeVideoHistory> _fillBackupInfoMapIsolate(String dirPath) {
     final map = <String, YoutubeVideoHistory>{};
-    for (final f in Directory(dirPath).listSync()) {
+    for (final f in Directory(dirPath).listSyncSafe()) {
       if (f is File) {
         try {
           final response = f.readAsJsonSync();
@@ -235,15 +233,28 @@ class YoutubeController {
   String getYoutubeLink(String id) => id.toYTUrl();
 
   VideoInfo? getTemporarelyVideoInfo(String id, {bool checkFromStorage = true}) {
-    _tempVideoInfosFromStreams.remove('');
-    final si = _tempVideoInfosFromStreams[id];
+    final si = tempVideoInfosFromStreams[id];
     if (si != null) return VideoInfo.fromStreamInfoItem(si);
     if (checkFromStorage) {
       final file = File('${AppDirs.YT_METADATA_TEMP}$id.txt');
       final res = file.readAsJsonSync();
       try {
         final strInfo = StreamInfoItem.fromMap(res);
-        return VideoInfo.fromStreamInfoItem(strInfo);
+        return strInfo.toVideoInfo();
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  StreamInfoItem? getTemporarelyStreamInfo(String id, {bool checkFromStorage = true}) {
+    final si = tempVideoInfosFromStreams[id];
+    if (si != null) si;
+    if (checkFromStorage) {
+      final file = File('${AppDirs.YT_METADATA_TEMP}$id.txt');
+      final res = file.readAsJsonSync();
+      try {
+        final strInfo = StreamInfoItem.fromMap(res);
+        return strInfo;
       } catch (_) {}
     }
     return null;
@@ -252,7 +263,7 @@ class YoutubeController {
   /// Keeps the map at max 2000 items. maintained by least recently used.
   void _fillTempVideoInfoMap(Iterable<StreamInfoItem>? items) async {
     if (items != null) {
-      final map = _tempVideoInfosFromStreams;
+      final map = tempVideoInfosFromStreams;
 
       final entriesForStorage = <MapEntry<String, Map<String, String?>>>[];
       for (final e in items) {
@@ -464,7 +475,7 @@ class YoutubeController {
       }
     }
 
-    final channelUrl = _tempVideoInfosFromStreams[id]?.uploaderUrl;
+    final channelUrl = tempVideoInfosFromStreams[id]?.uploaderUrl;
 
     if (channelUrl != null) {
       await Future.wait([

@@ -29,6 +29,10 @@ class NamidaNavigator {
 
   final navKey = Get.nestedKey(1);
 
+  final ytLocalSearchNavigatorKey = Get.nestedKey(9);
+
+  bool isytLocalSearchInFullPage = false;
+
   final RxList<NamidaRoute> currentWidgetStack = <NamidaRoute>[].obs;
   NamidaRoute? get currentRoute => currentWidgetStack.lastOrNull;
   int _currentDialogNumber = 0;
@@ -311,6 +315,12 @@ class NamidaNavigator {
     }
     if (MiniPlayerController.inst.ytMiniplayerKey.currentState?.isExpanded == true) {
       MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
+      return;
+    }
+    final ytsnvks = ytLocalSearchNavigatorKey?.currentState;
+    if (ytsnvks != null) {
+      ytsnvks.pop();
+      isytLocalSearchInFullPage = false;
       return;
     }
     if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {

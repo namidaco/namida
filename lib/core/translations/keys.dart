@@ -375,6 +375,7 @@ abstract class LanguageKeys {
   String get NOTE => _getKey('NOTE');
   String get NUMBER_OF_TRACKS => _getKey('NUMBER_OF_TRACKS');
   String get OF => _getKey('OF');
+  String get OFFLINE_SEARCH => _getKey('OFFLINE_SEARCH');
   String get OFFSET => _getKey('OFFSET');
   String get OLDEST_WATCH => _getKey('OLDEST_WATCH');
   String get OLD_DIRECTORY => _getKey('OLD_DIRECTORY');
