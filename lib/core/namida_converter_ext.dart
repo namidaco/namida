@@ -538,7 +538,11 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
       case OnYoutubeLinkOpenAction.play:
         await Player.inst.playOrPause(0, streams.map((e) => YoutubeID(id: e.id ?? '', playlistID: null)), QueueSource.others);
       case OnYoutubeLinkOpenAction.alwaysAsk:
-        _showAskDialog((action) => action.executePlaylist(playlistUrl, context: context, playlist: plInfo));
+        _showAskDialog(
+          (action) => action.executePlaylist(playlistUrl, context: context, playlist: plInfo),
+          playlistToOpen: plInfo,
+          context: context?.mounted == true ? context : null,
+        );
 
       default:
         null;
@@ -571,7 +575,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
     }
   }
 
-  void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap) {
+  void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap, {YoutubePlaylist? playlistToOpen, BuildContext? context}) {
     final newVals = List<OnYoutubeLinkOpenAction>.from(OnYoutubeLinkOpenAction.values);
     newVals.remove(OnYoutubeLinkOpenAction.alwaysAsk);
     NamidaNavigator.inst.navigateDialog(
@@ -585,15 +589,25 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
           )
         ],
         child: Column(
-          children: newVals
-              .map(
-                (e) => CustomListTile(
-                  icon: e.toIcon(),
-                  title: e.toText(),
-                  onTap: () => onTap(e),
-                ),
-              )
-              .toList(),
+          children: [
+            if (playlistToOpen != null)
+              CustomListTile(
+                icon: Broken.export_2,
+                title: lang.OPEN,
+                onTap: () {
+                  NamidaNavigator.inst.closeDialog();
+                  context.safePop(rootNavigator: true);
+                  NamidaNavigator.inst.navigateTo(YTHostedPlaylistSubpage(playlist: playlistToOpen));
+                },
+              ),
+            ...newVals.map(
+              (e) => CustomListTile(
+                icon: e.toIcon(),
+                title: e.toText(),
+                onTap: () => onTap(e),
+              ),
+            )
+          ],
         ),
       ),
     );
