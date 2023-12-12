@@ -1292,6 +1292,10 @@ class NamidaMiniPlayer extends StatelessWidget {
                                           queueSource: QueueSource.playerQueue,
                                           cardColorOpacity: 0.5,
                                           fadeOpacity: i < currentIndex ? 0.3 : 0.0,
+                                          onPlaying: () {
+                                            // -- to improve performance, skipping process of checking new queues, etc..
+                                            Player.inst.skipToQueueItem(i);
+                                          },
                                         ),
                                       );
                                     },

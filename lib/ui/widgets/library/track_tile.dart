@@ -25,7 +25,8 @@ class TrackTile extends StatelessWidget {
   final bool draggableThumbnail;
   final Color? bgColor;
   final Widget? trailingWidget;
-  final void Function()? onTap;
+  final VoidCallback? onTap;
+  final VoidCallback? onPlaying;
   final String? playlistName;
   final String thirdLineText;
   final bool displayTrackNumber;
@@ -44,6 +45,7 @@ class TrackTile extends StatelessWidget {
     this.draggableThumbnail = true,
     this.bgColor,
     this.onTap,
+    this.onPlaying,
     this.trailingWidget,
     this.playlistName,
     required this.index,
@@ -124,6 +126,10 @@ class TrackTile extends StatelessWidget {
                         if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
                           _selectTrack();
                         } else {
+                          if (onPlaying != null) {
+                            onPlaying!();
+                            return;
+                          }
                           if (queueSource == QueueSource.search) {
                             ScrollSearchController.inst.unfocusKeyboard();
                             await Player.inst.playOrPause(
