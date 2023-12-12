@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:file_picker/file_picker.dart';
@@ -61,7 +63,7 @@ class IndexerSettings extends SettingSubpageProvider {
       };
 
   Future<void> _showRefreshPromptDialog(bool didModifyFolder) async {
-    _RefreshLibraryIcon.controller.repeat();
+    _RefreshLibraryIconController.repeat();
     final currentFiles = await Indexer.inst.getAudioFiles(forceReCheckDirs: didModifyFolder);
     final newPathsLength = Indexer.inst.getNewFoundPaths(currentFiles).length;
     final deletedPathLength = Indexer.inst.getDeletedPaths(currentFiles).length;
@@ -96,8 +98,8 @@ class IndexerSettings extends SettingSubpageProvider {
       );
     }
 
-    await _RefreshLibraryIcon.controller.fling(velocity: 0.6);
-    _RefreshLibraryIcon.controller.stop();
+    await _RefreshLibraryIconController.fling();
+    _RefreshLibraryIconController.stop();
   }
 
   Widget addFolderButton(void Function(String dirPath) onSuccessChoose) {
@@ -304,13 +306,26 @@ class IndexerSettings extends SettingSubpageProvider {
 
   @override
   Widget build(BuildContext context) {
+    const refreshIconKey1 = 'kurukuru';
+    const refreshIconKey2 = 'kururin';
     return SettingsCard(
       title: lang.INDEXER,
       subtitle: lang.INDEXER_SUBTITLE,
       icon: Broken.component,
-      trailing: const SizedBox(
-        height: 48.0,
-        child: IndexingPercentage(),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          NamidaIconButton(
+            icon: Broken.refresh_2,
+            tooltip: lang.REFRESH_LIBRARY,
+            onPressed: () => _showRefreshPromptDialog(false),
+            child: const _RefreshLibraryIcon(widgetKey: refreshIconKey2),
+          ),
+          const SizedBox(
+            height: 48.0,
+            child: IndexingPercentage(),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -624,7 +639,7 @@ class IndexerSettings extends SettingSubpageProvider {
             key: _IndexerSettingsKeys.refreshLibrary,
             child: CustomListTile(
               bgColor: getBgColor(_IndexerSettingsKeys.refreshLibrary),
-              leading: const _RefreshLibraryIcon(),
+              leading: const _RefreshLibraryIcon(widgetKey: refreshIconKey1),
               title: lang.REFRESH_LIBRARY,
               subtitle: lang.REFRESH_LIBRARY_SUBTITLE,
               onTap: () => _showRefreshPromptDialog(false),
@@ -800,9 +815,54 @@ class IndexerSettings extends SettingSubpageProvider {
   }
 }
 
+class _RefreshLibraryIconController {
+  static final _controllers = <String, AnimationController>{};
+
+  static AnimationController getController(String key) => _controllers[key]!;
+
+  static void init(String key, TickerProvider vsync) {
+    _controllers[key] ??= AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: vsync,
+    );
+  }
+
+  static void dispose(String key) {
+    _controllers[key]?.dispose();
+    _controllers.remove(key);
+  }
+
+  static void repeat() {
+    _loopControllers((c) => c?.repeat());
+  }
+
+  static Future<void> fling() async {
+    int controllersFlinging = _controllers.length;
+    final completer = Completer<void>();
+    _loopControllers(
+      (c) => c?.fling(velocity: 0.6).then((value) {
+        controllersFlinging--;
+        if (controllersFlinging == 0) completer.completeIfWasnt();
+      }),
+    );
+    await completer.future;
+  }
+
+  static void stop() {
+    _loopControllers((c) => c?.stop());
+  }
+
+  static void _loopControllers(void Function(AnimationController? c) execute) {
+    for (final k in _controllers.keys) {
+      final controller = _controllers[k];
+      execute(controller);
+    }
+  }
+}
+
 class _RefreshLibraryIcon extends StatefulWidget {
-  const _RefreshLibraryIcon({Key? key}) : super(key: key);
-  static late AnimationController controller;
+  final String widgetKey;
+  const _RefreshLibraryIcon({required this.widgetKey});
 
   @override
   State<_RefreshLibraryIcon> createState() => _RefreshLibraryIconState();
@@ -813,22 +873,19 @@ class _RefreshLibraryIconState extends State<_RefreshLibraryIcon> with TickerPro
   @override
   void initState() {
     super.initState();
-    _RefreshLibraryIcon.controller = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    );
+    _RefreshLibraryIconController.init(widget.widgetKey, this);
   }
 
   @override
   void dispose() {
-    _RefreshLibraryIcon.controller.dispose();
+    _RefreshLibraryIconController.dispose(widget.widgetKey);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return RotationTransition(
-      turns: turnsTween.animate(_RefreshLibraryIcon.controller),
+      turns: turnsTween.animate(_RefreshLibraryIconController.getController(widget.widgetKey)),
       child: Icon(
         Broken.refresh_2,
         color: context.defaultIconColor(),
