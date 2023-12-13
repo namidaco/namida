@@ -56,7 +56,7 @@ class YTCommentCard extends StatelessWidget {
             NamidaDummyContainer(
               width: 38.0,
               height: 38.0,
-              borderRadius: 999,
+              isCircle: true,
               shimmerEnabled: uploaderAvatar == null,
               child: YoutubeThumbnail(
                 isImportantInCache: false,
@@ -212,6 +212,150 @@ class YTCommentCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class YTCommentCardCompact extends StatelessWidget {
+  final YoutubeComment? comment;
+  const YTCommentCardCompact({super.key, required this.comment});
+
+  @override
+  Widget build(BuildContext context) {
+    final uploaderAvatar = comment?.uploaderAvatarUrl;
+    final author = comment?.author;
+    final uploadedFrom = comment?.uploadDate;
+    final commentText = comment?.commentText;
+    final likeCount = comment?.likeCount;
+    final repliesCount = comment?.replyCount == -1 ? null : comment?.replyCount;
+    final isHearted = comment?.hearted ?? false;
+    final isPinned = comment?.pinned ?? false;
+
+    final cid = comment?.commentId;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        NamidaDummyContainer(
+          width: 28.0,
+          height: 28.0,
+          isCircle: true,
+          shimmerEnabled: uploaderAvatar == null,
+          child: YoutubeThumbnail(
+            isImportantInCache: false,
+            channelUrl: uploaderAvatar,
+            width: 28.0,
+            isCircle: true,
+          ),
+        ),
+        const SizedBox(width: 10.0),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 2.0),
+              NamidaDummyContainer(
+                width: context.width * 0.5,
+                height: 12.0,
+                borderRadius: 6.0,
+                shimmerEnabled: author == null,
+                child: Row(
+                  children: [
+                    Text(
+                      [
+                        author,
+                        if (uploadedFrom != null) uploadedFrom,
+                      ].join(' • '),
+                      style: context.textTheme.displaySmall?.copyWith(
+                        fontSize: 11.5.multipliedFontScale,
+                        fontWeight: FontWeight.w400,
+                        color: context.theme.colorScheme.onBackground.withAlpha(180),
+                      ),
+                    ),
+                    if (isPinned) ...[
+                      const SizedBox(width: 4.0),
+                      const Icon(
+                        Broken.path,
+                        size: 14.0,
+                      ),
+                    ],
+                    if (isHearted) ...[
+                      const SizedBox(width: 4.0),
+                      const Icon(
+                        Broken.heart_tick,
+                        size: 14.0,
+                        color: Color.fromARGB(200, 250, 90, 80),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 2.0),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: commentText == null
+                    ? Column(
+                        children: [
+                          ...List.filled(
+                            3,
+                            const Padding(
+                              padding: EdgeInsets.only(top: 2.0),
+                              child: NamidaDummyContainer(
+                                width: null,
+                                height: 12.0,
+                                borderRadius: 4.0,
+                                shimmerEnabled: true,
+                                child: null,
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Text(
+                        YoutubeController.inst.commentToParsedHtml[cid] ?? commentText,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.displaySmall?.copyWith(
+                          fontSize: 12.5.multipliedFontScale,
+                          fontWeight: FontWeight.w500,
+                          color: context.theme.colorScheme.onBackground.withAlpha(220),
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 4.0),
+              Row(
+                children: [
+                  const SizedBox(width: 4.0),
+                  const Icon(Broken.like_1, size: 12.0),
+                  const SizedBox(width: 4.0),
+                  NamidaDummyContainer(
+                    width: 18.0,
+                    height: 8.0,
+                    borderRadius: 4.0,
+                    shimmerEnabled: likeCount == null,
+                    child: Text(
+                      likeCount?.formatDecimalShort() ?? '?',
+                      style: context.textTheme.displaySmall?.copyWith(
+                        fontSize: 11.5.multipliedFontScale,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12.0),
+                  if (repliesCount != null && repliesCount > 0)
+                    Text(
+                      [
+                        lang.REPLIES,
+                        repliesCount,
+                      ].join(' • '),
+                      style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w300),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -170,6 +170,7 @@ class SettingsController {
   final RxBool enableClipboardMonitoring = false.obs;
   final RxBool ytIsAudioOnlyMode = false.obs;
   final RxBool ytRememberAudioOnly = false.obs;
+  final RxBool ytTopComments = false.obs;
   final RxBool artworkGestureScale = false.obs;
   final RxBool artworkGestureDoubleTapLRC = true.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
@@ -446,6 +447,7 @@ class SettingsController {
       enableClipboardMonitoring.value = json['enableClipboardMonitoring'] ?? enableClipboardMonitoring.value;
       ytRememberAudioOnly.value = json['ytRememberAudioOnly'] ?? ytRememberAudioOnly.value;
       if (ytRememberAudioOnly.value) ytIsAudioOnlyMode.value = json['ytIsAudioOnlyMode'] ?? ytIsAudioOnlyMode.value;
+      ytTopComments.value = json['ytTopComments'] ?? ytTopComments.value;
       artworkGestureScale.value = json['artworkGestureScale'] ?? artworkGestureScale.value;
       artworkGestureDoubleTapLRC.value = json['artworkGestureDoubleTapLRC'] ?? artworkGestureDoubleTapLRC.value;
 
@@ -666,6 +668,7 @@ class SettingsController {
       'enableClipboardMonitoring': enableClipboardMonitoring.value,
       'ytIsAudioOnlyMode': ytIsAudioOnlyMode.value,
       'ytRememberAudioOnly': ytRememberAudioOnly.value,
+      'ytTopComments': ytTopComments.value,
       'artworkGestureScale': artworkGestureScale.value,
       'artworkGestureDoubleTapLRC': artworkGestureDoubleTapLRC.value,
       'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
@@ -855,6 +858,7 @@ class SettingsController {
     bool? enableClipboardMonitoring,
     bool? ytIsAudioOnlyMode,
     bool? ytRememberAudioOnly,
+    bool? ytTopComments,
     bool? artworkGestureScale,
     bool? artworkGestureDoubleTapLRC,
     List<TagField>? tagFieldsToEdit,
@@ -1329,6 +1333,9 @@ class SettingsController {
     }
     if (ytRememberAudioOnly != null) {
       this.ytRememberAudioOnly.value = ytRememberAudioOnly;
+    }
+    if (ytTopComments != null) {
+      this.ytTopComments.value = ytTopComments;
     }
     if (artworkGestureScale != null) {
       this.artworkGestureScale.value = artworkGestureScale;

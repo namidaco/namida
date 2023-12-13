@@ -9,6 +9,7 @@ class NamidaDummyContainer extends StatelessWidget {
   final Widget? child;
   final bool shimmerEnabled;
   final double borderRadius;
+  final bool isCircle;
 
   const NamidaDummyContainer({
     super.key,
@@ -17,6 +18,7 @@ class NamidaDummyContainer extends StatelessWidget {
     required this.child,
     required this.shimmerEnabled,
     this.borderRadius = 12.0,
+    this.isCircle = false,
   });
 
   @override
@@ -29,7 +31,8 @@ class NamidaDummyContainer extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: context.theme.colorScheme.background,
-              borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
+              borderRadius: isCircle ? null : BorderRadius.circular(borderRadius.multipliedRadius),
+              shape: isCircle ? BoxShape.circle : BoxShape.rectangle,
             ),
           );
   }

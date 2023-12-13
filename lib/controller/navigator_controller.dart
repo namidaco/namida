@@ -31,7 +31,10 @@ class NamidaNavigator {
 
   final ytLocalSearchNavigatorKey = Get.nestedKey(9);
 
+  final ytMiniplayerCommentsPageKey = Get.nestedKey(11);
+
   bool isytLocalSearchInFullPage = false;
+  bool isInYTCommentsSubpage = false;
 
   final RxList<NamidaRoute> currentWidgetStack = <NamidaRoute>[].obs;
   NamidaRoute? get currentRoute => currentWidgetStack.lastOrNull;
@@ -316,16 +319,26 @@ class NamidaNavigator {
       innerDrawerKey.currentState?.close();
       return;
     }
+
+    final ytmpcpks = ytMiniplayerCommentsPageKey?.currentState;
+    if (ytmpcpks != null) {
+      ytmpcpks.pop();
+      isInYTCommentsSubpage = false;
+      return;
+    }
+
     if (MiniPlayerController.inst.ytMiniplayerKey.currentState?.isExpanded == true) {
       MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
       return;
     }
+
     final ytsnvks = ytLocalSearchNavigatorKey?.currentState;
     if (ytsnvks != null) {
       ytsnvks.pop();
       isytLocalSearchInFullPage = false;
       return;
     }
+
     if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
       _hideSearchMenuAndUnfocus();
       return;

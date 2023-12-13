@@ -555,6 +555,8 @@ abstract class LanguageKeys {
   String get THEME_SETTINGS => _getKey('THEME_SETTINGS');
   String get THUMBNAILS => _getKey('THUMBNAILS');
   String get TITLE => _getKey('TITLE');
+  String get TOP_COMMENTS => _getKey('TOP_COMMENTS');
+  String get TOP_COMMENTS_SUBTITLE => _getKey('TOP_COMMENTS_SUBTITLE');
   String get TOP_RECENTS => _getKey('TOP_RECENTS');
   String get TOP_RECENT_ALBUMS => _getKey('TOP_RECENT_ALBUMS');
   String get TOP_RECENT_ARTISTS => _getKey('TOP_RECENT_ARTISTS');

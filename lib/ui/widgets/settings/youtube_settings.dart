@@ -13,6 +13,7 @@ import 'package:namida/ui/widgets/settings_card.dart';
 
 enum _YoutubeSettingKeys {
   rememberAudioOnly,
+  topComments,
   preferNewComments,
   dimMiniplayerAfter,
   dimIntensity,
@@ -29,6 +30,7 @@ class YoutubeSettings extends SettingSubpageProvider {
   @override
   Map<Enum, List<String>> get lookupMap => {
         _YoutubeSettingKeys.rememberAudioOnly: [lang.REMEMBER_AUDIO_ONLY_MODE],
+        _YoutubeSettingKeys.topComments: [lang.TOP_COMMENTS, lang.TOP_COMMENTS_SUBTITLE],
         _YoutubeSettingKeys.preferNewComments: [lang.YT_PREFER_NEW_COMMENTS, lang.YT_PREFER_NEW_COMMENTS_SUBTITLE],
         _YoutubeSettingKeys.dimMiniplayerAfter: [lang.DIM_MINIPLAYER_AFTER_SECONDS],
         _YoutubeSettingKeys.dimIntensity: [lang.DIM_INTENSITY],
@@ -53,6 +55,31 @@ class YoutubeSettings extends SettingSubpageProvider {
                 title: lang.REMEMBER_AUDIO_ONLY_MODE,
                 value: settings.ytRememberAudioOnly.value,
                 onChanged: (isTrue) => settings.save(ytRememberAudioOnly: !isTrue),
+              ),
+            ),
+          ),
+          getItemWrapper(
+            key: _YoutubeSettingKeys.topComments,
+            child: Obx(
+              () => CustomSwitchListTile(
+                bgColor: getBgColor(_YoutubeSettingKeys.topComments),
+                leading: const StackedIcon(
+                  baseIcon: Broken.document,
+                  secondaryIcon: Broken.arrow_circle_up,
+                  secondaryIconSize: 12.0,
+                ),
+                title: lang.TOP_COMMENTS,
+                subtitle: lang.TOP_COMMENTS_SUBTITLE,
+                value: settings.ytTopComments.value,
+                onChanged: (isTrue) {
+                  settings.save(ytTopComments: !isTrue);
+
+                  // -- pop comments subpage in case was inside.
+                  if (settings.ytTopComments.value == false) {
+                    NamidaNavigator.inst.ytMiniplayerCommentsPageKey?.currentState?.pop();
+                    NamidaNavigator.inst.isInYTCommentsSubpage = false;
+                  }
+                },
               ),
             ),
           ),
