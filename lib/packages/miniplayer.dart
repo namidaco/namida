@@ -1956,66 +1956,61 @@ class WaveformMiniplayer extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaHero(
       tag: 'MINIPLAYER_WAVEFORM',
-      child: Obx(
-        () {
-          final currentDurationInMS = Player.inst.nowPlayingTrack.duration * 1000;
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              void onSeekDragUpdate(double deltax) {
-                final percentageSwiped = deltax / constraints.maxWidth;
-                final newSeek = percentageSwiped * currentDurationInMS;
-                MiniPlayerController.inst.seekValue.value = newSeek.toInt();
-              }
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          void onSeekDragUpdate(double deltax) {
+            final percentageSwiped = deltax / constraints.maxWidth;
+            final newSeek = percentageSwiped * Player.inst.nowPlayingTrack.duration * 1000;
+            MiniPlayerController.inst.seekValue.value = newSeek.toInt();
+          }
 
-              void onSeekEnd() {
-                final ms = MiniPlayerController.inst.seekValue.value;
-                Player.inst.seek(Duration(milliseconds: ms));
-                MiniPlayerController.inst.seekValue.value = 0;
-              }
+          void onSeekEnd() {
+            final ms = MiniPlayerController.inst.seekValue.value;
+            Player.inst.seek(Duration(milliseconds: ms));
+            MiniPlayerController.inst.seekValue.value = 0;
+          }
 
-              return GestureDetector(
-                onTapDown: (details) => onSeekDragUpdate(details.localPosition.dx),
-                onTapUp: (details) => onSeekEnd(),
-                onTapCancel: () => MiniPlayerController.inst.seekValue.value = 0,
-                onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx),
-                onHorizontalDragEnd: (details) => onSeekEnd(),
-                child: WaveformComponent(
-                  key: const Key('waveform_widget'),
-                  color: context.theme.colorScheme.onBackground.withAlpha(40),
-                  barsColorOnTop: context.theme.colorScheme.onBackground.withAlpha(110),
-                  padding: fixPadding ? const EdgeInsets.symmetric(horizontal: 16.0 / 2) : null,
-                  widgetOnTop: (barsWidgetWithDiffColor) {
-                    return Obx(
-                      () {
-                        final seekValue = MiniPlayerController.inst.seekValue.value;
-                        final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPosition;
-                        final durInMs = currentDurationInMS;
-                        final percentage = (position / durInMs).clamp(0.0, durInMs.toDouble());
-                        return ShaderMask(
-                          blendMode: BlendMode.srcIn,
-                          shaderCallback: (Rect bounds) {
-                            return LinearGradient(
-                              tileMode: TileMode.decal,
-                              stops: [0.0, percentage, percentage + 0.005, 1.0],
-                              colors: [
-                                Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(220), context.theme.colorScheme.onBackground),
-                                Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(180), context.theme.colorScheme.onBackground),
-                                Colors.transparent,
-                                Colors.transparent,
-                              ],
-                            ).createShader(bounds);
-                          },
-                          child: SizedBox(
-                            width: Get.width - 16.0 / 2,
-                            child: barsWidgetWithDiffColor,
-                          ),
-                        );
+          return GestureDetector(
+            onTapDown: (details) => onSeekDragUpdate(details.localPosition.dx),
+            onTapUp: (details) => onSeekEnd(),
+            onTapCancel: () => MiniPlayerController.inst.seekValue.value = 0,
+            onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx),
+            onHorizontalDragEnd: (details) => onSeekEnd(),
+            child: WaveformComponent(
+              key: const Key('waveform_widget'),
+              color: context.theme.colorScheme.onBackground.withAlpha(40),
+              barsColorOnTop: context.theme.colorScheme.onBackground.withAlpha(110),
+              padding: fixPadding ? const EdgeInsets.symmetric(horizontal: 16.0 / 2) : null,
+              widgetOnTop: (barsWidgetWithDiffColor) {
+                return Obx(
+                  () {
+                    final seekValue = MiniPlayerController.inst.seekValue.value;
+                    final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPosition;
+                    final durInMs = Player.inst.nowPlayingTrack.duration * 1000;
+                    final percentage = (position / durInMs).clamp(0.0, durInMs.toDouble());
+                    return ShaderMask(
+                      blendMode: BlendMode.srcIn,
+                      shaderCallback: (Rect bounds) {
+                        return LinearGradient(
+                          tileMode: TileMode.decal,
+                          stops: [0.0, percentage, percentage + 0.005, 1.0],
+                          colors: [
+                            Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(220), context.theme.colorScheme.onBackground),
+                            Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(180), context.theme.colorScheme.onBackground),
+                            Colors.transparent,
+                            Colors.transparent,
+                          ],
+                        ).createShader(bounds);
                       },
+                      child: SizedBox(
+                        width: Get.width - 16.0 / 2,
+                        child: barsWidgetWithDiffColor,
+                      ),
                     );
                   },
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         },
       ),
