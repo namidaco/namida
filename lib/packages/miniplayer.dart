@@ -1169,7 +1169,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
 
                 /// Slider
                 if (slowOpacity > 0.0)
-                  NamidaOpacity(
+                  Opacity(
                     opacity: slowOpacity,
                     child: Transform.translate(
                       offset: Offset(

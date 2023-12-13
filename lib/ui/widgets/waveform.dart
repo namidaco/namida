@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:namida/controller/settings_controller.dart';
 
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -47,16 +46,19 @@ class _WaveformComponentState extends State<WaveformComponent> {
   late Widget _stockWidget;
   Key? _lastKey;
 
-  NamidaWaveBars barRows(List<double> waveList, double barWidth, Color? color) => NamidaWaveBars(
-        waveList: waveList,
-        color: color,
-        borderRadius: 5.0,
-        barWidth: barWidth,
-        barMinHeight: widget.barsMinHeight,
-        barMaxHeight: widget.barsMaxHeight,
-        animationDurationMS: widget.durationInMilliseconds,
-        animationCurve: widget.curve,
-      );
+  @override
+  void initState() {
+    super.initState();
+    _fillWidget();
+    WaveformController.inst.canModifyUIWaveform = true;
+    if (WaveformController.inst.currentWaveformUI.isEqualTo(kDefaultWaveFormData)) WaveformController.inst.calculateUIWaveform();
+  }
+
+  @override
+  void dispose() {
+    WaveformController.inst.canModifyUIWaveform = false;
+    super.dispose();
+  }
 
   void _fillWidget() {
     _lastKey = widget.key;
@@ -68,21 +70,34 @@ class _WaveformComponentState extends State<WaveformComponent> {
       decoration: BoxDecoration(color: widget.bgColor, borderRadius: widget.borderRadius),
       child: Obx(
         () {
-          final waveform = WaveformController.inst.currentWaveform;
-          final clamping = waveform.isEqualTo(kDefaultWaveFormData) ? null : widget.barsMaxHeight;
-          final downscaled = waveform.changeListSize(
-            targetSize: settings.waveformTotalBars.value,
-            multiplier: 0.9,
-            clampToMax: clamping,
-            enforceClampToMax: false,
-          );
-          final barWidth = Get.width / downscaled.length * 0.45;
-
+          final downscaled = WaveformController.inst.currentWaveformUI;
+          final barWidth = context.width / downscaled.length * 0.45;
           return Center(
             child: Stack(
               children: [
-                barRows(downscaled, barWidth, widget.color),
-                if (widget.widgetOnTop != null) widget.widgetOnTop!(barRows(downscaled, barWidth, widget.barsColorOnTop)),
+                NamidaWaveBars(
+                  waveList: downscaled,
+                  color: widget.color,
+                  borderRadius: 5.0,
+                  barWidth: barWidth,
+                  barMinHeight: widget.barsMinHeight,
+                  barMaxHeight: widget.barsMaxHeight,
+                  animationDurationMS: widget.durationInMilliseconds,
+                  animationCurve: widget.curve,
+                ),
+                if (widget.widgetOnTop != null)
+                  widget.widgetOnTop!(
+                    NamidaWaveBars(
+                      waveList: downscaled,
+                      color: widget.barsColorOnTop,
+                      borderRadius: 5.0,
+                      barWidth: barWidth,
+                      barMinHeight: widget.barsMinHeight,
+                      barMaxHeight: widget.barsMaxHeight,
+                      animationDurationMS: widget.durationInMilliseconds,
+                      animationCurve: widget.curve,
+                    ),
+                  ),
               ],
             ),
           );
@@ -93,7 +108,7 @@ class _WaveformComponentState extends State<WaveformComponent> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.key == null || widget.key != _lastKey) {
+    if (_lastKey == null || widget.key != _lastKey) {
       _fillWidget();
     }
     return _stockWidget;

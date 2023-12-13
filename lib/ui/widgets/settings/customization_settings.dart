@@ -9,6 +9,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
+import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -1000,6 +1001,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                         onValueChanged: (val) {
                           final v = (val + 40);
                           settings.save(waveformTotalBars: v);
+                          WaveformController.inst.calculateUIWaveform();
                         },
                         text: settings.waveformTotalBars.value.toString(),
                       ),
