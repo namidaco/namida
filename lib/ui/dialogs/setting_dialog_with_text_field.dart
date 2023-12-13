@@ -52,6 +52,9 @@ Future<void> showSettingDialogWithTextField({
   void onTTSetChange() => onTrackTileSettingsChanged?.call();
 
   await NamidaNavigator.inst.navigateDialog(
+    onDisposing: () {
+      controller.dispose();
+    },
     dialog: Form(
       key: formKey,
       child: CustomBlurryDialog(

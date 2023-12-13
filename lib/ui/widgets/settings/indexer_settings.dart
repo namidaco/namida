@@ -676,6 +676,7 @@ class IndexerSettings extends SettingSubpageProvider {
     NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
         updatingLibrary.close();
+        separatorsController.dispose();
       },
       onDismissing: isBlackListDialog
           ? null

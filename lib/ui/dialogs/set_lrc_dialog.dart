@@ -176,6 +176,7 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
     await NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
         newOffset.closeAfterDelay();
+        offsetController.dispose();
       },
       colorScheme: colorScheme,
       dialogBuilder: (theme) => CustomBlurryDialog(
@@ -311,6 +312,7 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
       fetchedLyrics.close();
       selectedLyrics.close();
       expandedLyrics.close();
+      searchController.dispose();
     },
     colorScheme: colorScheme,
     dialogBuilder: (theme) => CustomBlurryDialog(

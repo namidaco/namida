@@ -215,6 +215,9 @@ Future<void> showVideoDownloadOptionsSheet({
       );
     },
   );
+  for (final c in controllersMap.values) {
+    c.dispose();
+  }
 }
 
 class YTDownloadOptionFolderListTile extends StatefulWidget {

@@ -144,6 +144,9 @@ Future<void> showGeneralPopupDialog(
     final title = isTags ? lang.SET_TAGS : lang.SET_MOODS;
     final subtitle = lang.SET_MOODS_SUBTITLE;
     await openDialog(
+      onDisposing: () {
+        controller.dispose();
+      },
       CustomBlurryDialog(
         title: title,
         actions: [
@@ -224,6 +227,9 @@ Future<void> showGeneralPopupDialog(
   void setTrackRating() async {
     final c = TextEditingController();
     await openDialog(
+      onDisposing: () {
+        c.dispose();
+      },
       CustomBlurryDialog(
         title: lang.SET_RATING,
         actions: [
@@ -255,6 +261,9 @@ Future<void> showGeneralPopupDialog(
     final controller = TextEditingController(text: playlistName);
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
     await openDialog(
+      onDisposing: () {
+        controller.dispose();
+      },
       Form(
         key: formKey,
         child: CustomBlurryDialog(
@@ -412,6 +421,7 @@ Future<void> showGeneralPopupDialog(
       onDisposing: () {
         filteredPaths.close();
         shouldCleanUp.close();
+        txtc.dispose();
       },
       CustomBlurryDialog(
         title: lang.CHOOSE,

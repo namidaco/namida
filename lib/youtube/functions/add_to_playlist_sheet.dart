@@ -36,7 +36,7 @@ void showAddToPlaylistSheet({
 
   await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
   // ignore: use_build_context_synchronously
-  showModalBottomSheet(
+  await showModalBottomSheet(
     useRootNavigator: true,
     backgroundColor: Colors.transparent,
     context: context,
@@ -151,4 +151,5 @@ void showAddToPlaylistSheet({
       );
     },
   );
+  controller.disposeAfterAnimation();
 }

@@ -54,6 +54,10 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
   final ytlink = singleTrack.youtubeLink;
   controller.text = ytlink;
   NamidaNavigator.inst.navigateDialog(
+    onDisposing: () {
+      controller.dispose();
+      ytSearchController.dispose();
+    },
     colorScheme: colorScheme,
     dialogBuilder: (theme) => Form(
       key: formKey,
@@ -246,6 +250,9 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
       canEditTags.close();
       didAutoExtractFromFilename.close();
       currentImagePath.close();
+      for (final c in tagsControllers.values) {
+        c.dispose();
+      }
     },
     scale: 0.94,
     colorScheme: colorScheme,

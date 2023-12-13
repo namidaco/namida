@@ -828,6 +828,8 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
         NamidaNavigator.inst.navigateDialog(
             onDisposing: () {
               updateMissingOnly.close();
+              oldDirController.dispose();
+              newDirController.dispose();
             },
             colorScheme: colorScheme,
             dialogBuilder: (theme) => Form(

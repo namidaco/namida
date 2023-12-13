@@ -476,6 +476,8 @@ void showLibraryTracksChooseDialog({
     onDisposing: () {
       allTracksList.close();
       selectedTrack.close();
+      searchController.dispose();
+      focusNode.dispose();
     },
     colorScheme: colorScheme,
     dialogBuilder: (theme) => CustomBlurryDialog(
