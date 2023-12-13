@@ -515,6 +515,14 @@ class BackupAndRestore extends SettingSubpageProvider {
                             final oldestDate = Rxn<DateTime>();
                             DateTime? newestDate;
                             NamidaNavigator.inst.navigateDialog(
+                              onDisposing: () {
+                                isMatchingTypeLink.close();
+                                isMatchingTypeTitleAndArtist.close();
+                                matchYT.close();
+                                matchYTMusic.close();
+                                matchAll.close();
+                                oldestDate.close();
+                              },
                               dialog: CustomBlurryDialog(
                                 title: lang.CONFIGURE,
                                 actions: [
@@ -655,6 +663,10 @@ class BackupAndRestore extends SettingSubpageProvider {
                             DateTime? newestDate;
                             final matchAll = false.obs;
                             NamidaNavigator.inst.navigateDialog(
+                              onDisposing: () {
+                                oldestDate.close();
+                                matchAll.close();
+                              },
                               dialog: CustomBlurryDialog(
                                 insetPadding: const EdgeInsets.all(38.0),
                                 title: lang.CONFIGURE,

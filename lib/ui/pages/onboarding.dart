@@ -55,6 +55,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
   @override
   void dispose() {
     c.dispose();
+    _shouldShowGlow.close();
     super.dispose();
   }
 

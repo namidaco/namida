@@ -268,6 +268,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     final didRead = false.obs;
 
     await NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        didRead.close();
+      },
       dialog: CustomBlurryDialog(
         actions: [
           const CancelButton(),

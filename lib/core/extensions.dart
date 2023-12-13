@@ -494,10 +494,14 @@ extension ExecuteDelayedUtils<T> on T Function() {
   Future<T> executeDelayed(Duration dur) async {
     return await Future.delayed(dur, this);
   }
+
+  Future<T> executeAfterDelay({int durationMS = 2000}) async {
+    return await executeDelayed(Duration(milliseconds: durationMS));
+  }
 }
 
-extension RxStreamClosing<T> on Rx<T> {
-  Future<void> closeAfterDelay({int durationMS = 500}) async {
-    return await Future.delayed(Duration(milliseconds: durationMS), close);
+extension RxStreamClosing<T extends RxInterface> on T {
+  Future<void> closeAfterDelay({int durationMS = 2000}) async {
+    await close.executeAfterDelay(durationMS: durationMS);
   }
 }

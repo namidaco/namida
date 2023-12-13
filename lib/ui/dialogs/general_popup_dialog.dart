@@ -87,8 +87,8 @@ Future<void> showGeneralPopupDialog(
 
   final Iterable<YoutubeID> availableYoutubeIDs = tracks.map((e) => YoutubeID(id: e.youtubeID, playlistID: null)).where((element) => element.id != '');
 
-  RxInt numberOfRepeats = 1.obs;
-  RxBool isLoadingFilesToShare = false.obs;
+  final numberOfRepeats = 1.obs;
+  final isLoadingFilesToShare = false.obs;
 
   final iconColor = Color.alphaBlend(colorDelightened.withAlpha(120), Get.textTheme.displayMedium!.color!);
 
@@ -126,8 +126,9 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  void openDialog(Widget widget) {
-    NamidaNavigator.inst.navigateDialog(
+  Future<void> openDialog(Widget widget, {void Function()? onDisposing}) async {
+    await NamidaNavigator.inst.navigateDialog(
+      onDisposing: onDisposing,
       colorScheme: colorDelightened,
       dialogBuilder: (theme) => widget,
     );
@@ -135,14 +136,14 @@ Future<void> showGeneralPopupDialog(
 
   void cancelSkipTimer() => Player.inst.cancelPlayErrorSkipTimer();
 
-  void setMoodsOrTags(List<String> initialMoods, void Function(List<String> moodsFinal) saveFunction, {bool isTags = false}) {
+  void setMoodsOrTags(List<String> initialMoods, void Function(List<String> moodsFinal) saveFunction, {bool isTags = false}) async {
     final controller = TextEditingController();
     final currentMoods = initialMoods.join(', ');
     controller.text = currentMoods;
 
     final title = isTags ? lang.SET_TAGS : lang.SET_MOODS;
     final subtitle = lang.SET_MOODS_SUBTITLE;
-    openDialog(
+    await openDialog(
       CustomBlurryDialog(
         title: title,
         actions: [
@@ -198,7 +199,7 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  Rx<TrackStats> stats = tracks.first.stats.obs;
+  final stats = tracks.first.stats.obs;
 
   void setTrackMoods() {
     setMoodsOrTags(
@@ -220,9 +221,9 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  void setTrackRating() {
+  void setTrackRating() async {
     final c = TextEditingController();
-    openDialog(
+    await openDialog(
       CustomBlurryDialog(
         title: lang.SET_RATING,
         actions: [
@@ -246,14 +247,14 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  void renamePlaylist() {
+  void renamePlaylist() async {
     // function button won't be visible if playlistName == null.
     if (!shoulShowPlaylistUtils()) return;
     cancelSkipTimer();
 
     final controller = TextEditingController(text: playlistName);
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-    openDialog(
+    await openDialog(
       Form(
         key: formKey,
         child: CustomBlurryDialog(
@@ -339,8 +340,8 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  void updatePathDialog(String newPath) {
-    openDialog(
+  void updatePathDialog(String newPath) async {
+    await openDialog(
       CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
@@ -407,7 +408,11 @@ Future<void> showGeneralPopupDialog(
     filteredPaths.addAll(paths);
     final RxBool shouldCleanUp = true.obs;
 
-    openDialog(
+    await openDialog(
+      onDisposing: () {
+        filteredPaths.close();
+        shouldCleanUp.close();
+      },
       CustomBlurryDialog(
         title: lang.CHOOSE,
         actions: [
@@ -567,7 +572,12 @@ Future<void> showGeneralPopupDialog(
         )
       : null;
 
-  NamidaNavigator.inst.navigateDialog(
+  await NamidaNavigator.inst.navigateDialog(
+    onDisposing: () {
+      numberOfRepeats.close();
+      isLoadingFilesToShare.close();
+      stats.close();
+    },
     colorScheme: colorDelightened,
     lighterDialogColor: false,
     durationInMs: 400,
@@ -712,7 +722,7 @@ Future<void> showGeneralPopupDialog(
                             /// firstly checks if a file exists in current library
                             final firstHighMatchesFiles = NamidaGenerator.inst.getHighMatcheFilesFromFilename(Indexer.inst.allAudioFiles, tracks.first.path.getFilename);
                             if (firstHighMatchesFiles.isNotEmpty) {
-                              openDialog(
+                              await openDialog(
                                 CustomBlurryDialog(
                                   title: lang.CHOOSE,
                                   actions: [

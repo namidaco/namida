@@ -137,6 +137,10 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
                   final minutes = Player.inst.sleepAfterMin.obs;
                   final tracks = Player.inst.sleepAfterTracks.obs;
                   NamidaNavigator.inst.navigateDialog(
+                    onDisposing: () {
+                      minutes.close();
+                      tracks.close();
+                    },
                     dialog: CustomBlurryDialog(
                       title: lang.SLEEP_AFTER,
                       icon: Broken.timer_1,

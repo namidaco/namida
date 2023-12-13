@@ -48,7 +48,14 @@ void showTrackAdvancedDialog({
 
   final firstTracksDirectoryPath = tracksUniqued.first.track.path.getDirectoryPath;
 
-  NamidaNavigator.inst.navigateDialog(
+  await NamidaNavigator.inst.navigateDialog(
+    onDisposing: () {
+      willUpdateArtwork.close();
+      reIndexedTracksSuccessful.close();
+      reIndexedTracksFailed.close();
+      shouldShowReIndexProgress.close();
+      shouldReIndexEnabled.close();
+    },
     colorScheme: colorScheme,
     dialogBuilder: (theme) => CustomBlurryDialog(
       theme: theme,
@@ -208,7 +215,7 @@ void _showTrackColorPaletteDialog({
   required NamidaColor trackColor,
   required void Function(List<Color> palette, Color color) onFinalColor,
   required void Function() onRestoreDefaults,
-}) {
+}) async {
   final allPaletteColor = List<Color>.from(trackColor.palette).obs;
   final selectedColors = <Color>[].obs;
   final removedColors = <Color>[].obs;
@@ -306,7 +313,14 @@ void _showTrackColorPaletteDialog({
     );
   }
 
-  NamidaNavigator.inst.navigateDialog(
+  await NamidaNavigator.inst.navigateDialog(
+    onDisposing: () {
+      allPaletteColor.close();
+      selectedColors.close();
+      removedColors.close();
+      didChangeOriginalPalette.close();
+      finalColorToBeUsed.close();
+    },
     colorScheme: colorScheme,
     dialogBuilder: (theme) {
       return CustomBlurryDialog(
@@ -444,7 +458,7 @@ void showLibraryTracksChooseDialog({
   required void Function(Track choosenTrack) onChoose,
   String trackName = '',
   Color? colorScheme,
-}) {
+}) async {
   final allTracksList = List<Track>.from(allTracksInLibrary).obs;
   final selectedTrack = Rxn<Track>();
   void onTrackTap(Track tr) {
@@ -458,7 +472,11 @@ void showLibraryTracksChooseDialog({
   final searchController = TextEditingController();
   final focusNode = FocusNode();
 
-  NamidaNavigator.inst.navigateDialog(
+  await NamidaNavigator.inst.navigateDialog(
+    onDisposing: () {
+      allTracksList.close();
+      selectedTrack.close();
+    },
     colorScheme: colorScheme,
     dialogBuilder: (theme) => CustomBlurryDialog(
       title: lang.CHOOSE,

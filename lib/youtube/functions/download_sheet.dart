@@ -254,7 +254,7 @@ Future<void> showDownloadVideoBottomSheet({
 
   await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
   // ignore: use_build_context_synchronously
-  showModalBottomSheet(
+  await showModalBottomSheet(
     isScrollControlled: true,
     context: context,
     builder: (context) {
@@ -632,4 +632,18 @@ Future<void> showDownloadVideoBottomSheet({
       );
     },
   );
+
+  void closeStreams() {
+    showAudioWebm.close();
+    showVideoWebm.close();
+    video.close();
+    selectedAudioOnlyStream.close();
+    selectedVideoOnlyStream.close();
+    videoInfo.dispose();
+    videoOutputFilenameController.dispose();
+    videoThumbnail.close();
+    filenameExists.close();
+  }
+
+  closeStreams.executeAfterDelay();
 }

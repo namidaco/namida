@@ -287,6 +287,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     seekAnimationForward2.dispose();
     seekAnimationBackward1.dispose();
     seekAnimationBackward2.dispose();
+    userSeekMS.close();
+    _currentDeviceVolume.close();
+    _canShowBrightnessSlider.close();
     Player.inst.onVolumeChangeRemoveListener(_volumeListenerKey);
     super.dispose();
   }

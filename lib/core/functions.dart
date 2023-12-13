@@ -200,6 +200,10 @@ class NamidaOnTaps {
     }
 
     NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        sorters.close();
+        allSorts.close();
+      },
       onDismissing: resortMedia,
       dialog: CustomBlurryDialog(
         title: "${lang.SORT_BY} (${lang.REORDERABLE})",
@@ -312,8 +316,8 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
 
   final dates = <DateTime>[];
 
-  final RxInt daysNumber = 0.obs;
-  final RxBool canGenerate = false.obs;
+  final daysNumber = 0.obs;
+  final canGenerate = false.obs;
 
   void calculateDaysNumber() {
     if (canGenerate.value) {
@@ -339,6 +343,10 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
   }
 
   await NamidaNavigator.inst.navigateDialog(
+    onDisposing: () {
+      daysNumber.close();
+      canGenerate.close();
+    },
     scale: 0.90,
     dialog: CustomBlurryDialog(
       titleWidgetInPadding: Obx(

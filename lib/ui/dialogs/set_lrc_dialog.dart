@@ -20,7 +20,7 @@ import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-void showLRCSetDialog(Track track, Color colorScheme) {
+void showLRCSetDialog(Track track, Color colorScheme) async {
   final fetchingFromInternet = false.obs;
   final availableLyrics = <LyricsModel>[].obs;
   final fetchedLyrics = <LyricsModel>[].obs;
@@ -125,7 +125,7 @@ void showLRCSetDialog(Track track, Color colorScheme) {
     );
   }
 
-  void showEditCachedSyncedTimeOffsetDialog(LyricsModel l) {
+  void showEditCachedSyncedTimeOffsetDialog(LyricsModel l) async {
     Lrc? lrc;
     int offsetMS = 0;
     try {
@@ -173,7 +173,10 @@ void showLRCSetDialog(Track track, Color colorScheme) {
 
     final offsetController = TextEditingController();
 
-    NamidaNavigator.inst.navigateDialog(
+    await NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        newOffset.closeAfterDelay();
+      },
       colorScheme: colorScheme,
       dialogBuilder: (theme) => CustomBlurryDialog(
         title: lang.CONFIGURE,
@@ -301,7 +304,14 @@ void showLRCSetDialog(Track track, Color colorScheme) {
     fetchingFromInternet.value = false;
   }
 
-  NamidaNavigator.inst.navigateDialog(
+  await NamidaNavigator.inst.navigateDialog(
+    onDisposing: () {
+      fetchingFromInternet.close();
+      availableLyrics.close();
+      fetchedLyrics.close();
+      selectedLyrics.close();
+      expandedLyrics.close();
+    },
     colorScheme: colorScheme,
     dialogBuilder: (theme) => CustomBlurryDialog(
       title: lang.LYRICS,

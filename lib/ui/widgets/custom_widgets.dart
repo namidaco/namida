@@ -3110,6 +3110,12 @@ class _NamidaAZScrollbarState extends State<NamidaAZScrollbar> {
     super.initState();
   }
 
+  @override
+  void dispose() {
+    _selectedChar.close();
+    super.dispose();
+  }
+
   void onScroll(double dy) {
     final controller = this.controller!;
     final columnHeight = columnKey.currentContext?.size?.height ?? 1;
@@ -3180,4 +3186,31 @@ class _NamidaAZScrollbarState extends State<NamidaAZScrollbar> {
       ],
     );
   }
+}
+
+class VisibilityDetector extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onInit;
+  final VoidCallback? onDispose;
+  const VisibilityDetector({super.key, required this.child, this.onInit, this.onDispose});
+
+  @override
+  State<VisibilityDetector> createState() => _VisibilityDetectorState();
+}
+
+class _VisibilityDetectorState extends State<VisibilityDetector> {
+  @override
+  void initState() {
+    super.initState();
+    widget.onInit?.call();
+  }
+
+  @override
+  void dispose() {
+    widget.onDispose?.call();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

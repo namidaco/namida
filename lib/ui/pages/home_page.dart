@@ -320,6 +320,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     });
 
     await NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        subList.close();
+      },
       dialog: CustomBlurryDialog(
         title: "${lang.CONFIGURE} (${lang.REORDERABLE})",
         actions: [

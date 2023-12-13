@@ -440,6 +440,9 @@ class IndexerSettings extends SettingSubpageProvider {
                 onTap: () {
                   final tempList = List<AlbumIdentifier>.from(settings.albumIdentifiers).obs;
                   NamidaNavigator.inst.navigateDialog(
+                    onDisposing: () {
+                      tempList.close();
+                    },
                     dialog: CustomBlurryDialog(
                       title: lang.ALBUM_IDENTIFIERS,
                       actions: [
@@ -589,6 +592,9 @@ class IndexerSettings extends SettingSubpageProvider {
               onTap: () async {
                 final clearArtworks = false.obs;
                 await NamidaNavigator.inst.navigateDialog(
+                  onDisposing: () {
+                    clearArtworks.close();
+                  },
                   dialog: CustomBlurryDialog(
                     normalTitleStyle: true,
                     isWarning: true,
@@ -668,6 +674,9 @@ class IndexerSettings extends SettingSubpageProvider {
     final RxBool updatingLibrary = false.obs;
 
     NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        updatingLibrary.close();
+      },
       onDismissing: isBlackListDialog
           ? null
           : () async {

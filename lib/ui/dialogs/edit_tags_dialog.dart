@@ -240,7 +240,13 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
     );
   }
 
-  NamidaNavigator.inst.navigateDialog(
+  await NamidaNavigator.inst.navigateDialog(
+    onDisposing: () {
+      trimWhiteSpaces.close();
+      canEditTags.close();
+      didAutoExtractFromFilename.close();
+      currentImagePath.close();
+    },
     scale: 0.94,
     colorScheme: colorScheme,
     lighterDialogColor: false,
@@ -254,11 +260,14 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color colorScheme) async {
         _getKeepDatesWidget,
         NamidaIconButton(
           icon: Broken.edit_2,
-          onPressed: () {
+          onPressed: () async {
             final subList = List<TagField>.from(TagField.values).obs;
             subList.removeWhere((element) => settings.tagFieldsToEdit.contains(element));
 
-            NamidaNavigator.inst.navigateDialog(
+            await NamidaNavigator.inst.navigateDialog(
+              onDisposing: () {
+                subList.close();
+              },
               scale: 0.94,
               dialog: CustomBlurryDialog(
                 title: lang.TAG_FIELDS,
@@ -739,7 +748,17 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
     );
   }
 
-  NamidaNavigator.inst.navigateDialog(
+  await NamidaNavigator.inst.navigateDialog(
+    onDisposing: () {
+      tracks.close();
+      trimWhiteSpaces.close();
+      canEditTags.close();
+      currentImagePath.close();
+      for (final c in tagsControllers.values) {
+        c.dispose();
+      }
+      hasEmptyDumbValues.close();
+    },
     scale: 0.94,
     dialog: CustomBlurryDialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
@@ -821,6 +840,12 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                       }
 
                       NamidaNavigator.inst.navigateDialog(
+                        onDisposing: () {
+                          successfullEdits.close();
+                          failedEditsTracks.close();
+                          finishedEditing.close();
+                          updatingLibrary.close();
+                        },
                         tapToDismiss: false,
                         dialog: Obx(
                           () => CustomBlurryDialog(

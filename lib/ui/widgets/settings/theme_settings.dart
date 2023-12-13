@@ -84,6 +84,9 @@ class ThemeSetting extends SettingSubpageProvider {
           onTap: () {
             final Rx<NamidaLanguage> selectedLang = lang.currentLanguage.obs;
             NamidaNavigator.inst.navigateDialog(
+              onDisposing: () {
+                selectedLang.close();
+              },
               dialog: CustomBlurryDialog(
                 title: lang.LANGUAGE,
                 normalTitleStyle: true,

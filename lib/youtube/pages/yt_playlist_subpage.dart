@@ -326,6 +326,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
   void dispose() {
     controller.removeListener(_scrollListener);
     controller.dispose();
+    _isLoadingMoreItems.close();
     super.dispose();
   }
 

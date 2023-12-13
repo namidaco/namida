@@ -105,9 +105,12 @@ class YTDownloadsPage extends StatelessWidget {
     return confirmed;
   }
 
-  void _showParallelDownloadsDialog() async {
+  void _showParallelDownloadsDialog() {
     final tempCount = YoutubeParallelDownloadsHandler.inst.maxParallelDownloadingItems.obs;
-    await NamidaNavigator.inst.navigateDialog(
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        tempCount.close();
+      },
       dialog: CustomBlurryDialog(
         title: lang.CONFIGURE,
         normalTitleStyle: true,
@@ -143,7 +146,6 @@ class YTDownloadsPage extends StatelessWidget {
         ),
       ),
     );
-    tempCount.close();
   }
 
   bool? get _isOnGoingSelected => YTOnGoingFinishedDownloads.inst.isOnGoingSelected.value;

@@ -422,6 +422,9 @@ class ExtrasSettings extends SettingSubpageProvider {
             });
 
             NamidaNavigator.inst.navigateDialog(
+              onDisposing: () {
+                subList.close();
+              },
               dialog: CustomBlurryDialog(
                 title: lang.LIBRARY_TABS,
                 actions: [

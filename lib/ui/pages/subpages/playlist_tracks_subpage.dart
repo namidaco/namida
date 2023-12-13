@@ -256,23 +256,39 @@ class MostPlayedTracksPage extends StatelessWidget {
   }
 }
 
-class EmptyPlaylistSubpage extends StatelessWidget {
+class EmptyPlaylistSubpage extends StatefulWidget {
   final Playlist playlist;
-  EmptyPlaylistSubpage({super.key, required this.playlist});
+  const EmptyPlaylistSubpage({super.key, required this.playlist});
 
+  @override
+  State<EmptyPlaylistSubpage> createState() => _EmptyPlaylistSubpageState();
+}
+
+class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
+  late List<Track> randomTracks;
   final tracksToAddMap = <Track, bool>{}.obs;
-  final isExpanded = false.obs;
+  bool isExpanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    randomTracks = List<Track>.from(allTracksInLibrary.take(150));
+  }
+
+  @override
+  void dispose() {
+    tracksToAddMap.close();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final randomTracks = List<Track>.from(allTracksInLibrary.take(150));
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
-          child: Obx(
-            () => AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              height: isExpanded.value ? context.height * 0.1 : context.height * 0.3,
-            ),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: isExpanded ? context.height * 0.1 : context.height * 0.3,
           ),
         ),
         SliverPadding(
@@ -282,7 +298,7 @@ class EmptyPlaylistSubpage extends StatelessWidget {
               data: AppThemes.inst.getAppTheme(Colors.red, !context.isDarkMode),
               child: NamidaButton(
                 icon: Broken.trash,
-                onPressed: () => NamidaDialogs.inst.showDeletePlaylistDialog(playlist),
+                onPressed: () => NamidaDialogs.inst.showDeletePlaylistDialog(widget.playlist),
                 text: lang.DELETE_PLAYLIST,
               ),
             ),
@@ -292,10 +308,10 @@ class EmptyPlaylistSubpage extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: context.width * 0.1),
           sliver: SliverToBoxAdapter(
             child: NamidaExpansionTile(
-              initiallyExpanded: isExpanded.value,
+              initiallyExpanded: isExpanded,
               titleText: lang.ADD,
               icon: Broken.add_circle,
-              onExpansionChanged: (value) => isExpanded.value = value,
+              onExpansionChanged: (value) => setState(() => isExpanded = value),
               children: [
                 Container(
                   clipBehavior: Clip.antiAlias,
@@ -343,7 +359,7 @@ class EmptyPlaylistSubpage extends StatelessWidget {
                     enabled: trl > 0,
                     icon: Broken.add,
                     text: '${lang.ADD} ${trl.displayTrackKeyword}',
-                    onPressed: () => PlaylistController.inst.addTracksToPlaylist(playlist, tracksToAddMap.keys.toList()),
+                    onPressed: () => PlaylistController.inst.addTracksToPlaylist(widget.playlist, tracksToAddMap.keys.toList()),
                   );
                 },
               ),

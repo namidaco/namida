@@ -216,6 +216,12 @@ class AdvancedSettings extends SettingSubpageProvider {
                 DateTime? newestDate;
 
                 NamidaNavigator.inst.navigateDialog(
+                  onDisposing: () {
+                    sourcesToDelete.close();
+                    sourcesMap.close();
+                    totalTracksToBeRemoved.close();
+                    totalTracksBetweenDates.close();
+                  },
                   dialog: CustomBlurryDialog(
                     title: lang.CHOOSE,
                     actions: [
@@ -496,6 +502,11 @@ class AdvancedSettings extends SettingSubpageProvider {
     }
 
     NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        videosToDelete.close();
+        videoFiles.close();
+        currentSort.close();
+      },
       dialog: CustomBlurryDialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
         contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
@@ -686,6 +697,13 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
     _fillSizes();
   }
 
+  @override
+  void dispose() {
+    dirsMap.close();
+    dirsChoosen.close();
+    super.dispose();
+  }
+
   void _fillSizes() async {
     final res = await _fillSizesIsolate.thready(mainDirs);
     dirsMap
@@ -808,6 +826,9 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
         final GlobalKey<FormState> formKey = GlobalKey<FormState>();
         final updateMissingOnly = true.obs;
         NamidaNavigator.inst.navigateDialog(
+            onDisposing: () {
+              updateMissingOnly.close();
+            },
             colorScheme: colorScheme,
             dialogBuilder: (theme) => Form(
                   key: formKey,
@@ -971,6 +992,12 @@ class _CompressImagesListTile extends StatelessWidget {
     final dirsToCompress = <String>[].obs;
 
     NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        compPerc.close();
+        keepOriginalFileDates.close();
+        initialDirectories.close();
+        dirsToCompress.close();
+      },
       dialog: CustomBlurryDialog(
         title: lang.CONFIGURE,
         actions: [

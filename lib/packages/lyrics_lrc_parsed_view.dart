@@ -163,6 +163,13 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   final timestampsMap = <Duration, (int, LrcLine)>{};
 
   @override
+  void dispose() {
+    _latestUpdatedLineIndex.close();
+    _latestUpdatedLine.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final fullscreen = widget.isFullScreenView;
     final initialFontSize = fullscreen ? 25.0 : 15.0;
