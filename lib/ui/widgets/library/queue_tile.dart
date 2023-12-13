@@ -8,6 +8,7 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -115,10 +116,17 @@ class QueueTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(width: 4.0),
-                  MoreIcon(
-                    padding: 6.0,
-                    onPressed: () => NamidaDialogs.inst.showQueueDialog(queue.date),
-                  ),
+                  queue.tracks.isEmpty
+                      ? NamidaIconButton(
+                          icon: Broken.trash,
+                          iconSize: 18.0,
+                          onPressed: () => NamidaOnTaps.inst.onQueueDelete(queue),
+                        )
+                      : MoreIcon(
+                          padding: 6.0,
+                          iconSize: 18.0,
+                          onPressed: () => NamidaDialogs.inst.showQueueDialog(queue.date),
+                        ),
                   const SizedBox(width: 8.0),
                 ],
               ),

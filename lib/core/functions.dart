@@ -17,6 +17,7 @@ import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -127,6 +128,23 @@ class NamidaOnTaps {
   Future<void> onQueueTap(Queue queue) async {
     NamidaNavigator.inst.navigateTo(
       QueueTracksPage(queue: queue),
+    );
+  }
+
+  Future<void> onQueueDelete(Queue queue) async {
+    final oldQueue = queue;
+    QueueController.inst.removeQueue(oldQueue);
+    snackyy(
+      title: lang.UNDO_CHANGES,
+      message: lang.UNDO_CHANGES_DELETED_QUEUE,
+      displaySeconds: 3,
+      button: TextButton(
+        onPressed: () {
+          QueueController.inst.reAddQueue(oldQueue);
+          Get.closeAllSnackbars();
+        },
+        child: Text(lang.UNDO),
+      ),
     );
   }
 
