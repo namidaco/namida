@@ -605,20 +605,20 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                 children: [
                                                   const SizedBox(width: 18.0),
                                                   NamidaDummyContainer(
-                                                    width: 48.0,
-                                                    height: 48.0,
+                                                    width: 42.0,
+                                                    height: 42.0,
                                                     borderRadius: 100.0,
                                                     shimmerEnabled: channelThumbnail == null,
                                                     child: YoutubeThumbnail(
                                                       key: Key(channelThumbnail ?? ''),
                                                       isImportantInCache: true,
                                                       channelUrl: channelThumbnail ?? '',
-                                                      width: 48.0,
-                                                      height: 48.0,
+                                                      width: 42.0,
+                                                      height: 42.0,
                                                       isCircle: true,
                                                     ),
                                                   ),
-                                                  const SizedBox(width: 12.0),
+                                                  const SizedBox(width: 8.0),
                                                   Expanded(
                                                     // key: Key(currentId),
                                                     child: Column(
@@ -636,7 +636,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                                 child: Text(
                                                                   channelName ?? '',
                                                                   style: context.textTheme.displayMedium?.copyWith(
-                                                                    fontSize: 12.5.multipliedFontScale,
+                                                                    fontSize: 13.5.multipliedFontScale,
                                                                   ),
                                                                   maxLines: 1,
                                                                   overflow: TextOverflow.ellipsis,
@@ -647,13 +647,13 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                                 const SizedBox(width: 4.0),
                                                                 const Icon(
                                                                   Broken.shield_tick,
-                                                                  size: 14.0,
+                                                                  size: 12.0,
                                                                 ),
                                                               ]
                                                             ],
                                                           ),
                                                         ),
-                                                        const SizedBox(height: 4.0),
+                                                        const SizedBox(height: 2.0),
                                                         FittedBox(
                                                           child: NamidaDummyContainer(
                                                             width: 92.0,
@@ -665,7 +665,9 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                                 channelSubs?.formatDecimalShort(isTitleExpanded.value) ?? '?',
                                                                 (channelSubs ?? 0) < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS
                                                               ].join(' '),
-                                                              style: context.textTheme.displaySmall,
+                                                              style: context.textTheme.displaySmall?.copyWith(
+                                                                fontSize: 12.0.multipliedFontScale,
+                                                              ),
                                                               maxLines: 1,
                                                               overflow: TextOverflow.ellipsis,
                                                             ),
