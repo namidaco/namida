@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 
+import 'package:namida/controller/lifecycle_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
 class WaveformComponent extends StatefulWidget {
@@ -50,13 +50,20 @@ class _WaveformComponentState extends State<WaveformComponent> {
   void initState() {
     super.initState();
     _fillWidget();
-    WaveformController.inst.canModifyUIWaveform = true;
-    if (WaveformController.inst.currentWaveformUI.isEqualTo(kDefaultWaveFormData)) WaveformController.inst.calculateUIWaveform();
+
+    // -- to refresh after coming resuming app
+    LifeCycleController.inst.addOnResume('waveform', WaveformController.inst.calculateUIWaveform);
+
+    // -- to refresh after coming back from landscape
+    NamidaNavigator.inst.addOnLandScapeEvent('waveform', () {
+      if (NamidaNavigator.inst.isInLanscape) WaveformController.inst.calculateUIWaveform();
+    });
   }
 
   @override
   void dispose() {
-    WaveformController.inst.canModifyUIWaveform = false;
+    LifeCycleController.inst.removeOnResume('waveform');
+    NamidaNavigator.inst.removeOnLandScapeEvent('waveform');
     super.dispose();
   }
 

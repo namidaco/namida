@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/connectivity.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -47,26 +48,33 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
             () {
               final totalCommentsCount = YoutubeController.inst.currentTotalCommentsCount.value;
               return DecoratedBox(
-                decoration: BoxDecoration(boxShadow: [
-                  BoxShadow(
-                    blurRadius: 12.0,
-                    color: context.theme.shadowColor.withOpacity(0.5),
-                  )
-                ]),
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 12.0,
+                      color: context.theme.shadowColor.withOpacity(0.5),
+                    )
+                  ],
+                ),
                 child: Padding(
                   key: Key("${currentId}_comments_header"),
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(vertical: 12.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      const Icon(Broken.document),
+                      NamidaIconButton(
+                        horizontalPadding: 12.0,
+                        icon: Broken.arrow_left_2,
+                        onPressed: NamidaNavigator.inst.popPage,
+                      ),
+                      const Icon(Broken.document, size: 20.0),
                       const SizedBox(width: 8.0),
                       Text(
                         [
                           lang.COMMENTS,
                           if (totalCommentsCount != null) totalCommentsCount.formatDecimalShort(),
                         ].join(' • '),
-                        style: context.textTheme.displayLarge,
+                        style: context.textTheme.displayMedium,
                         textAlign: TextAlign.start,
                       ),
                       const Spacer(),
@@ -91,7 +99,8 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                                 Broken.refresh,
                                 color: context.defaultIconColor(),
                               ),
-                      )
+                      ),
+                      const SizedBox(width: 8.0),
                     ],
                   ),
                 ),

@@ -725,7 +725,10 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                         onTap: () {
                                                           NamidaNavigator.inst.isInYTCommentsSubpage = true;
                                                           NamidaNavigator.inst.ytMiniplayerCommentsPageKey?.currentState?.push(
-                                                            MaterialPageRoute(builder: (context) => const YTMiniplayerCommentsSubpage()),
+                                                            GetPageRoute(
+                                                              page: () => const YTMiniplayerCommentsSubpage(),
+                                                              transition: Transition.cupertino,
+                                                            ),
                                                           );
                                                         },
                                                         child: Column(

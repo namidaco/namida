@@ -18,7 +18,6 @@ import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
-import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -74,8 +73,12 @@ Future<void> showGeneralPopupDialog(
   forceSingleArtwork ??= isSingle;
   final doesTracksExist = !errorPlayingTrack && tracksExisting.isNotEmpty;
 
-  final trackToExtractColorFrom = forceSingleArtwork ? tracks[tracks.indexOfImage] : tracks.first;
-  final colorDelightened = extractColor ? await CurrentColor.inst.getTrackDelightnedColor(trackToExtractColorFrom) : CurrentColor.inst.color;
+  final trackToExtractColorFrom = tracks.isEmpty
+      ? null
+      : forceSingleArtwork
+          ? tracks[tracks.indexOfImage]
+          : tracks.first;
+  final colorDelightened = extractColor && trackToExtractColorFrom != null ? await CurrentColor.inst.getTrackDelightnedColor(trackToExtractColorFrom) : CurrentColor.inst.color;
 
   /// name, identifier
   final List<(String, String)> availableAlbums = tracks.mappedUniqued((e) {
@@ -202,9 +205,10 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  final stats = tracks.first.stats.obs;
+  final stats = tracks.firstOrNull?.stats.obs;
 
   void setTrackMoods() {
+    if (stats == null) return;
     setMoodsOrTags(
       stats.value.moods,
       (moodsFinal) async {
@@ -214,6 +218,7 @@ Future<void> showGeneralPopupDialog(
   }
 
   void setTrackTags() {
+    if (stats == null) return;
     cancelSkipTimer();
     setMoodsOrTags(
       stats.value.tags,
@@ -225,6 +230,7 @@ Future<void> showGeneralPopupDialog(
   }
 
   void setTrackRating() async {
+    if (stats == null) return;
     final c = TextEditingController();
     await openDialog(
       onDisposing: () {
@@ -563,20 +569,7 @@ Future<void> showGeneralPopupDialog(
           icon: Broken.pen_remove,
           onTap: () {
             cancelSkipTimer();
-            final oldQueue = queue;
-            QueueController.inst.removeQueue(oldQueue);
-            snackyy(
-              title: lang.UNDO_CHANGES,
-              message: lang.UNDO_CHANGES_DELETED_QUEUE,
-              displaySeconds: 3,
-              button: TextButton(
-                onPressed: () {
-                  QueueController.inst.reAddQueue(oldQueue);
-                  Get.closeAllSnackbars();
-                },
-                child: Text(lang.UNDO),
-              ),
-            );
+            NamidaOnTaps.inst.onQueueDelete(queue);
             NamidaNavigator.inst.closeDialog();
           },
         )
@@ -586,7 +579,7 @@ Future<void> showGeneralPopupDialog(
     onDisposing: () {
       numberOfRepeats.close();
       isLoadingFilesToShare.close();
-      stats.close();
+      stats?.close();
     },
     colorScheme: colorDelightened,
     lighterDialogColor: false,
@@ -1125,7 +1118,7 @@ Future<void> showGeneralPopupDialog(
                                   Broken.grammerly,
                                   lang.SET_RATING,
                                   setTrackRating,
-                                  subtitle: stats.value.rating == 0 ? '' : ' ${stats.value.rating}%',
+                                  subtitle: stats == null || stats.value.rating == 0 ? '' : ' ${stats.value.rating}%',
                                 ),
                               ),
                             ),

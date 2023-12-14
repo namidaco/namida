@@ -96,12 +96,14 @@ class YTCommentCard extends StatelessWidget {
                     shimmerEnabled: author == null,
                     child: Row(
                       children: [
-                        Text(
-                          [
-                            author,
-                            if (uploadedFrom != null) uploadedFrom,
-                          ].join(' • '),
-                          style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400, color: context.theme.colorScheme.onBackground.withAlpha(180)),
+                        Expanded(
+                          child: Text(
+                            [
+                              author,
+                              if (uploadedFrom != null) uploadedFrom,
+                            ].join(' • '),
+                            style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400, color: context.theme.colorScheme.onBackground.withAlpha(180)),
+                          ),
                         ),
                         if (isHearted) ...[
                           const SizedBox(width: 4.0),
@@ -261,15 +263,17 @@ class YTCommentCardCompact extends StatelessWidget {
                 shimmerEnabled: author == null,
                 child: Row(
                   children: [
-                    Text(
-                      [
-                        author,
-                        if (uploadedFrom != null) uploadedFrom,
-                      ].join(' • '),
-                      style: context.textTheme.displaySmall?.copyWith(
-                        fontSize: 11.5.multipliedFontScale,
-                        fontWeight: FontWeight.w400,
-                        color: context.theme.colorScheme.onBackground.withAlpha(180),
+                    Expanded(
+                      child: Text(
+                        [
+                          author,
+                          if (uploadedFrom != null) uploadedFrom,
+                        ].join(' • '),
+                        style: context.textTheme.displaySmall?.copyWith(
+                          fontSize: 11.5.multipliedFontScale,
+                          fontWeight: FontWeight.w400,
+                          color: context.theme.colorScheme.onBackground.withAlpha(180),
+                        ),
                       ),
                     ),
                     if (isPinned) ...[
@@ -337,19 +341,26 @@ class YTCommentCardCompact extends StatelessWidget {
                       likeCount?.formatDecimalShort() ?? '?',
                       style: context.textTheme.displaySmall?.copyWith(
                         fontSize: 11.5.multipliedFontScale,
-                        fontWeight: FontWeight.w300,
+                        fontWeight: FontWeight.w400,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12.0),
-                  if (repliesCount != null && repliesCount > 0)
+                  if (repliesCount != null && repliesCount > 0) ...[
+                    Text(
+                      ' | ',
+                      style: context.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w300),
+                    ),
                     Text(
                       [
                         lang.REPLIES,
                         repliesCount,
                       ].join(' • '),
-                      style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w300),
+                      style: context.textTheme.displaySmall?.copyWith(
+                        fontSize: 11.5.multipliedFontScale,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
+                  ],
                 ],
               ),
             ],

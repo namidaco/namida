@@ -49,4 +49,16 @@ class LifeCycleController {
   void addOnSuspending(String key, FutureOr<void> Function() fn) {
     _onSuspending[key] = fn;
   }
+
+  void removeOnDestroy(String key) {
+    _onDestroy.remove(key);
+  }
+
+  void removeOnResume(String key) {
+    _onResume.remove(key);
+  }
+
+  void removeOnSuspending(String key) {
+    _onSuspending.remove(key);
+  }
 }

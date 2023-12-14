@@ -44,9 +44,26 @@ class NamidaNavigator {
   final GlobalKey<InnerDrawerState> innerDrawerKey = GlobalKey<InnerDrawerState>();
   final heroController = HeroController();
 
-  bool isInLanscape = false;
+  bool _isInLanscape = false;
+  bool get isInLanscape => _isInLanscape;
+  set isInLanscape(bool val) {
+    _isInLanscape = val;
+    for (final fn in _onLandscapeEvents.values) {
+      fn();
+    }
+  }
 
   static const _defaultRouteAnimationDurMS = 500;
+
+  final _onLandscapeEvents = <String, FutureOr<void> Function()>{};
+
+  void addOnLandScapeEvent(String key, FutureOr<void> Function() fn) {
+    _onLandscapeEvents[key] = fn;
+  }
+
+  void removeOnLandScapeEvent(String key) {
+    _onLandscapeEvents.remove(key);
+  }
 
   Future<T?> showMenu<T>(Future? menuFunction) async {
     _currentMenusNumber++;

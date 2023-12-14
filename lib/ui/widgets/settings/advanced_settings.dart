@@ -96,8 +96,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                   onTap: () {
                     e.execute();
                     settings.save(performanceMode: e);
-                    NamidaNavigator.inst.popMenu(handleClosing: false);
-                    Navigator.of(context).pop();
+                    NamidaNavigator.inst.popMenu();
                   },
                 ),
               ),

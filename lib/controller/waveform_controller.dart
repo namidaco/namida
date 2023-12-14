@@ -1,12 +1,9 @@
-import 'dart:math';
-
 import 'package:get/get.dart';
 import 'package:waveform_extractor/waveform_extractor.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
 class WaveformController {
@@ -14,24 +11,22 @@ class WaveformController {
   static final WaveformController _instance = WaveformController._internal();
   WaveformController._internal();
 
-  /// Trying to update [currentWaveformUI] while this is false will have no effect.
-  bool canModifyUIWaveform = false;
+  List<double> _currentWaveform = [];
 
-  List<double> _currentWaveform = kDefaultWaveFormData;
-  final currentWaveformUI = kDefaultWaveFormData.obs;
+  final currentWaveformUI = <double>[].obs;
 
   final RxMap<int, double> _currentScaleMap = <int, double>{}.obs;
 
   /// Extracts waveform data from a given track, or immediately read from .wave file if exists, then assigns wavedata to [_currentWaveform].
   Future<void> generateWaveform(Track track) async {
-    _currentWaveform = kDefaultWaveFormData;
-    calculateUIWaveform(dummy: true);
+    _currentWaveform = [];
+    currentWaveformUI.value = List.filled(settings.waveformTotalBars.value, 2.0);
 
-    const maxSampleRate = 400;
-    final scaledDuration = 0.4 * track.duration;
-    final scaledSampleRate = maxSampleRate * (exp(-scaledDuration / 100));
-
-    final samplePerSecond = scaledSampleRate.toInt().clamp(1, maxSampleRate);
+    final samplePerSecond = _waveformExtractor.getSampleRateFromDuration(
+      audioDuration: Duration(seconds: track.duration),
+      maxSampleRate: 400,
+      scaleFactor: 0.4,
+    );
 
     List<int> waveformData = [];
     await Future.wait([
@@ -50,27 +45,26 @@ class WaveformController {
         original: waveformData,
       ));
 
-      _currentWaveform = downscaledLists[maxWaveformCount]!;
+      _currentWaveform = downscaledLists[maxWaveformCount] ?? [];
       calculateUIWaveform();
 
       // ----- Updating [currentScale]
-      _updateScaleMap(downscaledLists[numberOfScales]!);
+      _updateScaleMap(downscaledLists[numberOfScales] ?? []);
     }
   }
 
-  void calculateUIWaveform({bool dummy = false}) async {
-    if (!canModifyUIWaveform) return;
+  void calculateUIWaveform() async {
+    if (_currentWaveform.isEmpty) return;
     final userBars = settings.waveformTotalBars.value;
     final waveform = await _calculateUIWaveformIsolate.thready((
       targetSize: userBars,
-      original: dummy ? kDefaultWaveFormData : _currentWaveform,
+      original: _currentWaveform,
     ));
-    if (!canModifyUIWaveform) return;
     currentWaveformUI.value = waveform;
   }
 
   static List<double> _calculateUIWaveformIsolate(({List<double> original, int targetSize}) params) {
-    final clamping = params.original.isEqualTo(kDefaultWaveFormData) ? null : 64.0;
+    final clamping = params.original.isEmpty ? null : 64.0;
     final downscaled = params.original.changeListSize(
       targetSize: params.targetSize,
       multiplier: 0.9,

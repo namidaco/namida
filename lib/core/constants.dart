@@ -14,7 +14,6 @@ int kSdkVersion = 21;
 
 final Set<String> kStoragePaths = {};
 final Set<String> kInitialDirectoriesToScan = {};
-final List<double> kDefaultWaveFormData = List<double>.filled(1, 2.0);
 final RegExp kYoutubeRegex = RegExp(
   r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)(?:\S+)?',
   caseSensitive: false,
