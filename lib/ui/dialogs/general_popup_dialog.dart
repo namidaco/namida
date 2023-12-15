@@ -456,10 +456,8 @@ Future<void> showGeneralPopupDialog(
                       onChanged: (value) {
                         final matches = value == ''
                             ? paths
-                            : paths.where((element) => shouldCleanUp.value ? element.cleanUpForComparison.contains(value.cleanUpForComparison) : element.contains(value));
-                        filteredPaths
-                          ..clear()
-                          ..addAll(matches);
+                            : paths.where((element) => shouldCleanUp.value ? element.cleanUpForComparison.contains(value.cleanUpForComparison) : element.contains(value)).toList();
+                        filteredPaths.value = matches;
                       },
                     ),
                   ),

@@ -231,9 +231,7 @@ class NamidaOnTaps {
             tooltip: lang.RESTORE_DEFAULTS,
             onPressed: () {
               final defaults = defaultSorts[media] ?? [SortType.year];
-              sorters
-                ..clear()
-                ..addAll(defaults);
+              sorters.value = defaults;
               settings.updateMediaItemsTrackSorting(media, defaults);
             },
           ),
@@ -276,9 +274,7 @@ class NamidaOnTaps {
                       final item = allSorts.removeAt(oldIndex);
                       allSorts.insertSafe(newIndex, item);
                       final activeSorts = allSorts.where((element) => sorters.contains(element)).toList();
-                      sorters
-                        ..clear()
-                        ..addAll(activeSorts);
+                      sorters.value = activeSorts;
                       settings.updateMediaItemsTrackSorting(media, activeSorts);
                     },
                     itemBuilder: (context, i) {

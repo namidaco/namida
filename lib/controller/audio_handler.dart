@@ -57,12 +57,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   Future<void> updateAudioCacheMap() async {
     final map = await _getAllAudiosInCache.thready(AppDirs.AUDIOS_CACHE);
-    audioCacheMap
-      ..clear()
-      ..addAll(map);
+    audioCacheMap = map;
   }
 
-  final audioCacheMap = <String, List<AudioCacheDetails>>{};
+  var audioCacheMap = <String, List<AudioCacheDetails>>{};
 
   Selectable get currentTrack => (currentItem is Selectable ? currentItem as Selectable : null) ?? kDummyTrack;
   YoutubeID? get currentVideo => currentItem is YoutubeID ? currentItem as YoutubeID : null;
@@ -591,9 +589,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
         if (currentItem is YoutubeID && videoId != (currentItem as YoutubeID).id) return;
 
-        YoutubeController.inst.currentYTQualities
-          ..clear()
-          ..addAll(newStreams);
+        YoutubeController.inst.currentYTQualities.value = newStreams;
 
         if (sameStreamUrl != null) {
           await VideoController.vcontroller.setNetworkSource(
@@ -659,9 +655,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
         if (currentItem is YoutubeID && videoId != (currentItem as YoutubeID).id) return;
 
-        YoutubeController.inst.currentYTAudioStreams
-          ..clear()
-          ..addAll(newStreams);
+        YoutubeController.inst.currentYTAudioStreams.value = newStreams;
 
         if (sameStreamUrl != null) {
           await setAudioLockCache();
@@ -810,12 +804,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         _isFetchingInfo.value = false;
         if (streams == null) return;
         if (item != currentVideo) return; // race avoidance when playing multiple videos
-        YoutubeController.inst.currentYTQualities
-          ..clear()
-          ..addAll(streams.videoOnlyStreams ?? []);
-        YoutubeController.inst.currentYTAudioStreams
-          ..clear()
-          ..addAll(streams.audioOnlyStreams ?? []);
+        YoutubeController.inst.currentYTQualities.value = streams.videoOnlyStreams ?? [];
+        YoutubeController.inst.currentYTAudioStreams.value = streams.audioOnlyStreams ?? [];
         currentVideoInfo.value = streams.videoInfo;
         final vos = streams.videoOnlyStreams;
         final allVideoStream = isAudioOnlyPlayback || vos == null || vos.isEmpty ? null : YoutubeController.inst.getPreferredStreamQuality(vos, preferIncludeWebm: false);
@@ -960,9 +950,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       (e) => e.frameratePrecise,
     );
 
-    YoutubeController.inst.currentCachedQualities
-      ..clear()
-      ..addAll(allCachedVideos);
+    YoutubeController.inst.currentCachedQualities.value = allCachedVideos;
 
     final cachedVideo = allCachedVideos.firstOrNull;
     final mediaItem = item.toMediaItem(currentVideoInfo.value, currentVideoThumbnail.value, index, currentQueue.length);

@@ -705,9 +705,7 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
 
   void _fillSizes() async {
     final res = await _fillSizesIsolate.thready(mainDirs);
-    dirsMap
-      ..clear()
-      ..addAll(res);
+    dirsMap.value = res;
   }
 
   static Map<String, int> _fillSizesIsolate(Set<String> dirs) {

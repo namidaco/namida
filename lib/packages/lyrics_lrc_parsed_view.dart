@@ -112,9 +112,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
           },
         ),
       );
-    lyrics
-      ..clear()
-      ..addAll(timestampsMap.values.map((e) => e.$2));
+    lyrics = timestampsMap.values.map((e) => e.$2).toList();
     _listenForPosition();
     _updateHighlightedLine(Player.inst.nowPlayingPosition.milliseconds, jump: true);
   }
@@ -159,7 +157,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   final _latestUpdatedLineIndex = (-1).obs;
   final _latestUpdatedLine = Rxn<Duration>();
 
-  final lyrics = <LrcLine>[];
+  var lyrics = <LrcLine>[];
   final timestampsMap = <Duration, (int, LrcLine)>{};
 
   @override

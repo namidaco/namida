@@ -1,5 +1,6 @@
 // ignore_for_file: non_constant_identifier_names
 
+import 'dart:collection';
 import 'dart:io';
 
 import 'package:history_manager/history_manager.dart';
@@ -107,13 +108,12 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
   Track mainItemToSubItem(TrackWithDate item) => item.track;
 
   @override
-  Future<Map<int, List<TrackWithDate>>> prepareAllHistoryFilesFunction(String directoryPath) async {
-    final map = await _readHistoryFilesCompute.thready(directoryPath);
-    return map;
+  Future<SplayTreeMap<int, List<TrackWithDate>>> prepareAllHistoryFilesFunction(String directoryPath) async {
+    return await _readHistoryFilesCompute.thready(directoryPath);
   }
 
-  static Future<Map<int, List<TrackWithDate>>> _readHistoryFilesCompute(String path) async {
-    final map = <int, List<TrackWithDate>>{};
+  static Future<SplayTreeMap<int, List<TrackWithDate>>> _readHistoryFilesCompute(String path) async {
+    final map = SplayTreeMap<int, List<TrackWithDate>>((date1, date2) => date2.compareTo(date1));
     for (final f in Directory(path).listSyncSafe()) {
       if (f is File) {
         try {

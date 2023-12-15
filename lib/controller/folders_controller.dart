@@ -55,9 +55,7 @@ class Folders {
       return;
     }
 
-    currentFolderslist
-      ..clear()
-      ..addAll(dirInside);
+    currentFolderslist.value = dirInside;
 
     currentFolder.value = folder;
     if (trackToScrollTo != null) {

@@ -331,9 +331,7 @@ class JsonToHistoryParser {
     _notificationTimer?.cancel();
     NotificationService.inst.doneImportingHistoryNotification(parsedHistoryJson.value, addedHistoryJsonToPlaylist.value);
 
-    _latestMissingMap
-      ..clear()
-      ..addAll(allMissingEntries);
+    _latestMissingMap.value = allMissingEntries;
     _latestMissingMapAddedStatus.clear();
     showMissingEntriesDialog();
   }

@@ -46,7 +46,7 @@ class SearchSortController {
     MediaType.folder: <String>[].obs,
   };
 
-  final trackSearchTemp = <Track>[].obs;
+  var trackSearchTemp = <Track>[].obs;
   final playlistSearchTemp = <String>[].obs;
   RxList<String> get albumSearchTemp => _searchMapTemp[MediaType.album]!;
   RxList<String> get artistSearchTemp => _searchMapTemp[MediaType.artist]!;
@@ -172,14 +172,10 @@ class SearchSortController {
       }
     });
     if (temp) {
-      trackSearchTemp
-        ..clear()
-        ..addAll(result);
+      trackSearchTemp.value = result;
       sortTracksSearch(canSkipSorting: true);
     } else {
-      trackSearchList
-        ..clear()
-        ..addAll(result);
+      trackSearchList.value = result;
     }
   }
 
@@ -198,20 +194,20 @@ class SearchSortController {
         null;
     }
 
+    final keysList = keys.toList();
+
     if (text == '') {
       if (temp) {
         _searchMapTemp[type]?.clear();
       } else {
         type.toLibraryTab()?.textSearchController?.clear();
-        _searchMap[type]
-          ?..clear()
-          ..addAll(keys);
+        _searchMap[type]?.value = keysList;
       }
       return;
     }
 
     final parameter = {
-      'keys': keys,
+      'keys': keysList,
       'cleanup': _shouldCleanup,
       'text': text,
       'keyIsPath': type == MediaType.folder,
@@ -219,13 +215,9 @@ class SearchSortController {
     final results = await _generalSearchIsolate.thready(parameter);
 
     if (temp) {
-      _searchMapTemp[type]
-        ?..clear()
-        ..addAll(results);
+      _searchMapTemp[type]?.value = results;
     } else {
-      _searchMap[type]
-        ?..clear()
-        ..addAll(results);
+      _searchMap[type]?.value = results;
     }
   }
 
@@ -235,9 +227,7 @@ class SearchSortController {
         playlistSearchTemp.clear();
       } else {
         LibraryTab.playlists.textSearchController?.clear();
-        playlistSearchList
-          ..clear()
-          ..addAll(playlistsMap.keys);
+        playlistSearchList.value = playlistsMap.keys.toList();
       }
       return;
     }
@@ -270,16 +260,12 @@ class SearchSortController {
           (sMoods && item.moods.any((element) => textCleanedForSearch(element).contains(lctext)));
     });
 
-    final playlists = results.map((e) => e.key);
+    final playlists = results.map((e) => e.key).toList();
 
     if (temp) {
-      playlistSearchTemp
-        ..clear()
-        ..addAll(playlists);
+      playlistSearchTemp.value = playlists;
     } else {
-      playlistSearchList
-        ..clear()
-        ..addAll(playlists);
+      playlistSearchList.value = playlists;
     }
   }
 
@@ -706,21 +692,29 @@ class SearchSortController {
   //   return results;
   // }
 
-  static Iterable<String> _generalSearchIsolate(Map parameters) {
-    final keys = parameters['keys'] as Iterable<String>;
+  static List<String> _generalSearchIsolate(Map parameters) {
+    final keys = parameters['keys'] as List<String>;
     final cleanup = parameters['cleanup'] as bool;
     final keyIsPath = parameters['keyIsPath'] as bool;
     final text = parameters['text'] as String;
 
     final cleanupFunction = _functionOfCleanup(cleanup);
 
+    final results = <String>[];
     if (keyIsPath) {
-      final results = keys.where((path) => cleanupFunction(path.split(Platform.pathSeparator).last).contains(cleanupFunction(text)));
-      return results;
+      keys.loop((path, _) {
+        if (cleanupFunction(path.split(Platform.pathSeparator).last).contains(cleanupFunction(text))) {
+          results.add(path);
+        }
+      });
     } else {
-      final results = keys.where((name) => cleanupFunction(name).contains(cleanupFunction(text)));
-      return results;
+      keys.loop((name, _) {
+        if (cleanupFunction(name).contains(cleanupFunction(text))) {
+          results.add(name);
+        }
+      });
     }
+    return results;
   }
 
   bool get _shouldCleanup => settings.enableSearchCleanup.value;

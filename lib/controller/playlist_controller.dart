@@ -177,13 +177,11 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
       final creationDate = File(m3uPath).statSync().creationDate.millisecondsSinceEpoch;
       PlaylistController.inst.addNewPlaylist(plName, tracks: trs, m3uPath: m3uPath, creationDate: creationDate);
     }
-    _pathsM3ULookup
-      ..clear()
-      ..addAll(infoMap);
+    _pathsM3ULookup = infoMap;
   }
 
   /// saves each track m3u info for writing back
-  final _pathsM3ULookup = <String, String?>{}; // {trackPath: EXTINFO}
+  var _pathsM3ULookup = <String, String?>{}; // {trackPath: EXTINFO}
 
   static Map _parseM3UPlaylistFiles(Map params) {
     final paths = params['paths'] as Set<String>;

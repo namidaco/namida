@@ -199,7 +199,7 @@ class VideoController {
   /// `path`: `NamidaVideo`
   final _videoPathsMap = <String, NamidaVideo>{};
 
-  final _allVideoPaths = <String>[];
+  var _allVideoPaths = <String>{};
 
   /// `id`: `<NamidaVideo>[]`
   final _videoCacheIDMap = <String, List<NamidaVideo>>{};
@@ -265,9 +265,7 @@ class VideoController {
     if (!settings.enableVideoPlayback.value) return;
 
     final possibleVideos = await _getPossibleVideosFromTrack(track);
-    currentPossibleVideos
-      ..clear()
-      ..addAll(possibleVideos);
+    currentPossibleVideos.value = possibleVideos;
 
     final trackYTID = track.youtubeID;
     if (possibleVideos.isEmpty && trackYTID == '') isNoVideosAvailable.value = true;
@@ -625,9 +623,7 @@ class VideoController {
     if (fillPathsOnly) {
       localVideoExtractCurrent.value = 0;
       final videos = await _fetchVideoPathsFromStorage(strictNoMedia: strictNoMedia, forceReCheckDir: forceReScan);
-      _allVideoPaths
-        ..clear()
-        ..addAll(videos);
+      _allVideoPaths = videos;
       localVideoExtractCurrent.value = null;
       return;
     }

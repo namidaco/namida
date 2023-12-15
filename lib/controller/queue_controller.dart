@@ -158,10 +158,7 @@ class QueueController {
   ///
   Future<void> prepareAllQueuesFile() async {
     final map = await _readQueueFilesCompute.thready(AppDirs.QUEUES);
-    queuesMap.value
-      ..clear()
-      ..addAll(map);
-    queuesMap.refresh();
+    queuesMap.value = map;
     _isLoadingQueues = false;
     // Adding queues that were rejected by [addNewQueue] since Queues wasn't fully loaded.
     if (_queuesToAddAfterAllQueuesLoad.isNotEmpty) {
@@ -173,8 +170,8 @@ class QueueController {
     }
   }
 
-  static Future<Map<int, Queue>> _readQueueFilesCompute(String path) async {
-    final map = <int, Queue>{};
+  static Future<SplayTreeMap<int, Queue>> _readQueueFilesCompute(String path) async {
+    final map = SplayTreeMap<int, Queue>((date1, date2) => date1.compareTo(date2));
     for (final f in Directory(path).listSyncSafe()) {
       if (f is File) {
         try {

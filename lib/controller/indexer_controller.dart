@@ -1032,9 +1032,7 @@ class Indexer {
   Future<void> readTrackData() async {
     // reading stats file containing track rating etc.
     final statsResult = await _readTracksStatsCompute.thready(AppPaths.TRACKS_STATS);
-    trackStatsMap
-      ..clear()
-      ..addAll(statsResult);
+    trackStatsMap.value = statsResult;
 
     tracksInfoList.clear(); // clearing for cases which refreshing library is required (like after changing separators)
 
@@ -1045,9 +1043,7 @@ class Indexer {
       genresConfig: GenresSplitConfig.settings(),
     );
     final tracksResult = await _readTracksFileCompute.thready(splitconfig);
-    allTracksMappedByPath
-      ..clear()
-      ..addAll(tracksResult);
+    allTracksMappedByPath.value = tracksResult;
     tracksInfoList.addAll(tracksResult.keys);
 
     printy("All Tracks Length From File: ${tracksInfoList.length}");
@@ -1194,9 +1190,8 @@ class Indexer {
 
     tracksExcludedByNoMedia.value += excludedByNoMedia.length;
 
-    allAudioFiles
-      ..clear()
-      ..addAll(allPaths);
+    // ignore: invalid_use_of_protected_member
+    allAudioFiles.value = allPaths;
 
     printy("Paths Found: ${allPaths.length}");
     return allPaths;

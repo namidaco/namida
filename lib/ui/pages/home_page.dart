@@ -58,7 +58,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   final _randomTracks = <Track>[];
   final _recentListened = <TrackWithDate>[];
   final _topRecentListened = <MapEntry<Track, List<int>>>[];
-  final _sameTimeYearAgo = <MapEntry<Track, List<int>>>[];
+  var _sameTimeYearAgo = <MapEntry<Track, List<int>>>[];
 
   final _recentAlbums = <String>[];
   final _recentArtists = <String>[];
@@ -150,18 +150,14 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   void _updateSameTimeNYearsAgo(DateTime timeNow, int year) {
-    _sameTimeYearAgo
-      ..clear()
-      ..addAll(
-        HistoryController.inst.getMostListensInTimeRange(
-          mptr: MostPlayedTimeRange.custom,
-          customDate: DateRange(
-            oldest: DateTime(year, timeNow.month, timeNow.day - 5),
-            newest: DateTime(year, timeNow.month, timeNow.day + 5),
-          ),
-          isStartOfDay: false,
-        ),
-      );
+    _sameTimeYearAgo = HistoryController.inst.getMostListensInTimeRange(
+      mptr: MostPlayedTimeRange.custom,
+      customDate: DateRange(
+        oldest: DateTime(year, timeNow.month, timeNow.day - 5),
+        newest: DateTime(year, timeNow.month, timeNow.day + 5),
+      ),
+      isStartOfDay: false,
+    );
     currentYearLostMemories = year;
   }
 
@@ -748,6 +744,15 @@ class _MixesCardState extends State<_MixesCard> {
   Color? _cardColor;
   Track? track;
 
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 500)).then((value) {
+      _assignTrack();
+      _extractColor();
+    });
+  }
+
   void onMixTap(Widget thumbnailWidget) {
     NamidaNavigator.inst.navigateDialog(
       colorScheme: _cardColor,
@@ -825,8 +830,7 @@ class _MixesCardState extends State<_MixesCard> {
   void _extractColor() {
     if (track != null && _cardColor == null) {
       CurrentColor.inst.getTrackColors(track!, useIsolate: true).then((value) {
-        _cardColor = value.color;
-        if (mounted) setState(() {});
+        if (mounted) setState(() => _cardColor = value.color);
       });
     }
   }
@@ -858,8 +862,6 @@ class _MixesCardState extends State<_MixesCard> {
 
   @override
   Widget build(BuildContext context) {
-    _assignTrack();
-    _extractColor();
     final displayShimmer = track == null;
     Widget artworkWidget(bool titleInside) => NamidaHero(
           tag: 'mix_thumbnail_${widget.title}${widget.index}',
@@ -1053,15 +1055,19 @@ class _TrackCardState extends State<_TrackCard> {
   void _extractColor() {
     if (widget.track != null && _cardColor == null) {
       CurrentColor.inst.getTrackColors(widget.track!, useIsolate: true).then((value) {
-        _cardColor = value.color;
-        if (mounted) setState(() {});
+        if (mounted) setState(() => _cardColor = value.color);
       });
     }
   }
 
   @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 500)).then((value) => _extractColor());
+  }
+
+  @override
   Widget build(BuildContext context) {
-    _extractColor();
     final track = widget.track;
     final color = Color.alphaBlend((_cardColor ?? context.theme.scaffoldBackgroundColor).withAlpha(50), context.theme.cardColor);
     final dummyContainer = track == null;
@@ -1075,8 +1081,7 @@ class _TrackCardState extends State<_TrackCard> {
     }
     return NamidaInkWell(
       onTap: () {
-        _enabledTrack = (widget.title, widget.index);
-        if (mounted) setState(() {});
+        if (mounted) setState(() => _enabledTrack = (widget.title, widget.index));
 
         Player.inst.playOrPause(
           widget.index,

@@ -23,7 +23,7 @@ class Language extends LanguageKeys {
   NamidaLanguage get currentLanguage => _currentLanguage.value;
 
   /// All Available Languages fetched from `'/assets/language/translations/'`
-  static final availableLanguages = <NamidaLanguage>[];
+  static var availableLanguages = <NamidaLanguage>[];
 
   /// Used as a backup in case a key wasn't found in the desired language.
   static late final Map<String, String> _defaultMap;
@@ -34,9 +34,7 @@ class Language extends LanguageKeys {
     final lang = settings.selectedLanguage.value;
 
     Future<void> updateAllAvailable() async {
-      availableLanguages
-        ..clear()
-        ..addAll(await getAllLanguages());
+      availableLanguages = await getAllLanguages();
     }
 
     // -- Assigning default map, used as a backup in case a key doesnt exist in [lang].

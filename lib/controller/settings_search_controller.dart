@@ -103,7 +103,7 @@ class SettingsSearchController {
   SettingsSearchController._internal();
 
   final _map = <SettingSubpageEnum, Map<int, GlobalKey>>{};
-  final _allWidgets = <(SettingSubpageProvider, Map<Enum, List<String>>)>[];
+  var _allWidgets = <(SettingSubpageProvider, Map<Enum, List<String>>)>[];
   final searchResults = <SettingSubpageEnum, List<SettingSearchResultItem>>{}.obs;
   final subpagesDetails = <SettingSubpageEnum, CustomCollapsedListTile?>{};
 
@@ -135,18 +135,16 @@ class SettingsSearchController {
       const extras = ExtrasSettings();
       const backupAndRestore = BackupAndRestore();
       const advanced = AdvancedSettings();
-      _allWidgets
-        ..clear()
-        ..addAll([
-          (theme, theme.lookupMap),
-          (indexer, indexer.lookupMap),
-          (playback, playback.lookupMap),
-          (customization, customization.lookupMap),
-          (youtube, youtube.lookupMap),
-          (extras, extras.lookupMap),
-          (backupAndRestore, backupAndRestore.lookupMap),
-          (advanced, advanced.lookupMap),
-        ]);
+      _allWidgets = [
+        (theme, theme.lookupMap),
+        (indexer, indexer.lookupMap),
+        (playback, playback.lookupMap),
+        (customization, customization.lookupMap),
+        (youtube, youtube.lookupMap),
+        (extras, extras.lookupMap),
+        (backupAndRestore, backupAndRestore.lookupMap),
+        (advanced, advanced.lookupMap),
+      ];
       for (final p in _allWidgets) {
         subpagesDetails[p.$1.settingPage] = p.$1.settingPage.toSettingSubPageDetails();
       }
@@ -174,10 +172,7 @@ class SettingsSearchController {
         }
       }
     });
-    searchResults
-      ..clear()
-      ..addAll(res);
-    searchResults.refresh();
+    searchResults.value = res;
   }
 
   Future<void> onResultTap({

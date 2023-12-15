@@ -518,9 +518,7 @@ void showLibraryTracksChooseDialog({
                           final albumMatch = element.album.cleanUpForComparison.contains(value);
                           return titleMatch || artistMatch || albumMatch;
                         });
-                        allTracksList
-                          ..clear()
-                          ..addAll(matched);
+                        allTracksList.value = matched.toList();
                       },
                     ),
                   ),
@@ -528,9 +526,7 @@ void showLibraryTracksChooseDialog({
                   NamidaIconButton(
                     icon: Broken.close_circle,
                     onPressed: () {
-                      allTracksList
-                        ..clear()
-                        ..addAll(allTracksInLibrary);
+                      allTracksList.value = allTracksInLibrary;
                       searchController.clear();
                     },
                   )

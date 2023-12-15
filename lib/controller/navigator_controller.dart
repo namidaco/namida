@@ -315,9 +315,7 @@ class NamidaNavigator {
     bool nested = true,
     Transition transition = Transition.cupertino,
   }) async {
-    currentWidgetStack
-      ..clear()
-      ..add(page.toNamidaRoute());
+    currentWidgetStack.value = [page.toNamidaRoute()];
     _hideEverything();
 
     currentRoute?.updateColorScheme();

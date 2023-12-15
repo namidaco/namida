@@ -153,8 +153,9 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                           onColorReady: (color) async {
                             if (color != null) {
                               await Future.delayed(const Duration(milliseconds: 200)); // navigation delay
-                              bgColor = color.color;
-                              setState(() {});
+                              setState(() {
+                                bgColor = color.color;
+                              });
                             }
                           },
                         ),
@@ -233,8 +234,12 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                           icon: Broken.edit_2,
                                           title: lang.RENAME_PLAYLIST,
                                           onTap: () async {
-                                            playlistCurrentName = await playlist.showRenamePlaylistSheet(context: context, playlistName: playlistCurrentName);
-                                            setState(() {});
+                                            final newName = await playlist.showRenamePlaylistSheet(context: context, playlistName: playlistCurrentName);
+                                            if (context.mounted) {
+                                              setState(() {
+                                                playlistCurrentName = newName;
+                                              });
+                                            }
                                           },
                                         ),
                                         NamidaPopupItem(
@@ -382,8 +387,9 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
                       onColorReady: (color) async {
                         if (color != null) {
                           await Future.delayed(const Duration(milliseconds: 200)); // navigation delay
-                          bgColor = color.color;
-                          setState(() {});
+                          setState(() {
+                            bgColor = color.color;
+                          });
                         }
                       },
                     ),

@@ -1,6 +1,7 @@
 // ignore_for_file: depend_on_referenced_packages
 
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -137,7 +138,7 @@ class YoutubeController {
 
   /// Used for easily displaying title & channel inside history directly without needing to fetch or rely on cache.
   /// This comes mainly after a youtube history import
-  final tempBackupVideoInfo = <String, YoutubeVideoHistory>{}; // {id: YoutubeVideoHistory()}
+  var tempBackupVideoInfo = <String, YoutubeVideoHistory>{}; // {id: YoutubeVideoHistory()}
 
   /// [renameCacheFiles] requires you to stop the download first, otherwise it might result in corrupted files.
   Future<void> renameConfigFilename({
@@ -204,9 +205,7 @@ class YoutubeController {
 
   Future<void> fillBackupInfoMap() async {
     final map = await _fillBackupInfoMapIsolate.thready(AppDirs.YT_STATS);
-    tempBackupVideoInfo
-      ..clear()
-      ..addAll(map);
+    tempBackupVideoInfo = map;
     tempBackupVideoInfo.remove('');
   }
 
@@ -334,17 +333,13 @@ class YoutubeController {
   }
 
   Future<void> fetchRelatedVideos(String id) async {
-    currentRelatedVideos
-      ..clear()
-      ..addAll(List.filled(20, null));
+    currentRelatedVideos.value = List.filled(20, null);
     final items = await NewPipeExtractorDart.videos.getRelatedStreams(id.toYTUrl());
     _fillTempVideoInfoMap(items.whereType<StreamInfoItem>());
     if (_canSafelyModifyMetadata(id)) {
-      currentRelatedVideos
-        ..clear()
-        ..addAll([
-          ...items,
-        ]);
+      currentRelatedVideos.value = [
+        ...items,
+      ];
     }
   }
 

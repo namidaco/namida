@@ -1188,7 +1188,7 @@ class _NamidaConverters {
     // =================================================
     // ====================== Title ====================
     // =================================================
-    final toTitle = <Type, Map<Enum, String>>{
+    _toTitle = <Type, Map<Enum, String>>{
       InterruptionAction: {
         InterruptionAction.doNothing: lang.DO_NOTHING,
         InterruptionAction.duckAudio: lang.DUCK_AUDIO,
@@ -1426,7 +1426,7 @@ class _NamidaConverters {
     // ====================================================
     // ====================== Subtitle ====================
     // ====================================================
-    final toSubtitle = <Type, Map<Enum, String?>>{
+    _toSubtitle = <Type, Map<Enum, String?>>{
       InterruptionType: {
         InterruptionType.shouldPause: lang.SHOULD_PAUSE_NOTE,
         InterruptionType.shouldDuck: lang.SHOULD_DUCK_NOTE,
@@ -1442,7 +1442,7 @@ class _NamidaConverters {
     // =================================================
     // ====================== Icons ====================
     // =================================================
-    final toIcon = <Type, Map<Enum, IconData>>{
+    _toIcon = <Type, Map<Enum, IconData>>{
       InterruptionAction: {
         InterruptionAction.doNothing: Broken.minus_cirlce,
         InterruptionAction.duckAudio: Broken.volume_low_1,
@@ -1520,7 +1520,7 @@ class _NamidaConverters {
       },
     };
 
-    final ffmpegToTitle = {
+    _ffmpegToTitle = {
       FFMPEGTagField.title: lang.TITLE,
       FFMPEGTagField.album: lang.ALBUM,
       FFMPEGTagField.artist: lang.ARTIST,
@@ -1543,7 +1543,7 @@ class _NamidaConverters {
       FFMPEGTagField.recordLabel: lang.RECORD_LABEL,
       FFMPEGTagField.country: lang.COUNTRY,
     };
-    final ffmpegToIcon = {
+    _ffmpegToIcon = {
       FFMPEGTagField.title: Broken.music,
       FFMPEGTagField.album: Broken.music_dashboard,
       FFMPEGTagField.artist: Broken.microphone,
@@ -1566,30 +1566,14 @@ class _NamidaConverters {
       FFMPEGTagField.recordLabel: Broken.ticket,
       FFMPEGTagField.country: Broken.house,
     };
-    _toTitle
-      ..clear()
-      ..addAll(toTitle);
-    _toSubtitle
-      ..clear()
-      ..addAll(toSubtitle);
-    _toIcon
-      ..clear()
-      ..addAll(toIcon);
-
-    _ffmpegToTitle
-      ..clear()
-      ..addAll(ffmpegToTitle);
-    _ffmpegToIcon
-      ..clear()
-      ..addAll(ffmpegToIcon);
   }
 
-  final _toTitle = <Type, Map<Enum, String>>{};
-  final _toSubtitle = <Type, Map<Enum, String?>>{};
-  final _toIcon = <Type, Map<Enum, IconData>>{};
+  var _toTitle = <Type, Map<Enum, String>>{};
+  var _toSubtitle = <Type, Map<Enum, String?>>{};
+  var _toIcon = <Type, Map<Enum, IconData>>{};
 
-  final _ffmpegToTitle = <String, String>{};
-  final _ffmpegToIcon = <String, IconData>{};
+  var _ffmpegToTitle = <String, String>{};
+  var _ffmpegToIcon = <String, IconData>{};
 
   String getTitle(Enum enumValue) {
     return _toTitle[enumValue.runtimeType]![enumValue]!;

@@ -1,5 +1,6 @@
 // ignore_for_file: non_constant_identifier_names
 
+import 'dart:collection';
 import 'dart:io';
 
 import 'package:history_manager/history_manager.dart';
@@ -39,13 +40,12 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
   String mainItemToSubItem(YoutubeID item) => item.id;
 
   @override
-  Future<Map<int, List<YoutubeID>>> prepareAllHistoryFilesFunction(String directoryPath) async {
-    final map = await _readHistoryFilesCompute.thready(directoryPath);
-    return map;
+  Future<SplayTreeMap<int, List<YoutubeID>>> prepareAllHistoryFilesFunction(String directoryPath) async {
+    return await _readHistoryFilesCompute.thready(directoryPath);
   }
 
-  static Future<Map<int, List<YoutubeID>>> _readHistoryFilesCompute(String path) async {
-    final map = <int, List<YoutubeID>>{};
+  static Future<SplayTreeMap<int, List<YoutubeID>>> _readHistoryFilesCompute(String path) async {
+    final map = SplayTreeMap<int, List<YoutubeID>>();
     for (final f in Directory(path).listSyncSafe()) {
       if (f is File) {
         try {
