@@ -81,7 +81,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   final volumeHideDuration = const Duration(milliseconds: 500);
   final brightnessHideDuration = const Duration(milliseconds: 500);
   final transitionDuration = const Duration(milliseconds: 300);
-  final doubleTapSeekReset = const Duration(milliseconds: 600);
+  final doubleTapSeekReset = const Duration(milliseconds: 900);
 
   Timer? _hideTimer;
   void _resetTimer({bool hideControls = false}) {

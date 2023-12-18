@@ -747,10 +747,8 @@ class _MixesCardState extends State<_MixesCard> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 500)).then((value) {
-      _assignTrack();
-      _extractColor();
-    });
+    _assignTrack();
+    Future.delayed(const Duration(milliseconds: 500)).then((value) => _extractColor());
   }
 
   void onMixTap(Widget thumbnailWidget) {

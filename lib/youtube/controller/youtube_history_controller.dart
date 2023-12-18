@@ -45,7 +45,7 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
   }
 
   static Future<SplayTreeMap<int, List<YoutubeID>>> _readHistoryFilesCompute(String path) async {
-    final map = SplayTreeMap<int, List<YoutubeID>>();
+    final map = SplayTreeMap<int, List<YoutubeID>>((date1, date2) => date2.compareTo(date1));
     for (final f in Directory(path).listSyncSafe()) {
       if (f is File) {
         try {

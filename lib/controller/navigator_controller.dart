@@ -336,7 +336,7 @@ class NamidaNavigator {
     }
 
     final ytmpcpks = ytMiniplayerCommentsPageKey?.currentState;
-    if (ytmpcpks != null) {
+    if (isInYTCommentsSubpage && ytmpcpks != null) {
       ytmpcpks.pop();
       isInYTCommentsSubpage = false;
       return;
