@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -17,6 +16,7 @@ class YoutubeCard extends StatelessWidget {
   final String subtitle;
   final String thirdLineText;
   final String? channelThumbnailUrl;
+  final String? channelID;
   final bool displayChannelThumbnail;
   final bool displaythirdLineText;
   final List<Widget> onTopWidgets;
@@ -45,13 +45,14 @@ class YoutubeCard extends StatelessWidget {
     this.subtitle = '',
     required this.thirdLineText,
     this.channelThumbnailUrl,
+    this.channelID,
     this.displayChannelThumbnail = true,
     this.displaythirdLineText = true,
     this.onTopWidgets = const <Widget>[],
     this.smallBoxText,
     this.checkmarkStatus,
     this.thumbnailWidthPercentage = 1.0,
-    this.smallBoxIcon = Broken.play_cricle,
+    this.smallBoxIcon,
     this.extractColor = false,
     this.menuChildren = const [],
     this.menuChildrenDefault = const [],
@@ -89,6 +90,7 @@ class YoutubeCard extends StatelessWidget {
                   height: thumbnailHeight,
                   shimmerEnabled: shimmerEnabled,
                   child: YoutubeThumbnail(
+                    key: Key("${videoId}_$thumbnailUrl"),
                     isImportantInCache: isImageImportantInCache,
                     videoId: videoId,
                     channelUrl: thumbnailUrl,
@@ -150,8 +152,10 @@ class YoutubeCard extends StatelessWidget {
                                 height: channelThumbSize,
                                 shimmerEnabled: shimmerEnabled && (channelThumbnailUrl == null || !displayChannelThumbnail),
                                 child: YoutubeThumbnail(
+                                  key: Key("${channelThumbnailUrl}_$channelID"),
                                   isImportantInCache: false,
                                   channelUrl: channelThumbnailUrl ?? '',
+                                  channelIDForHQImage: channelThumbnailUrl == null ? (channelID ?? '') : '',
                                   width: channelThumbSize,
                                   isCircle: true,
                                 ),

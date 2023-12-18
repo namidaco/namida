@@ -36,9 +36,11 @@ class YoutubeThumbnail extends StatefulWidget {
   final bool compressed;
   final bool isImportantInCache;
   final bool preferLowerRes;
+  final String channelIDForHQImage;
+  final bool hqChannelImage;
 
   const YoutubeThumbnail({
-    super.key,
+    required super.key,
     this.channelUrl,
     this.videoId,
     this.height,
@@ -50,7 +52,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.onColorReady,
     this.onTopWidgets = const <Widget>[],
     this.smallBoxText,
-    this.smallBoxIcon = Broken.play_cricle,
+    this.smallBoxIcon,
     this.displayFallbackIcon = true,
     this.localImagePath,
     this.extractColor = false,
@@ -58,6 +60,8 @@ class YoutubeThumbnail extends StatefulWidget {
     this.compressed = true,
     required this.isImportantInCache,
     this.preferLowerRes = true,
+    this.channelIDForHQImage = '',
+    this.hqChannelImage = false,
   });
 
   @override
@@ -92,13 +96,20 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
     imagePath = widget.localImagePath;
 
     if (imagePath == null) {
-      final res = VideoController.inst.getYoutubeThumbnailFromCacheSync() ??
+      final fetchHQChImg = widget.channelIDForHQImage != '';
+      final finalChAvatarUrl = fetchHQChImg ? widget.channelIDForHQImage : widget.channelUrl;
+      final res = VideoController.inst.getYoutubeThumbnailFromCacheSync(
+            id: widget.videoId,
+            channelUrl: finalChAvatarUrl,
+          ) ??
           await VideoController.inst.getYoutubeThumbnailAndCache(
             id: widget.videoId,
-            channelUrl: widget.channelUrl,
+            channelUrlOrID: finalChAvatarUrl,
+            hqChannelImage: fetchHQChImg,
             isImportantInCache: widget.isImportantInCache,
             // -- get lower res first
             beforeFetchingFromInternet: () async {
+              if (widget.videoId == null) return;
               final lowerRes = await VideoController.inst.getYoutubeThumbnailAsBytes(
                 youtubeId: widget.videoId,
                 lowerResYTID: true,
@@ -129,23 +140,16 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
     }
   }
 
-  Key? _latestKey;
   Key get thumbKey => Key("$smallBoxDynamicColor${widget.videoId}${widget.channelUrl}${imageBytes?.length}$imagePath${widget.smallBoxText}");
 
   @override
+  void initState() {
+    super.initState();
+    _getThumbnail();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (_latestKey != thumbKey) {
-      _latestKey = thumbKey;
-      _dontTouchMeImFetchingThumbnail?.cancel();
-      imagePath = null;
-      imageBytes = null;
-      imageColors = null;
-      smallBoxDynamicColor = null;
-      _getThumbnail();
-    } else if (imagePath == null && canFetchImage) {
-      _getThumbnail(); // for failed requests
-      _latestKey = thumbKey;
-    }
     return Padding(
       padding: widget.margin ?? EdgeInsets.zero,
       child: ArtworkWidget(
@@ -171,48 +175,42 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
             Positioned(
               bottom: 0.0,
               right: 0.0,
-              child: Padding(
-                padding: const EdgeInsets.all(3.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                  child: NamidaBgBlur(
-                    blur: 3.0,
-                    enabled: settings.enableBlurEffect.value,
-                    child: NamidaInkWell(
-                      animationDurationMS: 300,
-                      borderRadius: 5.0,
-                      bgColor: Color.alphaBlend(
-                        Colors.black.withOpacity(0.35),
-                        smallBoxDynamicColor ?? context.theme.cardColor.withAlpha(130),
-                      ).withAlpha(140),
-                      padding: const EdgeInsets.symmetric(vertical: 1.0, horizontal: 3.0),
-                      child: widget.smallBoxIcon != null
-                          ? Row(
-                              children: [
-                                Icon(
-                                  widget.smallBoxIcon,
-                                  size: 16.0,
-                                  color: Colors.white.withOpacity(0.8),
-                                ),
-                                const SizedBox(width: 2.0),
-                                Text(
-                                  widget.smallBoxText!,
-                                  style: context.textTheme.displaySmall?.copyWith(
-                                    color: Colors.white.withOpacity(0.8),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            )
-                          : Text(
+              child: Container(
+                clipBehavior: Clip.hardEdge,
+                margin: const EdgeInsets.all(2.0),
+                padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 1.0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5.0.multipliedRadius),
+                  color: Colors.black.withOpacity(0.3),
+                ),
+                child: NamidaBgBlur(
+                  blur: 2.0,
+                  enabled: settings.enableBlurEffect.value,
+                  child: widget.smallBoxIcon != null
+                      ? Row(
+                          children: [
+                            Icon(
+                              widget.smallBoxIcon,
+                              size: 15.0,
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                            const SizedBox(width: 2.0),
+                            Text(
                               widget.smallBoxText!,
                               style: context.textTheme.displaySmall?.copyWith(
                                 color: Colors.white.withOpacity(0.8),
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                    ),
-                  ),
+                          ],
+                        )
+                      : Text(
+                          widget.smallBoxText!,
+                          style: context.textTheme.displaySmall?.copyWith(
+                            color: Colors.white.withOpacity(0.8),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                 ),
               ),
             )

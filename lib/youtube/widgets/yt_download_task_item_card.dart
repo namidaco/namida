@@ -517,34 +517,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
               width: thumbWidth,
               height: thumbHeight,
               videoId: item.id,
-              onTopWidgets: [
-                if (duration != null)
-                  Positioned(
-                    bottom: 0.0,
-                    right: 0.0,
-                    child: Padding(
-                      padding: const EdgeInsets.all(3.0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                        child: NamidaBgBlur(
-                          blur: 2.0,
-                          enabled: settings.enableBlurEffect.value,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
-                            color: Colors.black.withOpacity(0.2),
-                            child: Text(
-                              duration,
-                              style: context.textTheme.displaySmall?.copyWith(
-                                color: Colors.white.withOpacity(0.8),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
+              smallBoxText: duration,
             ),
             const SizedBox(width: 8.0),
             Expanded(

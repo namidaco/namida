@@ -1,7 +1,6 @@
 // ignore_for_file: depend_on_referenced_packages
 
 import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -371,8 +370,7 @@ class YoutubeController {
 
   Future<void> _fetchComments(String id, {bool forceRequest = false}) async {
     currentTotalCommentsCount.value = null;
-    currentComments.clear();
-    currentComments.addAll(List.filled(20, null));
+    currentComments.value = List.filled(20, null);
 
     // -- Fetching Comments.
     final fetchedComments = <YoutubeComment>[];
@@ -1056,7 +1054,7 @@ class YoutubeController {
         onAudioFileReady: (audioFile) async {
           final thumbnailFile = await VideoController.inst.getYoutubeThumbnailAndCache(
             id: videoID,
-            channelUrl: null,
+            channelUrlOrID: null,
             isImportantInCache: true,
           );
           await YTUtils.writeAudioMetadata(

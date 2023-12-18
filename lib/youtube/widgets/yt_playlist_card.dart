@@ -5,6 +5,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/widgets/yt_card.dart';
@@ -53,6 +54,7 @@ class YoutubePlaylistCard extends StatelessWidget {
       displayChannelThumbnail: false,
       displaythirdLineText: false,
       smallBoxText: countText,
+      smallBoxIcon: Broken.play_cricle,
       menuChildrenDefault: playlist?.getPopupMenuItems(
             context,
             displayPlay: playOnTap == false,

@@ -262,7 +262,7 @@ class CurrentColor {
       final response = await paletteFile.readAsJson();
       if (response != null) {
         final nc = NamidaColor.fromJson(response);
-        printy("Color Read From File");
+        _printie("Color Read From File");
         return nc;
       } else {
         await paletteFile.deleteIfExists();
@@ -277,7 +277,7 @@ class CurrentColor {
     final nc = NamidaColor(used: null, mix: mixIntColors(pcolors), palette: pcolors.toList());
     await paletteFile.writeAsJson(nc.toJson()); // writing the file bothways, to prevent reduntant re-extraction.
     Indexer.inst.updateColorPalettesSizeInStorage(newPalettePath: paletteFile.path);
-    printy("Color Extracted From Image (${pcolors.length})");
+    _printie("Color Extracted From Image (${pcolors.length})");
     return pcolors.isEmpty ? null : nc;
   }
 
@@ -401,6 +401,16 @@ class CurrentColor {
   void stopGeneratingColorPalettes() => isGeneratingAllColorPalettes.value = false;
 
   static const _defaultUseIsolate = false;
+
+  void _printie(
+    dynamic message, {
+    bool isError = false,
+    bool dumpshit = false,
+  }) {
+    if (logsEnabled) printy(message, isError: isError, dumpshit: dumpshit);
+  }
+
+  bool logsEnabled = false;
 }
 
 extension ColorUtils on Color {

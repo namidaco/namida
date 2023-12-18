@@ -860,98 +860,99 @@ class _MixesCardState extends State<_MixesCard> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final displayShimmer = track == null;
-    Widget artworkWidget(bool titleInside) => NamidaHero(
-          tag: 'mix_thumbnail_${widget.title}${widget.index}',
-          child: ArtworkWidget(
-            key: Key(track?.pathToImage ?? ''),
-            compressed: false,
-            blur: 1.5,
-            borderRadius: titleInside ? 12.0 : 8.0,
-            forceSquared: true,
-            path: track?.pathToImage,
-            displayIcon: !displayShimmer,
-            thumbnailSize: widget.width,
-            onTopWidgets: [
-              if (titleInside) ...[
-                Positioned(
-                  top: 12.0,
-                  left: 0.0,
-                  child: ClipRect(
-                    child: NamidaBgBlur(
-                      blur: 2.0,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: context.theme.cardColor.withAlpha(50),
-                        ),
-                        padding: const EdgeInsets.all(2.0),
-                        child: NamidaIconButton(
-                          icon: Broken.arrow_left_2,
-                          iconColor: context.theme.cardColor.withAlpha(160),
-                          onPressed: NamidaNavigator.inst.closeDialog,
-                        ),
+  Widget artworkWidget(bool titleInside, bool displayShimmer) => NamidaHero(
+        tag: 'mix_thumbnail_${widget.title}${widget.index}',
+        child: ArtworkWidget(
+          key: Key(track?.pathToImage ?? ''),
+          compressed: false,
+          blur: 1.5,
+          borderRadius: titleInside ? 12.0 : 8.0,
+          forceSquared: true,
+          path: track?.pathToImage,
+          displayIcon: !displayShimmer,
+          thumbnailSize: widget.width,
+          onTopWidgets: [
+            if (titleInside) ...[
+              Positioned(
+                top: 12.0,
+                left: 0.0,
+                child: ClipRect(
+                  child: NamidaBgBlur(
+                    blur: 2.0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: context.theme.cardColor.withAlpha(50),
+                      ),
+                      padding: const EdgeInsets.all(2.0),
+                      child: NamidaIconButton(
+                        icon: Broken.arrow_left_2,
+                        iconColor: context.theme.cardColor.withAlpha(160),
+                        onPressed: NamidaNavigator.inst.closeDialog,
                       ),
                     ),
                   ),
                 ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  child: NamidaInkWell(
-                    borderRadius: 8.0,
-                    margin: const EdgeInsets.all(6.0),
-                    padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
-                    bgColor: context.theme.cardColor.withAlpha(240),
-                    child: Row(
-                      children: [
-                        const Icon(Broken.audio_square, size: 22.0),
-                        const SizedBox(width: 6.0),
-                        Text(
-                          widget.title,
-                          style: context.textTheme.displayLarge?.copyWith(fontSize: 15.0.multipliedFontScale),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
+              ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                child: NamidaInkWell(
+                  borderRadius: 8.0,
+                  margin: const EdgeInsets.all(6.0),
+                  padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
+                  bgColor: context.theme.cardColor.withAlpha(240),
+                  child: Row(
+                    children: [
+                      const Icon(Broken.audio_square, size: 22.0),
+                      const SizedBox(width: 6.0),
+                      Text(
+                        widget.title,
+                        style: context.textTheme.displayLarge?.copyWith(fontSize: 15.0.multipliedFontScale),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
-              ],
-              if (!displayShimmer)
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: NamidaInkWell(
-                    onTap: () {
-                      Player.inst.playOrPause(
-                        0,
-                        widget.tracks,
-                        QueueSource.homePageItem,
-                        homePageItem: HomePageItems.mixes,
-                      );
-                    },
-                    borderRadius: 8.0,
-                    margin: const EdgeInsets.all(6.0),
-                    padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
-                    bgColor: context.theme.cardColor.withAlpha(240),
-                    child: Row(
-                      children: [
-                        Icon(Broken.play_cricle, size: titleInside ? 22.0 : 16.0),
-                        const SizedBox(width: 4.0),
-                        Text(
-                          "${widget.tracks.length}",
-                          style: (titleInside ? context.textTheme.displayLarge : context.textTheme.displaySmall)?.copyWith(fontSize: 15.0.multipliedFontScale),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
+              ),
             ],
-          ),
-        );
+            if (!displayShimmer)
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: NamidaInkWell(
+                  onTap: () {
+                    Player.inst.playOrPause(
+                      0,
+                      widget.tracks,
+                      QueueSource.homePageItem,
+                      homePageItem: HomePageItems.mixes,
+                    );
+                  },
+                  borderRadius: 8.0,
+                  margin: const EdgeInsets.all(6.0),
+                  padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
+                  bgColor: context.theme.cardColor.withAlpha(240),
+                  child: Row(
+                    children: [
+                      Icon(Broken.play_cricle, size: titleInside ? 22.0 : 16.0),
+                      const SizedBox(width: 4.0),
+                      Text(
+                        "${widget.tracks.length}",
+                        style: (titleInside ? context.textTheme.displayLarge : context.textTheme.displaySmall)?.copyWith(fontSize: 15.0.multipliedFontScale),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+          ],
+        ),
+      );
+  @override
+  Widget build(BuildContext context) {
+    final displayShimmer = track == null;
+
     final thumbnailWidget = Stack(
       alignment: Alignment.topCenter,
       children: [
@@ -973,13 +974,13 @@ class _MixesCardState extends State<_MixesCard> {
         ),
         Padding(
           padding: const EdgeInsets.only(top: 6.0).add(const EdgeInsets.all(1.0)),
-          child: artworkWidget(false),
+          child: artworkWidget(false, displayShimmer),
         ),
       ],
     );
 
     return NamidaInkWell(
-      onTap: () => onMixTap(artworkWidget(true)),
+      onTap: () => onMixTap(artworkWidget(true, displayShimmer)),
       child: AnimatedContainer(
         width: widget.width,
         margin: const EdgeInsets.symmetric(horizontal: 4.0),

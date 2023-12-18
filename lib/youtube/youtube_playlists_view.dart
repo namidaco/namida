@@ -300,6 +300,7 @@ class YoutubePlaylistsView extends StatelessWidget {
                             }
                           },
                           smallBoxText: playlist.tracks.length.formatDecimal(),
+                          smallBoxIcon: Broken.play_cricle,
                           checkmarkStatus: idsExist,
                           menuChildrenDefault: menuItems,
                         );

@@ -38,6 +38,7 @@ typedef MiniplayerBuilderCallback = Widget Function(
   double panelHeight,
   double miniplayerbottomnavheight,
   double bottomOffset,
+  Widget? constantChild,
 );
 
 class MiniplayerRaw extends StatelessWidget {
@@ -45,6 +46,7 @@ class MiniplayerRaw extends StatelessWidget {
   final double topBorderRadius;
   final double bottomBorderRadius;
   final bool enableHorizontalGestures;
+  final Widget? constantChild;
 
   const MiniplayerRaw({
     super.key,
@@ -52,6 +54,7 @@ class MiniplayerRaw extends StatelessWidget {
     this.topBorderRadius = 20.0,
     this.bottomBorderRadius = 20.0,
     this.enableHorizontalGestures = true,
+    this.constantChild,
   });
 
   @override
@@ -135,8 +138,10 @@ class MiniplayerRaw extends StatelessWidget {
           panelHeight,
           miniplayerbottomnavheight,
           bottomOffset,
+          child,
         );
       },
+      child: constantChild,
     );
     return WillPopScope(
       onWillPop: MiniPlayerController.inst.onWillPop,

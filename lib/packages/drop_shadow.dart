@@ -9,7 +9,7 @@ class DropShadow extends StatelessWidget {
     required this.child,
     this.bottomChild,
     this.blurRadius = 10.0,
-    this.borderRadius = 0.0,
+    this.borderRadius,
     this.offset = const Offset(0, 8),
     this.spread = 1.0,
     this.boxShadow,
@@ -26,7 +26,7 @@ class DropShadow extends StatelessWidget {
   final double blurRadius;
 
   /// BorderRadius to the image and the shadow
-  final double borderRadius;
+  final BorderRadius? borderRadius;
 
   /// Position of the shadow
   final Offset offset;
@@ -39,57 +39,44 @@ class DropShadow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double left = 0.0;
-    double right = 0.0;
-    double top = 0.0;
-    double bottom = 0.0;
+    final left = (offset.dx.abs() + (blurRadius * 2)) * spread;
+    final right = (offset.dx + (blurRadius * 2)) * spread;
+    final top = (offset.dy.abs() + (blurRadius * 2)) * spread;
+    final bottom = (offset.dy + (blurRadius * 2)) * spread;
 
-    left = (offset.dx.abs() + (blurRadius * 2)) * spread;
-    right = (offset.dx + (blurRadius * 2)) * spread;
-    top = (offset.dy.abs() + (blurRadius * 2)) * spread;
-    bottom = (offset.dy + (blurRadius * 2)) * spread;
+    return Container(
+      clipBehavior: Clip.hardEdge,
+      decoration: BoxDecoration(
+        boxShadow: boxShadow,
+        borderRadius: borderRadius,
+      ),
 
-    /// [ClipRRect] to isolate [BackDropFilter] from other widgets
-    return ClipRRect(
-      child: Container(
-        decoration: BoxDecoration(boxShadow: boxShadow),
+      /// Calculate Shadow's effect field
+      padding: EdgeInsets.fromLTRB(left, top, right, bottom),
+      child: Stack(
+        children: [
+          /// Arrange shadow position
+          Transform.translate(
+            offset: offset,
+            child: bottomChild ?? child,
+          ),
 
-        /// Calculate Shadow's effect field
-        padding: EdgeInsets.fromLTRB(left, top, right, bottom),
-        child: Stack(
-          children: [
-            /// Arrange shadow position
-            Transform.translate(
-              offset: offset,
-
-              /// Apply [BorderRadius] to the shadow
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(borderRadius),
-                child: bottomChild ?? child,
+          /// Apply filter the whole [Stack] space
+          Positioned.fill(
+            /// Apply blur effect to the layer
+            child: BackdropFilter(
+              filter: ImageFilter.blur(
+                sigmaX: blurRadius,
+                sigmaY: blurRadius,
               ),
-            ),
 
-            /// Apply filter the whole [Stack] space
-            Positioned.fill(
-              /// Apply blur effect to the layer
-              child: BackdropFilter(
-                filter: ImageFilter.blur(
-                  sigmaX: blurRadius,
-                  sigmaY: blurRadius,
-                ),
-
-                /// Filter effect field
-                child: const ColoredBox(color: Colors.transparent),
-              ),
+              /// Filter effect field
+              child: const ColoredBox(color: Colors.transparent),
             ),
+          ),
 
-            /// [Widget] itself with given [BorderRadius]
-            ClipRRect(
-              borderRadius: BorderRadius.circular(borderRadius),
-              child: child,
-            ),
-          ],
-        ),
+          child,
+        ],
       ),
     );
   }

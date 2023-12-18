@@ -459,9 +459,12 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
             ],
       ),
       child: widget.borderRadius != 0
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(
-                (1 - _controller.value) * widget.borderRadius,
+          ? Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(
+                  (1 - _controller.value) * widget.borderRadius,
+                ),
               ),
               child: scaffoldChild,
             )

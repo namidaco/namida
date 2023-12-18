@@ -102,7 +102,6 @@ class YoutubeVideoCard extends StatelessWidget {
         channelThumbnailUrl: video?.uploaderAvatarUrl,
         displayChannelThumbnail: true,
         smallBoxText: video?.duration?.inSeconds.secondsLabel,
-        smallBoxIcon: null,
         bottomRightWidgets: idNull == null ? [] : YTUtils.getVideoCacheStatusIcons(videoId: idNull, context: context),
         menuChildrenDefault: menuItems,
       ),

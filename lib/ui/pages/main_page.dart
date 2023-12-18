@@ -32,29 +32,27 @@ class MainPage extends StatelessWidget {
   final AnimationController animation;
   const MainPage({super.key, required this.animation});
 
+  Widget appbar(double animationMultiplier) => Obx(
+        () => AppBar(
+          toolbarHeight: 56.0 * animationMultiplier,
+          leading: NamidaNavigator.inst.currentWidgetStack.length > 1
+              ? NamidaAppBarIcon(
+                  icon: Broken.arrow_left_2,
+                  onPressed: NamidaNavigator.inst.popPage,
+                )
+              : NamidaAppBarIcon(
+                  icon: Broken.menu_1,
+                  onPressed: NamidaNavigator.inst.toggleDrawer,
+                ),
+          titleSpacing: 0,
+          automaticallyImplyLeading: false,
+          title: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? ScrollSearchController.inst.searchBarWidget : NamidaNavigator.inst.currentRoute?.toTitle(),
+          actions: NamidaNavigator.inst.currentRoute?.toActions(),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
-    Widget appbar(double animationMultiplier) => Obx(
-          () {
-            return AppBar(
-              toolbarHeight: 56.0 * animationMultiplier,
-              leading: NamidaNavigator.inst.currentWidgetStack.length > 1
-                  ? NamidaAppBarIcon(
-                      icon: Broken.arrow_left_2,
-                      onPressed: NamidaNavigator.inst.popPage,
-                    )
-                  : NamidaAppBarIcon(
-                      icon: Broken.menu_1,
-                      onPressed: NamidaNavigator.inst.toggleDrawer,
-                    ),
-              titleSpacing: 0,
-              automaticallyImplyLeading: false,
-              title: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? ScrollSearchController.inst.searchBarWidget : NamidaNavigator.inst.currentRoute?.toTitle(),
-              actions: NamidaNavigator.inst.currentRoute?.toActions(),
-            );
-          },
-        );
-
     final main = WillPopScope(
       onWillPop: () async {
         await NamidaNavigator.inst.popPage();
@@ -99,10 +97,11 @@ class MainPage extends StatelessWidget {
                 ? main
                 : AnimatedBuilder(
                     animation: animation,
+                    child: main,
                     builder: (context, child) {
                       return Transform.scale(
                         scale: 1 - (animation.value * 0.05),
-                        child: main,
+                        child: child,
                       );
                     },
                   );
@@ -193,30 +192,31 @@ class MainPage extends StatelessWidget {
             ? const SizedBox()
             : AnimatedBuilder(
                 animation: animation,
+                child: Obx(
+                  () => NavigationBar(
+                    animationDuration: const Duration(seconds: 1),
+                    elevation: 22,
+                    labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+                    height: 64.0,
+                    onDestinationSelected: (value) async {
+                      final tab = value.toEnum();
+                      ScrollSearchController.inst.animatePageController(tab);
+                    },
+                    selectedIndex: settings.selectedLibraryTab.value.toInt().toIf(0, -1),
+                    destinations: [
+                      ...settings.libraryTabs.map(
+                        (e) => NavigationDestination(
+                          icon: Icon(e.toIcon()),
+                          label: settings.libraryTabs.length >= 7 ? '' : e.toText(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 builder: (context, child) {
                   return Transform.translate(
                     offset: Offset(0, (kBottomNavigationBarHeight * animation.value).withMinimum(0)),
-                    child: Obx(
-                      () => NavigationBar(
-                        animationDuration: const Duration(seconds: 1),
-                        elevation: 22,
-                        labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-                        height: 64.0,
-                        onDestinationSelected: (value) async {
-                          final tab = value.toEnum();
-                          ScrollSearchController.inst.animatePageController(tab);
-                        },
-                        selectedIndex: settings.selectedLibraryTab.value.toInt().toIf(0, -1),
-                        destinations: [
-                          ...settings.libraryTabs.map(
-                            (e) => NavigationDestination(
-                              icon: Icon(e.toIcon()),
-                              label: settings.libraryTabs.length >= 7 ? '' : e.toText(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    child: child,
                   );
                 }),
       ),

@@ -18,6 +18,7 @@ class MultiArtworkContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      alignment: Alignment.center,
       margin: margin ?? const EdgeInsets.symmetric(horizontal: 12.0),
       padding: const EdgeInsets.all(3.0),
       width: size,
@@ -35,9 +36,13 @@ class MultiArtworkContainer extends StatelessWidget {
       ),
       child: NamidaHero(
         tag: heroTag,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18.0.multipliedRadius),
+          ),
           child: Stack(
+            clipBehavior: Clip.hardEdge,
             children: [
               if (paths != null)
                 MultiArtworks(

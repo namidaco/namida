@@ -173,7 +173,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
             child: Align(
               child: _DropShadowWrapper(
                 enabled: widget.forceEnableGlow || (settings.enableGlowEffect.value && widget.blur != 0.0),
-                borderRadius: widget.borderRadius.multipliedRadius,
+                borderRadius: borderR,
                 blur: widget.blur,
                 child: Container(
                   clipBehavior: Clip.antiAlias,
@@ -228,13 +228,13 @@ class _DropShadowWrapper extends StatelessWidget {
   final Widget child;
   final double blur;
   final Offset offset;
-  final double borderRadius;
+  final BorderRadius? borderRadius;
 
   const _DropShadowWrapper({
     required this.enabled,
     required this.child,
     this.offset = const Offset(0, 1),
-    this.borderRadius = 0,
+    this.borderRadius,
     this.blur = 4.0,
   });
 

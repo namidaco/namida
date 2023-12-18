@@ -136,17 +136,19 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
             () {
               final playlist = YoutubePlaylistController.inst.getPlaylist(playlistCurrentName);
               if (playlist == null) return const SizedBox();
+              final firstID = playlist.tracks.firstOrNull?.id;
               return CustomScrollView(
                 slivers: [
                   SliverToBoxAdapter(
                     child: Stack(
                       children: [
                         YoutubeThumbnail(
+                          key: Key("$firstID"),
                           width: context.width,
                           height: context.width * 9 / 16,
                           compressed: true,
                           isImportantInCache: false,
-                          videoId: playlist.tracks.firstOrNull?.id,
+                          videoId: firstID,
                           blur: 0.0,
                           borderRadius: 0.0,
                           extractColor: true,
@@ -173,11 +175,12 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               YoutubeThumbnail(
+                                key: Key("$firstID"),
                                 width: bigThumbWidth,
                                 height: (bigThumbWidth * 9 / 16),
                                 compressed: false,
                                 isImportantInCache: true,
-                                videoId: playlist.tracks.firstOrNull?.id,
+                                videoId: firstID,
                                 blur: 4.0,
                               ),
                               const SizedBox(height: 24.0),
@@ -363,6 +366,8 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
     final itemsThumbnailWidth = context.width * hmultiplier;
     final itemsThumbnailHeight = itemsThumbnailWidth * 9 / 16;
     final itemsThumbnailItemExtent = itemsThumbnailHeight + 8.0 * 2;
+
+    final firstID = widget.playlist.streams.firstOrNull?.id;
     return AnimatedTheme(
       duration: const Duration(milliseconds: 300),
       data: AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode),
@@ -376,11 +381,12 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
                 child: Stack(
                   children: [
                     YoutubeThumbnail(
+                      key: Key("$firstID"),
                       width: context.width,
                       height: context.width * 9 / 16,
                       compressed: true,
                       isImportantInCache: false,
-                      videoId: widget.playlist.streams.firstOrNull?.id,
+                      videoId: firstID,
                       blur: 0.0,
                       borderRadius: 0.0,
                       extractColor: true,
@@ -407,11 +413,12 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           YoutubeThumbnail(
+                            key: Key("$firstID"),
                             width: bigThumbWidth,
                             height: (bigThumbWidth * 9 / 16),
                             compressed: false,
                             isImportantInCache: true,
-                            videoId: playlist.streams.firstOrNull?.id,
+                            videoId: firstID,
                             blur: 4.0,
                           ),
                           const SizedBox(height: 24.0),

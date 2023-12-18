@@ -7,8 +7,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart' hide Response;
-import 'package:namida/core/functions.dart';
-import 'package:newpipeextractor_dart/models/streams.dart';
+import 'package:html/parser.dart' as parser;
+import 'package:http/http.dart' as http;
+import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:newpipeextractor_dart/utils/httpClient.dart';
 import 'package:picture_in_picture/picture_in_picture.dart';
 import 'package:queue/queue.dart';
 import 'package:video_player/video_player.dart';
@@ -25,6 +27,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
@@ -372,7 +375,7 @@ class VideoController {
     try {
       await execute();
     } catch (e) {
-      printy(e, isError: true);
+      _printie(e, isError: true);
     }
   }
 
@@ -416,7 +419,7 @@ class VideoController {
     _downloadTimerCancel();
     void updateCurrentBytes() {
       currentDownloadedBytes.value = downloaded == 0 ? null : downloaded;
-      printy('Video Download: ${currentDownloadedBytes.value?.fileSizeFormatted}');
+      _printie('Video Download: ${currentDownloadedBytes.value?.fileSizeFormatted}');
     }
 
     _downloadTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -563,7 +566,7 @@ class VideoController {
             nv = vid;
           }
         } catch (e) {
-          printy(e, isError: true);
+          _printie(e, isError: true);
           continue;
         }
       }
@@ -586,7 +589,7 @@ class VideoController {
 
     Future<void> fetchCachedVideos() async {
       final cachedVideos = await _checkIfVideosInMapValid(_videoCacheIDMap);
-      printy('videos cached: ${cachedVideos.length}');
+      _printie('videos cached: ${cachedVideos.length}');
       _videoCacheIDMap.clear();
       cachedVideos.entries.toList().loop((videoEntry, _) {
         videoEntry.value.loop((e, _) {
@@ -595,7 +598,7 @@ class VideoController {
       });
 
       final newCachedVideos = await _checkForNewVideosInCache(cachedVideos);
-      printy('videos cached new: ${newCachedVideos.length}');
+      _printie('videos cached new: ${newCachedVideos.length}');
       newCachedVideos.entries.toList().loop((videoEntry, _) {
         videoEntry.value.loop((e, _) {
           _videoCacheIDMap.addForce(videoEntry.key, e);
@@ -643,7 +646,7 @@ class VideoController {
         localVideoExtractTotal.value = total;
       },
     );
-    printy('videos local: ${localVideos.length}');
+    _printie('videos local: ${localVideos.length}');
     localVideos.loop((e, index) {
       _videoPathsMap[e.path] = e;
     });
@@ -817,7 +820,7 @@ class VideoController {
             namidaVideos.add(nv);
           }
         } catch (e) {
-          printy(e, isError: true);
+          _printie(e, isError: true);
           continue;
         }
 
@@ -878,7 +881,7 @@ class VideoController {
 
     for (final link in links) {
       if (_runningRequestsMap[link] != null) {
-        printy('getYoutubeThumbnailAsBytes: Same link is being requested right now, ignoring');
+        _printie('getYoutubeThumbnailAsBytes: Same link is being requested right now, ignoring');
         return await _runningRequestsMap[link]!.future; // return and not continue, cuz if requesting hq image, continue will make it request lower one
       }
 
@@ -899,7 +902,7 @@ class VideoController {
             requestRes = (res.data ?? Uint8List.fromList([]), res.statusCode ?? 404);
           }
         } catch (e) {
-          printy('getYoutubeThumbnailAsBytes: Error getting thumbnail at $link, trying again with lower quality.\n$e', isError: true);
+          _printie('getYoutubeThumbnailAsBytes: Error getting thumbnail at $link, trying again with lower quality.\n$e', isError: true);
         }
       });
 
@@ -1115,6 +1118,16 @@ class VideoController {
     // final excludedByNoMedia = mapResult['pathsExcludedByNoMedia'] as Set<String>;
     return allVideoPaths;
   }
+
+  void _printie(
+    dynamic message, {
+    bool isError = false,
+    bool dumpshit = false,
+  }) {
+    if (logsEnabled) printy(message, isError: isError, dumpshit: dumpshit);
+  }
+
+  bool logsEnabled = false;
 }
 
 class _NamidaVideoPlayer {

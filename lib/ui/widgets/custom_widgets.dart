@@ -1091,8 +1091,11 @@ class BlurryContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Widget? finalChild = container ?? child;
-    return ClipRRect(
-      borderRadius: borderRadius,
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: borderRadius,
+      ),
       child: disableBlur || finalChild == null
           ? finalChild
           : NamidaBgBlur(
@@ -2643,16 +2646,16 @@ class ShimmerWrapper extends StatelessWidget {
 }
 
 class LazyLoadListView extends StatefulWidget {
-  final Widget Function(ScrollController controller) listview;
-  final Future<void> Function() onReachingEnd;
-  final int extend;
   final ScrollController? scrollController;
+  final int extend;
+  final Future<void> Function() onReachingEnd;
+  final Widget Function(ScrollController controller) listview;
   const LazyLoadListView({
     super.key,
-    required this.listview,
-    required this.onReachingEnd,
-    this.extend = 400,
     this.scrollController,
+    this.extend = 400,
+    required this.onReachingEnd,
+    required this.listview,
   });
 
   @override
@@ -2938,7 +2941,7 @@ class _NamidaTabViewState extends State<NamidaTabView> with SingleTickerProvider
               .map(
                 (e) => Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
-                  child: Text(e),
+                  child: Text(e, maxLines: 1, overflow: TextOverflow.ellipsis),
                 ),
               )
               .toList(),

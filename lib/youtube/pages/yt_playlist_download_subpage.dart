@@ -383,37 +383,13 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                         Padding(
                                           padding: const EdgeInsets.all(4.0),
                                           child: YoutubeThumbnail(
+                                            key: Key(id),
                                             borderRadius: 8.0,
                                             width: thumWidth - 4.0,
                                             height: thumHeight - 4.0,
                                             isImportantInCache: false,
                                             videoId: id,
-                                            onTopWidgets: [
-                                              if (duration != null)
-                                                Positioned(
-                                                  bottom: 0.0,
-                                                  right: 0.0,
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(2.0),
-                                                    child: DecoratedBox(
-                                                      decoration: BoxDecoration(
-                                                        borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                                                        color: Colors.black.withOpacity(0.3),
-                                                      ),
-                                                      child: Padding(
-                                                        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
-                                                        child: Text(
-                                                          duration,
-                                                          style: context.textTheme.displaySmall?.copyWith(
-                                                            color: Colors.white.withOpacity(0.8),
-                                                            fontWeight: FontWeight.w500,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                            ],
+                                            smallBoxText: duration,
                                           ),
                                         ),
                                         const SizedBox(width: 4.0),
