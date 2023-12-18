@@ -1238,22 +1238,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   Future<void> skipToQueueItem(int index, [bool? andPlay]) async => await onSkipToQueueItem(index, andPlay);
 
-  @protected
-  @override
-  Future<void> stop() async {
-    await [super.onStop(), VideoController.vcontroller.pause()].execute();
-    await super.stop();
-  }
-
   @override
   Future<void> onStop() async {
-    await stop();
-  }
-
-  @override
-  Future<void> onDispose() async {
-    await stop();
-    await super.onDispose();
+    await [
+      super.onStop(),
+      VideoController.vcontroller.pause(),
+    ].execute();
   }
 
   @override
