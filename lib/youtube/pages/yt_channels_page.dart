@@ -1,8 +1,10 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -11,6 +13,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_import_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
@@ -133,6 +136,19 @@ class _YoutubeChannelsPageState extends State<YoutubeChannelsPage> {
       setState(() {
         _streamsList.addAll(st);
       });
+    }
+  }
+
+  Future<void> _onSubscriptionFileImportTap() async {
+    final files = await FilePicker.platform.pickFiles(allowedExtensions: ['csv', 'CSV'], type: FileType.custom);
+    final fp = files?.files.firstOrNull?.path;
+    if (fp != null) {
+      final imported = await YoutubeImportController().importSubscriptions(fp);
+      if (imported > 0) {
+        snackyy(message: lang.IMPORTED_N_CHANNELS_SUCCESSFULLY.replaceFirst('_NUM_', '$imported'));
+      } else {
+        snackyy(message: "${lang.CORRUPTED_FILE}\nPlease choose a valid subscriptions.csv file", isError: true);
+      }
     }
   }
 
@@ -284,6 +300,10 @@ class _YoutubeChannelsPageState extends State<YoutubeChannelsPage> {
                         ),
                       ),
                     ),
+                    NamidaButton(
+                      text: lang.IMPORT,
+                      onPressed: _onSubscriptionFileImportTap,
+                    )
                   ],
                 ),
         ),
