@@ -42,14 +42,14 @@ class Dimensions {
   }
 
   /// + floating action button padding
-  double get _globalBottomPaddingFAB {
+  double get globalBottomPaddingFAB {
     return shouldHideFAB ? 0.0 : kFABHeight;
   }
 
   /// + active miniplayer padding
   /// + floating action button padding
   double get globalBottomPaddingTotal {
-    return _globalBottomPaddingFAB + globalBottomPaddingEffective;
+    return globalBottomPaddingFAB + globalBottomPaddingEffective;
   }
 
   static const tileBottomMargin = 4.0;

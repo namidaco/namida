@@ -49,6 +49,7 @@ class AppPaths {
 
   // ================= Youtube =================
   static final YT_LIKES_PLAYLIST = '${AppDirs.YOUTUBE_MAIN_DIRECTORY}/yt_likes.json';
+  static final YT_SUBSCRIPTIONS = '${AppDirs.YOUTUBE_MAIN_DIRECTORY}/yt_subs.json';
 }
 
 /// Directories used by Namida

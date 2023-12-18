@@ -107,7 +107,7 @@ dependencies:
   newpipeextractor_dart:
     git:
       url: https://github.com/MSOB7YY/NewPipeExtractor_Dart
-      ref: e54554601087e076421d290b78ea9ef058aa5ab3
+      ref: 183f75193c02555971713557e956e453c4b6be4f
 
   # ---- Image Utilities ----
   extended_image: ^8.0.2

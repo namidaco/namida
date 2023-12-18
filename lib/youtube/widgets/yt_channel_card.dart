@@ -41,8 +41,10 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
             height: thumbnailSize,
             shimmerEnabled: shimmerEnabled,
             child: YoutubeThumbnail(
+              compressed: false,
               isImportantInCache: true,
-              channelUrl: channel?.thumbnailUrl,
+              channelUrl: channel?.avatarUrl,
+              channelIDForHQImage: channel?.id ?? '',
               width: thumbnailSize,
               height: thumbnailSize,
               borderRadius: 10.0,

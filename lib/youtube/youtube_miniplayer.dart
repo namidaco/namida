@@ -25,6 +25,7 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart' hide YoutubePlaylist;
+import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_listens_dialog.dart';
@@ -79,9 +80,10 @@ class YoutubeMiniPlayer extends StatelessWidget {
             final currentId = videoInfo?.id ?? Player.inst.nowPlayingVideoID?.id ?? Player.inst.nowPlayingTrack.youtubeID; // last one not needed
 
             final channelName = videoChannel?.name ?? videoInfo?.uploaderName;
-            final channelThumbnail = videoChannel?.thumbnailUrl ?? videoInfo?.uploaderAvatarUrl;
+            final channelThumbnail = videoChannel?.avatarUrl ?? videoInfo?.uploaderAvatarUrl;
             final channelIsVerified = videoChannel?.isVerified ?? videoInfo?.isUploaderVerified ?? false;
             final channelSubs = videoChannel?.subscriberCount ?? Player.inst.currentChannelInfo?.subscriberCount;
+            final channelIDOrURL = videoChannel?.id ?? videoInfo?.uploaderUrl ?? Player.inst.currentChannelInfo?.id;
 
             final isUserLiked = YoutubePlaylistController.inst.favouritesPlaylist.value.tracks.firstWhereEff((element) => element.id == currentId) != null;
 
@@ -379,6 +381,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                   MaterialPage(
                                     maintainState: true,
                                     child: LazyLoadListView(
+                                      key: Key("${currentId}_body_lazy_load_list"),
                                       onReachingEnd: () async => await YoutubeController.inst.updateCurrentComments(currentId, fetchNextOnly: true),
                                       extend: 400,
                                       scrollController: YoutubeController.inst.scrollController,
@@ -626,6 +629,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                             key: Key(channelThumbnail ?? ''),
                                                             isImportantInCache: true,
                                                             channelUrl: channelThumbnail ?? '',
+                                                            channelIDForHQImage: channelIDOrURL ?? '',
                                                             width: 42.0,
                                                             height: 42.0,
                                                             isCircle: true,
@@ -690,17 +694,34 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                           ),
                                                         ),
                                                         const SizedBox(width: 12.0),
-                                                        TextButton(
-                                                          child: Row(
-                                                            children: [
-                                                              const Icon(Broken.video, size: 20.0),
-                                                              const SizedBox(width: 8.0),
-                                                              Text(lang.SUBSCRIBE),
-                                                            ],
-                                                          ),
-                                                          onPressed: () {},
+                                                        Obx(
+                                                          () {
+                                                            final channelID = YoutubeSubscriptionsController.inst.idOrUrlToChannelID(channelIDOrURL);
+                                                            final subscribed =
+                                                                YoutubeSubscriptionsController.inst.subscribedChannels[channelID]?.status == SubscriptionStatus.subscribed;
+                                                            return TextButton(
+                                                              style: TextButton.styleFrom(
+                                                                foregroundColor:
+                                                                    Color.alphaBlend(Colors.grey.withOpacity(subscribed ? 0.6 : 0.0), context.theme.colorScheme.primary),
+                                                              ),
+                                                              child: Row(
+                                                                children: [
+                                                                  Icon(subscribed ? Broken.tick_square : Broken.video, size: 20.0),
+                                                                  const SizedBox(width: 8.0),
+                                                                  Text(
+                                                                    subscribed ? lang.SUBSCRIBED : lang.SUBSCRIBE,
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                              onPressed: () async {
+                                                                if (channelIDOrURL != null) {
+                                                                  await YoutubeSubscriptionsController.inst.changeChannelStatus(channelIDOrURL, null);
+                                                                }
+                                                              },
+                                                            );
+                                                          },
                                                         ),
-                                                        const SizedBox(width: 24.0),
+                                                        const SizedBox(width: 20.0),
                                                       ],
                                                     ),
                                                   ),
@@ -774,7 +795,10 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                               ],
                                                             ),
                                                             const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 4.0)),
-                                                            YTCommentCardCompact(comment: highlightedComment),
+                                                            ShimmerWrapper(
+                                                              shimmerEnabled: highlightedComment == null,
+                                                              child: YTCommentCardCompact(comment: highlightedComment),
+                                                            )
                                                           ],
                                                         ),
                                                       ),

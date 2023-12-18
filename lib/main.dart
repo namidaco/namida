@@ -41,6 +41,7 @@ import 'package:namida/main_page_wrapper.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
+import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -139,6 +140,7 @@ void main() async {
   await [
     YoutubePlaylistController.inst.prepareDefaultPlaylistsFile(),
     YoutubeController.inst.loadDownloadTasksInfoFile(),
+    YoutubeSubscriptionsController.inst.loadSubscriptionsFile()
   ].execute();
 
   await _initializeIntenties();

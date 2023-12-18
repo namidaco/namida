@@ -969,29 +969,38 @@ class VideoController {
 
   Future<File?> getYoutubeThumbnailAndCache({
     String? id,
-    String? channelUrl,
+    String? channelUrlOrID,
     bool isImportantInCache = true,
     FutureOr<void> Function()? beforeFetchingFromInternet,
+    bool hqChannelImage = false,
   }) async {
-    if (id == null && channelUrl == null) return null;
+    if (id == null && channelUrlOrID == null) return null;
 
     void trySavingLastAccessed(File? file) {
       final time = isImportantInCache ? DateTime.now() : DateTime(1970);
-      file?.setLastAccessed(time);
+      try {
+        file?.setLastAccessed(time);
+      } catch (_) {}
     }
 
-    final file = id != null ? File("${AppDirs.YT_THUMBNAILS}$id.png") : File("${AppDirs.YT_THUMBNAILS_CHANNELS}${channelUrl?.split('/').last}.png");
+    final file = id != null ? File("${AppDirs.YT_THUMBNAILS}$id.png") : File("${AppDirs.YT_THUMBNAILS_CHANNELS}${channelUrlOrID?.split('/').last}.png");
+
     if (file.existsSync()) {
-      printy('Downloading Thumbnail Already Exists');
+      _printie('Downloading Thumbnail Already Exists');
       trySavingLastAccessed(file);
       return file;
     }
 
-    printy('Downloading Thumbnail Started');
+    _printie('Downloading Thumbnail Started');
     await beforeFetchingFromInternet?.call();
 
-    final bytes = await getYoutubeThumbnailAsBytes(youtubeId: id, url: channelUrl, keepInMemory: false);
-    printy('Downloading Thumbnail Finished with ${bytes?.length} bytes');
+    if (channelUrlOrID != null && hqChannelImage) {
+      final res = await _getChannelAvatarUrlIsolate.thready(channelUrlOrID);
+      if (res != null) channelUrlOrID = res;
+    }
+
+    final bytes = await getYoutubeThumbnailAsBytes(youtubeId: id, url: channelUrlOrID, keepInMemory: false);
+    _printie('Downloading Thumbnail Finished with ${bytes?.length} bytes');
 
     final savedFile = (id != null
             ? _saveThumbnailToStorage(
@@ -1010,6 +1019,16 @@ class VideoController {
     });
 
     return savedFile;
+  }
+
+  static Future<String?> _getChannelAvatarUrlIsolate(String channelId) async {
+    final url = 'https://www.youtube.com/channel/$channelId?hl=en';
+    final client = http.Client();
+    final response = await client.get(Uri.parse(url), headers: ExtractorHttpClient.defaultHeaders);
+    final raw = response.body;
+    final s = parser.parse(raw).querySelector('meta[property="og:image"]')?.attributes['content'];
+    client.close();
+    return s;
   }
 
   File? getYoutubeThumbnailFromCacheSync({String? id, String? channelUrl}) {
