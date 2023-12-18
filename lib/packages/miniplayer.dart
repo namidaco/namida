@@ -237,8 +237,8 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                               Player.inst.removeFromQueue(i);
                               MiniPlayerController.inst.invokeDoneReordering();
                             },
-                            onUpdate: (detailts) {
-                              final isReordering = detailts.progress != 0.0;
+                            onUpdate: (details) {
+                              final isReordering = details.progress != 0.0;
                               if (isReordering) {
                                 MiniPlayerController.inst.invokeStartReordering();
                               } else {
