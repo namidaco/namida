@@ -11,7 +11,7 @@ bool _wasExpanded = false;
 
 class NamidaYTMiniplayer extends StatefulWidget {
   final double minHeight, maxHeight, bottomMargin;
-  final Widget Function(double height, double percentage, Widget? constantChild) builder;
+  final Widget Function(double height, double percentage, List<Widget> constantChildren) builder;
   final Decoration? decoration;
   final void Function(double percentage)? onHeightChange;
   final void Function(double dismissPercentage)? onDismissing;
@@ -19,7 +19,7 @@ class NamidaYTMiniplayer extends StatefulWidget {
   final Curve curve;
   final AnimationController? animationController;
   final void Function()? onDismiss;
-  final Widget? constantChild;
+  final List<Widget> constantChildren;
 
   const NamidaYTMiniplayer({
     super.key,
@@ -34,7 +34,7 @@ class NamidaYTMiniplayer extends StatefulWidget {
     this.curve = Curves.decelerate,
     this.animationController,
     this.onDismiss,
-    this.constantChild,
+    required this.constantChildren,
   });
 
   @override
@@ -115,9 +115,9 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
+    return AnimatedBuilderMulti(
       animation: controller,
-      builder: (context, child) {
+      builder: (context, children) {
         final percentage = this.percentage;
         return Stack(
           alignment: Alignment.bottomCenter,
@@ -171,7 +171,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
                       child: Container(
                         height: controller.value,
                         decoration: widget.decoration,
-                        child: widget.builder(controller.value, percentage, child),
+                        child: widget.builder(controller.value, percentage, children),
                       ),
                     ),
                   ),
@@ -181,7 +181,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
           ],
         );
       },
-      child: widget.constantChild,
+      children: widget.constantChildren,
     );
   }
 }

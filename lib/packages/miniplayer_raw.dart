@@ -3,14 +3,12 @@
 
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
-
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 
 typedef MiniplayerBuilderCallback = Widget Function(
-  Color onSecondary,
   double maxOffset,
   bool bounceUp,
   bool bounceDown,
@@ -38,7 +36,7 @@ typedef MiniplayerBuilderCallback = Widget Function(
   double panelHeight,
   double miniplayerbottomnavheight,
   double bottomOffset,
-  Widget? constantChild,
+  List<Widget> constantChildren,
 );
 
 class MiniplayerRaw extends StatelessWidget {
@@ -46,7 +44,7 @@ class MiniplayerRaw extends StatelessWidget {
   final double topBorderRadius;
   final double bottomBorderRadius;
   final bool enableHorizontalGestures;
-  final Widget? constantChild;
+  final List<Widget> constantChildren;
 
   const MiniplayerRaw({
     super.key,
@@ -54,15 +52,14 @@ class MiniplayerRaw extends StatelessWidget {
     this.topBorderRadius = 20.0,
     this.bottomBorderRadius = 20.0,
     this.enableHorizontalGestures = true,
-    this.constantChild,
+    this.constantChildren = const [],
   });
 
   @override
   Widget build(BuildContext context) {
-    final child = AnimatedBuilder(
+    final child = AnimatedBuilderMulti(
       animation: MiniPlayerController.inst.animation,
       builder: (context, child) {
-        final Color onSecondary = context.theme.colorScheme.onSecondaryContainer;
         final maxOffset = MiniPlayerController.inst.maxOffset;
         final bounceUp = MiniPlayerController.inst.bounceUp;
         final bounceDown = MiniPlayerController.inst.bounceDown;
@@ -110,7 +107,6 @@ class MiniplayerRaw extends StatelessWidget {
         final double bottomOffset = (-miniplayerbottomnavheight * icp + p.clamp(-1, 0) * -200) - (bottomInset * icp);
 
         return builder(
-          onSecondary,
           maxOffset,
           bounceUp,
           bounceDown,
@@ -141,7 +137,7 @@ class MiniplayerRaw extends StatelessWidget {
           child,
         );
       },
-      child: constantChild,
+      children: constantChildren,
     );
     return WillPopScope(
       onWillPop: MiniPlayerController.inst.onWillPop,
