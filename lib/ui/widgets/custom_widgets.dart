@@ -2021,9 +2021,10 @@ class _FadeDismissibleState extends State<FadeDismissible> {
       direction: widget.direction,
       child: ValueListenableBuilder(
         valueListenable: fadeOpacity,
+        child: widget.child,
         builder: (context, value, child) => NamidaOpacity(
           opacity: 1 - fadeOpacity.value,
-          child: widget.child,
+          child: child!,
         ),
       ),
     );

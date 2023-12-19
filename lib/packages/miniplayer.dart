@@ -76,11 +76,12 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
             Positioned.fill(
               child: AnimatedBuilder(
                 animation: widget.animation,
+                child: const Wallpaper(gradient: false, particleOpacity: .3),
                 builder: (context, child) {
                   if (widget.animation.value > 0.01) {
                     return NamidaOpacity(
                       opacity: widget.animation.value.clamp(0.0, 1.0),
-                      child: const Wallpaper(gradient: false, particleOpacity: .3),
+                      child: child!,
                     );
                   } else {
                     return const SizedBox();
@@ -2349,15 +2350,14 @@ class LyricsWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // if (cp == 0.0) return child;
-
     final childFinal = enableChildBorderRadius
         ? ClipRRect(
-            key: Key("${(6.0 + 10.0 * cp).multipliedRadius}"),
             borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
             child: child,
           )
         : child;
+
+    if (cp == 0.0) return childFinal;
 
     return Obx(
       () => AnimatedSwitcher(
@@ -2375,6 +2375,7 @@ class LyricsWrapper extends StatelessWidget {
                   )
                 : Lyrics.inst.currentLyricsText.value != ''
                     ? Stack(
+                        key: const Key('child_2'),
                         alignment: Alignment.center,
                         children: [
                           childFinal,

@@ -201,7 +201,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
                           width: realWidthAndHeight,
                           height: realWidthAndHeight,
                           frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
-                            if (wasSynchronouslyLoaded) return child;
+                            if (wasSynchronouslyLoaded || bytes?.isNotEmpty == true) return child;
                             return AnimatedSwitcher(
                               duration: Duration(milliseconds: widget.fadeMilliSeconds),
                               child: frame != null ? child : const SizedBox(),

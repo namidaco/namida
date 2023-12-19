@@ -567,6 +567,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                                       baseIcon: Broken.refresh,
                                                                       secondaryIcon: Broken.global,
                                                                       iconSize: 20.0,
+                                                                      secondaryIconSize: 12.0,
                                                                     )
                                                                   : Icon(
                                                                       Broken.refresh,

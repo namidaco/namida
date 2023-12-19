@@ -260,8 +260,8 @@ class YTCommentCardCompact extends StatelessWidget {
               const SizedBox(height: 2.0),
               NamidaDummyContainer(
                 width: context.width * 0.5,
-                height: 12.0,
-                borderRadius: 6.0,
+                height: 8.0,
+                borderRadius: 4.0,
                 shimmerEnabled: author == null,
                 child: Row(
                   children: [
@@ -303,13 +303,13 @@ class YTCommentCardCompact extends StatelessWidget {
                     ? Column(
                         children: [
                           ...List.filled(
-                            3,
+                            2,
                             const Padding(
                               padding: EdgeInsets.only(top: 2.0),
                               child: NamidaDummyContainer(
                                 width: null,
-                                height: 12.0,
-                                borderRadius: 4.0,
+                                height: 8.0,
+                                borderRadius: 3.0,
                                 shimmerEnabled: true,
                                 child: null,
                               ),
@@ -336,7 +336,7 @@ class YTCommentCardCompact extends StatelessWidget {
                   const SizedBox(width: 4.0),
                   NamidaDummyContainer(
                     width: 18.0,
-                    height: 8.0,
+                    height: 6.0,
                     borderRadius: 4.0,
                     shimmerEnabled: likeCount == null,
                     child: Text(

@@ -874,18 +874,19 @@ class _MixesCardState extends State<_MixesCard> {
               Positioned(
                 top: 12.0,
                 left: 0.0,
-                child: ClipRect(
+                child: Container(
+                  clipBehavior: Clip.hardEdge,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: context.theme.colorScheme.background.withAlpha(50),
+                  ),
                   child: NamidaBgBlur(
                     blur: 2.0,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: context.theme.cardColor.withAlpha(50),
-                      ),
+                    child: Padding(
                       padding: const EdgeInsets.all(2.0),
                       child: NamidaIconButton(
                         icon: Broken.arrow_left_2,
-                        iconColor: context.theme.cardColor.withAlpha(160),
+                        iconColor: context.theme.colorScheme.onBackground.withAlpha(160),
                         onPressed: NamidaNavigator.inst.closeDialog,
                       ),
                     ),

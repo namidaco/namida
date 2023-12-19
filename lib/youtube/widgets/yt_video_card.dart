@@ -64,7 +64,7 @@ class YoutubeVideoCard extends StatelessWidget {
         shimmerEnabled: video == null,
         title: video?.name ?? '',
         subtitle: [
-          if (videoViewCount != null) "${videoViewCount.formatDecimalShort()} ${videoViewCount == 0 ? lang.VIEW : lang.VIEWS}",
+          if (videoViewCount != null && videoViewCount >= 0) "${videoViewCount.formatDecimalShort()} ${videoViewCount == 0 ? lang.VIEW : lang.VIEWS}",
           if (video?.textualUploadDate != null) video?.textualUploadDate,
         ].join(' - '),
         thirdLineText: video?.uploaderName ?? '',

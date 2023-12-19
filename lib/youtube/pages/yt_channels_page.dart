@@ -300,6 +300,7 @@ class _YoutubeChannelsPageState extends State<YoutubeChannelsPage> {
                         ),
                       ),
                     ),
+                    const SizedBox(width: 4.0),
                     NamidaButton(
                       text: lang.IMPORT,
                       onPressed: _onSubscriptionFileImportTap,
