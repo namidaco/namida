@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
@@ -11,6 +12,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/youtube_import_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/yt_history_page.dart';
@@ -230,12 +232,38 @@ class YoutubePlaylistsView extends StatelessWidget {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-              child: Obx(
-                () => SearchPageTitleRow(
-                  title: "${lang.PLAYLISTS} - ${YoutubePlaylistController.inst.playlistsMap.length}",
-                  icon: Broken.music_library_2,
-                  trailing: const SizedBox(),
-                ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Obx(
+                      () => SearchPageTitleRow(
+                        title: "${lang.PLAYLISTS} - ${YoutubePlaylistController.inst.playlistsMap.length}",
+                        icon: Broken.music_library_2,
+                        trailing: const SizedBox(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4.0),
+                  Obx(
+                    () => NamidaInkWellButton(
+                      icon: Broken.add_circle,
+                      text: lang.IMPORT,
+                      enabled: !YoutubeImportController.inst.isImportingPlaylists.value,
+                      onTap: () async {
+                        final dirPath = await FilePicker.platform.getDirectoryPath();
+                        if (dirPath != null) {
+                          final imported = await YoutubeImportController.inst.importPlaylists(dirPath);
+                          if (imported > 0) {
+                            snackyy(message: lang.IMPORTED_N_PLAYLISTS_SUCCESSFULLY.replaceFirst('_NUM_', '$imported'));
+                          } else {
+                            snackyy(message: "Failed to import\nPlease choose a valid playlists directory taken from google takeout", isError: true);
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 4.0),
+                ],
               ),
             ),
           ),

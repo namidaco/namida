@@ -143,7 +143,7 @@ class _YoutubeChannelsPageState extends State<YoutubeChannelsPage> {
     final files = await FilePicker.platform.pickFiles(allowedExtensions: ['csv', 'CSV'], type: FileType.custom);
     final fp = files?.files.firstOrNull?.path;
     if (fp != null) {
-      final imported = await YoutubeImportController().importSubscriptions(fp);
+      final imported = await YoutubeImportController.inst.importSubscriptions(fp);
       if (imported > 0) {
         snackyy(message: lang.IMPORTED_N_CHANNELS_SUCCESSFULLY.replaceFirst('_NUM_', '$imported'));
       } else {
@@ -205,7 +205,7 @@ class _YoutubeChannelsPageState extends State<YoutubeChannelsPage> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
           child: ch == null
               ? SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -301,10 +301,14 @@ class _YoutubeChannelsPageState extends State<YoutubeChannelsPage> {
                       ),
                     ),
                     const SizedBox(width: 4.0),
-                    NamidaButton(
-                      text: lang.IMPORT,
-                      onPressed: _onSubscriptionFileImportTap,
-                    )
+                    Obx(
+                      () => NamidaInkWellButton(
+                        icon: Broken.add_circle,
+                        text: lang.IMPORT,
+                        enabled: !YoutubeImportController.inst.isImportingSubscriptions.value,
+                        onTap: _onSubscriptionFileImportTap,
+                      ),
+                    ),
                   ],
                 ),
         ),

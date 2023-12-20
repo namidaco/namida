@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/video.dart';
@@ -25,6 +26,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
     int? creationDate,
     String comment = '',
     List<String> moods = const [],
+    PlaylistID? playlistID,
   }) async {
     super.addNewPlaylistRaw(
       name,
@@ -43,6 +45,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
       creationDate: creationDate,
       comment: comment,
       moods: moods,
+      playlistID: playlistID,
     );
   }
 

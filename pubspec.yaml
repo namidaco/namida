@@ -12,7 +12,7 @@ dependency_overrides:
   dart_extensions:
     git:
       url: https://github.com/MSOB7YY/dart_extensions
-      ref: 538079ba5ba215cc065b9d33193488244c233721
+      ref: 44c9ce41605203fd0da088d3968e258c4fe3e5ea
   archive: ^3.3.8
   intl: ^0.18.0
 
@@ -48,7 +48,7 @@ dependencies:
   playlist_manager:
     git:
       url: https://github.com/namidaco/playlist_manager
-      ref: c69241e6f5a88f1cecc876b76f758db51fb8adb2
+      ref: 35f89cbf7048bac92f0594a9ed2fc27696a81a89
   history_manager:
     git:
       url: https://github.com/namidaco/history_manager

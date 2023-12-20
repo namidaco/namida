@@ -2412,6 +2412,72 @@ class NamidaInkWell extends StatelessWidget {
   }
 }
 
+class NamidaInkWellButton extends StatelessWidget {
+  final Color? bgColor;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+  final double borderRadius;
+  final int animationDurationMS;
+  final IconData? icon;
+  final String text;
+  final bool enabled;
+  final bool showLoadingWhenDisabled;
+
+  const NamidaInkWellButton({
+    super.key,
+    this.bgColor,
+    this.onTap,
+    this.onLongPress,
+    this.borderRadius = 10.0,
+    this.animationDurationMS = 250,
+    required this.icon,
+    required this.text,
+    this.enabled = true,
+    this.showLoadingWhenDisabled = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      ignoring: !enabled,
+      child: AnimatedOpacity(
+        opacity: enabled ? 1.0 : 0.6,
+        duration: Duration(milliseconds: animationDurationMS),
+        child: NamidaInkWell(
+          animationDurationMS: animationDurationMS,
+          borderRadius: borderRadius,
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+          bgColor: bgColor ?? context.theme.colorScheme.secondaryContainer.withOpacity(0.5),
+          onTap: onTap,
+          onLongPress: onLongPress,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                !enabled && showLoadingWhenDisabled
+                    ? const LoadingIndicator(boxHeight: 18.0)
+                    : Icon(
+                        icon,
+                        size: 18.0,
+                        color: context.theme.colorScheme.onBackground,
+                      ),
+                const SizedBox(width: 6.0),
+              ],
+              Text(
+                text,
+                style: context.textTheme.displayMedium?.copyWith(
+                  color: context.theme.colorScheme.onBackground,
+                ),
+              ),
+              const SizedBox(width: 4.0),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class HistoryJumpToDayIcon<T extends ItemWithDate, E> extends StatelessWidget {
   final HistoryManager<T, E> controller;
   const HistoryJumpToDayIcon({super.key, required this.controller});
