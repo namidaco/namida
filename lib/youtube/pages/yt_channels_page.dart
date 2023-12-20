@@ -140,6 +140,7 @@ class _YoutubeChannelsPageState extends State<YoutubeChannelsPage> {
   }
 
   Future<void> _onSubscriptionFileImportTap() async {
+    showSystemToast(message: 'choose a "subscriptions.csv" file from a google takeout');
     final files = await FilePicker.platform.pickFiles(allowedExtensions: ['csv', 'CSV'], type: FileType.custom);
     final fp = files?.files.firstOrNull?.path;
     if (fp != null) {

@@ -250,6 +250,7 @@ class YoutubePlaylistsView extends StatelessWidget {
                       text: lang.IMPORT,
                       enabled: !YoutubeImportController.inst.isImportingPlaylists.value,
                       onTap: () async {
+                        showSystemToast(message: 'choose playlist directory from a google takeout');
                         final dirPath = await FilePicker.platform.getDirectoryPath();
                         if (dirPath != null) {
                           final imported = await YoutubeImportController.inst.importPlaylists(dirPath);
