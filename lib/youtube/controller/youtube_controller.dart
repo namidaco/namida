@@ -370,7 +370,9 @@ class YoutubeController {
 
   Future<void> _fetchComments(String id, {bool forceRequest = false}) async {
     currentTotalCommentsCount.value = null;
-    currentComments.value = List.filled(20, null);
+    currentComments
+      ..clear()
+      ..addAll(List.filled(20, null));
 
     // -- Fetching Comments.
     final fetchedComments = <YoutubeComment>[];
