@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
 
 typedef MiniplayerBuilderCallback = Widget Function(
   double maxOffset,
@@ -36,7 +35,7 @@ typedef MiniplayerBuilderCallback = Widget Function(
   double panelHeight,
   double miniplayerbottomnavheight,
   double bottomOffset,
-  List<Widget> constantChildren,
+  Widget? constantChild,
 );
 
 class MiniplayerRaw extends StatelessWidget {
@@ -44,7 +43,7 @@ class MiniplayerRaw extends StatelessWidget {
   final double topBorderRadius;
   final double bottomBorderRadius;
   final bool enableHorizontalGestures;
-  final List<Widget> constantChildren;
+  final Widget? constantChild;
 
   const MiniplayerRaw({
     super.key,
@@ -52,12 +51,12 @@ class MiniplayerRaw extends StatelessWidget {
     this.topBorderRadius = 20.0,
     this.bottomBorderRadius = 20.0,
     this.enableHorizontalGestures = true,
-    this.constantChildren = const [],
+    this.constantChild,
   });
 
   @override
   Widget build(BuildContext context) {
-    final child = AnimatedBuilderMulti(
+    final child = AnimatedBuilder(
       animation: MiniPlayerController.inst.animation,
       builder: (context, child) {
         final maxOffset = MiniPlayerController.inst.maxOffset;
@@ -137,7 +136,7 @@ class MiniplayerRaw extends StatelessWidget {
           child,
         );
       },
-      children: constantChildren,
+      child: constantChild,
     );
     return WillPopScope(
       onWillPop: MiniPlayerController.inst.onWillPop,
