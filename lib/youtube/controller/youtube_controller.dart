@@ -445,7 +445,7 @@ class YoutubeController {
     isLoadingComments.value = false;
   }
 
-  VideoStream getPreferredStreamQuality(List<VideoStream> streams, {List<String> qualities = const [], bool preferIncludeWebm = true}) {
+  VideoStream getPreferredStreamQuality(List<VideoStream> streams, {List<String> qualities = const [], bool preferIncludeWebm = false}) {
     final preferredQualities = (qualities.isNotEmpty ? qualities : settings.youtubeVideoQualities).map((element) => element.settingLabeltoVideoLabel());
     VideoStream? plsLoop(bool webm) {
       for (int i = 0; i < streams.length; i++) {
@@ -1003,7 +1003,7 @@ class YoutubeController {
               config.audioStream = audios.firstWhereEff((e) => e.id == config.prefferedAudioQualityID);
             }
             if (config.audioStream == null || config.audioStream?.url == null || config.audioStream?.url == '') {
-              config.audioStream = audios.firstOrNull;
+              config.audioStream = audios.firstWhereEff((e) => e.formatSuffix != 'webm') ?? audios.firstOrNull;
             }
             completerA.completeIfWasnt();
           });
