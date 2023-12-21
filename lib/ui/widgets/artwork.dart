@@ -74,44 +74,67 @@ class ArtworkWidget extends StatefulWidget {
 }
 
 class _ArtworkWidgetState extends State<ArtworkWidget> {
-  late DisposableBuildContext<_ArtworkWidgetState> _disposableContext;
-
   String? _imagePath;
+  late Uint8List? bytes = widget.bytes ?? Indexer.inst.artworksMap[widget.path];
 
   @override
-  void initState() {
-    super.initState();
-    _disposableContext = DisposableBuildContext<_ArtworkWidgetState>(this);
-    _extractArtwork();
+  void didChangeDependencies() {
+    _tryExtract();
+    super.didChangeDependencies();
+  }
+
+  void _tryExtract() async {
+    final shouldDelayLoading = Scrollable.recommendDeferredLoadingForContext(context);
+    if (shouldDelayLoading) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      _tryExtract();
+      return;
+    }
+    if (!shouldDelayLoading) _extractArtwork();
   }
 
   void _extractArtwork() async {
-    if (widget.path != null) {
-      if (File(widget.path!).existsSync()) {
-        _imagePath = widget.path;
+    final wPath = widget.path;
+    if (wPath != null && _imagePath == null) {
+      if (File(wPath).existsSync()) {
+        _imagePath = wPath;
       } else {
-        if (!widget.compressed || Indexer.inst.artworksMap[widget.path] == null) {
-          final res = await Indexer.inst.getArtwork(
-            imagePath: widget.path!,
-            compressed: widget.compressed,
-            checkFileFirst: false,
-            size: widget.useTrackTileCacheHeight ? 240 : null,
-          );
-          if ((res.$1 != null || res.$2 != null) && widget.compressed) setState(() {});
+        if (widget.compressed == false) {
+          final resPath = await Indexer.inst
+              .getArtwork(
+                imagePath: wPath,
+                compressed: false,
+                checkFileFirst: false,
+                size: widget.useTrackTileCacheHeight ? 240 : null,
+              )
+              .then((value) => value.$1?.path);
+          if (resPath != null) {
+            setState(() {
+              _imagePath = resPath;
+            });
+          }
+        } else if (bytes == null) {
+          final resBytes = await Indexer.inst
+              .getArtwork(
+                imagePath: wPath,
+                compressed: widget.compressed,
+                checkFileFirst: false,
+                size: widget.useTrackTileCacheHeight ? 240 : null,
+              )
+              .then((value) => value.$2);
+          if (resBytes != null) {
+            setState(() {
+              bytes = resBytes;
+            });
+          }
         }
       }
     }
   }
 
   @override
-  void dispose() {
-    _disposableContext.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final bytes = widget.bytes ?? Indexer.inst.artworksMap[widget.path];
+    final bytes = this.bytes;
     final key = Key("${widget.path}_${bytes?.length}");
     final isValidBytes = bytes != null && bytes.isNotEmpty;
 
@@ -187,13 +210,10 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
                     children: [
                       if (_imagePath != null || isValidBytes)
                         Image(
-                          image: ScrollAwareImageProvider(
-                            context: _disposableContext,
-                            imageProvider: ResizeImage.resizeIfNeeded(
-                              null,
-                              finalCache,
-                              (_imagePath != null ? FileImage(File(_imagePath!)) : MemoryImage(bytes!)) as ImageProvider,
-                            ),
+                          image: ResizeImage.resizeIfNeeded(
+                            null,
+                            finalCache,
+                            (_imagePath != null ? FileImage(File(_imagePath!)) : MemoryImage(bytes!)) as ImageProvider,
                           ),
                           gaplessPlayback: true,
                           fit: BoxFit.cover,
@@ -201,7 +221,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
                           width: realWidthAndHeight,
                           height: realWidthAndHeight,
                           frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
-                            if (wasSynchronouslyLoaded || bytes?.isNotEmpty == true) return child;
+                            if (wasSynchronouslyLoaded) return child;
                             return AnimatedSwitcher(
                               duration: Duration(milliseconds: widget.fadeMilliSeconds),
                               child: frame != null ? child : const SizedBox(),

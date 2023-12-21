@@ -34,6 +34,7 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/packages/bouncing_scroll_physics_modified.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
@@ -3095,6 +3096,8 @@ class NamidaScrollbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return CupertinoScrollbar(
       controller: controller,
+      onThumbLongPressStart: () => isScrollbarThumbDragging = true,
+      onThumbLongPressEnd: () => isScrollbarThumbDragging = false,
       child: child,
     );
   }
@@ -3126,6 +3129,8 @@ class _NamidaScrollbarWithControllerState extends State<NamidaScrollbarWithContr
   Widget build(BuildContext context) {
     return CupertinoScrollbar(
       controller: _sc,
+      onThumbLongPressStart: () => isScrollbarThumbDragging = true,
+      onThumbLongPressEnd: () => isScrollbarThumbDragging = false,
       child: widget.child(_sc),
     );
   }
