@@ -199,6 +199,13 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                           playlist.tracks.length.displayVideoKeyword,
                                           style: context.textTheme.displaySmall,
                                         ),
+                                        if (playlist.comment != '') ...[
+                                          const SizedBox(height: 2.0),
+                                          Text(
+                                            playlist.comment,
+                                            style: context.textTheme.displaySmall,
+                                          ),
+                                        ],
                                       ],
                                     ),
                                   ),
@@ -442,6 +449,13 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
                                       playlist.uploaderName ?? '',
                                       style: context.textTheme.displaySmall,
                                     ),
+                                    if (playlist.description != null && playlist.description != '') ...[
+                                      const SizedBox(height: 2.0),
+                                      Text(
+                                        playlist.description!,
+                                        style: context.textTheme.displaySmall,
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
