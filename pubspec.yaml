@@ -12,7 +12,7 @@ dependency_overrides:
   dart_extensions:
     git:
       url: https://github.com/MSOB7YY/dart_extensions
-      ref: 44c9ce41605203fd0da088d3968e258c4fe3e5ea
+      ref: 1de0a3d597a20f9464fa36740a76e8c534d2200f
   archive: ^3.3.8
   intl: ^0.18.0
 

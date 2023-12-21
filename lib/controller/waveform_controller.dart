@@ -64,21 +64,30 @@ class WaveformController {
   }
 
   static List<double> _calculateUIWaveformIsolate(({List<double> original, int targetSize}) params) {
-    final clamping = params.original.isEmpty ? null : 64.0;
+    const maxClamping = 64.0;
+    final clamping = params.original.isEmpty ? null : maxClamping;
     final downscaled = params.original.changeListSize(
       targetSize: params.targetSize,
       multiplier: 0.9,
       clampToMax: clamping,
-      enforceClampToMax: false,
+      enforceClampToMax: (minValue, maxValue) => false,
     );
     return downscaled;
   }
 
   static Map<int, List<double>> _downscaledWaveformLists(({List<int> original, List<int> targetSizes}) params) {
     final newLists = <int, List<double>>{};
+    const maxClamping = 64.0;
     params.targetSizes.loop((targetSize, index) {
-      final isLast = index == params.targetSizes.length - 1;
-      newLists[targetSize] = params.original.changeListSize(targetSize: targetSize, multiplier: isLast ? 0.003 : 1.0);
+      newLists[targetSize] = params.original.changeListSize(
+        targetSize: targetSize,
+        clampToMax: maxClamping,
+        enforceClampToMax: (minValue, maxValue) {
+          // -- checking if max value is greater than `maxClamping`;
+          // -- since clamping tries to normalize among all lists variations
+          return maxValue > maxClamping;
+        },
+      );
     });
     return newLists;
   }
@@ -91,7 +100,7 @@ class WaveformController {
     final posInMap = positionInMs ~/ 50;
     final dynamicScale = _currentScaleMap[posInMap] ?? 0.01;
     final intensity = settings.animatingThumbnailIntensity.value;
-    final finalScale = dynamicScale * intensity * 0.02;
+    final finalScale = dynamicScale * intensity * 0.00005;
 
     return finalScale.isNaN ? 0.01 : finalScale;
   }
