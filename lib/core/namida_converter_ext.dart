@@ -602,13 +602,20 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
         child: Column(
           children: [
             if (playlistToOpen != null)
-              ...newVals.map(
-                (e) => CustomListTile(
-                  icon: e.toIcon(),
-                  title: e.toText(),
-                  onTap: () => onTap(e),
-                ),
+              CustomListTile(
+                icon: Broken.export_2,
+                title: lang.OPEN,
+                onTap: () {
+                  NamidaNavigator.inst.navigateTo(YTHostedPlaylistSubpage(playlist: playlistToOpen));
+                },
               ),
+            ...newVals.map(
+              (e) => CustomListTile(
+                icon: e.toIcon(),
+                title: e.toText(),
+                onTap: () => onTap(e),
+              ),
+            ),
             if (playlistNameToAddAs != '')
               ObxValue<RxBool>(
                 (didAdd) => CustomListTile(

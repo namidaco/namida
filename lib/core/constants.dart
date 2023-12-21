@@ -19,7 +19,7 @@ final RegExp kYoutubeRegex = RegExp(
   caseSensitive: false,
 );
 final RegExp kYoutubeRegexPlaylists = RegExp(
-  r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/playlist\?list=|youtu\.be/)([\w\-]+)(?:\S+)?',
+  r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/playlist\?list=)([\w\-]+)(?:\S+)?',
   caseSensitive: false,
 );
 
