@@ -79,11 +79,12 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
 
   @override
   void didChangeDependencies() {
-    _tryExtract();
     super.didChangeDependencies();
+    _tryExtract();
   }
 
   void _tryExtract() async {
+    if (!context.mounted) return;
     final shouldDelayLoading = Scrollable.recommendDeferredLoadingForContext(context);
     if (shouldDelayLoading) {
       await Future.delayed(const Duration(milliseconds: 300));

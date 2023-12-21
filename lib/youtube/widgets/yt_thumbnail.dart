@@ -81,6 +81,23 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
   Uint8List? imageBytes;
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _tryExtract();
+  }
+
+  void _tryExtract() async {
+    if (!context.mounted) return;
+    final shouldDelayLoading = Scrollable.recommendDeferredLoadingForContext(context);
+    if (shouldDelayLoading) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      _tryExtract();
+      return;
+    }
+    if (!shouldDelayLoading) _getThumbnail();
+  }
+
+  @override
   void dispose() {
     final allLinks = [widget.channelUrl];
     allLinks.addAll(widget.videoId == null ? [] : YTThumbnail(widget.videoId!).allQualitiesByHighest);
@@ -141,12 +158,6 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
   }
 
   Key get thumbKey => Key("$smallBoxDynamicColor${widget.videoId}${widget.channelUrl}${imageBytes?.length}$imagePath${widget.smallBoxText}");
-
-  @override
-  void initState() {
-    super.initState();
-    _getThumbnail();
-  }
 
   @override
   Widget build(BuildContext context) {
