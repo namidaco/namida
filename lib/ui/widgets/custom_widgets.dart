@@ -2808,7 +2808,7 @@ class NamidaPopupWrapper extends StatelessWidget {
 
   void _showPopupMenu(BuildContext context) async {
     final RenderBox button = context.findRenderObject()! as RenderBox;
-    final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
+    final RenderBox overlay = Navigator.of(context, rootNavigator: useRootNavigator).overlay!.context.findRenderObject()! as RenderBox;
     const offset = Offset(0.0, 24.0);
     final RelativeRect position = RelativeRect.fromRect(
       Rect.fromPoints(
