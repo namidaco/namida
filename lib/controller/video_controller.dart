@@ -393,6 +393,7 @@ class VideoController {
   }) async {
     final tr = Player.inst.nowPlayingTrack;
     final dv = await fetchVideoFromYoutube(id, stream: stream);
+    if (!settings.enableVideoPlayback.value) return null;
     _executeForCurrentTrackOnly(tr, () {
       currentVideo.value = dv;
       currentYTQualities.refresh();
@@ -430,6 +431,7 @@ class VideoController {
     void updateValuesCT(void Function() execute) => _executeForCurrentTrackOnly(initialTrack, execute);
 
     final downloadedVideo = await YoutubeController.inst.downloadYoutubeVideo(
+      canStartDownloading: () => settings.enableVideoPlayback.value,
       id: id,
       stream: stream,
       onAvailableQualities: (availableStreams) {},
