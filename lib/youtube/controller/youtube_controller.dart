@@ -336,6 +336,11 @@ class YoutubeController {
     currentRelatedVideos.value = List.filled(20, null);
     final items = await NewPipeExtractorDart.videos.getRelatedStreams(id.toYTUrl());
     _fillTempVideoInfoMap(items.whereType<StreamInfoItem>());
+    items.loop((p, index) {
+      if (p is YoutubePlaylist) {
+        YoutubeController.inst.getPlaylistStreams(p, forceInitial: true);
+      }
+    });
     if (_canSafelyModifyMetadata(id)) {
       currentRelatedVideos.value = [
         ...items,

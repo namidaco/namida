@@ -367,6 +367,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     void Function()? onIndexAndQueueSame,
     void Function(List<Q> finalizedQueue)? onQueueDifferent,
     void Function(Q currentItem)? onAssigningCurrentItem,
+    bool Function(Q? currentItem, Q itemToPlay)? canRestructureQueueOnly,
   }) async {
     await beforeQueueAddOrInsert(queue);
     await super.assignNewQueue(
@@ -379,6 +380,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       onQueueDifferent: onQueueDifferent,
       onQueueEmpty: onQueueEmpty,
       onAssigningCurrentItem: onAssigningCurrentItem,
+      canRestructureQueueOnly: canRestructureQueueOnly ??
+          (currentItem, itemToPlay) {
+            if (itemToPlay is Selectable && currentItem is Selectable) {
+              return itemToPlay.track.path == currentItem.track.path;
+            } else if (itemToPlay is YoutubeID && currentItem is YoutubeID) {
+              return itemToPlay.id == currentItem.id;
+            }
+            return false;
+          },
     );
   }
 

@@ -28,14 +28,17 @@ class YoutubePlaylistCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final count = playlist?.streamCount;
     final countText = count == null || count < 0 ? "+25" : count.formatDecimalShort();
+    final thumbnailUrl = playlist?.thumbnailUrl;
+    final firstVideoID = playlist?.streams.firstOrNull?.id;
+    final goodVideoID = firstVideoID != null && firstVideoID != '';
     return YoutubeCard(
       thumbnailHeight: thumbnailHeight,
       thumbnailWidth: thumbnailWidth,
       isImageImportantInCache: false,
       extractColor: true,
       borderRadius: 12.0,
-      videoId: null,
-      thumbnailUrl: playlist?.thumbnailUrl ?? '',
+      videoId: goodVideoID ? firstVideoID : null,
+      thumbnailUrl: goodVideoID ? null : thumbnailUrl,
       shimmerEnabled: playlist == null,
       title: playlist?.name ?? '',
       subtitle: playlist?.uploaderName ?? '',
