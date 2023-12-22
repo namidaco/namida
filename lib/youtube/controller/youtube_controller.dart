@@ -55,6 +55,7 @@ class YoutubeController {
       _shouldShowGlowUnderVideo.value = hasScrolledEnough;
     });
   }
+  void resetGlowUnderVideo() => _shouldShowGlowUnderVideo.value = false;
 
   int get _defaultMiniplayerDimSeconds => settings.ytMiniplayerDimAfterSeconds.value;
   double get _defaultMiniplayerOpacity => settings.ytMiniplayerDimOpacity.value;

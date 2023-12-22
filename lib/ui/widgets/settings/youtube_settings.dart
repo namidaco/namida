@@ -73,6 +73,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 value: settings.ytTopComments.value,
                 onChanged: (isTrue) {
                   settings.save(ytTopComments: !isTrue);
+                  YoutubeController.inst.resetGlowUnderVideo();
 
                   // -- pop comments subpage in case was inside.
                   if (settings.ytTopComments.value == false) {

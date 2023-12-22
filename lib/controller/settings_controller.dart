@@ -170,7 +170,7 @@ class SettingsController {
   final RxBool enableClipboardMonitoring = false.obs;
   final RxBool ytIsAudioOnlyMode = false.obs;
   final RxBool ytRememberAudioOnly = false.obs;
-  final RxBool ytTopComments = false.obs;
+  final RxBool ytTopComments = true.obs;
   final RxBool artworkGestureScale = false.obs;
   final RxBool artworkGestureDoubleTapLRC = true.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
