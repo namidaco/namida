@@ -78,7 +78,7 @@ class _WaveformComponentState extends State<WaveformComponent> {
       child: Obx(
         () {
           final downscaled = WaveformController.inst.currentWaveformUI;
-          final barWidth = context.width / downscaled.length * 0.45;
+          final barWidth = View.of(context).physicalSize.shortestSide / 2 / downscaled.length * 0.45;
           return Center(
             child: Stack(
               children: [
