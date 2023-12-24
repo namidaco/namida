@@ -41,6 +41,7 @@ class ArtworkWidget extends StatefulWidget {
   final bool displayIcon;
   final IconData icon;
   final bool isCircle;
+  final bool ignoreLoadingDelay;
 
   const ArtworkWidget({
     required super.key,
@@ -67,38 +68,33 @@ class ArtworkWidget extends StatefulWidget {
     this.displayIcon = true,
     this.icon = Broken.musicnote,
     this.isCircle = false,
+    this.ignoreLoadingDelay = false,
   });
 
   @override
   State<ArtworkWidget> createState() => _ArtworkWidgetState();
 }
 
-class _ArtworkWidgetState extends State<ArtworkWidget> {
+class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMixin {
   String? _imagePath;
   late Uint8List? bytes = widget.bytes ?? Indexer.inst.artworksMap[widget.path];
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _tryExtract();
-  }
-
-  void _tryExtract() async {
-    if (!context.mounted) return;
-    final shouldDelayLoading = Scrollable.recommendDeferredLoadingForContext(context);
-    if (shouldDelayLoading) {
-      await Future.delayed(const Duration(milliseconds: 300));
-      _tryExtract();
-      return;
+  void initState() {
+    super.initState();
+    if (widget.compressed && !widget.ignoreLoadingDelay) {
+      Future.delayed(Duration.zero, _extractArtwork);
+    } else if (widget.path != null && File(widget.path!).existsSync()) {
+      _imagePath = widget.path;
     }
-    if (!shouldDelayLoading) _extractArtwork();
   }
 
   void _extractArtwork() async {
     final wPath = widget.path;
     if (wPath != null && _imagePath == null) {
-      if (File(wPath).existsSync()) {
-        _imagePath = wPath;
+      if (!await canStartLoadingItems()) return;
+      if (await File(wPath).exists()) {
+        if (mounted) setState(() => _imagePath = wPath);
       } else {
         if (widget.compressed == false) {
           final resPath = await Indexer.inst
@@ -110,9 +106,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
               )
               .then((value) => value.$1?.path);
           if (resPath != null) {
-            setState(() {
-              _imagePath = resPath;
-            });
+            if (mounted) setState(() => _imagePath = resPath);
           }
         } else if (bytes == null) {
           final resBytes = await Indexer.inst
@@ -124,9 +118,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> {
               )
               .then((value) => value.$2);
           if (resBytes != null) {
-            setState(() {
-              bytes = resBytes;
-            });
+            if (mounted) setState(() => bytes = resBytes);
           }
         }
       }

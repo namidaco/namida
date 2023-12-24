@@ -34,7 +34,7 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:namida/packages/bouncing_scroll_physics_modified.dart';
+import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
@@ -2439,6 +2439,7 @@ class NamidaInkWellButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final itemsColor = context.theme.colorScheme.onBackground.withOpacity(0.8);
     return IgnorePointer(
       ignoring: !enabled,
       child: AnimatedOpacity(
@@ -2460,14 +2461,14 @@ class NamidaInkWellButton extends StatelessWidget {
                     : Icon(
                         icon,
                         size: 18.0,
-                        color: context.theme.colorScheme.onBackground,
+                        color: itemsColor,
                       ),
                 const SizedBox(width: 6.0),
               ],
               Text(
                 text,
                 style: context.textTheme.displayMedium?.copyWith(
-                  color: context.theme.colorScheme.onBackground,
+                  color: itemsColor,
                 ),
               ),
               const SizedBox(width: 4.0),

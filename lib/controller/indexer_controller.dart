@@ -70,7 +70,7 @@ class Indexer {
   final Map<String, bool> _currentFileNamesMap = {};
 
   static final _faudiotagger = FAudioTagger();
-  final _audioQuery = OnAudioQuery();
+  late final _audioQuery = OnAudioQuery();
 
   List<Track> get recentlyAddedTracks {
     final alltracks = List<Track>.from(tracksInfoList);

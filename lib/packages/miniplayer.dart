@@ -79,7 +79,7 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
                 child: const Wallpaper(gradient: false, particleOpacity: .3),
                 builder: (context, child) {
                   if (widget.animation.value > 0.01) {
-                    return NamidaOpacity(
+                    return Opacity(
                       opacity: widget.animation.value.clamp(0.0, 1.0),
                       child: child!,
                     );

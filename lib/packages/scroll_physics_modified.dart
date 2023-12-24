@@ -10,14 +10,18 @@ import 'package:flutter/widgets.dart';
 bool isScrollbarThumbDragging = false;
 
 class BouncingScrollPhysicsModified extends ScrollPhysics {
-  /// Creates scroll physics that bounce back from the edge.
   const BouncingScrollPhysicsModified({
+    super.parent = const BouncingScrollPhysics(),
     this.decelerationRate = ScrollDecelerationRate.normal,
-    super.parent,
   });
 
   /// Used to determine parameters for friction simulations.
   final ScrollDecelerationRate decelerationRate;
+
+  @override
+  BouncingScrollPhysics applyTo(ScrollPhysics? ancestor) {
+    return BouncingScrollPhysics(parent: buildParent(ancestor), decelerationRate: decelerationRate);
+  }
 
   @override
   bool recommendDeferredLoading(double velocity, ScrollMetrics metrics, BuildContext context) {
@@ -29,19 +33,6 @@ class BouncingScrollPhysicsModified extends ScrollPhysics {
     return parent!.recommendDeferredLoading(velocity, metrics, context);
   }
 
-  @override
-  BouncingScrollPhysics applyTo(ScrollPhysics? ancestor) {
-    return BouncingScrollPhysics(parent: buildParent(ancestor), decelerationRate: decelerationRate);
-  }
-
-  /// The multiple applied to overscroll to make it appear that scrolling past
-  /// the edge of the scrollable contents is harder than scrolling the list.
-  /// This is done by reducing the ratio of the scroll effect output vs the
-  /// scroll gesture input.
-  ///
-  /// This factor starts at 0.52 and progressively becomes harder to overscroll
-  /// as more of the area past the edge is dragged in (represented by an increasing
-  /// `overscrollFraction` which starts at 0 when there is no overscroll).
   double frictionFactor(double overscrollFraction) {
     switch (decelerationRate) {
       case ScrollDecelerationRate.fast:
@@ -92,9 +83,6 @@ class BouncingScrollPhysicsModified extends ScrollPhysics {
   }
 
   @override
-  double applyBoundaryConditions(ScrollMetrics position, double value) => 0.0;
-
-  @override
   Simulation? createBallisticSimulation(ScrollMetrics position, double velocity) {
     final Tolerance tolerance = toleranceFor(position);
     if (velocity.abs() >= tolerance.velocity || position.outOfRange) {
@@ -117,32 +105,17 @@ class BouncingScrollPhysicsModified extends ScrollPhysics {
     return null;
   }
 
-  // The ballistic simulation here decelerates more slowly than the one for
-  // ClampingScrollPhysics so we require a more deliberate input gesture
-  // to trigger a fling.
+  @override
+  double applyBoundaryConditions(ScrollMetrics position, double value) => 0.0;
+
   @override
   double get minFlingVelocity => kMinFlingVelocity * 2.0;
 
-  // Methodology:
-  // 1- Use https://github.com/flutter/platform_tests/tree/master/scroll_overlay to test with
-  //    Flutter and platform scroll views superimposed.
-  // 3- If the scrollables stopped overlapping at any moment, adjust the desired
-  //    output value of this function at that input speed.
-  // 4- Feed new input/output set into a power curve fitter. Change function
-  //    and repeat from 2.
-  // 5- Repeat from 2 with medium and slow flings.
-  /// Momentum build-up function that mimics iOS's scroll speed increase with repeated flings.
-  ///
-  /// The velocity of the last fling is not an important factor. Existing speed
-  /// and (related) time since last fling are factors for the velocity transfer
-  /// calculations.
   @override
   double carriedMomentum(double existingVelocity) {
     return existingVelocity.sign * math.min(0.000816 * math.pow(existingVelocity.abs(), 1.967).toDouble(), 40000.0);
   }
 
-  // Eyeballed from observation to counter the effect of an unintended scroll
-  // from the natural motion of lifting the finger after a scroll.
   @override
   double get dragStartDistanceMotionThreshold => 3.5;
 
@@ -168,5 +141,81 @@ class BouncingScrollPhysicsModified extends ScrollPhysics {
       case ScrollDecelerationRate.normal:
         return super.spring;
     }
+  }
+}
+
+class ClampingScrollPhysicsModified extends ScrollPhysics {
+  const ClampingScrollPhysicsModified({super.parent = const ClampingScrollPhysics()});
+
+  @override
+  ClampingScrollPhysicsModified applyTo(ScrollPhysics? ancestor) {
+    return ClampingScrollPhysicsModified(parent: buildParent(ancestor));
+  }
+
+  @override
+  bool recommendDeferredLoading(double velocity, ScrollMetrics metrics, BuildContext context) {
+    if (parent == null) {
+      final double maxPhysicalPixels = View.of(context).physicalSize.longestSide;
+      final finalVelocity = isScrollbarThumbDragging ? velocity.abs() * 20 : velocity.abs() * 0.6;
+      return finalVelocity > maxPhysicalPixels;
+    }
+    return parent!.recommendDeferredLoading(velocity, metrics, context);
+  }
+
+  @override
+  double applyBoundaryConditions(ScrollMetrics position, double value) {
+    if (value < position.pixels && position.pixels <= position.minScrollExtent) {
+      // Underscroll.
+      return value - position.pixels;
+    }
+    if (position.maxScrollExtent <= position.pixels && position.pixels < value) {
+      // Overscroll.
+      return value - position.pixels;
+    }
+    if (value < position.minScrollExtent && position.minScrollExtent < position.pixels) {
+      // Hit top edge.
+      return value - position.minScrollExtent;
+    }
+    if (position.pixels < position.maxScrollExtent && position.maxScrollExtent < value) {
+      // Hit bottom edge.
+      return value - position.maxScrollExtent;
+    }
+    return 0.0;
+  }
+
+  @override
+  Simulation? createBallisticSimulation(ScrollMetrics position, double velocity) {
+    final Tolerance tolerance = toleranceFor(position);
+    if (position.outOfRange) {
+      double? end;
+      if (position.pixels > position.maxScrollExtent) {
+        end = position.maxScrollExtent;
+      }
+      if (position.pixels < position.minScrollExtent) {
+        end = position.minScrollExtent;
+      }
+      assert(end != null);
+      return ScrollSpringSimulation(
+        spring,
+        position.pixels,
+        end!,
+        math.min(0.0, velocity),
+        tolerance: tolerance,
+      );
+    }
+    if (velocity.abs() < tolerance.velocity) {
+      return null;
+    }
+    if (velocity > 0.0 && position.pixels >= position.maxScrollExtent) {
+      return null;
+    }
+    if (velocity < 0.0 && position.pixels <= position.minScrollExtent) {
+      return null;
+    }
+    return ClampingScrollSimulation(
+      position: position.pixels,
+      velocity: velocity,
+      tolerance: tolerance,
+    );
   }
 }

@@ -68,7 +68,7 @@ class YoutubeThumbnail extends StatefulWidget {
   State<YoutubeThumbnail> createState() => _YoutubeThumbnailState();
 }
 
-class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
+class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDelayMixin {
   String? imagePath;
   NamidaColor? imageColors;
   Color? smallBoxDynamicColor;
@@ -81,27 +81,18 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
   Uint8List? imageBytes;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _tryExtract();
-  }
-
-  void _tryExtract() async {
-    if (!context.mounted) return;
-    final shouldDelayLoading = Scrollable.recommendDeferredLoadingForContext(context);
-    if (shouldDelayLoading) {
-      await Future.delayed(const Duration(milliseconds: 300));
-      _tryExtract();
-      return;
-    }
-    if (!shouldDelayLoading) _getThumbnail();
+  void initState() {
+    super.initState();
+    _getThumbnail();
   }
 
   @override
   void dispose() {
     final allLinks = [widget.channelUrl];
-    allLinks.addAll(widget.videoId == null ? [] : YTThumbnail(widget.videoId!).allQualitiesByHighest);
+    if (widget.videoId != null) allLinks.addAll(YTThumbnail(widget.videoId!).allQualitiesByHighest);
     VideoController.inst.closeThumbnailClients(allLinks);
+    _dontTouchMeImFetchingThumbnail?.cancel();
+    _dontTouchMeImFetchingThumbnail = null;
     super.dispose();
   }
 
@@ -110,33 +101,42 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
     if (imagePath != null && imageColors != null) return;
     _dontTouchMeImFetchingThumbnail = null;
     _dontTouchMeImFetchingThumbnail = Timer(const Duration(seconds: 8), () {});
+
     imagePath = widget.localImagePath;
 
     if (imagePath == null) {
       final fetchHQChImg = widget.channelIDForHQImage != '';
       final finalChAvatarUrl = fetchHQChImg ? widget.channelIDForHQImage : widget.channelUrl;
-      final res = VideoController.inst.getYoutubeThumbnailFromCacheSync(
-            id: widget.videoId,
-            channelUrl: finalChAvatarUrl,
-          ) ??
-          await VideoController.inst.getYoutubeThumbnailAndCache(
-            id: widget.videoId,
-            channelUrlOrID: finalChAvatarUrl,
-            hqChannelImage: fetchHQChImg,
-            isImportantInCache: widget.isImportantInCache,
-            // -- get lower res first
-            beforeFetchingFromInternet: () async {
-              if (widget.videoId == null) return;
-              final lowerRes = await VideoController.inst.getYoutubeThumbnailAsBytes(
-                youtubeId: widget.videoId,
-                lowerResYTID: true,
-                keepInMemory: true,
-              );
-              if (lowerRes != null && lowerRes.isNotEmpty) {
-                if (mounted) setState(() => imageBytes = lowerRes);
-              }
-            },
-          );
+
+      File? res = VideoController.inst.getYoutubeThumbnailFromCacheSync(
+        id: widget.videoId,
+        channelUrl: finalChAvatarUrl,
+      );
+      imagePath = res?.path;
+
+      if (res == null) {
+        await Future.delayed(Duration.zero);
+        if (!await canStartLoadingItems()) return;
+        res = await VideoController.inst.getYoutubeThumbnailAndCache(
+          id: widget.videoId,
+          channelUrlOrID: finalChAvatarUrl,
+          hqChannelImage: fetchHQChImg,
+          isImportantInCache: widget.isImportantInCache,
+          // -- get lower res first
+          beforeFetchingFromInternet: () async {
+            if (widget.videoId == null) return;
+            final lowerRes = await VideoController.inst.getYoutubeThumbnailAsBytes(
+              youtubeId: widget.videoId,
+              lowerResYTID: true,
+              keepInMemory: true,
+            );
+            if (lowerRes != null && lowerRes.isNotEmpty) {
+              if (mounted) setState(() => imageBytes = lowerRes);
+            }
+          },
+        );
+      }
+
       widget.onImageReady?.call(res);
 
       // -- only put the image if bytes are NOT valid, or if specified by parent
@@ -165,6 +165,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> {
       padding: widget.margin ?? EdgeInsets.zero,
       child: ArtworkWidget(
         key: thumbKey,
+        ignoreLoadingDelay: true,
         isCircle: widget.isCircle,
         bgcolor: context.theme.cardColor.withAlpha(60),
         compressed: widget.compressed,

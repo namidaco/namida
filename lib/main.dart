@@ -38,7 +38,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/main_page_wrapper.dart';
-import 'package:namida/packages/bouncing_scroll_physics_modified.dart';
+import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
@@ -442,7 +442,7 @@ class ScrollBehaviorModified extends ScrollBehavior {
       case TargetPlatform.fuchsia:
       case TargetPlatform.linux:
       case TargetPlatform.windows:
-        return const ClampingScrollPhysics();
+        return const ClampingScrollPhysicsModified();
     }
   }
 }

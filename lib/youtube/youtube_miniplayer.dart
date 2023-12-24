@@ -20,6 +20,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/mp.dart';
 import 'package:namida/packages/three_arched_circle.dart';
+import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
@@ -170,7 +171,10 @@ class YoutubeMiniPlayer extends StatelessWidget {
                             maintainState: true,
                             child: LazyLoadListView(
                               key: Key("${currentId}_body_lazy_load_list"),
-                              onReachingEnd: () async => await YoutubeController.inst.updateCurrentComments(currentId, fetchNextOnly: true),
+                              onReachingEnd: () async {
+                                if (settings.ytTopComments.value) return;
+                                await YoutubeController.inst.updateCurrentComments(currentId, fetchNextOnly: true);
+                              },
                               extend: 400,
                               scrollController: YoutubeController.inst.scrollController,
                               listview: (controller) => ObxValue<RxBool>(
@@ -179,7 +183,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                   children: [
                                     CustomScrollView(
                                       // key: PageStorageKey(currentId), // duplicate errors
-                                      physics: const ClampingScrollPhysics(),
+                                      physics: const ClampingScrollPhysicsModified(),
                                       controller: controller,
                                       slivers: [
                                         // --START-- title & subtitle
@@ -482,25 +486,30 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                 Obx(
                                                   () {
                                                     final channelID = YoutubeSubscriptionsController.inst.idOrUrlToChannelID(channelIDOrURL);
-                                                    final subscribed = YoutubeSubscriptionsController.inst.subscribedChannels[channelID]?.subscribed ?? false;
-                                                    return TextButton(
-                                                      style: TextButton.styleFrom(
-                                                        foregroundColor: Color.alphaBlend(Colors.grey.withOpacity(subscribed ? 0.6 : 0.0), context.theme.colorScheme.primary),
+                                                    final disabled = channelID == null;
+                                                    final subscribed = disabled ? false : YoutubeSubscriptionsController.inst.subscribedChannels[channelID]?.subscribed ?? false;
+                                                    return AnimatedOpacity(
+                                                      opacity: disabled ? 0.5 : 1.0,
+                                                      duration: const Duration(milliseconds: 300),
+                                                      child: TextButton(
+                                                        style: TextButton.styleFrom(
+                                                          foregroundColor: Color.alphaBlend(Colors.grey.withOpacity(subscribed ? 0.6 : 0.0), context.theme.colorScheme.primary),
+                                                        ),
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(subscribed ? Broken.tick_square : Broken.video, size: 20.0),
+                                                            const SizedBox(width: 8.0),
+                                                            Text(
+                                                              subscribed ? lang.SUBSCRIBED : lang.SUBSCRIBE,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        onPressed: () async {
+                                                          if (channelIDOrURL != null) {
+                                                            await YoutubeSubscriptionsController.inst.changeChannelStatus(channelIDOrURL, null);
+                                                          }
+                                                        },
                                                       ),
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(subscribed ? Broken.tick_square : Broken.video, size: 20.0),
-                                                          const SizedBox(width: 8.0),
-                                                          Text(
-                                                            subscribed ? lang.SUBSCRIBED : lang.SUBSCRIBE,
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      onPressed: () async {
-                                                        if (channelIDOrURL != null) {
-                                                          await YoutubeSubscriptionsController.inst.changeChannelStatus(channelIDOrURL, null);
-                                                        }
-                                                      },
                                                     );
                                                   },
                                                 ),

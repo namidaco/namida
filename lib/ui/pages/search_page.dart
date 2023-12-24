@@ -170,12 +170,13 @@ class SearchPage extends StatelessWidget {
                               child: TweenAnimationBuilder(
                                 tween: Tween<double>(begin: 4.0, end: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? 4.0 : 12.0),
                                 duration: const Duration(milliseconds: 500),
+                                child: Image.asset('assets/namida_icon.png'),
                                 builder: (context, value, child) => ImageFiltered(
                                   imageFilter: ImageFilter.blur(
                                     sigmaX: value,
                                     sigmaY: value,
                                   ),
-                                  child: Image.asset('assets/namida_icon.png'),
+                                  child: child,
                                 ),
                               ),
                             ),

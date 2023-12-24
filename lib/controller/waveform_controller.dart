@@ -85,7 +85,7 @@ class WaveformController {
         enforceClampToMax: (minValue, maxValue) {
           // -- checking if max value is greater than `maxClamping`;
           // -- since clamping tries to normalize among all lists variations
-          return maxValue > maxClamping;
+          return maxValue > maxClamping + 6.0;
         },
       );
     });

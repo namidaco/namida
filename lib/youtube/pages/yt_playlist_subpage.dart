@@ -209,7 +209,6 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                       ],
                                     ),
                                   ),
-                                  const Spacer(),
                                   NamidaIconButton(
                                     iconColor: context.defaultIconColor(bgColor),
                                     icon: Broken.shuffle,
@@ -374,7 +373,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
     final itemsThumbnailHeight = itemsThumbnailWidth * 9 / 16;
     final itemsThumbnailItemExtent = itemsThumbnailHeight + 8.0 * 2;
 
-    final firstID = widget.playlist.streams.firstOrNull?.id;
+    final firstID = playlist.streams.firstOrNull?.id;
     return AnimatedTheme(
       duration: const Duration(milliseconds: 300),
       data: AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode),
@@ -393,6 +392,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
                       height: context.width * 9 / 16,
                       compressed: true,
                       isImportantInCache: false,
+                      channelUrl: playlist.thumbnailUrl,
                       videoId: firstID,
                       blur: 0.0,
                       borderRadius: 0.0,
@@ -425,6 +425,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
                             height: (bigThumbWidth * 9 / 16),
                             compressed: false,
                             isImportantInCache: true,
+                            channelUrl: playlist.thumbnailUrl,
                             videoId: firstID,
                             blur: 4.0,
                           ),
@@ -459,7 +460,6 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
                                   ],
                                 ),
                               ),
-                              const Spacer(),
                               NamidaIconButton(
                                 iconColor: context.defaultIconColor(bgColor),
                                 icon: Broken.shuffle,

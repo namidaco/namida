@@ -46,7 +46,7 @@ class YTLocalSearchController {
     Directory(directoryPath).listSyncSafe().loop((file, _) {
       try {
         final res = (file as File).readAsJsonSync();
-        list.add(res);
+        if (res != null) list.add(res);
       } catch (_) {}
     });
     return list;
