@@ -11,6 +11,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/library/track_tile.dart';
 
 Future<void> showSettingDialogWithTextField({
   Widget? topWidget,
@@ -26,7 +27,6 @@ Future<void> showSettingDialogWithTextField({
   bool dateTimeFormat = false,
   bool trackTileSeparator = false,
   bool addNewPlaylist = false,
-  void Function()? onTrackTileSettingsChanged,
 }) async {
   final controller = TextEditingController();
   final formKey = GlobalKey<FormState>();
@@ -49,7 +49,8 @@ Future<void> showSettingDialogWithTextField({
     );
   }
 
-  void onTTSetChange() => onTrackTileSettingsChanged?.call();
+  void onTTSetChange() {}
+  void onTIPropChange() => TrackTileManager.onTrackItemPropChange();
 
   await NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
@@ -96,11 +97,13 @@ Future<void> showSettingDialogWithTextField({
                 if (dateTimeFormat) {
                   settings.save(dateTimeFormat: 'MMM yyyy');
                   showResetToDefaultSnackBar("${settings.dateTimeFormat}", title: title);
+                  onTIPropChange();
                 }
                 if (trackTileSeparator) {
                   settings.save(trackTileSeparator: '•');
                   showResetToDefaultSnackBar("${settings.trackTileSeparator}", title: title);
                   onTTSetChange();
+                  onTIPropChange();
                 }
 
                 NamidaNavigator.inst.closeDialog();
@@ -138,10 +141,13 @@ Future<void> showSettingDialogWithTextField({
                 }
                 if (dateTimeFormat) {
                   settings.save(dateTimeFormat: controller.text);
+                  onTTSetChange();
+                  onTIPropChange();
                 }
                 if (trackTileSeparator) {
                   settings.save(trackTileSeparator: controller.text);
                   onTTSetChange();
+                  onTIPropChange();
                 }
                 if (addNewPlaylist) {
                   PlaylistController.inst.addNewPlaylist(controller.text);

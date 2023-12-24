@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:path/path.dart' as p;
 import 'package:system_info2/system_info2.dart';
@@ -1003,6 +1004,7 @@ class Indexer {
   }
 
   Future<void> _saveTrackFileToStorage() async {
+    TrackTileManager.onTrackItemPropChange();
     await File(AppPaths.TRACKS).writeAsJson(tracksInfoList.map((key) => allTracksMappedByPath[key]?.toJson()).toList());
   }
 
@@ -1026,6 +1028,7 @@ class Indexer {
   }
 
   Future<void> _saveTrackStatsFileToStorage() async {
+    TrackTileManager.onTrackItemPropChange();
     await File(AppPaths.TRACKS_STATS).writeAsJson(trackStatsMap.values.map((e) => e.toJson()).toList());
   }
 
