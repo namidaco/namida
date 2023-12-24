@@ -323,7 +323,12 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
     if (_isLoadingMoreItems.value) return;
     if (!controller.hasClients) return;
 
-    final needsToLoadMore = widget.playlist.streamCount >= 0 && widget.playlist.streams.length < widget.playlist.streamCount;
+    final fetched = widget.playlist.streams.length;
+    final total = widget.playlist.streamCount;
+    // -- mainly a workaround for playlists containing hidden videos
+    // -- works only for small playlists (<=100 videos).
+    if (fetched > 0 && fetched <= 100 && total > 0 && total <= 100) return;
+    final needsToLoadMore = total >= 0 && fetched < total;
     if (needsToLoadMore && controller.offset >= controller.position.maxScrollExtent - 400 && !controller.position.outOfRange) {
       await _fetch100Video();
     }
