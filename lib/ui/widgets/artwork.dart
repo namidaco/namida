@@ -215,9 +215,25 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                           height: realWidthAndHeight,
                           frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
                             if (wasSynchronouslyLoaded) return child;
-                            return AnimatedSwitcher(
+                            if (bytes != null && bytes.isNotEmpty) return child;
+                            if (frame == null) return child;
+
+                            return TweenAnimationBuilder(
+                              tween: Tween<double>(begin: 1.0, end: 0.0),
                               duration: Duration(milliseconds: widget.fadeMilliSeconds),
-                              child: frame != null ? child : const SizedBox(),
+                              child: child,
+                              builder: (context, value, child) {
+                                return Stack(
+                                  children: [
+                                    child!,
+                                    Positioned.fill(
+                                      child: IgnorePointer(
+                                        child: ColoredBox(color: context.theme.cardColor.withOpacity(value)),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
                             );
                           }),
                           errorBuilder: (context, error, stackTrace) {
