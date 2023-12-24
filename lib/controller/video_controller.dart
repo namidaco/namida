@@ -988,9 +988,10 @@ class VideoController {
       } catch (_) {}
     }
 
-    final file = id != null ? File("${AppDirs.YT_THUMBNAILS}$id.png") : File("${AppDirs.YT_THUMBNAILS_CHANNELS}${channelUrlOrID?.split('/').last}.png");
+    final file = imageUrlToCacheFile(id: id, url: channelUrlOrID);
+    if (file == null) return null;
 
-    if (file.existsSync()) {
+    if (file.existsSync() == true) {
       _printie('Downloading Thumbnail Already Exists');
       trySavingLastAccessed(file);
       return file;
@@ -1026,6 +1027,27 @@ class VideoController {
     return savedFile;
   }
 
+  File? imageUrlToCacheFile({
+    required String? id,
+    required String? url,
+  }) {
+    String? finalUrl = url;
+    final imageUrl = finalUrl?.split('i.ytimg.com/vi/');
+    if (imageUrl != null && imageUrl.length > 1) {
+      finalUrl = imageUrl.last.split('?').first.replaceAll('/', '_');
+    } else {
+      if (finalUrl != null) finalUrl = '${finalUrl.split('/').last.split('=').first}.png';
+    }
+
+    final file = id != null && id != ''
+        ? File("${AppDirs.YT_THUMBNAILS}$id.png")
+        : finalUrl == null
+            ? null
+            : File("${AppDirs.YT_THUMBNAILS_CHANNELS}$finalUrl");
+
+    return file;
+  }
+
   static Future<String?> _getChannelAvatarUrlIsolate(String channelId) async {
     final url = 'https://www.youtube.com/channel/$channelId?hl=en';
     final client = http.Client();
@@ -1039,10 +1061,9 @@ class VideoController {
   File? getYoutubeThumbnailFromCacheSync({String? id, String? channelUrl}) {
     if (id == null && channelUrl == null) return null;
 
-    final file = id != null ? File("${AppDirs.YT_THUMBNAILS}$id.png") : File("${AppDirs.YT_THUMBNAILS_CHANNELS}${channelUrl?.split('/').last}.png");
-    if (file.existsSync()) {
-      return file;
-    }
+    final file = imageUrlToCacheFile(id: id, url: channelUrl);
+
+    if (file != null && file.existsSync()) return file;
     return null;
   }
 
