@@ -520,6 +520,7 @@ Future<void> showGeneralPopupDialog(
         tracks: tracksWithDates.isNotEmpty ? tracksWithDates : tracks,
         colorScheme: colorDelightened,
         source: source,
+        albumsUniqued: availableAlbums,
       );
     },
   );

@@ -8,6 +8,7 @@ import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -24,6 +25,7 @@ void showTrackAdvancedDialog({
   required List<Selectable> tracks,
   required Color colorScheme,
   required QueueSource source,
+  required List<(String, String)> albumsUniqued,
 }) async {
   final isSingle = tracks.length == 1;
   final canShowClearDialog = tracks.hasAnythingCached;
@@ -166,7 +168,7 @@ void showTrackAdvancedDialog({
                 );
               },
             ),
-          if (isSingle)
+          if (isSingle || (albumsUniqued.length == 1 && settings.groupArtworksByAlbum.value))
             CustomListTile(
               passedColor: colorScheme,
               title: lang.COLOR_PALETTE,

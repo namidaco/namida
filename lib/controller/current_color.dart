@@ -200,18 +200,21 @@ class CurrentColor {
       }
     }
 
-    final valInMap = colorsMap[track.path.getFilename];
+    final filename = settings.groupArtworksByAlbum.value ? track.albumIdentifier : track.filename;
+
+    final valInMap = colorsMap[filename];
     if (!forceReCheck && valInMap != null) {
       return maybeDelightned(valInMap);
     }
 
     NamidaColor? nc = await extractPaletteFromImage(
       track.pathToImage,
+      track: track,
       useIsolate: useIsolate,
     );
 
     final finalnc = maybeDelightned(nc);
-    _updateInColorMap(track.filename, finalnc);
+    _updateInColorMap(filename, finalnc);
     return finalnc;
   }
 
@@ -247,6 +250,7 @@ class CurrentColor {
 
   Future<NamidaColor?> extractPaletteFromImage(
     String imagePath, {
+    Track? track,
     bool forceReExtract = false,
     bool useIsolate = _defaultUseIsolate,
     Directory? paletteSaveDirectory,
@@ -255,7 +259,13 @@ class CurrentColor {
 
     paletteSaveDirectory ??= Directory(AppDirs.PALETTES);
 
-    final paletteFile = File("${paletteSaveDirectory.path}${imagePath.getFilenameWOExt}.palette");
+    final filename = track != null
+        ? settings.groupArtworksByAlbum.value
+            ? track.albumIdentifier
+            : track.filename
+        : imagePath.getFilenameWOExt;
+
+    final paletteFile = File("${paletteSaveDirectory.path}$filename.palette");
 
     // -- try reading the cached file
     if (!forceReExtract) {
@@ -286,13 +296,14 @@ class CurrentColor {
   Future<void> reExtractTrackColorPalette({required Track track, required NamidaColor? newNC, required String? imagePath, bool useIsolate = true}) async {
     assert(newNC != null || imagePath != null, 'a color or imagePath must be provided');
 
-    final paletteFile = File("${AppDirs.PALETTES}${track.filename}.palette");
+    final filename = settings.groupArtworksByAlbum.value ? track.albumIdentifier : track.filename;
+    final paletteFile = File("${AppDirs.PALETTES}$filename.palette");
     if (newNC != null) {
       await paletteFile.writeAsJson(newNC.toJson());
-      _updateInColorMap(track.filename, newNC);
+      _updateInColorMap(filename, newNC);
     } else if (imagePath != null) {
-      final nc = await extractPaletteFromImage(imagePath, forceReExtract: true, useIsolate: useIsolate);
-      _updateInColorMap(imagePath.getFilenameWOExt, nc);
+      final nc = await extractPaletteFromImage(imagePath, track: track, forceReExtract: true, useIsolate: useIsolate);
+      _updateInColorMap(filename, nc);
     }
     if (Player.inst.nowPlayingTrack == track) {
       updatePlayerColorFromTrack(track, null);
