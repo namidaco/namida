@@ -81,7 +81,7 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/audio_service
       path: audio_service/
-      ref: b21b6503c2c4ee39d83c163cfa4cc7b05044e649
+      ref: 2e673424b3a43362c725eecadff8844ecc460748
   faudiotagger:
     git:
       url: https://github.com/MSOB7YY/faudiotagger
