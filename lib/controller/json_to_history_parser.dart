@@ -1,14 +1,17 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -110,11 +113,12 @@ class JsonToHistoryParser {
     );
   }
 
-  bool get shouldShowMissingEntriesDialog => _latestMissingMap.length != _latestMissingMapAddedStatus.length;
+  bool get shouldShowMissingEntriesDialog => _latestMissingMap.isNotEmpty && _latestMissingMap.length != _latestMissingMapAddedStatus.length;
   final _latestMissingMap = <_MissingListenEntry, List<int>>{}.obs;
   final _latestMissingMapAddedStatus = <_MissingListenEntry, Track>{}.obs;
 
   void showMissingEntriesDialog() {
+    if (_latestMissingMap.isEmpty) return;
     void onTrackChoose(MapEntry<_MissingListenEntry, List<int>> entry) {
       showLibraryTracksChooseDialog(
         trackName: "${entry.key.artistOrChannel} - ${entry.key.title}",
@@ -596,29 +600,89 @@ class JsonToHistoryParser {
     required DateTime? newestDate,
     required void Function(_MissingListenEntry missingEntry) onMissingEntry,
   }) async {
-    final oldestDay = oldestDate?.toDaysSince1970();
-    final newestDay = newestDate?.toDaysSince1970();
-
-    final lines = await file.readAsLines();
-    totalJsonToParse.value = lines.length;
-    isLoadingFile.value = false;
-
     final totalDaysToSave = <int>[];
+    final port = ReceivePort();
+    final portProgressParsed = ReceivePort();
+    final portProgressAdded = ReceivePort();
+    final portLoadingProgress = ReceivePort();
+    final portMissing = ReceivePort();
+    final params = {
+      'tracks': Indexer.inst.allTracksMappedByPath.values.map((e) => e.toJson()).toList(),
+      'oldestDay': oldestDate?.toDaysSince1970(),
+      'newestDay': newestDate?.toDaysSince1970(),
+      'file': file,
+      'matchAll': matchAll,
+      'artistsSplitConfig': ArtistsSplitConfig.settings().toMap(),
+      'sendPort': port.sendPort,
+      'portProgressParsed': portProgressParsed.sendPort,
+      'portProgressAdded': portProgressAdded.sendPort,
+      'portLoadingProgress': portLoadingProgress.sendPort,
+      'portMissing': portMissing.sendPort,
+    };
+    portLoadingProgress.listen((message) {
+      totalJsonToParse.value = message as int;
+      isLoadingFile.value = false;
+      portLoadingProgress.close();
+    });
+    port.listen((message) {
+      final tracksToAdd = message as List<TrackWithDate>;
+      totalDaysToSave.addAll(HistoryController.inst.addTracksToHistoryOnly(tracksToAdd));
+    });
+    portMissing.listen((message) {
+      onMissingEntry(message as _MissingListenEntry);
+    });
+    portProgressParsed.listen((message) {
+      parsedHistoryJson.value += message as int;
+    });
+    portProgressAdded.listen((message) {
+      addedHistoryJsonToPlaylist.value += message as int;
+    });
+
+    await _addLastFmSourceIsolate.thready(params);
+
+    port.close();
+    portProgressParsed.close();
+    portProgressAdded.close();
+    portMissing.close();
+    return totalDaysToSave;
+  }
+
+  /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
+  static Future<void> _addLastFmSourceIsolate(Map params) async {
+    final allTracks = params['tracks'] as List<Map>;
+    final oldestDay = params['oldestDay'] as int?;
+    final newestDay = params['newestDay'] as int?;
+    final file = params['file'] as File;
+    final matchAll = params['matchAll'] as bool;
+    final artistsSplitConfig = ArtistsSplitConfig.fromMap(params['artistsSplitConfig']);
+    final sendPort = params['sendPort'] as SendPort;
+    final portProgressParsed = params['portProgressParsed'] as SendPort;
+    final portProgressAdded = params['portProgressAdded'] as SendPort;
+    final portLoadingProgress = params['portLoadingProgress'] as SendPort;
+    final portMissing = params['portMissing'] as SendPort;
+
+    final lines = file.readAsLinesSync();
+    portLoadingProgress.send(lines.length);
+
     final tracksToAdd = <TrackWithDate>[];
+    int totalParsed = 0;
 
     // used for cases where date couldnt be parsed, so it uses this one as a reference
     int? lastDate;
     for (final line in lines) {
-      parsedHistoryJson.value++;
+      totalParsed++;
 
       /// updates history every 10 tracks
       if (tracksToAdd.length == 10) {
-        totalDaysToSave.addAll(HistoryController.inst.addTracksToHistoryOnly(tracksToAdd));
+        sendPort.send(tracksToAdd);
         tracksToAdd.clear();
       }
 
-      // pls forgive me
-      await Future.delayed(Duration.zero);
+      /// updates progress every 10 lines, calling on every loop affects benchmarks heavily.
+      if (totalParsed == 10) {
+        portProgressParsed.send(totalParsed);
+        totalParsed = 0;
+      }
 
       /// artist, album, title, (dd MMM yyyy HH:mm);
       try {
@@ -646,12 +710,18 @@ class JsonToHistoryParser {
         /// matching has to meet 2 conditons:
         /// [csv artist] contains [track.artistsList.first]
         /// [csv title] contains [track.title], anything after ( or [ is ignored.
-        final tracks = allTracksInLibrary.firstWhereOrWhere(
+        final tracks = allTracks.firstWhereOrWhere(
           matchAll,
-          (trPre) {
-            final track = trPre.toTrackExt();
-            final matchingArtist = track.artistsList.isNotEmpty && pieces[0].cleanUpForComparison.contains(track.artistsList.first.cleanUpForComparison);
-            final matchingTitle = pieces[2].cleanUpForComparison.contains(track.title.split('(').first.split('[').first.cleanUpForComparison);
+          (trMap) {
+            final title = trMap['title'] as String;
+            final originalArtist = trMap['originalArtist'] as String;
+            final artistsList = Indexer.splitArtist(
+              title: title,
+              originalArtist: originalArtist,
+              config: artistsSplitConfig,
+            );
+            final matchingArtist = artistsList.isNotEmpty && pieces[0].cleanUpForComparison.contains(artistsList.first.cleanUpForComparison);
+            final matchingTitle = pieces[2].cleanUpForComparison.contains(title.split('(').first.split('[').first.cleanUpForComparison);
             return matchingArtist && matchingTitle;
           },
         );
@@ -659,13 +729,13 @@ class JsonToHistoryParser {
           tracksToAdd.addAll(
             tracks.map((tr) => TrackWithDate(
                   dateAdded: date,
-                  track: tr,
+                  track: Track(tr['path'] ?? ''),
                   source: TrackSource.lastfm,
                 )),
           );
-          addedHistoryJsonToPlaylist.value += tracks.length;
+          portProgressAdded.send(tracks.length);
         } else {
-          onMissingEntry(
+          portMissing.send(
             _MissingListenEntry(
               youtubeID: null,
               dateMSSE: date,
@@ -676,14 +746,13 @@ class JsonToHistoryParser {
           );
         }
       } catch (e) {
-        printy(e, isError: true);
+        printo(e, isError: true);
         continue;
       }
     }
     // normally the loop automatically adds every 10 tracks, this one is to ensure adding any tracks left.
-    totalDaysToSave.addAll(HistoryController.inst.addTracksToHistoryOnly(tracksToAdd));
-
-    return totalDaysToSave;
+    sendPort.send(tracksToAdd);
+    portProgressParsed.send(totalParsed);
   }
 
   Future<void> _updateYoutubeStatsDirectory({required Map<String, YoutubeVideoHistory> affectedIds, required void Function(List<String> updatedIds) onProgress}) async {
