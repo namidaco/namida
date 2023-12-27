@@ -119,6 +119,7 @@ class JsonToHistoryParser {
 
   void showMissingEntriesDialog() {
     if (_latestMissingMap.isEmpty) return;
+
     void onTrackChoose(MapEntry<_MissingListenEntry, List<int>> entry) {
       showLibraryTracksChooseDialog(
         trackName: "${entry.key.artistOrChannel} - ${entry.key.title}",
@@ -331,6 +332,8 @@ class JsonToHistoryParser {
     YoutubeHistoryController.inst.sortHistoryTracks(datesAddedYoutube);
     await YoutubeHistoryController.inst.saveHistoryToStorage(datesAddedYoutube);
     YoutubeHistoryController.inst.updateMostPlayedPlaylist();
+
+    isParsing.value = false;
 
     _notificationTimer?.cancel();
     NotificationService.inst.doneImportingHistoryNotification(parsedHistoryJson.value, addedHistoryJsonToPlaylist.value);
@@ -593,43 +596,38 @@ class JsonToHistoryParser {
   }
 
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
-  Future<List<int>> _addLastFmSource({
+  Future<({List<int> historyDays, Map<_MissingListenEntry, List<int>> missingEntries})?> _addLastFmSource({
     required File file,
     required bool matchAll,
     required DateTime? oldestDate,
     required DateTime? newestDate,
-    required void Function(_MissingListenEntry missingEntry) onMissingEntry,
   }) async {
-    final totalDaysToSave = <int>[];
-    final port = ReceivePort();
     final portProgressParsed = ReceivePort();
     final portProgressAdded = ReceivePort();
     final portLoadingProgress = ReceivePort();
-    final portMissing = ReceivePort();
+
     final params = {
-      'tracks': Indexer.inst.allTracksMappedByPath.values.map((e) => e.toJson()).toList(),
+      'tracks': Indexer.inst.allTracksMappedByPath.values
+          .map((e) => {
+                'title': e.title,
+                'artist': e.originalArtist,
+                'path': e.path,
+              })
+          .toList(),
       'oldestDay': oldestDate?.toDaysSince1970(),
       'newestDay': newestDate?.toDaysSince1970(),
       'file': file,
       'matchAll': matchAll,
       'artistsSplitConfig': ArtistsSplitConfig.settings().toMap(),
-      'sendPort': port.sendPort,
       'portProgressParsed': portProgressParsed.sendPort,
       'portProgressAdded': portProgressAdded.sendPort,
       'portLoadingProgress': portLoadingProgress.sendPort,
-      'portMissing': portMissing.sendPort,
+      'localHistory': HistoryController.inst.historyMap.value,
     };
     portLoadingProgress.listen((message) {
       totalJsonToParse.value = message as int;
       isLoadingFile.value = false;
       portLoadingProgress.close();
-    });
-    port.listen((message) {
-      final tracksToAdd = message as List<TrackWithDate>;
-      totalDaysToSave.addAll(HistoryController.inst.addTracksToHistoryOnly(tracksToAdd));
-    });
-    portMissing.listen((message) {
-      onMissingEntry(message as _MissingListenEntry);
     });
     portProgressParsed.listen((message) {
       parsedHistoryJson.value += message as int;
@@ -638,51 +636,65 @@ class JsonToHistoryParser {
       addedHistoryJsonToPlaylist.value += message as int;
     });
 
-    await _addLastFmSourceIsolate.thready(params);
+    HistoryController.inst.setIdleStatus(true);
 
-    port.close();
+    final res = await _addLastFmSourceIsolate.thready(params);
+
     portProgressParsed.close();
     portProgressAdded.close();
-    portMissing.close();
-    return totalDaysToSave;
+
+    if (res != null) {
+      HistoryController.inst.historyMap.value = res.localHistory;
+    }
+
+    await HistoryController.inst.setIdleStatus(false);
+
+    return res == null
+        ? null
+        : (
+            historyDays: res.daysToSaveLocal,
+            missingEntries: res.missingEntries,
+          );
   }
 
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
-  static Future<void> _addLastFmSourceIsolate(Map params) async {
+  static ({
+    List<int> daysToSaveLocal,
+    SplayTreeMap<int, List<TrackWithDate>> localHistory,
+    Map<_MissingListenEntry, List<int>> missingEntries,
+  })? _addLastFmSourceIsolate(Map params) {
     final allTracks = params['tracks'] as List<Map>;
     final oldestDay = params['oldestDay'] as int?;
     final newestDay = params['newestDay'] as int?;
     final file = params['file'] as File;
     final matchAll = params['matchAll'] as bool;
     final artistsSplitConfig = ArtistsSplitConfig.fromMap(params['artistsSplitConfig']);
-    final sendPort = params['sendPort'] as SendPort;
+
+    final localHistory = params['localHistory'] as SplayTreeMap<int, List<TrackWithDate>>;
+
     final portProgressParsed = params['portProgressParsed'] as SendPort;
     final portProgressAdded = params['portProgressAdded'] as SendPort;
     final portLoadingProgress = params['portLoadingProgress'] as SendPort;
-    final portMissing = params['portMissing'] as SendPort;
 
-    final lines = file.readAsLinesSync();
-    portLoadingProgress.send(lines.length);
+    final List<String> lines;
+    try {
+      lines = file.readAsLinesSync();
+      portLoadingProgress.send(lines.length);
+    } catch (e) {
+      portLoadingProgress.send(0);
+      return null;
+    }
 
-    final tracksToAdd = <TrackWithDate>[];
+    final missingEntries = <_MissingListenEntry, List<int>>{};
     int totalParsed = 0;
+    int totalAdded = 0;
+    final daysToSaveLocal = <int>[];
+    const chunkSize = 20;
 
     // used for cases where date couldnt be parsed, so it uses this one as a reference
     int? lastDate;
     for (final line in lines) {
       totalParsed++;
-
-      /// updates history every 10 tracks
-      if (tracksToAdd.length == 10) {
-        sendPort.send(tracksToAdd);
-        tracksToAdd.clear();
-      }
-
-      /// updates progress every 10 lines, calling on every loop affects benchmarks heavily.
-      if (totalParsed == 10) {
-        portProgressParsed.send(totalParsed);
-        totalParsed = 0;
-      }
 
       /// artist, album, title, (dd MMM yyyy HH:mm);
       try {
@@ -710,11 +722,11 @@ class JsonToHistoryParser {
         /// matching has to meet 2 conditons:
         /// [csv artist] contains [track.artistsList.first]
         /// [csv title] contains [track.title], anything after ( or [ is ignored.
-        final tracks = allTracks.firstWhereOrWhere(
+        final tracks = allTracks.firstWhereOrAllWhere(
           matchAll,
           (trMap) {
             final title = trMap['title'] as String;
-            final originalArtist = trMap['originalArtist'] as String;
+            final originalArtist = trMap['artist'] as String;
             final artistsList = Indexer.splitArtist(
               title: title,
               originalArtist: originalArtist,
@@ -725,34 +737,53 @@ class JsonToHistoryParser {
             return matchingArtist && matchingTitle;
           },
         );
+        totalAdded += tracks.length;
         if (tracks.isNotEmpty) {
-          tracksToAdd.addAll(
-            tracks.map((tr) => TrackWithDate(
-                  dateAdded: date,
-                  track: Track(tr['path'] ?? ''),
-                  source: TrackSource.lastfm,
-                )),
-          );
-          portProgressAdded.send(tracks.length);
-        } else {
-          portMissing.send(
-            _MissingListenEntry(
-              youtubeID: null,
-              dateMSSE: date,
+          for (final trMap in tracks) {
+            final tr = TrackWithDate(
+              dateAdded: date,
+              track: Track(trMap['path'] ?? ''),
               source: TrackSource.lastfm,
-              artistOrChannel: pieces[0],
-              title: pieces[2],
-            ),
+            );
+            final day = tr.dateTimeAdded.toDaysSince1970();
+            daysToSaveLocal.add(day);
+            localHistory.insertForce(0, day, tr);
+          }
+        } else {
+          final me = _MissingListenEntry(
+            youtubeID: null,
+            dateMSSE: date,
+            source: TrackSource.lastfm,
+            artistOrChannel: pieces[0],
+            title: pieces[2],
           );
+          missingEntries.addForce(me, me.dateMSSE);
+        }
+
+        /// updates progress every [chunkSize] lines, calling on every loop affects benchmarks heavily.
+        if (totalParsed >= chunkSize) {
+          portProgressParsed.send(totalParsed);
+          totalParsed = 0;
+        }
+        if (totalAdded >= chunkSize) {
+          portProgressAdded.send(totalAdded);
+          totalAdded = 0;
         }
       } catch (e) {
         printo(e, isError: true);
         continue;
       }
     }
-    // normally the loop automatically adds every 10 tracks, this one is to ensure adding any tracks left.
-    sendPort.send(tracksToAdd);
+    // normally the loop automatically adds every [chunkSize] tracks, this one is to ensure adding any tracks left.
     portProgressParsed.send(totalParsed);
+    portProgressAdded.send(totalAdded);
+
+    return (
+      daysToSaveLocal: daysToSaveLocal,
+      localHistory: localHistory,
+      missingEntries: missingEntries,
+    );
+  }
   }
 
   Future<void> _updateYoutubeStatsDirectory({required Map<String, YoutubeVideoHistory> affectedIds, required void Function(List<String> updatedIds) onProgress}) async {
@@ -806,7 +837,7 @@ class JsonToHistoryParser {
 }
 
 extension _FWORWHERE<E> on List<E> {
-  Iterable<E> firstWhereOrWhere(bool matchAll, bool Function(E e) test) {
+  Iterable<E> firstWhereOrAllWhere(bool matchAll, bool Function(E e) test) {
     if (matchAll) {
       return where(test);
     } else {
