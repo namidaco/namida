@@ -206,7 +206,7 @@ class Player {
       } else {
         _audioHandler.shuffleAllItems((element) => (element as YoutubeID).id);
       }
-      MiniPlayerController.inst.animateQueueToCurrentTrack(jump: true);
+      MiniPlayerController.inst.animateQueueToCurrentTrack(jump: true, minZero: true);
     } else {
       await _audioHandler.shuffleNextItems();
     }

@@ -146,17 +146,18 @@ class MiniPlayerController {
   bool bounceUp = false;
   bool bounceDown = false;
 
-  void animateQueueToCurrentTrack({bool jump = false}) {
+  void animateQueueToCurrentTrack({bool jump = false, bool minZero = false}) {
     if (queueScrollController.hasClients) {
       final trackTileItemScrollOffsetInQueue = Dimensions.inst.trackTileItemExtent * Player.inst.currentIndex - screenSize.height * 0.3;
       if (queueScrollController.positions.lastOrNull?.pixels == trackTileItemScrollOffsetInQueue) {
         return;
       }
+      final finalOffset = minZero ? trackTileItemScrollOffsetInQueue.withMinimum(0) : trackTileItemScrollOffsetInQueue;
       if (jump) {
-        queueScrollController.jumpTo(trackTileItemScrollOffsetInQueue);
+        queueScrollController.jumpTo(finalOffset);
       } else {
         queueScrollController.animateToEff(
-          trackTileItemScrollOffsetInQueue,
+          finalOffset,
           duration: const Duration(milliseconds: 600),
           curve: Curves.fastEaseInToSlowEaseOut,
         );
