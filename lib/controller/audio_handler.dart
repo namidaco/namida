@@ -498,9 +498,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         tr.toAudioSource(currentIndex, currentQueue.length),
         startPlaying: startPlaying,
       );
-      if (tr.duration == 0) {
-        tr.duration = dur?.inSeconds ?? 0;
-      }
+      Indexer.inst.updateTrackDuration(tr, dur);
+
       refreshNotification(currentItem);
     }
 

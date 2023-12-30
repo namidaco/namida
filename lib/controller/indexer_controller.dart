@@ -1008,6 +1008,14 @@ class Indexer {
     await File(AppPaths.TRACKS).writeAsJson(tracksInfoList.map((key) => allTracksMappedByPath[key]?.toJson()).toList());
   }
 
+  Future<void> updateTrackDuration(Track track, Duration? dur) async {
+    final durInSeconds = dur?.inSeconds ?? 0;
+    if (track.duration == 0 && durInSeconds > 0) {
+      track.duration = durInSeconds;
+    }
+    await _saveTrackFileToStorage();
+  }
+
   /// Returns new [TrackStats].
   Future<TrackStats> updateTrackStats(
     Track track, {
