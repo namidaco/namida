@@ -493,7 +493,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     // -- generating artwork in case it wasnt, to be displayed in notification
     Indexer.inst.getArtwork(imagePath: tr.pathToImage, compressed: false).then((value) => refreshNotification());
 
-    Future<void> setPls() async {
+    Future<Duration?> setPls() async {
       final dur = await setAudioSource(
         tr.toAudioSource(currentIndex, currentQueue.length),
         startPlaying: startPlaying,
@@ -501,11 +501,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       Indexer.inst.updateTrackDuration(tr, dur);
 
       refreshNotification(currentItem);
+      return dur;
     }
 
+    Duration? duration;
+
     try {
-      await setPls();
+      duration = await setPls();
     } catch (e) {
+      if (duration != null && currentPositionMS > 0) return;
       if (item.track == currentTrack.track) {
         // -- playing music from root folders still require `all_file_access`
         // -- this is a fix for not playing some external files reported by some users.
