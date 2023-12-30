@@ -219,8 +219,13 @@ class CurrentColor {
   }
 
   /// Equivalent to calling [getTrackColors] with [delightnedAndAlpha == true]
-  Future<Color> getTrackDelightnedColor(Track track, {bool fallbackToPlayerStaticColor = false}) async {
-    final nc = await getTrackColors(track, fallbackToPlayerStaticColor: fallbackToPlayerStaticColor, delightnedAndAlpha: true);
+  Future<Color> getTrackDelightnedColor(Track track, {bool fallbackToPlayerStaticColor = false, bool useIsolate = _defaultUseIsolate}) async {
+    final nc = await getTrackColors(
+      track,
+      fallbackToPlayerStaticColor: fallbackToPlayerStaticColor,
+      delightnedAndAlpha: true,
+      useIsolate: useIsolate,
+    );
     return nc.color;
   }
 
