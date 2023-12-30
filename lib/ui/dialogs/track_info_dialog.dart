@@ -28,11 +28,23 @@ import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQueue = false, int? index, Color? colorScheme, required QueueSource queueSource}) async {
+Future<void> showTrackInfoDialog(
+  Track track,
+  bool enableBlur, {
+  bool comingFromQueue = false,
+  int? index,
+  Color? colorScheme,
+  required QueueSource queueSource,
+  String? additionalHero,
+}) async {
   // [showTrackDialog] calls [showGeneralPopupDialog] which has a built-check for tracks that are not available.
   final trackExt = track.toTrackExtOrNull();
   if (trackExt == null) {
-    NamidaDialogs.inst.showTrackDialog(track, source: queueSource);
+    NamidaDialogs.inst.showTrackDialog(
+      track,
+      source: queueSource,
+      additionalHero: additionalHero,
+    );
     return;
   }
 
@@ -109,7 +121,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
   }
 
   final artwork = NamidaHero(
-    tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}',
+    tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}$additionalHero',
     child: ArtworkWidget(
       key: Key(trackExt.pathToImage),
       path: trackExt.pathToImage,
@@ -201,7 +213,7 @@ Future<void> showTrackInfoDialog(Track track, bool enableBlur, {bool comingFromQ
                                     );
                                   },
                                   child: PhotoView(
-                                    heroAttributes: PhotoViewHeroAttributes(tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}'),
+                                          heroAttributes: PhotoViewHeroAttributes(tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}$additionalHero'),
                                     gaplessPlayback: true,
                                     tightMode: true,
                                     minScale: PhotoViewComputedScale.contained,

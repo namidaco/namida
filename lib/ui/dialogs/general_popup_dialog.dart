@@ -62,6 +62,7 @@ Future<void> showGeneralPopupDialog(
   String? artistToAddFrom,
   (String, String)? albumToAddFrom,
   String? heroTag,
+  String? additionalHero,
 }) async {
   final tracksExisting = <Track>[];
   tracks.loop((t, index) {
@@ -613,7 +614,7 @@ Future<void> showGeneralPopupDialog(
                     const SizedBox(width: 16.0),
                     if (forceSingleArtwork!)
                       NamidaHero(
-                        tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${tracks.first.path}',
+                              tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${tracks.first.path}$additionalHero',
                         child: ArtworkWidget(
                           key: Key(tracks.pathToImage),
                           path: tracks.pathToImage,

@@ -29,6 +29,7 @@ class NamidaDialogs {
     bool isFromPlayerQueue = false,
     bool errorPlayingTrack = false,
     required QueueSource source,
+    String? additionalHero,
   }) async {
     final trExt = track.toTrackExt();
     await showGeneralPopupDialog(
@@ -45,6 +46,7 @@ class NamidaDialogs {
       useTrackTileCacheHeight: true,
       isFromPlayerQueue: isFromPlayerQueue,
       errorPlayingTrack: errorPlayingTrack,
+      additionalHero: additionalHero,
     );
   }
 

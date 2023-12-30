@@ -70,11 +70,21 @@ class TrackTile extends StatelessWidget {
         comingFromQueue: _isFromQueue,
         trackWithDate: trackOrTwd.trackWithDate,
         source: queueSource,
+        additionalHero: additionalHero,
       );
 
-  void _triggerTrackInfoDialog() => showTrackInfoDialog(_tr, true, comingFromQueue: _isFromQueue, index: index, queueSource: queueSource);
+  void _triggerTrackInfoDialog() => showTrackInfoDialog(
+        _tr,
+        true,
+        comingFromQueue: _isFromQueue,
+        index: index,
+        queueSource: queueSource,
+        additionalHero: additionalHero,
+      );
 
   void _selectTrack() => SelectedTracksController.inst.selectOrUnselect(trackOrTwd, queueSource, playlistName);
+
+  String? get additionalHero => trackOrTwd.trackWithDate?.dateAdded.toString();
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +98,7 @@ class TrackTile extends StatelessWidget {
         queueSource == QueueSource.history;
 
     final isInSelectedTracksPreview = queueSource == QueueSource.selectedTracks;
+    final additionalHero = this.additionalHero;
     return Stack(
       alignment: Alignment.centerRight,
       children: [
@@ -173,7 +184,7 @@ class TrackTile extends StatelessWidget {
                                     width: thumbnailSize,
                                     height: thumbnailSize,
                                     child: NamidaHero(
-                                      tag: '$comingFromQueue${index}_sussydialogs_${track.path}',
+                                      tag: '$comingFromQueue${index}_sussydialogs_${track.path}$additionalHero',
                                       child: ArtworkWidget(
                                         key: Key("$willSleepAfterThis${trackOrTwd.hashCode}"),
                                         thumbnailSize: thumbnailSize,
