@@ -232,13 +232,24 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   void onQueueChanged() async {
     super.onQueueChanged();
-    refreshNotification(currentItem);
-    await currentQueue._execute(
-      selectable: (finalItems) async {
-        await QueueController.inst.updateLatestQueue(finalItems.tracks.toList());
-      },
-      youtubeID: (finalItems) {},
-    );
+    if (currentQueue.isEmpty) {
+      CurrentColor.inst.resetCurrentPlayingTrack();
+      MiniPlayerController.inst.animation.reset();
+      MiniPlayerController.inst.verticalSnapping();
+      await pause();
+      await [
+        onDispose(),
+        QueueController.inst.emptyLatestQueue(),
+      ].execute();
+    } else {
+      refreshNotification(currentItem);
+      await currentQueue._execute(
+        selectable: (finalItems) async {
+          await QueueController.inst.updateLatestQueue(finalItems.tracks.toList());
+        },
+        youtubeID: (finalItems) {},
+      );
+    }
   }
 
   @override

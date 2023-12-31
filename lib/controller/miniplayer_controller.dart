@@ -7,9 +7,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
-import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -47,15 +45,7 @@ class MiniPlayerController {
 
   final ScrollController queueScrollController = ScrollController();
 
-  Future<void> _onMiniplayerDismiss() async {
-    CurrentColor.inst.resetCurrentPlayingTrack();
-    await Player.inst.pause();
-    await [
-      Player.inst.clearQueue(),
-      Player.inst.dispose(),
-      QueueController.inst.emptyLatestQueue(),
-    ].execute();
-  }
+  Future<void> _onMiniplayerDismiss() async => await Player.inst.clearQueue();
 
   AnimationController initialize(TickerProvider ticker) {
     animation = AnimationController(
@@ -93,6 +83,7 @@ class MiniPlayerController {
     topInset = media.padding.top;
     bottomInset = media.padding.bottom;
     screenSize = media.size;
+    // screenSize = Size(media.size.width, media.size.height - MediaQuery.viewPaddingOf(context).bottom);
     maxOffset = screenSize.height;
     sMaxOffset = screenSize.width;
   }

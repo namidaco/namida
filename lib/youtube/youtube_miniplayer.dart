@@ -137,12 +137,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
               ),
               onDismiss: settings.dismissibleMiniplayer.value
                   ? () async {
-                      CurrentColor.inst.resetCurrentPlayingTrack();
-                      await Player.inst.pause();
-                      await [
-                        Player.inst.clearQueue(),
-                        Player.inst.dispose(),
-                      ].execute();
+                      await Player.inst.clearQueue();
                       Player.inst.setPlayerVolume(settings.playerVolume.value);
                     }
                   : null,
