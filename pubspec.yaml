@@ -76,12 +76,12 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio/
-      ref: ca68e2598bc61cb61f4ef8ad911894d90495e2a3
+      ref: d507797ff4ebd37b05784cb962842b0e86f9170c
   audio_service:
     git:
       url: https://github.com/MSOB7YY/audio_service
       path: audio_service/
-      ref: a63f101c5ec425053a1f8ebd6a6a648313e4d669
+      ref: 5915657acb366aa2195b57bf9f10d35fda20c604
   faudiotagger:
     git:
       url: https://github.com/MSOB7YY/faudiotagger
@@ -90,7 +90,7 @@ dependencies:
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
-      ref: 6cbc29797efc9eb68fec639028cf0fdb615e4243
+      ref: 1b415486d5b34cc094fe8e0ecf5cb19c0ab28981
   on_audio_query:
     git:
       url: https://github.com/MSOB7YY/on_audio_query
