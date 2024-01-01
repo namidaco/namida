@@ -8,7 +8,7 @@ import 'package:get/get.dart';
 import 'package:namida/class/color_m.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/video_controller.dart';
+import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -92,7 +92,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
   void dispose() {
     final allLinks = [widget.channelUrl];
     if (widget.videoId != null) allLinks.addAll(YTThumbnail(widget.videoId!).allQualitiesByHighest);
-    VideoController.inst.closeThumbnailClients(allLinks);
+    ThumbnailManager.inst.closeThumbnailClients(allLinks);
     _dontTouchMeImFetchingThumbnail?.cancel();
     _dontTouchMeImFetchingThumbnail = null;
     super.dispose();
@@ -110,7 +110,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       final fetchHQChImg = widget.channelIDForHQImage != '';
       final finalChAvatarUrl = fetchHQChImg ? widget.channelIDForHQImage : widget.channelUrl;
 
-      File? res = VideoController.inst.getYoutubeThumbnailFromCacheSync(
+      File? res = ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(
         id: widget.videoId,
         channelUrl: finalChAvatarUrl,
       );
@@ -119,7 +119,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       if (res == null) {
         await Future.delayed(Duration.zero);
         if (!await canStartLoadingItems()) return;
-        res = await VideoController.inst.getYoutubeThumbnailAndCache(
+        res = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
           id: widget.videoId,
           channelUrlOrID: finalChAvatarUrl,
           hqChannelImage: fetchHQChImg,
@@ -127,7 +127,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
           // -- get lower res first
           beforeFetchingFromInternet: () async {
             if (widget.videoId == null) return;
-            final lowerRes = await VideoController.inst.getYoutubeThumbnailAsBytes(
+            final lowerRes = await ThumbnailManager.inst.getYoutubeThumbnailAsBytes(
               youtubeId: widget.videoId,
               lowerResYTID: true,
               keepInMemory: true,

@@ -12,6 +12,7 @@ import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -222,7 +223,7 @@ class YTUtils {
     required File? thumbnailFile,
     required Map<String, String?> tagsMap,
   }) async {
-    final thumbnail = thumbnailFile ?? await VideoController.inst.getYoutubeThumbnailAndCache(id: videoId);
+    final thumbnail = thumbnailFile ?? await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: videoId);
     if (thumbnail != null) {
       await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: audioFile.path, thumbnailPath: thumbnail.path);
     }

@@ -27,6 +27,7 @@ import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -214,7 +215,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         await CurrentColor.inst.updatePlayerColorFromTrack(finalItem, newIndex);
       },
       youtubeID: (finalItem) async {
-        final image = await VideoController.inst.getYoutubeThumbnailAndCache(id: finalItem.id);
+        final image = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: finalItem.id);
         if (image != null && finalItem == currentItem) {
           // -- only extract if same item is still playing, i.e. user didn't skip.
           final color = await CurrentColor.inst.extractPaletteFromImage(image.path, paletteSaveDirectory: Directory(AppDirs.YT_PALETTES), useIsolate: true);
@@ -941,7 +942,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       });
     }
     if (currentVideoThumbnail.value == null) {
-      VideoController.inst.getYoutubeThumbnailAndCache(id: item.id).then((thumbFile) {
+      ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: item.id).then((thumbFile) {
         if (currentItem == item) {
           currentVideoThumbnail.value = thumbFile;
           refreshNotification(currentItem);

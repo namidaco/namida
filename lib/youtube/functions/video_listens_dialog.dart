@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/video_controller.dart';
+import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
@@ -15,7 +15,7 @@ void showVideoListensDialog(String videoId, {List<int> datesOfListen = const [],
     datesOfListen: datesOfListen.isNotEmpty ? datesOfListen : YoutubeHistoryController.inst.topTracksMapListens[videoId] ?? [],
     colorScheme: colorScheme,
     colorSchemeFunction: () async {
-      final image = VideoController.inst.getYoutubeThumbnailFromCacheSync(id: videoId);
+      final image = ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: videoId);
       if (image != null) {
         final color = await CurrentColor.inst.extractPaletteFromImage(image.path, paletteSaveDirectory: Directory(AppDirs.YT_PALETTES), useIsolate: true);
         return color?.color;

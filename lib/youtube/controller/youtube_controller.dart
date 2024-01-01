@@ -15,7 +15,7 @@ import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/video_controller.dart';
+import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -636,7 +636,7 @@ class YoutubeController {
             progress: p,
             total: tp,
             subtitle: (progressText) => "$progressText (${speedB.fileSizeFormatted}/s)",
-            imagePath: VideoController.inst.getYoutubeThumbnailFromCacheSync(id: videoId)?.path,
+            imagePath: ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: videoId)?.path,
             displayTime: startTime,
           );
         }
@@ -658,7 +658,7 @@ class YoutubeController {
           notificationID: nameIdentifier,
           videoTitle: videoTitle,
           subtitle: 'Download Failed',
-          imagePath: VideoController.inst.getYoutubeThumbnailFromCacheSync(id: videoId)?.path,
+          imagePath: ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: videoId)?.path,
           failed: true,
         );
       }
@@ -668,7 +668,7 @@ class YoutubeController {
         notificationID: nameIdentifier,
         videoTitle: downloadedFile.path.getFilenameWOExt,
         subtitle: size == null ? '' : 'Downloaded: $size',
-        imagePath: VideoController.inst.getYoutubeThumbnailFromCacheSync(id: videoId)?.path,
+        imagePath: ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: videoId)?.path,
         failed: false,
       );
     }
@@ -1060,7 +1060,7 @@ class YoutubeController {
         onInitialAudioFileSize: (initialFileSize) {},
         ffmpegTags: config.ffmpegTags,
         onAudioFileReady: (audioFile) async {
-          final thumbnailFile = await VideoController.inst.getYoutubeThumbnailAndCache(
+          final thumbnailFile = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
             id: videoID,
             channelUrlOrID: null,
             isImportantInCache: true,

@@ -10,7 +10,7 @@ import 'package:get/get_rx/get_rx.dart';
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/video_controller.dart';
+import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/main.dart';
@@ -253,7 +253,7 @@ class NamidaFFMPEG {
 
         File? cachedThumbnail;
 
-        cachedThumbnail = await VideoController.inst.getYoutubeThumbnailAndCache(id: ytId);
+        cachedThumbnail = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: ytId);
 
         if (cachedThumbnail == null) {
           currentFailed++;

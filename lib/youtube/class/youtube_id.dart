@@ -8,7 +8,7 @@ import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
-import 'package:namida/controller/video_controller.dart';
+import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 
@@ -71,11 +71,11 @@ extension YoutubeIDUtils on YoutubeID {
   }
 
   Future<File?> getThumbnail() async {
-    return await VideoController.inst.getYoutubeThumbnailAndCache(id: id);
+    return await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: id);
   }
 
   File? getThumbnailSync() {
-    return VideoController.inst.getYoutubeThumbnailFromCacheSync(id: id);
+    return ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: id);
   }
 
   Future<Duration?> getDuration() async {
