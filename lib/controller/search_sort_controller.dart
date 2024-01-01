@@ -172,7 +172,19 @@ class SearchSortController {
       },
       isolateFunction: (itemsSendPort) async {
         final params = {
-          'tracks': Indexer.inst.allTracksMappedByPath.values.map((e) => e.toJson()).toList(),
+          'tracks': Indexer.inst.allTracksMappedByPath.values
+              .map((e) => {
+                    'title': e.title,
+                    'artist': e.originalArtist,
+                    'album': e.album,
+                    'albumArtist': e.albumArtist,
+                    'genre': e.originalGenre,
+                    'composer': e.composer,
+                    'year': e.year,
+                    'comment': e.comment,
+                    'path': e.path,
+                  })
+              .toList(),
           'artistsSplitConfig': ArtistsSplitConfig.settings().toMap(),
           'genresSplitConfig': GenresSplitConfig.settings().toMap(),
           'filters': settings.trackSearchFilter.cast<TrackSearchFilter>(),
@@ -259,6 +271,7 @@ class SearchSortController {
     });
   }
 
+  // TODO: comment search filter
   static void _searchTracksIsolate(Map params) {
     final tracks = params['tracks'] as List<Map>;
     final artistsSplitConfig = ArtistsSplitConfig.fromMap(params['artistsSplitConfig']);
@@ -271,15 +284,6 @@ class SearchSortController {
 
     sendPort.send(receivePort.sendPort);
 
-    final tracksExtended = <TrackExtended>[];
-    for (final tr in tracks) {
-      final trExt = TrackExtended.fromJson(
-        tr.cast(),
-        artistsSplitConfig: artistsSplitConfig,
-        genresSplitConfig: genresSplitConfig,
-      );
-      tracksExtended.add(trExt);
-    }
     final tsfMap = <TrackSearchFilter, bool>{};
     tsf.loop((f, _) => tsfMap[f] = true);
 
@@ -295,6 +299,47 @@ class SearchSortController {
     final function = _functionOfCleanup(cleanup);
     String textCleanedForSearch(String textToClean) => function(textToClean);
 
+    Iterable<String> splitThis(String? property, bool split) => !split || property == null ? [] : property.split(' ').map((e) => textCleanedForSearch(e));
+
+    final tracksExtended = <({
+      String path,
+      Iterable<String> splitTitle,
+      Iterable<String> splitFilename,
+      Iterable<String> splitAlbum,
+      Iterable<String> splitAlbumArtist,
+      List<String> splitArtist,
+      List<String> splitGenre,
+      Iterable<String> splitComposer,
+      String year,
+    })>[];
+    for (final trMap in tracks) {
+      final path = trMap['path'] as String;
+      tracksExtended.add(
+        (
+          path: path,
+          splitTitle: splitThis(trMap['title'], stitle),
+          splitFilename: splitThis(path.getFilename, sfilename),
+          splitAlbum: splitThis(trMap['album'], salbum),
+          splitAlbumArtist: splitThis(trMap['albumArtist'], salbumartist),
+          splitArtist: sartist
+              ? Indexer.splitArtist(
+                  title: trMap['title'],
+                  originalArtist: trMap['artist'],
+                  config: artistsSplitConfig,
+                )
+              : [],
+          splitGenre: sgenre
+              ? Indexer.splitGenre(
+                  trMap['genre'],
+                  config: genresSplitConfig,
+                )
+              : [],
+          splitComposer: splitThis(trMap['composer'], scomposer),
+          year: textCleanedForSearch(trMap['year'].toString()),
+        ),
+      );
+    }
+
     receivePort.listen((p) {
       if (p is String && p == 'dispose') {
         receivePort.close();
@@ -305,17 +350,22 @@ class SearchSortController {
       final temp = p['temp'] as bool;
 
       final lctext = textCleanedForSearch(text);
+      final lctextSplit = text.split(' ').map((e) => textCleanedForSearch(e));
+
+      bool isMatch(Iterable<String> propertySplit) {
+        return lctextSplit.every((element) => propertySplit.any((p) => p.contains(element)));
+      }
 
       final result = <Track>[];
       tracksExtended.loop((trExt, index) {
-        if ((stitle && textCleanedForSearch(trExt.title).contains(lctext)) ||
-            (sfilename && textCleanedForSearch((trExt.path).getFilename).contains(lctext)) ||
-            (salbum && textCleanedForSearch(trExt.album).contains(lctext)) ||
-            (salbumartist && textCleanedForSearch(trExt.albumArtist).contains(lctext)) ||
-            (sartist && (trExt.artistsList).any((element) => textCleanedForSearch(element).contains(lctext))) ||
-            (sgenre && (trExt.genresList).any((element) => textCleanedForSearch(element).contains(lctext))) ||
-            (scomposer && textCleanedForSearch(trExt.composer).contains(lctext)) ||
-            (syear && textCleanedForSearch((trExt.year).toString()).contains(lctext))) {
+        if ((stitle && isMatch(trExt.splitTitle)) ||
+            (sfilename && isMatch(trExt.splitFilename)) ||
+            (salbum && isMatch(trExt.splitAlbum)) ||
+            (salbumartist && isMatch(trExt.splitAlbumArtist)) ||
+            (sartist && isMatch(trExt.splitArtist)) ||
+            (sgenre && isMatch(trExt.splitGenre)) ||
+            (scomposer && isMatch(trExt.splitComposer)) ||
+            (syear && trExt.year.contains(lctext))) {
           result.add(Track(trExt.path));
         }
       });
