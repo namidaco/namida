@@ -50,7 +50,7 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
       ),
       onTap: () {
-        setState(() => YTLocalSearchController.inst.sortType = sort);
+        YTLocalSearchController.inst.sortType = sort;
         _didChangeSort = true;
       },
       child: Row(

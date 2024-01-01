@@ -74,12 +74,13 @@ class SearchPage extends StatelessWidget {
               return 0;
           }
         }(),
-        onIndexChanged: (index) {
+        onIndexChanged: (index) async {
           switch (index) {
             case 0:
               ScrollSearchController.inst.currentSearchType.value = SearchType.localTracks;
               final srchTxt = ScrollSearchController.inst.searchTextEditingController.text;
               ClipboardController.inst.updateTextInControllerEmpty(srchTxt == '');
+              await SearchSortController.inst.prepareResources();
               SearchSortController.inst.searchAll(srchTxt);
               break;
             case 1:
@@ -113,12 +114,13 @@ class SearchPage extends StatelessWidget {
                             child: NamidaInkWell(
                               bgColor: isActive ? context.theme.colorScheme.secondary.withOpacity(0.12) : null,
                               borderRadius: 8.0,
-                              onTap: () {
+                              onTap: () async {
                                 if (isForcelyEnabled) return;
                                 if (isActive) {
                                   settings.removeFromList(activeSearchMediaTypes1: e);
                                 } else {
                                   settings.save(activeSearchMediaTypes: [e]);
+                                  await SearchSortController.inst.prepareResources();
                                   SearchSortController.inst.searchAll(ScrollSearchController.inst.searchTextEditingController.text);
                                 }
                               },

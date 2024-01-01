@@ -48,9 +48,14 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   void initState() {
     super.initState();
     fetchSearch();
-    YTLocalSearchController.inst.initializeLookupMap().then((value) {
+    YTLocalSearchController.inst.initializeLookupMap(onSearchDone: () => setState(() {})).then((value) {
       _isLoadingLocalLookupList.value = false;
-      if (currentSearchText != '') YTLocalSearchController.inst.search(currentSearchText, maxResults: _maxSearchResultsMini);
+      if (currentSearchText != '') {
+        YTLocalSearchController.inst.search(currentSearchText, maxResults: _maxSearchResultsMini);
+        if (NamidaNavigator.inst.isytLocalSearchInFullPage) {
+          NamidaNavigator.inst.ytLocalSearchNavigatorKey?.currentState?.setState(() {});
+        }
+      }
     });
   }
 
@@ -66,11 +71,10 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
     final newSearch = customText == '' ? widget.searchText : customText;
     _latestSearched = newSearch;
     YTLocalSearchController.inst.search(newSearch, maxResults: NamidaNavigator.inst.isytLocalSearchInFullPage ? null : _maxSearchResultsMini);
-    setState(() {});
-
     _searchResult.clear();
     if (newSearch == '') return;
     if (!ConnectivityController.inst.hasConnection) return;
+    if (NamidaNavigator.inst.isytLocalSearchInFullPage) return;
 
     if (mounted) {
       setState(() {
@@ -129,7 +133,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                           margin: const EdgeInsets.symmetric(horizontal: 12.0),
                           onTap: () {
-                            if (_isLoadingLocalLookupList.value || currentSearchText == '') return;
+                            // if (_isLoadingLocalLookupList.value || currentSearchText == '') return;
                             NamidaNavigator.inst.isytLocalSearchInFullPage = true;
                             NamidaNavigator.inst.ytLocalSearchNavigatorKey?.currentState?.push(
                               MaterialPageRoute(builder: (context) {

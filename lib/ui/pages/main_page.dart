@@ -242,10 +242,7 @@ class NamidaSearchBar extends StatelessWidget {
       ScrollSearchController.inst.searchTextEditingController.clear();
       Player.inst.playOrPause(0, [YoutubeID(id: ytlink.getYoutubeID, playlistID: null)], QueueSource.others);
     } else if (ScrollSearchController.inst.currentSearchType.value == SearchType.youtube) {
-      final latestSearch = ScrollSearchController.inst.ytSearchKey.currentState?.currentSearchText;
-      if (latestSearch != val) {
-        ScrollSearchController.inst.ytSearchKey.currentState?.fetchSearch(customText: val);
-      }
+      ScrollSearchController.inst.ytSearchKey.currentState?.fetchSearch(customText: val);
     }
   }
 
@@ -325,12 +322,17 @@ class NamidaSearchBar extends StatelessWidget {
           ScrollSearchController.inst.showSearchMenu(isOpen);
           ScrollSearchController.inst.resetSearch();
           ClipboardController.inst.updateTextInControllerEmpty(true);
+          if (isOpen) {
+            SearchSortController.inst.prepareResources();
+          } else {
+            SearchSortController.inst.disposeResources();
+          }
         },
         onFieldSubmitted: _onSubmitted,
         onChanged: (value) {
           if (ScrollSearchController.inst.currentSearchType.value == SearchType.localTracks) {
             _searchFieldTimer?.cancel();
-            _searchFieldTimer = Timer(const Duration(milliseconds: 200), () {
+            _searchFieldTimer = Timer(const Duration(milliseconds: 100), () {
               ClipboardController.inst.updateTextInControllerEmpty(value == '');
               SearchSortController.inst.searchAll(value);
             });

@@ -1,16 +1,23 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:playlist_manager/playlist_manager.dart';
 
+import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/search_ports_provider.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/translations/language.dart';
 
 class SearchSortController {
   static SearchSortController get inst => _instance;
@@ -99,33 +106,136 @@ class SearchSortController {
     }
   }
 
+  late final _mediaTracksSortingComparables = <SortType, Comparable Function(Track e)>{
+    SortType.title: (e) => e.title.toLowerCase(),
+    SortType.album: (e) => e.album.toLowerCase(),
+    SortType.albumArtist: (e) => e.albumArtist.toLowerCase(),
+    SortType.year: (e) => e.yearPreferyyyyMMdd,
+    SortType.artistsList: (e) => e.artistsList.join().toLowerCase(),
+    SortType.genresList: (e) => e.genresList.join().toLowerCase(),
+    SortType.dateAdded: (e) => e.dateAdded,
+    SortType.dateModified: (e) => e.dateModified,
+    SortType.bitrate: (e) => e.bitrate,
+    SortType.composer: (e) => e.composer.toLowerCase(),
+    SortType.trackNo: (e) => e.trackNo,
+    SortType.discNo: (e) => e.discNo,
+    SortType.filename: (e) => e.filename.toLowerCase(),
+    SortType.duration: (e) => e.duration,
+    SortType.sampleRate: (e) => e.sampleRate,
+    SortType.size: (e) => e.size,
+    SortType.rating: (e) => e.stats.rating,
+  };
+
   List<Comparable Function(Track tr)> getMediaTracksSortingComparables(MediaType media) {
     final sorts = settings.mediaItemsTrackSorting[media] ?? <SortType>[SortType.title];
-
-    final map = <SortType, Comparable Function(Track e)>{
-      SortType.title: (e) => e.title.toLowerCase(),
-      SortType.album: (e) => e.album.toLowerCase(),
-      SortType.albumArtist: (e) => e.albumArtist.toLowerCase(),
-      SortType.year: (e) => e.yearPreferyyyyMMdd,
-      SortType.artistsList: (e) => e.artistsList.join().toLowerCase(),
-      SortType.genresList: (e) => e.genresList.join().toLowerCase(),
-      SortType.dateAdded: (e) => e.dateAdded,
-      SortType.dateModified: (e) => e.dateModified,
-      SortType.bitrate: (e) => e.bitrate,
-      SortType.composer: (e) => e.composer.toLowerCase(),
-      SortType.trackNo: (e) => e.trackNo,
-      SortType.discNo: (e) => e.discNo,
-      SortType.filename: (e) => e.filename.toLowerCase(),
-      SortType.duration: (e) => e.duration,
-      SortType.sampleRate: (e) => e.sampleRate,
-      SortType.size: (e) => e.size,
-      SortType.rating: (e) => e.stats.rating,
-    };
     final l = <Comparable Function(Track e)>[];
     sorts.loop((e, index) {
-      if (map[e] != null) l.add(map[e]!);
+      if (_mediaTracksSortingComparables[e] != null) l.add(_mediaTracksSortingComparables[e]!);
     });
     return l;
+  }
+
+  Future<void> prepareResources() async {
+    final enabledSearchesList = settings.activeSearchMediaTypes;
+    final enabledSearches = <MediaType, bool>{};
+    enabledSearchesList.loop((f, _) => enabledSearches[f] = true);
+
+    await Future.wait([
+      _prepareTracksPorts(),
+      if (enabledSearches[MediaType.album] ?? false) _prepareMediaPorts(mainMapAlbums.value.keys, MediaType.album) else SearchPortsProvider.inst.closePorts(MediaType.album),
+      if (enabledSearches[MediaType.artist] ?? false) _prepareMediaPorts(mainMapArtists.value.keys, MediaType.artist) else SearchPortsProvider.inst.closePorts(MediaType.artist),
+      if (enabledSearches[MediaType.genre] ?? false) _prepareMediaPorts(mainMapGenres.value.keys, MediaType.genre) else SearchPortsProvider.inst.closePorts(MediaType.genre),
+      if (enabledSearches[MediaType.playlist] ?? false) _preparePlaylistPorts() else SearchPortsProvider.inst.closePorts(MediaType.playlist),
+      if (enabledSearches[MediaType.folder] ?? false) _prepareMediaPorts(mainMapFolder.keys, MediaType.folder) else SearchPortsProvider.inst.closePorts(MediaType.folder),
+    ]);
+  }
+
+  void disposeResources() {
+    SearchPortsProvider.inst.disposeAll();
+  }
+
+  Future<SendPort> _prepareTracksPorts() async {
+    return await SearchPortsProvider.inst.preparePorts(
+      type: MediaType.track,
+      onResult: (result) {
+        final r = result as (List<Track>, bool);
+        final isTemp = r.$2;
+        if (isTemp) {
+          trackSearchTemp.value = r.$1;
+          sortTracksSearch(canSkipSorting: true);
+        } else {
+          trackSearchList.value = r.$1;
+        }
+      },
+      isolateFunction: (itemsSendPort) async {
+        final params = {
+          'tracks': Indexer.inst.allTracksMappedByPath.values.map((e) => e.toJson()).toList(),
+          'artistsSplitConfig': ArtistsSplitConfig.settings().toMap(),
+          'genresSplitConfig': GenresSplitConfig.settings().toMap(),
+          'filters': settings.trackSearchFilter.cast<TrackSearchFilter>(),
+          'cleanup': _shouldCleanup,
+          'sendPort': itemsSendPort,
+        };
+
+        await Isolate.spawn(_searchTracksIsolate, params);
+      },
+    );
+  }
+
+  Future<SendPort> _preparePlaylistPorts() async {
+    return await SearchPortsProvider.inst.preparePorts(
+      type: MediaType.playlist,
+      onResult: (result) {
+        final r = result as (List<String>, bool);
+        final isTemp = r.$2;
+        if (isTemp) {
+          playlistSearchTemp.value = r.$1;
+        } else {
+          playlistSearchList.value = r.$1;
+        }
+      },
+      isolateFunction: (itemsSendPort) async {
+        final params = {
+          'playlists': playlistsMap.values.map((e) => e.toJson((item) => item.toJson())).toList(),
+          'translations': {
+            'k_PLAYLIST_NAME_AUTO_GENERATED': lang.AUTO_GENERATED,
+            'k_PLAYLIST_NAME_FAV': lang.FAVOURITES,
+            'k_PLAYLIST_NAME_HISTORY': lang.HISTORY,
+            'k_PLAYLIST_NAME_MOST_PLAYED': lang.MOST_PLAYED,
+          },
+          'filters': settings.playlistSearchFilter.cast<String>(),
+          'cleanup': _shouldCleanup,
+          'sendPort': itemsSendPort,
+        };
+
+        await Isolate.spawn(_searchPlaylistsIsolate, params);
+      },
+    );
+  }
+
+  Future<SendPort> _prepareMediaPorts(Iterable<String> keysList, MediaType type) async {
+    return await SearchPortsProvider.inst.preparePorts(
+      type: type,
+      onResult: (result) {
+        final r = result as (List<String>, bool);
+        final isTemp = r.$2;
+        if (isTemp) {
+          _searchMapTemp[type]?.value = r.$1;
+        } else {
+          _searchMap[type]?.value = r.$1;
+        }
+      },
+      isolateFunction: (itemsSendPort) async {
+        final params = {
+          'keys': keysList.toList(),
+          'cleanup': _shouldCleanup,
+          'keyIsPath': type == MediaType.folder,
+          'sendPort': itemsSendPort,
+        };
+
+        await Isolate.spawn(_generalSearchIsolate, params);
+      },
+    );
   }
 
   void _searchTracks(String text, {bool temp = false}) async {
@@ -134,49 +244,81 @@ class SearchSortController {
         trackSearchTemp.clear();
       } else {
         LibraryTab.tracks.textSearchController?.clear();
-        trackSearchList.assignAll(tracksInfoList);
+        trackSearchList.value = tracksInfoList;
       }
-
       return;
     }
 
-    final tsf = settings.trackSearchFilter;
-    final cleanup = settings.enableSearchCleanup.value;
+    final sp = await _prepareTracksPorts();
+    sp.send({
+      'text': text,
+      'temp': temp,
+    });
+  }
+
+  static void _searchTracksIsolate(Map params) {
+    final tracks = params['tracks'] as List<Map>;
+    final artistsSplitConfig = ArtistsSplitConfig.fromMap(params['artistsSplitConfig']);
+    final genresSplitConfig = GenresSplitConfig.fromMap(params['genresSplitConfig']);
+    final tsf = params['filters'] as List<TrackSearchFilter>;
+    final cleanup = params['cleanup'] as bool;
+    final sendPort = params['sendPort'] as SendPort;
+
+    final receivePort = ReceivePort();
+
+    sendPort.send(receivePort.sendPort);
+
+    final tracksExtended = <TrackExtended>[];
+    for (final tr in tracks) {
+      final trExt = TrackExtended.fromJson(
+        tr.cast(),
+        artistsSplitConfig: artistsSplitConfig,
+        genresSplitConfig: genresSplitConfig,
+      );
+      tracksExtended.add(trExt);
+    }
+    final tsfMap = <TrackSearchFilter, bool>{};
+    tsf.loop((f, _) => tsfMap[f] = true);
+
+    final stitle = tsfMap[TrackSearchFilter.title] ?? true;
+    final sfilename = tsfMap[TrackSearchFilter.filename] ?? true;
+    final salbum = tsfMap[TrackSearchFilter.album] ?? true;
+    final salbumartist = tsfMap[TrackSearchFilter.albumartist] ?? false;
+    final sartist = tsfMap[TrackSearchFilter.artist] ?? true;
+    final sgenre = tsfMap[TrackSearchFilter.genre] ?? false;
+    final scomposer = tsfMap[TrackSearchFilter.composer] ?? false;
+    final syear = tsfMap[TrackSearchFilter.year] ?? false;
 
     final function = _functionOfCleanup(cleanup);
     String textCleanedForSearch(String textToClean) => function(textToClean);
 
-    final stitle = tsf.contains(TrackSearchFilter.title);
-    final sfilename = tsf.contains(TrackSearchFilter.filename);
-    final salbum = tsf.contains(TrackSearchFilter.album);
-    final salbumartist = tsf.contains(TrackSearchFilter.albumartist);
-    final sartist = tsf.contains(TrackSearchFilter.artist);
-    final sgenre = tsf.contains(TrackSearchFilter.genre);
-    final scomposer = tsf.contains(TrackSearchFilter.composer);
-    final syear = tsf.contains(TrackSearchFilter.year);
+    receivePort.listen((p) {
+      if (p is String && p == 'dispose') {
+        receivePort.close();
+        return;
+      }
+      p as Map<String, dynamic>;
+      final text = p['text'] as String;
+      final temp = p['temp'] as bool;
 
-    final result = <Track>[];
-    Indexer.inst.tracksInfoList.loop((tr, index) {
-      final trExt = tr.toTrackExt();
       final lctext = textCleanedForSearch(text);
 
-      if ((stitle && textCleanedForSearch(trExt.title).contains(lctext)) ||
-          (sfilename && textCleanedForSearch((trExt.path).getFilename).contains(lctext)) ||
-          (salbum && textCleanedForSearch(trExt.album).contains(lctext)) ||
-          (salbumartist && textCleanedForSearch(trExt.albumArtist).contains(lctext)) ||
-          (sartist && (trExt.artistsList).any((element) => textCleanedForSearch(element).contains(lctext))) ||
-          (sgenre && (trExt.genresList).any((element) => textCleanedForSearch(element).contains(lctext))) ||
-          (scomposer && textCleanedForSearch(trExt.composer).contains(lctext)) ||
-          (syear && textCleanedForSearch((trExt.year).toString()).contains(lctext))) {
-        result.add(tr);
-      }
+      final result = <Track>[];
+      tracksExtended.loop((trExt, index) {
+        if ((stitle && textCleanedForSearch(trExt.title).contains(lctext)) ||
+            (sfilename && textCleanedForSearch((trExt.path).getFilename).contains(lctext)) ||
+            (salbum && textCleanedForSearch(trExt.album).contains(lctext)) ||
+            (salbumartist && textCleanedForSearch(trExt.albumArtist).contains(lctext)) ||
+            (sartist && (trExt.artistsList).any((element) => textCleanedForSearch(element).contains(lctext))) ||
+            (sgenre && (trExt.genresList).any((element) => textCleanedForSearch(element).contains(lctext))) ||
+            (scomposer && textCleanedForSearch(trExt.composer).contains(lctext)) ||
+            (syear && textCleanedForSearch((trExt.year).toString()).contains(lctext))) {
+          result.add(Track(trExt.path));
+        }
+      });
+
+      sendPort.send((result, temp));
     });
-    if (temp) {
-      trackSearchTemp.value = result;
-      sortTracksSearch(canSkipSorting: true);
-    } else {
-      trackSearchList.value = result;
-    }
   }
 
   void _searchMediaType({required MediaType type, required String text, bool temp = false}) async {
@@ -194,31 +336,21 @@ class SearchSortController {
         null;
     }
 
-    final keysList = keys.toList();
-
     if (text == '') {
       if (temp) {
         _searchMapTemp[type]?.clear();
       } else {
         type.toLibraryTab()?.textSearchController?.clear();
-        _searchMap[type]?.value = keysList;
+        _searchMap[type]?.value = keys.toList();
       }
       return;
     }
 
-    final parameter = {
-      'keys': keysList,
-      'cleanup': _shouldCleanup,
+    final sp = await _prepareMediaPorts(keys, type);
+    sp.send({
       'text': text,
-      'keyIsPath': type == MediaType.folder,
-    };
-    final results = await _generalSearchIsolate.thready(parameter);
-
-    if (temp) {
-      _searchMapTemp[type]?.value = results;
-    } else {
-      _searchMap[type]?.value = results;
-    }
+      'temp': temp,
+    });
   }
 
   void _searchPlaylists(String text, {bool temp = false}) async {
@@ -231,42 +363,91 @@ class SearchSortController {
       }
       return;
     }
+    final sp = await _preparePlaylistPorts();
+    sp.send({
+      'text': text,
+      'temp': temp,
+    });
+  }
 
-    // TODO(MSOB7YY): expose in settings
-    final psf = settings.playlistSearchFilter;
+  static void _searchPlaylistsIsolate(Map params) {
+    final playlistsMap = params['playlists'] as List<Map<String, dynamic>>;
+    final translations = params['translations'] as Map<String, String>;
+    final psf = params['filters'] as List<String>;
+    final cleanup = params['cleanup'] as bool;
+    final sendPort = params['sendPort'] as SendPort;
 
-    final cleanupFunction = _functionOfCleanup(_shouldCleanup);
-    String textCleanedForSearch(String textToClean) => cleanupFunction(textToClean);
+    final receivePort = ReceivePort();
 
-    final sTitle = psf.contains('name');
-    final sCreationDate = psf.contains('creationDate');
-    final sModifiedDate = psf.contains('modifiedDate');
-    final sComment = psf.contains('comment');
-    final sMoods = psf.contains('moods');
+    sendPort.send(receivePort.sendPort);
+
+    String translatePlName(String n) {
+      return n
+          .replaceFirst(k_PLAYLIST_NAME_AUTO_GENERATED, translations['k_PLAYLIST_NAME_AUTO_GENERATED'] ?? k_PLAYLIST_NAME_AUTO_GENERATED)
+          .replaceFirst(k_PLAYLIST_NAME_FAV, translations['k_PLAYLIST_NAME_FAV'] ?? k_PLAYLIST_NAME_FAV)
+          .replaceFirst(k_PLAYLIST_NAME_HISTORY, translations['k_PLAYLIST_NAME_HISTORY'] ?? k_PLAYLIST_NAME_HISTORY)
+          .replaceFirst(k_PLAYLIST_NAME_MOST_PLAYED, translations['k_PLAYLIST_NAME_MOST_PLAYED'] ?? k_PLAYLIST_NAME_MOST_PLAYED);
+    }
+
     final formatDate = DateFormat('yyyyMMdd');
 
-    final results = playlistsMap.entries.where((e) {
-      final playlistName = e.key;
-      final item = e.value;
+    final playlists = <({
+      GeneralPlaylist<TrackWithDate> pl,
+      String name,
+      String dateCreatedFormatted,
+      String dateModifiedFormatted,
+    })>[];
+    for (final plMap in playlistsMap) {
+      final pl = GeneralPlaylist<TrackWithDate>.fromJson(plMap, (itemJson) => TrackWithDate.fromJson(itemJson));
+      final trName = translatePlName(pl.name);
+      final dateCreatedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(pl.creationDate));
+      final dateModifiedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(pl.modifiedDate));
+      playlists.add((
+        pl: pl,
+        name: trName,
+        dateCreatedFormatted: dateCreatedFormatted,
+        dateModifiedFormatted: dateModifiedFormatted,
+      ));
+    }
+
+    final function = _functionOfCleanup(cleanup);
+    String textCleanedForSearch(String textToClean) => function(textToClean);
+
+    final psfMap = <String, bool>{};
+    psf.loop((f, _) => psfMap[f] = true);
+
+    final sTitle = psfMap['name'] ?? true;
+    final sCreationDate = psfMap['creationDate'] ?? false;
+    final sModifiedDate = psfMap['modifiedDate'] ?? false;
+    final sComment = psfMap['comment'] ?? false;
+    final sMoods = psfMap['moods'] ?? false;
+
+    receivePort.listen((p) {
+      if (p is String && p == 'dispose') {
+        receivePort.close();
+        return;
+      }
+      p as Map<String, dynamic>;
+      final text = p['text'] as String;
+      final temp = p['temp'] as bool;
 
       final lctext = textCleanedForSearch(text);
-      final dateCreatedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.creationDate));
-      final dateModifiedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.modifiedDate));
 
-      return (sTitle && textCleanedForSearch(playlistName.translatePlaylistName()).contains(lctext)) ||
-          (sCreationDate && textCleanedForSearch(dateCreatedFormatted.toString()).contains(lctext)) ||
-          (sModifiedDate && textCleanedForSearch(dateModifiedFormatted.toString()).contains(lctext)) ||
-          (sComment && textCleanedForSearch(item.comment).contains(lctext)) ||
-          (sMoods && item.moods.any((element) => textCleanedForSearch(element).contains(lctext)));
+      final results = <String>[];
+      playlists.loop((itemInfo, _) {
+        final item = itemInfo.pl;
+        final playlistName = item.name;
+
+        if ((sTitle && textCleanedForSearch(itemInfo.name).contains(lctext)) ||
+            (sCreationDate && textCleanedForSearch(itemInfo.dateCreatedFormatted).contains(lctext)) ||
+            (sModifiedDate && textCleanedForSearch(itemInfo.dateModifiedFormatted).contains(lctext)) ||
+            (sComment && textCleanedForSearch(item.comment).contains(lctext)) ||
+            (sMoods && item.moods.any((element) => textCleanedForSearch(element).contains(lctext)))) {
+          results.add(playlistName);
+        }
+      });
+      sendPort.send((results, temp));
     });
-
-    final playlists = results.map((e) => e.key).toList();
-
-    if (temp) {
-      playlistSearchTemp.value = playlists;
-    } else {
-      playlistSearchList.value = playlists;
-    }
   }
 
   void sortAll() {
@@ -625,96 +806,47 @@ class SearchSortController {
     _searchPlaylists(LibraryTab.playlists.textSearchController?.text ?? '');
   }
 
-  // static List<Track> _searchTracksIsolate(Map parameters) {
-  //   final tsf = parameters['tsf'] as List<TrackSearchFilter>;
-  //   final cleanup = parameters['cleanup'] as bool;
-  //   final tracks = parameters['tracks'] as Map<Track, Map<String, dynamic>>;
-  //   final text = parameters['text'] as String;
-
-  //   final function = _functionOfCleanup(cleanup);
-  //   String textCleanedForSearch(String textToClean) => function(textToClean);
-
-  //   bool hasF(TrackSearchFilter f) => tsf.contains(f);
-
-  //   final finalList = <Track>[];
-
-  //   // -- well i dont think we need the overhead of converting the map into a TrackExtended Object.
-  //   // -- we'll just access the map values.
-  //   for (final entry in tracks.entries) {
-  //     final trExt = entry.value;
-  //     final lctext = textCleanedForSearch(text);
-
-  //     if ((hasF(TrackSearchFilter.title) && textCleanedForSearch(trExt['title'] as String).contains(lctext)) ||
-  //         (hasF(TrackSearchFilter.filename) && textCleanedForSearch((trExt['path'] as String).getFilename).contains(lctext)) ||
-  //         (hasF(TrackSearchFilter.album) && textCleanedForSearch(trExt['album'] as String).contains(lctext)) ||
-  //         (hasF(TrackSearchFilter.albumartist) && textCleanedForSearch(trExt['albumArtist'] as String).contains(lctext)) ||
-  //         (hasF(TrackSearchFilter.artist) && (trExt['artistsList'] as List<String>).any((element) => textCleanedForSearch(element).contains(lctext))) ||
-  //         (hasF(TrackSearchFilter.genre) && (trExt['genresList'] as List<String>).any((element) => textCleanedForSearch(element).contains(lctext))) ||
-  //         (hasF(TrackSearchFilter.composer) && textCleanedForSearch(trExt['composer'] as String).contains(lctext)) ||
-  //         (hasF(TrackSearchFilter.year) && textCleanedForSearch((trExt['year'] as int).toString()).contains(lctext))) {
-  //       finalList.add(entry.key);
-  //     }
-  //   }
-
-  //   return finalList;
-  // }
-
-  // static Iterable<MapEntry<String, Playlist>> _searchPlaylistsIsolate(Map parameters) {
-  //   final psf = parameters['psf'] as List<String>;
-  //   final cleanup = parameters['cleanup'] as bool;
-  //   final playlists = parameters['playlists'] as Map<String, Playlist>;
-  //   final text = parameters['text'] as String;
-
-  //   final cleanupFunction = _functionOfCleanup(cleanup);
-  //   String textCleanedForSearch(String textToClean) => cleanupFunction(textToClean);
-
-  //   final sTitle = psf.contains('name');
-  //   final sCreationDate = psf.contains('creationDate');
-  //   final sModifiedDate = psf.contains('modifiedDate');
-  //   final sComment = psf.contains('comment');
-  //   final sMoods = psf.contains('moods');
-  //   final formatDate = DateFormat('yyyyMMdd');
-
-  //   final results = playlists.entries.where((e) {
-  //     final playlistName = e.key;
-  //     final item = e.value;
-
-  //     final lctext = textCleanedForSearch(text);
-  //     final dateCreatedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.creationDate));
-  //     final dateModifiedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(item.modifiedDate));
-
-  //     return (sTitle && textCleanedForSearch(playlistName.translatePlaylistName()).contains(lctext)) ||
-  //         (sCreationDate && textCleanedForSearch(dateCreatedFormatted.toString()).contains(lctext)) ||
-  //         (sModifiedDate && textCleanedForSearch(dateModifiedFormatted.toString()).contains(lctext)) ||
-  //         (sComment && textCleanedForSearch(item.comment).contains(lctext)) ||
-  //         (sMoods && item.moods.any((element) => textCleanedForSearch(element).contains(lctext)));
-  //   });
-  //   return results;
-  // }
-
-  static List<String> _generalSearchIsolate(Map parameters) {
+  static void _generalSearchIsolate(Map parameters) {
     final keys = parameters['keys'] as List<String>;
     final cleanup = parameters['cleanup'] as bool;
     final keyIsPath = parameters['keyIsPath'] as bool;
-    final text = parameters['text'] as String;
+
+    final sendPort = parameters['sendPort'] as SendPort;
+
+    final receivePort = ReceivePort();
+
+    sendPort.send(receivePort.sendPort);
 
     final cleanupFunction = _functionOfCleanup(cleanup);
+    receivePort.listen((p) {
+      if (p is String && p == 'dispose') {
+        receivePort.close();
+        return;
+      }
+      p as Map<String, dynamic>;
+      final text = p['text'] as String;
+      final temp = p['temp'] as bool;
 
-    final results = <String>[];
-    if (keyIsPath) {
-      keys.loop((path, _) {
-        if (cleanupFunction(path.split(Platform.pathSeparator).last).contains(cleanupFunction(text))) {
-          results.add(path);
-        }
-      });
-    } else {
-      keys.loop((name, _) {
-        if (cleanupFunction(name).contains(cleanupFunction(text))) {
-          results.add(name);
-        }
-      });
-    }
-    return results;
+      final results = <String>[];
+      if (keyIsPath) {
+        keys.loop((path, _) {
+          String pathN = path;
+          while (pathN.isNotEmpty && pathN[pathN.length - 1] == Platform.pathSeparator) {
+            pathN = pathN.substring(0, pathN.length);
+          }
+          if (cleanupFunction(pathN.split(Platform.pathSeparator).last).contains(cleanupFunction(text))) {
+            results.add(pathN);
+          }
+        });
+      } else {
+        keys.loop((name, _) {
+          if (cleanupFunction(name).contains(cleanupFunction(text))) {
+            results.add(name);
+          }
+        });
+      }
+      sendPort.send((results, temp));
+    });
   }
 
   bool get _shouldCleanup => settings.enableSearchCleanup.value;
